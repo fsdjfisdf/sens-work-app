@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_cause = document.getElementById('task_cause').value;
 
     try {
-      const response = await axios.post(`3.37.165.84/log`, {
+      const response = await axios.post(`http://localhost:3001/log`, {
         task_name,
         worker,
         task_result,
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadWorkLogs() {
     try {
-      const response = await axios.get(`3.37.165.84/logs`);
+      const response = await axios.get(`http://localhost:3001/logs`);
       const logs = response.data;
 
       const tbody = document.querySelector('#worklog-table tbody');
