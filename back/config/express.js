@@ -1,14 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // CORS 추가
+const cors = require('cors');
 const path = require('path');
 const { pool } = require('./database');
 const { logger } = require('./winston');
 
 const app = express();
 
-// CORS 설정 추가
-app.use(cors());
+const corsOptions = {
+  origin: 'http://3.37.165.84', // 필요한 출처 추가
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
