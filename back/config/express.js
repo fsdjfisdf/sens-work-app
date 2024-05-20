@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const { pool } = require('./database');
+const { pool } = require('./database');  // 데이터베이스 모듈 가져오기
 const { logger } = require('./winston');
 
 const app = express();
