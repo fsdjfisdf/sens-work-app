@@ -1,18 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors'); // CORS 추가
 const path = require('path');
-const { pool } = require('./database');  // 데이터베이스 모듈 가져오기
+const { pool } = require('./database');
 const { logger } = require('./winston');
 
 const app = express();
 
-// JSON 바디 파서를 사용하여 JSON 요청을 처리
-app.use(bodyParser.json());
+// CORS 설정 추가
+app.use(cors());
 
-// 정적 파일을 서빙하기 위해 front 디렉토리를 사용
+app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
 
-// 기본 경로에 대한 라우트 추가
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../front', 'index.html'));
 });
