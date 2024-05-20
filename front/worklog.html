@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>작업 이력</title>
+  <link rel="stylesheet" href="./css/common.css">
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section id="worklog-form">
+      <div class="inner">
+        <h2>작업 이력 작성</h2>
+        <form id="worklogForm">
+          <div>
+            <label for="task_name">작업명:</label>
+            <input type="text" id="task_name" name="task_name" required>
+          </div>
+          <div>
+            <label for="worker">작업자:</label>
+            <input type="text" id="worker" name="worker" required>
+          </div>
+          <div>
+            <label for="task_result">결과:</label>
+            <input type="text" id="task_result" name="task_result" required>
+          </div>
+          <div>
+            <label for="task_cause">원인:</label>
+            <input type="text" id="task_cause" name="task_cause" required>
+          </div>
+          <div>
+            <button type="submit">작업 이력 추가</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="worklog">
+      <div class="inner">
+        <h2>작업 이력 목록</h2>
+        <table id="worklog-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>작업명</th>
+              <th>작업자</th>
+              <th>결과</th>
+              <th>원인</th>
+              <th>타임스탬프</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 작업 이력 데이터가 여기에 추가됩니다 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/url.js"></script>
+  <script src="./js/worklog.js"></script>
+</body>
+</html>

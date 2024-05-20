@@ -1,22 +1,56 @@
-const express = require("express");
-const compression = require("compression");
-const methodOverride = require("method-override");
-var cors = require("cors");
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
+const { pool } = require('./database');
+const { logger } = require('./winston');
 
-module.exports = function () {
-  const app = express();
+const app = express();
 
-  /* 미들웨어 설정 */
-  app.use(compression()); // HTTP 요청을 압축 및 해제
-  app.use(express.json()); // body값을 파싱
-  app.use(express.urlencoded({ extended: true })); // form 으로 제출되는 값 파싱
-  app.use(methodOverride()); // put, delete 요청 처리
-  app.use(cors()); // 웹브라우저 cors 설정을 관리
-  app.use(express.static("/home/ubuntu/food-map-dist-example/front")); // express 정적 파일 제공 (html, css, js 등..)
-  // app.use(express.static(process.cwd() + '/public'));
+// JSON 바디 파서를 사용하여 JSON 요청을 처리
+app.use(bodyParser.json());
 
-  /* 직접 구현해야 하는 모듈 */
-  require("../src/routes/indexRoute")(app);
+// 정적 파일을 서빙하기 위해 front 디렉토리를 사용
+app.use(express.static(path.join(__dirname, '../../front')));
 
-  return app;
-};
+// 기본 경로에 대한 라우트 추가
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../front', 'index.html'));
+});
+
+app.post('/log', async (req, res) => {
+  logger.info('POST /log 요청 수신됨');
+  const { task_name, worker, task_result, task_cause } = req.body;
+  logger.info(`요청 바디: ${JSON.stringify(req.body)}`);
+  try {
+    const query = 'INSERT INTO work_log (task_name, worker, task_result, task_cause) VALUES (?, ?, ?, ?)';
+    await pool.query(query, [task_name, worker, task_result, task_cause]);
+    logger.info('작업 로그가 성공적으로 추가되었습니다.');
+    res.status(200).send('작업 로그가 성공적으로 추가되었습니다.');
+  } catch (err) {
+    logger.error('작업 로그 추가 중 오류:', err);
+    res.status(500).send('작업 로그 추가 실패.');
+  }
+});
+
+app.get('/logs', async (req, res) => {
+  try {
+    logger.info('작업 이력 목록 요청');
+    const [rows] = await pool.query('SELECT * FROM work_log');
+    res.status(200).json(rows);
+  } catch (err) {
+    logger.error('작업 이력 목록을 가져오는 중 오류 발생:', err);
+    res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
+  }
+});
+
+// 데이터베이스 연결 확인
+pool.getConnection()
+  .then(connection => {
+    console.log('데이터베이스 연결 성공');
+    connection.release();
+  })
+  .catch(err => {
+    console.error('데이터베이스 연결 실패:', err);
+  });
+
+module.exports = app;
