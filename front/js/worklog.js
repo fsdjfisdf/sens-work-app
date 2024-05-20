@@ -2,14 +2,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('worklogForm');
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    
+
     const task_name = document.getElementById('task_name').value;
     const worker = document.getElementById('worker').value;
     const task_result = document.getElementById('task_result').value;
     const task_cause = document.getElementById('task_cause').value;
 
     try {
-      const response = await axios.post(`${url}/log`, {
+      const response = await axios.post(`3.37.165.84/log`, {
         task_name,
         worker,
         task_result,
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadWorkLogs() {
     try {
-      const response = await axios.get(`${url}/logs`);
+      const response = await axios.get(`3.37.165.84/logs`);
       const logs = response.data;
 
       const tbody = document.querySelector('#worklog-table tbody');
