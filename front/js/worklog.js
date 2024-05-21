@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_cause = document.getElementById('task_cause').value;
 
     try {
-      const response = await axios.post(`http://localhost:3001/log`, {
+      const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
         worker,
         task_result,
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (response.status === 200) {
         alert('작업 로그가 성공적으로 추가되었습니다.');
-        loadWorkLogs(); // 작업 이력 목록을 다시 로드
+        loadWorkLogs();
       } else {
         alert('작업 로그 추가 중 오류가 발생했습니다.');
       }
@@ -30,11 +30,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadWorkLogs() {
     try {
-      const response = await axios.get(`http://localhost:3001/logs`);
+      const response = await axios.get(`http://3.37.165.84:3001/logs`);
       const logs = response.data;
 
       const tbody = document.querySelector('#worklog-table tbody');
-      tbody.innerHTML = ''; // 기존 내용을 지우고 새로 추가
+      tbody.innerHTML = '';
       logs.forEach(log => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -52,6 +52,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 초기 작업 이력 목록 로드
   loadWorkLogs();
 });

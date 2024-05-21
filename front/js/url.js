@@ -1,1 +1,1 @@
-const url = "http://localhost:3001"; // 서버 주소
+const url = "3.37.165.84"; // 서버 주소
