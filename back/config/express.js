@@ -7,13 +7,7 @@ const { logger } = require('./winston');
 
 const app = express();
 
-const corsOptions = {
-  origin: '*', // 필요한 경우 다시 변경
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
-
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
 
@@ -24,7 +18,6 @@ app.get('/', (req, res) => {
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause } = req.body;
-  logger.info(`요청 바디: ${JSON.stringify(req.body)}`);
   try {
     const query = 'INSERT INTO work_log (task_name, worker, task_result, task_cause) VALUES (?, ?, ?, ?)';
     await pool.query(query, [task_name, worker, task_result, task_cause]);
@@ -47,15 +40,4 @@ app.get('/logs', async (req, res) => {
   }
 });
 
-// 데이터베이스 연결 확인
-pool.getConnection()
-  .then(connection => {
-    console.log('데이터베이스 연결 성공');
-    connection.release();
-  })
-  .catch(err => {
-    console.error('데이터베이스 연결 실패:', err);
-  });
-
 module.exports = app;
-
