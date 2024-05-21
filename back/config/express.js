@@ -8,11 +8,10 @@ const { logger } = require('./winston');
 const app = express();
 
 const corsOptions = {
-  origin: 'http://3.37.165.84', // 필요한 출처 추가
+  origin: '*', // 필요한 경우 다시 변경
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
-
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
