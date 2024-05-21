@@ -1,7 +1,7 @@
 const expressApp = require('./config/express');
-const { logger } = require('./config/winston'); // log
+const { logger } = require('./config/winston');
 
-const port = 3001; // 포트 번호 확인
+const port = 3001;
 expressApp.listen(port, () => {
   logger.info(`API Server Start At Port ${port}`);
 });
