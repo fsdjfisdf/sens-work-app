@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, '../../front')));
 
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
-  const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, group, site, line, equipment_type, equipment_name } = req.body;
+  const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
 
   // 누락된 필드에 기본값 설정
   const taskDescription = task_description || '';
@@ -30,17 +30,19 @@ app.post('/log', async (req, res) => {
   const taskLine = line || 'SELECT';
   const taskEquipmentType = equipment_type || 'SELECT';
   const taskEquipmentName = equipment_name || '';
+  const taskWorkType = workType || 'SELECT';
+  const taskSetupItem = setupItem || 'SELECT';
   
   // 수정된 데이터 로그 출력
-  logger.info('수정된 요청 데이터:', { task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName });
+  logger.info('수정된 요청 데이터:', { task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
 
   try {
     const query = `
       INSERT INTO work_log 
-      (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, \`group\`, site, \`line\`, equipment_type, equipment_name) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName];
+    const values = [task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
     
     // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);
@@ -68,6 +70,7 @@ app.get('/logs', async (req, res) => {
     res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
   }
 });
+
 
 
 

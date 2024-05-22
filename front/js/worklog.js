@@ -39,12 +39,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       end_time = `${end_time}:00`; // 시간 값에 초 추가
     }
 
-    // GROUP, SITE, LINE, EQ 및 EQ Name 값 추가
+    // GROUP, SITE, LINE, EQ, EQ Name, WORKTYPE 및 SET UP ITEM 값 추가
     const group = document.getElementById('group').value;
     const site = document.getElementById('site').value;
     const line = document.getElementById('line').value;
     const equipment_type = document.getElementById('equipment_type').value;
     const equipment_name = document.getElementById('equipment_name').value;
+    const workType = document.getElementById('workType').value;
+    const setupItem = workType === 'SET UP' ? document.getElementById('additionalWorkType').value : 'SELECT';
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
@@ -60,7 +62,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       site,
       line,
       equipment_type,
-      equipment_name
+      equipment_name,
+      workType,
+      setupItem
     });
 
     try {
@@ -77,7 +81,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         site,
         line,
         equipment_type,
-        equipment_name
+        equipment_name,
+        workType,
+        setupItem
       }, {
         headers: {
           'Content-Type': 'application/json'
@@ -120,6 +126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.line}</td>
           <td>${log.equipment_type}</td>
           <td>${log.equipment_name}</td>
+          <td>${log.workType}</td>
+          <td>${log.setupItem}</td>
           <td>${log.timestamp}</td>
         `;
         tbody.appendChild(tr);
@@ -131,4 +139,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   loadWorkLogs();
+
+  // WORKTYPE 선택에 따라 추가 입력 항목 표시
+  document.getElementById('workType').addEventListener('change', function() {
+    const additionalOptions = document.getElementById('additionalOptions');
+    if (this.value === 'SET UP') {
+      additionalOptions.style.display = 'block';
+    } else {
+      additionalOptions.style.display = 'none';
+      document.getElementById('additionalWorkType').value = 'SELECT'; // SET UP ITEM 초기화
+    }
+  });
 });

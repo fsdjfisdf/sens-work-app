@@ -103,6 +103,34 @@
             <input type="text" id="equipment_name" name="equipment_name" required>
           </div>
           <div>
+            <label for="workType">WORKTYPE:</label>
+            <select id="workType" name="workType" required>
+              <option value="SELECT">SELECT</option>
+              <option value="SET UP">SET UP</option>
+              <option value="RELOCATION">RELOCATION</option>
+              <option value="MAINT">MAINT</option>
+            </select>
+          </div>
+          <div id="additionalOptions" class="additionalOption" style="display:none;">
+            <label for="additionalWorkType">SET UP ITEM:</label>
+            <select id="additionalWorkType" name="additionalWorkType">
+              <option value="SELECT">SELECT</option>
+              <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+              <option value="FAB IN">FAB IN</option>
+              <option value="DOCKING">DOCKING</option>
+              <option value="POWER TURN ON">POWER TURN ON</option>
+              <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+              <option value="GAS TURN ON">GAS TURN ON</option>
+              <option value="TEACHING">TEACHING</option>
+              <option value="PART INSTALLATION">PART INSTALLATION</option>
+              <option value="LEAK CHECK">LEAK CHECK</option>
+              <option value="TTTM">TTTM</option>
+              <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
+              <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+              <option value="MAINTENANCE">MAINTENANCE</option>
+            </select>
+          </div>
+          <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
@@ -129,6 +157,8 @@
               <th>LINE</th>
               <th>EQ</th>
               <th>EQ Name</th>
+              <th>WORKTYPE</th>
+              <th>SET UP ITEM</th>
               <th>타임스탬프</th>
             </tr>
           </thead>
