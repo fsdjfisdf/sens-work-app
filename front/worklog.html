@@ -81,6 +81,12 @@
             </select>
           </div>
           <div>
+            <label for="line">LINE:</label>
+            <select id="line" name="line" required>
+              <option value="SELECT">SELECT</option>
+            </select>
+          </div>
+          <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
@@ -104,6 +110,7 @@
               <th>작업 끝나는 시간</th>
               <th>GROUP</th>
               <th>SITE</th>
+              <th>LINE</th>
               <th>타임스탬프</th>
             </tr>
           </thead>
@@ -116,5 +123,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script src="./js/url.js"></script>
   <script src="./js/worklog.js"></script>
+  <script src="./js/site.js"></script> <!-- 새로 추가된 파일 -->
 </body>
 </html>

@@ -39,9 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       end_time = `${end_time}:00`; // 시간 값에 초 추가
     }
 
-    // GROUP과 SITE 값 추가
+    // GROUP, SITE 및 LINE 값 추가
     const group = document.getElementById('group').value;
     const site = document.getElementById('site').value;
+    const line = document.getElementById('line').value;
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
@@ -54,7 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       start_time,
       end_time,
       group,
-      site
+      site,
+      line
     });
 
     try {
@@ -68,7 +70,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         start_time,
         end_time,
         group,
-        site
+        site,
+        line
       }, {
         headers: {
           'Content-Type': 'application/json'
@@ -108,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.end_time}</td>
           <td>${log.group}</td>
           <td>${log.site}</td>
+          <td>${log.line}</td>
           <td>${log.timestamp}</td>
         `;
         tbody.appendChild(tr);
