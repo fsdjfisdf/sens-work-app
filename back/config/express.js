@@ -14,10 +14,12 @@ app.use(express.static(path.join(__dirname, '../../front')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../front', 'index.html'));
 });
-
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time } = req.body;
+  
+  // 요청 데이터 출력
+  console.log('수신된 요청 데이터:', req.body);
 
   // 누락된 필드에 기본값 설정
   const taskDescription = task_description || '';
