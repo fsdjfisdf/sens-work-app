@@ -61,6 +61,26 @@
             <input type="time" id="end_time" name="end_time" required>
           </div>
           <div>
+            <label for="group">GROUP:</label>
+            <select id="group" name="group" required>
+              <option value="SELECT">SELECT</option>
+              <option value="PEE1">PEE1</option>
+              <option value="PEE2">PEE2</option>
+              <option value="PEE3">PEE3</option>
+            </select>
+          </div>
+          <div>
+            <label for="site">SITE:</label>
+            <select id="site" name="site" required>
+              <option value="SELECT">SELECT</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+          <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
@@ -82,7 +102,8 @@
               <th>작업 날짜</th>
               <th>작업 시작 시간</th>
               <th>작업 끝나는 시간</th>
-              <th>작업 시간</th>
+              <th>GROUP</th>
+              <th>SITE</th>
               <th>타임스탬프</th>
             </tr>
           </thead>

@@ -13,29 +13,29 @@ app.use(express.static(path.join(__dirname, '../../front')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../front', 'index.html'));
-});app.post('/log', async (req, res) => {
+});
+app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
-  const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time } = req.body;
-  
-  // 요청 데이터 출력
-  console.log('수신된 요청 데이터:', req.body);
+  const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, group, site } = req.body;
 
   // 누락된 필드에 기본값 설정
   const taskDescription = task_description || '';
   const taskDate = task_date || '1970-01-01';
   const startTime = start_time || '00:00:00';
   const endTime = end_time || '00:00:00';
+  const taskGroup = group || 'SELECT';
+  const taskSite = site || 'SELECT';
   
   // 수정된 데이터 로그 출력
-  logger.info('수정된 요청 데이터:', { task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime });
+  logger.info('수정된 요청 데이터:', { task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite });
 
   try {
     const query = `
       INSERT INTO work_log 
-      (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, \`group\`, site) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime];
+    const values = [task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite];
     
     // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);
@@ -51,6 +51,7 @@ app.get('/', (req, res) => {
     res.status(500).send('작업 로그 추가 실패.');
   }
 });
+
 app.get('/logs', async (req, res) => {
   try {
     logger.info('작업 이력 목록 요청');
