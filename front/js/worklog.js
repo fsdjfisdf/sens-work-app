@@ -126,8 +126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.line}</td>
           <td>${log.equipment_type}</td>
           <td>${log.equipment_name}</td>
-          <td>${log.workType}</td>
-          <td>${log.setupItem}</td>
+          <td>${log.work_type}</td> <!-- 여기서 수정 -->
+          <td>${log.setup_item}</td> <!-- 여기서 수정 -->
           <td>${log.timestamp}</td>
         `;
         tbody.appendChild(tr);
