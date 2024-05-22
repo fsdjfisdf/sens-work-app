@@ -44,10 +44,12 @@
             <label for="task_cause">원인:</label>
             <input type="text" id="task_cause" name="task_cause" required>
           </div>
-          <div>
-            <label for="task_description">작업내용:</label>
-            <textarea id="task_description" name="task_description" required></textarea>
+          <div id="task-descriptions-container">
+            <label>작업내용:</label>
+            <textarea name="task_description" class="task-description-input" required></textarea>
           </div>
+          <button type="button" id="add-task-description">+</button>
+          <button type="button" id="remove-task-description" disabled>-</button>
           <div>
             <label for="task_date">작업 날짜:</label>
             <input type="date" id="task_date" name="task_date" required>
@@ -172,5 +174,6 @@
   <script src="./js/url.js"></script>
   <script src="./js/worklog.js"></script>
   <script src="./js/site.js"></script>
+  <script src="./js/addandremove.js"></script> <!-- 새로 추가된 파일 -->
 </body>
 </html>

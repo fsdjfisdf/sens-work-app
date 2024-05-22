@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const worker = document.getElementById('worker').value;
     const task_result = document.getElementById('task_result').value;
     const task_cause = document.getElementById('task_cause').value;
-    const task_description = document.getElementById('task_description').value || ''; // 빈 문자열로 기본값 설정
     
     // 날짜와 시간 값 형식화
     let task_date = document.getElementById('task_date').value;
@@ -48,13 +47,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const workType = document.getElementById('workType').value;
     const setupItem = workType === 'SET UP' ? document.getElementById('additionalWorkType').value : 'SELECT';
 
+    // 여러 task_description 값을 결합
+    const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join(',');
+
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
       worker,
       task_result,
       task_cause,
-      task_description,
+      taskDescriptions,
       task_date,
       start_time,
       end_time,
@@ -73,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         worker,
         task_result,
         task_cause,
-        task_description,
+        task_description: taskDescriptions, // 결합된 task_description 값 전송
         task_date,
         start_time,
         end_time,
@@ -126,8 +128,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.line}</td>
           <td>${log.equipment_type}</td>
           <td>${log.equipment_name}</td>
-          <td>${log.work_type}</td> <!-- 여기서 수정 -->
-          <td>${log.setup_item}</td> <!-- 여기서 수정 -->
+          <td>${log.work_type}</td>
+          <td>${log.setup_item}</td>
           <td>${log.timestamp}</td>
         `;
         tbody.appendChild(tr);
