@@ -18,9 +18,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_result = document.getElementById('task_result').value;
     const task_cause = document.getElementById('task_cause').value;
     const task_description = document.getElementById('task_description').value || ''; // 빈 문자열로 기본값 설정
-    const task_date = document.getElementById('task_date').value;
-    const start_time = document.getElementById('start_time').value || '00:00:00'; // 기본값 설정
-    const end_time = document.getElementById('end_time').value || '00:00:00'; // 기본값 설정
+    
+    // 날짜와 시간 값 형식화
+    let task_date = document.getElementById('task_date').value;
+    let start_time = document.getElementById('start_time').value;
+    let end_time = document.getElementById('end_time').value;
+
+    // 사파리 대응: 날짜와 시간 값 형식화 확인
+    if (!task_date) {
+      task_date = getTodayDate();
+    }
+    if (!start_time) {
+      start_time = '00:00:00';
+    } else {
+      start_time = `${start_time}:00`; // 시간 값에 초 추가
+    }
+    if (!end_time) {
+      end_time = '00:00:00';
+    } else {
+      end_time = `${end_time}:00`; // 시간 값에 초 추가
+    }
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
@@ -44,6 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         task_date,
         start_time,
         end_time
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.status === 200) {

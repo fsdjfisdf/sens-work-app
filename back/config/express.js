@@ -13,8 +13,7 @@ app.use(express.static(path.join(__dirname, '../../front')));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../front', 'index.html'));
-});
-app.post('/log', async (req, res) => {
+});app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time } = req.body;
   
@@ -52,7 +51,6 @@ app.post('/log', async (req, res) => {
     res.status(500).send('작업 로그 추가 실패.');
   }
 });
-
 app.get('/logs', async (req, res) => {
   try {
     logger.info('작업 이력 목록 요청');
