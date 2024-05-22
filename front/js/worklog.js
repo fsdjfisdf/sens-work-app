@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const task_name = document.getElementById('task_name').value;
     const worker = document.getElementById('worker').value;
-    
+
     const taskResults = Array.from(document.querySelectorAll('textarea[name="task_result[]"]')).map(input => input.value).join('\n');
     const taskCauses = Array.from(document.querySelectorAll('textarea[name="task_cause[]"]')).map(input => input.value).join('\n');
     const taskDescriptions = Array.from(document.querySelectorAll('textarea[name="task_description[]"]')).map(input => input.value).join('\n');
@@ -31,13 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (!start_time) {
       start_time = '00:00:00';
-    } else {
-      start_time = `${start_time}:00`;
     }
     if (!end_time) {
       end_time = '00:00:00';
-    } else {
-      end_time = `${end_time}:00`;
     }
 
     const group = document.getElementById('group').value;

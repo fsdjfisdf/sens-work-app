@@ -163,26 +163,27 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    function resetAndFillFields(field, values) {
-        const container = document.getElementById(`${field}Fields`);
-        container.innerHTML = ''; // 기존 필드 초기화
-        values.forEach(value => addField(field, value));
-      }
     
-      function addField(field, value = '') {
-        const container = document.getElementById(`${field}Fields`);
-        const newField = document.createElement('textarea');
-        newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
-        newField.className = `${field}-input`;
-        newField.value = value;
-        newField.required = true;
-        container.appendChild(newField);
-        updateRemoveButtonState(field);
-      }
-    
-      function updateRemoveButtonState(field) {
-        const container = document.getElementById(`${field}Fields`);
-        const removeButton = document.getElementById(`remove-${field}`);
-        removeButton.disabled = container.children.length === 1;
-      }
-    });
+  function resetAndFillFields(field, values) {
+    const container = document.getElementById(`${field}Fields`);
+    container.innerHTML = ''; // 기존 필드 초기화
+    values.forEach(value => addField(field, value));
+  }
+
+  function addField(field, value = '') {
+    const container = document.getElementById(`${field}Fields`);
+    const newField = document.createElement('textarea');
+    newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
+    newField.className = `${field}-input`;
+    newField.value = value;
+    newField.required = true;
+    container.appendChild(newField);
+    updateRemoveButtonState(field);
+  }
+
+  function updateRemoveButtonState(field) {
+    const container = document.getElementById(`${field}Fields`);
+    const removeButton = document.getElementById(`remove-${field}`);
+    removeButton.disabled = container.children.length === 1;
+  }
+});
