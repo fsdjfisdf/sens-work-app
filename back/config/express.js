@@ -17,7 +17,6 @@ app.use(express.static(path.join(__dirname, '../../front')));
 
 
 
-
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
