@@ -167,21 +167,21 @@ document.addEventListener('DOMContentLoaded', function() {
         resetAndFillFields('task_result', ['TTTM 완료']);
       }
     }
+  
     function resetAndFillFields(field, values) {
-        const container = document.getElementById(`${field}Fields`);
-        container.innerHTML = ''; // 기존 필드 초기화
-        values.forEach(value => addField(field, value));
+      const container = document.getElementById(`${field}Fields`);
+      container.innerHTML = ''; // 기존 필드 초기화
+      values.forEach(value => addField(field, value));
     }
-    
+  
     function addField(field, value) {
-        const container = document.getElementById(`${field}Fields`);
-        const newField = document.createElement('textarea');
-        newField.name = field; // 필드 이름 설정
-        newField.className = `${field}-input`;
-        newField.value = value;
-        newField.required = true;
-        container.appendChild(newField);
+      const container = document.getElementById(`${field}Fields`);
+      const newField = document.createElement('textarea');
+      newField.name = field;
+      newField.className = `${field}-input`;
+      newField.value = value;
+      newField.required = true;
+      container.appendChild(newField);
     }
-    
   });
   
