@@ -1,56 +1,37 @@
-// addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
-    window.addField = function(field, value = '') {
-      const container = document.getElementById(`${field}Fields`);
-      const newField = document.createElement('textarea');
-      newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
-      newField.className = `${field}-input`;
-      newField.value = value;
-      newField.required = true;
-      container.appendChild(newField);
-      updateRemoveButtonState(field);
+    function addRemoveFunctionality(addButtonId, removeButtonId, containerId, inputClass) {
+      const addButton = document.getElementById(addButtonId);
+      const removeButton = document.getElementById(removeButtonId);
+      const container = document.getElementById(containerId);
+  
+      addButton.addEventListener('click', function() {
+        const newInput = document.createElement('textarea');
+        newInput.name = inputClass;
+        newInput.className = inputClass;
+        newInput.required = true;
+        container.appendChild(newInput);
+        
+        // - 버튼 활성화
+        if (container.getElementsByClassName(inputClass).length > 1) {
+          removeButton.disabled = false;
+        }
+      });
+  
+      removeButton.addEventListener('click', function() {
+        const inputs = container.getElementsByClassName(inputClass);
+        if (inputs.length > 1) {
+          container.removeChild(inputs[inputs.length - 1]);
+        }
+        
+        // - 버튼 비활성화
+        if (inputs.length <= 1) {
+          removeButton.disabled = true;
+        }
+      });
     }
-    
-    window.removeField = function(field) {
-      const container = document.getElementById(`${field}Fields`);
-      if (container.children.length > 1) {
-        container.removeChild(container.lastChild);
-      }
-      updateRemoveButtonState(field);
-    }
-    
-    function updateRemoveButtonState(field) {
-      const container = document.getElementById(`${field}Fields`);
-      const removeButton = document.getElementById(`remove-${field}`);
-      removeButton.disabled = container.children.length === 1;
-    }
-    
-    document.getElementById('add-task-result').addEventListener('click', function() {
-      addField('task_result');
-    });
-    
-    document.getElementById('remove-task-result').addEventListener('click', function() {
-      removeField('task_result');
-    });
-    
-    document.getElementById('add-task-cause').addEventListener('click', function() {
-      addField('task_cause');
-    });
-    
-    document.getElementById('remove-task-cause').addEventListener('click', function() {
-      removeField('task_cause');
-    });
-    
-    document.getElementById('add-task-description').addEventListener('click', function() {
-      addField('task_description');
-    });
-    
-    document.getElementById('remove-task-description').addEventListener('click', function() {
-      removeField('task_description');
-    });
-    
-    updateRemoveButtonState('task_result');
-    updateRemoveButtonState('task_cause');
-    updateRemoveButtonState('task_description');
+  
+    addRemoveFunctionality('add-task-result', 'remove-task-result', 'task-results-container', 'task-result-input');
+    addRemoveFunctionality('add-task-cause', 'remove-task-cause', 'task-causes-container', 'task-cause-input');
+    addRemoveFunctionality('add-task-description', 'remove-task-description', 'task-descriptions-container', 'task-description-input');
   });
   
