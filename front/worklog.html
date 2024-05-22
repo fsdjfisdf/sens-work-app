@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>작업 이력</title>
   <link rel="stylesheet" href="./css/common.css">
+  <style>
+    .big-text {
+      font-size: 2em;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -37,6 +45,22 @@
             <input type="text" id="task_cause" name="task_cause" required>
           </div>
           <div>
+            <label for="task_description">작업내용:</label>
+            <textarea id="task_description" name="task_description" required></textarea>
+          </div>
+          <div>
+            <label for="task_date">작업 날짜:</label>
+            <input type="date" id="task_date" name="task_date" required>
+          </div>
+          <div>
+            <label for="start_time">작업 시작 시간:</label>
+            <input type="time" id="start_time" name="start_time" required>
+          </div>
+          <div>
+            <label for="end_time">작업 끝나는 시간:</label>
+            <input type="time" id="end_time" name="end_time" required>
+          </div>
+          <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
@@ -54,17 +78,20 @@
               <th>작업자</th>
               <th>결과</th>
               <th>원인</th>
+              <th>작업내용</th>
+              <th>작업 날짜</th>
+              <th>작업 시작 시간</th>
+              <th>작업 끝나는 시간</th>
+              <th>작업 시간</th>
               <th>타임스탬프</th>
             </tr>
           </thead>
           <tbody>
-            <!-- 작업 이력 데이터가 여기에 추가됩니다 -->
           </tbody>
         </table>
       </div>
     </section>
   </main>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script src="./js/url.js"></script>
   <script src="./js/worklog.js"></script>
