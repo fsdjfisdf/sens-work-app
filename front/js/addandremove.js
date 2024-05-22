@@ -1,6 +1,6 @@
 // addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
-    function addField(field, value = '') {
+    window.addField = function(field, value = '') {
       const container = document.getElementById(`${field}Fields`);
       const newField = document.createElement('textarea');
       newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
       updateRemoveButtonState(field);
     }
     
-    function removeField(field) {
+    window.removeField = function(field) {
       const container = document.getElementById(`${field}Fields`);
       if (container.children.length > 1) {
         container.removeChild(container.lastChild);
@@ -52,9 +52,5 @@ document.addEventListener('DOMContentLoaded', function() {
     updateRemoveButtonState('task_result');
     updateRemoveButtonState('task_cause');
     updateRemoveButtonState('task_description');
-  
-    // 함수들을 전역으로 노출
-    window.addField = addField;
-    window.removeField = removeField;
   });
   
