@@ -39,10 +39,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       end_time = `${end_time}:00`; // 시간 값에 초 추가
     }
 
-    // GROUP, SITE 및 LINE 값 추가
+    // GROUP, SITE, LINE, EQ 및 EQ Name 값 추가
     const group = document.getElementById('group').value;
     const site = document.getElementById('site').value;
     const line = document.getElementById('line').value;
+    const equipment_type = document.getElementById('equipment_type').value;
+    const equipment_name = document.getElementById('equipment_name').value;
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
@@ -56,7 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       end_time,
       group,
       site,
-      line
+      line,
+      equipment_type,
+      equipment_name
     });
 
     try {
@@ -71,7 +75,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         end_time,
         group,
         site,
-        line
+        line,
+        equipment_type,
+        equipment_name
       }, {
         headers: {
           'Content-Type': 'application/json'
@@ -112,6 +118,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.group}</td>
           <td>${log.site}</td>
           <td>${log.line}</td>
+          <td>${log.equipment_type}</td>
+          <td>${log.equipment_name}</td>
           <td>${log.timestamp}</td>
         `;
         tbody.appendChild(tr);

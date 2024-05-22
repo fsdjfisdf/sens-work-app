@@ -87,6 +87,22 @@
             </select>
           </div>
           <div>
+            <label for="equipment_type">EQ:</label>
+            <select id="equipment_type" name="equipment_type" required>
+              <option value="SELECT">SELECT</option>
+              <option value="SUPRA">SUPRA</option>
+              <option value="ZEDIUS">ZEDIUS</option>
+              <option value="INTEGER">INTEGER</option>
+              <option value="PRECIA">PRECIA</option>
+              <option value="ECOLITE">ECOLITE</option>
+              <option value="JENEVA">JENEVA</option>
+            </select>
+          </div>
+          <div>
+            <label for="equipment_name">EQ Name:</label>
+            <input type="text" id="equipment_name" name="equipment_name" required>
+          </div>
+          <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
@@ -111,6 +127,8 @@
               <th>GROUP</th>
               <th>SITE</th>
               <th>LINE</th>
+              <th>EQ</th>
+              <th>EQ Name</th>
               <th>타임스탬프</th>
             </tr>
           </thead>
@@ -123,6 +141,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script src="./js/url.js"></script>
   <script src="./js/worklog.js"></script>
-  <script src="./js/site.js"></script> <!-- 새로 추가된 파일 -->
+  <script src="./js/site.js"></script>
 </body>
 </html>
