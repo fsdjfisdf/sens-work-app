@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const task_name = document.getElementById('task_name').value;
     const worker = document.getElementById('worker').value;
-    
+
     // 여러 task_result 값을 줄바꿈으로 결합
     const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('\n');
     
