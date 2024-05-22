@@ -18,10 +18,9 @@ app.use(express.static(path.join(__dirname, '../../front')));
 
 
 
-
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
-  const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
+  const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
 
   // 누락된 필드에 기본값 설정
   const taskResult = task_result || '';
@@ -30,6 +29,8 @@ app.post('/log', async (req, res) => {
   const taskDate = task_date || '1970-01-01';
   const startTime = start_time || '00:00:00';
   const endTime = end_time || '00:00:00';
+  const noneTime = none_time || 0;
+  const moveTime = move_time || 0;
   const taskGroup = group || 'SELECT';
   const taskSite = site || 'SELECT';
   const taskLine = line || 'SELECT';
@@ -39,15 +40,15 @@ app.post('/log', async (req, res) => {
   const taskSetupItem = setupItem || 'SELECT';
   
   // 수정된 데이터 로그 출력
-  logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
+  logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
 
   try {
     const query = `
       INSERT INTO work_log 
-      (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
+    const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
     
     // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);

@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let task_date = document.getElementById('task_date').value;
     let start_time = document.getElementById('start_time').value;
     let end_time = document.getElementById('end_time').value;
+    const noneTime = document.getElementById('noneTime').value;
+    const moveTime = document.getElementById('moveTime').value;
 
     // 사파리 대응: 날짜와 시간 값 형식화 확인
     if (!task_date) {
@@ -62,6 +64,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       task_date,
       start_time,
       end_time,
+      noneTime,
+      moveTime,
       group,
       site,
       line,
@@ -81,6 +85,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         task_date,
         start_time,
         end_time,
+        none_time: noneTime,
+        move_time: moveTime,
         group,
         site,
         line,
@@ -125,6 +131,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.task_date}</td>
           <td>${log.start_time}</td>
           <td>${log.end_time}</td>
+          <td>${log.none_time}</td>
+          <td>${log.move_time}</td>
           <td>${log.group}</td>
           <td>${log.site}</td>
           <td>${log.line}</td>
