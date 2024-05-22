@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-    function addField(field) {
+    function addField(field, value = '') {
       const container = document.getElementById(`${field}Fields`);
       const newField = document.createElement('textarea');
       newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
       newField.className = `${field}-input`;
+      newField.value = value;
       newField.required = true;
       container.appendChild(newField);
       updateRemoveButtonState(field);

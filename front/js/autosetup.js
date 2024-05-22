@@ -1,11 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('workType').addEventListener('change', function() {
-      updateFieldsBasedOnSelection();
-    });
-  
-    document.getElementById('additionalWorkType').addEventListener('change', function() {
-      updateFieldsBasedOnSelection();
-    });
+    document.getElementById('workType').addEventListener('change', updateFieldsBasedOnSelection);
+    document.getElementById('additionalWorkType').addEventListener('change', updateFieldsBasedOnSelection);
   
     function updateFieldsBasedOnSelection() {
       const workType = document.getElementById('workType').value;
@@ -168,32 +163,26 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-  function resetAndFillFields(field, values) {
-    const container = document.getElementById(`${field}Fields`);
-    container.innerHTML = ''; // 기존 필드 초기화
-    values.forEach(value => addField(field, value));
-  }
-
-  function addField(field, value) {
-    const container = document.getElementById(`${field}Fields`);
-    const newField = document.createElement('textarea');
-    newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
-    newField.className = `${field}-input`;
-    newField.value = value || '';
-    newField.required = true;
-    container.appendChild(newField);
-    updateRemoveButtonState(field);
-  }
-
-  function updateRemoveButtonState(field) {
-    const container = document.getElementById(`${field}Fields`);
-    const removeButton = document.getElementById(`remove-${field}`);
-    removeButton.disabled = container.children.length === 1;
-  }
-
-  // 초기 상태 업데이트
-  updateRemoveButtonState('task_result');
-  updateRemoveButtonState('task_cause');
-  updateRemoveButtonState('task_description');
-});
-  
+    function resetAndFillFields(field, values) {
+        const container = document.getElementById(`${field}Fields`);
+        container.innerHTML = ''; // 기존 필드 초기화
+        values.forEach(value => addField(field, value));
+      }
+    
+      function addField(field, value) {
+        const container = document.getElementById(`${field}Fields`);
+        const newField = document.createElement('textarea');
+        newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
+        newField.className = `${field}-input`;
+        newField.value = value || '';
+        newField.required = true;
+        container.appendChild(newField);
+        updateRemoveButtonState(field);
+      }
+    
+      function updateRemoveButtonState(field) {
+        const container = document.getElementById(`${field}Fields`);
+        const removeButton = document.getElementById(`remove-${field}`);
+        removeButton.disabled = container.children.length === 1;
+      }
+    });
