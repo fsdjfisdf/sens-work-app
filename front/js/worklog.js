@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const worker = document.getElementById('worker').value;
     const task_result = document.getElementById('task_result').value;
     const task_cause = document.getElementById('task_cause').value;
-    const task_description = document.getElementById('task_description').value || '';
+    const task_description = document.getElementById('task_description').value || ''; // 빈 문자열로 기본값 설정
     const task_date = document.getElementById('task_date').value;
-    const start_time = document.getElementById('start_time').value || '00:00:00';
-    const end_time = document.getElementById('end_time').value || '00:00:00';
+    const start_time = document.getElementById('start_time').value || '00:00:00'; // 기본값 설정
+    const end_time = document.getElementById('end_time').value || '00:00:00'; // 기본값 설정
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {

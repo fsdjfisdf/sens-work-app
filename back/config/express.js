@@ -14,13 +14,19 @@ app.use(express.static(path.join(__dirname, '../../front')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../../front', 'index.html'));
 });
+
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time } = req.body;
-  logger.info('요청 데이터:', req.body);
 
-  // 전송된 데이터 콘솔 출력
-  console.log('전송 데이터:', req.body);
+  // 누락된 필드에 기본값 설정
+  const taskDescription = task_description || '';
+  const taskDate = task_date || '1970-01-01';
+  const startTime = start_time || '00:00:00';
+  const endTime = end_time || '00:00:00';
+  
+  // 수정된 데이터 로그 출력
+  logger.info('수정된 요청 데이터:', { task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime });
 
   try {
     const query = `
@@ -28,7 +34,9 @@ app.post('/log', async (req, res) => {
       (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time];
+    const values = [task_name, worker, task_result, task_cause, taskDescription, taskDate, startTime, endTime];
+    
+    // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);
     logger.info('쿼리 값:', values);
 
