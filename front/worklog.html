@@ -40,7 +40,7 @@
           <div id="task-results-container">
             <label>결과:</label>
             <div id="task_resultFields">
-              <textarea name="task_result" class="task-result-input" required></textarea>
+              <textarea name="task_result[]" class="task-result-input" required></textarea>
             </div>
             <button type="button" id="add-task-result">+</button>
             <button type="button" id="remove-task-result" disabled>-</button>
@@ -49,7 +49,7 @@
           <div id="task-causes-container">
             <label>원인:</label>
             <div id="task_causeFields">
-              <textarea name="task_cause" class="task-cause-input" required></textarea>
+              <textarea name="task_cause[]" class="task-cause-input" required></textarea>
             </div>
             <button type="button" id="add-task-cause">+</button>
             <button type="button" id="remove-task-cause" disabled>-</button>
@@ -58,7 +58,7 @@
           <div id="task-descriptions-container">
             <label>작업내용:</label>
             <div id="task_descriptionFields">
-              <textarea name="task_description" class="task-description-input" required></textarea>
+              <textarea name="task_description[]" class="task-description-input" required></textarea>
             </div>
             <button type="button" id="add-task-description">+</button>
             <button type="button" id="remove-task-description" disabled>-</button>
@@ -198,7 +198,7 @@
   <script src="./js/url.js"></script>
   <script src="./js/worklog.js"></script>
   <script src="./js/site.js"></script>
-  <script src="./js/addandremove.js"></script> <!-- 새로 추가된 파일 -->
-  <script src="./js/autosetup.js"></script> <!-- 새로운 파일 -->
+  <script src="./js/addandremove.js"></script>
+  <script src="./js/autosetup.js"></script>
 </body>
 </html>

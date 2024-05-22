@@ -1,35 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 결과 추가/제거
-    document.getElementById('add-task-result').addEventListener('click', function() {
-      addField('task_result');
-    });
-  
-    document.getElementById('remove-task-result').addEventListener('click', function() {
-      removeField('task_result');
-    });
-  
-    // 원인 추가/제거
-    document.getElementById('add-task-cause').addEventListener('click', function() {
-      addField('task_cause');
-    });
-  
-    document.getElementById('remove-task-cause').addEventListener('click', function() {
-      removeField('task_cause');
-    });
-  
-    // 작업 내용 추가/제거
-    document.getElementById('add-task-description').addEventListener('click', function() {
-      addField('task_description');
-    });
-  
-    document.getElementById('remove-task-description').addEventListener('click', function() {
-      removeField('task_description');
-    });
-  
     function addField(field) {
       const container = document.getElementById(`${field}Fields`);
       const newField = document.createElement('textarea');
-      newField.name = field;
+      newField.name = `${field}[]`; // 배열로 전송하기 위해 name 속성을 배열 형태로 변경
       newField.className = `${field}-input`;
       newField.required = true;
       container.appendChild(newField);
@@ -50,7 +23,30 @@ document.addEventListener('DOMContentLoaded', function() {
       removeButton.disabled = container.children.length === 1;
     }
   
-    // 초기 상태 업데이트
+    document.getElementById('add-task-result').addEventListener('click', function() {
+      addField('task_result');
+    });
+  
+    document.getElementById('remove-task-result').addEventListener('click', function() {
+      removeField('task_result');
+    });
+  
+    document.getElementById('add-task-cause').addEventListener('click', function() {
+      addField('task_cause');
+    });
+  
+    document.getElementById('remove-task-cause').addEventListener('click', function() {
+      removeField('task_cause');
+    });
+  
+    document.getElementById('add-task-description').addEventListener('click', function() {
+      addField('task_description');
+    });
+  
+    document.getElementById('remove-task-description').addEventListener('click', function() {
+      removeField('task_description');
+    });
+  
     updateRemoveButtonState('task_result');
     updateRemoveButtonState('task_cause');
     updateRemoveButtonState('task_description');
