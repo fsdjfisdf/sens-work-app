@@ -1,3 +1,4 @@
+// addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
     function addField(field, value = '') {
       const container = document.getElementById(`${field}Fields`);
@@ -9,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
       container.appendChild(newField);
       updateRemoveButtonState(field);
     }
-  
+    
     function removeField(field) {
       const container = document.getElementById(`${field}Fields`);
       if (container.children.length > 1) {
@@ -17,39 +18,43 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       updateRemoveButtonState(field);
     }
-  
+    
     function updateRemoveButtonState(field) {
       const container = document.getElementById(`${field}Fields`);
       const removeButton = document.getElementById(`remove-${field}`);
       removeButton.disabled = container.children.length === 1;
     }
-  
+    
     document.getElementById('add-task-result').addEventListener('click', function() {
       addField('task_result');
     });
-  
+    
     document.getElementById('remove-task-result').addEventListener('click', function() {
       removeField('task_result');
     });
-  
+    
     document.getElementById('add-task-cause').addEventListener('click', function() {
       addField('task_cause');
     });
-  
+    
     document.getElementById('remove-task-cause').addEventListener('click', function() {
       removeField('task_cause');
     });
-  
+    
     document.getElementById('add-task-description').addEventListener('click', function() {
       addField('task_description');
     });
-  
+    
     document.getElementById('remove-task-description').addEventListener('click', function() {
       removeField('task_description');
     });
-  
+    
     updateRemoveButtonState('task_result');
     updateRemoveButtonState('task_cause');
     updateRemoveButtonState('task_description');
+  
+    // 함수들을 전역으로 노출
+    window.addField = addField;
+    window.removeField = removeField;
   });
   
