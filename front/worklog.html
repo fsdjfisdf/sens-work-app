@@ -36,20 +36,28 @@
             <label for="worker">작업자:</label>
             <input type="text" id="worker" name="worker" required>
           </div>
-          <div>
-            <label for="task_result">결과:</label>
-            <input type="text" id="task_result" name="task_result" required>
+
+          <div id="task-results-container">
+            <label>결과:</label>
+            <textarea name="task_result" class="task-result-input" required></textarea>
+            <button type="button" id="add-task-result">+</button>
+            <button type="button" id="remove-task-result" disabled>-</button>
           </div>
-          <div>
-            <label for="task_cause">원인:</label>
-            <input type="text" id="task_cause" name="task_cause" required>
+
+          <div id="task-causes-container">
+            <label>원인:</label>
+            <textarea name="task_cause" class="task-cause-input" required></textarea>
+            <button type="button" id="add-task-cause">+</button>
+            <button type="button" id="remove-task-cause" disabled>-</button>
           </div>
+
           <div id="task-descriptions-container">
             <label>작업내용:</label>
             <textarea name="task_description" class="task-description-input" required></textarea>
+            <button type="button" id="add-task-description">+</button>
+            <button type="button" id="remove-task-description" disabled>-</button>
           </div>
-          <button type="button" id="add-task-description">+</button>
-          <button type="button" id="remove-task-description" disabled>-</button>
+
           <div>
             <label for="task_date">작업 날짜:</label>
             <input type="date" id="task_date" name="task_date" required>

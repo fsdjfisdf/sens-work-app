@@ -1,31 +1,37 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const addTaskDescriptionButton = document.getElementById('add-task-description');
-    const removeTaskDescriptionButton = document.getElementById('remove-task-description');
-    const taskDescriptionsContainer = document.getElementById('task-descriptions-container');
+    function addRemoveFunctionality(addButtonId, removeButtonId, containerId, inputClass) {
+      const addButton = document.getElementById(addButtonId);
+      const removeButton = document.getElementById(removeButtonId);
+      const container = document.getElementById(containerId);
   
-    addTaskDescriptionButton.addEventListener('click', function() {
-      const newTaskDescription = document.createElement('textarea');
-      newTaskDescription.name = 'task_description';
-      newTaskDescription.className = 'task-description-input';
-      newTaskDescription.required = true;
-      taskDescriptionsContainer.appendChild(newTaskDescription);
-      
-      // - 버튼 활성화
-      if (taskDescriptionsContainer.getElementsByClassName('task-description-input').length > 1) {
-        removeTaskDescriptionButton.disabled = false;
-      }
-    });
+      addButton.addEventListener('click', function() {
+        const newInput = document.createElement('textarea');
+        newInput.name = inputClass;
+        newInput.className = inputClass;
+        newInput.required = true;
+        container.appendChild(newInput);
+        
+        // - 버튼 활성화
+        if (container.getElementsByClassName(inputClass).length > 1) {
+          removeButton.disabled = false;
+        }
+      });
   
-    removeTaskDescriptionButton.addEventListener('click', function() {
-      const taskDescriptions = taskDescriptionsContainer.getElementsByClassName('task-description-input');
-      if (taskDescriptions.length > 1) {
-        taskDescriptionsContainer.removeChild(taskDescriptions[taskDescriptions.length - 1]);
-      }
-      
-      // - 버튼 비활성화
-      if (taskDescriptions.length <= 1) {
-        removeTaskDescriptionButton.disabled = true;
-      }
-    });
+      removeButton.addEventListener('click', function() {
+        const inputs = container.getElementsByClassName(inputClass);
+        if (inputs.length > 1) {
+          container.removeChild(inputs[inputs.length - 1]);
+        }
+        
+        // - 버튼 비활성화
+        if (inputs.length <= 1) {
+          removeButton.disabled = true;
+        }
+      });
+    }
+  
+    addRemoveFunctionality('add-task-result', 'remove-task-result', 'task-results-container', 'task-result-input');
+    addRemoveFunctionality('add-task-cause', 'remove-task-cause', 'task-causes-container', 'task-cause-input');
+    addRemoveFunctionality('add-task-description', 'remove-task-description', 'task-descriptions-container', 'task-description-input');
   });
   

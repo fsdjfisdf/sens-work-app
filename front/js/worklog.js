@@ -15,10 +15,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const task_name = document.getElementById('task_name').value;
     const worker = document.getElementById('worker').value;
-    const task_result = document.getElementById('task_result').value;
-    const task_cause = document.getElementById('task_cause').value;
     
-    // 날짜와 시간 값 형식화
+    // 여러 task_result 값을 줄바꿈으로 결합
+    const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('\n');
+    
+    // 여러 task_cause 값을 줄바꿈으로 결합
+    const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
+
+    // 여러 task_description 값을 줄바꿈으로 결합
+    const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
+
     let task_date = document.getElementById('task_date').value;
     let start_time = document.getElementById('start_time').value;
     let end_time = document.getElementById('end_time').value;
@@ -38,7 +44,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       end_time = `${end_time}:00`; // 시간 값에 초 추가
     }
 
-    // GROUP, SITE, LINE, EQ, EQ Name, WORKTYPE 및 SET UP ITEM 값 추가
     const group = document.getElementById('group').value;
     const site = document.getElementById('site').value;
     const line = document.getElementById('line').value;
@@ -47,16 +52,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const workType = document.getElementById('workType').value;
     const setupItem = workType === 'SET UP' ? document.getElementById('additionalWorkType').value : 'SELECT';
 
-    // 여러 task_description 값을 결합
-    const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join(',');
-
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
       worker,
-      task_result,
-      task_cause,
-      taskDescriptions,
+      task_result: taskResults,
+      task_cause: taskCauses,
+      task_description: taskDescriptions,
       task_date,
       start_time,
       end_time,
@@ -73,8 +75,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
         worker,
-        task_result,
-        task_cause,
+        task_result: taskResults, // 결합된 task_result 값 전송
+        task_cause: taskCauses, // 결합된 task_cause 값 전송
         task_description: taskDescriptions, // 결합된 task_description 값 전송
         task_date,
         start_time,
