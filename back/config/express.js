@@ -4,6 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const { pool } = require('./database');
 const { logger } = require('./winston');
+const indexRoute = require('./routes/indexRoute');
 
 const app = express();
 
@@ -11,10 +12,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
 
-
-
-
-
+app.use('/', indexRoute);
 
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
@@ -74,15 +72,5 @@ app.get('/logs', async (req, res) => {
     res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
   }
 });
-
-
-
-
-
-
-
-
-
-
 
 module.exports = app;

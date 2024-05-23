@@ -13,7 +13,7 @@ async function signIn(event) {
   try {
     const signInReturn = await axios({
       method: "post",
-      url: url + "/sign-in",
+      url: url + "/sign-in", // URL이 중복되지 않도록 확인
       data: { userID: parseInt(userID), password: password }, // userID를 정수형으로 변환
     });
 
