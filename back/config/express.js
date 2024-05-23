@@ -1,27 +1,21 @@
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const morgan = require('morgan'); // 추가
+const morgan = require('morgan');
 const { pool } = require('./database');
 const { logger } = require('./winston');
+
+const indexRoute = require('../src/routes/indexRoute'); // 경로 확인
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
-app.use(morgan('combined')); // 추가
+app.use(morgan('combined'));
+
 app.use('/', indexRoute);
-
-
-const indexRoute = require('../src/routes/indexRoute'); // 경로 확인
-
-
-
-
-
 
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
@@ -82,20 +76,4 @@ app.get('/logs', async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
 module.exports = app;
-
-
-
-
-
-
