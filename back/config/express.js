@@ -13,6 +13,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
 app.use(morgan('combined')); // 추가
+app.use('/', indexRoute);
+
+
+const indexRoute = require('../src/routes/indexRoute'); // 경로 확인
 
 
 
