@@ -1,4 +1,4 @@
-const { pool } = require('../../config/database'); // 상대 경로 수정
+const { pool } = require('../../config/database');
 const bcrypt = require('bcrypt');
 
 exports.createUser = async (username, password, nickname) => {

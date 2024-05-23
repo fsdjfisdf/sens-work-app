@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const workLogController = require('../controllers/indexController');
+const workLogController = require('../controllers/workLogController'); // 올바른 컨트롤러 경로
 const userController = require('../controllers/userController');
 
 // 작업 이력 조회
