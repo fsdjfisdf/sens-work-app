@@ -5,16 +5,20 @@ const secret = require('../../config/secret');
 
 exports.register = async (req, res) => {
   const { username, password, nickname } = req.body;
+  logger.info('Register request received:', { username, password, nickname });
 
   try {
     const existingUser = await userDao.getUserByUsername(username);
     if (existingUser) {
+      logger.info('Username already exists:', username);
       return res.status(400).json({ message: 'Username already exists' });
     }
 
     await userDao.createUser(username, password, nickname);
+    logger.info('User registered successfully:', { username, nickname });
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
+    logger.error('Error during user registration:', err);
     res.status(500).json({ error: err.message });
   }
 };
