@@ -30,6 +30,9 @@ exports.createJwt = async function (req, res) {
   try {
     const connection = await pool.getConnection(async (conn) => conn);
     try {
+      // 로그를 추가하여 데이터를 확인합니다.
+      logger.info(`로그인 요청 - userID: ${userID}, password: ${password}`);
+
       // DB 회원 검증
       const [rows] = await indexDao.isValidUsers(connection, userID, password);
 

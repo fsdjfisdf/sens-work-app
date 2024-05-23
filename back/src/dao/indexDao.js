@@ -6,6 +6,5 @@ exports.isValidUsers = async function (connection, userID, password) {
   const Params = [userID, password];
 
   const [rows] = await connection.query(Query, Params);
-
   return rows;
 };

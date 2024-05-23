@@ -13,8 +13,8 @@ async function signIn(event) {
   try {
     const signInReturn = await axios({
       method: "post",
-      url: url + "/sign-in", // 올바른 URL로 수정
-      data: { userID: userID, password: password },
+      url: url + "/sign-in",
+      data: { userID: parseInt(userID), password: password }, // userID를 정수형으로 변환
     });
 
     const isValidSignIn = signInReturn.data.code == 200;
