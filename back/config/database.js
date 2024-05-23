@@ -1,6 +1,7 @@
 const mysql = require('mysql2/promise');
 const { logger } = require('./winston');
 const secret = require('./secret');
+const bcrypt = require('bcrypt');
 
 console.log('Database Config:', secret);
 
@@ -28,6 +29,20 @@ async function checkDatabase() {
 
 checkDatabase();
 
+async function insertUser(username, password, nickname) {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const query = 'INSERT INTO users (username, password, nickname) VALUES (?, ?, ?)';
+    await connection.query(query, [username, hashedPassword, nickname]);
+  } catch (err) {
+    throw new Error(`사용자 추가 중 오류 발생: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
   pool: pool,
+  insertUser: insertUser,
 };
