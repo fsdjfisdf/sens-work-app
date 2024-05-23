@@ -13,7 +13,7 @@ async function signIn(event) {
   try {
     const signInReturn = await axios({
       method: "post",
-      url: url + "/sign-in",
+      url: url + "/sign-in", // 올바른 URL로 수정
       data: { userID: userID, password: password },
     });
 
