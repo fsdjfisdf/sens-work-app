@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const workLogController = require('../controllers/workLogController'); // 작업 이력 컨트롤러 경로
-const userController = require('../controllers/userController'); // 사용자 컨트롤러 경로
+const workLogController = require('../controllers/workLogController'); // 올바른 경로
+const userController = require('../controllers/userController'); // 올바른 경로
 
 // 작업 이력 조회
 router.get('/work-logs', workLogController.getWorkLogs);

@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { pool } = require('../../config/database'); // 올바른 경로
 
 exports.getWorkLogs = async () => {
   const connection = await pool.getConnection(async conn => conn);
@@ -17,7 +17,7 @@ exports.addWorkLog = async (task_name, worker, task_result, task_cause, task_des
   try {
     const query = `
       INSERT INTO work_log (
-        task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, line, equipment_type, equipment_name, work_type, setup_item
+        task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, work_type, setup_item];
