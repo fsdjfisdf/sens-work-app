@@ -6,19 +6,18 @@ const cors = require('cors');
 const path = require('path');
 const { pool } = require('./database');
 const { logger } = require('./winston');
-var cors = require("cors");
 
 const app = express();
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '../../front')));
+// 미들웨어 설정
+app.use(compression()); // HTTP 요청을 압축 및 해제
+app.use(bodyParser.json()); // JSON 요청 본문을 파싱
+app.use(bodyParser.urlencoded({ extended: true })); // URL-encoded 요청 본문을 파싱
+app.use(methodOverride()); // PUT, DELETE 요청을 처리
+app.use(cors()); // CORS 설정 관리
+app.use(express.static(path.join(__dirname, '../../front'))); // 정적 파일 제공
 
-
-
-
-
-
+// 작업 로그 추가
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
@@ -39,7 +38,7 @@ app.post('/log', async (req, res) => {
   const taskEquipmentName = equipment_name || '';
   const taskWorkType = workType || 'SELECT';
   const taskSetupItem = setupItem || 'SELECT';
-  
+
   // 수정된 데이터 로그 출력
   logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
 
@@ -50,7 +49,7 @@ app.post('/log', async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
-    
+
     // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);
     logger.info('쿼리 값:', values);
@@ -66,6 +65,7 @@ app.post('/log', async (req, res) => {
   }
 });
 
+// 작업 로그 목록 조회
 app.get('/logs', async (req, res) => {
   try {
     logger.info('작업 이력 목록 요청');
@@ -78,24 +78,13 @@ app.get('/logs', async (req, res) => {
   }
 });
 
+// 라우트 설정
+require("../src/routes/indexRoute")(app);
+
+// 서버 시작
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
 module.exports = app;
-
-
-
-module.exports = function () {
-  const app = express();
-
-  /* 미들웨어 설정 */
-  app.use(compression()); // HTTP 요청을 압축 및 해제
-  app.use(express.json()); // body값을 파싱
-  app.use(express.urlencoded({ extended: true })); // form 으로 제출되는 값 파싱
-  app.use(methodOverride()); // put, delete 요청 처리
-  app.use(cors()); // 웹브라우저 cors 설정을 관리
-  app.use(express.static("/home/ubuntu/food-map-dist-example/front")); // express 정적 파일 제공 (html, css, js 등..)
-  // app.use(express.static(process.cwd() + '/public'));
-
-  /* 직접 구현해야 하는 모듈 */
-  require("../src/routes/indexRoute")(app);
-
-  return app;
-};
