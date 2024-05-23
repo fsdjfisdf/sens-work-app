@@ -1,14 +1,13 @@
-const jwt = require("jsonwebtoken");
-const secret_config = require("./secret");
+const jwt = require('jsonwebtoken');
+const secret_config = require('./secret');
+
 const jwtMiddleware = function (req, res, next) {
-  // read the token from header or url
-  const token = req.headers["x-access-token"] || req.query.token;
-  // token does not exist
+  const token = req.headers['x-access-token'] || req.query.token;
   if (!token) {
     return res.status(403).json({
       isSuccess: false,
       code: 403,
-      message: "로그인이 되어 있지 않습니다.",
+      message: '로그인이 되어 있지 않습니다.',
     });
   }
 
@@ -20,7 +19,7 @@ const jwtMiddleware = function (req, res, next) {
     res.status(403).json({
       isSuccess: false,
       code: 403,
-      message: "검증 실패",
+      message: '검증 실패',
     });
   }
 };
