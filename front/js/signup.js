@@ -1,11 +1,11 @@
-document.getElementById('signup-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
+document.getElementById('signup-form').addEventListener('submit', async function(event) {
+  event.preventDefault();
+  
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   const nickname = document.getElementById('nickname').value;
 
-  const response = await fetch('http://3.37.165.84:3001/signup', {
+  const response = await fetch('http://3.37.165.84:3001/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -13,14 +13,14 @@ document.getElementById('signup-form').addEventListener('submit', async (e) => {
     body: JSON.stringify({ username, password, nickname })
   });
 
-  const messageDiv = document.getElementById('message');
+  const result = await response.json();
   
+  const messageElement = document.getElementById('message');
   if (response.ok) {
-    messageDiv.textContent = '회원가입이 성공적으로 완료되었습니다.';
-    messageDiv.style.color = 'green';
+    messageElement.textContent = 'User registered successfully!';
+    messageElement.style.color = 'green';
   } else {
-    const errorText = await response.text();
-    messageDiv.textContent = `회원가입 중 오류가 발생했습니다: ${errorText}`;
-    messageDiv.style.color = 'red';
+    messageElement.textContent = result.message || 'Registration failed!';
+    messageElement.style.color = 'red';
   }
 });
