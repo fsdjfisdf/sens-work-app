@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
+const morgan = require('morgan'); // 추가
 const { pool } = require('./database');
 const { logger } = require('./winston');
 
@@ -11,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
+app.use(morgan('combined')); // 추가
 
 
 
