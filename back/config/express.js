@@ -6,7 +6,7 @@ const morgan = require('morgan');
 const { pool } = require('./database');
 const { logger } = require('./winston');
 
-const indexRoute = require('../src/routes/indexRoute'); // 경로 확인
+const indexRoute = require('../src/routes/indexRoute');
 
 const app = express();
 
@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
 app.use(morgan('combined'));
 
-app.use('/', indexRoute); // 라우트를 사용합니다.
+app.use('/', indexRoute);
 
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
@@ -70,6 +70,12 @@ app.get('/logs', async (req, res) => {
     logger.error('작업 이력 목록을 가져오는 중 오류 발생:', err);
     res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
   }
+});
+
+// 에러 핸들러 추가
+app.use((err, req, res, next) => {
+  logger.error(`Global error handler: ${err.message}`);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
 
 module.exports = app;
