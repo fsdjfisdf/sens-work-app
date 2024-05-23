@@ -1,3 +1,4 @@
+
 const { pool } = require('../../config/database'); // 올바른 경로
 
 exports.getWorkLogs = async () => {

@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const secret = require('../../config/secret');
 
+// 사용자 등록
 exports.register = async (req, res) => {
   const { username, password, nickname } = req.body;
 
@@ -19,6 +20,7 @@ exports.register = async (req, res) => {
   }
 };
 
+// 사용자 로그인
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
