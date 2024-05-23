@@ -1,4 +1,4 @@
-const workLogDao = require('../dao/workLogDao'); // 경로 수정
+const workLogDao = require('../dao/workLogDao');
 
 exports.getWorkLogs = async (req, res) => {
   try {
