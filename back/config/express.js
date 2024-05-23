@@ -6,7 +6,7 @@ const morgan = require('morgan');
 const { pool } = require('./database');
 const { logger } = require('./winston');
 
-const indexRoute = require('../src/routes/indexRoute'); // 올바른 경로 확인
+const indexRoute = require('../src/routes/indexRoute'); // 경로 확인
 
 const app = express();
 
