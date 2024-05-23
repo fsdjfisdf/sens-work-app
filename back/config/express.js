@@ -1,3 +1,4 @@
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -13,7 +14,10 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
 app.use(morgan('combined')); // 추가
 
-app.use('/', indexRoute);
+
+
+
+
 
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
@@ -74,4 +78,20 @@ app.get('/logs', async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
 module.exports = app;
+
+
+
+
+
+
