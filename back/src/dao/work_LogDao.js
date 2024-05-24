@@ -12,15 +12,15 @@ exports.getWorkLogs = async () => {
   }
 };
 
-exports.addWorkLog = async (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, work_type, setup_item) => {
+exports.addWorkLog = async (task_name, status, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, work_type, setup_item) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
     const query = `
       INSERT INTO work_log (
-        task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, line, equipment_type, equipment_name, work_type, setup_item
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        task_name, status, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, line, equipment_type, equipment_name, work_type, setup_item
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, work_type, setup_item];
+    const values = [task_name, status, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, work_type, setup_item];
     await connection.query(query, values);
   } catch (err) {
     throw new Error(`Error adding work log: ${err.message}`);
