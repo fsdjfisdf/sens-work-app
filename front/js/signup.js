@@ -21,6 +21,13 @@ async function signup(event) {
   const group = document.querySelector("#group").value;
   const site = document.querySelector("#site").value;
   const level = document.querySelector("#level").value;
+  const mainSetUpCapa = parseFloat(document.querySelector("#mainSetUpCapa").value) || 0;
+  const mainMaintCapa = parseFloat(document.querySelector("#mainMaintCapa").value) || 0;
+  const multiSetUpCapa = parseFloat(document.querySelector("#multiSetUpCapa").value) || 0;
+  const multiMaintCapa = parseFloat(document.querySelector("#multiMaintCapa").value) || 0;
+  const mainCapa = (mainSetUpCapa + mainMaintCapa) / 2;
+  const multiCapa = (multiSetUpCapa + multiMaintCapa) / 2;
+  const totalCapa = (mainSetUpCapa + mainMaintCapa + multiCapa) / 3;
 
   // 2. #email, #password, nickname 값 확인 (정규표현식 확인)
   const userIDRegExp = /^[a-z]+[a-z0-9]{5,19}$/; // 아이디 정규식 영문자로 시작하는 영문자 또는 숫자 6-20
@@ -42,7 +49,7 @@ async function signup(event) {
     method: "post", // http method
     url: "http://3.37.165.84:3001/sign-up",
     headers: {}, // packet header
-    data: { userID, password, nickname, group, site, level }, // packet body
+    data: { userID, password, nickname, group, site, level, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa }, // packet body
   });
 
   // 4. 요청이 성공적이지 않다면, alert message

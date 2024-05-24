@@ -11,9 +11,9 @@ exports.isValidUsers = async function (connection, userID, password) {
 };
 
 // 회원가입
-exports.insertUsers = async function (connection, userID, password, nickname, group, site, level) {
-  const Query = `insert into Users(userID, password, nickname, \`group\`, site, level) values (?,?,?,?,?,?);`;
-  const Params = [userID, password, nickname, group, site, level];
+exports.insertUsers = async function (connection, userID, password, nickname, group, site, level, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa) {
+  const Query = `insert into Users(userID, password, nickname, \`group\`, site, level, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) values (?,?,?,?,?,?,?,?,?,?,?,?,?);`;
+  const Params = [userID, password, nickname, group, site, level, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa];
 
   const rows = await connection.query(Query, Params);
 
