@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
+
 app.post('/logs', async (req, res) => {
   logger.info('POST /logs 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
@@ -52,7 +53,6 @@ app.post('/logs', async (req, res) => {
     res.status(500).send('작업 로그 추가 실패.');
   }
 });
-
 
 app.get('/logs', async (req, res) => {
   try {
