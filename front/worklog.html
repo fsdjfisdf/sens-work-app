@@ -1,3 +1,4 @@
+<!-- HTML 파일 (worklog.html) -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -18,7 +19,7 @@
   <nav>
     <div class="inner">
       <div class="nav-container">
-        <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
+        <h1 class="nav-title"><a href="./index.html">맛집지도</a></h1>
         <button class="nav-contact">
           <a href="./signin.html">로그인</a>
         </button>
@@ -34,17 +35,129 @@
       <div class="inner">
         <h2>작업 이력 작성</h2>
         <form id="worklogForm">
-          <!-- 작업 이력 작성 폼 시작 -->
-          <!-- 폼의 각 항목을 포함하는 섹션들 -->
           <div>
             <label for="task_name">작업명:</label>
             <input type="text" id="task_name" name="task_name" required>
           </div>
-          <!-- 다른 폼 항목들 생략 -->
+          <div>
+            <label for="worker">작업자:</label>
+            <input type="text" id="worker" name="worker" required>
+          </div>
+
+          <div id="task-results-container">
+            <label>결과:</label>
+            <textarea name="task_result" class="task-result-input" required></textarea>
+            <button type="button" id="add-task-result">+</button>
+            <button type="button" id="remove-task-result" disabled>-</button>
+          </div>
+
+          <div id="task-causes-container">
+            <label>원인:</label>
+            <textarea name="task_cause" class="task-cause-input" required></textarea>
+            <button type="button" id="add-task-cause">+</button>
+            <button type="button" id="remove-task-cause" disabled>-</button>
+          </div>
+
+          <div id="task-descriptions-container">
+            <label>작업내용:</label>
+            <textarea name="task_description" class="task-description-input" required></textarea>
+            <button type="button" id="add-task-description">+</button>
+            <button type="button" id="remove-task-description" disabled>-</button>
+          </div>
+
+          <div>
+            <label for="task_date">작업 날짜:</label>
+            <input type="date" id="task_date" name="task_date" required>
+          </div>
+          <div>
+            <label for="start_time">작업 시작 시간:</label>
+            <input type="time" id="start_time" name="start_time" required>
+          </div>
+          <div>
+            <label for="end_time">작업 끝나는 시간:</label>
+            <input type="time" id="end_time" name="end_time" required>
+          </div>
+          <div>
+            <label for="noneTime">None time:</label>
+            <input type="number" id="noneTime" name="noneTime">
+          </div>
+          <div>
+            <label for="moveTime">Move time:</label>
+            <input type="number" id="moveTime" name="moveTime">
+          </div>
+          <div>
+            <label for="group">GROUP:</label>
+            <select id="group" name="group" required>
+              <option value="SELECT">SELECT</option>
+              <option value="PEE1">PEE1</option>
+              <option value="PEE2">PEE2</option>
+              <option value="PEE3">PEE3</option>
+            </select>
+          </div>
+          <div>
+            <label for="site">SITE:</label>
+            <select id="site" name="site" required>
+              <option value="SELECT">SELECT</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+          <div>
+            <label for="line">LINE:</label>
+            <select id="line" name="line" required>
+              <option value="SELECT">SELECT</option>
+            </select>
+          </div>
+          <div>
+            <label for="equipment_type">EQ:</label>
+            <select id="equipment_type" name="equipment_type" required>
+              <option value="SELECT">SELECT</option>
+              <option value="SUPRA">SUPRA</option>
+              <option value="ZEDIUS">ZEDIUS</option>
+              <option value="INTEGER">INTEGER</option>
+              <option value="PRECIA">PRECIA</option>
+              <option value="ECOLITE">ECOLITE</option>
+              <option value="JENEVA">JENEVA</option>
+            </select>
+          </div>
+          <div>
+            <label for="equipment_name">EQ Name:</label>
+            <input type="text" id="equipment_name" name="equipment_name" required>
+          </div>
+          <div>
+            <label for="workType">WORKTYPE:</label>
+            <select id="workType" name="workType" required>
+              <option value="SELECT">SELECT</option>
+              <option value="SET UP">SET UP</option>
+              <option value="RELOCATION">RELOCATION</option>
+              <option value="MAINT">MAINT</option>
+            </select>
+          </div>
+          <div id="additionalOptions" class="additionalOption" style="display:none;">
+            <label for="additionalWorkType">SET UP ITEM:</label>
+            <select id="additionalWorkType" name="additionalWorkType">
+              <option value="SELECT">SELECT</option>
+              <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+              <option value="FAB IN">FAB IN</option>
+              <option value="DOCKING">DOCKING</option>
+              <option value="POWER TURN ON">POWER TURN ON</option>
+              <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+              <option value="GAS TURN ON">GAS TURN ON</option>
+              <option value="TEACHING">TEACHING</option>
+              <option value="PART INSTALLATION">PART INSTALLATION</option>
+              <option value="LEAK CHECK">LEAK CHECK</option>
+              <option value="TTTM">TTTM</option>
+              <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
+              <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+              <option value="MAINTENANCE">MAINTENANCE</option>
+            </select>
+          </div>
           <div>
             <button type="submit">작업 이력 추가</button>
           </div>
-          <!-- 작업 이력 작성 폼 끝 -->
         </form>
       </div>
     </section>
