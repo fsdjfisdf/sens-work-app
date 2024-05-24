@@ -13,7 +13,7 @@
                 <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
                 <div class="sign-container">
                     <!-- 비회원 -->
-                    <div class="unsigned hidden">
+                    <div class="unsigned">
                         <a href="./signin.html" class="sign-link">로그인/회원가입</a>
                     </div>
                     <!-- 회원 -->
@@ -32,19 +32,6 @@
             </div>
         </div>
     </nav>
-
-    <main>
-        <div class="inner">
-            <div class="tabs">
-                <button class="tab-button" onclick="showTab('profile')">내 정보 확인</button>
-                <button class="tab-button" onclick="goToWorklog()">작업이력작성 및 조회</button>
-            </div>
-            <div id="profile" class="tab-content">
-                <h2>내 정보 확인</h2>
-                <div id="user-info"></div>
-            </div>
-        </div>
-    </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
