@@ -160,14 +160,13 @@
               <option value="MAINTENANCE">MAINTENANCE</option>
             </select>
           </div>
-          <div class="print-container">
-            <button type="button" id="print-inform">Print Inform</button>
-            <button type="button" id="copy-inform">Copy</button>
-          </div>
           <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
+        <!-- 새로운 버튼들 -->
+        <button id="print-inform">Print Inform</button>
+        <button id="copy-inform">Copy</button>
       </div>
     </section>
 
@@ -196,12 +195,14 @@
               <th>WORKTYPE</th>
               <th>SET UP ITEM</th>
               <th>타임스탬프</th>
-              <th>상태</th> <!-- 상태 컬럼 추가 -->
+              <th>상태</th>
             </tr>
           </thead>
           <tbody>
           </tbody>
         </table>
+        <!-- 결과 출력 컨테이너 -->
+        <div id="print-container" class="print-container"></div>
       </div>
     </section>
   </main>

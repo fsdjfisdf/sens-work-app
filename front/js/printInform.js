@@ -25,22 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
         -. ${status}<br>
         <br>
         2) ACTION<br>
-        -. ${taskDescriptions}<br>
+        -. ${taskDescriptions.split('\n').join('<br>-. ')}<br>
         <br>
         3) CAUSE<br>
-        -. ${taskCauses}<br>
+        -. ${taskCauses.split('\n').join('<br>-. ')}<br>
         <br>
         4) RESULT<br>
-        -. ${taskResults}<br>
+        -. ${taskResults.split('\n').join('<br>-. ')}<br>
         <br>
         작업자: ${worker}<br>
         작업시간: ${startTime} - ${endTime}<br>
         (None: ${noneTime}, Move: ${moveTime})<br>
       `;
   
-      const printContainer = document.createElement('div');
+      const printContainer = document.getElementById('print-container');
       printContainer.innerHTML = informContent;
-      document.body.appendChild(printContainer);
     });
   
     document.getElementById('copy-inform').addEventListener('click', () => {
@@ -64,26 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const moveTime = document.getElementById('moveTime').value;
   
       const informContent = `
-        <strong>${taskName}</strong><br><br>
-        1) STATUS<br>
-        -. ${status}<br>
-        <br>
-        2) ACTION<br>
-        -. ${taskDescriptions}<br>
-        <br>
-        3) CAUSE<br>
-        -. ${taskCauses}<br>
-        <br>
-        4) RESULT<br>
-        -. ${taskResults}<br>
-        <br>
-        작업자: ${worker}<br>
-        작업시간: ${startTime} - ${endTime}<br>
-        (None: ${noneTime}, Move: ${moveTime})<br>
+        <strong>${taskName}</strong>\n\n
+        1) STATUS\n
+        -. ${status}\n\n
+        2) ACTION\n
+        -. ${taskDescriptions.split('\n').join('\n-. ')}\n\n
+        3) CAUSE\n
+        -. ${taskCauses.split('\n').join('\n-. ')}\n\n
+        4) RESULT\n
+        -. ${taskResults.split('\n').join('\n-. ')}\n\n
+        작업자: ${worker}\n
+        작업시간: ${startTime} - ${endTime}\n
+        (None: ${noneTime}, Move: ${moveTime})\n
       `;
   
       const tempTextArea = document.createElement('textarea');
-      tempTextArea.value = informContent.replace(/<br>/g, '\n');
+      tempTextArea.value = informContent;
       document.body.appendChild(tempTextArea);
       tempTextArea.select();
       document.execCommand('copy');
