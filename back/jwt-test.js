@@ -1,17 +1,13 @@
 const jwt = require("jsonwebtoken");
-
-const secret = "gusdn3887!";
+const { jwtsecret } = require("./config/secret"); // 올바른 경로로 수정
 
 const token = jwt.sign(
   { userIdx: 100, nickname: "김철수" }, // payload 정의
-  secret // 서버 비밀키
+  jwtsecret // secret 키 불러오기
 );
 
-console.log(token);
+console.log("Generated Token:", token);
 
-const verifiedToken = jwt.verify(
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.A7LKg7IiYIiwiaWF0IjoxNjU2MzA1ODY2fQ.grQvBg7aey43dfByN6UsfUKY4Jy1V0j2m9wt2S9d5hk",
-  secret
-);
+const verifiedToken = jwt.verify(token, jwtsecret);
 
-console.log(verifiedToken);
+console.log("Verified Token:", verifiedToken);

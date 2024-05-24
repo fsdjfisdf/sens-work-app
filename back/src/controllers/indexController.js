@@ -113,6 +113,8 @@ exports.createUsers = async function (req, res) {
         nickname
       );
 
+      console.log(rows)
+
       // 입력된 유저 인덱스
       const userIdx = rows.insertId;
 
