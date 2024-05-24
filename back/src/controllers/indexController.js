@@ -66,6 +66,8 @@ exports.createJwt = async function (req, res) {
     return false;
   }
 };
+
+
 exports.createUsers = async function (req, res) {
   const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
 
