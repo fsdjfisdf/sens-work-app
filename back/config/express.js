@@ -22,12 +22,34 @@ module.exports = function () {
   /* 직접 구현해야 하는 모듈 */
   require("../src/routes/indexRoute")(app);
 
+  // 회원가입
+  app.post('/sign-up', async (req, res) => {
+    const { userID, password, nickname } = req.body;
+
+    try {
+      // userID 중복 확인
+      const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
+
+      if (rows.length > 0) {
+        return res.status(400).json({ message: '이미 존재하는 userID입니다.' });
+      }
+
+      // 회원가입 처리
+      const query = 'INSERT INTO users (userID, password, nickname) VALUES (?, ?, ?)';
+      await pool.query(query, [userID, password, nickname]);
+
+      res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
+    } catch (err) {
+      logger.error('회원가입 중 오류 발생:', err);
+      res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
+    }
+  });
+
   // 작업 로그 추가
-  app.post('/log', async (req, res) => {
-    logger.info('POST /log 요청 수신됨');
+  app.post('/logs', async (req, res) => {
+    logger.info('POST /logs 요청 수신됨');
     const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
-  
-    // 누락된 필드에 기본값 설정
+
     const taskResult = task_result || '';
     const taskCause = task_cause || '';
     const taskDescription = task_description || '';
@@ -43,10 +65,9 @@ module.exports = function () {
     const taskEquipmentName = equipment_name || '';
     const taskWorkType = workType || 'SELECT';
     const taskSetupItem = setupItem || 'SELECT';
-    
-    // 수정된 데이터 로그 출력
+
     logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
-  
+
     try {
       const query = `
         INSERT INTO work_log 
@@ -55,21 +76,20 @@ module.exports = function () {
       `;
       const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
       
-      // 쿼리 및 값 출력
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
-  
-      // 데이터베이스에 삽입
+
       await pool.execute(query, values);
-  
+
       logger.info('작업 로그가 성공적으로 추가되었습니다.');
-      res.status(200).send('작업 로그가 성공적으로 추가되었습니다.');
+      res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
     } catch (err) {
       logger.error('작업 로그 추가 중 오류:', err);
       res.status(500).send('작업 로그 추가 실패.');
     }
   });
-  
+
+  // 작업 이력 목록 조회
   app.get('/logs', async (req, res) => {
     try {
       logger.info('작업 이력 목록 요청');
@@ -81,7 +101,6 @@ module.exports = function () {
       res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
     }
   });
-  
 
   return app;
 };
