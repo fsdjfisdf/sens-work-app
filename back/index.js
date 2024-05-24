@@ -1,11 +1,6 @@
-delete require.cache[require.resolve('./config/secret')];
-const secret = require('./config/secret');
-console.log('Secret Config:', secret);
-
-const expressApp = require('./config/worklogExpress');
-const { logger } = require('./config/winston');
+const express = require("./config/express");
+const { logger } = require("./config/winston"); // log
 
 const port = 3001;
-expressApp.listen(port, () => {
-  logger.info(`API Server Start At Port ${port}`);
-});
+express().listen(port);
+logger.info(`API Server Start At Port ${port}`);
