@@ -1,51 +1,33 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 관리</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>메인 화면</title>
+    <link rel="stylesheet" href="./css/common.css" />
+  </head>
+
+  <body>
     <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
-                <div class="sign-container">
-                    <!-- 비회원 -->
-                    <div class="unsigned">
-                        <a href="./signin.html" class="sign-link">로그인/회원가입</a>
-                    </div>
-                    <!-- 회원 -->
-                    <div class="signed hidden">
-                        <div class="dropdown">
-                            <button class="dropdown-button">
-                                안녕하세요. <span class="nickname"></span>님.
-                            </button>
-                            <div class="dropdown-content">
-                                <a href="./worklog.html" class="dropdown-item">작업 이력</a>
-                                <button id="sign-out" class="dropdown-item">로그아웃</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div class="inner">
+        <div class="nav-container">
+          <h1 class="nav-title"><a href="./index.html">홈</a></h1>
+          <button class="nav-contact">
+            <a href="./signin.html">로그인</a>
+          </button>
+          <button class="nav-contact">
+            <a href="./worklog.html">작업이력 작성</a>
+          </button>
         </div>
+      </div>
     </nav>
 
     <main>
-        <div class="inner">
-            <div class="tabs">
-                <button class="tab-button" onclick="loadUserProfile()">내 정보 확인</button>
-                <button class="tab-button" onclick="location.href='worklog.html'">작업이력작성 및 조회</button>
-            </div>
-            <div id="profile" class="tab-content">
-                <h2>내 정보 확인</h2>
-                <div id="user-info"></div>
-            </div>
-        </div>
+      <div class="inner">
+        <h2>환영합니다!</h2>
+        <p>로그인 또는 작업 이력을 작성해 주세요.</p>
+      </div>
     </main>
-
-    <script src="scripts.js"></script>
-</body>
+  </body>
 </html>
