@@ -1,5 +1,4 @@
 const express = require("./config/express");
-const express = require("./config/worklogExpress");
 const { logger } = require("./config/winston"); // log
 
 const port = 3001;
