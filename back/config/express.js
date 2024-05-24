@@ -47,7 +47,7 @@ app.post('/sign-up', async (req, res) => {
 
   // 작업 로그 추가
   app.post('/log', async (req, res) => {
-    logger.info('POST /logs 요청 수신됨');
+    logger.info('POST /log 요청 수신됨');
     const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
 
     const taskResult = task_result || '';
