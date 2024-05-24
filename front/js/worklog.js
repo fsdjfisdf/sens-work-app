@@ -1,3 +1,5 @@
+// worklog.js
+
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
     const today = new Date();
@@ -15,7 +17,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const task_name = document.getElementById('task_name').value;
     const worker = document.getElementById('worker').value;
-    
+    const status = document.getElementById('status').value;
+
     // 여러 task_result 값을 줄바꿈으로 결합
     const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('\n');
     
@@ -72,16 +75,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       equipment_type,
       equipment_name,
       workType,
-      setupItem
+      setupItem,
+      status
     });
 
     try {
       const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
         worker,
-        task_result: taskResults, // 결합된 task_result 값 전송
-        task_cause: taskCauses, // 결합된 task_cause 값 전송
-        task_description: taskDescriptions, // 결합된 task_description 값 전송
+        task_result: taskResults,
+        task_cause: taskCauses,
+        task_description: taskDescriptions,
         task_date,
         start_time,
         end_time,
@@ -93,7 +97,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         equipment_type,
         equipment_name,
         workType,
-        setupItem
+        setupItem,
+        status
       }, {
         headers: {
           'Content-Type': 'application/json'
@@ -141,6 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.work_type}</td>
           <td>${log.setup_item}</td>
           <td>${log.timestamp}</td>
+          <td>${log.status}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -152,14 +158,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadWorkLogs();
 
-  // WORKTYPE 선택에 따라 추가 입력 항목 표시
   document.getElementById('workType').addEventListener('change', function() {
     const additionalOptions = document.getElementById('additionalOptions');
     if (this.value === 'SET UP') {
       additionalOptions.style.display = 'block';
     } else {
       additionalOptions.style.display = 'none';
-      document.getElementById('additionalWorkType').value = 'SELECT'; // SET UP ITEM 초기화
+      document.getElementById('additionalWorkType').value = 'SELECT';
     }
   });
 });

@@ -51,8 +51,8 @@ app.post('/sign-up', async (req, res) => {
   // 작업 로그 추가
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
-    const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
-
+    const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem, status } = req.body;
+  
     const taskResult = task_result || '';
     const taskCause = task_cause || '';
     const taskDescription = task_description || '';
@@ -68,22 +68,23 @@ app.post('/sign-up', async (req, res) => {
     const taskEquipmentName = equipment_name || '';
     const taskWorkType = workType || 'SELECT';
     const taskSetupItem = setupItem || 'SELECT';
-
-    logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
-
+    const taskStatus = status || 'active'; // status 필드 추가
+  
+    logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus });
+  
     try {
       const query = `
         INSERT INTO work_log 
-        (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item, status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
+      const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus];
       
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
-
+  
       await pool.execute(query, values);
-
+  
       logger.info('작업 로그가 성공적으로 추가되었습니다.');
       res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
     } catch (err) {
@@ -91,6 +92,7 @@ app.post('/sign-up', async (req, res) => {
       res.status(500).send('작업 로그 추가 실패.');
     }
   });
+  
 
   // 작업 이력 목록 조회
   app.get('/logs', async (req, res) => {
