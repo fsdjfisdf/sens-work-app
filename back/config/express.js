@@ -81,10 +81,3 @@ module.exports = function () {
 
   return app;
 };
-
-// 서버 시작
-const app = require("./express")();
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`서버가 ${PORT} 번 포트에서 실행 중입니다.`);
-});
