@@ -1,40 +1,38 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>정보 조회</title>
-    <link rel="stylesheet" href="./css/common.css" />
-    <link rel="stylesheet" href="./css/info.css" />
-  </head>
-
-  <body>
-    <nav>
-      <div class="inner">
-        <div class="nav-container">
-          <h1 class="nav-title"><a href="./index.html">정보 조회</a></h1>
-          <button class="nav-contact">
-            <a href="./signin.html">로그인</a>
-          </button>
-          <button class="nav-contact">
-            <a href="./worklog.html">작업이력 작성</a>
-          </button>
-          <button class="nav-contact">
-            <a href="./info.html">정보 조회</a>
-          </button>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>정보 조회</title>
+  <link rel="stylesheet" href="./css/common.css" />
+  <link rel="stylesheet" href="./css/info.css" />
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">정보 조회</a></h1>
+        <button class="nav-contact">
+          <a href="./signin.html">로그인</a>
+        </button>
+        <button class="nav-contact">
+          <a href="./worklog.html">작업이력 작성</a>
+        </button>
+        <button class="nav-contact">
+          <a href="./info.html">정보 조회</a>
+        </button>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <main>
-      <div class="inner">
-        <h2>정보 조회</h2>
-        <p>여기에 정보를 조회하는 내용을 입력하세요.</p>
-      </div>
-    </main>
+  <main>
+    <div class="inner">
+      <div id="user-info"></div>
+      <div id="user-work-logs"></div>
+    </div>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="./js/info.js"></script>
-  </body>
+  <script src="./js/info.js"></script>
+</body>
 </html>
