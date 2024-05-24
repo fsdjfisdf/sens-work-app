@@ -10,13 +10,10 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
-
-
 app.post('/logs', async (req, res) => {
   logger.info('POST /logs 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
 
-  // 누락된 필드에 기본값 설정
   const taskResult = task_result || '';
   const taskCause = task_cause || '';
   const taskDescription = task_description || '';
@@ -32,8 +29,7 @@ app.post('/logs', async (req, res) => {
   const taskEquipmentName = equipment_name || '';
   const taskWorkType = workType || 'SELECT';
   const taskSetupItem = setupItem || 'SELECT';
-  
-  // 수정된 데이터 로그 출력
+
   logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
 
   try {
@@ -44,20 +40,19 @@ app.post('/logs', async (req, res) => {
     `;
     const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
     
-    // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);
     logger.info('쿼리 값:', values);
 
-    // 데이터베이스에 삽입
     await pool.execute(query, values);
 
     logger.info('작업 로그가 성공적으로 추가되었습니다.');
-    res.status(200).send('작업 로그가 성공적으로 추가되었습니다.');
+    res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
   } catch (err) {
     logger.error('작업 로그 추가 중 오류:', err);
     res.status(500).send('작업 로그 추가 실패.');
   }
 });
+
 
 app.get('/logs', async (req, res) => {
   try {
@@ -69,6 +64,11 @@ app.get('/logs', async (req, res) => {
     logger.error('작업 이력 목록을 가져오는 중 오류 발생:', err);
     res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
   }
+});
+
+const PORT = 3001;
+app.listen(PORT, () => {
+  console.log(`서버가 ${PORT} 번 포트에서 실행 중입니다.`);
 });
 
 module.exports = app;
