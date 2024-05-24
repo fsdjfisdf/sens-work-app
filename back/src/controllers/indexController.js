@@ -67,9 +67,8 @@ exports.createJwt = async function (req, res) {
   }
 };
 
-// 회원가입
 exports.createUsers = async function (req, res) {
-  const { userID, password, nickname } = req.body;
+  const { userID, password, nickname, group, site, level } = req.body;
 
   // 1. 유저 데이터 검증
   const userIDRegExp = /^[a-z]+[a-z0-9]{5,19}$/; // 아이디 정규식 영문자로 시작하는 영문자 또는 숫자 6-20
@@ -110,7 +109,10 @@ exports.createUsers = async function (req, res) {
         connection,
         userID,
         password,
-        nickname
+        nickname,
+        group,
+        site,
+        level
       );
 
       console.log(rows)
@@ -141,6 +143,7 @@ exports.createUsers = async function (req, res) {
     return false;
   }
 };
+
 
 // 식당 조회
 exports.readRestaurants = async function (req, res) {

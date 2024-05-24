@@ -22,22 +22,21 @@ module.exports = function () {
   /* 직접 구현해야 하는 모듈 */
   require("../src/routes/indexRoute")(app);
 
-  // 회원가입
   app.post('/sign-up', async (req, res) => {
-    const { userID, password, nickname } = req.body;
-
+    const { userID, password, nickname, group, site, level } = req.body;
+  
     try {
       // userID 중복 확인
       const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
-
+  
       if (rows.length > 0) {
         return res.status(400).json({ message: '이미 존재하는 userID입니다.' });
       }
-
+  
       // 회원가입 처리
-      const query = 'INSERT INTO users (userID, password, nickname) VALUES (?, ?, ?)';
-      await pool.query(query, [userID, password, nickname]);
-
+      const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level) VALUES (?, ?, ?, ?, ?, ?)';
+      await pool.query(query, [userID, password, nickname, group, site, level]);
+  
       res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
     } catch (err) {
       logger.error('회원가입 중 오류 발생:', err);

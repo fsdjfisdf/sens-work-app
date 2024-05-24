@@ -11,9 +11,9 @@ exports.isValidUsers = async function (connection, userID, password) {
 };
 
 // 회원가입
-exports.insertUsers = async function (connection, userID, password, nickname) {
-  const Query = `insert into Users(userID, password, nickname) values (?,?,?);`;
-  const Params = [userID, password, nickname];
+exports.insertUsers = async function (connection, userID, password, nickname, group, site, level) {
+  const Query = `insert into Users(userID, password, nickname, \`group\`, site, level) values (?,?,?,?,?,?);`;
+  const Params = [userID, password, nickname, group, site, level];
 
   const rows = await connection.query(Query, Params);
 

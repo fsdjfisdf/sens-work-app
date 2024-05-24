@@ -1,4 +1,3 @@
-
 /* 
 회원가입 API 연동
 
@@ -19,6 +18,9 @@ async function signup(event) {
   const userID = document.querySelector("#userID").value;
   const password = document.querySelector("#password").value;
   const nickname = document.querySelector("#nickname").value;
+  const group = document.querySelector("#group").value;
+  const site = document.querySelector("#site").value;
+  const level = document.querySelector("#level").value;
 
   // 2. #email, #password, nickname 값 확인 (정규표현식 확인)
   const userIDRegExp = /^[a-z]+[a-z0-9]{5,19}$/; // 아이디 정규식 영문자로 시작하는 영문자 또는 숫자 6-20
@@ -38,9 +40,9 @@ async function signup(event) {
   // 3. 회원가입 API 요청
   const signUpReturn = await axios({
     method: "post", // http method
-    url: "http://3.37.165.84:3001/log/sign-up",
+    url: "http://3.37.165.84:3001/sign-up",
     headers: {}, // packet header
-    data: { userID: userID, password: password, nickname: nickname }, // packet body
+    data: { userID, password, nickname, group, site, level }, // packet body
   });
 
   // 4. 요청이 성공적이지 않다면, alert message
