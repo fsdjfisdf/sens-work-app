@@ -10,7 +10,7 @@ exports.readJwt = async function (req, res) {
 
   return res.send({
     result: { userIdx: userIdx, nickname: nickname },
-    code: 200, // 요청 실패시 400번대 코드
+    code: 200,
     message: "유효한 토큰입니다.",
   });
 };
@@ -22,7 +22,7 @@ exports.createJwt = async function (req, res) {
   if (!userID || !password) {
     return res.send({
       isSuccess: false,
-      code: 400, // 요청 실패시 400번대 코드
+      code: 400,
       message: "회원정보를 입력해주세요.",
     });
   }
@@ -30,40 +30,45 @@ exports.createJwt = async function (req, res) {
   try {
     const connection = await pool.getConnection(async (conn) => conn);
     try {
-      // 2. DB 회원 검증
       const [rows] = await indexDao.isValidUsers(connection, userID, password);
 
       if (rows.length < 1) {
         return res.send({
           isSuccess: false,
-          code: 410, // 요청 실패시 400번대 코드
+          code: 410,
           message: "회원정보가 존재하지 않습니다.",
         });
       }
 
       const { userIdx, nickname } = rows[0];
-
-      // 3. JWT 발급
       const token = jwt.sign(
-        { userIdx: userIdx, nickname: nickname }, // payload 정의
-        secret.jwtsecret // 서버 비밀키
+        { userIdx: userIdx, nickname: nickname },
+        secret.jwtsecret
       );
 
       return res.send({
         result: { jwt: token },
         isSuccess: true,
-        code: 200, // 요청 실패시 400번대 코드
+        code: 200,
         message: "로그인 성공",
       });
     } catch (err) {
       logger.error(`createJwt Query error\n: ${JSON.stringify(err)}`);
-      return false;
+      return res.status(500).json({
+        isSuccess: false,
+        code: 500,
+        message: "로그인 중 서버 오류가 발생했습니다.",
+      });
     } finally {
       connection.release();
     }
   } catch (err) {
     logger.error(`createJwt DB Connection error\n: ${JSON.stringify(err)}`);
-    return false;
+    return res.status(500).json({
+      isSuccess: false,
+      code: 500,
+      message: "로그인 중 서버 오류가 발생했습니다.",
+    });
   }
 };
 
