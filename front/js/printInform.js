@@ -6,15 +6,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
       const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n-. ');
+        .join('\n');
       
       const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n-. ');
+        .join('\n');
   
       const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n-. ');
+        .join('\n');
   
       const taskDate = document.getElementById('task_date').value;
       const startTime = document.getElementById('start_time').value;
@@ -48,15 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
   
       const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n-. ');
+        .join('\n');
       
       const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n-. ');
+        .join('\n');
   
       const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n-. ');
+        .join('\n');
   
       const taskDate = document.getElementById('task_date').value;
       const startTime = document.getElementById('start_time').value;
@@ -65,22 +65,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const moveTime = document.getElementById('moveTime').value;
   
       const informContent = `
-  ${taskName}\n\n
-  1) STATUS\n
-  -. ${status}\n\n
-  2) ACTION\n
-  ${taskDescriptions.split('\n').join('\n')}\n\n
-  3) CAUSE\n
-  ${taskCauses.split('\n').join('\n')}\n\n
-  4) RESULT\n
-  ${taskResults.split('\n').join('\n')}\n\n
-  작업자: ${worker}\n
-  작업시간: ${startTime} - ${endTime}\n
-  (None: ${noneTime}, Move: ${moveTime})\n
+  ${taskName}
+  
+  1) STATUS
+  -. ${status}
+  
+  2) ACTION
+  ${taskDescriptions.split('\n').join('\n')}
+  
+  3) CAUSE
+  ${taskCauses.split('\n').join('\n')}
+  
+  4) RESULT
+  ${taskResults.split('\n').join('\n')}
+  
+  작업자: ${worker}
+  작업시간: ${startTime} - ${endTime}
+  (None: ${noneTime}, Move: ${moveTime})
       `;
   
       const tempTextArea = document.createElement('textarea');
-      tempTextArea.value = informContent;
+      tempTextArea.value = informContent.trim();
       document.body.appendChild(tempTextArea);
       tempTextArea.select();
       document.execCommand('copy');
