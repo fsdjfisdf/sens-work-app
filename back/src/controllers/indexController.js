@@ -66,9 +66,8 @@ exports.createJwt = async function (req, res) {
     return false;
   }
 };
-
 exports.createUsers = async function (req, res) {
-  const { userID, password, nickname, group, site, level, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
+  const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
 
   // 1. 유저 데이터 검증
   const userIDRegExp = /^[a-z]+[a-z0-9]{5,19}$/; // 아이디 정규식 영문자로 시작하는 영문자 또는 숫자 6-20
@@ -113,6 +112,7 @@ exports.createUsers = async function (req, res) {
         group,
         site,
         level,
+        hireDate,
         mainSetUpCapa,
         mainMaintCapa,
         mainCapa,

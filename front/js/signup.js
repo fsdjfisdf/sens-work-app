@@ -1,14 +1,3 @@
-/* 
-회원가입 API 연동
-
-1. #signup 클릭
-2. #userID, #password, nickname 값 확인 (정규표현식 확인)
-3. 회원가입 API 요청
-4. 요청이 성공적이지 않다면, alert message
-5. 요청이 성공하면, jwt를 localstorage에 저장하고 main page 이동
-
-*/
-
 const btnSignUp = document.querySelector("#signup");
 
 // 1. #signup 클릭
@@ -21,6 +10,7 @@ async function signup(event) {
   const group = document.querySelector("#group").value;
   const site = document.querySelector("#site").value;
   const level = document.querySelector("#level").value;
+  const hireDate = document.querySelector("#hireDate").value;
   const mainSetUpCapa = parseFloat(document.querySelector("#mainSetUpCapa").value) || 0;
   const mainMaintCapa = parseFloat(document.querySelector("#mainMaintCapa").value) || 0;
   const multiSetUpCapa = parseFloat(document.querySelector("#multiSetUpCapa").value) || 0;
@@ -49,7 +39,7 @@ async function signup(event) {
     method: "post", // http method
     url: "http://3.37.165.84:3001/sign-up",
     headers: {}, // packet header
-    data: { userID, password, nickname, group, site, level, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa }, // packet body
+    data: { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa }, // packet body
   });
 
   // 4. 요청이 성공적이지 않다면, alert message
