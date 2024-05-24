@@ -26,7 +26,7 @@ async function signIn(event) {
   // 3. 로그인 API 요청
   const signInReturn = await axios({
     method: "post", // http method
-    url: "http://3.37.165.84:3001/sign-in",
+    url: url + "/sign-in",
     headers: {}, // packet header
     data: { userID: userID, password: password }, // packet body
   });
