@@ -18,6 +18,9 @@ module.exports = function () {
   app.use(cors()); // CORS 설정
   app.use(express.static("/home/ubuntu/food-map-dist-example/front"));
   app.use(express.static(path.join(__dirname, '../../front')));
+  app.get("/", (req, res) => {
+    res.redirect("/signin.html");
+  });
 
   /* 직접 구현해야 하는 모듈 */
   require("../src/routes/indexRoute")(app);
