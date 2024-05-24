@@ -15,9 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const task_name = document.getElementById('task_name').value;
     const worker = document.getElementById('worker').value;
-
+    
+    // 여러 task_result 값을 줄바꿈으로 결합
     const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('\n');
+    
+    // 여러 task_cause 값을 줄바꿈으로 결합
     const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
+
+    // 여러 task_description 값을 줄바꿈으로 결합
     const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
 
     let task_date = document.getElementById('task_date').value;
@@ -26,18 +31,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noneTime = document.getElementById('noneTime').value;
     const moveTime = document.getElementById('moveTime').value;
 
+    // 사파리 대응: 날짜와 시간 값 형식화 확인
     if (!task_date) {
       task_date = getTodayDate();
     }
     if (!start_time) {
       start_time = '00:00:00';
     } else {
-      start_time = `${start_time}:00`;
+      start_time = `${start_time}:00`; // 시간 값에 초 추가
     }
     if (!end_time) {
       end_time = '00:00:00';
     } else {
-      end_time = `${end_time}:00`;
+      end_time = `${end_time}:00`; // 시간 값에 초 추가
     }
 
     const group = document.getElementById('group').value;
@@ -48,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const workType = document.getElementById('workType').value;
     const setupItem = workType === 'SET UP' ? document.getElementById('additionalWorkType').value : 'SELECT';
 
+    // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
       worker,
@@ -69,17 +76,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     try {
-      const response = await axios.post('http://3.37.165.84:3001/logs', {
+      const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
         worker,
-        task_result: taskResults,
-        task_cause: taskCauses,
-        task_description: taskDescriptions,
+        task_result: taskResults, // 결합된 task_result 값 전송
+        task_cause: taskCauses, // 결합된 task_cause 값 전송
+        task_description: taskDescriptions, // 결합된 task_description 값 전송
         task_date,
         start_time,
         end_time,
         none_time: noneTime,
-        move_time: MoveTime,
+        move_time: moveTime,
         group,
         site,
         line,
@@ -93,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         alert('작업 로그가 성공적으로 추가되었습니다.');
         loadWorkLogs();
       } else {
@@ -107,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function loadWorkLogs() {
     try {
-      const response = await axios.get('http://3.37.165.84:3001/logs');
+      const response = await axios.get(`http://3.37.165.84:3001/logs`);
       const logs = response.data;
 
       const tbody = document.querySelector('#worklog-table tbody');
@@ -145,13 +152,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   loadWorkLogs();
 
+  // WORKTYPE 선택에 따라 추가 입력 항목 표시
   document.getElementById('workType').addEventListener('change', function() {
     const additionalOptions = document.getElementById('additionalOptions');
     if (this.value === 'SET UP') {
       additionalOptions.style.display = 'block';
     } else {
       additionalOptions.style.display = 'none';
-      document.getElementById('additionalWorkType').value = 'SELECT';
+      document.getElementById('additionalWorkType').value = 'SELECT'; // SET UP ITEM 초기화
     }
   });
 });
