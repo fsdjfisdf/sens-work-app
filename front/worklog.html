@@ -1,5 +1,3 @@
-<!-- worklog.html -->
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -12,6 +10,9 @@
       font-size: 2em;
       font-weight: bold;
       text-align: center;
+      margin-top: 20px;
+    }
+    .print-container {
       margin-top: 20px;
     }
   </style>
@@ -39,7 +40,6 @@
       <div class="inner">
         <h2>작업 이력 작성</h2>
         <form id="worklogForm">
-          <!-- 기존 필드들 -->
           <div>
             <label for="task_name">작업명:</label>
             <input type="text" id="task_name" name="task_name" required>
@@ -48,12 +48,10 @@
             <label for="worker">작업자:</label>
             <input type="text" id="worker" name="worker" required>
           </div>
-          <!-- 새로운 status 필드 추가 -->
           <div>
             <label for="status">상태:</label>
             <input type="text" id="status" name="status" required>
           </div>
-          <!-- 나머지 기존 필드들 -->
           <div id="task-results-container">
             <label>결과:</label>
             <textarea name="task_result" class="task-result-input" required></textarea>
@@ -162,30 +160,16 @@
               <option value="MAINTENANCE">MAINTENANCE</option>
             </select>
           </div>
+          <div class="print-container">
+            <button type="button" id="print-inform">Print Inform</button>
+            <button type="button" id="copy-inform">Copy</button>
+          </div>
           <div>
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
       </div>
     </section>
-
-    <nav>
-      <div class="inner">
-        <div class="nav-container">
-          <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
-          <button class="nav-contact">
-            <a href="./signin.html">로그인</a>
-          </button>
-          <button class="nav-contact">
-            <a href="./worklog.html">작업이력 작성</a>
-          </button>
-          <button class="nav-contact">
-            <a href="./info.html">정보 조회</a>
-          </button>
-        </div>
-      </div>
-    </nav>
-  
 
     <section id="worklog">
       <div class="inner">
@@ -212,7 +196,7 @@
               <th>WORKTYPE</th>
               <th>SET UP ITEM</th>
               <th>타임스탬프</th>
-              <th>상태</th>
+              <th>상태</th> <!-- 상태 컬럼 추가 -->
             </tr>
           </thead>
           <tbody>
@@ -225,6 +209,7 @@
   <script src="./js/url.js"></script>
   <script src="./js/worklog.js"></script>
   <script src="./js/site.js"></script>
-  <script src="./js/addandremove.js"></script> <!-- 새로 추가된 파일 -->
+  <script src="./js/addandremove.js"></script>
+  <script src="./js/printInform.js"></script> <!-- 새로운 JavaScript 파일 추가 -->
 </body>
 </html>
