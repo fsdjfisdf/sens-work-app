@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     try {
-      const response = await axios.post(`http://3.37.165.84:3001/log`, {
+      const response = await axios.post(`http://3.37.165.84:3001/logs`, {
         task_name,
         worker,
         task_result: taskResults, // 결합된 task_result 값 전송
