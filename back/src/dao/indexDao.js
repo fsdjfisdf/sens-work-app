@@ -20,6 +20,15 @@ exports.insertUsers = async function (connection, userID, password, nickname, gr
   return rows;
 };
 
+// 회원 정보 조회
+exports.getUserById = async function (connection, userIdx) {
+  const Query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE userIdx = ? AND status = 'A';`;
+  const Params = [userIdx];
+
+  const [rows] = await connection.query(Query, Params);
+  return rows;
+};
+
 
 exports.selectRestaurants = async function (connection, category) {
   const selectAllRestaurantsQuery = `SELECT title, address, category, videoUrl FROM Restaurants where status = 'A';`;
