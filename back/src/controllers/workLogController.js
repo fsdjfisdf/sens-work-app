@@ -1,48 +1,27 @@
+const workLogDao = require('../dao/workLogDao');
 
-const userDao = require('../dao/userDao');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const secret = require('../../config/secret');
-
-exports.register = async (req, res) => {
-  const { username, password, nickname } = req.body;
-
+exports.getWorkLogs = async (req, res) => {
   try {
-    const existingUser = await userDao.getUserByUsername(username);
-    if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists' });
-    }
-
-    await userDao.createUser(username,password, nickname);
-    res.status(201).json({ message: 'User registered successfully' });
-    } catch (err) {
+    const logs = await workLogDao.getWorkLogs();
+    res.status(200).json(logs);
+  } catch (err) {
     res.status(500).json({ error: err.message });
-    }
-    };
-    
-    exports.login = async (req, res) => {
-    const { username, password } = req.body;
-    
-    try {
-    const user = await userDao.getUserByUsername(username);
-    if (!user) {
-    return res.status(400).json({ message: 'Invalid username or password' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-if (!isPasswordValid) {
-  return res.status(400).json({ message: 'Invalid username or password' });
-}
-
-const token = jwt.sign({ id: user.id, username: user.username, nickname: user.nickname }, secret.jwtsecret, {
-  expiresIn: '1h'
-});
-
-res.status(200).json({ message: 'Login successful', token });
-} catch (err) {
-  res.status(500).json({ error: err.message });
   }
-  };
+};
 
-
-
+exports.addWorkLog = async (req, res) => {
+  const {
+    task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time,
+    group, site, line, equipment_type, equipment_name, workType, setupItem
+  } = req.body;
+  
+  try {
+    await workLogDao.addWorkLog(
+      task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time,
+      group, site, line, equipment_type, equipment_name, workType, setupItem
+    );
+    res.status(201).json({ message: "Work log added" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

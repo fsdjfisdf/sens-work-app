@@ -2,25 +2,25 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const morgan = require('morgan');
 const { pool } = require('./database');
 const { logger } = require('./winston');
-
-const indexRoute = require('../src/routes/indexRoute');
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../../front')));
-app.use(morgan('combined'));
 
-app.use('/', indexRoute);
+
+
+
+
 
 app.post('/log', async (req, res) => {
   logger.info('POST /log 요청 수신됨');
   const { task_name, worker, task_result, task_cause, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem } = req.body;
 
+  // 누락된 필드에 기본값 설정
   const taskResult = task_result || '';
   const taskCause = task_cause || '';
   const taskDescription = task_description || '';
@@ -36,7 +36,8 @@ app.post('/log', async (req, res) => {
   const taskEquipmentName = equipment_name || '';
   const taskWorkType = workType || 'SELECT';
   const taskSetupItem = setupItem || 'SELECT';
-
+  
+  // 수정된 데이터 로그 출력
   logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem });
 
   try {
@@ -46,10 +47,12 @@ app.post('/log', async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [task_name, worker, taskResult, taskCause, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem];
-
+    
+    // 쿼리 및 값 출력
     logger.info('실행할 쿼리:', query);
     logger.info('쿼리 값:', values);
 
+    // 데이터베이스에 삽입
     await pool.execute(query, values);
 
     logger.info('작업 로그가 성공적으로 추가되었습니다.');
@@ -72,10 +75,14 @@ app.get('/logs', async (req, res) => {
   }
 });
 
-// 에러 핸들러 추가
-app.use((err, req, res, next) => {
-  logger.error(`Global error handler: ${err.message}`);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
+
+
+
+
+
+
+
+
+
 
 module.exports = app;

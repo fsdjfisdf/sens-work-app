@@ -6,41 +6,40 @@ const env = process.env.NODE_ENV || 'development';
 const logDir = 'log';
 
 if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir);
+    fs.mkdirSync(logDir);
 }
 
 const dailyRotateFileTransport = new transports.DailyRotateFile({
-  level: 'debug',
-  filename: `${logDir}/%DATE%-app.log`,
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '14d'
+    level: 'debug',
+    filename: `${logDir}/%DATE%-app.log`,
+    datePattern: 'YYYY-MM-DD',
+    zippedArchive: true,
+    maxSize: '20m',
+    maxFiles: '14d'
 });
 
 const logger = createLogger({
-  level: env === 'development' ? 'debug' : 'info',
-  format: format.combine(
-    format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    format.errors({ stack: true }), // 스택 트레이스를 포함합니다.
-    format.json()
-  ),
-  transports: [
-    new transports.Console({
-      level: 'info',
-      format: format.combine(
-        format.colorize(),
-        format.printf(
-          info => `${info.timestamp} ${info.level}: ${info.message}`
-        )
-      )
-    }),
-    dailyRotateFileTransport
-  ]
+    level: env === 'development' ? 'debug' : 'info',
+    format: format.combine(
+        format.timestamp({
+            format: 'YYYY-MM-DD HH:mm:ss'
+        }),
+        format.json()
+    ),
+    transports: [
+        new transports.Console({
+            level: 'info',
+            format: format.combine(
+                format.colorize(),
+                format.printf(
+                    info => `${info.timestamp} ${info.level}: ${info.message}`
+                )
+            )
+        }),
+        dailyRotateFileTransport
+    ]
 });
 
 module.exports = {
-  logger: logger
+    logger: logger
 };
