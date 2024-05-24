@@ -14,4 +14,3 @@ module.exports = function (app) {
     // 로그인 유지, 토큰 검증
     app.get("/jwt", jwtMiddleware, index.readJwt);
   };
-  

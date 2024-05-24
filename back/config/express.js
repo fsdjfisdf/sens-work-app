@@ -24,7 +24,7 @@ module.exports = function () {
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
-    const { userID, password, nickname, group, site, level } = req.body;
+    const { userID, password, nickname } = req.body;
 
     try {
       // userID 중복 확인
@@ -35,8 +35,8 @@ module.exports = function () {
       }
 
       // 회원가입 처리
-      const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level) VALUES (?, ?, ?, ?, ?, ?)';
-      await pool.query(query, [userID, password, nickname, group, site, level]);
+      const query = 'INSERT INTO users (userID, password, nickname) VALUES (?, ?, ?)';
+      await pool.query(query, [userID, password, nickname]);
 
       res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
     } catch (err) {
