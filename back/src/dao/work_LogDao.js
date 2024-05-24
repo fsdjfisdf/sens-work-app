@@ -28,3 +28,4 @@ exports.addWorkLog = async (task_name, worker, task_result, task_cause, task_des
     connection.release();
   }
 };
+
