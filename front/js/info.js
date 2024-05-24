@@ -1,14 +1,14 @@
 document.addEventListener("DOMContentLoaded", function() {
+    const token = localStorage.getItem("x-access-token");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      window.location.replace("./signin.html");
+      return;
+    }
+  
     loadUserInfo();
   
     function loadUserInfo() {
-      const token = localStorage.getItem("x-access-token");
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        window.location.replace("./signin.html");
-        return;
-      }
-  
       axios.get('http://3.37.165.84:3001/user-info', {
         headers: { "x-access-token": token }
       }).then(response => {
