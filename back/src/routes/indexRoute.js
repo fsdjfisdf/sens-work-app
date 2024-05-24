@@ -13,4 +13,8 @@ module.exports = function (app) {
   
     // 로그인 유지, 토큰 검증
     app.get("/jwt", jwtMiddleware, index.readJwt);
+
+    // 회원 정보 조회
+    app.get("/user-info", jwtMiddleware, index.getUserInfo);
+
   };
