@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     event.preventDefault();
 
     const task_name = document.getElementById('task_name').value;
-    const status = document.getElementById('status').value;
     const worker = document.getElementById('worker').value;
     
     // 여러 task_result 값을 줄바꿈으로 결합
@@ -58,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
-      status,
       worker,
       task_result: taskResults,
       task_cause: taskCauses,
@@ -80,7 +78,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
-        status,
         worker,
         task_result: taskResults, // 결합된 task_result 값 전송
         task_cause: taskCauses, // 결합된 task_cause 값 전송
@@ -127,7 +124,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         tr.innerHTML = `
           <td>${log.id}</td>
           <td>${log.task_name}</td>
-          <td>${log.status}</td>
           <td>${log.worker}</td>
           <td>${log.task_result}</td>
           <td>${log.task_cause}</td>
