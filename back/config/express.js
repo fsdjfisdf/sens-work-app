@@ -53,8 +53,11 @@ module.exports = function () {
     logger.info('POST /log 요청 수신됨');
     const { task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem, status } = req.body;
   
+    // task_man 필드가 배열인지 확인하고 배열이 아닌 경우 빈 배열로 설정
+    const taskManArray = Array.isArray(task_man) ? task_man : [];
+
     // task_man 필드를 배열 형식에서 문자열 형식으로 변환
-    const formattedTaskMan = task_man.map(man => `${man.name}(${man.type})`).join(', ');
+    const formattedTaskMan = taskManArray.map(man => `${man.name}(${man.type})`).join(', ');
 
     const taskResult = task_result || '';
     const taskCause = task_cause || '';
