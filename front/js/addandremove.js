@@ -1,3 +1,4 @@
+// JavaScript 파일 (addandremove.js)
 document.addEventListener('DOMContentLoaded', function() {
   function setupDynamicFields(containerId, inputClass) {
     const container = document.getElementById(containerId);
@@ -5,8 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeButton = container.querySelector(`#remove-${inputClass}`);
 
     addButton.addEventListener('click', function() {
-      const newInput = document.createElement('input');
-      newInput.type = 'text';
+      const newInput = document.createElement('textarea');
       newInput.name = inputClass;
       newInput.className = inputClass + '-input';
       container.insertBefore(newInput, addButton);
@@ -30,5 +30,4 @@ document.addEventListener('DOMContentLoaded', function() {
   setupDynamicFields('task-results-container', 'task-result');
   setupDynamicFields('task-causes-container', 'task-cause');
   setupDynamicFields('task-descriptions-container', 'task-description');
-  setupDynamicFields('workers-container', 'worker');
 });

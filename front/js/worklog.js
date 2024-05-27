@@ -1,3 +1,5 @@
+// worklog.js
+
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
     const today = new Date();
@@ -14,11 +16,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     event.preventDefault();
 
     const task_name = document.getElementById('task_name').value;
-    const workers = Array.from(document.getElementsByClassName('worker-input')).map(input => input.value).join('\n');
+    const worker = document.getElementById('worker').value;
     const status = document.getElementById('status').value;
 
+    // 여러 task_result 값을 줄바꿈으로 결합
     const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('\n');
+    
+    // 여러 task_cause 값을 줄바꿈으로 결합
     const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
+
+    // 여러 task_description 값을 줄바꿈으로 결합
     const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
 
     let task_date = document.getElementById('task_date').value;
@@ -27,18 +34,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noneTime = document.getElementById('noneTime').value;
     const moveTime = document.getElementById('moveTime').value;
 
+    // 사파리 대응: 날짜와 시간 값 형식화 확인
     if (!task_date) {
       task_date = getTodayDate();
     }
     if (!start_time) {
       start_time = '00:00:00';
     } else {
-      start_time = `${start_time}:00`;
+      start_time = `${start_time}:00`; // 시간 값에 초 추가
     }
     if (!end_time) {
       end_time = '00:00:00';
     } else {
-      end_time = `${end_time}:00`;
+      end_time = `${end_time}:00`; // 시간 값에 초 추가
     }
 
     const group = document.getElementById('group').value;
@@ -49,9 +57,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const workType = document.getElementById('workType').value;
     const setupItem = workType === 'SET UP' ? document.getElementById('additionalWorkType').value : 'SELECT';
 
+    // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
-      workers,
+      worker,
       task_result: taskResults,
       task_cause: taskCauses,
       task_description: taskDescriptions,
@@ -73,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
-        workers,
+        worker,
         task_result: taskResults,
         task_cause: taskCauses,
         task_description: taskDescriptions,
