@@ -47,57 +47,56 @@ module.exports = function () {
       res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
     }
   });
+// 작업 로그 추가
+app.post('/log', async (req, res) => {
+  logger.info('POST /log 요청 수신됨');
+  const { task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem, status } = req.body;
 
-  // 작업 로그 추가
-  app.post('/log', async (req, res) => {
-    logger.info('POST /log 요청 수신됨');
-    const { task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem, status } = req.body;
-  
-    // task_man 필드가 배열인지 확인하고 배열이 아닌 경우 빈 배열로 설정
-    const taskManArray = Array.isArray(task_man) ? task_man : [];
+  // task_man 필드가 배열인지 확인하고 배열이 아닌 경우 빈 배열로 설정
+  const taskManArray = Array.isArray(task_man) ? task_man : [];
 
-    // task_man 필드를 배열 형식에서 문자열 형식으로 변환
-    const formattedTaskMan = taskManArray.map(man => `${man.name}(${man.type})`).join(', ');
+  // task_man 필드를 배열 형식에서 문자열 형식으로 변환
+  const formattedTaskMan = taskManArray.map(man => `${man.name}(${man.type})`).join(', ');
 
-    const taskResult = task_result || '';
-    const taskCause = task_cause || '';
-    const taskDescription = task_description || '';
-    const taskDate = task_date || '1970-01-01';
-    const startTime = start_time || '00:00:00';
-    const endTime = end_time || '00:00:00';
-    const noneTime = none_time || 0;
-    const moveTime = move_time || 0;
-    const taskGroup = group || 'SELECT';
-    const taskSite = site || 'SELECT';
-    const taskLine = line || 'SELECT';
-    const taskEquipmentType = equipment_type || 'SELECT';
-    const taskEquipmentName = equipment_name || '';
-    const taskWorkType = workType || 'SELECT';
-    const taskSetupItem = setupItem || 'SELECT';
-    const taskStatus = status || 'active'; // status 필드 추가
-  
-    logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, formattedTaskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus });
-  
-    try {
-      const query = `
-        INSERT INTO work_log 
-        (task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const values = [task_name, worker, taskResult, taskCause, formattedTaskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus];
-      
-      logger.info('실행할 쿼리:', query);
-      logger.info('쿼리 값:', values);
-  
-      await pool.execute(query, values);
-  
-      logger.info('작업 로그가 성공적으로 추가되었습니다.');
-      res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
-    } catch (err) {
-      logger.error('작업 로그 추가 중 오류:', err);
-      res.status(500).send('작업 로그 추가 실패.');
-    }
-  });
+  const taskResult = task_result || '';
+  const taskCause = task_cause || '';
+  const taskDescription = task_description || '';
+  const taskDate = task_date || '1970-01-01';
+  const startTime = start_time || '00:00:00';
+  const endTime = end_time || '00:00:00';
+  const noneTime = none_time || 0;
+  const moveTime = move_time || 0;
+  const taskGroup = group || 'SELECT';
+  const taskSite = site || 'SELECT';
+  const taskLine = line || 'SELECT';
+  const taskEquipmentType = equipment_type || 'SELECT';
+  const taskEquipmentName = equipment_name || '';
+  const taskWorkType = workType || 'SELECT';
+  const taskSetupItem = setupItem || 'SELECT';
+  const taskStatus = status || 'active'; // status 필드 추가
+
+  logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, formattedTaskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus });
+
+  try {
+    const query = `
+      INSERT INTO work_log 
+      (task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item, status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [task_name, worker, taskResult, taskCause, formattedTaskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus];
+    
+    logger.info('실행할 쿼리:', query);
+    logger.info('쿼리 값:', values);
+
+    await pool.execute(query, values);
+
+    logger.info('작업 로그가 성공적으로 추가되었습니다.');
+    res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
+  } catch (err) {
+    logger.error('작업 로그 추가 중 오류:', err);
+    res.status(500).send('작업 로그 추가 실패.');
+  }
+});
   
 
   // 작업 이력 목록 조회
