@@ -1,3 +1,5 @@
+// worklog.js
+
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
     const today = new Date();
@@ -14,8 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     event.preventDefault();
 
     const task_name = document.getElementById('task_name').value;
-    // 여러 worker 값을 쉼표로 결합
-    const workers = Array.from(document.getElementsByClassName('worker-input')).map(input => input.value).join(', ');
+    const worker = document.getElementById('worker').value;
     const status = document.getElementById('status').value;
 
     // 여러 task_result 값을 줄바꿈으로 결합
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
-      worker: workers,
+      worker,
       task_result: taskResults,
       task_cause: taskCauses,
       task_description: taskDescriptions,
@@ -81,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const response = await axios.post(`http://3.37.165.84:3001/log`, {
         task_name,
-        worker: workers, // 결합된 worker 값 전송
+        worker,
         task_result: taskResults,
         task_cause: taskCauses,
         task_description: taskDescriptions,
@@ -166,35 +167,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('additionalWorkType').value = 'SELECT';
     }
   });
-
-  // 작업자 필드 동적 추가/제거 기능 추가
-  function setupDynamicFields(containerId, inputClass) {
-    const container = document.getElementById(containerId);
-    const addButton = container.querySelector(`#add-${inputClass}`);
-    const removeButton = container.querySelector(`#remove-${inputClass}`);
-
-    addButton.addEventListener('click', function() {
-      const newInput = document.createElement('input');
-      newInput.name = inputClass;
-      newInput.className = inputClass + '-input';
-      newInput.type = 'text';
-      container.insertBefore(newInput, addButton);
-
-      if (container.querySelectorAll(`.${inputClass}-input`).length > 1) {
-        removeButton.disabled = false;
-      }
-    });
-
-    removeButton.addEventListener('click', function() {
-      const inputs = container.querySelectorAll(`.${inputClass}-input`);
-      if (inputs.length > 1) {
-        container.removeChild(inputs[inputs.length - 1]);
-        if (inputs.length === 2) {
-          removeButton.disabled = true;
-        }
-      }
-    });
-  }
-
-  setupDynamicFields('workers-container', 'worker');
 });

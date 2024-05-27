@@ -1,9 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('print-inform').addEventListener('click', () => {
       const taskName = document.getElementById('task_name').value;
-      const worker = Array.from(document.getElementsByClassName('worker-input'))
-        .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n');
+      const worker = document.getElementById('worker').value;
       const status = document.getElementById('status').value;
   
       const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
@@ -45,9 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     document.getElementById('copy-inform').addEventListener('click', () => {
       const taskName = document.getElementById('task_name').value;
-      const worker = Array.from(document.getElementsByClassName('worker-input'))
-        .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
-        .join('\n');
+      const worker = document.getElementById('worker').value;
       const status = document.getElementById('status').value;
   
       const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
