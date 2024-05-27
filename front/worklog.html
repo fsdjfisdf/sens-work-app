@@ -46,7 +46,7 @@
           </div>
           <div id="workers-container">
             <label>작업자:</label>
-            <textarea name="worker" class="worker-input" required></textarea>
+            <input type="text" name="worker" class="worker-input" required>
             <button type="button" id="add-worker">+</button>
             <button type="button" id="remove-worker" disabled>-</button>
           </div>
@@ -166,6 +166,7 @@
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
+        <!-- 새로운 버튼들 -->
         <button id="print-inform">Print Inform</button>
         <button id="copy-inform">Copy</button>
       </div>
@@ -202,6 +203,7 @@
           <tbody>
           </tbody>
         </table>
+        <!-- 결과 출력 컨테이너 -->
         <div id="print-container" class="print-container"></div>
       </div>
     </section>
