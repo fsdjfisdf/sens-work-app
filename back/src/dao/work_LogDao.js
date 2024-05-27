@@ -17,8 +17,8 @@ exports.addWorkLog = async (task_name, worker, task_result, task_cause, task_man
   try {
     const query = `
       INSERT INTO work_log (
-        task_name, worker, task_result, task_cause, task_man, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, line, equipment_type, equipment_name, work_type, setup_item, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, work_type, setup_item, status];
     await connection.query(query, values);
@@ -28,4 +28,3 @@ exports.addWorkLog = async (task_name, worker, task_result, task_cause, task_man
     connection.release();
   }
 };
-

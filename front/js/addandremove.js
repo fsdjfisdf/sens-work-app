@@ -1,4 +1,3 @@
-// JavaScript 파일 (addandremove.js)
 document.addEventListener('DOMContentLoaded', function() {
   function setupDynamicFields(containerId, inputClass) {
     const container = document.getElementById(containerId);
@@ -6,21 +5,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const removeButton = container.querySelector(`#remove-${inputClass}`);
 
     addButton.addEventListener('click', function() {
+      const inputGroup = document.createElement('div');
+      inputGroup.className = inputClass + '-input-group';
+
       const newInput = document.createElement('textarea');
       newInput.name = inputClass;
       newInput.className = inputClass + '-input';
-      container.insertBefore(newInput, addButton);
+      inputGroup.appendChild(newInput);
 
-      if (container.querySelectorAll(`.${inputClass}-input`).length > 1) {
+      if (inputClass === 'task-man') {
+        const newSelect = document.createElement('select');
+        newSelect.name = inputClass + '_type';
+        newSelect.className = inputClass + '-type-input';
+        newSelect.innerHTML = `
+          <option value="main">main</option>
+          <option value="support">support</option>
+        `;
+        inputGroup.appendChild(newSelect);
+      }
+
+      container.insertBefore(inputGroup, addButton);
+
+      if (container.querySelectorAll(`.${inputClass}-input-group`).length > 1) {
         removeButton.disabled = false;
       }
     });
 
     removeButton.addEventListener('click', function() {
-      const inputs = container.querySelectorAll(`.${inputClass}-input`);
-      if (inputs.length > 1) {
-        container.removeChild(inputs[inputs.length - 1]);
-        if (inputs.length === 2) {
+      const inputGroups = container.querySelectorAll(`.${inputClass}-input-group`);
+      if (inputGroups.length > 1) {
+        container.removeChild(inputGroups[inputGroups.length - 1]);
+        if (inputGroups.length === 2) {
           removeButton.disabled = true;
         }
       }
