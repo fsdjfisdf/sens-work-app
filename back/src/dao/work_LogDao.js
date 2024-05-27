@@ -3,7 +3,7 @@ const { pool } = require('../config/database');
 exports.getWorkLogs = async () => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const [rows] = await connection.query('SELECT * FROM work_log');
+    const [rows] = await connection.query(`SELECT * FROM work_log`);
     connection.release();
     return rows;
   } catch (err) {
