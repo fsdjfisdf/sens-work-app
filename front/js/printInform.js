@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
         .join('\n');
+
+      const taskMans = Array.from(document.getElementsByClassName('task-man-input'))
+        .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+        .join('\n');
   
       const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
@@ -30,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${taskDescriptions.split('\n').join('<br>')}<br><br>
         3) CAUSE<br>
         ${taskCauses.split('\n').join('<br>')}<br><br>
+        ${taskMans.split('\n').join('<br>')}<br><br>
         4) RESULT<br>
         ${taskResults.split('\n').join('<br>')}<br><br>
         작업자: ${worker}<br>
@@ -51,6 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
         .join('\n');
       
       const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
+        .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+        .join('\n');
+
+      const taskMans = Array.from(document.getElementsByClassName('task-man-input'))
         .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
         .join('\n');
   
@@ -75,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   3) CAUSE
   ${taskCauses.split('\n').join('\n')}
+  ${taskMans.split('\n').join('\n')}
   
   4) RESULT
   ${taskResults.split('\n').join('\n')}

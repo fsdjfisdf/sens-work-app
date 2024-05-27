@@ -25,6 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 여러 task_cause 값을 줄바꿈으로 결합
     const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
 
+    // 여러 task_mans 값을 줄바꿈으로 결합
+    const taskMans = Array.from(document.getElementsByClassName('task-man-input')).map(input => input.value).join('\n');
+
     // 여러 task_description 값을 줄바꿈으로 결합
     const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
 
@@ -63,6 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       worker,
       task_result: taskResults,
       task_cause: taskCauses,
+      task_man: taskMans,
       task_description: taskDescriptions,
       task_date,
       start_time,
@@ -85,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         worker,
         task_result: taskResults,
         task_cause: taskCauses,
+        task_man: taskMans,
         task_description: taskDescriptions,
         task_date,
         start_time,
@@ -132,6 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td>${log.worker}</td>
           <td>${log.task_result}</td>
           <td>${log.task_cause}</td>
+          <td>${log.task_man}</td>
           <td>${log.task_description}</td>
           <td>${log.task_date}</td>
           <td>${log.start_time}</td>
