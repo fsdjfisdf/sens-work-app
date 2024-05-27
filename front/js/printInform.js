@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('print-inform').addEventListener('click', () => {
       const taskName = document.getElementById('task_name').value;
-      const taskWorkers = Array.from(document.getElementsByClassName('task-worker'))
+      const worker = document.getElementById('worker').value;
       const status = document.getElementById('status').value;
   
       const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${taskCauses.split('\n').join('<br>')}<br><br>
         4) RESULT<br>
         ${taskResults.split('\n').join('<br>')}<br><br>
-        작업자: ${taskWorkers}<br>
+        작업자: ${worker}<br>
         작업시간: ${startTime} - ${endTime}<br>
         (None: ${noneTime}, Move: ${moveTime})<br>
       `;
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     document.getElementById('copy-inform').addEventListener('click', () => {
       const taskName = document.getElementById('task_name').value;
-      const taskWorkers = Array.from(document.getElementsByClassName('task-worker'))
+      const worker = document.getElementById('worker').value;
       const status = document.getElementById('status').value;
   
       const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   4) RESULT
   ${taskResults.split('\n').join('\n')}
   
-  작업자: ${taskWorkers}
+  작업자: ${worker}
   작업시간: ${startTime} - ${endTime}
   (None: ${noneTime}, Move: ${moveTime})
       `;

@@ -30,5 +30,4 @@ document.addEventListener('DOMContentLoaded', function() {
   setupDynamicFields('task-results-container', 'task-result');
   setupDynamicFields('task-causes-container', 'task-cause');
   setupDynamicFields('task-descriptions-container', 'task-description');
-  setupDynamicFields('task-workers-container', 'task-worker');
 });
