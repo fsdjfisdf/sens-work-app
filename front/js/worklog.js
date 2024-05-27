@@ -1,5 +1,3 @@
-// worklog.js
-
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
     const today = new Date();
@@ -61,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
       task_name,
-      workers,
+      worker: workers,
       task_result: taskResults,
       task_cause: taskCauses,
       task_description: taskDescriptions,
@@ -91,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         start_time,
         end_time,
         none_time: noneTime,
-        move_time: MoveTime,
+        move_time: moveTime,
         group,
         site,
         line,
@@ -168,4 +166,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('additionalWorkType').value = 'SELECT';
     }
   });
+
+  // 작업자 필드 동적 추가/제거 기능 추가
+  function setupDynamicFields(containerId, inputClass) {
+    const container = document.getElementById(containerId);
+    const addButton = container.querySelector(`#add-${inputClass}`);
+    const removeButton = container.querySelector(`#remove-${inputClass}`);
+
+    addButton.addEventListener('click', function() {
+      const newInput = document.createElement('input');
+      newInput.name = inputClass;
+      newInput.className = inputClass + '-input';
+      newInput.type = 'text';
+      container.insertBefore(newInput, addButton);
+
+      if (container.querySelectorAll(`.${inputClass}-input`).length > 1) {
+        removeButton.disabled = false;
+      }
+    });
+
+    removeButton.addEventListener('click', function() {
+      const inputs = container.querySelectorAll(`.${inputClass}-input`);
+      if (inputs.length > 1) {
+        container.removeChild(inputs[inputs.length - 1]);
+        if (inputs.length === 2) {
+          removeButton.disabled = true;
+        }
+      }
+    });
+  }
+
+  setupDynamicFields('workers-container', 'worker');
 });
