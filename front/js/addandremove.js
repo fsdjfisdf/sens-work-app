@@ -30,4 +30,5 @@ document.addEventListener('DOMContentLoaded', function() {
   setupDynamicFields('task-results-container', 'task-result');
   setupDynamicFields('task-causes-container', 'task-cause');
   setupDynamicFields('task-descriptions-container', 'task-description');
+  setupDynamicFields('workers-container', 'worker'); // 새로 추가된 작업자 필드에 대한 동적 필드 설정
 });

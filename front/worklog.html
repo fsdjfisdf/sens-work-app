@@ -44,9 +44,11 @@
             <label for="task_name">작업명:</label>
             <input type="text" id="task_name" name="task_name" required>
           </div>
-          <div>
-            <label for="worker">작업자:</label>
-            <input type="text" id="worker" name="worker" required>
+          <div id="workers-container">
+            <label>작업자:</label>
+            <input type="text" name="worker" class="worker-input" required>
+            <button type="button" id="add-worker">+</button>
+            <button type="button" id="remove-worker" disabled>-</button>
           </div>
           <div>
             <label for="status">상태:</label>
@@ -164,7 +166,6 @@
             <button type="submit">작업 이력 추가</button>
           </div>
         </form>
-        <!-- 새로운 버튼들 -->
         <button id="print-inform">Print Inform</button>
         <button id="copy-inform">Copy</button>
       </div>
@@ -201,7 +202,6 @@
           <tbody>
           </tbody>
         </table>
-        <!-- 결과 출력 컨테이너 -->
         <div id="print-container" class="print-container"></div>
       </div>
     </section>
