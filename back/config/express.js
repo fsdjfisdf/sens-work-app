@@ -103,8 +103,6 @@ module.exports = function () {
       logger.info('작업 이력 목록:', rows);
       res.status(200).json(rows);
     } catch (err) {
-      logger.error('작업 이력 목록을 가져오는 중 오류 발생:', err);
-      res.status(500).send('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
     }
   });
 
