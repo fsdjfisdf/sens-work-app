@@ -27,11 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   const taskManTemplate = `
-    <textarea name="task_man" class="task-man-input" required></textarea>
-    <select name="task_man_role" class="task-man-select" required>
-      <option value="main">main</option>
-      <option value="support">support</option>
-    </select>
+    <div class="task-man-container">
+      <textarea name="task_man" class="task-man-input" required></textarea>
+      <select name="task_man_role" class="task-man-select" required>
+        <option value="main">main</option>
+        <option value="support">support</option>
+      </select>
+    </div>
   `;
 
   setupDynamicFields('task-results-container', 'task-result', '<textarea name="task_result" class="task-result-input" required></textarea>');
