@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         start_time,
         end_time,
         none_time: noneTime,
-        move_time: moveTime,
+        move_time: MoveTime,
         group,
         site,
         line,
