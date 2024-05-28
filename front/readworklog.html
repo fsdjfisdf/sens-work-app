@@ -1,77 +1,72 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>작업 이력 목록</title>
-  <link rel="stylesheet" href="./css/styles.css" />
-  <style>
-    .print-container {
-      margin-top: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 이력 목록</title>
+    <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-  <nav>
-    <div class="inner">
-      <div class="nav-container">
-        <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
-        <button class="nav-contact">
-          <a href="./signin.html">로그인</a>
-        </button>
-        <button class="nav-contact">
-          <a href="./worklog.html">작업이력 작성</a>
-        </button>
-        <button class="nav-contact">
-          <a href="./readworklog.html">작업이력 목록</a>
-        </button>
-        <button class="nav-contact">
-          <a href="./info.html">정보 조회</a>
-        </button>
-      </div>
-    </div>
-  </nav>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
+                <button class="nav-contact">
+                    <a href="./signin.html">로그인</a>
+                </button>
+                <button class="nav-contact">
+                    <a href="./worklog.html">작업이력 작성</a>
+                </button>
+                <button class="nav-contact">
+                    <a href="./readworklog.html">작업이력 목록</a>
+                </button>
+                <button class="nav-contact">
+                    <a href="./info.html">정보 조회</a>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-  <main>
-    <section id="worklog">
-      <div class="inner">
-        <h2>작업 이력 목록</h2>
-        <table id="worklog-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>작업명</th>
-              <th>작업자</th>
-              <th>결과</th>
-              <th>원인</th>
-              <th>누가</th>
-              <th>작업내용</th>
-              <th>작업 날짜</th>
-              <th>작업 시작 시간</th>
-              <th>작업 끝나는 시간</th>
-              <th>None time</th>
-              <th>Move time</th>
-              <th>GROUP</th>
-              <th>SITE</th>
-              <th>LINE</th>
-              <th>EQ</th>
-              <th>EQ Name</th>
-              <th>WORKTYPE</th>
-              <th>SET UP ITEM</th>
-              <th>타임스탬프</th>
-              <th>상태</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <!-- 결과 출력 컨테이너 -->
-        <div id="print-container" class="print-container"></div>
-      </div>
-    </section>
-  </main>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-  <script src="./js/url.js"></script>
-  <script src="./js/readworklog.js"></script> <!-- 목록 페이지에서 사용할 JavaScript 파일 -->
+    <main>
+        <section id="worklog">
+            <div class="inner">
+                <h2>작업 이력 목록</h2>
+                <table id="worklog-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>작업명</th>
+                            <th>작업자</th>
+                            <th>결과</th>
+                            <th>원인</th>
+                            <th>누가</th>
+                            <th>작업내용</th>
+                            <th>작업 날짜</th>
+                            <th>작업 시작 시간</th>
+                            <th>작업 끝나는 시간</th>
+                            <th>None time</th>
+                            <th>Move time</th>
+                            <th>GROUP</th>
+                            <th>SITE</th>
+                            <th>LINE</th>
+                            <th>EQ</th>
+                            <th>EQ Name</th>
+                            <th>WORKTYPE</th>
+                            <th>SET UP ITEM</th>
+                            <th>타임스탬프</th>
+                            <th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <!-- 결과 출력 컨테이너 -->
+                <div id="print-container" class="print-container"></div>
+            </div>
+        </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="./js/url.js"></script>
+    <script src="./js/readworklog.js"></script> <!-- 목록 페이지에서 사용할 JavaScript 파일 -->
 </body>
 </html>

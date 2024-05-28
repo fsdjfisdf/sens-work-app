@@ -1,209 +1,194 @@
-/* styles.css */
-
-/* Reset some basic elements for a consistent baseline */
-* {
+/* 기본 설정 */
+body, h1, h2, h3, p, a {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #333;
 }
 
-/* Global styles */
 body {
-    font-family: 'Lato', sans-serif;
-    line-height: 1.6;
     background-color: #f5f5f5;
-    color: #333;
-    padding: 10px;
 }
 
 a {
     text-decoration: none;
-    color: #333;
+    color: inherit;
 }
 
-h1, h2 {
-    margin-bottom: 15px;
-    color: #444;
-}
-
-h1 {
-    font-size: 2.5em;
-    font-weight: bold;
-}
-
-h2 {
-    font-size: 2em;
-    font-weight: normal;
-}
-
-button {
-    background-color: #27ae60; /* 초록색 계열 */
-    color: #fff;
-    border: none;
-    padding: 12px 20px;
-    cursor: pointer;
-    border-radius: 12px;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    font-size: 1em;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-button:hover {
-    background-color: #219150; /* 다크 그린 */
-    transform: translateY(-2px);
-}
-
-input, select, textarea {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    font-size: 1em;
-    transition: border 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-input:focus, select:focus, textarea:focus {
-    border-color: #27ae60;
-    box-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
-}
-
-/* Navigation styles */
-nav {
-    background: linear-gradient(90deg, #27ae60, #2ecc71); /* 그라디언트 초록색 */
-    color: #fff;
-    padding: 15px 0;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.nav-container, .inner {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 0 20px;
 }
 
-.nav-title {
-    font-size: 1.8em;
-    font-weight: bold;
+nav {
+    background-color: #222;
+    color: #fff;
+    padding: 15px 0;
 }
 
 .nav-title a {
     color: #fff;
+    font-size: 1.5em;
+    font-weight: bold;
 }
 
 .nav-contact a {
     color: #fff;
+    background-color: #007bff;
     padding: 10px 15px;
-    border-radius: 12px;
-    transition: background-color 0.3s ease;
+    border-radius: 5px;
+    margin-left: 10px;
 }
 
 .nav-contact a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: #0056b3;
 }
 
-.signed .dropdown-button {
-    background-color: transparent;
-    color: #fff;
-    border: none;
-    font-size: 1em;
-    cursor: pointer;
-    padding: 10px 15px;
+.sign-container {
+    display: flex;
+    align-items: center;
 }
 
-.inner {
-    width: 90%;
-    max-width: 1200px;
-    margin: 0 auto;
+.unsigned, .signed {
+    display: flex;
+    align-items: center;
 }
 
-/* Form and button container */
-form div,
-button {
-    margin-bottom: 15px;
-}
-
-/* Section and table styles */
-main {
-    margin-top: 20px;
-}
-
-section h2 {
-    margin-bottom: 20px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    background: rgba(255, 255, 255, 0.7); /* 유리 모피즘 배경 */
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px); /* 블러 효과 */
-}
-
-table th, table td {
-    padding: 12px 15px;
-    text-align: left;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-thead {
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-/* Specific styles for additional sections */
-.print-container,
-.signin-container,
-.signin-form,
-.task-result-container,
-.task-cause-container,
-.task-man-container,
-.task-description-container {
-    background: rgba(255, 255, 255, 0.7); /* 유리 모피즘 배경 */
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px); /* 블러 효과 */
-}
-
-/* Ensure the print-container is visible */
-#print-container {
-    display: none; /* Initially hidden */
-}
-
-.show-print-container {
-    display: block;
-}
-
-/* Utility classes */
 .hidden {
     display: none;
 }
 
-/* Mobile styles */
-@media (max-width: 600px) {
-    .nav-container {
-        flex-direction: column;
-        align-items: flex-start;
+.dropdown {
+    position: relative;
+}
+
+.dropdown-button {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    color: #333;
+    min-width: 160px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    right: 0;
+}
+
+.dropdown-content a, .dropdown-content button {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.dropdown-content a:hover, .dropdown-content button:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.main {
+    background: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h2 {
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+form input, form select, form textarea, form button {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+form textarea {
+    resize: vertical;
+}
+
+form button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+form button:hover {
+    background-color: #0056b3;
+}
+
+.print-container, .signin-container, .task-result-container, .task-cause-container, .task-man-container, .task-description-container {
+    margin-top: 20px;
+}
+
+.task-man-container, .task-result-container, .task-cause-container, .task-description-container {
+    display: flex;
+    align-items: center;
+}
+
+.task-man-input, .task-result-input, .task-cause-input, .task-description-input {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.task-man-select, .remove-field {
+    margin-left: 10px;
+}
+
+@media (max-width: 768px) {
+    .nav-container, .inner {
+        padding: 0 10px;
     }
 
-    .nav-contact {
-        margin: 5px 0;
+    .nav-title a {
+        font-size: 1.2em;
     }
 
-    .task-man-container,
-    .task-result-container,
-    .task-cause-container,
-    .task-description-container {
-        flex-direction: column;
+    .nav-contact a {
+        padding: 8px 10px;
+        font-size: 0.9em;
     }
 
-    .remove-field {
-        margin-top: 10px;
+    form label, form input, form select, form textarea, form button {
+        font-size: 0.9em;
+    }
+
+    h2 {
+        font-size: 1.5em;
     }
 }
