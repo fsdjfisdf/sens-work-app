@@ -127,15 +127,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       alert('작업 로그 추가 중 오류가 발생했습니다.');
     }
   });
-
-  loadWorkLogs();
-  document.getElementById('workType').addEventListener('change', function() {
-    const additionalOptions = document.getElementById('additionalOptions');
-    if (this.value === 'SET UP') {
-      additionalOptions.style.display = 'block';
-    } else {
-      additionalOptions.style.display = 'none';
-      document.getElementById('additionalWorkType').value = 'SELECT';
-    }
-  });
 });
