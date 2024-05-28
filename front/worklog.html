@@ -66,9 +66,15 @@
           </div>
           <div id="task-mans-container">
             <label>누가:</label>
-            <textarea name="task_man" class="task-man-input" required></textarea>
-            <button type="button" id="add-task-man">+</button>
-            <button type="button" id="remove-task-man" disabled>-</button>
+            <div class="task-man-input-group">
+              <input type="text" class="task-man-input" required>
+              <select class="task-man-type-input" required>
+                <option value="main">main</option>
+                <option value="support">support</option>
+              </select>
+              <button type="button" class="add-task-man">+</button>
+              <button type="button" class="remove-task-man" disabled>-</button>
+            </div>
           </div>
           <div id="task-descriptions-container">
             <label>작업내용:</label>
