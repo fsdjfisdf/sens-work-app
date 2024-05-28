@@ -46,8 +46,29 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   `;
 
-  setupDynamicFields('task-results-container', 'task-result', '<textarea name="task_result" class="task-result-input" required></textarea>');
-  setupDynamicFields('task-causes-container', 'task-cause', '<textarea name="task_cause" class="task-cause-input" required></textarea>');
+  const taskResultTemplate = `
+    <div class="task-result-container">
+      <textarea name="task_result" class="task-result-input" required></textarea>
+      <button type="button" class="remove-field">-</button>
+    </div>
+  `;
+
+  const taskCauseTemplate = `
+    <div class="task-cause-container">
+      <textarea name="task_cause" class="task-cause-input" required></textarea>
+      <button type="button" class="remove-field">-</button>
+    </div>
+  `;
+
+  const taskDescriptionTemplate = `
+    <div class="task-description-container">
+      <textarea name="task_description" class="task-description-input" required></textarea>
+      <button type="button" class="remove-field">-</button>
+    </div>
+  `;
+
+  setupDynamicFields('task-results-container', 'task-result', taskResultTemplate);
+  setupDynamicFields('task-causes-container', 'task-cause', taskCauseTemplate);
   setupDynamicFields('task-mans-container', 'task-man', taskManTemplate);
-  setupDynamicFields('task-descriptions-container', 'task-description', '<textarea name="task_description" class="task-description-input" required></textarea>');
+  setupDynamicFields('task-descriptions-container', 'task-description', taskDescriptionTemplate);
 });
