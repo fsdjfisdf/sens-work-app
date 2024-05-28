@@ -35,8 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           tbody.appendChild(tr);
         });
       } catch (error) {
-        console.error('작업 이력 목록을 가져오는 중 오류가 발생했습니다.', error);
-        alert('작업 이력 목록을 가져오는 중 오류가 발생했습니다.');
       }
     }
   
