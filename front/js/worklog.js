@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
 
     // 여러 task_man 값을 역할과 함께 결합
-    const taskMans = Array.from(document.querySelectorAll('.task-man-container')).map(container => {
+    const taskMans = Array.from(document.querySelectorAll('.task-man-container')).map((container, index) => {
       const input = container.querySelector('.task-man-input').value;
       const role = container.querySelector('.task-man-select').value;
       return `${input}(${role})`;
