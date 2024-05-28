@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const input = container.querySelector('.task-man-input').value;
       const role = container.querySelector('.task-man-select').value;
       return `${input}(${role})`;
-    }).join(' ');
+    }).join('\n');
 
     // 여러 task_description 값을 줄바꿈으로 결합
     const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         start_time,
         end_time,
         none_time: noneTime,
-        move_time: MoveTime,
+        move_time: moveTime,
         group,
         site,
         line,
