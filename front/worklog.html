@@ -1,220 +1,190 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>작업 이력 작성</title>
-  <link rel="stylesheet" href="./css/common.css">
-  <style>
-    .big-text {
-      font-size: 2em;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 20px;
-    }
-    .print-container {
-      margin-top: 20px;
-    }
-    .task-man-container {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .task-man-input {
-      flex-grow: 1;
-      margin-right: 10px;
-    }
-    .task-man-select {
-      width: 150px;
-    }
-    .remove-field {
-      margin-left: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 이력 작성</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <nav>
-    <div class="inner">
-      <div class="nav-container">
-        <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
-        <button class="nav-contact">
-          <a href="./signin.html">로그인</a>
-        </button>
-        <button class="nav-contact">
-          <a href="./worklog.html">작업이력 작성</a>
-        </button>
-        <button class="nav-contact">
-          <a href="./readworklog.html">작업이력 목록</a>
-        </button>
-        <button class="nav-contact">
-          <a href="./info.html">정보 조회</a>
-        </button>
-      </div>
-    </div>
-  </nav>
+    <nav>
+        <div class="nav-container">
+            <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
+            <div>
+                <button class="nav-contact">
+                    <a href="./signin.html">로그인</a>
+                </button>
+                <button class="nav-contact">
+                    <a href="./worklog.html">작업이력 작성</a>
+                </button>
+                <button class="nav-contact">
+                    <a href="./readworklog.html">작업이력 목록</a>
+                </button>
+                <button class="nav-contact">
+                    <a href="./info.html">정보 조회</a>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-  <main>
-    <section id="worklog-form">
-      <div class="inner">
-        <h2>작업 이력 작성</h2>
-        <form id="worklogForm">
-          <div>
-            <label for="task_name">작업명:</label>
-            <input type="text" id="task_name" name="task_name" required>
-          </div>
-          <div>
-            <label for="worker">작업자:</label>
-            <input type="text" id="worker" name="worker" required>
-          </div>
-          <div>
-            <label for="status">상태:</label>
-            <input type="text" id="status" name="status" required>
-          </div>
-          <div id="task-results-container">
-            <label>결과:</label>
-            <div class="task-result-container">
-              <textarea name="task_result" class="task-result-input" required></textarea>
-              <button type="button" class="remove-field">-</button>
+    <main>
+        <section id="worklog-form">
+            <div class="inner">
+                <h2>작업 이력 작성</h2>
+                <form id="worklogForm">
+                    <div>
+                        <label for="task_name">작업명:</label>
+                        <input type="text" id="task_name" name="task_name" required>
+                    </div>
+                    <div>
+                        <label for="worker">작업자:</label>
+                        <input type="text" id="worker" name="worker" required>
+                    </div>
+                    <div>
+                        <label for="status">상태:</label>
+                        <input type="text" id="status" name="status" required>
+                    </div>
+                    <div id="task-results-container">
+                        <label>결과:</label>
+                        <div class="task-result-container">
+                            <textarea name="task_result" class="task-result-input" required></textarea>
+                            <button type="button" class="remove-field">-</button>
+                        </div>
+                        <button type="button" id="add-task-result">+</button>
+                    </div>
+                    <div id="task-causes-container">
+                        <label>원인:</label>
+                        <div class="task-cause-container">
+                            <textarea name="task_cause" class="task-cause-input" required></textarea>
+                            <button type="button" class="remove-field">-</button>
+                        </div>
+                        <button type="button" id="add-task-cause">+</button>
+                    </div>
+                    <div id="task-mans-container">
+                        <label>누가:</label>
+                        <div class="task-man-container">
+                            <textarea name="task_man" class="task-man-input" required></textarea>
+                            <select name="task_man_role" class="task-man-select" required>
+                                <option value="main">main</option>
+                                <option value="support">support</option>
+                            </select>
+                            <button type="button" class="remove-field">-</button>
+                        </div>
+                        <button type="button" id="add-task-man">+</button>
+                    </div>
+                    <div id="task-descriptions-container">
+                        <label>작업내용:</label>
+                        <div class="task-description-container">
+                            <textarea name="task_description" class="task-description-input" required></textarea>
+                            <button type="button" class="remove-field">-</button>
+                        </div>
+                        <button type="button" id="add-task-description">+</button>
+                    </div>
+                    <div>
+                        <label for="task_date">작업 날짜:</label>
+                        <input type="date" id="task_date" name="task_date" required>
+                    </div>
+                    <div>
+                        <label for="start_time">작업 시작 시간:</label>
+                        <input type="time" id="start_time" name="start_time" required>
+                    </div>
+                    <div>
+                        <label for="end_time">작업 끝나는 시간:</label>
+                        <input type="time" id="end_time" name="end_time" required>
+                    </div>
+                    <div>
+                        <label for="noneTime">None time:</label>
+                        <input type="number" id="noneTime" name="noneTime">
+                    </div>
+                    <div>
+                        <label for="moveTime">Move time:</label>
+                        <input type="number" id="moveTime" name="moveTime">
+                    </div>
+                    <div>
+                        <label for="group">GROUP:</label>
+                        <select id="group" name="group" required>
+                            <option value="SELECT">SELECT</option>
+                            <option value="PEE1">PEE1</option>
+                            <option value="PEE2">PEE2</option>
+                            <option value="PEE3">PEE3</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="site">SITE:</label>
+                        <select id="site" name="site" required>
+                            <option value="SELECT">SELECT</option>
+                            <option value="PT">PT</option>
+                            <option value="HS">HS</option>
+                            <option value="IC">IC</option>
+                            <option value="CJ">CJ</option>
+                            <option value="PSKH">PSKH</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="line">LINE:</label>
+                        <select id="line" name="line" required>
+                            <option value="SELECT">SELECT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="equipment_type">EQ:</label>
+                        <select id="equipment_type" name="equipment_type" required>
+                            <option value="SELECT">SELECT</option>
+                            <option value="SUPRA">SUPRA</option>
+                            <option value="ZEDIUS">ZEDIUS</option>
+                            <option value="INTEGER">INTEGER</option>
+                            <option value="PRECIA">PRECIA</option>
+                            <option value="ECOLITE">ECOLITE</option>
+                            <option value="JENEVA">JENEVA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="equipment_name">EQ Name:</label>
+                        <input type="text" id="equipment_name" name="equipment_name" required>
+                    </div>
+                    <div>
+                        <label for="workType">WORKTYPE:</label>
+                        <select id="workType" name="workType" required>
+                            <option value="SELECT">SELECT</option>
+                            <option value="SET UP">SET UP</option>
+                            <option value="RELOCATION">RELOCATION</option>
+                            <option value="MAINT">MAINT</option>
+                        </select>
+                    </div>
+                    <div id="additionalOptions" class="additionalOption" style="display:none;">
+                        <label for="additionalWorkType">SET UP ITEM:</label>
+                        <select id="additionalWorkType" name="additionalWorkType">
+                            <option value="SELECT">SELECT</option>
+                            <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+                            <option value="FAB IN">FAB IN</option>
+                            <option value="DOCKING">DOCKING</option>
+                            <option value="POWER TURN ON">POWER TURN ON</option>
+                            <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+                            <option value="GAS TURN ON">GAS TURN ON</option>
+                            <option value="TEACHING">TEACHING</option>
+                            <option value="PART INSTALLATION">PART INSTALLATION</option>
+                            <option value="LEAK CHECK">LEAK CHECK</option>
+                            <option value="TTTM">TTTM</option>
+                            <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
+                            <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+                            <option value="MAINTENANCE">MAINTENANCE</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit">작업 이력 추가</button>
+                    </div>
+                </form>
+                <button id="print-inform">Print Inform</button>
+                <button id="copy-inform">Copy</button>
             </div>
-            <button type="button" id="add-task-result">+</button>
-            <button type="button" id="remove-task-result" disabled>-</button>
-          </div>
-          <div id="task-causes-container">
-            <label>원인:</label>
-            <div class="task-cause-container">
-              <textarea name="task_cause" class="task-cause-input" required></textarea>
-              <button type="button" class="remove-field">-</button>
-            </div>
-            <button type="button" id="add-task-cause">+</button>
-            <button type="button" id="remove-task-cause" disabled>-</button>
-          </div>
-          <div id="task-mans-container">
-            <label>누가:</label>
-            <div class="task-man-container">
-              <textarea name="task_man" class="task-man-input" required></textarea>
-              <select name="task_man_role" class="task-man-select" required>
-                <option value="main">main</option>
-                <option value="support">support</option>
-              </select>
-              <button type="button" class="remove-field">-</button>
-            </div>
-            <button type="button" id="add-task-man">+</button>
-            <button type="button" id="remove-task-man" disabled>-</button>
-          </div>
-          <div id="task-descriptions-container">
-            <label>작업내용:</label>
-            <div class="task-description-container">
-              <textarea name="task_description" class="task-description-input" required></textarea>
-              <button type="button" class="remove-field">-</button>
-            </div>
-            <button type="button" id="add-task-description">+</button>
-            <button type="button" id="remove-task-description" disabled>-</button>
-          </div>
-          <div>
-            <label for="task_date">작업 날짜:</label>
-            <input type="date" id="task_date" name="task_date" required>
-          </div>
-          <div>
-            <label for="start_time">작업 시작 시간:</label>
-            <input type="time" id="start_time" name="start_time" required>
-          </div>
-          <div>
-            <label for="end_time">작업 끝나는 시간:</label>
-            <input type="time" id="end_time" name="end_time" required>
-          </div>
-          <div>
-            <label for="noneTime">None time:</label>
-            <input type="number" id="noneTime" name="noneTime">
-          </div>
-          <div>
-            <label for="moveTime">Move time:</label>
-            <input type="number" id="moveTime" name="moveTime">
-          </div>
-          <div>
-            <label for="group">GROUP:</label>
-            <select id="group" name="group" required>
-              <option value="SELECT">SELECT</option>
-              <option value="PEE1">PEE1</option>
-              <option value="PEE2">PEE2</option>
-              <option value="PEE3">PEE3</option>
-            </select>
-          </div>
-          <div>
-            <label for="site">SITE:</label>
-            <select id="site" name="site" required>
-              <option value="SELECT">SELECT</option>
-              <option value="PT">PT</option>
-              <option value="HS">HS</option>
-              <option value="IC">IC</option>
-              <option value="CJ">CJ</option>
-              <option value="PSKH">PSKH</option>
-            </select>
-          </div>
-          <div>
-            <label for="line">LINE:</label>
-            <select id="line" name="line" required>
-              <option value="SELECT">SELECT</option>
-            </select>
-          </div>
-          <div>
-            <label for="equipment_type">EQ:</label>
-            <select id="equipment_type" name="equipment_type" required>
-              <option value="SELECT">SELECT</option>
-              <option value="SUPRA">SUPRA</option>
-              <option value="ZEDIUS">ZEDIUS</option>
-              <option value="INTEGER">INTEGER</option>
-              <option value="PRECIA">PRECIA</option>
-              <option value="ECOLITE">ECOLITE</option>
-              <option value="JENEVA">JENEVA</option>
-            </select>
-          </div>
-          <div>
-            <label for="equipment_name">EQ Name:</label>
-            <input type="text" id="equipment_name" name="equipment_name" required>
-          </div>
-          <div>
-            <label for="workType">WORKTYPE:</label>
-            <select id="workType" name="workType" required>
-              <option value="SELECT">SELECT</option>
-              <option value="SET UP">SET UP</option>
-              <option value="RELOCATION">RELOCATION</option>
-              <option value="MAINT">MAINT</option>
-            </select>
-          </div>
-          <div id="additionalOptions" class="additionalOption" style="display:none;">
-            <label for="additionalWorkType">SET UP ITEM:</label>
-            <select id="additionalWorkType" name="additionalWorkType">
-              <option value="SELECT">SELECT</option>
-              <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
-              <option value="FAB IN">FAB IN</option>
-              <option value="DOCKING">DOCKING</option>
-              <option value="POWER TURN ON">POWER TURN ON</option>
-              <option value="UTILITY TURN ON">UTILITY TURN ON</option>
-              <option value="GAS TURN ON">GAS TURN ON</option>
-              <option value="TEACHING">TEACHING</option>
-              <option value="PART INSTALLATION">PART INSTALLATION</option>
-              <option value="LEAK CHECK">LEAK CHECK</option>
-              <option value="TTTM">TTTM</option>
-              <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
-              <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
-              <option value="MAINTENANCE">MAINTENANCE</option>
-            </select>
-          </div>
-          <div>
-            <button type="submit">작업 이력 추가</button>
-          </div>
-        </form>
-        <!-- 새로운 버튼들 -->
-        <button id="print-inform">Print Inform</button>
-        <button id="copy-inform">Copy</button>
-      </div>
-    </section>
-  </main>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-  <script src="./js/url.js"></script>
-  <script src="./js/worklog.js"></script>
-  <script src="./js/site.js"></script>
-  <script src="./js/addandremove.js"></script>
-  <script src="./js/printInform.js"></script> <!-- 새로운 JavaScript 파일 추가 -->
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="js/url.js"></script>
+    <script src="js/worklog.js"></script>
+    <script src="js/site.js"></script>
+    <script src="js/addandremove.js"></script>
+    <script src="js/printInform.js"></script>
 </body>
 </html>

@@ -1,0 +1,146 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+nav {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-title a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.5em;
+}
+
+.nav-contact a, .sign-link, .dropdown-button, .dropdown-item {
+    color: #fff;
+    text-decoration: none;
+    padding: 5px 10px;
+    background-color: #444;
+    border: none;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #444;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-content a {
+    display: block;
+    padding: 10px;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}
+
+.inner {
+    padding: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+.print-container {
+    margin-top: 20px;
+}
+
+.signin-container, .signup-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.signin-form, .signup-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.signin-form input[type="text"], .signin-form input[type="password"], .signin-form input[type="button"], .signup-form input[type="text"], .signup-form input[type="password"], .signup-form input[type="button"], .signup-form select, .signup-form input[type="date"], .signup-form input[type="number"] {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+}
+
+.signup-container a {
+    color: #007bff;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.task-man-container, .task-result-container, .task-cause-container, .task-description-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.task-man-input, .task-result-input, .task-cause-input, .task-description-input {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.task-man-select, .remove-field {
+    margin-left: 10px;
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+form input, form select, form textarea, form button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+form button[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
