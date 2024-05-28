@@ -1,64 +1,71 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 관리</title>
-    <link rel="stylesheet" href="./css/styles.css" />
-</head>
-<body>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
-                <div class="sign-container">
-                    <div class="unsigned">
-                        <a href="./signin.html" class="sign-link">로그인/회원가입</a>
-                    </div>
-                    <div class="signed hidden">
-                        <div class="dropdown">
-                            <button class="dropdown-button">
-                                안녕하세요. <span class="nickname"></span>님.
-                            </button>
-                            <div class="dropdown-content">
-                                <a href="./worklog.html" class="dropdown-item">작업 이력</a>
-                                <button id="sign-out" class="dropdown-item">로그아웃</button>
+
+<index.html>
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>작업 이력 관리</title>
+        <link rel="stylesheet" href="./css/styles.css" />
+    </head>
+    <body>
+        <nav>
+            <div class="inner">
+                <div class="nav-container">
+                    <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
+                    <div class="sign-container">
+                        <!-- 비회원 -->
+                        <div class="unsigned">
+                            <a href="./signin.html" class="sign-link">로그인/회원가입</a>
+                        </div>
+                        <!-- 회원 -->
+                        <div class="signed hidden">
+                            <div class="dropdown">
+                                <button class="dropdown-button">
+                                    안녕하세요. <span class="nickname"></span>님.
+                                </button>
+                                <div class="dropdown-content">
+                                    <a href="./worklog.html" class="dropdown-item">작업 이력</a>
+                                    <button id="sign-out" class="dropdown-item">로그아웃</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </nav>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-
-            if (!token) {
-                alert("로그인이 필요합니다.");
-                window.location.replace("./signin.html");
-                return;
-            }
-
-            const signOutButton = document.querySelector("#sign-out");
-
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    alert("로그아웃 되었습니다.");
+        </nav>
+    
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const token = localStorage.getItem("x-access-token");
+    
+                if (!token) {
+                    alert("로그인이 필요합니다.");
                     window.location.replace("./signin.html");
-                });
-            }
-
-            if (token) {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            }
-        });
-    </script>
-</body>
-</html>
+                    return;
+                }
+    
+                // 로그인 여부 확인 및 UI 업데이트
+                const signOutButton = document.querySelector("#sign-out");
+    
+                if (signOutButton) {
+                    signOutButton.addEventListener("click", function() {
+                        localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
+                        alert("로그아웃 되었습니다.");
+                        window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
+                    });
+                }
+    
+                if (token) {
+                    document.querySelector(".unsigned").classList.add("hidden");
+                    document.querySelector(".signed").classList.remove("hidden");
+                    // 추가적으로 사용자 정보를 표시할 수 있음
+                } else {
+                    document.querySelector(".unsigned").classList.remove("hidden");
+                    document.querySelector(".signed").classList.add("hidden");
+                }
+            });
+        </script>
+    </body>
+    </html>
+    

@@ -1,271 +1,209 @@
-/* 전체 페이지 스타일링 */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* styles.css */
+
+/* Reset some basic elements for a consistent baseline */
+* {
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    box-sizing: border-box;
+}
+
+/* Global styles */
+body {
+    font-family: 'Lato', sans-serif;
+    line-height: 1.6;
+    background-color: #f5f5f5;
+    color: #333;
+    padding: 10px;
+}
+
+a {
+    text-decoration: none;
     color: #333;
 }
 
-/* 네비게이션 스타일 */
-nav {
-    background-color: #333;
+h1, h2 {
+    margin-bottom: 15px;
+    color: #444;
+}
+
+h1 {
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 2em;
+    font-weight: normal;
+}
+
+button {
+    background-color: #27ae60; /* 초록색 계열 */
     color: #fff;
-    padding: 10px;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    font-size: 1em;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    background-color: #219150; /* 다크 그린 */
+    transform: translateY(-2px);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    font-size: 1em;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #27ae60;
+    box-shadow: 0 0 5px rgba(46, 204, 113, 0.5);
+}
+
+/* Navigation styles */
+nav {
+    background: linear-gradient(90deg, #27ae60, #2ecc71); /* 그라디언트 초록색 */
+    color: #fff;
+    padding: 15px 0;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .nav-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0 20px;
+}
+
+.nav-title {
+    font-size: 1.8em;
+    font-weight: bold;
 }
 
 .nav-title a {
     color: #fff;
-    text-decoration: none;
-    font-size: 1.5em;
 }
 
-.nav-contact a, .sign-link, .dropdown-button, .dropdown-item {
+.nav-contact a {
     color: #fff;
-    text-decoration: none;
-    padding: 5px 10px;
-    background-color: #444;
+    padding: 10px 15px;
+    border-radius: 12px;
+    transition: background-color 0.3s ease;
+}
+
+.nav-contact a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.signed .dropdown-button {
+    background-color: transparent;
+    color: #fff;
     border: none;
+    font-size: 1em;
     cursor: pointer;
-    margin-left: 5px;
-    border-radius: 4px;
+    padding: 10px 15px;
 }
 
-.dropdown {
-    position: relative;
+.inner {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-.dropdown-content {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #444;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+/* Form and button container */
+form div,
+button {
+    margin-bottom: 15px;
 }
 
-.dropdown-content a {
+/* Section and table styles */
+main {
+    margin-top: 20px;
+}
+
+section h2 {
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.7); /* 유리 모피즘 배경 */
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px); /* 블러 효과 */
+}
+
+table th, table td {
+    padding: 12px 15px;
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+thead {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Specific styles for additional sections */
+.print-container,
+.signin-container,
+.signin-form,
+.task-result-container,
+.task-cause-container,
+.task-man-container,
+.task-description-container {
+    background: rgba(255, 255, 255, 0.7); /* 유리 모피즘 배경 */
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px); /* 블러 효과 */
+}
+
+/* Ensure the print-container is visible */
+#print-container {
+    display: none; /* Initially hidden */
+}
+
+.show-print-container {
     display: block;
-    padding: 10px;
 }
 
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
+/* Utility classes */
 .hidden {
     display: none;
 }
 
-/* 폼 컨테이너 스타일링 */
-#loginContainer, #workLogFormContainer, .tabcontent, .inner {
-    max-width: 600px;
-    margin: 30px auto;
-    padding: 20px;
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-}
-
-/* 폼 내부 요소 스타일링 */
-form div {
-    margin-bottom: 15px;
-}
-
-form label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-input[type="text"], input[type="password"], input[type="date"], input[type="time"], select, textarea {
-    width: 100%;
-    padding: 8px;
-    margin: 5px 0 10px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-/* 버튼 기본 스타일링 */
-button {
-    width: 100%;
-    background-color: #4CAF50;
-    color: white;
-    padding: 14px 20px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-/* 탭 컨테이너 스타일 */
-.tab {
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #d4eed6;
-}
-
-/* 탭 버튼 스타일 */
-.tab button {
-    background-color: inherit;
-    float: left;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 14px 16px;
-    transition: 0.3s;
-    font-size: 17px;
-}
-
-/* 탭 버튼 - 마우스 호버 상태 */
-.tab button:hover {
-    background-color: #6ab16d;
-}
-
-/* 탭 버튼 - 활성화 상태 */
-.tab button.active {
-    background-color: #4CAF50;
-}
-
-/* 탭 컨텐츠 기본 스타일 */
-.tabcontent {
-    display: none;
-    padding: 6px 12px;
-    border: 1px solid #ffffff;
-    border-top: none;
-    animation: fadeEffect 0.5s; /* 컨텐츠 변경 시 페이드 효과 */
-}
-
-/* 페이드 효과 애니메이션 */
-@keyframes fadeEffect {
-    from {opacity: 0;}
-    to {opacity: 1;}
-}
-
-/* 작업 이력 표시 스타일 */
-.history-item {
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.history-item h3 {
-    font-size: 16px;
-    color: #333;
-}
-
-.history-item p {
-    font-size: 14px;
-    color: #666;
-}
-
-.deleteLogButton {
-    font-size: 16px;
-    color: #555;
-    padding: 5px 8px;
-    cursor: pointer;
-    border: 1px solid #ccc;
-    background-color: #f0f0f0;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.deleteLogButton:hover {
-    background-color: #e0e0e0;
-    color: #333;
-}
-
-.input-group {
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f5f5f5;
-    border-radius: 5px;
-}
-
-.input-group h3 {
-    margin-bottom: 10px;
-}
-
-/* 작은 버튼 스타일링 */
-.smallButton {
-    padding: 3px 6px;
-    font-size: 10px;
-    margin-left: 5px;
-    cursor: pointer;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    background-color: #f9f9f9;
-    color: #333;
-    transition: background-color 0.3s, border-color 0.3s;
-}
-
-.smallButton:hover {
-    background-color: #e0e0e0;
-    border-color: #adadad;
-}
-
-/* 모바일 화면과 태블릿을 위한 기본 스타일 */
-@media screen and (max-width: 768px) {
-    body {
-        font-size: 14px;
+/* Mobile styles */
+@media (max-width: 600px) {
+    .nav-container {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-    .tab button {
-        padding: 10px 12px;
-        font-size: 14px;
+    .nav-contact {
+        margin: 5px 0;
     }
 
-    input[type="text"], input[type="password"], input[type="date"], input[type="time"], select, textarea {
-        font-size: 14px;
-    }
-
-    button {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
-
-    .input-group h3 {
-        font-size: 16px;
-    }
-
-    /* 탭과 관련된 스타일 */
-    .tab {
-        display: flex;
+    .task-man-container,
+    .task-result-container,
+    .task-cause-container,
+    .task-description-container {
         flex-direction: column;
     }
 
-    .tabcontent, #loginContainer, #workLogFormContainer {
-        padding: 15px;
-    }
-}
-
-/* 매우 작은 화면(주로 스마트폰)을 위한 스타일 */
-@media screen and (max-width: 480px) {
-    .tab button {
-        font-size: 12px;
-    }
-
-    .input-group, .buttonContainer {
-        flex-direction: column;
-    }
-
-    button, input[type="text"], input[type="password"], input[type="date"], input[type="time"], select, textarea {
-        width: 100%;
+    .remove-field {
+        margin-top: 10px;
     }
 }

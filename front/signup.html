@@ -1,61 +1,74 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>회원가입</title>
-    <link rel="stylesheet" href="./css/styles.css" />
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title></title>
+  <meta name="author" content="author" />
+  <meta name="description" content="" />
+  <meta name="keywords" content=""/>
+  <link rel="stylesheet" href="./css/common.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+
 <body>
-    <nav>
-        <div class="nav-container">
-            <h1 class="nav-title"><a href="./index.html">작업 이력 관리</a></h1>
-            <button class="nav-contact">
-                <a href="./signin.html">로그인/회원가입</a>
-            </button>
-        </div>
-    </nav>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html"></a></h1>
+        <button class="nav-contact">
+          <a href="./signin.html">로그인/회원가입</a>
+        </button>
+      </div>
+    </div>
+  </nav>
 
-    <main>
-        <div class="inner">
-            <div class="signin-container">
-                <h2>회원가입</h2>
-                <div class="signin-form">
-                    <input type="text" placeholder="아이디" id="userID">
-                    <input type="password" placeholder="비밀번호" id="password">
-                    <input type="text" placeholder="닉네임" id="nickname">
-                    <select id="group">
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PEE3">PEE3</option>
-                    </select>
-                    <select id="site">
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="level">
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
-                    <input type="date" placeholder="입사일" id="hireDate">
-                    <input type="number" placeholder="Main Set Up CAPA" id="mainSetUpCapa">
-                    <input type="number" placeholder="Main Maint CAPA" id="mainMaintCapa">
-                    <input type="number" placeholder="Multi Set Up CAPA" id="multiSetUpCapa">
-                    <input type="number" placeholder="Multi Maint CAPA" id="multiMaintCapa">
-                    <input type="button" value="회원가입" id="signup">
-                </div>
-            </div>
+  <main>
+    <div class="inner">
+      <div class="signin-container">
+        <h2>회원가입</h2>
+        <div class="signin-form">
+          <input type="text" placeholder="아이디" id="userID" />
+          <input type="password" placeholder="비밀번호" id="password" />
+          <input type="text" placeholder="닉네임" id="nickname" />
+          <select id="group">
+            <option value="PEE1">PEE1</option>
+            <option value="PEE2">PEE2</option>
+            <option value="PEE3">PEE3</option>
+          </select>
+          <select id="site">
+            <option value="PT">PT</option>
+            <option value="HS">HS</option>
+            <option value="IC">IC</option>
+            <option value="CJ">CJ</option>
+            <option value="PSKH">PSKH</option>
+          </select>
+          <select id="level">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+          <input type="date" placeholder="입사일" id="hireDate" />
+          <input type="number" placeholder="Main Set Up CAPA" id="mainSetUpCapa" />
+          <input type="number" placeholder="Main Maint CAPA" id="mainMaintCapa" />
+          <input type="number" placeholder="Multi Set Up CAPA" id="multiSetUpCapa" />
+          <input type="number" placeholder="Multi Maint CAPA" id="multiMaintCapa" />
+          <input type="button" value="회원가입" id="signup" />
         </div>
-    </main>
+      </div>
+    </div>
+  </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js" integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="js/url.js"></script>
-    <script src="js/signup.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js"
+    integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script src="./js/url.js"></script>
+  <script src="./js/signup.js"></script>
 </body>
 </html>
