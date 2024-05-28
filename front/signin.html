@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>로그인</title>
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
     <nav>
@@ -22,20 +22,16 @@
     </nav>
 
     <main>
-        <div class="signin-container">
-            <h2>로그인</h2>
-            <div class="signin-form">
-                <div>
-                    <label for="userID">ID :</label>
-                    <input type="text" placeholder="Username" id="userID" />
-                </div>
-                <div>
-                    <label for="password">PASSWORD :</label>
-                    <input type="password" placeholder="Password" id="password" />
-                </div>
-                <input type="button" value="로그인" id="signin" />
-                <div class="signup-container">
-                    <a href="./signup.html" id="signup">회원가입</a>
+        <div class="inner">
+            <div class="signin-container">
+                <h2>로그인</h2>
+                <div class="signin-form">
+                    <input type="text" placeholder="아이디" id="userID" />
+                    <input type="password" placeholder="비밀번호" id="password" />
+                    <input type="button" value="로그인" id="signin" />
+                    <div class="signup-container">
+                        <a href="./signup.html" id="signup">회원가입</a>
+                    </div>
                 </div>
             </div>
         </div>

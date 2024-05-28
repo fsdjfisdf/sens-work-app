@@ -20,18 +20,18 @@ async function signup(event) {
   const totalCapa = (mainSetUpCapa + mainMaintCapa + multiCapa) / 3;
 
   // 2. #email, #password, nickname 값 확인 (정규표현식 확인)
-  const userIDRegExp = /^[0-9]{6}$/; // 6자 숫자자
-  const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[\W_])[0-9a-zA-Z\W_]{8,16}$/;
-  const nicknameRegExp = /^[가-힣a-zA-Z]{2,10}$/;
+  const userIDRegExp = /^\d{6}$/; // 숫자 6자리
+  const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,16}$/; // 숫자, 영어, 특수문자 포함 8-16자리
+  const nicknameRegExp = /^[가-힣a-zA-Z]+$/; // 한글과 영어 조합
 
   if (!userIDRegExp.test(userID)) {
-    return alert("아이디 형식은 사번 6자리만 사용 가능");
+      return alert("아이디 형식: 숫자 6자리");
   }
   if (!passwordRegExp.test(password)) {
-    return alert("비밀번호 형식은 숫자, 문자, 특수문자가 1개씩 포함된 비밀번호만 사용 가능");
+      return alert("비밀번호 형식: 숫자, 영어, 특수문자 포함 8-16자리");
   }
   if (!nicknameRegExp.test(nickname)) {
-    return alert("이름 형식은 이름과 영어만 사용 가능");
+      return alert("닉네임 형식: 한글과 영어를 조합하여 사용 (한글만 사용 가능)");
   }
 
   // 3. 회원가입 API 요청
@@ -54,5 +54,5 @@ async function signup(event) {
   localStorage.setItem("x-access-token", jwt);
   alert(signUpReturn.data.message);
 
-  return location.replace("./index.html");
+  return location.replace("./signin.html");
 }

@@ -5,45 +5,41 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>회원가입</title>
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
     <nav>
-        <div class="nav-container">
-            <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
-            <div class="sign-container">
-                <div class="unsigned">
-                    <a href="./signin.html" class="sign-link">로그인/회원가입</a>
-                </div>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
+                <button class="nav-contact">
+                    <a href="./signin.html">로그인/회원가입</a>
+                </button>
             </div>
         </div>
     </nav>
 
-    <main class="container">
-        <div class="signin-container">
-            <h2>회원가입</h2>
-            <div class="signin-form">
-                <div>
+    <main>
+        <div class="inner">
+            <div class="signin-container">
+                <h2>SIGN UP</h2>
+                <div class="signin-form">
                     <label for="userID">ID</label>
                     <input type="text" placeholder="사번" id="userID" />
-                </div>
-                <div>
-                    <label for="password">Password</label>
-                    <input type="password" id="password" />
-                </div>
-                <div>
+                    
+                    <label for="password">PASSWORD</label>
+                    <input type="password" placeholder="비밀번호" id="password" />
+                    
                     <label for="nickname">Name</label>
                     <input type="text" id="nickname" />
-                </div>
-                <div>
+                    
                     <label for="group">Group</label>
                     <select id="group">
-                        <option value="PEE1">PEE1(PSKH)</option>
-                        <option value="PEE2">PEE2(SUPRA)</option>
-                        <option value="PEE3">PEE3(INTEGER)</option>
+                        <option value="PEE1">PEE1(SUPRA)</option>
+                        <option value="PEE2">PEE2(INTEGER)</option>
+                        <option value="PEE3">PEE3(PSKH)</option>
                     </select>
-                </div>
-                <div>
+                    
                     <label for="site">Site</label>
                     <select id="site">
                         <option value="PT">PT</option>
@@ -52,8 +48,7 @@
                         <option value="CJ">CJ</option>
                         <option value="PSKH">PSKH</option>
                     </select>
-                </div>
-                <div>
+                    
                     <label for="level">Eng'r Level</label>
                     <select id="level">
                         <option value="0">0</option>
@@ -62,35 +57,29 @@
                         <option value="3">3</option>
                         <option value="4">4</option>
                     </select>
-                </div>
-                <div>
-                    <label for="hireDate">START DATE</label>
-                    <input type="date" placeholder="입사일" id="hireDate" />
-                </div>
-                <div>
+                    
+                    <label for="hireDate">입사일</label>
+                    <input type="date" id="hireDate" />
+                    
                     <label for="mainSetUpCapa">Main Set Up CAPA</label>
                     <input type="number" id="mainSetUpCapa" />
-                </div>
-                <div>
+                    
                     <label for="mainMaintCapa">Main Maint CAPA</label>
                     <input type="number" id="mainMaintCapa" />
-                </div>
-                <div>
+                    
                     <label for="multiSetUpCapa">Multi Set Up CAPA</label>
                     <input type="number" id="multiSetUpCapa" />
-                </div>
-                <div>
+                    
                     <label for="multiMaintCapa">Multi Maint CAPA</label>
                     <input type="number" id="multiMaintCapa" />
+                    
+                    <input type="button" value="회원가입" id="signup" />
                 </div>
-                <input type="button" value="회원가입" id="signup" />
             </div>
         </div>
     </main>
 
-    <p class="footer-text">Produced by SEnS Jeong Hyeon Woo</p>
-
-    <script src="https://cdn.jsdelivr.net/npm/axios/0.26.1/axios.min.js" integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="./js/url.js"></script>
     <script src="./js/signup.js"></script>
 </body>

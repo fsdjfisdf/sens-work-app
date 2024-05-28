@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEnS Working System</title>
-    <link rel="stylesheet" href="./css/styles.css">
+    <title>작업 이력 작성</title>
+    <link rel="stylesheet" href="./css/styles.css" />
 </head>
 <body>
     <nav>
-        <div class="nav-container">
-            <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
-            <div class="sign-container">
-                <div class="unsigned">
-                    <a href="./signin.html" class="sign-link">로그인/회원가입</a>
-                </div>
-                <div class="signed hidden">
-                    <a href="./info.html" class="sign-link">정보 조회</a>
-                    <a href="./worklog.html" class="sign-link">작업 이력 작성</a>
-                    <a href="./readworklog.html" class="sign-link">작업 이력 목록</a>
-                    <button id="sign-out" class="sign-link">로그아웃</button>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
+                <div class="sign-container">
+                    <div class="unsigned">
+                        <a href="./signin.html" class="sign-link">로그인/회원가입</a>
+                    </div>
+                    <div class="signed hidden">
+                        <div class="dropdown">
+                            <button class="dropbtn">메뉴</button>
+                            <div class="dropdown-content">
+                                <a href="./info.html" class="dropdown-item">정보 조회</a>
+                                <a href="./worklog.html" class="dropdown-item">작업 이력 작성</a>
+                                <a href="./readworklog.html" class="dropdown-item">작업 이력 목록</a>
+                                <button id="sign-out" class="dropdown-item">로그아웃</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
-
-    <main class="container">
-        <h2>작업 이력 작성</h2>
-        <!-- 메인 콘텐츠 -->
-    </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
