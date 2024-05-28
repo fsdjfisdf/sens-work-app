@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>작업 이력</title>
+  <title>작업 이력 작성</title>
   <link rel="stylesheet" href="./css/common.css">
   <style>
     .big-text {
@@ -27,6 +27,9 @@
     .task-man-select {
       width: 150px;
     }
+    .remove-field {
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -39,6 +42,9 @@
         </button>
         <button class="nav-contact">
           <a href="./worklog.html">작업이력 작성</a>
+        </button>
+        <button class="nav-contact">
+          <a href="./readworklog.html">작업이력 목록</a>
         </button>
         <button class="nav-contact">
           <a href="./info.html">정보 조회</a>
@@ -66,13 +72,19 @@
           </div>
           <div id="task-results-container">
             <label>결과:</label>
-            <textarea name="task_result" class="task-result-input" required></textarea>
+            <div class="task-result-container">
+              <textarea name="task_result" class="task-result-input" required></textarea>
+              <button type="button" class="remove-field">-</button>
+            </div>
             <button type="button" id="add-task-result">+</button>
             <button type="button" id="remove-task-result" disabled>-</button>
           </div>
           <div id="task-causes-container">
             <label>원인:</label>
-            <textarea name="task_cause" class="task-cause-input" required></textarea>
+            <div class="task-cause-container">
+              <textarea name="task_cause" class="task-cause-input" required></textarea>
+              <button type="button" class="remove-field">-</button>
+            </div>
             <button type="button" id="add-task-cause">+</button>
             <button type="button" id="remove-task-cause" disabled>-</button>
           </div>
@@ -84,13 +96,17 @@
                 <option value="main">main</option>
                 <option value="support">support</option>
               </select>
+              <button type="button" class="remove-field">-</button>
             </div>
             <button type="button" id="add-task-man">+</button>
             <button type="button" id="remove-task-man" disabled>-</button>
           </div>
           <div id="task-descriptions-container">
             <label>작업내용:</label>
-            <textarea name="task_description" class="task-description-input" required></textarea>
+            <div class="task-description-container">
+              <textarea name="task_description" class="task-description-input" required></textarea>
+              <button type="button" class="remove-field">-</button>
+            </div>
             <button type="button" id="add-task-description">+</button>
             <button type="button" id="remove-task-description" disabled>-</button>
           </div>
@@ -191,43 +207,6 @@
         <!-- 새로운 버튼들 -->
         <button id="print-inform">Print Inform</button>
         <button id="copy-inform">Copy</button>
-      </div>
-    </section>
-
-    <section id="worklog">
-      <div class="inner">
-        <h2>작업 이력 목록</h2>
-        <table id="worklog-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>작업명</th>
-              <th>작업자</th>
-              <th>결과</th>
-              <th>원인</th>
-              <th>누가</th>
-              <th>작업내용</th>
-              <th>작업 날짜</th>
-              <th>작업 시작 시간</th>
-              <th>작업 끝나는 시간</th>
-              <th>None time</th>
-              <th>Move time</th>
-              <th>GROUP</th>
-              <th>SITE</th>
-              <th>LINE</th>
-              <th>EQ</th>
-              <th>EQ Name</th>
-              <th>WORKTYPE</th>
-              <th>SET UP ITEM</th>
-              <th>타임스탬프</th>
-              <th>상태</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <!-- 결과 출력 컨테이너 -->
-        <div id="print-container" class="print-container"></div>
       </div>
     </section>
   </main>
