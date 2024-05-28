@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', function() {
       newField.innerHTML = template;
       container.insertBefore(newField, addButton);
 
+      // 새로운 필드에 개별 삭제 버튼 이벤트 리스너 추가
+      newField.querySelector('.remove-field').addEventListener('click', function() {
+        newField.remove();
+        if (container.querySelectorAll(`.${inputClass}-container`).length <= 1) {
+          removeButton.disabled = true;
+        }
+      });
+
       if (container.querySelectorAll(`.${inputClass}-container`).length > 1) {
         removeButton.disabled = false;
       }
@@ -34,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <option value="main">main</option>
         <option value="support">support</option>
       </select>
+      <button type="button" class="remove-field">-</button>
     </div>
   `;
 
