@@ -123,8 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('작업 로그 추가 중 오류가 발생했습니다.');
       }
     } catch (error) {
-      console.error('작업 로그 추가 중 오류가 발생했습니다.', error);
-      alert('작업 로그 추가 중 오류가 발생했습니다.');
     }
   });
 });
