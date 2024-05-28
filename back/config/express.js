@@ -26,41 +26,36 @@ module.exports = function () {
   require("../src/routes/indexRoute")(app);
 
   // 회원가입
-  app.post('/sign-up', async (req, res) => {
-    const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
+app.post('/sign-up', async (req, res) => {
+  const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
 
-    try {
-      // userID 중복 확인
-      const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
+  try {
+    // userID 중복 확인
+    const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
 
-      if (rows.length > 0) {
-        return res.status(400).json({ message: '이미 존재하는 userID입니다.' });
-      }
-
-      // 회원가입 처리
-      const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      await pool.query(query, [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa]);
-
-      res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
-    } catch (err) {
-      logger.error('회원가입 중 오류 발생:', err);
-      res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
+    if (rows.length > 0) {
+      return res.status(400).json({ message: '이미 존재하는 userID입니다.' });
     }
-  });
+
+    // 회원가입 처리
+    const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    await pool.query(query, [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa]);
+
+    res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
+  } catch (err) {
+    logger.error('회원가입 중 오류 발생:', err);
+    res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
+  }
+});
 
   // 작업 로그 추가
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
     const { task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, equipment_type, equipment_name, workType, setupItem, status } = req.body;
   
-    // task_man 필드가 배열인지 확인하고 배열이 아닌 경우 빈 배열로 설정
-    const taskManArray = Array.isArray(task_man) ? task_man : [];
-
-    // task_man 필드를 배열 형식에서 문자열 형식으로 변환
-    const formattedTaskMan = taskManArray.map(man => `${man.name}(${man.type})`).join(', ');
-
     const taskResult = task_result || '';
     const taskCause = task_cause || '';
+    const taskMan = task_man || '';
     const taskDescription = task_description || '';
     const taskDate = task_date || '1970-01-01';
     const startTime = start_time || '00:00:00';
@@ -76,7 +71,7 @@ module.exports = function () {
     const taskSetupItem = setupItem || 'SELECT';
     const taskStatus = status || 'active'; // status 필드 추가
   
-    logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, formattedTaskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus });
+    logger.info('수정된 요청 데이터:', { task_name, worker, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus });
   
     try {
       const query = `
@@ -84,7 +79,7 @@ module.exports = function () {
         (task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, equipment_type, equipment_name, work_type, setup_item, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [task_name, worker, taskResult, taskCause, formattedTaskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus];
+      const values = [task_name, worker, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskStatus];
       
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
@@ -98,6 +93,7 @@ module.exports = function () {
       res.status(500).send('작업 로그 추가 실패.');
     }
   });
+  
 
   // 작업 이력 목록 조회
   app.get('/logs', async (req, res) => {
