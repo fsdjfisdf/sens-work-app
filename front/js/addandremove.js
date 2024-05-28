@@ -1,3 +1,4 @@
+// addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
   function setupDynamicFields(containerId, inputClass, template) {
     const container = document.getElementById(containerId);
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
       newField.innerHTML = template;
       container.insertBefore(newField, addButton);
 
-      if (container.querySelectorAll(`.${inputClass}-input`).length > 1) {
+      if (container.querySelectorAll(`.${inputClass}-container`).length > 1) {
         removeButton.disabled = false;
       }
     });
