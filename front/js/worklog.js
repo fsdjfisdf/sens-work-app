@@ -1,3 +1,4 @@
+// worklog.js
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
     const today = new Date();
