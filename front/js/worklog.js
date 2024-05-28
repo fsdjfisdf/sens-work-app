@@ -1,4 +1,3 @@
-// worklog.js
 
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
@@ -25,8 +24,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 여러 task_cause 값을 줄바꿈으로 결합
     const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
 
-    // 여러 task_mans 값을 줄바꿈으로 결합
-    const taskMans = Array.from(document.getElementsByClassName('task-man-input')).map(input => input.value).join('\n');
+    // 여러 task_man 값을 역할과 함께 결합
+    const taskMans = Array.from(document.querySelectorAll('.task-man-container')).map(container => {
+      const input = container.querySelector('.task-man-input').value;
+      const role = container.querySelector('.task-man-select').value;
+      return `${input}(${role})`;
+    }).join(' ');
 
     // 여러 task_description 값을 줄바꿈으로 결합
     const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
