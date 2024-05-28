@@ -26,27 +26,27 @@ module.exports = function () {
   require("../src/routes/indexRoute")(app);
 
   // 회원가입
-app.post('/sign-up', async (req, res) => {
-  const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
+  app.post('/sign-up', async (req, res) => {
+    const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
 
-  try {
-    // userID 중복 확인
-    const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
+    try {
+      // userID 중복 확인
+      const [rows] = await pool.query('SELECT * FROM users WHERE userID = ?', [userID]);
 
-    if (rows.length > 0) {
-      return res.status(400).json({ message: '이미 존재하는 userID입니다.' });
+      if (rows.length > 0) {
+        return res.status(400).json({ message: '이미 존재하는 userID입니다.' });
+      }
+
+      // 회원가입 처리
+      const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      await pool.query(query, [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa]);
+
+      res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
+    } catch (err) {
+      logger.error('회원가입 중 오류 발생:', err);
+      res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
     }
-
-    // 회원가입 처리
-    const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    await pool.query(query, [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa]);
-
-    res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
-  } catch (err) {
-    logger.error('회원가입 중 오류 발생:', err);
-    res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
-  }
-});
+  });
 
   // 작업 로그 추가
   app.post('/log', async (req, res) => {
