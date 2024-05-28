@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const input = container.querySelector('.task-man-input').value;
       const role = container.querySelector('.task-man-select').value;
       return `${input}(${role})`;
-    }).join('\n');
+    }).join(' ');
 
     // 여러 task_description 값을 줄바꿈으로 결합
     const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         alert('작업 로그가 성공적으로 추가되었습니다.');
         loadWorkLogs();
       } else {
