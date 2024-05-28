@@ -1,3 +1,4 @@
+// addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
   function setupDynamicFields(containerId, inputClass, template) {
     const container = document.getElementById(containerId);
