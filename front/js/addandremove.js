@@ -1,4 +1,3 @@
-// addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
   function setupDynamicFields(containerId, inputClass, template) {
     const container = document.getElementById(containerId);
@@ -7,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     addButton.addEventListener('click', function() {
       const newField = document.createElement('div');
-      newField.className = 'task-man-container';
+      newField.className = `${inputClass}-container`;
       newField.innerHTML = template;
       container.insertBefore(newField, addButton);
 
