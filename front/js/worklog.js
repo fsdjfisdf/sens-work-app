@@ -1,4 +1,3 @@
-// worklog.js
 document.addEventListener('DOMContentLoaded', async () => {
   function getTodayDate() {
     const today = new Date();
@@ -9,6 +8,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('task_date').value = getTodayDate();
+
+  // WORK TYPE 변경 시 SET UP ITEM 선택 필드 표시/숨기기
+  document.getElementById('workType').addEventListener('change', function() {
+    const workTypeValue = this.value;
+    const additionalOptions = document.getElementById('additionalOptions');
+    if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
+      additionalOptions.style.display = 'block';
+    } else {
+      additionalOptions.style.display = 'none';
+    }
+  });
 
   const form = document.getElementById('worklogForm');
   form.addEventListener('submit', async (event) => {
@@ -61,10 +71,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const group = document.getElementById('group').value;
     const site = document.getElementById('site').value;
     const line = document.getElementById('line').value;
+    const warranty = document.getElementById('warranty').value;
     const equipment_type = document.getElementById('equipment_type').value;
     const equipment_name = document.getElementById('equipment_name').value;
     const workType = document.getElementById('workType').value;
-    const setupItem = workType === 'SET UP' ? document.getElementById('additionalWorkType').value : 'SELECT';
+    const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
@@ -81,6 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       moveTime,
       group,
       site,
+      warranty,
       line,
       equipment_type,
       equipment_name,
@@ -104,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         move_time: moveTime,
         group,
         site,
+        warranty,
         line,
         equipment_type,
         equipment_name,
@@ -123,6 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('작업 로그 추가 중 오류가 발생했습니다.');
       }
     } catch (error) {
+      console.error(error);
+      alert('작업 로그 추가 중 오류가 발생했습니다.');
     }
   });
 });
