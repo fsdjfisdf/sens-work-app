@@ -346,6 +346,7 @@ form textarea {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
+    flex-wrap: wrap; /* 필드들이 작은 화면에서도 잘 보이도록 설정 */
 }
 
 .task-result-input,
@@ -354,7 +355,7 @@ form textarea {
 .task-description-input {
     flex-grow: 1;
     margin-right: 10px; /* 필드 간격 조정 */
-    flex-basis: 90%; /* 필드가 더 많은 공간을 차지하도록 설정 */
+    flex-basis: calc(100% - 40px); /* 필드가 더 많은 공간을 차지하도록 설정 */
 }
 
 .task-man-select {
@@ -362,7 +363,7 @@ form textarea {
 }
 
 .remove-field {
-    flex-basis: 10%; /* - 버튼이 차지하는 공간을 줄이기 */
+    flex-basis: 30px; /* - 버튼이 차지하는 공간을 줄이기 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -377,8 +378,8 @@ button#remove-task-result,
 button#remove-task-cause,
 button#remove-task-man,
 button#remove-task-description {
-    width: 25px; /* 버튼 크기 조정 */
-    height: 25px;
+    width: 30px; /* 버튼 크기 조정 */
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -466,5 +467,24 @@ button#remove-task-description {
 
     .footer-text {
         font-size: 10px;
+    }
+
+    .task-result-container,
+    .task-cause-container,
+    .task-man-container,
+    .task-description-container {
+        flex-basis: 100%;
+        justify-content: space-between;
+    }
+
+    .task-result-input,
+    .task-cause-input,
+    .task-man-input,
+    .task-description-input {
+        flex-basis: calc(100% - 40px); /* 작은 화면에서 필드가 더 많은 공간을 차지하도록 조정 */
+    }
+
+    .remove-field {
+        flex-basis: 30px; /* 작은 화면에서 - 버튼 크기 조정 */
     }
 }
