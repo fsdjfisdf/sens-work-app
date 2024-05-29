@@ -123,8 +123,9 @@ input[type="time"], input[type="number"], select, textarea {
     display: block;
 }
 
-.date-input {
-    padding: 12px; /* 입력란 크기 확대 */
+.short-input {
+    width: calc(50% - 8px); /* Eng'r Level과 입사일의 폭을 동일하게 설정 */
+    display: inline-block;
 }
 
 input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus,
@@ -232,5 +233,9 @@ th {
 
     section h2 {
         font-size: 1.2em;
+    }
+
+    .short-input {
+        width: 100%; /* 모바일에서는 전체 폭을 사용 */
     }
 }
