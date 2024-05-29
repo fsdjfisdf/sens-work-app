@@ -120,7 +120,11 @@ input[type="time"], input[type="number"], select, textarea {
     border: 1px solid #ccc;
     border-radius: 4px;
     transition: border-color 0.3s;
-    display: block; /* 추가: 각 입력 필드를 블록 요소로 설정 */
+    display: block;
+}
+
+.date-input {
+    padding: 12px; /* 입력란 크기 확대 */
 }
 
 input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus,
