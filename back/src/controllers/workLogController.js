@@ -11,13 +11,13 @@ exports.getWorkLogs = async (req, res) => {
 
 exports.addWorkLog = async (req, res) => {
   const {
-    task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+    task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
     group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, status
   } = req.body;
   
   try {
     await workLogDao.addWorkLog(
-      task_name, worker, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+      task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
       group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, status
     );
     res.status(201).json({ message: "Work log added" });
