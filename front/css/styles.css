@@ -1,241 +1,470 @@
-/* 기본 초기화 */
-* {
+/* Reset some basic elements */
+body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
+    text-decoration: none;
+    color: inherit;
     box-sizing: border-box;
 }
 
-body, html {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f5f5f5;
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
     color: #333;
-    line-height: 1.6;
-    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* 중앙 정렬된 컨테이너 */
-.inner {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-/* 네비게이션 스타일 */
+/* Navigation styles */
 nav {
-    background-color: #35495e;
-    color: white;
+    background-color: #0044cc;
     padding: 10px 0;
-    margin-bottom: 20px;
-    text-align: center;
 }
 
 .nav-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 600px;
+    width: 90%;
     margin: 0 auto;
 }
 
 .nav-title a {
-    color: white;
-    text-decoration: none;
-    font-size: 1.5em;
+    color: #fff;
+    font-size: 24px;
     font-weight: bold;
 }
 
-.sign-link, .nav-contact a, .dropdown-item {
-    color: white;
-    text-decoration: none;
+.sign-container {
+    display: flex;
+    align-items: center;
+}
+
+.sign-link {
+    color: #fff;
     padding: 8px 16px;
-    background-color: #42b983;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-    display: inline-block;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-.sign-link:hover, .nav-contact a:hover, .dropdown-item:hover {
-    background-color: #3a9d70;
+.sign-link:hover {
+    background-color: #fff;
+    color: #0044cc;
 }
 
-/* 드롭다운 스타일 */
-.dropdown {
+.signed .dropdown {
     position: relative;
     display: inline-block;
 }
 
 .dropbtn {
-    background-color: #42b983;
-    color: white;
+    background-color: #0044cc;
+    color: #fff;
     padding: 8px 16px;
-    font-size: 16px;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
+}
+
+.dropbtn:hover {
+    background-color: #003bb5;
 }
 
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: #f9f9f9;
+    background-color: #fff;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     z-index: 1;
-    border-radius: 5px;
+    right: 0;
 }
 
 .dropdown-content .dropdown-item {
-    color: #35495e;
+    color: #333;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
-    border-bottom: 1px solid #eee;
+}
+
+.dropdown-content .dropdown-item:hover {
+    background-color: #f1f1f1;
 }
 
 .dropdown:hover .dropdown-content {
     display: block;
 }
 
-/* 섹션 스타일 */
-section {
-    margin-bottom: 20px;
-    background: white;
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+.inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Info page styles */
+.content {
     padding: 20px;
+    background-color: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
 }
 
 h2 {
-    font-size: 1.5em;
+    font-size: 28px;
     margin-bottom: 20px;
-    color: #35495e;
+    color: #0044cc;
+    text-align: center;
 }
 
-/* 입력 필드 스타일 */
-input[type="text"], input[type="password"], input[type="date"], 
-input[type="time"], input[type="number"], select, textarea {
+.info-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.info-item h3 {
+    font-size: 20px;
+    color: #333;
+}
+
+.info-item p {
+    font-size: 16px;
+    color: #555;
+}
+
+/* Main content styles */
+main {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.signin-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
     width: 100%;
-    padding: 12px;
-    margin-top: 8px;
-    border: 1px solid #ccc;
+    max-width: 400px;
+}
+
+.signin-form input[type="text"],
+.signin-form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    transition: border-color 0.3s;
-    display: block;
+    font-size: 16px;
 }
 
-.short-input {
-    width: calc(50% - 8px); /* Eng'r Level과 입사일의 폭을 동일하게 설정 */
-    display: inline-block;
-}
-
-input[type="text"]:focus, input[type="password"]:focus, input[type="date"]:focus,
-input[type="time"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-    border-color: #42b983;
-}
-
-/* 버튼 스타일 */
-button, input[type="button"], input[type="submit"] {
+.signin-form input[type="button"] {
     width: 100%;
-    background-color: #42b983;
-    color: white;
+    padding: 10px;
+    margin: 20px 0;
+    background-color: #0044cc;
+    color: #fff;
     border: none;
-    padding: 14px 20px;
-    margin-top: 10px;
     border-radius: 4px;
+    font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s;
 }
 
-button:hover, input[type="button"]:hover, input[type="submit"]:hover {
-    background-color: #3a9d70;
+.signin-form input[type="button"]:hover {
+    background-color: #003bb5;
 }
 
-/* 테이블 스타일 */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+.signup-link-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
 }
 
-th, td {
-    text-align: left;
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
+.signup-link-container a {
+    color: #0044cc;
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-th {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-/* 로그인 및 회원가입 폼 스타일 */
-.signin-container, .signup-container {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: 40px auto;
-    text-align: center;
-}
-
-.signin-container h2, .signup-container h2 {
-    font-size: 1.8em;
-    margin-bottom: 20px;
-    color: #35495e;
-}
-
-/* 폼 그룹 스타일 */
-.form-group {
-    margin-bottom: 20px;
-    background: #f9f9f9;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #35495e;
+.signup-link-container a:hover {
+    background-color: #0044cc;
+    color: #fff;
 }
 
 .footer-text {
-    font-size: 0.8em;
-    color: gray;
+    font-size: 12px;
+    color: #999;
     text-align: center;
     margin-top: 20px;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 600px) {
+/* 회원가입 페이지 스타일 */
+.signup-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.signup-form h2 {
+    font-size: 28px;
+    color: #0044cc;
+    margin-bottom: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.signup-form label {
+    font-size: 14px;
+    color: #555;
+    text-align: left;
+}
+
+.signup-form input[type="text"],
+.signup-form input[type="password"],
+.signup-form input[type="date"],
+.signup-form input[type="number"],
+.signup-form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.signup-form input[type="button"] {
+    width: 50%;
+    padding: 10px;
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 0 auto;
+}
+
+.signup-form input[type="button"]:hover {
+    background-color: #003bb5;
+}
+
+/* 작업 이력 작성 페이지 스타일 */
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+form div {
+    margin-bottom: 15px;
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #333;
+}
+
+form input[type="text"],
+form input[type="date"],
+form input[type="time"],
+form input[type="number"],
+form select,
+form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    height: 40px; /* 모든 입력 필드와 동일한 높이로 설정 */
+}
+
+form button[type="button"],
+form button[type="submit"] {
+    width: auto;
+    padding: 10px 20px;
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+}
+
+form button[type="button"]:hover,
+form button[type="submit"]:hover {
+    background-color: #003bb5;
+}
+
+form textarea {
+    resize: vertical;
+    height: 40px; /* textarea 높이를 다른 필드와 동일하게 설정 */
+}
+
+.task-result-container,
+.task-cause-container,
+.task-man-container,
+.task-description-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.task-result-input,
+.task-cause-input,
+.task-man-input,
+.task-description-input {
+    flex-grow: 1;
+    margin-right: 10px; /* 필드 간격 조정 */
+    flex-basis: 90%; /* 필드가 더 많은 공간을 차지하도록 설정 */
+}
+
+.task-man-select {
+    width: 150px;
+}
+
+.remove-field {
+    flex-basis: 10%; /* - 버튼이 차지하는 공간을 줄이기 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+button#add-task-result,
+button#add-task-cause,
+button#add-task-man,
+button#add-task-description,
+button#remove-task-result,
+button#remove-task-cause,
+button#remove-task-man,
+button#remove-task-description {
+    width: 25px; /* 버튼 크기 조정 */
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-top: 0;
+}
+
+.print-container {
+    margin-top: 20px;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
     .nav-container {
         flex-direction: column;
-        text-align: center;
+        align-items: flex-start;
     }
 
-    .dropbtn {
-        width: 100%;
+    .nav-title a {
+        font-size: 20px;
+    }
+
+    .sign-link, .dropbtn {
+        padding: 8px 12px;
+        font-size: 14px;
     }
 
     .dropdown-content {
-        min-width: 100%;
+        min-width: 100px;
     }
 
-    .inner {
-        padding: 10px;
+    .dropdown-content .dropdown-item {
+        padding: 10px 12px;
     }
 
-    button, input[type="button"], input[type="submit"] {
-        padding: 10px 14px;
+    h2 {
+        font-size: 24px;
     }
 
-    section h2 {
-        font-size: 1.2em;
+    .signin-container {
+        padding: 15px;
     }
 
-    .short-input {
-        width: 100%; /* 모바일에서는 전체 폭을 사용 */
+    .signin-form input[type="text"],
+    .signin-form input[type="password"],
+    .signin-form input[type="button"] {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .signup-container {
+        padding: 15px;
+    }
+
+    .signup-form input[type="text"],
+    .signup-form input[type="password"],
+    .signup-form input[type="date"],
+    .signup-form input[type="number"],
+    .signup-form select,
+    .signup-form input[type="button"] {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    form {
+        padding: 15px;
+    }
+
+    form input[type="text"],
+    form input[type="date"],
+    form input[type="time"],
+    form input[type="number"],
+    form select,
+    form textarea {
+        font-size: 12px;
+        padding: 8px;
+        height: 30px; /* 작은 화면에서 높이 조정 */
+    }
+
+    form button[type="button"],
+    form button[type="submit"] {
+        font-size: 12px;
+        padding: 8px 16px;
+    }
+
+    .footer-text {
+        font-size: 10px;
     }
 }

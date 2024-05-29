@@ -10,9 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logs.forEach(log => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>${log.id}</td>
             <td>${log.task_name}</td>
-            <td>${log.worker}</td>
             <td>${log.task_result}</td>
             <td>${log.task_cause}</td>
             <td>${log.task_man}</td>
@@ -20,8 +18,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${log.task_date}</td>
             <td>${log.start_time}</td>
             <td>${log.end_time}</td>
-            <td>${log.none_time}</td>
-            <td>${log.move_time}</td>
             <td>${log.group}</td>
             <td>${log.site}</td>
             <td>${log.line}</td>
@@ -29,7 +25,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${log.equipment_name}</td>
             <td>${log.work_type}</td>
             <td>${log.setup_item}</td>
-            <td>${log.timestamp}</td>
             <td>${log.status}</td>
           `;
           tbody.appendChild(tr);

@@ -7,30 +7,7 @@
     <title>작업 이력 작성</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <style>
-        .big-text {
-            font-size: 2em;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .print-container {
-            margin-top: 20px;
-        }
-        .task-man-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .task-man-input {
-            flex-grow: 1;
-            margin-right: 10px;
-        }
-        .task-man-select {
-            width: 150px;
-        }
-        .remove-field {
-            margin-left: 10px;
-        }
+
     </style>
 </head>
 <body>
@@ -78,7 +55,6 @@
                         <label>결과:</label>
                         <div class="task-result-container">
                             <textarea name="task_result" class="task-result-input" required></textarea>
-                            <button type="button" class="remove-field">-</button>
                         </div>
                         <button type="button" id="add-task-result">+</button>
                         <button type="button" id="remove-task-result" disabled>-</button>
@@ -87,7 +63,6 @@
                         <label>원인:</label>
                         <div class="task-cause-container">
                             <textarea name="task_cause" class="task-cause-input" required></textarea>
-                            <button type="button" class="remove-field">-</button>
                         </div>
                         <button type="button" id="add-task-cause">+</button>
                         <button type="button" id="remove-task-cause" disabled>-</button>
@@ -100,7 +75,6 @@
                                 <option value="main">main</option>
                                 <option value="support">support</option>
                             </select>
-                            <button type="button" class="remove-field">-</button>
                         </div>
                         <button type="button" id="add-task-man">+</button>
                         <button type="button" id="remove-task-man" disabled>-</button>
@@ -109,7 +83,6 @@
                         <label>작업내용:</label>
                         <div class="task-description-container">
                             <textarea name="task_description" class="task-description-input" required></textarea>
-                            <button type="button" class="remove-field">-</button>
                         </div>
                         <button type="button" id="add-task-description">+</button>
                         <button type="button" id="remove-task-description" disabled>-</button>
