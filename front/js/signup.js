@@ -6,6 +6,7 @@ btnSignUp.addEventListener("click", signup);
 async function signup(event) {
   const userID = document.querySelector("#userID").value;
   const password = document.querySelector("#password").value;
+  const employeeID = document.querySelector("#employeeID").value;
   const nickname = document.querySelector("#nickname").value;
   const group = document.querySelector("#group").value;
   const site = document.querySelector("#site").value;
@@ -20,26 +21,32 @@ async function signup(event) {
   const totalCapa = (mainSetUpCapa + mainMaintCapa + multiCapa) / 3;
 
   // 2. #email, #password, nickname 값 확인 (정규표현식 확인)
-  const userIDRegExp = /^\d{6}$/; // 숫자 6자리
-  const passwordRegExp = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,16}$/; // 숫자, 영어, 특수문자 포함 8-16자리
-  const nicknameRegExp = /^[가-힣a-zA-Z]+$/; // 한글과 영어 조합
+  const userIDRegExp = /^[a-z]+[a-z0-9]{5,19}$/; // 아이디 정규식 영문자로 시작하는 영문자 또는 숫자 6-20
+  const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/; // 비밀번호 정규식 8-16 문자, 숫자 조합
+  const nicknameRegExp = /^[가-힣|a-z|A-Z|0-9|]{2,10}$/; // 닉네임 정규식 2-10 한글, 숫자 또는 영문
+  const employeeIDRegExp = /^\d{6}$/; // 숫자 6자
 
   if (!userIDRegExp.test(userID)) {
-      return alert("아이디 형식: 숫자 6자리");
+    return alert("아이디 형식: 영문자로 시작하는 영문자 또는 숫자 6-20");
   }
   if (!passwordRegExp.test(password)) {
-      return alert("비밀번호 형식: 숫자, 영어, 특수문자 포함 8-16자리");
+    return alert("비밀번호 형식: 8-16 문자, 숫자 조합");
   }
   if (!nicknameRegExp.test(nickname)) {
-      return alert("닉네임 형식: 한글과 영어를 조합하여 사용 (한글만 사용 가능)");
+    return alert("이름 형식 한글 + 영문");
   }
+  if (!employeeIDRegExp.test(nickname)) {
+    return alert("사번 형식 : 6자리 숫자");
+  }
+
+
 
   // 3. 회원가입 API 요청
   const signUpReturn = await axios({
     method: "post", // http method
     url: "http://3.37.165.84:3001/sign-up",
     headers: {}, // packet header
-    data: { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa }, // packet body
+    data: { userID, password, employeeID, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa }, // packet body
   });
 
   // 4. 요청이 성공적이지 않다면, alert message
@@ -54,5 +61,5 @@ async function signup(event) {
   localStorage.setItem("x-access-token", jwt);
   alert(signUpReturn.data.message);
 
-  return location.replace("./signin.html");
+  return location.replace("./index.html");
 }
