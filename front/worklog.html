@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>작업 이력 작성</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="./css/styles.css" />
     <style>
 
@@ -68,23 +69,23 @@
                     </select>
                 </div>
                 <div>
-                    <label for="equipment_type">EQ TYPE</label>
-                    <select id="equipment_type" name="equipment_type" required>
-                        <option value="SELECT">SELECT</option>
-                        <option value="SUPRA">SUPRA</option>
-                        <option value="ZEDIUS">ZEDIUS</option>
-                        <option value="INTEGER">INTEGER</option>
-                        <option value="PRECIA">PRECIA</option>
-                        <option value="ECOLITE">ECOLITE</option>
-                        <option value="JENEVA">JENEVA</option>
-                    </select>
-                </div>
+                  <label for="equipment_type">EQ TYPE</label>
+                  <select id="equipment_type" name="equipment_type" required>
+                      <option value="SELECT">SELECT</option>
+                      <option value="SUPRA N">SUPRA N</option>
+                      <option value="SUPRA XP">SUPRA XP</option>
+                      <option value="INTEGER">INTEGER</option>
+                      <option value="PRECIA">PRECIA</option>
+                      <option value="ECOLITE">ECOLITE</option>
+                      <option value="JENEVA">JENEVA</option>
+                  </select>
+              </div>
                 <div>
                     <label for="equipment_name">EQ NAME</label>
                     <input type="text" id="equipment_name" name="equipment_name" required>
                 </div>
                 <div>
-                  <label for="warranty">WARRANTY</label>
+                  <label for="warranty">warranty</label>
                   <select id="warranty" name="warranty" required>
                       <option value="SELECT">SELECT</option>
                       <option value="WI">WI</option>
@@ -126,6 +127,12 @@
                         <option value="MAINTENANCE">MAINTENANCE</option>
                     </select>
                 </div>
+                <div id="maintOption" class="maintOption" style="display:none;">
+                  <label for="maintOptionSelect">MAINT ITEM</label>
+                  <select id="maintOptionSelect" name="maintOption">
+                      <option value="SELECT">SELECT</option>
+                  </select>
+              </div>
                 <div id="task-mans-container">
                   <label>WORKER</label>
                   <div class="task-man-container">
@@ -200,13 +207,16 @@
             </div>
         </section>
     </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/url.js"></script>
     <script src="./js/worklog.js"></script>
     <script src="./js/site.js"></script>
     <script src="./js/addandremove.js"></script>
     <script src="./js/printInform.js"></script>
-    <script src="./js/autofill.js"></script>
+    <script src="./js/setupautofill.js"></script>
+    <script src="./js/maintOption.js"></script>
 </body>
 </html>
 

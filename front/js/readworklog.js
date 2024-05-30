@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${log.equipment_name}</td>
             <td>${log.work_type}</td>
             <td>${log.setup_item}</td>
+            <td>${log.maint_item}</td>
             <td>${log.status}</td>
           `;
           tbody.appendChild(tr);
