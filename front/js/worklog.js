@@ -9,20 +9,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('task_date').value = getTodayDate();
 
-  // WORK TYPE 변경 시 SET UP ITEM 선택 필드 표시/숨기기
+  // WORK TYPE 변경 시 SET UP ITEM 및 MAINT ITEM 선택 필드 표시/숨기기
   document.getElementById('workType').addEventListener('change', function() {
     const workTypeValue = this.value;
     const additionalOptions = document.getElementById('additionalOptions');
+    const maintOptions = document.getElementById('maintOption');
     if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
       additionalOptions.style.display = 'block';
+      maintOptions.style.display = 'none';
+    } else if (workTypeValue === 'MAINT') {
+      maintOptions.style.display = 'block';
+      additionalOptions.style.display = 'none';
     } else {
       additionalOptions.style.display = 'none';
-    }
-
-    const maintOptions = document.getElementById('maintOption');
-    if (workTypeValue === 'MAINT') {
-      maintOptions.style.display = 'block';
-    } else {
       maintOptions.style.display = 'none';
     }
   });
