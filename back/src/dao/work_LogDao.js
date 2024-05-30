@@ -21,6 +21,11 @@ exports.addWorkLog = async (task_name, task_result, task_cause, task_man, task_d
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, status];
+    
+    // 이 부분에 로그 추가
+    console.log('실행할 쿼리:', query);
+    console.log('쿼리 값:', values);
+
     await connection.query(query, values);
   } catch (err) {
     throw new Error(`Error adding work log: ${err.message}`);

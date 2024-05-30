@@ -53,7 +53,8 @@ module.exports = function () {
     logger.info('POST /log 요청 수신됨');
     const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, status } = req.body;
   
-    logger.info('maint_item 값:', maint_item); // 여기서 maint_item 값을 로그로 출력
+    // 이 부분에 로그 추가
+    logger.info('maint_item 값:', maint_item);
   
     const taskResult = task_result || '';
     const taskCause = task_cause || '';
@@ -73,7 +74,7 @@ module.exports = function () {
     const taskWorkType = workType || 'SELECT';
     const taskSetupItem = setupItem || 'SELECT';
     const taskMaintItem = maint_item || 'SELECT';
-    const taskStatus = status || 'active'; // status 필드 추가
+    const taskStatus = status || 'active';
   
     logger.info('수정된 요청 데이터:', { task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus });
   
