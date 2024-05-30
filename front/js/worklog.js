@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const equipment_name = document.getElementById('equipment_name').value;
       const workType = document.getElementById('workType').value;
       const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
-      const maintItem = workType === 'MAINT' ? $('#maintOptionSelect').val() : 'SELECT'; // Get value from Select2
+      const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionSelect').value : 'SELECT'; // Get value from Select2
   
       // 콘솔에 입력 값 출력
       console.log('전송 데이터:', {

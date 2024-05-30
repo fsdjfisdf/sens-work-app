@@ -53,6 +53,8 @@ module.exports = function () {
     logger.info('POST /log 요청 수신됨');
     const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, status } = req.body;
   
+    logger.info('maint_item 값:', maint_item); // 여기서 maint_item 값을 로그로 출력
+  
     const taskResult = task_result || '';
     const taskCause = task_cause || '';
     const taskMan = task_man || '';
@@ -82,7 +84,7 @@ module.exports = function () {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus];
-      
+  
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
   
@@ -95,7 +97,6 @@ module.exports = function () {
       res.status(500).send('작업 로그 추가 중 오류가 발생했습니다.');
     }
   });
-  
 
   // 작업 이력 목록 조회
   app.get('/logs', async (req, res) => {
