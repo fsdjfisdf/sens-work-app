@@ -15,6 +15,9 @@ exports.addWorkLog = async (req, res) => {
     group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, status
   } = req.body;
 
+  // Add a console log here
+  console.log('Received maintItem:', maintItem);
+
   try {
     await workLogDao.addWorkLog(
       task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
