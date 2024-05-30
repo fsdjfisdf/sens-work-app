@@ -51,6 +51,7 @@ module.exports = function () {
   // 작업 로그 추가
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
+    logger.info('요청 바디:', req.body);  // 추가: 요청 바디 전체 출력
     const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, status } = req.body;
   
     // 이 부분에 로그 추가
