@@ -13,18 +13,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('workType').addEventListener('change', function() {
     const workTypeValue = this.value;
     const additionalOptions = document.getElementById('additionalOptions');
-    const maintOptionContainer = document.getElementById('maintOption');
-    
     if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
       additionalOptions.style.display = 'block';
     } else {
       additionalOptions.style.display = 'none';
-    }
-
-    if (workTypeValue === 'MAINT') {
-      maintOptionContainer.style.display = 'block';
-    } else {
-      maintOptionContainer.style.display = 'none';
     }
   });
 
