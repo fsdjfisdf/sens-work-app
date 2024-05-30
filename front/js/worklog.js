@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const equipment_name = document.getElementById('equipment_name').value;
     const workType = document.getElementById('workType').value;
     const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
-    const maint_item = (workType === 'MAINT') ? document.getElementById('maintOptionSelect').value : 'SELECT';
+    const maintItem = (workType === 'MAINT') ? document.getElementById('maintOptionSelect').value : 'SELECT';
 
     // 콘솔에 입력 값 출력
     console.log('전송 데이터:', {
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       equipment_name,
       workType,
       setupItem,
-      maint_item,
+      maintItem,
       status
     });
 
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         equipment_name,
         workType,
         setupItem,
-        maint_item,
+        maintItem,
         status
       }, {
         headers: {
