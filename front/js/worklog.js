@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       additionalOptions.style.display = 'none';
     }
+
+    const maintOptions = document.getElementById('maintOption');
+    if (workTypeValue === 'MAINT') {
+      maintOptions.style.display = 'block';
+    } else {
+      maintOptions.style.display = 'none';
+    }
   });
 
   const form = document.getElementById('worklogForm');
