@@ -81,7 +81,7 @@ module.exports = function () {
         (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, EndTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus];
+      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus];
       
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
@@ -91,8 +91,8 @@ module.exports = function () {
       logger.info('작업 로그가 성공적으로 추가되었습니다.');
       res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
     } catch (err) {
+      logger.error('작업 로그 추가 중 오류 발생:', err.message);
       res.status(500).send('작업 로그 추가 중 오류가 발생했습니다.');
-      logger.error(err);
     }
   });
   
