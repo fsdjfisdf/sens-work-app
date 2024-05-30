@@ -43,7 +43,7 @@ module.exports = function () {
 
       res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
     } catch (err) {
-      logger.error('회원가입 중 오류 발생:', err);
+      logger.error('회원가입 중 오류 발생:', err.message);
       res.status(500).json({ message: '회원가입 중 오류가 발생했습니다.' });
     }
   });
@@ -81,7 +81,7 @@ module.exports = function () {
         (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, EndTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus];
+      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus];
       
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
@@ -95,7 +95,6 @@ module.exports = function () {
       res.status(500).send('작업 로그 추가 중 오류가 발생했습니다.');
     }
   });
-
   
 
   // 작업 이력 목록 조회
@@ -106,6 +105,8 @@ module.exports = function () {
       logger.info('작업 이력 목록:', rows);
       res.status(200).json(rows);
     } catch (err) {
+      logger.error('작업 이력 목록 조회 중 오류 발생:', err.message);
+      res.status(500).send('작업 이력 목록 조회 중 오류가 발생했습니다.');
     }
   });
 
