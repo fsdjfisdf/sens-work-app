@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             maintOptionContainer.style.display = 'block';
             const options = maintOptions[equipmentTypeSelect.value] || ["SELECT"];
             maintOptionSelect.innerHTML = ""; // 기존 옵션 초기화
+            console.log('Maint options for', equipmentTypeSelect.value, ':', options);
             options.forEach(option => {
                 const opt = document.createElement('option');
                 opt.value = option;

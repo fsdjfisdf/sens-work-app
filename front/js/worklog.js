@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('workType').addEventListener('change', function() {
     const workTypeValue = this.value;
     const additionalOptions = document.getElementById('additionalOptions');
-    const maintOptions = document.getElementById('maintOptions'); // 수정된 부분
+    const maintOptions = document.getElementById('maintOptions');
     if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
       additionalOptions.style.display = 'block';
       maintOptions.style.display = 'none';
