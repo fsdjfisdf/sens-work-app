@@ -66,7 +66,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const site = document.getElementById('site').value;
       const line = document.getElementById('line').value;
       const SOP = document.getElementById('SOP').value;
-      const TSguide = document.getElementById('TSguide').value; // 추가된 필드
       const warranty = document.getElementById('warranty').value;
       const equipment_type = document.getElementById('equipment_type').value;
       const equipment_name = document.getElementById('equipment_name').value;
@@ -89,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         group,
         site,
         SOP,
-        TSguide, // 추가된 필드
         warranty,
         line,
         equipment_type,
@@ -112,11 +110,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           start_time,
           end_time,
           none_time: noneTime,
-          move_time: MoveTime,
+          move_time: moveTime,
           group,
           site,
           SOP,
-          TSguide, // 추가된 필드
           warranty,
           line,
           equipment_type,
