@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('workType').addEventListener('change', function() {
     const workTypeValue = this.value;
     const additionalOptions = document.getElementById('additionalOptions');
-    const maintOptions = document.getElementById('maintOption');
+    const maintOptions = document.getElementById('maintOptions');
     if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
       additionalOptions.style.display = 'block';
       maintOptions.style.display = 'none';
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const equipment_name = document.getElementById('equipment_name').value;
       const workType = document.getElementById('workType').value;
       const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
-      const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionSelect').value : 'SELECT'; // Get value from Select2
+      const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionWorkType').value : 'SELECT'; // Get value from Select2
       const task_maint = maintItem; // 새로 추가된 필드
   
       // 콘솔에 입력 값 출력
