@@ -392,7 +392,27 @@ button#remove-task-description {
 }
 
 .print-container {
-    margin-top: 20px;
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 600px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1000;
+    overflow-y: auto;
+    max-height: 80%;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.print-container.visible {
+    display: block; /* visible 클래스가 추가되면 표시 */
 }
 
 /* Responsive design */

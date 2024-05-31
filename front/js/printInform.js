@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('print-inform').addEventListener('click', () => {
+    const printContainer = document.createElement('div');
+    printContainer.classList.add('print-container');
+    document.body.appendChild(printContainer);
+
+    const updateInformContent = () => {
         const taskName = document.getElementById('task_name').value;
         const status = document.getElementById('status').value;
         const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
@@ -38,21 +42,28 @@ document.addEventListener('DOMContentLoaded', () => {
             ${taskResults.split('\n').join('<br>')}<br><br>
             5) SOP 및 T/S Guide 활용<br>
             ${taskSOP} / ${taskTSGuide}<br><br>
-            작업자: ${taskMans.split(',')}<br><br>
+            작업자: ${taskMans.split(', ')}<br><br>
             작업시간: ${startTime} - ${endTime}<br>
             (None ${noneTime}, Move ${moveTime})<br>
         `;
 
-        const printWindow = window.open('', '', 'width=800,height=600');
-        printWindow.document.write('<html><head><title>작업 이력</title></head><body>');
-        printWindow.document.write(informContent);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        
-        // 창이 포커스를 잃을 때 창 닫기 이벤트 추가
-        printWindow.onblur = function() {
-            printWindow.close();
-        };
+        printContainer.innerHTML = informContent;
+    };
+
+    document.getElementById('print-inform').addEventListener('click', () => {
+        printContainer.classList.add('visible');
+        updateInformContent();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!printContainer.contains(event.target) && !event.target.matches('#print-inform')) {
+            printContainer.classList.remove('visible');
+        }
+    });
+
+    // Hide the container when clicking on it
+    printContainer.addEventListener('click', () => {
+        printContainer.classList.remove('visible');
     });
 
     document.getElementById('copy-inform').addEventListener('click', () => {
