@@ -57,6 +57,7 @@ module.exports = function () {
     // 이 부분에 로그 추가
     logger.info('maint_item 값:', maint_item);
     logger.info('setupItem 값:', setupItem);  // setupItem 값 로그 추가
+    logger.info('SOP 값:', SOP);  // SOP 값 로그 추가
     logger.info('task_maint 값:', task_maint);
   
     const taskResult = task_result || '';

@@ -28,5 +28,3 @@ exports.addWorkLog = async (task_name, task_result, task_cause, task_man, task_d
     connection.release();
   }
 };
-
-
