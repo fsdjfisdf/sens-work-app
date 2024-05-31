@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <td>${log.group}</td>
             <td>${log.site}</td>
             <td>${log.line}</td>
+            <td>${log.SOP}</td>
             <td>${log.warranty}</td>
             <td>${log.equipment_type}</td>
             <td>${log.equipment_name}</td>
