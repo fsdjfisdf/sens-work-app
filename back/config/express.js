@@ -27,7 +27,7 @@ module.exports = function () {
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
-    const { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
+    const { userID, password, nickname, group, site, sop, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa } = req.body;
 
     try {
       // userID 중복 확인
@@ -38,8 +38,8 @@ module.exports = function () {
       }
 
       // 회원가입 처리
-      const query = 'INSERT INTO users (userID, password, nickname, `group`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      await pool.query(query, [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa]);
+      const query = 'INSERT INTO users (userID, password, nickname, `group`, site, sop, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      await pool.query(query, [userID, password, nickname, group, site, sop, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa]);
 
       res.status(201).json({ message: '회원가입이 성공적으로 완료되었습니다.' });
     } catch (err) {
@@ -52,7 +52,7 @@ module.exports = function () {
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
     logger.info('요청 바디:', req.body);  // 추가: 요청 바디 전체 출력
-    const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, task_maint, status } = req.body;
+    const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, sop, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, task_maint, status } = req.body;
   
     // 이 부분에 로그 추가
     logger.info('maint_item 값:', maint_item);
@@ -70,6 +70,7 @@ module.exports = function () {
     const moveTime = move_time || 0;
     const taskGroup = group || 'SELECT';
     const taskSite = site || 'SELECT';
+    const taskSop = sop || 'SELECT';
     const taskLine = line || 'SELECT';
     const taskWarranty = warranty || 'SELECT';
     const taskEquipmentType = equipment_type || 'SELECT';
@@ -80,15 +81,15 @@ module.exports = function () {
     const taskStatus = status || 'active';
     const taskMaint = task_maint || 'SELECT'; // 추가된 필드
   
-    logger.info('수정된 요청 데이터:', { task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint });
+    logger.info('수정된 요청 데이터:', { task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskSop, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint });
   
     try {
       const query = `
         INSERT INTO work_log 
-        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, status, task_maint) 
+        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, sop, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, status, task_maint) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint];
+      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskSop, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint];
   
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
