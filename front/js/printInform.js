@@ -50,9 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
         printContainer.innerHTML = informContent;
     };
 
-    document.getElementById('print-inform').addEventListener('click', () => {
-        printContainer.classList.add('visible');
+    document.getElementById('print-inform').addEventListener('click', (event) => {
+        event.preventDefault(); // 폼 제출 방지
         updateInformContent();
+        printContainer.classList.add('visible');
     });
 
     document.addEventListener('click', (event) => {
@@ -66,7 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         printContainer.classList.remove('visible');
     });
 
-    document.getElementById('copy-inform').addEventListener('click', () => {
+    document.getElementById('copy-inform').addEventListener('click', (event) => {
+        event.preventDefault(); // 폼 제출 방지
         const taskName = document.getElementById('task_name').value;
         const status = document.getElementById('status').value;
         const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
