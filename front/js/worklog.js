@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const site = document.getElementById('site').value;
       const line = document.getElementById('line').value;
       const SOP = document.getElementById('SOP').value;
+      const tsguide = document.getElementById('tsguide').value;
       const warranty = document.getElementById('warranty').value;
       const equipment_type = document.getElementById('equipment_type').value;
       const equipment_name = document.getElementById('equipment_name').value;
@@ -114,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           group,
           site,
           SOP,
+          tsguide,
           warranty,
           line,
           equipment_type,
