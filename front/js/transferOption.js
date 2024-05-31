@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Select2 for maintOptionSelect
-    $('#maintOptionSelect').select2();
+    // Initialize Select2 for transferItemOptionSelect
+    $('#transferItemOptionSelect').select2();
 
     const workTypeSelect = document.getElementById('workType');
     const equipmentTypeSelect = document.getElementById('equipment_type');
-    const maintOptionContainer = document.getElementById('maintOptions'); // 수정된 부분
-    const maintOptionSelect = document.getElementById('maintOptionSelect');
+    const transferItemOptionContainer = document.getElementById('transferItemOptions'); // 수정된 부분
+    const transferItemOptionSelect = document.getElementById('transferItemOptionSelect');
 
-    const maintOptions = {
+    const transferItemOptions = {
         "SUPRA N": ["SELECT", "EFEM ROBOT TEACHING", "EFEM ROBOT REP", "EFEM ROBOT CONTROLLER", "TM ROBOT TEACHING", "TM ROBOT REP",
             "TM ROBOT CONTROLLER", "PASSIVE PAD REP", "PIN CYLINDER", "PUSHER CYLINDER", "IB FLOW", "DRT", "FFU CONTROLLER", "FAN", "MOTOR DRIVER",
             "R1","R3","R5","R3 TO R5", "MICROWAVE", "APPLICATOR", "GENERATOR", "CHUCK", "PROCESS KIT", "HELIUM DETECTOR", "HOOK LIFT PIN", "BELLOWS",
@@ -26,24 +26,24 @@ document.addEventListener('DOMContentLoaded', function() {
         "JENEVA": ["SELECT"]
     };
 
-    function updateMaintOptions() {
+    function updatetransferItemOptions() {
         if (workTypeSelect.value === 'MAINT') {
-            maintOptionContainer.style.display = 'block';
-            const options = maintOptions[equipmentTypeSelect.value] || ["SELECT"];
-            maintOptionSelect.innerHTML = ""; // 기존 옵션 초기화
+            transferItemOptionContainer.style.display = 'block';
+            const options = transferItemOptions[equipmentTypeSelect.value] || ["SELECT"];
+            transferItemOptionSelect.innerHTML = ""; // 기존 옵션 초기화
             console.log('Maint options for', equipmentTypeSelect.value, ':', options);
             options.forEach(option => {
                 const opt = document.createElement('option');
                 opt.value = option;
                 opt.innerHTML = option;
-                maintOptionSelect.appendChild(opt);
+                transferItemOptionSelect.appendChild(opt);
             });
-            $('#maintOptionSelect').select2(); // re-initialize Select2 with new options
+            $('#transferItemOptionSelect').select2(); // re-initialize Select2 with new options
         } else {
-            maintOptionContainer.style.display = 'none';
+            transferItemOptionContainer.style.display = 'none';
         }
     }
 
-    workTypeSelect.addEventListener('change', updateMaintOptions);
-    equipmentTypeSelect.addEventListener('change', updateMaintOptions);
+    workTypeSelect.addEventListener('change', updatetransferItemOptions);
+    equipmentTypeSelect.addEventListener('change', updatetransferItemOptions);
 });

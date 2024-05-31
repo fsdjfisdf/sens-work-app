@@ -25,10 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const moveTime = document.getElementById('moveTime').value;
         const taskSOP = document.getElementById('SOP').value;
         const taskTSGuide = document.getElementById('tsguide').value;
+        const warranty = document.getElementById('warranty').value;
 
         const taskMans = Array.from(document.querySelectorAll('.task-man-container .task-man-input'))
             .map(input => input.value)
             .join(', ');
+
+        let workTimeText = `작업시간: ${startTime} - ${endTime}<br>(None ${noneTime}, Move ${moveTime})<br>`;
+        if (warranty === 'WO') {
+            workTimeText = `작업시간: ${startTime} - ${endTime}(ems)<br>(None ${noneTime}, Move ${moveTime})<br>`;
+        }
 
         const informContent = `
             <strong>${taskName}</strong><br><br>
@@ -43,8 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             5) SOP 및 T/S Guide 활용<br>
             ${taskSOP} / ${taskTSGuide}<br><br>
             작업자: ${taskMans.split(', ')}<br><br>
-            작업시간: ${startTime} - ${endTime}<br>
-            (None ${noneTime}, Move ${moveTime})<br>
+            ${workTimeText}
         `;
 
         printContainer.innerHTML = informContent;
@@ -90,10 +95,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const moveTime = document.getElementById('moveTime').value;
         const taskSOP = document.getElementById('SOP').value;
         const taskTSGuide = document.getElementById('tsguide').value;
+        const warranty = document.getElementById('warranty').value;
 
         const taskMans = Array.from(document.querySelectorAll('.task-man-container .task-man-input'))
             .map(input => input.value)
             .join(', ');
+
+        let workTimeText = `작업시간: ${startTime} - ${endTime}\n(None ${noneTime}, Move ${moveTime})`;
+        if (warranty === 'WO') {
+            workTimeText = `작업시간: ${startTime} - ${endTime}(ems)\n(None ${noneTime}, Move ${moveTime})`;
+        }
 
         const informContent = `
 ${taskName}
@@ -114,8 +125,7 @@ ${taskResults.split('\n').join('\n')}
 ${taskSOP} / ${taskTSGuide}
 
 작업자: ${taskMans.split(',')}
-작업시간: ${startTime} - ${endTime}
-(None ${noneTime}, Move ${moveTime})
+${workTimeText}
         `;
 
         const tempTextArea = document.createElement('textarea');
