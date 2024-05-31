@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const group = document.getElementById('group').value;
       const site = document.getElementById('site').value;
       const line = document.getElementById('line').value;
-      const sop = document.getElementById('sop').value;
+      const SOP = document.getElementById('SOP').value;
       const warranty = document.getElementById('warranty').value;
       const equipment_type = document.getElementById('equipment_type').value;
       const equipment_name = document.getElementById('equipment_name').value;
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         moveTime,
         group,
         site,
-        sop,
+        SOP,
         warranty,
         line,
         equipment_type,
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           move_time: moveTime,
           group,
           site,
-          sop,
+          SOP,
           warranty,
           line,
           equipment_type,
