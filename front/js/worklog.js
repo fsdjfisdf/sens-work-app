@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const workType = document.getElementById('workType').value;
       const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
       const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionSelect').value : 'SELECT'; // Get value from Select2
+      const task_maint = maintItem; // 새로 추가된 필드
   
       // 콘솔에 입력 값 출력
       console.log('전송 데이터:', {
@@ -104,6 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         workType,
         setupItem,
         maintItem,
+        task_maint, // 새로 추가된 필드
         status
       });
   
@@ -128,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           workType,
           setupItem,
           maintItem,
+          task_maint, // 새로 추가된 필드
           status
         }, {
           headers: {
