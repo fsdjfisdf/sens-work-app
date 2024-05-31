@@ -23,17 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       additionalOptions.style.display = 'none';
       maintOptions.style.display = 'none';
     }
-    const transferItemOptions = document.getElementById('transferItemOptions');
-    if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
-      additionalOptions.style.display = 'block';
-      transferItemOptions.style.display = 'none';
-    } else if (workTypeValue === 'MAINT') {
-      additionalOptions.style.display = 'none';
-      transferItemOptions.style.display = 'block';
-    } else {
-      additionalOptions.style.display = 'none';
-      transferItemOptions.style.display = 'none';
-    }
   });
 
   const form = document.getElementById('worklogForm');
@@ -84,9 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const workType = document.getElementById('workType').value;
       const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
       const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionSelect').value : 'SELECT';
-      const transferItem = workType === 'MAINT' ? document.getElementById('transferItemSelect').value : 'SELECT';
       const task_maint = maintItem; // 새로 추가된 필드
-      const task_transfer = transferItem; // 새로 추가된 필드
 
       console.log('전송 데이터:', {
         task_name,
@@ -109,9 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         workType,
         setupItem,
         maintItem,
-        transferItem,
-        task_maint,
-        task_transfer, // 새로 추가된 필드
+        task_maint, // 새로 추가된 필드
         status
       });
 
@@ -138,9 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           workType,
           setupItem,
           maintItem,
-          transferItem,
-          task_maint,
-          task_transfer, // 새로 추가된 필드
+          task_maint, // 새로 추가된 필드
           status
         }, {
           headers: {

@@ -52,7 +52,7 @@ module.exports = function () {
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
     logger.info('요청 바디:', req.body);  // 추가: 요청 바디 전체 출력
-    const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, transfer_item, task_maint, task_transfer, status } = req.body;
+    const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maint_item, task_maint, status } = req.body;
   
     // 이 부분에 로그 추가
     logger.info('maint_item 값:', maint_item);
@@ -80,20 +80,18 @@ module.exports = function () {
     const taskWorkType = workType || 'SELECT';
     const taskSetupItem = setupItem || 'SELECT';
     const taskMaintItem = maint_item || 'SELECT';
-    const taskTransferItem = transfer_item || 'SELECT'; // 추가된 필드
     const taskStatus = status || 'active';
     const taskMaint = task_maint || 'SELECT'; // 추가된 필드
-    const taskTransfer = task_transfer || 'SELECT'; // 추가된 필드
   
-    logger.info('수정된 요청 데이터:', { task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskSOP, tasktsguide, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint, taskTransferItem, taskTransfer });
+    logger.info('수정된 요청 데이터:', { task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskSOP, tasktsguide, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint });
   
     try {
       const query = `
         INSERT INTO work_log 
-        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, status, task_maint, task_TransferItem) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, status, task_maint) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskSOP, tasktsguide, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint, taskTransferItem, taskTransfer];
+      const values = [task_name, taskResult, taskCause, taskMan, taskDescription, taskDate, startTime, endTime, noneTime, moveTime, taskGroup, taskSite, taskSOP, tasktsguide, taskLine, taskWarranty, taskEquipmentType, taskEquipmentName, taskWorkType, taskSetupItem, taskMaintItem, taskStatus, taskMaint];
   
       logger.info('실행할 쿼리:', query);
       logger.info('쿼리 값:', values);
