@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const workTypeSelect = document.getElementById('workType');
     const equipmentTypeSelect = document.getElementById('equipment_type');
-    const maintOptionContainer = document.getElementById('maintOption');
+    const maintOptionContainer = document.getElementById('maintOptions'); // 수정된 부분
     const maintOptionSelect = document.getElementById('maintOptionSelect');
 
     const maintOptions = {
