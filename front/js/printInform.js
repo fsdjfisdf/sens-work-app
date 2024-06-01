@@ -3,19 +3,31 @@ document.addEventListener('DOMContentLoaded', () => {
     printContainer.classList.add('print-container');
     document.body.appendChild(printContainer);
 
+    const formatText = (text) => {
+        return text.split('\n').map(line => {
+            if (line.startsWith('->')) {
+                return line;
+            } else if (line.startsWith('-.')) {
+                return line;
+            } else {
+                return `-. ${line}`;
+            }
+        }).join('\n');
+    };
+
     const updateInformContent = () => {
         const taskName = document.getElementById('task_name').value;
         const status = document.getElementById('status').value;
         const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
-            .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+            .map(input => formatText(input.value))
             .join('\n');
 
         const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
-            .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+            .map(input => formatText(input.value))
             .join('\n');
 
         const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
-            .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+            .map(input => formatText(input.value))
             .join('\n');
 
         const taskDate = document.getElementById('task_date').value;
@@ -39,16 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const informContent = `
             <strong>${taskName}</strong><br><br>
             1) STATUS<br>
-            -. ${status}<br><br>
+            ${formatText(status).replace(/\n/g, '<br>')}<br><br>
             2) ACTION<br>
-            ${taskDescriptions.split('\n').join('<br>')}<br><br>
+            ${formatText(taskDescriptions).replace(/\n/g, '<br>')}<br><br>
             3) CAUSE<br>
-            ${taskCauses.split('\n').join('<br>')}<br><br>
+            ${formatText(taskCauses).replace(/\n/g, '<br>')}<br><br>
             4) RESULT<br>
-            ${taskResults.split('\n').join('<br>')}<br><br>
+            ${formatText(taskResults).replace(/\n/g, '<br>')}<br><br>
             5) SOP 및 T/S Guide 활용<br>
             ${taskSOP} / ${taskTSGuide}<br><br>
-            작업자: ${taskMans.split(', ')}<br><br>
+            작업자: ${taskMans}<br><br>
             ${workTimeText}
         `;
 
@@ -77,15 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const taskName = document.getElementById('task_name').value;
         const status = document.getElementById('status').value;
         const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
-            .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+            .map(input => formatText(input.value))
             .join('\n');
 
         const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
-            .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+            .map(input => formatText(input.value))
             .join('\n');
 
         const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
-            .map(input => input.value.split('\n').map(line => `-. ${line}`).join('\n'))
+            .map(input => formatText(input.value))
             .join('\n');
 
         const taskDate = document.getElementById('task_date').value;
@@ -110,21 +122,21 @@ document.addEventListener('DOMContentLoaded', () => {
 ${taskName}
 
 1) STATUS
--. ${status}
+${formatText(status).split('\n').join('\n')}
 
 2) ACTION
-${taskDescriptions.split('\n').join('\n')}
+${formatText(taskDescriptions).split('\n').join('\n')}
 
 3) CAUSE
-${taskCauses.split('\n').join('\n')}
+${formatText(taskCauses).split('\n').join('\n')}
 
 4) RESULT
-${taskResults.split('\n').join('\n')}
+${formatText(taskResults).split('\n').join('\n')}
 
 5) SOP 및 T/S Guide 활용
 ${taskSOP} / ${taskTSGuide}
 
-작업자: ${taskMans.split(',')}
+작업자: ${taskMans}
 ${workTimeText}
         `;
 

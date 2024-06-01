@@ -42,6 +42,7 @@
             <div class="inner">
               <br><br>
                 <h3>작업 이력 작성</h3>
+                <button id="paste-button">PASTE</button>
                 <form id="worklogForm">
                 <div>
                   <div>
@@ -235,6 +236,16 @@
             </div>
         </section>
     </main>
+
+    <div class="overlay"></div>
+    <div id="popup">
+        <h3>PASTE INFORM</h3>
+        <textarea id="paste-textarea"></textarea>
+        <button id="paste-submit">WRITE</button>
+        <button id="paste-cancel">CANCEL</button>
+    </div>
+
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
@@ -246,6 +257,7 @@
     <script src="./js/printInform.js"></script>
     <script src="./js/setupautofill.js"></script>
     <script src="./js/maintOption.js"></script>
+    <script src="./js/paste.js"></script>
 </body>
 </html>
 
