@@ -1,4 +1,3 @@
-/* Reset some basic elements */
 body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
@@ -16,7 +15,6 @@ body {
     min-height: 100vh;
 }
 
-/* Navigation styles */
 nav {
     background-color: #0044cc;
     padding: 10px 0;
@@ -28,12 +26,6 @@ nav {
     align-items: center;
     width: 90%;
     margin: 0 auto;
-}
-
-.nav-title {
-    display: flex;
-    justify-content: center;
-    width: 100%;
 }
 
 .nav-title a {
@@ -84,25 +76,21 @@ nav {
     display: block;
 }
 
-/* Main content styles */
+.hidden {
+    display: none;
+}
+
+.inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
 main {
     flex-grow: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.inner {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
-}
-
-h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #0044cc;
-    text-align: center;
 }
 
 table {
@@ -111,34 +99,21 @@ table {
     margin-top: 20px;
 }
 
-table, th, td {
+th, td {
     border: 1px solid #ddd;
-    text-align: left;
     padding: 8px;
+    text-align: left;
 }
 
 th {
-    background-color: #0044cc;
-    color: white;
+    background-color: #f2f2f2;
+    color: #333;
 }
 
 tr:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: #f9f9f9;
 }
 
-button.view-details, button.delete-log {
-    background-color: #0044cc;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-button.delete-log {
-    background-color: #ff4d4d;
-}
-
-/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -148,16 +123,19 @@ button.delete-log {
     width: 100%;
     height: 100%;
     overflow: auto;
+    background-color: rgb(0, 0, 0);
     background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
 }
 
 .modal-content {
-    background-color: #fff;
-    margin: 15% auto;
+    background-color: #fefefe;
+    margin: 5% auto;
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
-    max-width: 500px;
+    max-width: 600px;
+    position: relative;
 }
 
 .close {
@@ -169,7 +147,7 @@ button.delete-log {
 
 .close:hover,
 .close:focus {
-    color: #000;
+    color: black;
     text-decoration: none;
     cursor: pointer;
 }

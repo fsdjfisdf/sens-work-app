@@ -60,11 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             deleteButtons.forEach(button => {
                 button.addEventListener('click', async (e) => {
                     const id = e.target.dataset.id;
-                    try {
-                        await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
-                        loadWorkLogs(); // 작업 이력 목록을 다시 불러옵니다.
-                    } catch (err) {
-                        console.error('삭제 중 오류 발생:', err);
+                    if (confirm('정말 삭제하시겠습니까?')) {
+                        try {
+                            await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
+                            loadWorkLogs(); // 작업 이력 목록을 다시 불러옵니다.
+                        } catch (err) {
+                            console.error('삭제 중 오류 발생:', err);
+                        }
                     }
                 });
             });
