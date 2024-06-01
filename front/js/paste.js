@@ -64,6 +64,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
+        // Helper function to add new fields with remove button
+        function addField(container, value, className) {
+            const newFieldContainer = document.createElement('div');
+            newFieldContainer.className = className;
+            newFieldContainer.innerHTML = `
+                <textarea class="${className}-input" required>${value}</textarea>
+                <button type="button" class="remove-field">-</button>
+            `;
+            container.appendChild(newFieldContainer);
+            newFieldContainer.querySelector('.remove-field').addEventListener('click', function () {
+                newFieldContainer.remove();
+            });
+        }
+
         // Title 필드 채우기
         const titleElement = document.getElementById('task_name');
         if (titleElement) {
@@ -85,12 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (actionContainer) {
             const actionContainers = actionContainer.querySelectorAll('.task-description-container');
             actionContainers.forEach(container => container.remove());
-            actions.forEach((action, index) => {
-                const newField = document.createElement('div');
-                newField.className = 'task-description-container';
-                newField.innerHTML = `<textarea name="task_description" class="task-description-input" required>${action}</textarea>
-                                      <button type="button" class="remove-field">-</button>`;
-                actionContainer.appendChild(newField);
+            actions.forEach(action => {
+                addField(actionContainer, action, 'task-description-container');
             });
         } else {
             console.error('Action container not found');
@@ -109,12 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (resultContainer) {
             const resultContainers = resultContainer.querySelectorAll('.task-result-container');
             resultContainers.forEach(container => container.remove());
-            results.forEach((result, index) => {
-                const newField = document.createElement('div');
-                newField.className = 'task-result-container';
-                newField.innerHTML = `<textarea name="task_result" class="task-result-input" required>${result}</textarea>
-                                      <button type="button" class="remove-field">-</button>`;
-                resultContainer.appendChild(newField);
+            results.forEach(result => {
+                addField(resultContainer, result, 'task-result-container');
             });
         } else {
             console.error('Result container not found');

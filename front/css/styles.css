@@ -315,6 +315,10 @@ form textarea {
     height: 40px; /* 모든 입력 필드와 동일한 높이로 설정 */
 }
 
+form textarea.task-description-input {
+    height: 60px; /* Action 필드 높이를 다른 필드보다 더 길게 설정 */
+}
+
 form button[type="button"],
 form button[type="submit"],
 button#print-inform,
@@ -352,7 +356,7 @@ form textarea {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    flex-wrap: wrap; /* 필드들이 작은 화면에서도 잘 보이도록 설정 */
+    flex-wrap: nowrap; /* 필드들이 작은 화면에서도 잘 보이도록 설정 */
 }
 
 .task-result-input,
@@ -364,12 +368,24 @@ form textarea {
     flex-basis: calc(100% - 40px); /* 필드가 더 많은 공간을 차지하도록 설정 */
 }
 
+.task-man-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.task-man-input {
+    flex-grow: 1;
+    margin-right: 10px;
+    flex-basis: calc(70% - 20px); /* 이름 필드가 더 많은 공간을 차지하도록 설정 */
+}
+
 .task-man-select {
-    width: 150px;
+    flex-basis: calc(30% - 20px); /* 역할 선택 필드가 나머지 공간을 차지하도록 설정 */
 }
 
 .remove-field {
-    flex-basis: 30px; /* - 버튼이 차지하는 공간을 줄이기 */
+    flex-basis: 20px; /* - 버튼이 차지하는 공간을 줄이기 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -390,7 +406,13 @@ button#remove-task-description {
     align-items: center;
     justify-content: center;
     padding: 0;
-    margin-top: 0;
+    margin-left: 10px; /* 버튼을 필드 오른쪽에 위치 */
+}
+
+.add-remove-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .print-container {
@@ -415,6 +437,55 @@ button#remove-task-description {
 
 .print-container.visible {
     display: block; /* visible 클래스가 추가되면 표시 */
+}
+
+/* 팝업 스타일 */
+#popup {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 600px;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 2;
+}
+
+#popup textarea {
+    width: 100%;
+    height: 200px;
+}
+
+#popup button {
+    display: block;
+    margin: 10px auto 0;
+    padding: 10px 20px;
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#popup button:hover {
+    background-color: #003bb5;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1;
 }
 
 /* Responsive design */
@@ -486,7 +557,10 @@ button#remove-task-description {
     }
 
     form button[type="button"],
-    form button[type="submit"] {
+    form button[type="submit"],
+    button#print-inform,
+    button#copy-inform,
+    button#paste-button {
         font-size: 12px;
         padding: 8px 16px;
     }
@@ -513,66 +587,4 @@ button#remove-task-description {
     .remove-field {
         flex-basis: 30px; /* 작은 화면에서 - 버튼 크기 조정 */
     }
-}
-
-/* 팝업 스타일 */
-#popup {
-    display: none;
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    max-width: 600px;
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    z-index: 2;
-    border-radius: 8px;
-}
-
-#popup textarea {
-    width: 100%;
-    height: 200px;
-    margin-bottom: 10px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-#popup button {
-    width: auto;
-    padding: 10px 20px;
-    background-color: #0044cc;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 10px;
-    display: inline-block;
-}
-
-#popup button:hover {
-    background-color: #003bb5;
-}
-
-#popup h3 {
-    margin-bottom: 15px;
-    font-size: 18px;
-    color: #333;
-}
-
-.overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1;
 }

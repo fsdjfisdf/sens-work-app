@@ -1,37 +1,18 @@
-// addandremove.js
 document.addEventListener('DOMContentLoaded', function() {
   function setupDynamicFields(containerId, inputClass, template) {
     const container = document.getElementById(containerId);
     const addButton = container.querySelector(`#add-${inputClass}`);
-    const removeButton = container.querySelector(`#remove-${inputClass}`);
-
+    
     addButton.addEventListener('click', function() {
       const newField = document.createElement('div');
       newField.className = `${inputClass}-container`;
       newField.innerHTML = template;
-      container.insertBefore(newField, addButton);
+      container.appendChild(newField);
 
       // 새로운 필드에 개별 삭제 버튼 이벤트 리스너 추가
       newField.querySelector('.remove-field').addEventListener('click', function() {
         newField.remove();
-        if (container.querySelectorAll(`.${inputClass}-container`).length <= 1) {
-          removeButton.disabled = true;
-        }
       });
-
-      if (container.querySelectorAll(`.${inputClass}-container`).length > 1) {
-        removeButton.disabled = false;
-      }
-    });
-
-    removeButton.addEventListener('click', function() {
-      const inputs = container.querySelectorAll(`.${inputClass}-container`);
-      if (inputs.length > 1) {
-        container.removeChild(inputs[inputs.length - 1]);
-        if (inputs.length === 2) {
-          removeButton.disabled = true;
-        }
-      }
     });
   }
 

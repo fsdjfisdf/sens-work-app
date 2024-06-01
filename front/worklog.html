@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,7 +8,22 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="./css/styles.css" />
     <style>
-
+        .label-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .label-container label {
+            flex-grow: 1;
+        }
+        .add-remove-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .add-remove-buttons button {
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
@@ -143,7 +157,12 @@
                   </select>
               </div>
                 <div id="task-mans-container">
-                  <label>WORKER</label>
+                    <div class="label-container">
+                        <label>WORKER</label>
+                        <div class="add-remove-buttons">
+                            <button type="button" id="add-task-man">+</button>
+                        </div>
+                    </div>
                   <div class="task-man-container">
                       <textarea name="task_man" class="task-man-input" required></textarea>
                       <select name="task_man_role" class="task-man-select" required>
@@ -151,8 +170,6 @@
                           <option value="support">support</option>
                       </select>
                   </div>
-                  <button type="button" id="add-task-man">+</button>
-                  <button type="button" id="remove-task-man" disabled>-</button>
               </div>
               <div>
                 <label for="SOP">SOP</label>
@@ -201,29 +218,38 @@
                         <label for="status">STATUS</label>
                         <input type="text" id="status" name="status" required>
                     </div>
-                    <div id="task-results-container">
-                        <label>RESULT</label>
-                        <div class="task-result-container">
-                            <textarea name="task_result" class="task-result-input" required></textarea>
-                        </div>
-                        <button type="button" id="add-task-result">+</button>
-                        <button type="button" id="remove-task-result" disabled>-</button>
-                    </div>
-                    <div id="task-causes-container">
-                        <label>CAUSE</label>
-                        <div class="task-cause-container">
-                            <textarea name="task_cause" class="task-cause-input" required></textarea>
-                        </div>
-                        <button type="button" id="add-task-cause">+</button>
-                        <button type="button" id="remove-task-cause" disabled>-</button>
-                    </div>
                     <div id="task-descriptions-container">
-                        <label>ACTION</label>
+                        <div class="label-container">
+                            <label>ACTION</label>
+                            <div class="add-remove-buttons">
+                                <button type="button" id="add-task-description">+</button>
+                            </div>
+                        </div>
                         <div class="task-description-container">
                             <textarea name="task_description" class="task-description-input" required></textarea>
                         </div>
-                        <button type="button" id="add-task-description">+</button>
-                        <button type="button" id="remove-task-description" disabled>-</button>
+                    </div>
+                    <div id="task-causes-container">
+                        <div class="label-container">
+                            <label>CAUSE</label>
+                            <div class="add-remove-buttons">
+                                <button type="button" id="add-task-cause">+</button>
+                            </div>
+                        </div>
+                        <div class="task-cause-container">
+                            <textarea name="task_cause" class="task-cause-input" required></textarea>
+                        </div>
+                    </div>
+                    <div id="task-results-container">
+                        <div class="label-container">
+                            <label>RESULT</label>
+                            <div class="add-remove-buttons">
+                                <button type="button" id="add-task-result">+</button>
+                            </div>
+                        </div>
+                        <div class="task-result-container">
+                            <textarea name="task_result" class="task-result-input" required></textarea>
+                        </div>
                     </div>
                     <div>
                         <button type="submit">SAVE</button>
@@ -245,7 +271,6 @@
         <button id="paste-cancel">CANCEL</button>
     </div>
 
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
@@ -260,4 +285,3 @@
     <script src="./js/paste.js"></script>
 </body>
 </html>
-
