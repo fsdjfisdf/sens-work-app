@@ -34,6 +34,19 @@
         <section id="worklog">
             <div class="inner">
                 <h2>Load Worklog</h2>
+                <div class="search-container">
+                    <input type="text" id="searchWorker" placeholder="Search by Worker">
+                    <div class="date-container">
+                        <input type="date" id="searchStartDate">
+                        <span class="date-to">TO</span>
+                        <input type="date" id="searchEndDate">
+                    </div>
+                    <input type="text" id="searchEqName" placeholder="Search by EQ Name">
+                    <input type="text" id="searchGroup" placeholder="Search by Group">
+                    <input type="text" id="searchSite" placeholder="Search by Site">
+                    <button id="searchButton">Search</button>
+                    <button id="resetButton">Reset</button>
+                </div>
                 <div id="worklog-cards" class="worklog-cards"></div>
             </div>
         </section>
