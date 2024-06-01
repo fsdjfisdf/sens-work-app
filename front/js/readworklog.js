@@ -9,12 +9,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             logs.forEach(log => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${log.task_date}</td>
-                    <td>${log.task_name}</td>
-                    <td>${log.task_result}</td>
-                    <td>${log.task_man}</td>
-                    <td><button class="view-details" data-id="${log.id}">View</button></td>
-                    <td><button class="delete-log" data-id="${log.id}">X</button></td>
+                    <td data-label="DATE">${log.task_date}</td>
+                    <td data-label="TITLE">${log.task_name}</td>
+                    <td data-label="RESULT">${log.task_result}</td>
+                    <td data-label="WORKER">${log.task_man}</td>
+                    <td data-label="ACTIONS">
+                        <button class="view-details" data-id="${log.id}">View</button>
+                        <button class="delete-log" data-id="${log.id}">X</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -63,24 +65,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (confirm('정말 삭제하시겠습니까?')) {
                         try {
                             await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
-                            loadWorkLogs(); // 작업 이력 목록을 다시 불러옵니다.
+                            loadWorkLogs();
                         } catch (err) {
-                            console.error('삭제 중 오류 발생:', err);
+                            console.error('Error deleting log:', err);
                         }
                     }
                 });
             });
         } catch (error) {
-            console.error('작업 이력 목록 조회 중 오류 발생:', error);
+            console.error('Error loading work logs:', error);
         }
     }
 
     loadWorkLogs();
 
-    // 모달 닫기 이벤트 리스너 추가
-    const modal = document.getElementById('logModal');
-    const closeModal = document.querySelector('.close');
-    closeModal.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
+    // 모달 닫기 버튼 이벤트 리스너 추가
+    const modalCloseButton = document.querySelector('.close');
+    if (modalCloseButton) {
+        modalCloseButton.addEventListener('click', () => {
+            document.getElementById('logModal').style.display = 'none';
+        });
+    }
 });

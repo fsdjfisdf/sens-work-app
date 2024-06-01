@@ -1,3 +1,4 @@
+/* Reset some basic elements */
 body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
@@ -15,6 +16,7 @@ body {
     min-height: 100vh;
 }
 
+/* Navigation styles */
 nav {
     background-color: #0044cc;
     padding: 10px 0;
@@ -91,6 +93,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px 0;
 }
 
 table {
@@ -150,4 +153,59 @@ tr:nth-child(even) {
     color: black;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .nav-title a {
+        font-size: 20px;
+    }
+
+    .sign-link, .dropbtn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .dropdown-content {
+        min-width: 100px;
+    }
+
+    .dropdown-content .dropdown-item {
+        padding: 10px 12px;
+    }
+
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    thead tr {
+        display: none;
+    }
+
+    tbody tr {
+        margin-bottom: 15px;
+    }
+
+    td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        white-space: pre-wrap;
+    }
+
+    td:before {
+        position: absolute;
+        top: 0;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        content: attr(data-label);
+        font-weight: bold;
+    }
 }
