@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>작업 이력 목록</title>
-    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/readworklog.css" />
 </head>
 <body>
     <nav>
@@ -12,15 +12,13 @@
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
                 <div class="sign-container">
-                    <div class="unsigned">
-                    </div>
                     <div class="signed hidden">
                         <div class="dropdown">
                             <button class="dropbtn">MENU</button>
                             <div class="dropdown-content">
                                 <a href="./info.html" class="dropdown-item">Eng'r Information</a>
-                                <a href="./worklog.html" class="dropdown-item">Write Worklog</a>
-                                <a href="./readworklog.html" class="dropdown-item">Read Worklog</a>
+                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
                                 <button id="sign-out" class="dropdown-item">Logout</button>
                             </div>
                         </div>
@@ -33,39 +31,33 @@
     <main>
         <section id="worklog">
             <div class="inner">
-                <h2>작업 이력 목록</h2>
+                <h2>Load Worklog</h2>
                 <table id="worklog-table">
                     <thead>
                         <tr>
+                            <th>DATE</th>
                             <th>TITLE</th>
                             <th>RESULT</th>
-                            <th>CAUSE</th>
                             <th>WORKER</th>
                             <th>ACTION</th>
-                            <th>DATE</th>
-                            <th>START TIME</th>
-                            <th>END TIME</th>
-                            <th>GROUP</th>
-                            <th>SITE</th>
-                            <th>LINE</th>
-                            <th>WARRANTY</th>
-                            <th>SOP</th>
-                            <th>TS Guide</th>
-                            <th>EQ</th>
-                            <th>EQ Name</th>
-                            <th>WORKTYPE</th>
-                            <th>SET UP ITEM</th>
-                            <th>MAINT ITEM</th>
-                            <th>STATUS</th>
+                            <th>DELETE</th>
                         </tr>
                     </thead>
                     <tbody>
                     </tbody>
                 </table>
-                <div id="print-container" class="print-container"></div>
             </div>
         </section>
     </main>
+
+    <!-- Modal -->
+    <div id="logModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="logDetails"></div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/url.js"></script>
     <script src="./js/readworklog.js"></script>

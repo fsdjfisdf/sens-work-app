@@ -25,3 +25,13 @@ exports.addWorkLog = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.deleteWorkLog = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await workLogDao.deleteWorkLog(id);
+    res.status(200).json({ message: "Work log deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

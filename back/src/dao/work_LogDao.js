@@ -31,3 +31,14 @@ exports.addWorkLog = async (task_name, task_result, task_cause, task_man, task_d
     connection.release();
   }
 };
+
+exports.deleteWorkLog = async (id) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    await connection.query('DELETE FROM work_log WHERE id = ?', [id]);
+  } catch (err) {
+    throw new Error(`Error deleting work log: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};

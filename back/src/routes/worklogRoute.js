@@ -8,4 +8,7 @@ router.get('/work-logs', workLogController.getWorkLogs);
 // 작업 이력 추가
 router.post('/work-logs', workLogController.addWorkLog);
 
+// 작업 이력 삭제
+router.delete('/work-logs/:id', workLogController.deleteWorkLog);
+
 module.exports = router;
