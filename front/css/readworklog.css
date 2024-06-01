@@ -117,6 +117,12 @@ h2 {
     width: 100%;
     max-width: 300px;
     position: relative;
+    transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.worklog-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
 }
 
 .worklog-card p {
@@ -137,12 +143,13 @@ button.delete-log {
     border-radius: 4px;
     padding: 10px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.3s;
+    font-size: 14px;
 }
 
-button.view-details:hover,
-button.delete-log:hover {
+button.view-details:hover {
     background-color: #003bb5;
+    transform: scale(1.05);
 }
 
 button.delete-log {
@@ -151,6 +158,7 @@ button.delete-log {
 
 button.delete-log:hover {
     background-color: #b20000;
+    transform: scale(1.05);
 }
 
 /* Modal styles */
@@ -176,6 +184,7 @@ button.delete-log:hover {
     width: 80%;
     max-width: 600px;
     position: relative;
+    border-radius: 8px;
 }
 
 .close {
