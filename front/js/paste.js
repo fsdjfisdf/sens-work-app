@@ -152,6 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('TS Guide element not found');
         }
 
+        // 'remove-field' 버튼에 이벤트 리스너 추가
+        document.querySelectorAll('.remove-field').forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+
         overlay.style.display = 'none';
         popup.style.display = 'none';
         pasteTextarea.value = '';

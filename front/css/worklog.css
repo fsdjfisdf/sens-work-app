@@ -387,3 +387,9 @@ button#remove-task-description {
         flex-basis: 30px; /* 작은 화면에서 - 버튼 크기 조정 */
     }
 }
+
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #ddd;
+  }
+  

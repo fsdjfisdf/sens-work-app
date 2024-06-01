@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', function() {
         newField.remove();
       });
     });
+
+    // SortableJS 적용
+    new Sortable(container, {
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      handle: `.${inputClass}-container`, // 드래그 할 수 있는 핸들
+    });
   }
 
   const taskManTemplate = `
