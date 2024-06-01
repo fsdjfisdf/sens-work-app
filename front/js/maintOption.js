@@ -1,11 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Select2 for maintOptionSelect
+    // Initialize Select2 for maintOptionSelect and transferOptionSelect
     $('#maintOptionSelect').select2();
+    $('#transferOptionSelect').select2(); // 추가된 부분
 
     const workTypeSelect = document.getElementById('workType');
     const equipmentTypeSelect = document.getElementById('equipment_type');
-    const maintOptionContainer = document.getElementById('maintOptions'); // 수정된 부분
+    const maintOptionContainer = document.getElementById('maintOptions');
     const maintOptionSelect = document.getElementById('maintOptionSelect');
+    const transferOptionContainer = document.getElementById('transferOptions'); // 추가된 부분
+    const transferOptionSelect = document.getElementById('transferOptionSelect'); // 추가된 부분
 
     const maintOptions = {
         "SUPRA N": ["SELECT", "EFEM ROBOT TEACHING", "EFEM ROBOT REP", "EFEM ROBOT CONTROLLER", "TM ROBOT TEACHING", "TM ROBOT REP",
@@ -26,21 +29,41 @@ document.addEventListener('DOMContentLoaded', function() {
         "JENEVA": ["SELECT"]
     };
 
+    const transferOptions = { // 추가된 부분
+        "SUPRA N": ["SELECT", "TRANSFER OPTION 1", "TRANSFER OPTION 2"],
+        "SUPRA XP": ["SELECT", "TRANSFER OPTION 1"],
+        "INTEGER": ["SELECT", "TRANSFER OPTION 1", "TRANSFER OPTION 2"],
+        "PRECIA": ["SELECT"],
+        "ECOLITE": ["SELECT"],
+        "JENEVA": ["SELECT"]
+    };
+
     function updateMaintOptions() {
         if (workTypeSelect.value === 'MAINT') {
             maintOptionContainer.style.display = 'block';
-            const options = maintOptions[equipmentTypeSelect.value] || ["SELECT"];
-            maintOptionSelect.innerHTML = ""; // 기존 옵션 초기화
-            console.log('Maint options for', equipmentTypeSelect.value, ':', options);
-            options.forEach(option => {
+            transferOptionContainer.style.display = 'block'; // 추가된 부분
+            const maintOptionsList = maintOptions[equipmentTypeSelect.value] || ["SELECT"];
+            maintOptionSelect.innerHTML = "";
+            maintOptionsList.forEach(option => {
                 const opt = document.createElement('option');
                 opt.value = option;
                 opt.innerHTML = option;
                 maintOptionSelect.appendChild(opt);
             });
-            $('#maintOptionSelect').select2(); // re-initialize Select2 with new options
+            $('#maintOptionSelect').select2();
+
+            const transferOptionsList = transferOptions[equipmentTypeSelect.value] || ["SELECT"]; // 추가된 부분
+            transferOptionSelect.innerHTML = ""; // 기존 옵션 초기화
+            transferOptionsList.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.innerHTML = option;
+                transferOptionSelect.appendChild(opt);
+            });
+            $('#transferOptionSelect').select2(); // re-initialize Select2 with new options
         } else {
             maintOptionContainer.style.display = 'none';
+            transferOptionContainer.style.display = 'none'; // 추가된 부분
         }
     }
 

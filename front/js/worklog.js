@@ -13,15 +13,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const workTypeValue = this.value;
     const additionalOptions = document.getElementById('additionalOptions');
     const maintOptions = document.getElementById('maintOptions');
+    const transferOptions = document.getElementById('transferOptions');
     if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
       additionalOptions.style.display = 'block';
       maintOptions.style.display = 'none';
+      transferOptions.style.display = 'none';
     } else if (workTypeValue === 'MAINT') {
       maintOptions.style.display = 'block';
+      transferOptions.style.display = 'block';
       additionalOptions.style.display = 'none';
     } else {
       additionalOptions.style.display = 'none';
       maintOptions.style.display = 'none';
+      transferOptions.style.display = 'none';
     }
   });
 
@@ -73,6 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const workType = document.getElementById('workType').value;
       const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
       const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionSelect').value : 'SELECT';
+      const transferItem = workType === 'MAINT' ? document.getElementById('transferOptionSelect').value : 'SELECT';
       const task_maint = maintItem; // 새로 추가된 필드
 
       console.log('전송 데이터:', {
@@ -89,6 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         group,
         site,
         SOP,
+        tsguide,
         warranty,
         line,
         equipment_type,
@@ -96,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         workType,
         setupItem,
         maintItem,
+        transferItem, // 추가된 필드
         task_maint, // 새로 추가된 필드
         status
       });
@@ -123,6 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           workType,
           setupItem,
           maintItem,
+          transferItem, // 추가된 필드
           task_maint, // 새로 추가된 필드
           status
         }, {
