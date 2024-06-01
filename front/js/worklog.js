@@ -12,19 +12,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('workType').addEventListener('change', function() {
     const workTypeValue = this.value;
     const additionalOptions = document.getElementById('additionalOptions');
-    const maintOptions = document.getElementById('maintOptions');
     const transferOptions = document.getElementById('transferOptions');
     if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
       additionalOptions.style.display = 'block';
-      maintOptions.style.display = 'none';
       transferOptions.style.display = 'none';
     } else if (workTypeValue === 'MAINT') {
-      maintOptions.style.display = 'block';
       transferOptions.style.display = 'block';
       additionalOptions.style.display = 'none';
     } else {
       additionalOptions.style.display = 'none';
-      maintOptions.style.display = 'none';
       transferOptions.style.display = 'none';
     }
   });
@@ -76,7 +72,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const equipment_name = document.getElementById('equipment_name').value;
       const workType = document.getElementById('workType').value;
       const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
-      const maintItem = workType === 'MAINT' ? document.getElementById('maintOptionSelect').value : 'SELECT';
       const transferItem = workType === 'MAINT' ? document.getElementById('transferOptionSelect').value : 'SELECT';
       const task_maint = maintItem; // 새로 추가된 필드
 
@@ -101,7 +96,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         equipment_name,
         workType,
         setupItem,
-        maintItem,
         transferItem, // 추가된 필드
         task_maint, // 새로 추가된 필드
         status
@@ -129,7 +123,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           equipment_name,
           workType,
           setupItem,
-          maintItem,
           transferItem, // 추가된 필드
           task_maint, // 새로 추가된 필드
           status
