@@ -50,8 +50,9 @@ module.exports = function () {
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
     logger.info('요청 바디:', req.body);
-    const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, transferItem, task_maint, status } = req.body;
+    const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status } = req.body;
 
+    logger.info('maint_item 값:', maintItem);
     logger.info('setupItem 값:', setupItem);
     logger.info('SOP 값:', SOP);
     logger.info('task_maint 값:', task_maint);
@@ -76,6 +77,7 @@ module.exports = function () {
     const taskEquipmentName = equipment_name || '';
     const taskWorkType = workType || 'SELECT';
     const taskSetupItem = setupItem || 'SELECT';
+    const taskMaintItem = maintItem || 'SELECT';
     const taskTransferItem = transferItem || 'SELECT';
     const taskStatus = status || 'active';
     const taskMaint = task_maint || 'SELECT';
@@ -101,6 +103,7 @@ module.exports = function () {
       taskEquipmentName,
       taskWorkType,
       taskSetupItem,
+      taskMaintItem,
       taskTransferItem,
       taskStatus,
       taskMaint
@@ -109,8 +112,8 @@ module.exports = function () {
     try {
       const query = `
         INSERT INTO work_log 
-        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, transfer_item, status, task_maint) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, status, task_maint) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
         task_name,
@@ -133,6 +136,7 @@ module.exports = function () {
         taskEquipmentName,
         taskWorkType,
         taskSetupItem,
+        taskMaintItem,
         taskTransferItem,
         taskStatus,
         taskMaint
