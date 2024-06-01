@@ -150,4 +150,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('작업 로그 추가 중 오류가 발생했습니다.');
       }
     });
+
+    const signOutButton = document.querySelector("#sign-out");
+
+    if (signOutButton) {
+        signOutButton.addEventListener("click", function() {
+            localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
+            alert("로그아웃 되었습니다.");
+            window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
+        });
+    }
 });
