@@ -2,23 +2,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadWorkLogs() {
         try {
             const response = await axios.get('http://3.37.165.84:3001/logs');
-            const logs = response.data;
+            const logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
 
-            const tbody = document.querySelector('#worklog-table tbody');
-            tbody.innerHTML = '';
+            const cardContainer = document.getElementById('worklog-cards');
+            cardContainer.innerHTML = '';
             logs.forEach(log => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td data-label="DATE">${log.task_date}</td>
-                    <td data-label="TITLE">${log.task_name}</td>
-                    <td data-label="RESULT">${log.task_result}</td>
-                    <td data-label="WORKER">${log.task_man}</td>
-                    <td data-label="ACTIONS">
+                const card = document.createElement('div');
+                card.className = 'worklog-card';
+                card.innerHTML = `
+                    <p><strong>DATE:</strong> ${log.task_date}</p>
+                    <p><strong>TITLE:</strong> ${log.task_name}</p>
+                    <p><strong>RESULT:</strong> ${log.task_result}</p>
+                    <p><strong>WORKER:</strong> ${log.task_man}</p>
+                    <div class="actions">
                         <button class="view-details" data-id="${log.id}">View</button>
                         <button class="delete-log" data-id="${log.id}">X</button>
-                    </td>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                cardContainer.appendChild(card);
             });
 
             // 상세 보기 버튼 이벤트 리스너 추가

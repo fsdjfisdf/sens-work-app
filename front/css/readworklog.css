@@ -96,27 +96,64 @@ main {
     padding: 20px 0;
 }
 
-table {
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.worklog-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.worklog-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
     width: 100%;
-    border-collapse: collapse;
+    max-width: 300px;
+    position: relative;
+}
+
+.worklog-card p {
+    margin: 10px 0;
+}
+
+.worklog-card .actions {
+    display: flex;
+    justify-content: space-between;
     margin-top: 20px;
 }
 
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
+button.view-details,
+button.delete-log {
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-th {
-    background-color: #f2f2f2;
-    color: #333;
+button.view-details:hover,
+button.delete-log:hover {
+    background-color: #003bb5;
 }
 
-tr:nth-child(even) {
-    background-color: #f9f9f9;
+button.delete-log {
+    background-color: #cc0000;
 }
 
+button.delete-log:hover {
+    background-color: #b20000;
+}
+
+/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -179,33 +216,7 @@ tr:nth-child(even) {
         padding: 10px 12px;
     }
 
-    table, thead, tbody, th, td, tr {
-        display: block;
-    }
-
-    thead tr {
-        display: none;
-    }
-
-    tbody tr {
-        margin-bottom: 15px;
-    }
-
-    td {
-        border: none;
-        position: relative;
-        padding-left: 50%;
-        white-space: pre-wrap;
-    }
-
-    td:before {
-        position: absolute;
-        top: 0;
-        left: 10px;
-        width: 45%;
-        padding-right: 10px;
-        white-space: nowrap;
-        content: attr(data-label);
-        font-weight: bold;
+    .worklog-card {
+        width: 90%;
     }
 }
