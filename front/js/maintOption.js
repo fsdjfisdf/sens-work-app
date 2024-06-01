@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateMaintOptions() {
         if (workTypeSelect.value === 'MAINT') {
-            maintOptionContainer.style.display = 'block';
+            maintOptionContainer.style.display = 'none';
             transferOptionContainer.style.display = 'block'; // 추가된 부분
             const maintOptionsList = maintOptions[equipmentTypeSelect.value] || ["SELECT"];
             maintOptionSelect.innerHTML = "";

@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       maintOptions.style.display = 'none';
       transferOptions.style.display = 'none';
     } else if (workTypeValue === 'MAINT') {
-      maintOptions.style.display = 'block';
+      maintOptions.style.display = 'none';
       transferOptions.style.display = 'block';
       additionalOptions.style.display = 'none';
     } else {
