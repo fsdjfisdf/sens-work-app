@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatText = (text) => {
         return text.split('\n').map(line => {
             if (line.startsWith('->')) {
-                return line;
+                return `&emsp;${line}`; // Indent for '->'
             } else if (line.startsWith('-.')) {
                 return line;
             } else {
@@ -19,15 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const taskName = document.getElementById('task_name').value;
         const status = document.getElementById('status').value;
         const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
-            .map(input => formatText(input.value))
+            .map(input => input.value)
             .join('\n');
 
         const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
-            .map(input => formatText(input.value))
+            .map(input => input.value)
             .join('\n');
 
         const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
-            .map(input => formatText(input.value))
+            .map(input => input.value)
             .join('\n');
 
         const taskDate = document.getElementById('task_date').value;
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const informContent = `
             <strong>${taskName}</strong><br><br>
             1) STATUS<br>
-            ${formatText(status).replace(/\n/g, '<br>')}<br><br>
+            ${status.replace(/\n/g, '<br>')}<br><br>
             2) ACTION<br>
             ${formatText(taskDescriptions).replace(/\n/g, '<br>')}<br><br>
             3) CAUSE<br>
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById('print-inform').addEventListener('click', (event) => {
-        event.preventDefault(); // 폼 제출 방지
+        event.preventDefault(); // Prevent form submission
         updateInformContent();
         printContainer.classList.add('visible');
     });
@@ -85,19 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('copy-inform').addEventListener('click', (event) => {
-        event.preventDefault(); // 폼 제출 방지
+        event.preventDefault(); // Prevent form submission
         const taskName = document.getElementById('task_name').value;
         const status = document.getElementById('status').value;
         const taskResults = Array.from(document.getElementsByClassName('task-result-input'))
-            .map(input => formatText(input.value))
+            .map(input => input.value)
             .join('\n');
 
         const taskCauses = Array.from(document.getElementsByClassName('task-cause-input'))
-            .map(input => formatText(input.value))
+            .map(input => input.value)
             .join('\n');
 
         const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input'))
-            .map(input => formatText(input.value))
+            .map(input => input.value)
             .join('\n');
 
         const taskDate = document.getElementById('task_date').value;

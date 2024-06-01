@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     function displayLogs(logs) {
         const worklogCards = document.getElementById('worklog-cards');
         worklogCards.innerHTML = '';
@@ -18,70 +26,67 @@ document.addEventListener('DOMContentLoaded', async () => {
         logs.forEach(log => {
             const card = document.createElement('div');
             card.className = 'worklog-card';
+            card.dataset.id = log.id;
             card.innerHTML = `
-                <p><strong>Date:</strong> ${log.task_date}</p>
+                <p><strong>Date:</strong> ${formatDate(log.task_date)}</p>
                 <p><strong>Title:</strong> ${log.task_name}</p>
                 <p><strong>Worker:</strong> ${log.task_man}</p>
                 <p><strong>EQ Name:</strong> ${log.equipment_name}</p>
                 <p><strong>Group:</strong> ${log.group}</p>
                 <p><strong>Site:</strong> ${log.site}</p>
                 <div class="actions">
-                    <button class="view-details" data-id="${log.id}">View</button>
                     <button class="delete-log" data-id="${log.id}">X</button>
                 </div>
             `;
             worklogCards.appendChild(card);
         });
 
-        document.querySelectorAll('.view-details').forEach(button => {
-            button.addEventListener('click', event => {
-                const id = event.target.getAttribute('data-id');
-                const log = logs.find(log => log.id === id);
-                showLogDetails(log);
+        document.querySelectorAll('.worklog-card').forEach(card => {
+            card.addEventListener('click', event => {
+                if (!event.target.classList.contains('delete-log')) {
+                    const id = card.dataset.id;
+                    const log = logs.find(log => log.id == id);
+                    showLogDetails(log);
+                }
             });
         });
 
         document.querySelectorAll('.delete-log').forEach(button => {
             button.addEventListener('click', async event => {
+                event.stopPropagation();
+                const id = button.dataset.id;
                 if (confirm('정말 삭제하시겠습니까?')) {
-                    const id = event.target.getAttribute('data-id');
-                    try {
-                        await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
-                        loadWorkLogs();
-                    } catch (error) {
-                        console.error('Error deleting work log:', error);
-                    }
+                    await deleteLog(id);
+                    loadWorkLogs();
                 }
             });
         });
     }
 
     function showLogDetails(log) {
-        const modal = document.getElementById('logModal');
+        const logModal = document.getElementById('logModal');
         const logDetails = document.getElementById('logDetails');
         logDetails.innerHTML = `
-            <p><strong>Date:</strong> ${log.task_date}</p>
-            <p><strong>Title:</strong> ${log.task_name}</p>
-            <p><strong>Result:</strong> ${log.task_result}</p>
-            <p><strong>Cause:</strong> ${log.task_cause}</p>
-            <p><strong>Worker:</strong> ${log.task_man}</p>
-            <p><strong>Action:</strong> ${log.task_description}</p>
-            <p><strong>Start Time:</strong> ${log.start_time}</p>
-            <p><strong>End Time:</strong> ${log.end_time}</p>
-            <p><strong>Group:</strong> ${log.group}</p>
-            <p><strong>Site:</strong> ${log.site}</p>
-            <p><strong>Line:</strong> ${log.line}</p>
-            <p><strong>Warranty:</strong> ${log.warranty}</p>
-            <p><strong>SOP:</strong> ${log.SOP}</p>
-            <p><strong>TS Guide:</strong> ${log.tsguide}</p>
-            <p><strong>EQ Type:</strong> ${log.equipment_type}</p>
-            <p><strong>EQ Name:</strong> ${log.equipment_name}</p>
-            <p><strong>Work Type:</strong> ${log.work_type}</p>
-            <p><strong>Setup Item:</strong> ${log.setup_item}</p>
-            <p><strong>Maint Item:</strong> ${log.maint_item}</p>
-            <p><strong>Status:</strong> ${log.status}</p>
+            <p><strong>Date :</strong> ${formatDate(log.task_date)}</p>
+            <p><strong>Group :</strong> ${log.group}</p>
+            <p><strong>Site :</strong> ${log.site}</p>
+            <p><strong>Line :</strong> ${log.line}</p>
+            <p><strong>Warranty :</strong> ${log.warranty}</p>
+            <p><strong>EQ Type :</strong> ${log.equipment_type}</p>
+            <p><strong>EQ Name :</strong> ${log.equipment_name}</p>
+            <p><strong>Title :</strong> ${log.task_name}</p>
+            <p><strong>Status :</strong> ${log.status}</p>
+            <p><strong>Action :</strong> ${log.task_description}</p>
+            <p><strong>Cause :</strong> ${log.task_cause}</p>
+            <p><strong>Result :</strong> ${log.task_result}</p>
+            <p><strong>Worker :</strong> ${log.task_man}</p>
+            <p><strong>SOP :</strong> ${log.SOP}</p>
+            <p><strong>TS Guide :</strong> ${log.tsguide}</p>
+            <p><strong>Work Type :</strong> ${log.work_type}</p>
+            <p><strong>Setup Item :</strong> ${log.setup_item}</p>
+            <p><strong>Maint Item :</strong> ${log.maint_item}</p>
         `;
-        modal.style.display = 'block';
+        logModal.style.display = 'block';
     }
 
     document.querySelector('.close').addEventListener('click', () => {
@@ -89,28 +94,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     window.onclick = event => {
-        const modal = document.getElementById('logModal');
-        if (event.target === modal) {
-            modal.style.display = 'none';
+        if (event.target == document.getElementById('logModal')) {
+            document.getElementById('logModal').style.display = 'none';
         }
     };
 
+    async function deleteLog(id) {
+        try {
+            await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
+        } catch (error) {
+            console.error('Error deleting log:', error);
+        }
+    }
+
     document.getElementById('searchButton').addEventListener('click', () => {
-        const worker = document.getElementById('searchWorker').value.toLowerCase();
-        const startDate = document.getElementById('searchStartDate').value;
-        const endDate = document.getElementById('searchEndDate').value;
-        const eqName = document.getElementById('searchEqName').value.toLowerCase();
-        const group = document.getElementById('searchGroup').value.toLowerCase();
-        const site = document.getElementById('searchSite').value.toLowerCase();
+        const searchWorker = document.getElementById('searchWorker').value.toLowerCase();
+        const searchStartDate = document.getElementById('searchStartDate').value;
+        const searchEndDate = document.getElementById('searchEndDate').value;
+        const searchEqName = document.getElementById('searchEqName').value.toLowerCase();
+        const searchGroup = document.getElementById('searchGroup').value.toLowerCase();
+        const searchSite = document.getElementById('searchSite').value.toLowerCase();
 
         const filteredLogs = logs.filter(log => {
-            const matchesWorker = worker === '' || log.task_man.toLowerCase().includes(worker);
-            const matchesStartDate = startDate === '' || new Date(log.task_date) >= new Date(startDate);
-            const matchesEndDate = endDate === '' || new Date(log.task_date) <= new Date(endDate);
-            const matchesEqName = eqName === '' || log.equipment_name.toLowerCase().includes(eqName);
-            const matchesGroup = group === '' || log.group.toLowerCase().includes(group);
-            const matchesSite = site === '' || log.site.toLowerCase().includes(site);
-            return matchesWorker && matchesStartDate && matchesEndDate && matchesEqName && matchesGroup && matchesSite;
+            const logDate = formatDate(log.task_date);
+            return (
+                (searchWorker === '' || log.task_man.toLowerCase().includes(searchWorker)) &&
+                (searchStartDate === '' || logDate >= searchStartDate) &&
+                (searchEndDate === '' || logDate <= searchEndDate) &&
+                (searchEqName === '' || log.equipment_name.toLowerCase().includes(searchEqName)) &&
+                (searchGroup === '' || log.group.toLowerCase().includes(searchGroup)) &&
+                (searchSite === '' || log.site.toLowerCase().includes(searchSite))
+            );
         });
 
         displayLogs(filteredLogs);

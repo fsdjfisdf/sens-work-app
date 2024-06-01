@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>작업 이력 목록</title>
+    <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/readworklog.css" />
 </head>
 <body>
@@ -12,8 +13,7 @@
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
                 <div class="sign-container">
-                    <div class="unsigned">
-                    </div>
+                    <div class="unsigned"></div>
                     <div class="signed hidden">
                         <div class="dropdown">
                             <button class="dropbtn">MENU</button>
@@ -33,17 +33,27 @@
     <main>
         <section id="worklog">
             <div class="inner">
-                <h2>Load Worklog</h2>
+                <br><h2>Load Worklog</h2><br>
                 <div class="search-container">
-                    <input type="text" id="searchWorker" placeholder="Search by Worker">
-                    <div class="date-container">
-                        <input type="date" id="searchStartDate">
-                        <span class="date-to">TO</span>
-                        <input type="date" id="searchEndDate">
-                    </div>
+                    <input type="date" id="searchStartDate">
+                    <span><br>to</span>
+                    <input type="date" id="searchEndDate">
                     <input type="text" id="searchEqName" placeholder="Search by EQ Name">
-                    <input type="text" id="searchGroup" placeholder="Search by Group">
-                    <input type="text" id="searchSite" placeholder="Search by Site">
+                    <select id="searchGroup">
+                        <option value="">Search by Group</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PEE3">PEE3</option>
+                    </select>
+                    <select id="searchSite">
+                        <option value="">Search by Site</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <input type="text" id="searchWorker" placeholder="Search by Worker"><br>
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                 </div>
@@ -60,7 +70,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-    <script src="./js/url.js"></script>
     <script src="./js/readworklog.js"></script>
 </body>
 </html>

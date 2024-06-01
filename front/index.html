@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 작성</title>
-    <link rel="stylesheet" href="./css/styles.css" />
+    <title>SEnS Working System</title>
+    <link rel="stylesheet" href="./css/index.css" />
 </head>
 <body>
     <nav>
         <div class="inner">
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
-                <div class="sign-container">
-                    <div class="unsigned">
-                    </div>
-                    <div class="signed hidden">
-                        <div class="dropdown">
-                            <button class="dropbtn">MENU</button>
-                            <div class="dropdown-content">
-                                <a href="./info.html" class="dropdown-item">Eng'r Information</a>
-                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
-                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
-                                <button id="sign-out" class="dropdown-item">Logout</button>
-                            </div>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <div class="dropdown">
+                        <div class="dropdown-content">
+                            <a href="./info.html" class="dropdown-item">Eng'r Information</a>
+                            <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                            <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                            <button id="sign-out" class="dropdown-item">Logout</button>
                         </div>
                     </div>
                 </div>
@@ -30,14 +28,55 @@
         </div>
     </nav>
 
+    <main>
+        <section class="hero">
+            <div class="inner">
+                <h2>Welcome</h2>
+                <p>Eng'r 정보, 작업 이력을 관리할 수 있는 SEnS만의 solution</p>
+                <div class="button-container">
+                    <a href="./info.html" class="button">Eng'r Information</a>
+                    <a href="./worklog.html" class="button">Create Worklog</a>
+                    <a href="./readworklog.html" class="button">Load Worklog</a>
+                </div>
+            </div>
+        </section>
+        <section class="features">
+            <div class="inner">
+                <h3>Features</h3>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <h4>Eng'r Information</h4>
+                        <p>로그인한 Eng'r의 Level, CAPA 등의 정보들을 확인할 수 있습니다.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Create Worklog</h4>
+                        <p>SEnS만의 작업 이력을 작성할 수 있습니다.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Load Worklog</h4>
+                        <p>작업 이력들을 검색하고 삭제할 수 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="inner">
+            <p>Produced by SEnS Jeong Hyeon Woo</p>
+        </div>
+    </footer>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
 
             if (!token) {
-                alert("로그인이 필요합니다.");
-                window.location.replace("./signin.html");
-                return;
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
             }
 
             const signOutButton = document.querySelector("#sign-out");
@@ -48,14 +87,6 @@
                     alert("로그아웃 되었습니다.");
                     window.location.replace("./signin.html");
                 });
-            }
-
-            if (token) {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
             }
         });
     </script>

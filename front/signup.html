@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>회원가입</title>
-    <link rel="stylesheet" href="./css/styles.css" />
+    <title>SIGN UP</title>
+    <link rel="stylesheet" href="./css/signup.css" />
 </head>
 <body>
     <nav>
@@ -20,58 +20,71 @@
         <div class="inner">
             <div class="signup-container">
                 <h2>SIGN UP</h2>
-                <div class="signup-form">
-                    <label for="userID">ID</label>
-                    <input type="text" placeholder="아이디" id="userID" />
-                    
-                    <label for="password">PASSWORD</label>
-                    <input type="password" placeholder="비밀번호" id="password" />
-                    
-                    <label for="nickname">Name</label>
-                    <input type="text" id="nickname" />
-                    
-                    <label for="group">Group</label>
-                    <select id="group">
-                        <option value="PEE1">PEE1(SUPRA)</option>
-                        <option value="PEE2">PEE2(INTEGER)</option>
-                        <option value="PEE3">PEE3(PSKH)</option>
-                    </select>
-                    
-                    <label for="site">Site</label>
-                    <select id="site">
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    
-                    <label for="level">Eng'r Level</label>
-                    <select id="level" class="short-input">
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
-                    
-                    <label for="hireDate">입사일</label>
-                    <input type="date" id="hireDate" class="short-input" />
-                    
-                    <label for="mainSetUpCapa">Main Set Up CAPA</label>
-                    <input type="number" id="mainSetUpCapa" />
-                    
-                    <label for="mainMaintCapa">Main Maint CAPA</label>
-                    <input type="number" id="mainMaintCapa" />
-                    
-                    <label for="multiSetUpCapa">Multi Set Up CAPA</label>
-                    <input type="number" id="multiSetUpCapa" />
-                    
-                    <label for="multiMaintCapa">Multi Maint CAPA</label>
-                    <input type="number" id="multiMaintCapa" />
-                    
-                    <input type="button" value="회원가입" id="signup" />
-                </div>
+                <form class="signup-form">
+                    <div class="form-group">
+                        <label for="userID">ID</label>
+                        <input type="text" placeholder="아이디" id="userID" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">PASSWORD</label>
+                        <input type="password" placeholder="비밀번호" id="password" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="nickname">Name</label>
+                        <input type="text" id="nickname" placeholder="이름" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="group">Group</label>
+                        <select id="group" required>
+                            <option value="PEE1">PEE1(SUPRA)</option>
+                            <option value="PEE2">PEE2(INTEGER)</option>
+                            <option value="PEE3">PEE3(PSKH)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="site">Site</label>
+                        <select id="site" required>
+                            <option value="PT">PT</option>
+                            <option value="HS">HS</option>
+                            <option value="IC">IC</option>
+                            <option value="CJ">CJ</option>
+                            <option value="PSKH">PSKH</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="level">Eng'r Level</label>
+                        <select id="level" class="short-input" required>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hireDate">Hire Date</label>
+                        <input type="date" id="hireDate" class="short-input" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="mainSetUpCapa">Main Set Up CAPA</label>
+                        <input type="number" id="mainSetUpCapa" placeholder="숫자만 입력(%제외)" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="mainMaintCapa">Main Maint CAPA</label>
+                        <input type="number" id="mainMaintCapa" placeholder="숫자만 입력(%제외)" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="multiSetUpCapa">Multi Set Up CAPA</label>
+                        <input type="number" id="multiSetUpCapa" placeholder="숫자만 입력(%제외)" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="multiMaintCapa">Multi Maint CAPA</label>
+                        <input type="number" id="multiMaintCapa" placeholder="숫자만 입력(%제외)" required />
+                    </div>
+                    <div class="form-group">
+                        <input type="button" value="SIGN UP" id="signup" />
+                    </div>
+                </form>
             </div>
         </div>
     </main>

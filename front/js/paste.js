@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let sopTsGuide = '';
 
         let currentSection = '';
-        
+        let actionSectionEnded = false;
+        let resultSectionEnded = false;
+
         if (lines.length > 0) {
             title = lines[0].trim();
         }
@@ -37,46 +39,48 @@ document.addEventListener('DOMContentLoaded', function() {
         lines.forEach(line => {
             if (line.startsWith('1) STATUS')) {
                 currentSection = 'status';
+                actionSectionEnded = false;
+                resultSectionEnded = false;
             } else if (line.startsWith('2) ACTION')) {
                 currentSection = 'action';
+                actionSectionEnded = false;
             } else if (line.startsWith('3) CAUSE')) {
                 currentSection = 'cause';
+                actionSectionEnded = true;  // End of action section
+                resultSectionEnded = true;  // End of result section
             } else if (line.startsWith('4) RESULT')) {
                 currentSection = 'result';
+                actionSectionEnded = true;  // End of action section
+                resultSectionEnded = false;
             } else if (line.startsWith('5) SOP 및 T/S Guide 활용')) {
                 currentSection = 'sopTsGuide';
+                resultSectionEnded = true;  // End of result section
             } else {
                 if (currentSection === 'status' && line.startsWith('-. ')) {
                     status = line.replace('-. ', '').trim();
-                } else if (currentSection === 'action' && line.startsWith('-. ')) {
-                    actions.push(line.replace('-. ', '').trim());
-                } else if (currentSection === 'action' && actions.length > 0) {
-                    actions[actions.length - 1] += '\n' + line.trim();
+                } else if (currentSection === 'action' && !actionSectionEnded) {
+                    if (line.trim() === '') {
+                        actionSectionEnded = true;
+                    } else if (line.startsWith('-. ')) {
+                        actions.push(line.replace('-. ', '').trim());
+                    } else if (actions.length > 0) {
+                        actions[actions.length - 1] += '\n' + line.trim();
+                    }
                 } else if (currentSection === 'cause' && line.startsWith('-. ')) {
                     cause = line.replace('-. ', '').trim();
-                } else if (currentSection === 'result' && line.startsWith('-. ')) {
-                    results.push(line.replace('-. ', '').trim());
-                } else if (currentSection === 'result' && results.length > 0) {
-                    results[results.length - 1] += '\n' + line.trim();
+                } else if (currentSection === 'result' && !resultSectionEnded) {
+                    if (line.trim() === '') {
+                        resultSectionEnded = true;
+                    } else if (line.startsWith('-. ')) {
+                        results.push(line.replace('-. ', '').trim());
+                    } else if (results.length > 0) {
+                        results[results.length - 1] += '\n' + line.trim();
+                    }
                 } else if (currentSection === 'sopTsGuide' && line.startsWith('-. ')) {
                     sopTsGuide = line.replace('-. ', '').trim();
                 }
             }
         });
-
-        // Helper function to add new fields with remove button
-        function addField(container, value, className) {
-            const newFieldContainer = document.createElement('div');
-            newFieldContainer.className = className;
-            newFieldContainer.innerHTML = `
-                <textarea class="${className}-input" required>${value}</textarea>
-                <button type="button" class="remove-field">-</button>
-            `;
-            container.appendChild(newFieldContainer);
-            newFieldContainer.querySelector('.remove-field').addEventListener('click', function () {
-                newFieldContainer.remove();
-            });
-        }
 
         // Title 필드 채우기
         const titleElement = document.getElementById('task_name');
@@ -99,8 +103,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (actionContainer) {
             const actionContainers = actionContainer.querySelectorAll('.task-description-container');
             actionContainers.forEach(container => container.remove());
-            actions.forEach(action => {
-                addField(actionContainer, action, 'task-description-container');
+            actions.forEach((action, index) => {
+                const newField = document.createElement('div');
+                newField.className = 'task-description-container';
+                newField.innerHTML = `<textarea name="task_description" class="task-description-input" required>${action}</textarea>
+                                      <button type="button" class="remove-field">-</button>`;
+                actionContainer.appendChild(newField);
             });
         } else {
             console.error('Action container not found');
@@ -119,8 +127,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (resultContainer) {
             const resultContainers = resultContainer.querySelectorAll('.task-result-container');
             resultContainers.forEach(container => container.remove());
-            results.forEach(result => {
-                addField(resultContainer, result, 'task-result-container');
+            results.forEach((result, index) => {
+                const newField = document.createElement('div');
+                newField.className = 'task-result-container';
+                newField.innerHTML = `<textarea name="task_result" class="task-result-input" required>${result}</textarea>
+                                      <button type="button" class="remove-field">-</button>`;
+                resultContainer.appendChild(newField);
             });
         } else {
             console.error('Result container not found');
