@@ -20,23 +20,40 @@ body {
 nav {
     background-color: #0044cc;
     padding: 10px 0;
+    display: flex;
+    justify-content: center; /* Center align the navigation bar */
 }
 
 .nav-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 90%;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 1200px; /* Limit the maximum width */
+    padding: 0 20px; /* Add some padding */
+}
+
+.nav-title {
+    flex-grow: 1;
+    text-align: center;
 }
 
 .nav-title a {
     color: #fff;
     font-size: 24px;
     font-weight: bold;
+    display: inline-block;
 }
 
 .sign-container {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center align the sign container */
+    flex-grow: 1;
+}
+
+.sign-container .unsigned,
+.sign-container .signed {
     display: flex;
     align-items: center;
 }
@@ -65,6 +82,8 @@ nav {
     padding: 8px 16px;
     border: none;
     cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
 }
 
 .dropbtn:hover {
@@ -492,7 +511,8 @@ button#remove-task-description {
 @media screen and (max-width: 768px) {
     .nav-container {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center; /* Center align the navigation items */
+        text-align: center;
     }
 
     .nav-title a {
