@@ -36,6 +36,7 @@ nav {
 .nav-title {
     flex-grow: 1;
     text-align: center;
+    margin-right: 50px; /* Add margin to the right */
 }
 
 .nav-title a {
@@ -135,60 +136,47 @@ main {
     padding: 20px;
 }
 
-.signup-container,
-.worklog-container {
+form {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 500px;
-    margin: 0 auto;
-    text-align: center;
+    margin: 20px auto;
+    text-align: left; /* Align form elements to the left */
 }
 
-.signup-form,
-.worklog-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+form div {
+    margin-bottom: 15px;
 }
 
-.signup-form .form-group,
-.worklog-form .form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.signup-form label,
-.worklog-form label {
-    font-size: 14px;
-    color: #555;
+form label {
+    display: block;
     margin-bottom: 5px;
+    font-size: 14px;
+    color: #333;
 }
 
-.signup-form input[type="text"],
-.signup-form input[type="password"],
-.signup-form input[type="date"],
-.signup-form input[type="number"],
-.signup-form select,
-.worklog-form input[type="text"],
-.worklog-form input[type="date"],
-.worklog-form input[type="time"],
-.worklog-form input[type="number"],
-.worklog-form select,
-.worklog-form textarea {
+form input[type="text"],
+form input[type="date"],
+form input[type="time"],
+form input[type="number"],
+form select,
+form textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 14px;
 }
 
-.signup-form input[type="button"],
-.worklog-form button[type="button"],
-.worklog-form button[type="submit"],
+form textarea.task-description-input {
+    height: 60px;
+}
+
+form button[type="button"],
+form button[type="submit"],
 button#print-inform,
 button#copy-inform,
 button#paste-button {
@@ -204,16 +192,15 @@ button#paste-button {
     margin-top: 10px;
 }
 
-.signup-form input[type="button"]:hover,
-.worklog-form button[type="button"]:hover,
-.worklog-form button[type="submit"]:hover,
+form button[type="button"]:hover,
+form button[type="submit"]:hover,
 button#print-inform:hover,
 button#copy-inform:hover,
 button#paste-button:hover {
     background-color: #003bb5;
 }
 
-.worklog-form textarea {
+form textarea {
     resize: vertical;
 }
 
@@ -359,6 +346,10 @@ button#remove-task-description {
         flex-direction: column;
         align-items: center;
         text-align: center;
+    }
+
+    .nav-title {
+        margin-right: 0; /* Remove margin on small screens */
     }
 
     .nav-title a {
