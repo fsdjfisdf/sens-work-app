@@ -21,16 +21,16 @@ nav {
     background-color: #0044cc;
     padding: 10px 0;
     display: flex;
-    justify-content: center; /* Center align the navigation bar */
+    justify-content: center;
 }
 
 .nav-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     width: 100%;
-    max-width: 1200px; /* Limit the maximum width */
-    padding: 0 20px; /* Add some padding */
+    max-width: 1200px;
+    padding: 0 20px;
 }
 
 .nav-title {
@@ -48,7 +48,7 @@ nav {
 .sign-container {
     display: flex;
     align-items: center;
-    justify-content: center; /* Center align the sign container */
+    justify-content: center;
     flex-grow: 1;
 }
 
@@ -132,7 +132,6 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
 }
 
 /* 작업 이력 작성 페이지 스타일 */
@@ -142,7 +141,7 @@ form {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 500px; /* 너비를 줄여서 중앙 정렬 */
+    max-width: 800px;
     margin: 20px auto;
 }
 
@@ -168,11 +167,10 @@ form textarea {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
-    height: 40px; /* 모든 입력 필드와 동일한 높이로 설정 */
 }
 
 form textarea.task-description-input {
-    height: 60px; /* Action 필드 높이를 다른 필드보다 더 길게 설정 */
+    height: 60px;
 }
 
 form button[type="button"],
@@ -202,7 +200,7 @@ button#paste-button:hover {
 
 form textarea {
     resize: vertical;
-    height: 40px; /* textarea 높이를 다른 필드와 동일하게 설정 */
+    height: 40px;
 }
 
 .task-result-container,
@@ -212,7 +210,7 @@ form textarea {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    flex-wrap: nowrap; /* 필드들이 작은 화면에서도 잘 보이도록 설정 */
+    flex-wrap: nowrap;
 }
 
 .task-result-input,
@@ -220,8 +218,7 @@ form textarea {
 .task-man-input,
 .task-description-input {
     flex-grow: 1;
-    margin-right: 10px; /* 필드 간격 조정 */
-    flex-basis: calc(100% - 40px); /* 필드가 더 많은 공간을 차지하도록 설정 */
+    margin-right: 10px;
 }
 
 .task-man-container {
@@ -233,20 +230,18 @@ form textarea {
 .task-man-input {
     flex-grow: 1;
     margin-right: 10px;
-    flex-basis: calc(70% - 20px); /* 이름 필드가 더 많은 공간을 차지하도록 설정 */
 }
 
 .task-man-select {
-    flex-basis: calc(30% - 20px); /* 역할 선택 필드가 나머지 공간을 차지하도록 설정 */
+    flex-basis: 30%;
 }
 
 .remove-field {
-    flex-basis: 30px; /* - 버튼이 차지하는 공간을 줄이기 */
+    flex-basis: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    margin-left: 10px; /* 버튼을 필드 오른쪽에 위치 */
 }
 
 button#add-task-result,
@@ -257,12 +252,13 @@ button#remove-task-result,
 button#remove-task-cause,
 button#remove-task-man,
 button#remove-task-description {
-    width: 30px; /* 버튼 크기 조정 */
+    width: 30px;
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
+    margin-left: 10px;
 }
 
 .add-remove-buttons {
@@ -272,13 +268,13 @@ button#remove-task-description {
 }
 
 .print-container {
-    display: none; /* 기본적으로 숨김 */
+    display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 80%;
-    max-width: 500px;
+    max-width: 600px;
     background-color: #fff;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -292,10 +288,9 @@ button#remove-task-description {
 }
 
 .print-container.visible {
-    display: block; /* visible 클래스가 추가되면 표시 */
+    display: block;
 }
 
-/* 팝업 스타일 */
 #popup {
     display: none;
     position: fixed;
@@ -303,7 +298,7 @@ button#remove-task-description {
     top: 50%;
     transform: translate(-50%, -50%);
     width: 80%;
-    max-width: 500px;
+    max-width: 600px;
     background-color: white;
     border: 1px solid #ccc;
     padding: 20px;
