@@ -132,6 +132,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
 /* 작업 이력 작성 페이지 스타일 */
@@ -141,7 +142,7 @@ form {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 600px; /* 너비를 줄여서 중앙 정렬 */
+    max-width: 500px; /* 너비를 줄여서 중앙 정렬 */
     margin: 20px auto;
 }
 
@@ -277,7 +278,7 @@ button#remove-task-description {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 80%;
-    max-width: 600px;
+    max-width: 500px;
     background-color: #fff;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -302,7 +303,7 @@ button#remove-task-description {
     top: 50%;
     transform: translate(-50%, -50%);
     width: 80%;
-    max-width: 600px;
+    max-width: 500px;
     background-color: white;
     border: 1px solid #ccc;
     padding: 20px;
