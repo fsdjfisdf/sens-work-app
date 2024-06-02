@@ -141,7 +141,7 @@ form {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 800px;
+    max-width: 600px; /* 너비를 줄여서 중앙 정렬 */
     margin: 20px auto;
 }
 
