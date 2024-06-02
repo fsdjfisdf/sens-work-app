@@ -13,20 +13,24 @@ body {
     color: #333;
     display: flex;
     flex-direction: column;
+    align-items: center; /* Center align body content */
+    justify-content: center; /* Center align body content */
     min-height: 100vh;
+    padding: 20px;
 }
 
 /* Navigation styles */
 nav {
     background-color: #0044cc;
     padding: 10px 0;
+    width: 100%;
     display: flex;
     justify-content: center; /* Center align the navigation bar */
 }
 
 .nav-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     width: 100%;
     max-width: 1200px; /* Limit the maximum width */
@@ -34,7 +38,6 @@ nav {
 }
 
 .nav-title {
-    flex-grow: 1;
     text-align: center;
 }
 
@@ -49,7 +52,6 @@ nav {
     display: flex;
     align-items: center;
     justify-content: center; /* Center align the sign container */
-    flex-grow: 1;
 }
 
 .sign-container .unsigned,
@@ -64,6 +66,7 @@ nav {
     border: 1px solid #fff;
     border-radius: 4px;
     transition: background-color 0.3s, color 0.3s;
+    margin: 0 5px;
 }
 
 .sign-link:hover {
@@ -77,6 +80,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
 }
 
 .signin-container {
