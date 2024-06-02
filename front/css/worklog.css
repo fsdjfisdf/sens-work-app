@@ -240,11 +240,12 @@ form textarea {
 }
 
 .remove-field {
-    flex-basis: 20px; /* - 버튼이 차지하는 공간을 줄이기 */
+    flex-basis: 30px; /* - 버튼이 차지하는 공간을 줄이기 */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
+    margin-left: 10px; /* 버튼을 필드 오른쪽에 위치 */
 }
 
 button#add-task-result,
@@ -261,7 +262,6 @@ button#remove-task-description {
     align-items: center;
     justify-content: center;
     padding: 0;
-    margin-left: 10px; /* 버튼을 필드 오른쪽에 위치 */
 }
 
 .add-remove-buttons {
@@ -386,10 +386,27 @@ button#remove-task-description {
     .remove-field {
         flex-basis: 30px; /* 작은 화면에서 - 버튼 크기 조정 */
     }
+
+    main {
+        padding: 10px; /* Main 패딩 조정 */
+    }
+
+    #worklog-form .inner {
+        padding: 20px; /* 폼 내부 패딩 조정 */
+        width: 100%;
+    }
+
+    form button[type="button"],
+    form button[type="submit"],
+    button#print-inform,
+    button#copy-inform,
+    button#paste-button {
+        width: 100%; /* 버튼을 화면 폭에 맞게 조정 */
+        padding: 10px 0;
+    }
 }
 
 .sortable-ghost {
     opacity: 0.4;
     background-color: #ddd;
-  }
-  
+}
