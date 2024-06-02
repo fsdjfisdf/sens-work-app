@@ -143,8 +143,12 @@ main {
     margin-top: 20px;
 }
 
-/* Responsive design */
+/* Mobile-friendly styles */
 @media screen and (max-width: 768px) {
+    body {
+        padding: 0 10px;
+    }
+
     .nav-container {
         flex-direction: column;
         align-items: center; /* Center align the navigation items */
@@ -160,12 +164,10 @@ main {
         font-size: 14px;
     }
 
-    h2 {
-        font-size: 24px;
-    }
-
     .signin-container {
         padding: 15px;
+        box-shadow: none;
+        border-radius: 0;
     }
 
     .signin-form input[type="text"],
@@ -173,6 +175,20 @@ main {
     .signin-form input[type="button"] {
         font-size: 14px;
         padding: 8px;
+    }
+
+    .signin-form input[type="button"] {
+        margin: 15px 0;
+    }
+
+    .signup-link-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .signup-link-container a {
+        font-size: 12px;
+        padding: 10px 15px;
     }
 
     .footer-text {
