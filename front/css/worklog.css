@@ -26,7 +26,7 @@ nav {
 
 .nav-container {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     width: 100%;
     max-width: 1200px;
@@ -132,49 +132,63 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
-/* 작업 이력 작성 페이지 스타일 */
-form {
+.signup-container,
+.worklog-container {
     background-color: #fff;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 800px;
-    margin: 20px auto;
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
 }
 
-form div {
-    margin-bottom: 15px;
+.signup-form,
+.worklog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-form label {
-    display: block;
-    margin-bottom: 5px;
+.signup-form .form-group,
+.worklog-form .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.signup-form label,
+.worklog-form label {
     font-size: 14px;
-    color: #333;
+    color: #555;
+    margin-bottom: 5px;
 }
 
-form input[type="text"],
-form input[type="date"],
-form input[type="time"],
-form input[type="number"],
-form select,
-form textarea {
+.signup-form input[type="text"],
+.signup-form input[type="password"],
+.signup-form input[type="date"],
+.signup-form input[type="number"],
+.signup-form select,
+.worklog-form input[type="text"],
+.worklog-form input[type="date"],
+.worklog-form input[type="time"],
+.worklog-form input[type="number"],
+.worklog-form select,
+.worklog-form textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 16px;
 }
 
-form textarea.task-description-input {
-    height: 60px;
-}
-
-form button[type="button"],
-form button[type="submit"],
+.signup-form input[type="button"],
+.worklog-form button[type="button"],
+.worklog-form button[type="submit"],
 button#print-inform,
 button#copy-inform,
 button#paste-button {
@@ -190,17 +204,17 @@ button#paste-button {
     margin-top: 10px;
 }
 
-form button[type="button"]:hover,
-form button[type="submit"]:hover,
+.signup-form input[type="button"]:hover,
+.worklog-form button[type="button"]:hover,
+.worklog-form button[type="submit"]:hover,
 button#print-inform:hover,
 button#copy-inform:hover,
 button#paste-button:hover {
     background-color: #003bb5;
 }
 
-form textarea {
+.worklog-form textarea {
     resize: vertical;
-    height: 40px;
 }
 
 .task-result-container,
@@ -233,7 +247,7 @@ form textarea {
 }
 
 .task-man-select {
-    flex-basis: 30%;
+    width: 30%;
 }
 
 .remove-field {
@@ -343,7 +357,7 @@ button#remove-task-description {
 @media screen and (max-width: 768px) {
     .nav-container {
         flex-direction: column;
-        align-items: center; /* Center align the navigation items */
+        align-items: center;
         text-align: center;
     }
 
@@ -376,34 +390,11 @@ button#remove-task-description {
     .task-cause-input,
     .task-man-input,
     .task-description-input {
-        flex-basis: calc(100% - 40px); /* 작은 화면에서 필드가 더 많은 공간을 차지하도록 조정 */
+        flex-basis: calc(100% - 40px);
     }
 
     .remove-field {
-        flex-basis: 30px; /* 작은 화면에서 - 버튼 크기 조정 */
-    }
-
-    main {
-        padding: 10px; /* Main 패딩 조정 */
-    }
-
-    #worklog-form .inner {
-        padding: 20px; /* 폼 내부 패딩 조정 */
-        width: 100%;
-    }
-
-    form {
-        padding: 10px; /* 폼 패딩 조정 */
-        max-width: 90%; /* 너비를 줄여서 화면에 맞춤 */
-    }
-
-    form button[type="button"],
-    form button[type="submit"],
-    button#print-inform,
-    button#copy-inform,
-    button#paste-button {
-        width: 100%; /* 버튼을 화면 폭에 맞게 조정 */
-        padding: 10px 0;
+        flex-basis: 30px;
     }
 }
 
