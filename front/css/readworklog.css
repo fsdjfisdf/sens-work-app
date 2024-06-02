@@ -48,6 +48,7 @@ nav {
     padding: 8px 16px;
     border: none;
     cursor: pointer;
+    border-radius: 4px;
 }
 
 .dropbtn:hover {
@@ -108,25 +109,28 @@ h2 {
     justify-content: center;
     gap: 10px;
     margin-bottom: 20px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-container input,
-.search-container label {
+.search-container select {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
+    min-width: 200px;
 }
 
-.date-container {
-    display: flex;
-    align-items: center;
+.search-container input[type="date"] {
+    max-width: 160px;
 }
 
-.date-to {
-    margin: 0 10px;
-    font-size: 14px;
-    color: #333;
+.search-container input::placeholder,
+.search-container select {
+    color: #999;
 }
 
 .search-container button {
@@ -286,7 +290,7 @@ button.delete-log:hover {
     }
 
     .search-container input,
-    .search-container label {
+    .search-container select {
         width: 100%;
     }
 
