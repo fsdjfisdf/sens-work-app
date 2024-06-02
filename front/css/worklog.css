@@ -397,6 +397,11 @@ button#remove-task-description {
         width: 100%;
     }
 
+    form {
+        padding: 10px; /* 폼 패딩 조정 */
+        max-width: 90%; /* 너비를 줄여서 화면에 맞춤 */
+    }
+
     form button[type="button"],
     form button[type="submit"],
     button#print-inform,
