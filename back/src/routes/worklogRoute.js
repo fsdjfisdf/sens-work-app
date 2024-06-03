@@ -11,4 +11,7 @@ router.post('/work-logs', workLogController.addWorkLog);
 // 작업 이력 삭제
 router.delete('/work-logs/:id', workLogController.deleteWorkLog);
 
+// 작업 이력 수정
+router.put('/work-logs/:id', workLogController.updateWorkLog);
+
 module.exports = router;

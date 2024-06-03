@@ -86,26 +86,48 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p><strong>Setup Item :</strong> ${log.setup_item}</p>
             <p><strong>Maint Item :</strong> ${log.maint_item}</p>
         `;
+        document.getElementById('editLogButton').onclick = () => showEditLogForm(log);
         logModal.style.display = 'block';
     }
 
-    document.querySelector('.close').addEventListener('click', () => {
-        document.getElementById('logModal').style.display = 'none';
+    function showEditLogForm(log) {
+        const editModal = document.getElementById('editModal');
+        document.getElementById('editLogId').value = log.id;
+        document.getElementById('editTaskName').value = log.task_name;
+        document.getElementById('editTaskResult').value = log.task_result;
+        // Set other fields as needed
+        editModal.style.display = 'block';
+    }
+
+    document.getElementById('saveEditButton').addEventListener('click', async () => {
+        const id = document.getElementById('editLogId').value;
+        const updatedLog = {
+            task_name: document.getElementById('editTaskName').value,
+            task_result: document.getElementById('editTaskResult').value,
+            // Add other fields as needed
+        };
+        await updateLog(id, updatedLog);
+        loadWorkLogs();
+        document.getElementById('editModal').style.display = 'none';
+    });
+
+    async function updateLog(id, updatedLog) {
+        try {
+            await axios.put(`http://3.37.165.84:3001/logs/${id}`, updatedLog);
+        } catch (error) {
+            console.error('Error updating log:', error);
+        }
+    }
+
+    document.querySelector('.close-edit').addEventListener('click', () => {
+        document.getElementById('editModal').style.display = 'none';
     });
 
     window.onclick = event => {
-        if (event.target == document.getElementById('logModal')) {
-            document.getElementById('logModal').style.display = 'none';
+        if (event.target == document.getElementById('editModal')) {
+            document.getElementById('editModal').style.display = 'none';
         }
     };
-
-    async function deleteLog(id) {
-        try {
-            await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
-        } catch (error) {
-            console.error('Error deleting log:', error);
-        }
-    }
 
     document.getElementById('searchButton').addEventListener('click', () => {
         const searchWorker = document.getElementById('searchWorker').value.toLowerCase();

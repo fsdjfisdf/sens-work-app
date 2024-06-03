@@ -12,13 +12,13 @@ exports.getWorkLogs = async (req, res) => {
 exports.addWorkLog = async (req, res) => {
   const {
     task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-    group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
+    group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, task_maint, status
   } = req.body;
 
   try {
     await workLogDao.addWorkLog(
       task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
+      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, task_maint, status
     );
     res.status(201).json({ message: "Work log added" });
   } catch (err) {
@@ -31,6 +31,24 @@ exports.deleteWorkLog = async (req, res) => {
   try {
     await workLogDao.deleteWorkLog(id);
     res.status(200).json({ message: "Work log deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateWorkLog = async (req, res) => {
+  const { id } = req.params;
+  const {
+    task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+    group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, task_maint, status
+  } = req.body;
+
+  try {
+    await workLogDao.updateWorkLog(
+      id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, task_maint, status
+    );
+    res.status(200).json({ message: "Work log updated" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

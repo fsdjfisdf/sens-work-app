@@ -66,6 +66,22 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="logDetails"></div>
+            <button id="editLogButton">Edit</button>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-edit">&times;</span>
+            <div id="editLogDetails">
+                <input type="hidden" id="editLogId">
+                <label for="editTaskName">Task Name:</label>
+                <input type="text" id="editTaskName"><br>
+                <label for="editTaskResult">Task Result:</label>
+                <input type="text" id="editTaskResult"><br>
+                <!-- Add other fields as needed -->
+                <button id="saveEditButton">Save</button>
+            </div>
         </div>
     </div>
 
