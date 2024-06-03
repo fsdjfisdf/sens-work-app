@@ -516,3 +516,32 @@ exports.getUserInfo = async function (req, res) {
     });
   }
 };
+
+// 작업 이력 조회
+exports.getWorkLogsByNickname = async function (req, res) {
+  const nickname = req.params.nickname;
+
+  try {
+    const connection = await pool.getConnection(async (conn) => conn);
+    try {
+      const workLogs = await indexDao.getWorkLogsByNickname(connection, nickname);
+      return res.status(200).json(workLogs);
+    } catch (err) {
+      logger.error(`getWorkLogsByNickname Query error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+        isSuccess: false,
+        code: 500,
+        message: "서버 오류입니다.",
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    logger.error(`getWorkLogsByNickname DB Connection error\n: ${JSON.stringify(err)}`);
+    return res.status(500).json({
+      isSuccess: false,
+      code: 500,
+      message: "서버 오류입니다.",
+    });
+  }
+};

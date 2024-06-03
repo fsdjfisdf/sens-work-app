@@ -13,10 +13,9 @@ document.addEventListener("DOMContentLoaded", function() {
         axios.get('http://3.37.165.84:3001/user-info', {
             headers: { "x-access-token": token }
         }).then(response => {
-            const { userInfo, workLogs, totalHours } = response.data.result;
+            const userInfo = response.data.result;
             if (userInfo) {
                 const formattedHireDate = formatDate(userInfo.hire_date);
-
                 document.querySelector("#data-display").innerHTML = `
                     <p>Name: ${userInfo.nickname}</p>
                     <p>Group: ${userInfo.group}</p>
@@ -24,9 +23,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <p>Level: ${userInfo.level}</p>
                     <p>Hire date: ${formattedHireDate}</p>
                 `;
+                loadWorkLogs(userInfo.nickname);
                 createCapaCharts(userInfo);
-                displayWorkLogs(workLogs);
-                document.querySelector("#total-hours").textContent = totalHours.toFixed(2);
                 document.querySelector(".nickname").textContent = userInfo.nickname;
                 document.querySelector(".unsigned").classList.add("hidden");
                 document.querySelector(".signed").classList.remove("hidden");
@@ -44,6 +42,45 @@ document.addEventListener("DOMContentLoaded", function() {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    function loadWorkLogs(nickname) {
+        axios.get(`http://3.37.165.84:3001/worklogs/${nickname}`)
+            .then(response => {
+                const workLogs = response.data;
+                let totalHours = 0;
+
+                workLogs.forEach(log => {
+                    const startTime = new Date(`1970-01-01T${log.start_time}`);
+                    const endTime = new Date(`1970-01-01T${log.end_time}`);
+                    const hoursWorked = (endTime - startTime) / (1000 * 60 * 60);
+                    totalHours += hoursWorked;
+                });
+
+                document.querySelector("#total-hours").textContent = totalHours.toFixed(2);
+                document.querySelector("#total-logs").textContent = workLogs.length;
+                displayWorkLogs(workLogs);
+            })
+            .catch(error => {
+                console.error("작업 이력을 로드하는 중 오류 발생:", error);
+            });
+    }
+
+    function displayWorkLogs(workLogs) {
+        const workLogTable = document.getElementById('work-log-table');
+        workLogTable.innerHTML = '';
+
+        workLogs.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${formatDate(log.task_date)}</td>
+                <td>${log.task_name}</td>
+                <td>${log.start_time}</td>
+                <td>${log.end_time}</td>
+                <td>${log.task_description}</td>
+            `;
+            workLogTable.appendChild(row);
+        });
     }
 
     function createCapaCharts(userInfo) {
@@ -154,23 +191,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 }
             }
-        });
-    }
-
-    function displayWorkLogs(workLogs) {
-        const workLogTable = document.getElementById('work-log-table');
-        workLogTable.innerHTML = '';
-
-        workLogs.forEach(log => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${formatDate(log.task_date)}</td>
-                <td>${log.task_name}</td>
-                <td>${log.start_time}</td>
-                <td>${log.end_time}</td>
-                <td>${log.task_description}</td>
-            `;
-            workLogTable.appendChild(row);
         });
     }
 

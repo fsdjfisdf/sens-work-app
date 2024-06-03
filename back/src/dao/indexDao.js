@@ -29,8 +29,8 @@ exports.getUserById = async function (connection, userIdx) {
   return rows;
 };
 
-// 사용자 작업 이력 조회
-exports.getWorkLogsByUser = async function (connection, nickname) {
+// 작업 이력 조회
+exports.getWorkLogsByNickname = async function (connection, nickname) {
   const Query = `SELECT * FROM work_log WHERE task_man = ?;`;
   const Params = [nickname];
 
