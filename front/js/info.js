@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
         axios.get('http://3.37.165.84:3001/user-info', {
             headers: { "x-access-token": token }
         }).then(response => {
-            const userInfo = response.data.result;
+            const { userInfo, workLogs, totalHours } = response.data.result;
             if (userInfo) {
                 const formattedHireDate = formatDate(userInfo.hire_date);
 
@@ -25,6 +25,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <p>Hire date: ${formattedHireDate}</p>
                 `;
                 createCapaCharts(userInfo);
+                displayWorkLogs(workLogs);
+                document.querySelector("#total-hours").textContent = totalHours.toFixed(2);
                 document.querySelector(".nickname").textContent = userInfo.nickname;
                 document.querySelector(".unsigned").classList.add("hidden");
                 document.querySelector(".signed").classList.remove("hidden");
@@ -152,6 +154,23 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 }
             }
+        });
+    }
+
+    function displayWorkLogs(workLogs) {
+        const workLogTable = document.getElementById('work-log-table');
+        workLogTable.innerHTML = '';
+
+        workLogs.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${formatDate(log.task_date)}</td>
+                <td>${log.task_name}</td>
+                <td>${log.start_time}</td>
+                <td>${log.end_time}</td>
+                <td>${log.task_description}</td>
+            `;
+            workLogTable.appendChild(row);
         });
     }
 
