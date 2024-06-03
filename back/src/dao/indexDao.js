@@ -115,5 +115,3 @@ exports.exampleDao = async function (connection) {
 
   return rows;
 };
-
-
