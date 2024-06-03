@@ -11,4 +11,6 @@ router.post('/work-logs', workLogController.addWorkLog);
 // 작업 이력 삭제
 router.delete('/work-logs/:id', workLogController.deleteWorkLog);
 
+router.get('/worker-summary/:workerName', workLogController.getWorkerSummary);
+
 module.exports = router;

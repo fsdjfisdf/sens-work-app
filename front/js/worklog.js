@@ -36,15 +36,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const task_name = document.getElementById('task_name').value;
       const status = document.getElementById('status').value;
 
-      const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('\n');
-      const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('\n');
+      const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('<br>');
+      const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('<br>');
       let taskMans = Array.from(document.querySelectorAll('.task-man-container')).map((container, index) => {
           const input = container.querySelector('.task-man-input').value;
           const role = container.querySelector('.task-man-select').value;
           return `${input}(${role})`;
       });
-      taskMans = [...new Set(taskMans)].join(' ');
-      const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('\n');
+      taskMans = [...new Set(taskMans)].join(', ');
+      const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('<br>');
 
       let task_date = document.getElementById('task_date').value;
       let start_time = document.getElementById('start_time').value;

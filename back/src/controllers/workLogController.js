@@ -35,3 +35,14 @@ exports.deleteWorkLog = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getWorkerSummary = async (req, res) => {
+  const { workerName } = req.params;
+
+  try {
+    const rows = await workLogDao.getWorkerSummary(workerName);
+    res.status(200).json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

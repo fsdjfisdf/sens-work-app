@@ -28,10 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.className = 'worklog-card';
             card.dataset.id = log.id;
             card.innerHTML = `
-                <p><strong>Date:</strong> ${formatDate(log.task_date)}</p>
                 <p><strong>Title:</strong> ${log.task_name}</p>
+                <p><strong>Date:</strong> ${formatDate(log.task_date)}</p>
                 <p><strong>Worker:</strong> ${log.task_man}</p>
-                <p><strong>EQ Name:</strong> ${log.equipment_name}</p>
                 <p><strong>Group:</strong> ${log.group}</p>
                 <p><strong>Site:</strong> ${log.site}</p>
                 <div class="actions">
