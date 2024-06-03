@@ -43,23 +43,3 @@ exports.deleteWorkLog = async (id) => {
   }
 };
 
-exports.getWorkerSummary = async (workerName) => {
-  const connection = await pool.getConnection(async conn => conn);
-  try {
-    const query = `
-      SELECT 
-        task_man, 
-        SUM(TIMESTAMPDIFF(HOUR, start_time, end_time)) AS total_hours, 
-        COUNT(*) AS total_tasks
-      FROM work_log
-      WHERE task_man = ?
-      GROUP BY task_man
-    `;
-    const [rows] = await connection.query(query, [workerName]);
-    connection.release();
-    return rows;
-  } catch (err) {
-    connection.release();
-    throw new Error(`Error retrieving worker summary: ${err.message}`);
-  }
-};
