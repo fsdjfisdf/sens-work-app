@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const searchEqName = document.getElementById('searchEqName').value.toLowerCase();
         const searchGroup = document.getElementById('searchGroup').value.toLowerCase();
         const searchSite = document.getElementById('searchSite').value.toLowerCase();
+        const searchTitle = document.getElementById('searchTitle').value.toLowerCase();
 
         const filteredLogs = logs.filter(log => {
             const logDate = formatDate(log.task_date);
@@ -122,6 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (searchStartDate === '' || logDate >= searchStartDate) &&
                 (searchEndDate === '' || logDate <= searchEndDate) &&
                 (searchEqName === '' || log.equipment_name.toLowerCase().includes(searchEqName)) &&
+                (searchTitle === '' || log.task_name.toLowerCase().includes(searchTitle)) &&
                 (searchGroup === '' || log.group.toLowerCase().includes(searchGroup)) &&
                 (searchSite === '' || log.site.toLowerCase().includes(searchSite))
             );
@@ -135,6 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('searchStartDate').value = '';
         document.getElementById('searchEndDate').value = '';
         document.getElementById('searchEqName').value = '';
+        document.getElementById('searchTitle').value = '';
         document.getElementById('searchGroup').value = '';
         document.getElementById('searchSite').value = '';
         displayLogs(logs);
