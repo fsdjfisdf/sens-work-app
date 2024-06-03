@@ -179,5 +179,24 @@ module.exports = function () {
     }
   });
 
+  // 작업 이력 수정
+  app.put('/logs/:id', async (req, res) => {
+    const { id } = req.params;
+    const {
+      task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
+    } = req.body;
+
+    try {
+      await workLogDao.updateWorkLog(
+        id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+        group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
+      );
+      res.status(200).json({ message: "Work log updated" });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   return app;
 };
