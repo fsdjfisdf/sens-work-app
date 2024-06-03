@@ -16,7 +16,4 @@ module.exports = function (app) {
 
     // 회원 정보 조회
     app.get("/user-info", jwtMiddleware, index.getUserInfo);
-
-    // 작업 이력 조회
-    app.get("/worklogs/:nickname", jwtMiddleware, index.getWorkLogsByNickname);
 };

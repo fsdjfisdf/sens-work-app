@@ -29,14 +29,6 @@ exports.getUserById = async function (connection, userIdx) {
   return rows;
 };
 
-// 작업 이력 조회
-exports.getWorkLogsByNickname = async function (connection, nickname) {
-  const Query = `SELECT * FROM work_log WHERE task_man = ?;`;
-  const Params = [nickname];
-
-  const [rows] = await connection.query(Query, Params);
-  return rows;
-};
 
 exports.selectRestaurants = async function (connection, category) {
   const selectAllRestaurantsQuery = `SELECT title, address, category, videoUrl FROM Restaurants where status = 'A';`;
