@@ -40,6 +40,7 @@ exports.updateWorkLog = async (req, res) => {
     );
     res.status(200).json({ message: "Work log updated" });
   } catch (err) {
+    console.error('Error updating work log:', err.message);
     res.status(500).json({ error: err.message });
   }
 };

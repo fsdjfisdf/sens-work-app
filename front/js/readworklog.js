@@ -97,24 +97,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('editEqName').value = log.equipment_name;
         document.getElementById('editGroup').value = log.group;
         document.getElementById('editSite').value = log.site;
-        // Add more fields as necessary
+        // 필요한 추가 필드를 여기에 추가하세요
         editModal.style.display = 'block';
 
         document.getElementById('editForm').onsubmit = async function (event) {
             event.preventDefault();
             const updatedLog = {
-                id: log.id,
                 task_date: document.getElementById('editDate').value,
                 task_name: document.getElementById('editTaskName').value,
                 task_man: document.getElementById('editWorker').value,
                 equipment_name: document.getElementById('editEqName').value,
                 group: document.getElementById('editGroup').value,
                 site: document.getElementById('editSite').value,
-                // Add more fields as necessary
+                // 필요한 추가 필드를 여기에 추가하세요
             };
-            await updateLog(updatedLog);
-            editModal.style.display = 'none';
-            loadWorkLogs();
+            console.log(updatedLog); // 확인을 위해 로그 출력
+            try {
+                await axios.put(`http://3.37.165.84:3001/logs/${log.id}`, updatedLog);
+                editModal.style.display = 'none';
+                loadWorkLogs();
+            } catch (error) {
+                console.error('Error updating log:', error);
+            }
         };
     }
 
