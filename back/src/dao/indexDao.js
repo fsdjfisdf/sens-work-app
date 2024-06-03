@@ -117,16 +117,3 @@ exports.exampleDao = async function (connection) {
 };
 
 
-// 사용자 작업 이력 조회
-exports.getWorkLogsByUser = async function (connection, userIdx) {
-  const Query = `
-    SELECT task_name, task_date, start_time, end_time, task_description 
-    FROM work_log 
-    WHERE task_man = (SELECT nickname FROM Users WHERE userIdx = ?) 
-    AND status = 'active';
-  `;
-  const Params = [userIdx];
-
-  const [rows] = await connection.query(Query, Params);
-  return rows;
-};

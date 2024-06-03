@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     loadUserInfo();
-    loadUserWorkLogs();
 
     function loadUserInfo() {
         axios.get('http://3.37.165.84:3001/user-info', {
@@ -34,39 +33,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }).catch(error => {
             console.error("사용자 정보를 로드하는 중 오류 발생:", error);
-        });
-    }
-
-    function loadUserWorkLogs() {
-        axios.get('http://3.37.165.84:3001/user-work-logs', {
-            headers: { "x-access-token": token }
-        }).then(response => {
-            const { workLogs, totalHours } = response.data.result;
-            if (workLogs) {
-                document.querySelector("#worklog-summary").innerHTML = `
-                    <p>Total Logs: ${workLogs.length}</p>
-                    <p>Total Hours: ${totalHours}</p>
-                `;
-
-                const worklogTableBody = document.querySelector("#worklog-table tbody");
-                worklogTableBody.innerHTML = '';
-
-                workLogs.forEach(log => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${formatDate(log.task_date)}</td>
-                        <td>${log.task_name}</td>
-                        <td>${log.task_description}</td>
-                        <td>${log.start_time}</td>
-                        <td>${log.end_time}</td>
-                    `;
-                    worklogTableBody.appendChild(row);
-                });
-            } else {
-                alert("작업 이력을 가져올 수 없습니다.");
-            }
-        }).catch(error => {
-            console.error("작업 이력을 로드하는 중 오류 발생:", error);
         });
     }
 
