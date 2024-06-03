@@ -26,28 +26,9 @@ exports.addWorkLog = async (req, res) => {
   }
 };
 
-exports.updateWorkLog = async (req, res) => {
-  const { id } = req.params;
-  const {
-    task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-    group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
-  } = req.body;
-
-  try {
-    await workLogDao.updateWorkLog(
-      id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
-    );
-    res.status(200).json({ message: "Work log updated" });
-  } catch (err) {
-    console.error('Error updating work log:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-};
-
 exports.deleteWorkLog = async (req, res) => {
   const { id } = req.params;
-  try {
+  try { 
     await workLogDao.deleteWorkLog(id);
     res.status(200).json({ message: "Work log deleted" });
   } catch (err) {

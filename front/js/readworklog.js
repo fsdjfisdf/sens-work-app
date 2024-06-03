@@ -35,19 +35,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>Group:</strong> ${log.group}</p>
                 <p><strong>Site:</strong> ${log.site}</p>
                 <div class="actions">
-                    <button class="edit-log" data-id="${log.id}">Edit</button>
                     <button class="delete-log" data-id="${log.id}">X</button>
                 </div>
             `;
             worklogCards.appendChild(card);
         });
 
-        document.querySelectorAll('.edit-log').forEach(button => {
-            button.addEventListener('click', event => {
-                event.stopPropagation();
-                const id = button.dataset.id;
-                const log = logs.find(log => log.id == id);
-                openEditModal(log);
+        document.querySelectorAll('.worklog-card').forEach(card => {
+            card.addEventListener('click', event => {
+                if (!event.target.classList.contains('delete-log')) {
+                    const id = card.dataset.id;
+                    const log = logs.find(log => log.id == id);
+                    showLogDetails(log);
+                }
             });
         });
 
@@ -89,53 +89,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         logModal.style.display = 'block';
     }
 
-    function openEditModal(log) {
-        const editModal = document.getElementById('editModal');
-        document.getElementById('editDate').value = formatDate(log.task_date);
-        document.getElementById('editTaskName').value = log.task_name;
-        document.getElementById('editWorker').value = log.task_man;
-        document.getElementById('editEqName').value = log.equipment_name;
-        document.getElementById('editGroup').value = log.group;
-        document.getElementById('editSite').value = log.site;
-        // 필요한 추가 필드를 여기에 추가하세요
-        editModal.style.display = 'block';
-
-        document.getElementById('editForm').onsubmit = async function (event) {
-            event.preventDefault();
-            const updatedLog = {
-                task_date: document.getElementById('editDate').value,
-                task_name: document.getElementById('editTaskName').value,
-                task_man: document.getElementById('editWorker').value,
-                equipment_name: document.getElementById('editEqName').value,
-                group: document.getElementById('editGroup').value,
-                site: document.getElementById('editSite').value,
-                // 필요한 추가 필드를 여기에 추가하세요
-            };
-            console.log(updatedLog); // 확인을 위해 로그 출력
-            try {
-                await axios.put(`http://3.37.165.84:3001/logs/${log.id}`, updatedLog);
-                editModal.style.display = 'none';
-                loadWorkLogs();
-            } catch (error) {
-                console.error('Error updating log:', error);
-            }
-        };
-    }
-
     document.querySelector('.close').addEventListener('click', () => {
         document.getElementById('logModal').style.display = 'none';
-    });
-
-    document.querySelector('.close-edit').addEventListener('click', () => {
-        document.getElementById('editModal').style.display = 'none';
     });
 
     window.onclick = event => {
         if (event.target == document.getElementById('logModal')) {
             document.getElementById('logModal').style.display = 'none';
-        }
-        if (event.target == document.getElementById('editModal')) {
-            document.getElementById('editModal').style.display = 'none';
         }
     };
 
@@ -144,14 +104,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
         } catch (error) {
             console.error('Error deleting log:', error);
-        }
-    }
-
-    async function updateLog(log) {
-        try {
-            await axios.put(`http://3.37.165.84:3001/logs/${log.id}`, log);
-        } catch (error) {
-            console.error('Error updating log:', error);
         }
     }
 
