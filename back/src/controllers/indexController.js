@@ -233,7 +233,7 @@ exports.getUserWorkLogs = async function (req, res) {
     const connection = await pool.getConnection(async (conn) => conn);
     try {
       const workLogs = await indexDao.getWorkLogsByUser(connection, userIdx);
-      const totalHours = workLogs.reduce((acc, log) => acc + (log.end_time - log.start_time), 0);
+      const totalHours = workLogs.reduce((acc, log) => acc + (new Date(log.end_time) - new Date(log.start_time)) / (1000 * 60 * 60), 0);
 
       return res.status(200).json({
         isSuccess: true,
