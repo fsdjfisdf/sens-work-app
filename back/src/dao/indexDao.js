@@ -31,52 +31,52 @@ exports.getUserById = async function (connection, userIdx) {
 
 // 회원 검색
 exports.searchUsers = async function (connection, group, site, level, nickname) {
-    let Query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE status = 'A'`;
-    let Params = [];
+  let Query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE status = 'A'`;
+  let Params = [];
 
-    if (group) {
-        Query += ` AND \`group\` = ?`;
-        Params.push(group);
-    }
-    if (site) {
-        Query += ` AND site = ?`;
-        Params.push(site);
-    }
-    if (level) {
-        Query += ` AND level = ?`;
-        Params.push(level);
-    }
-    if (nickname) {
-        Query += ` AND nickname LIKE ?`;
-        Params.push(`%${nickname}%`);
-    }
+  if (group) {
+      Query += ` AND \`group\` = ?`;
+      Params.push(group);
+  }
+  if (site) {
+      Query += ` AND site = ?`;
+      Params.push(site);
+  }
+  if (level) {
+      Query += ` AND level = ?`;
+      Params.push(level);
+  }
+  if (nickname) {
+      Query += ` AND nickname LIKE ?`;
+      Params.push(`%${nickname}%`);
+  }
 
-    const [rows] = await connection.query(Query, Params);
-    return rows;
+  const [rows] = await connection.query(Query, Params);
+  return rows;
 };
 
 // 평균 통계 계산
 exports.calculateAverageStats = async function (connection, group, site, level, nickname) {
-    let Query = `SELECT AVG(DATEDIFF(NOW(), hire_date)) AS average_tenure, AVG(level) AS average_level, AVG(main_set_up_capa) AS average_main_set_up_capa, AVG(main_maint_capa) AS average_main_maint_capa, AVG(main_capa) AS average_main_capa, AVG(multi_set_up_capa) AS average_multi_set_up_capa, AVG(multi_maint_capa) AS average_multi_maint_capa, AVG(multi_capa) AS average_multi_capa, AVG(total_capa) AS average_total_capa FROM Users WHERE status = 'A'`;
-    let Params = [];
+  let Query = `SELECT AVG(DATEDIFF(NOW(), hire_date)) AS average_tenure, AVG(level) AS average_level, AVG(main_set_up_capa) AS average_main_set_up_capa, AVG(main_maint_capa) AS average_main_maint_capa, AVG(main_capa) AS average_main_capa, AVG(multi_set_up_capa) AS average_multi_set_up_capa, AVG(multi_maint_capa) AS average_multi_maint_capa, AVG(multi_capa) AS average_multi_capa, AVG(total_capa) AS average_total_capa FROM Users WHERE status = 'A'`;
+  let Params = [];
 
-    if (group) {
-        Query += ` AND \`group\` = ?`;
-        Params.push(group);
-    }
-    if (site) {
-        Query += ` AND site = ?`;
-        Params.push(site);
-    }
-    if (level) {
-        Query += ` AND level = ?`;
-        Params.push(level);
-    }
-    if (nickname) {
-        Query += ` AND nickname LIKE ?`;
-        Params.push(`%${nickname}%`);
-    }
+  if (group) {
+      Query += ` AND \`group\` = ?`;
+      Params.push(group);
+  }
+  if (site) {
+      Query += ` AND site = ?`;
+      Params.push(site);
+  }
+  if (level) {
+      Query += ` AND level = ?`;
+      Params.push(level);
+  }
+  if (nickname) {
+      Query += ` AND nickname LIKE ?`;
+      Params.push(`%${nickname}%`);
+  }
 
-    const [rows] = await connection.query(Query, Params);
-    return rows[0];
+  const [rows] = await connection.query(Query, Params);
+  return rows[0];
 };

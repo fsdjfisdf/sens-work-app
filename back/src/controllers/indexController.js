@@ -195,6 +195,7 @@ exports.getUserInfo = async function (req, res) {
     }
 };
 
+// 회원 검색
 exports.searchUsers = async (req, res) => {
   const { group, site, level, nickname } = req.query;
 
