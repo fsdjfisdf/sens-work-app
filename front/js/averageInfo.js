@@ -17,20 +17,53 @@ document.addEventListener("DOMContentLoaded", function() {
             if (averageInfo) {
                 document.querySelector("#average-data-display").innerHTML = `
                     <p>Average Level: ${averageInfo.avg_level.toFixed(2)}</p>
-                    <p>Average Main Set Up CAPA: ${averageInfo.avg_main_set_up_capa.toFixed(2)}%</p>
-                    <p>Average Main Maint CAPA: ${averageInfo.avg_main_maint_capa.toFixed(2)}%</p>
-                    <p>Average Main CAPA: ${averageInfo.avg_main_capa.toFixed(2)}%</p>
-                    <p>Average Multi Set Up CAPA: ${averageInfo.avg_multi_set_up_capa.toFixed(2)}%</p>
-                    <p>Average Multi Maint CAPA: ${averageInfo.avg_multi_maint_capa.toFixed(2)}%</p>
-                    <p>Average Multi CAPA: ${averageInfo.avg_multi_capa.toFixed(2)}%</p>
-                    <p>Average Total CAPA: ${averageInfo.avg_total_capa.toFixed(2)}%</p>
+                    <p>Total Users: ${averageInfo.total_users}</p>
                 `;
+                createLevelDistributionChart(averageInfo);
                 createAverageCapaCharts(averageInfo);
             } else {
                 alert("평균 정보를 가져올 수 없습니다.");
             }
         }).catch(error => {
             console.error("평균 정보를 로드하는 중 오류 발생:", error);
+        });
+    }
+
+    function createLevelDistributionChart(averageInfo) {
+        const levelCtx = document.getElementById('levelDistributionChart').getContext('2d');
+
+        new Chart(levelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Level 0', 'Level 1', 'Level 2', 'Level 3', 'Level 4'],
+                datasets: [{
+                    label: 'Number of Users',
+                    data: [averageInfo.level_0, averageInfo.level_1, averageInfo.level_2, averageInfo.level_3, averageInfo.level_4],
+                    backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffcd56', '#4bc0c0'],
+                    borderColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffcd56', '#4bc0c0'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw;
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -83,41 +116,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     data: [averageInfo.avg_multi_set_up_capa, averageInfo.avg_multi_maint_capa, averageInfo.avg_multi_capa],
                     backgroundColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                },
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.raw + '%';
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        new Chart(totalCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Total CAPA'],
-                datasets: [{
-                    label: 'Average Total CAPA',
-                    data: [averageInfo.avg_total_capa],
-                    backgroundColor: ['#ffcd56'],
-                    borderColor: ['#ffcd56'],
                     borderWidth: 1
                 }]
             },

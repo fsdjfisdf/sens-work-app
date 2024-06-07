@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Average Information</title>
-    <link rel="stylesheet" href="./css/info.css" />
+    <link rel="stylesheet" href="./css/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -14,8 +13,7 @@
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
                 <div class="sign-container">
-                    <div class="unsigned">
-                    </div>
+                    <div class="unsigned"></div>
                     <div class="signed hidden">
                         <div class="dropdown">
                             <button class="dropbtn">MENU</button>
@@ -39,12 +37,12 @@
                 <div id="average-data-display">
                     <!-- 평균 정보 조회 결과가 여기에 표시됩니다. -->
                 </div>
+                <h3>Level Distribution</h3>
+                <canvas id="levelDistributionChart" width="400" height="200"></canvas>
                 <h3>Main CAPA</h3>
                 <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
                 <h3>Multi CAPA</h3>
                 <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
-                <h3>Total CAPA</h3>
-                <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
             </div>
         </section>
     </main>
