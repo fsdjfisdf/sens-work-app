@@ -116,7 +116,7 @@ exports.exampleDao = async function (connection) {
   return rows;
 };
 
-exports.getAverageInfo = async function (connection, group, site, level) {
+exports.getAverageInfo = async function (connection, group, site, level, nickname) {
   let filterQuery = 'WHERE status = "A"';
   const params = [];
 
@@ -133,6 +133,11 @@ exports.getAverageInfo = async function (connection, group, site, level) {
   if (level) {
       filterQuery += ' AND level = ?';
       params.push(level);
+  }
+
+  if (nickname) {
+      filterQuery += ' AND nickname LIKE ?';
+      params.push(`%${nickname}%`);
   }
 
   const Query = `

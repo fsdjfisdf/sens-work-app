@@ -18,11 +18,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const group = document.getElementById('filterGroup').value;
         const site = document.getElementById('filterSite').value;
         const level = document.getElementById('filterLevel').value;
+        const nickname = document.getElementById('filterNickname').value;
 
         try {
             const response = await axios.get('http://3.37.165.84:3001/average-info', {
                 headers: { "x-access-token": token },
-                params: { group, site, level }
+                params: { group, site, level, nickname }
             });
             const averageInfo = response.data.result || {};
             if (averageInfo) {
@@ -52,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('filterGroup').value = '';
         document.getElementById('filterSite').value = '';
         document.getElementById('filterLevel').value = '';
+        document.getElementById('filterNickname').value = '';
         loadAverageInfo();
     }
 
