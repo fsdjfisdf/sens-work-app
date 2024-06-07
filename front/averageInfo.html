@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Average Information</title>
+    <title>SEARCH INFORMATION</title>
     <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/averageInfo.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
@@ -34,11 +35,10 @@
     <main>
         <section id="average-info">
             <div class="inner">
-                <h2>Average Information</h2>
+                <h2>SEARCH INFORMATION</h2>
 
                 <!-- 필터링 섹션 -->
                 <div class="filter-container">
-                    <input type="text" id="filterNickname" placeholder="Search by Nickname">
                     <select id="filterGroup">
                         <option value="">All Groups</option>
                         <option value="PEE1">PEE1</option>
@@ -61,8 +61,9 @@
                         <option value="3">3</option>
                         <option value="4">4</option>
                     </select>
-                    <button id="filterButton">Filter</button>
-                    <button id="resetButton">Reset</button>
+                    <input type="text" id="filterNickname" placeholder="Search by Nickname">
+                    <button id="filterButton">SEARCH</button>
+                    <button id="resetButton">RESET</button>
                 </div>
 
                 <!-- 평균 데이터 표시 -->
@@ -72,14 +73,22 @@
 
                 <!-- 차트 표시 -->
                 <div class="chart-container">
-                    <h3>Level Distribution</h3>
-                    <canvas id="levelDistributionChart" width="400" height="200"></canvas>
-                    <h3>Main CAPA</h3>
-                    <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
-                    <h3>Multi CAPA</h3>
-                    <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
-                    <h3>Total CAPA</h3>
-                    <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
+                    <div class="chart-item">
+                        <h3>Level Distribution</h3>
+                        <canvas id="levelDistributionChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-item">
+                        <h3>Main CAPA</h3>
+                        <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-item">
+                        <h3>Multi CAPA</h3>
+                        <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-item">
+                        <h3>Total CAPA</h3>
+                        <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
+                    </div>
                 </div>
             </div>
         </section>
