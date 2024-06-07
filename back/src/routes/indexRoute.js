@@ -2,9 +2,6 @@ module.exports = function (app) {
     const index = require("../controllers/indexController");
     const jwtMiddleware = require("../../config/jwtMiddleware");
 
-    // 라우터 정의
-    app.get("/restaurants", index.readRestaurants);
-
     // 회원가입
     app.post("/sign-up", index.createUsers);
 
@@ -16,5 +13,4 @@ module.exports = function (app) {
 
     // 회원 정보 조회
     app.get("/user-info", jwtMiddleware, index.getUserInfo);
-    
 };
