@@ -17,7 +17,11 @@ document.addEventListener("DOMContentLoaded", function() {
             if (averageInfo) {
                 document.querySelector("#average-data-display").innerHTML = `
                     <p>Average Level: ${averageInfo.avg_level.toFixed(2)}</p>
+                    <p>Average Main Set Up CAPA: ${averageInfo.avg_main_set_up_capa.toFixed(2)}%</p>
+                    <p>Average Main Maint CAPA: ${averageInfo.avg_main_maint_capa.toFixed(2)}%</p>
                     <p>Average Main CAPA: ${averageInfo.avg_main_capa.toFixed(2)}%</p>
+                    <p>Average Multi Set Up CAPA: ${averageInfo.avg_multi_set_up_capa.toFixed(2)}%</p>
+                    <p>Average Multi Maint CAPA: ${averageInfo.avg_multi_maint_capa.toFixed(2)}%</p>
                     <p>Average Multi CAPA: ${averageInfo.avg_multi_capa.toFixed(2)}%</p>
                     <p>Average Total CAPA: ${averageInfo.avg_total_capa.toFixed(2)}%</p>
                 `;
@@ -38,10 +42,10 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(mainCtx, {
             type: 'bar',
             data: {
-                labels: ['Average Main Set Up CAPA', 'Average Main Maint CAPA', 'Average Main CAPA'],
+                labels: ['Main Set Up CAPA', 'Main Maint CAPA', 'Main CAPA'],
                 datasets: [{
                     label: 'Average Main CAPA',
-                    data: [averageInfo.avg_main_capa, averageInfo.avg_main_capa, averageInfo.avg_main_capa],
+                    data: [averageInfo.avg_main_set_up_capa, averageInfo.avg_main_maint_capa, averageInfo.avg_main_capa],
                     backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderWidth: 1
@@ -73,10 +77,10 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(multiCtx, {
             type: 'bar',
             data: {
-                labels: ['Average Multi Set Up CAPA', 'Average Multi Maint CAPA', 'Average Multi CAPA'],
+                labels: ['Multi Set Up CAPA', 'Multi Maint CAPA', 'Multi CAPA'],
                 datasets: [{
                     label: 'Average Multi CAPA',
-                    data: [averageInfo.avg_multi_capa, averageInfo.avg_multi_capa, averageInfo.avg_multi_capa],
+                    data: [averageInfo.avg_multi_set_up_capa, averageInfo.avg_multi_maint_capa, averageInfo.avg_multi_capa],
                     backgroundColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderWidth: 1
@@ -108,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(totalCtx, {
             type: 'bar',
             data: {
-                labels: ['Average Total CAPA'],
+                labels: ['Total CAPA'],
                 datasets: [{
                     label: 'Average Total CAPA',
                     data: [averageInfo.avg_total_capa],
