@@ -158,4 +158,3 @@ exports.getAverageInfo = async function (connection, group, site, level) {
   const [rows] = await connection.query(Query, params);
   return rows[0];
 };
-

@@ -8,7 +8,9 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const filterButton = document.getElementById('filterButton');
+    const resetButton = document.getElementById('resetButton');
     filterButton.addEventListener('click', loadAverageInfo);
+    resetButton.addEventListener('click', resetFilters);
 
     let levelChart, mainCapaChart, multiCapaChart, totalCapaChart;
 
@@ -44,6 +46,13 @@ document.addEventListener("DOMContentLoaded", function() {
         } catch (error) {
             console.error("평균 정보를 로드하는 중 오류 발생:", error);
         }
+    }
+
+    function resetFilters() {
+        document.getElementById('filterGroup').value = '';
+        document.getElementById('filterSite').value = '';
+        document.getElementById('filterLevel').value = '';
+        loadAverageInfo();
     }
 
     function destroyCharts() {

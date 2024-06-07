@@ -61,6 +61,7 @@
                         <option value="4">4</option>
                     </select>
                     <button id="filterButton">Filter</button>
+                    <button id="resetButton">Reset</button>
                 </div>
 
                 <!-- 평균 데이터 표시 -->
@@ -69,14 +70,16 @@
                 </div>
 
                 <!-- 차트 표시 -->
-                <h3>Level Distribution</h3>
-                <canvas id="levelDistributionChart" width="400" height="200"></canvas>
-                <h3>Main CAPA</h3>
-                <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
-                <h3>Multi CAPA</h3>
-                <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
-                <h3>Total CAPA</h3>
-                <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
+                <div class="chart-container">
+                    <h3>Level Distribution</h3>
+                    <canvas id="levelDistributionChart" width="400" height="200"></canvas>
+                    <h3>Main CAPA</h3>
+                    <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
+                    <h3>Multi CAPA</h3>
+                    <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
+                    <h3>Total CAPA</h3>
+                    <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
+                </div>
             </div>
         </section>
     </main>

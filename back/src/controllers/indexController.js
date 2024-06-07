@@ -258,4 +258,3 @@ exports.getAverageInfo = async function (req, res) {
       });
   }
 };
-
