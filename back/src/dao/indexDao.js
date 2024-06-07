@@ -2,141 +2,91 @@ const { pool } = require("../../config/database");
 
 // 로그인 (회원검증)
 exports.isValidUsers = async function (connection, userID, password) {
-  const Query = `SELECT userIdx, nickname FROM Users where userID = ? and password = ? and status = 'A';`;
-  const Params = [userID, password];
+    const Query = `SELECT userIdx, nickname FROM Users where userID = ? and password = ? and status = 'A';`;
+    const Params = [userID, password];
 
-  const rows = await connection.query(Query, Params);
+    const rows = await connection.query(Query, Params);
 
-  return rows;
+    return rows;
 };
 
 // 회원가입
 exports.insertUsers = async function (connection, userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa) {
-  const Query = `insert into Users(userID, password, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);`;
-  const Params = [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa];
+    const Query = `insert into Users(userID, password, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);`;
+    const Params = [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa];
 
-  const rows = await connection.query(Query, Params);
+    const rows = await connection.query(Query, Params);
 
-  return rows;
+    return rows;
 };
 
 // 회원 정보 조회
 exports.getUserById = async function (connection, userIdx) {
-  const Query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE userIdx = ? AND status = 'A';`;
-  const Params = [userIdx];
+    const Query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE userIdx = ? AND status = 'A';`;
+    const Params = [userIdx];
 
-  const [rows] = await connection.query(Query, Params);
-  return rows;
+    const [rows] = await connection.query(Query, Params);
+    return rows;
 };
 
+// 회원 검색
+exports.searchUsers = async function (connection, group, site, level, nickname) {
+    let Query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE status = 'A'`;
+    let Params = [];
 
-exports.selectRestaurants = async function (connection, category) {
-  const selectAllRestaurantsQuery = `SELECT title, address, category, videoUrl FROM Restaurants where status = 'A';`;
-  const selectCategorizedRestaurantsQuery = `SELECT title, address, category, videoUrl FROM Restaurants where status = 'A' and category = ?;`;
+    if (group) {
+        Query += ` AND \`group\` = ?`;
+        Params.push(group);
+    }
+    if (site) {
+        Query += ` AND site = ?`;
+        Params.push(site);
+    }
+    if (level) {
+        Query += ` AND level = ?`;
+        Params.push(level);
+    }
+    if (nickname) {
+        Query += ` AND nickname LIKE ?`;
+        Params.push(`%${nickname}%`);
+    }
 
-  const Params = [category];
-
-  const Query = category
-    ? selectCategorizedRestaurantsQuery
-    : selectAllRestaurantsQuery;
-
-  const rows = await connection.query(Query, Params);
-
-  return rows;
+    const [rows] = await connection.query(Query, Params);
+    return rows;
 };
 
-exports.deleteStudent = async function (connection, studentIdx) {
-  const Query = `update Students set status = "D" where studentIdx = ?;`;
-  const Params = [studentIdx];
+// 평균 통계 계산
+exports.calculateAverageStats = async function (connection, group, site, level, nickname) {
+    let Query = `SELECT AVG(DATEDIFF(NOW(), hire_date)) AS average_tenure, AVG(level) AS average_level, AVG(main_set_up_capa) AS average_main_set_up_capa, AVG(main_maint_capa) AS average_main_maint_capa, AVG(main_capa) AS average_main_capa, AVG(multi_set_up_capa) AS average_multi_set_up_capa, AVG(multi_maint_capa) AS average_multi_maint_capa, AVG(multi_capa) AS average_multi_capa, AVG(total_capa) AS average_total_capa FROM Users WHERE status = 'A'`;
+    let Params = [];
 
-  const rows = await connection.query(Query, Params);
+    if (group) {
+        Query += ` AND \`group\` = ?`;
+        Params.push(group);
+    }
+    if (site) {
+        Query += ` AND site = ?`;
+        Params.push(site);
+    }
+    if (level) {
+        Query += ` AND level = ?`;
+        Params.push(level);
+    }
+    if (nickname) {
+        Query += ` AND nickname LIKE ?`;
+        Params.push(`%${nickname}%`);
+    }
 
-  return rows;
+    const [rows] = await connection.query(Query, Params);
+    return rows[0];
 };
 
-exports.updateStudents = async function (
-  connection,
-  studentIdx,
-  studentName,
-  major,
-  birth,
-  address
-) {
-  const Query = `update Students set studentName = ifnull(?, studentName), major = ifnull(?, major), birth = ifnull(?, birth), address = ifnull(?, address) where studentIdx = ?;`;
-  const Params = [studentName, major, birth, address, studentIdx];
-
-  const rows = await connection.query(Query, Params);
-
-  return rows;
-};
-
-exports.isValidStudentIdx = async function (connection, studentIdx) {
-  const Query = `SELECT * FROM Students where studentIdx = ? and status = 'A';`;
-  const Params = [studentIdx];
-
-  const [rows] = await connection.query(Query, Params);
-
-  if (rows < 1) {
-    return false;
-  }
-
-  return true;
-};
-
-exports.insertStudents = async function (
-  connection,
-  studentName,
-  major,
-  birth,
-  address
-) {
-  const Query = `insert into Students(studentName, major, birth, address) values (?,?,?,?);`;
-  const Params = [studentName, major, birth, address];
-
-  const rows = await connection.query(Query, Params);
-
-  return rows;
-};
-
-exports.selectStudents = async function (connection, studentIdx) {
-  const Query = `SELECT * FROM Students where studentIdx = ?;`;
-  const Params = [studentIdx];
-
-  const rows = await connection.query(Query, Params);
-
-  return rows;
-};
-
+// 예시 코드
 exports.exampleDao = async function (connection) {
-  const Query = `SELECT * FROM Students;`;
-  const Params = [];
+    const Query = `SELECT * FROM Students;`;
+    const Params = [];
 
-  const rows = await connection.query(Query, Params);
+    const rows = await connection.query(Query, Params);
 
-  return rows;
-};
-
-exports.searchUsers = async function (connection, filters) {
-  let query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_capa, multi_capa, total_capa FROM Users WHERE status = 'A'`;
-  const params = [];
-
-  if (filters.group) {
-      query += ` AND \`group\` = ?`;
-      params.push(filters.group);
-  }
-  if (filters.site) {
-      query += ` AND site = ?`;
-      params.push(filters.site);
-  }
-  if (filters.level) {
-      query += ` AND level = ?`;
-      params.push(filters.level);
-  }
-  if (filters.nickname) {
-      query += ` AND LOWER(nickname) LIKE ?`;
-      params.push(`%${filters.nickname}%`);
-  }
-
-  const [rows] = await connection.query(query, params);
-  return rows;
+    return rows;
 };

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원 정보 검색</title>
-    <link rel="stylesheet" href="./css/styles.css">
-    <link rel="stylesheet" href="./css/searchUser.css">
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/searchUser.css" />
 </head>
 <body>
     <nav>
@@ -13,7 +13,8 @@
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
                 <div class="sign-container">
-                    <div class="unsigned"></div>
+                    <div class="unsigned">
+                    </div>
                     <div class="signed hidden">
                         <div class="dropdown">
                             <button class="dropbtn">MENU</button>
@@ -33,7 +34,7 @@
     <main>
         <section id="search-user">
             <div class="inner">
-                <h2>Search User Information</h2>
+                <h2>회원 정보 검색</h2>
                 <div class="search-container">
                     <select id="searchGroup">
                         <option value="">Search by Group</option>
@@ -49,20 +50,13 @@
                         <option value="CJ">CJ</option>
                         <option value="PSKH">PSKH</option>
                     </select>
-                    <select id="searchLevel">
-                        <option value="">Search by Level</option>
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
+                    <input type="number" id="searchLevel" placeholder="Search by Level">
                     <input type="text" id="searchNickname" placeholder="Search by Nickname">
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                 </div>
-                <div id="user-stats"></div>
-                <div id="user-results"></div>
+                <div id="search-results"></div>
+                <div id="average-stats"></div>
             </div>
         </section>
     </main>
