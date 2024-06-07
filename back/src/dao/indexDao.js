@@ -115,3 +115,28 @@ exports.exampleDao = async function (connection) {
 
   return rows;
 };
+
+exports.searchUsers = async function (connection, filters) {
+  let query = `SELECT userID, nickname, \`group\`, site, level, hire_date, main_capa, multi_capa, total_capa FROM Users WHERE status = 'A'`;
+  const params = [];
+
+  if (filters.group) {
+      query += ` AND \`group\` = ?`;
+      params.push(filters.group);
+  }
+  if (filters.site) {
+      query += ` AND site = ?`;
+      params.push(filters.site);
+  }
+  if (filters.level) {
+      query += ` AND level = ?`;
+      params.push(filters.level);
+  }
+  if (filters.nickname) {
+      query += ` AND LOWER(nickname) LIKE ?`;
+      params.push(`%${filters.nickname}%`);
+  }
+
+  const [rows] = await connection.query(query, params);
+  return rows;
+};

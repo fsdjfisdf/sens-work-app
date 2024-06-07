@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 목록</title>
-    <link rel="stylesheet" href="./css/styles.css" />
-    <link rel="stylesheet" href="./css/readworklog.css" />
+    <title>회원 정보 검색</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/searchUser.css">
 </head>
 <body>
     <nav>
@@ -29,16 +29,12 @@
             </div>
         </div>
     </nav>
-    
+
     <main>
-        <section id="worklog">
-            
+        <section id="search-user">
             <div class="inner">
-                <h2>Load Worklog</h2><br>
+                <h2>Search User Information</h2>
                 <div class="search-container">
-                    <input type="date" id="searchStartDate">
-                    <span>to</span>
-                    <input type="date" id="searchEndDate"><br>
                     <select id="searchGroup">
                         <option value="">Search by Group</option>
                         <option value="PEE1">PEE1</option>
@@ -53,50 +49,25 @@
                         <option value="CJ">CJ</option>
                         <option value="PSKH">PSKH</option>
                     </select>
-                    <input type="text" id="searchEqName" placeholder="Search by EQ Name">
-                    <input type="text" id="searchTitle" placeholder="Search by Title">
-                    <input type="text" id="searchWorker" placeholder="Search by Worker">
+                    <select id="searchLevel">
+                        <option value="">Search by Level</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                    <input type="text" id="searchNickname" placeholder="Search by Nickname">
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                 </div>
-                <p id="worklog-count">Total Worklogs: 0</p>
-                <div id="worklog-cards" class="worklog-cards"></div>
-                
+                <div id="user-stats"></div>
+                <div id="user-results"></div>
             </div>
         </section>
     </main>
 
-    
-
-    <div id="logModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div id="logDetails"></div>
-        </div>
-    </div>
-
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="edit-close">&times;</span>
-            <form id="editForm">
-                <label for="edit_task_name">Title</label>
-                <input type="text" id="edit_task_name" name="task_name" required>
-                
-                <label for="edit_task_date">Date</label>
-                <input type="date" id="edit_task_date" name="task_date" required>
-                
-                <label for="edit_equipment_name">EQ Name</label>
-                <input type="text" id="edit_equipment_name" name="equipment_name" required>
-                
-                <label for="edit_transfer_item">Transfer Item</label>
-                <input type="text" id="edit_transfer_item" name="transfer_item" required>
-                
-                <button type="submit">Save</button>
-            </form>
-        </div>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-    <script src="./js/readworklog.js"></script>
+    <script src="./js/searchUser.js"></script>
 </body>
 </html>

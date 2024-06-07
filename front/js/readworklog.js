@@ -1,8 +1,24 @@
 document.addEventListener('DOMContentLoaded', async () => {
     let logs = [];
+    let currentUserNickname = null; // 현재 로그인한 사용자의 nickname을 저장할 변수
+
+    // 현재 로그인한 사용자 정보를 받아오는 함수
+    async function getCurrentUser() {
+        try {
+            const response = await axios.get('http://3.37.165.84:3001/user-info', {
+                headers: {
+                    'x-access-token': localStorage.getItem('x-access-token')
+                }
+            });
+            currentUserNickname = response.data.result.nickname; // 현재 사용자의 nickname 저장
+        } catch (error) {
+            console.error('Error getting current user info:', error);
+        }
+    }
 
     async function loadWorkLogs() {
         try {
+            await getCurrentUser(); // 현재 사용자 정보 불러오기
             const response = await axios.get('http://3.37.165.84:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             displayLogs(logs);
@@ -19,6 +35,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `${year}-${month}-${day}`;
     }
 
+    function formatDuration(duration) {
+        const parts = duration.split(':');
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+
+        if (hours < 0 || minutes < 0) {
+            return '<span class="error-text" style="color: red;">수정 필요</span>';
+        }
+
+        let formattedDuration = '';
+        if (hours > 0) {
+            formattedDuration += `${hours}시간 `;
+        }
+        if (minutes > 0) {
+            formattedDuration += `${minutes}분`;
+        }
+        return formattedDuration.trim() || '0분';
+    }
+
     function displayLogs(logs) {
         const worklogCards = document.getElementById('worklog-cards');
         worklogCards.innerHTML = '';
@@ -33,12 +68,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>Worker:</strong> ${log.task_man}</p>
                 <p><strong>Group:</strong> ${log.group}</p>
                 <p><strong>Site:</strong> ${log.site}</p>
+                <p><strong>Task Duration:</strong> ${formatDuration(log.task_duration)}</p>
                 <div class="actions">
-                    <button class="delete-log" data-id="${log.id}">X</button>
+                    ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">X</button>` : ''}
                 </div>
             `;
             worklogCards.appendChild(card);
         });
+
+        // 총 개수 업데이트
+        document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
 
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
@@ -84,6 +123,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p><strong>Work Type :</strong> ${log.work_type}</p>
             <p><strong>Setup Item :</strong> ${log.setup_item}</p>
             <p><strong>Maint Item :</strong> ${log.maint_item}</p>
+            <p><strong>Transfer Item :</strong> ${log.transfer_item}</p>
+            <p><strong>Task Duration :</strong> ${formatDuration(log.task_duration)}</p>
         `;
         logModal.style.display = 'block';
     }

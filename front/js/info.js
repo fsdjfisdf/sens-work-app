@@ -155,6 +155,11 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // 회원 정보 검색 페이지로 이동하는 버튼 이벤트 리스너 추가
+    document.getElementById('searchUserButton').addEventListener('click', () => {
+        window.location.href = './searchUser.html';
+    });
+
     const signOutButton = document.querySelector("#sign-out");
 
     if (signOutButton) {
