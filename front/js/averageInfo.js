@@ -22,14 +22,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 headers: { "x-access-token": token },
                 params: { group, site, level }
             });
-            const averageInfo = response.data.result;
+            const averageInfo = response.data.result || {};
             if (averageInfo) {
+                const avgLevel = (typeof averageInfo.avg_level === 'number') ? averageInfo.avg_level.toFixed(2) : 'N/A';
+                const totalUsers = (typeof averageInfo.total_users === 'number') ? averageInfo.total_users : 'N/A';
+
                 document.querySelector("#average-data-display").innerHTML = `
                     <div class="info-box">
-                        <p><strong>Average Level:</strong> ${averageInfo.avg_level.toFixed(2)}</p>
+                        <p><strong>Average Level:</strong> ${avgLevel}</p>
                     </div>
                     <div class="info-box">
-                        <p><strong>Total Users:</strong> ${averageInfo.total_users}</p>
+                        <p><strong>Total Users:</strong> ${totalUsers}</p>
                     </div>
                 `;
                 destroyCharts();
@@ -59,7 +62,13 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: ['Level 0', 'Level 1', 'Level 2', 'Level 3', 'Level 4'],
                 datasets: [{
                     label: 'Number of Users',
-                    data: [averageInfo.level_0, averageInfo.level_1, averageInfo.level_2, averageInfo.level_3, averageInfo.level_4],
+                    data: [
+                        averageInfo.level_0 || 0,
+                        averageInfo.level_1 || 0,
+                        averageInfo.level_2 || 0,
+                        averageInfo.level_3 || 0,
+                        averageInfo.level_4 || 0
+                    ],
                     backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffcd56', '#4bc0c0'],
                     borderColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffcd56', '#4bc0c0'],
                     borderWidth: 1
@@ -103,7 +112,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: ['Main Set Up CAPA', 'Main Maint CAPA', 'Main CAPA'],
                 datasets: [{
                     label: 'Average Main CAPA',
-                    data: [averageInfo.avg_main_set_up_capa.toFixed(2), averageInfo.avg_main_maint_capa.toFixed(2), averageInfo.avg_main_capa.toFixed(2)],
+                    data: [
+                        (typeof averageInfo.avg_main_set_up_capa === 'number') ? averageInfo.avg_main_set_up_capa.toFixed(2) : 0,
+                        (typeof averageInfo.avg_main_maint_capa === 'number') ? averageInfo.avg_main_maint_capa.toFixed(2) : 0,
+                        (typeof averageInfo.avg_main_capa === 'number') ? averageInfo.avg_main_capa.toFixed(2) : 0
+                    ],
                     backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderWidth: 1
@@ -142,7 +155,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: ['Multi Set Up CAPA', 'Multi Maint CAPA', 'Multi CAPA'],
                 datasets: [{
                     label: 'Average Multi CAPA',
-                    data: [averageInfo.avg_multi_set_up_capa.toFixed(2), averageInfo.avg_multi_maint_capa.toFixed(2), averageInfo.avg_multi_capa.toFixed(2)],
+                    data: [
+                        (typeof averageInfo.avg_multi_set_up_capa === 'number') ? averageInfo.avg_multi_set_up_capa.toFixed(2) : 0,
+                        (typeof averageInfo.avg_multi_maint_capa === 'number') ? averageInfo.avg_multi_maint_capa.toFixed(2) : 0,
+                        (typeof averageInfo.avg_multi_capa === 'number') ? averageInfo.avg_multi_capa.toFixed(2) : 0
+                    ],
                     backgroundColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderWidth: 1
@@ -181,7 +198,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: ['Total CAPA'],
                 datasets: [{
                     label: 'Average Total CAPA',
-                    data: [averageInfo.avg_total_capa.toFixed(2)],
+                    data: [
+                        (typeof averageInfo.avg_total_capa === 'number') ? averageInfo.avg_total_capa.toFixed(2) : 0
+                    ],
                     backgroundColor: ['#ffcd56'],
                     borderColor: ['#ffcd56'],
                     borderWidth: 1

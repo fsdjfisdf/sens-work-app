@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Average Engineer Information</title>
-    <link rel="stylesheet" href="./css/info.css" />
+    <title>Average Information</title>
+    <link rel="stylesheet" href="./css/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
     <nav>
@@ -32,19 +32,20 @@
     </nav>
 
     <main>
-        <section id="info">
+        <section id="average-info">
             <div class="inner">
-                <h2>Average Engineer Information</h2>
+                <h2>Average Information</h2>
 
+                <!-- 필터링 섹션 -->
                 <div class="filter-container">
                     <select id="filterGroup">
-                        <option value="">Select Group</option>
+                        <option value="">All Groups</option>
                         <option value="PEE1">PEE1</option>
                         <option value="PEE2">PEE2</option>
                         <option value="PEE3">PEE3</option>
                     </select>
                     <select id="filterSite">
-                        <option value="">Select Site</option>
+                        <option value="">All Sites</option>
                         <option value="PT">PT</option>
                         <option value="HS">HS</option>
                         <option value="IC">IC</option>
@@ -52,7 +53,7 @@
                         <option value="PSKH">PSKH</option>
                     </select>
                     <select id="filterLevel">
-                        <option value="">Select Level</option>
+                        <option value="">All Levels</option>
                         <option value="0">0</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
@@ -62,19 +63,18 @@
                     <button id="filterButton">Filter</button>
                 </div>
 
-                <div id="average-data-display" class="average-data-display">
-                    <!-- 평균 정보가 여기에 표시됩니다. -->
+                <!-- 평균 데이터 표시 -->
+                <div id="average-data-display">
+                    <!-- 평균 데이터가 여기에 표시됩니다. -->
                 </div>
 
+                <!-- 차트 표시 -->
                 <h3>Level Distribution</h3>
                 <canvas id="levelDistributionChart" width="400" height="200"></canvas>
-
                 <h3>Main CAPA</h3>
                 <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
-
                 <h3>Multi CAPA</h3>
                 <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
-
                 <h3>Total CAPA</h3>
                 <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
             </div>

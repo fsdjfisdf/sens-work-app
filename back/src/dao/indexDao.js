@@ -116,28 +116,46 @@ exports.exampleDao = async function (connection) {
   return rows;
 };
 
-// 평균 정보 조회
-exports.getAverageInfo = async function (connection, filterQuery, filterParams) {
+exports.getAverageInfo = async function (connection, group, site, level) {
+  let filterQuery = 'WHERE status = "A"';
+  const params = [];
+
+  if (group) {
+      filterQuery += ' AND `group` = ?';
+      params.push(group);
+  }
+
+  if (site) {
+      filterQuery += ' AND site = ?';
+      params.push(site);
+  }
+
+  if (level) {
+      filterQuery += ' AND level = ?';
+      params.push(level);
+  }
+
   const Query = `
       SELECT 
-          AVG(level) AS avg_level,
-          COUNT(*) AS total_users,
-          AVG(main_set_up_capa) AS avg_main_set_up_capa,
-          AVG(main_maint_capa) AS avg_main_maint_capa,
-          AVG(main_capa) AS avg_main_capa,
-          AVG(multi_set_up_capa) AS avg_multi_set_up_capa,
-          AVG(multi_maint_capa) AS avg_multi_maint_capa,
-          AVG(multi_capa) AS avg_multi_capa,
-          AVG(total_capa) AS avg_total_capa,
-          SUM(level = 0) AS level_0,
-          SUM(level = 1) AS level_1,
-          SUM(level = 2) AS level_2,
-          SUM(level = 3) AS level_3,
-          SUM(level = 4) AS level_4
-      FROM Users 
-      WHERE status = 'A'
+          AVG(level) as avg_level,
+          COUNT(*) as total_users,
+          AVG(main_set_up_capa) as avg_main_set_up_capa,
+          AVG(main_maint_capa) as avg_main_maint_capa,
+          AVG(main_capa) as avg_main_capa,
+          AVG(multi_set_up_capa) as avg_multi_set_up_capa,
+          AVG(multi_maint_capa) as avg_multi_maint_capa,
+          AVG(multi_capa) as avg_multi_capa,
+          AVG(total_capa) as avg_total_capa,
+          SUM(CASE WHEN level = 0 THEN 1 ELSE 0 END) as level_0,
+          SUM(CASE WHEN level = 1 THEN 1 ELSE 0 END) as level_1,
+          SUM(CASE WHEN level = 2 THEN 1 ELSE 0 END) as level_2,
+          SUM(CASE WHEN level = 3 THEN 1 ELSE 0 END) as level_3,
+          SUM(CASE WHEN level = 4 THEN 1 ELSE 0 END) as level_4
+      FROM Users
       ${filterQuery};
   `;
-  const [rows] = await connection.query(Query, filterParams);
-  return rows;
+
+  const [rows] = await connection.query(Query, params);
+  return rows[0];
 };
+

@@ -226,35 +226,18 @@ exports.example = async function (req, res) {
 };
 
 
-// 평균 정보 조회
 exports.getAverageInfo = async function (req, res) {
   const { group, site, level } = req.query;
-
-  let filterQuery = '';
-  const filterParams = [];
-
-  if (group) {
-      filterQuery += ' AND `group` = ?';
-      filterParams.push(group);
-  }
-  if (site) {
-      filterQuery += ' AND `site` = ?';
-      filterParams.push(site);
-  }
-  if (level) {
-      filterQuery += ' AND `level` = ?';
-      filterParams.push(level);
-  }
 
   try {
       const connection = await pool.getConnection(async (conn) => conn);
       try {
-          const averageInfo = await indexDao.getAverageInfo(connection, filterQuery, filterParams);
+          const averageInfo = await indexDao.getAverageInfo(connection, group, site, level);
           return res.status(200).json({
               isSuccess: true,
               code: 200,
               message: "평균 정보 조회 성공",
-              result: averageInfo[0],
+              result: averageInfo,
           });
       } catch (err) {
           logger.error(`getAverageInfo Query error\n: ${JSON.stringify(err)}`);
@@ -275,3 +258,4 @@ exports.getAverageInfo = async function (req, res) {
       });
   }
 };
+
