@@ -1,7 +1,26 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
     const token = localStorage.getItem("x-access-token");
 
     if (!token) {
+        alert("로그인이 필요합니다.");
+        window.location.replace("./signin.html");
+        return;
+    }
+
+    // 사용자 role 확인
+    try {
+        const response = await axios.get('http://3.37.165.84:3001/user-info', {
+            headers: { "x-access-token": token }
+        });
+        const userRole = response.data.result.role;
+
+        if (userRole !== 'admin') {
+            alert("접근 권한이 없습니다.");
+            window.location.replace("./signin.html");
+            return;
+        }
+    } catch (error) {
+        console.error("사용자 정보를 로드하는 중 오류 발생:", error);
         alert("로그인이 필요합니다.");
         window.location.replace("./signin.html");
         return;
@@ -242,16 +261,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             },
             plugins: [ChartDataLabels]
-        });
-    }
-
-    const signOutButton = document.querySelector("#sign-out");
-
-    if (signOutButton) {
-        signOutButton.addEventListener("click", function() {
-            localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
-            alert("로그아웃 되었습니다.");
-            window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
         });
     }
 
