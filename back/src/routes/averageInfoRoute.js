@@ -18,7 +18,12 @@ router.get('/', async (req, res) => {
         `);
 
         if (rows.length > 0) {
-            res.status(200).json({ result: rows[0] });
+            const result = rows[0];
+            // ensure all values are numbers
+            for (let key in result) {
+                result[key] = parseFloat(result[key]);
+            }
+            res.status(200).json({ result });
         } else {
             res.status(404).json({ message: 'No data found' });
         }
