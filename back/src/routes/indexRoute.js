@@ -15,5 +15,5 @@ module.exports = function (app) {
     app.get("/user-info", jwtMiddleware, index.getUserInfo);
 
     // 평균 정보 조회
-    app.use("/average-info", jwtMiddleware, require('./averageInfoRoute'));
+    app.get("/average-info", jwtMiddleware, index.getAverageInfo);
 };

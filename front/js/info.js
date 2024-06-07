@@ -155,10 +155,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    document.getElementById("averageInfoButton").addEventListener("click", function() {
-        window.location.href = "./averageInfo.html";
-    });
-
     const signOutButton = document.querySelector("#sign-out");
 
     if (signOutButton) {
@@ -166,6 +162,15 @@ document.addEventListener("DOMContentLoaded", function() {
             localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
             alert("로그아웃 되었습니다.");
             window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
+        });
+    }
+
+    // "View Average Info" 버튼 클릭 이벤트 추가
+    const viewAverageInfoButton = document.getElementById("view-average-info");
+
+    if (viewAverageInfoButton) {
+        viewAverageInfoButton.addEventListener("click", function() {
+            window.location.href = "./averageInfo.html";
         });
     }
 });

@@ -116,3 +116,28 @@ exports.exampleDao = async function (connection) {
   return rows;
 };
 
+// 평균 정보 조회
+exports.getAverageInfo = async function (connection, filterQuery, filterParams) {
+  const Query = `
+      SELECT 
+          AVG(level) AS avg_level,
+          COUNT(*) AS total_users,
+          AVG(main_set_up_capa) AS avg_main_set_up_capa,
+          AVG(main_maint_capa) AS avg_main_maint_capa,
+          AVG(main_capa) AS avg_main_capa,
+          AVG(multi_set_up_capa) AS avg_multi_set_up_capa,
+          AVG(multi_maint_capa) AS avg_multi_maint_capa,
+          AVG(multi_capa) AS avg_multi_capa,
+          AVG(total_capa) AS avg_total_capa,
+          SUM(level = 0) AS level_0,
+          SUM(level = 1) AS level_1,
+          SUM(level = 2) AS level_2,
+          SUM(level = 3) AS level_3,
+          SUM(level = 4) AS level_4
+      FROM Users 
+      WHERE status = 'A'
+      ${filterQuery};
+  `;
+  const [rows] = await connection.query(Query, filterParams);
+  return rows;
+};

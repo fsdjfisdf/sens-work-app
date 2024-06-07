@@ -7,32 +7,53 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    loadAverageInfo();
+    const filterButton = document.getElementById('filterButton');
+    filterButton.addEventListener('click', loadAverageInfo);
 
-    function loadAverageInfo() {
-        axios.get('http://3.37.165.84:3001/average-info', {
-            headers: { "x-access-token": token }
-        }).then(response => {
+    let levelChart, mainCapaChart, multiCapaChart, totalCapaChart;
+
+    async function loadAverageInfo() {
+        const group = document.getElementById('filterGroup').value;
+        const site = document.getElementById('filterSite').value;
+        const level = document.getElementById('filterLevel').value;
+
+        try {
+            const response = await axios.get('http://3.37.165.84:3001/average-info', {
+                headers: { "x-access-token": token },
+                params: { group, site, level }
+            });
             const averageInfo = response.data.result;
             if (averageInfo) {
                 document.querySelector("#average-data-display").innerHTML = `
-                    <p>Average Level: ${averageInfo.avg_level.toFixed(2)}</p>
-                    <p>Total Users: ${averageInfo.total_users}</p>
+                    <div class="info-box">
+                        <p><strong>Average Level:</strong> ${averageInfo.avg_level.toFixed(2)}</p>
+                    </div>
+                    <div class="info-box">
+                        <p><strong>Total Users:</strong> ${averageInfo.total_users}</p>
+                    </div>
                 `;
+                destroyCharts();
                 createLevelDistributionChart(averageInfo);
                 createAverageCapaCharts(averageInfo);
             } else {
                 alert("평균 정보를 가져올 수 없습니다.");
             }
-        }).catch(error => {
+        } catch (error) {
             console.error("평균 정보를 로드하는 중 오류 발생:", error);
-        });
+        }
+    }
+
+    function destroyCharts() {
+        if (levelChart) levelChart.destroy();
+        if (mainCapaChart) mainCapaChart.destroy();
+        if (multiCapaChart) multiCapaChart.destroy();
+        if (totalCapaChart) totalCapaChart.destroy();
     }
 
     function createLevelDistributionChart(averageInfo) {
         const levelCtx = document.getElementById('levelDistributionChart').getContext('2d');
 
-        new Chart(levelCtx, {
+        levelChart = new Chart(levelCtx, {
             type: 'bar',
             data: {
                 labels: ['Level 0', 'Level 1', 'Level 2', 'Level 3', 'Level 4'],
@@ -55,15 +76,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     legend: {
                         display: false
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.raw;
-                            }
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value;
+                        },
+                        font: {
+                            weight: 'bold'
                         }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         });
     }
 
@@ -72,13 +97,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const multiCtx = document.getElementById('averageMultiCapaChart').getContext('2d');
         const totalCtx = document.getElementById('averageTotalCapaChart').getContext('2d');
 
-        new Chart(mainCtx, {
+        mainCapaChart = new Chart(mainCtx, {
             type: 'bar',
             data: {
                 labels: ['Main Set Up CAPA', 'Main Maint CAPA', 'Main CAPA'],
                 datasets: [{
                     label: 'Average Main CAPA',
-                    data: [averageInfo.avg_main_set_up_capa, averageInfo.avg_main_maint_capa, averageInfo.avg_main_capa],
+                    data: [averageInfo.avg_main_set_up_capa.toFixed(2), averageInfo.avg_main_maint_capa.toFixed(2), averageInfo.avg_main_capa.toFixed(2)],
                     backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderWidth: 1
@@ -96,24 +121,28 @@ document.addEventListener("DOMContentLoaded", function() {
                     legend: {
                         display: false
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.raw + '%';
-                            }
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value + '%';
+                        },
+                        font: {
+                            weight: 'bold'
                         }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         });
 
-        new Chart(multiCtx, {
+        multiCapaChart = new Chart(multiCtx, {
             type: 'bar',
             data: {
                 labels: ['Multi Set Up CAPA', 'Multi Maint CAPA', 'Multi CAPA'],
                 datasets: [{
                     label: 'Average Multi CAPA',
-                    data: [averageInfo.avg_multi_set_up_capa, averageInfo.avg_multi_maint_capa, averageInfo.avg_multi_capa],
+                    data: [averageInfo.avg_multi_set_up_capa.toFixed(2), averageInfo.avg_multi_maint_capa.toFixed(2), averageInfo.avg_multi_capa.toFixed(2)],
                     backgroundColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderWidth: 1
@@ -131,15 +160,58 @@ document.addEventListener("DOMContentLoaded", function() {
                     legend: {
                         display: false
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.raw + '%';
-                            }
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value + '%';
+                        },
+                        font: {
+                            weight: 'bold'
                         }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
+        });
+
+        totalCapaChart = new Chart(totalCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Total CAPA'],
+                datasets: [{
+                    label: 'Average Total CAPA',
+                    data: [averageInfo.avg_total_capa.toFixed(2)],
+                    backgroundColor: ['#ffcd56'],
+                    borderColor: ['#ffcd56'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value + '%';
+                        },
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
         });
     }
 
@@ -152,4 +224,6 @@ document.addEventListener("DOMContentLoaded", function() {
             window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
         });
     }
+
+    loadAverageInfo(); // 페이지 로드 시 평균 정보 불러오기
 });
