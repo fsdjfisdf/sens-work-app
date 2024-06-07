@@ -260,39 +260,3 @@ exports.getAverageInfo = async function (req, res) {
 };
 
 
-exports.searchLogsByNickname = async function (req, res) {
-  const { nickname } = req.query;
-
-  if (!nickname) {
-      return res.status(400).json({ message: 'nickname is required' });
-  }
-
-  try {
-      const connection = await pool.getConnection(async (conn) => conn);
-      try {
-          const result = await indexDao.searchLogsByNickname(connection, nickname);
-          return res.status(200).json({
-              isSuccess: true,
-              code: 200,
-              message: "로그 검색 성공",
-              result: result,
-          });
-      } catch (err) {
-          logger.error(`searchLogsByNickname Query error\n: ${JSON.stringify(err)}`);
-          return res.status(500).json({
-              isSuccess: false,
-              code: 500,
-              message: "서버 오류입니다.",
-          });
-      } finally {
-          connection.release();
-      }
-  } catch (err) {
-      logger.error(`searchLogsByNickname DB Connection error\n: ${JSON.stringify(err)}`);
-      return res.status(500).json({
-          isSuccess: false,
-          code: 500,
-          message: "서버 오류입니다.",
-      });
-  }
-};

@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../../config/database');
 
-// 기존 평균 정보 조회 라우트
 router.get('/', async (req, res) => {
     const { group, site, level, nickname } = req.query;
 
@@ -54,10 +53,6 @@ router.get('/', async (req, res) => {
 
         if (rows.length > 0) {
             const result = rows[0];
-            // ensure all values are numbers
-            for (let key in result) {
-                result[key] = parseFloat(result[key]);
-            }
             res.status(200).json({ result });
         } else {
             res.status(404).json({ message: 'No data found' });
@@ -67,6 +62,8 @@ router.get('/', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+module.exports = router;
 
 // 새로운 라우트 추가
 router.get('/search', async (req, res) => {
