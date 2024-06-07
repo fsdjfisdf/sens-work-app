@@ -21,11 +21,19 @@ document.addEventListener("DOMContentLoaded", async function() {
         const nickname = document.getElementById('filterNickname').value;
 
         try {
-            const response = await axios.get('http://3.37.165.84:3001/average-info', {
+            const averageResponse = await axios.get('http://3.37.165.84:3001/average-info', {
                 headers: { "x-access-token": token },
-                params: { group, site, level, nickname }
+                params: { group, site, level }
             });
-            const averageInfo = response.data.result || {};
+
+            const searchResponse = await axios.get('http://3.37.165.84:3001/average-info/search', {
+                headers: { "x-access-token": token },
+                params: { nickname }
+            });
+
+            const averageInfo = averageResponse.data.result || {};
+            const searchInfo = searchResponse.data.result || {};
+            
             if (averageInfo) {
                 const avgLevel = (typeof averageInfo.avg_level === 'number' && !isNaN(averageInfo.avg_level)) ? averageInfo.avg_level.toFixed(2) : 'N/A';
                 const totalUsers = (typeof averageInfo.total_users === 'number') ? averageInfo.total_users : 'N/A';
@@ -44,8 +52,24 @@ document.addEventListener("DOMContentLoaded", async function() {
             } else {
                 alert("평균 정보를 가져올 수 없습니다.");
             }
+
+            if (searchInfo) {
+                const totalTasks = searchInfo.total_tasks || 0;
+                const totalDuration = searchInfo.total_duration_minutes || 0;
+
+                document.querySelector("#nickname-search-results").innerHTML = `
+                    <div class="info-box">
+                        <p><strong>Total Tasks:</strong> ${totalTasks}</p>
+                    </div>
+                    <div class="info-box">
+                        <p><strong>Total Duration (minutes):</strong> ${totalDuration}</p>
+                    </div>
+                `;
+            } else {
+                alert("검색 결과를 가져올 수 없습니다.");
+            }
         } catch (error) {
-            console.error("평균 정보를 로드하는 중 오류 발생:", error);
+            console.error("정보를 로드하는 중 오류 발생:", error);
         }
     }
 
@@ -242,6 +266,16 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             },
             plugins: [ChartDataLabels]
+        });
+    }
+
+    const signOutButton = document.querySelector("#sign-out");
+
+    if (signOutButton) {
+        signOutButton.addEventListener("click", function() {
+            localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
+            alert("로그아웃 되었습니다.");
+            window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
         });
     }
 

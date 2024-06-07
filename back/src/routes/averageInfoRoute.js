@@ -64,3 +64,34 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+
+// 새로운 라우트 추가
+router.get('/search', async (req, res) => {
+    const { nickname } = req.query;
+
+    if (!nickname) {
+        return res.status(400).json({ message: 'nickname is required' });
+    }
+
+    try {
+        const [rows] = await pool.query(`
+            SELECT COUNT(*) as total_tasks, 
+                   SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 60) as total_duration_minutes
+            FROM work_log 
+            WHERE task_man LIKE ?
+        `, [`%${nickname}%`]);
+
+        if (rows.length > 0) {
+            const result = rows[0];
+            result.total_duration_minutes = parseFloat(result.total_duration_minutes).toFixed(2);
+            res.status(200).json({ result });
+        } else {
+            res.status(404).json({ message: 'No matching logs found' });
+        }
+    } catch (error) {
+        console.error('Error fetching work logs:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+module.exports = router;
