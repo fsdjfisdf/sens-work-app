@@ -7,25 +7,6 @@ document.addEventListener("DOMContentLoaded", async function() {
         return;
     }
 
-    // 사용자 role 확인
-    try {
-        const response = await axios.get('http://3.37.165.84:3001/user-info', {
-            headers: { "x-access-token": token }
-        });
-        const userRole = response.data.result.role;
-
-        if (userRole !== 'admin') {
-            alert("접근 권한이 없습니다.");
-            window.location.replace("./signin.html");
-            return;
-        }
-    } catch (error) {
-        console.error("사용자 정보를 로드하는 중 오류 발생:", error);
-        alert("로그인이 필요합니다.");
-        window.location.replace("./signin.html");
-        return;
-    }
-
     const filterButton = document.getElementById('filterButton');
     const resetButton = document.getElementById('resetButton');
     filterButton.addEventListener('click', loadAverageInfo);
@@ -46,7 +27,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             });
             const averageInfo = response.data.result || {};
             if (averageInfo) {
-                const avgLevel = (typeof averageInfo.avg_level === 'number') ? averageInfo.avg_level.toFixed(2) : 'N/A';
+                const avgLevel = (typeof averageInfo.avg_level === 'number' && !isNaN(averageInfo.avg_level)) ? averageInfo.avg_level.toFixed(2) : 'N/A';
                 const totalUsers = (typeof averageInfo.total_users === 'number') ? averageInfo.total_users : 'N/A';
 
                 document.querySelector("#average-data-display").innerHTML = `
