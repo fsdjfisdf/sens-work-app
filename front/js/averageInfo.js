@@ -16,15 +16,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
     async function loadAverageInfo() {
         const group = document.getElementById('filterGroup').value;
-        const siteOptions = document.getElementById('filterSite').options;
-        const sites = Array.from(siteOptions).filter(option => option.selected).map(option => option.value);
+        const site = Array.from(document.getElementById('filterSite').selectedOptions).map(option => option.value).join(',');
         const level = document.getElementById('filterLevel').value;
         const nickname = document.getElementById('filterNickname').value;
 
         try {
             const response = await axios.get('http://3.37.165.84:3001/average-info', {
                 headers: { "x-access-token": token },
-                params: { group, sites, level, nickname }
+                params: { group, site, level, nickname }
             });
             const averageInfo = response.data.result || {};
             if (averageInfo) {
@@ -52,8 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function resetFilters() {
         document.getElementById('filterGroup').value = '';
-        const siteOptions = document.getElementById('filterSite').options;
-        Array.from(siteOptions).forEach(option => option.selected = false);
+        document.getElementById('filterSite').selectedIndex = -1; // reset multiple select
         document.getElementById('filterLevel').value = '';
         document.getElementById('filterNickname').value = '';
         loadAverageInfo();
@@ -63,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (levelChart) levelChart.destroy();
         if (mainCapaChart) mainCapaChart.destroy();
         if (multiCapaChart) multiCapaChart.destroy();
-        if (totalCapaChart) multiCapaChart.destroy();
+        if (totalCapaChart) totalCapaChart.destroy();
     }
 
     function createLevelDistributionChart(averageInfo) {

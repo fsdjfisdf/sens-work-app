@@ -117,32 +117,9 @@ exports.exampleDao = async function (connection) {
 };
 
 exports.getAverageInfo = async function (connection, group, site, level, nickname) {
-  let filterQuery = 'WHERE status = "A"';
-  const params = [];
-
-  if (group) {
-      filterQuery += ' AND `group` = ?';
-      params.push(group);
-  }
-
-  if (site) {
-      filterQuery += ' AND site = ?';
-      params.push(site);
-  }
-
-  if (level) {
-      filterQuery += ' AND level = ?';
-      params.push(level);
-  }
-
-  if (nickname) {
-      filterQuery += ' AND nickname LIKE ?';
-      params.push(`%${nickname}%`);
-  }
-
-  const Query = `
+  let query = `
       SELECT 
-          AVG(level) as avg_level,
+          AVG(level) as avg_level, 
           COUNT(*) as total_users,
           AVG(main_set_up_capa) as avg_main_set_up_capa,
           AVG(main_maint_capa) as avg_main_maint_capa,
@@ -151,15 +128,33 @@ exports.getAverageInfo = async function (connection, group, site, level, nicknam
           AVG(multi_maint_capa) as avg_multi_maint_capa,
           AVG(multi_capa) as avg_multi_capa,
           AVG(total_capa) as avg_total_capa,
-          SUM(CASE WHEN level = 0 THEN 1 ELSE 0 END) as level_0,
-          SUM(CASE WHEN level = 1 THEN 1 ELSE 0 END) as level_1,
-          SUM(CASE WHEN level = 2 THEN 1 ELSE 0 END) as level_2,
-          SUM(CASE WHEN level = 3 THEN 1 ELSE 0 END) as level_3,
-          SUM(CASE WHEN level = 4 THEN 1 ELSE 0 END) as level_4
+          SUM(level = 0) as level_0,
+          SUM(level = 1) as level_1,
+          SUM(level = 2) as level_2,
+          SUM(level = 3) as level_3,
+          SUM(level = 4) as level_4
       FROM Users
-      ${filterQuery};
+      WHERE status = 'A'
   `;
+  const params = [];
 
-  const [rows] = await connection.query(Query, params);
+  if (group) {
+      query += " AND `group` = ?";
+      params.push(group);
+  }
+  if (site) {
+      query += " AND site IN (?)"; // multiple site filter
+      params.push(site.split(','));
+  }
+  if (level) {
+      query += " AND level = ?";
+      params.push(level);
+  }
+  if (nickname) {
+      query += " AND nickname LIKE ?";
+      params.push(`%${nickname}%`);
+  }
+
+  const [rows] = await connection.query(query, params);
   return rows[0];
 };
