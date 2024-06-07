@@ -158,3 +158,16 @@ exports.getAverageInfo = async function (connection, group, site, level, nicknam
   const [rows] = await connection.query(query, params);
   return rows[0];
 };
+
+
+exports.searchLogsByNickname = async function (connection, nickname) {
+  const query = `
+      SELECT COUNT(*) as total_tasks, 
+             SUM(TIME_TO_SEC(TIMEDIFF(end_time, start_time)) / 60) as total_duration_minutes
+      FROM work_log 
+      WHERE task_man LIKE ?
+  `;
+  const params = [`%${nickname}%`];
+  const [rows] = await connection.query(query, params);
+  return rows[0];
+};

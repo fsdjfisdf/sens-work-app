@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async function() {
+document.addEventListener("DOMContentLoaded", function() {
     const token = localStorage.getItem("x-access-token");
 
     if (!token) {
@@ -12,30 +12,25 @@ document.addEventListener("DOMContentLoaded", async function() {
     filterButton.addEventListener('click', loadAverageInfo);
     resetButton.addEventListener('click', resetFilters);
 
+    const searchButton = document.getElementById('searchButton');
+    searchButton.addEventListener('click', searchLogs);
+
     let levelChart, mainCapaChart, multiCapaChart, totalCapaChart;
 
     async function loadAverageInfo() {
         const group = document.getElementById('filterGroup').value;
-        const site = Array.from(document.getElementById('filterSite').selectedOptions).map(option => option.value).join(',');
+        const site = document.getElementById('filterSite').value;
         const level = document.getElementById('filterLevel').value;
         const nickname = document.getElementById('filterNickname').value;
 
         try {
-            const averageResponse = await axios.get('http://3.37.165.84:3001/average-info', {
+            const response = await axios.get('http://3.37.165.84:3001/average-info', {
                 headers: { "x-access-token": token },
-                params: { group, site, level }
+                params: { group, site, level, nickname }
             });
-
-            const searchResponse = await axios.get('http://3.37.165.84:3001/average-info/search', {
-                headers: { "x-access-token": token },
-                params: { nickname }
-            });
-
-            const averageInfo = averageResponse.data.result || {};
-            const searchInfo = searchResponse.data.result || {};
-            
+            const averageInfo = response.data.result || {};
             if (averageInfo) {
-                const avgLevel = (typeof averageInfo.avg_level === 'number' && !isNaN(averageInfo.avg_level)) ? averageInfo.avg_level.toFixed(2) : 'N/A';
+                const avgLevel = (typeof averageInfo.avg_level === 'number') ? averageInfo.avg_level.toFixed(2) : 'N/A';
                 const totalUsers = (typeof averageInfo.total_users === 'number') ? averageInfo.total_users : 'N/A';
 
                 document.querySelector("#average-data-display").innerHTML = `
@@ -52,32 +47,47 @@ document.addEventListener("DOMContentLoaded", async function() {
             } else {
                 alert("평균 정보를 가져올 수 없습니다.");
             }
+        } catch (error) {
+            console.error("평균 정보를 로드하는 중 오류 발생:", error);
+        }
+    }
 
-            if (searchInfo) {
-                const totalTasks = searchInfo.total_tasks || 0;
-                const totalDuration = searchInfo.total_duration_minutes || 0;
+    async function searchLogs() {
+        const nickname = document.getElementById('filterNickname').value;
 
-                document.querySelector("#nickname-search-results").innerHTML = `
+        if (!nickname) {
+            alert('닉네임을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await axios.get('http://3.37.165.84:3001/average-info/search', {
+                headers: { "x-access-token": token },
+                params: { nickname }
+            });
+
+            const searchResult = response.data.result || {};
+            if (searchResult) {
+                document.querySelector("#search-results").innerHTML = `
                     <div class="info-box">
-                        <p><strong>Total Tasks:</strong> ${totalTasks}</p>
-                    </div>
-                    <div class="info-box">
-                        <p><strong>Total Duration (minutes):</strong> ${totalDuration}</p>
+                        <p><strong>Total Tasks:</strong> ${searchResult.total_tasks}</p>
+                        <p><strong>Total Task Duration (minutes):</strong> ${searchResult.total_duration_minutes}</p>
                     </div>
                 `;
             } else {
                 alert("검색 결과를 가져올 수 없습니다.");
             }
         } catch (error) {
-            console.error("정보를 로드하는 중 오류 발생:", error);
+            console.error("로그 검색 중 오류 발생:", error);
         }
     }
 
     function resetFilters() {
         document.getElementById('filterGroup').value = '';
-        document.getElementById('filterSite').selectedIndex = -1; // reset multiple select
+        document.getElementById('filterSite').value = '';
         document.getElementById('filterLevel').value = '';
         document.getElementById('filterNickname').value = '';
+        document.querySelector("#search-results").innerHTML = '';
         loadAverageInfo();
     }
 
