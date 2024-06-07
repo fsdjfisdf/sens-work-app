@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Eng'r Information</title>
+    <title>Average Information</title>
     <link rel="stylesheet" href="./css/info.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -23,7 +23,6 @@
                                 <a href="./info.html" class="dropdown-item">Eng'r Information</a>
                                 <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
                                 <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
-                                <a href="./averageInfo.html" class="dropdown-item">Average Information</a>
                                 <button id="sign-out" class="dropdown-item">Logout</button>
                             </div>
                         </div>
@@ -34,24 +33,23 @@
     </nav>
 
     <main>
-        <section id="info">
+        <section id="average-info">
             <div class="inner">
-                <h2>Eng'r Information</h2>
-                <div id="data-display">
-                    <!-- 정보 조회 결과가 여기에 표시됩니다. -->
+                <h2>Average Information</h2>
+                <div id="average-data-display">
+                    <!-- 평균 정보 조회 결과가 여기에 표시됩니다. -->
                 </div>
-                <button id="averageInfoButton">전체 평균</button>
                 <h3>Main CAPA</h3>
-                <canvas id="mainCapaChart" width="400" height="200"></canvas>
+                <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
                 <h3>Multi CAPA</h3>
-                <canvas id="multiCapaChart" width="400" height="200"></canvas>
+                <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
                 <h3>Total CAPA</h3>
-                <canvas id="totalCapaChart" width="400" height="200"></canvas>
+                <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
             </div>
         </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="./js/info.js"></script>
+    <script src="./js/averageInfo.js"></script>
 </body>
 </html>

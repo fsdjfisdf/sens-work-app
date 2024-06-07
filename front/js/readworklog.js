@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const minutes = parseInt(parts[1], 10);
 
         if (hours < 0 || minutes < 0) {
-            return '<span class="error-text" style="color: red;">수정 필요</span>';
+            return '<span class="error-text">수정 필요</span>';
         }
 
         let formattedDuration = '';
@@ -68,6 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>Worker:</strong> ${log.task_man}</p>
                 <p><strong>Group:</strong> ${log.group}</p>
                 <p><strong>Site:</strong> ${log.site}</p>
+                <p><strong>EQ Name:</strong> ${log.equipment_name}</p>
+                <p><strong>Transfer Item:</strong> ${log.transfer_item}</p>
                 <p><strong>Task Duration:</strong> ${formatDuration(log.task_duration)}</p>
                 <div class="actions">
                     ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">X</button>` : ''}
@@ -129,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logModal.style.display = 'block';
     }
 
+    // 팝업 창 닫기 기능 추가
     document.querySelector('.close').addEventListener('click', () => {
         document.getElementById('logModal').style.display = 'none';
     });

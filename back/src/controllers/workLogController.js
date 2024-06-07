@@ -35,15 +35,3 @@ exports.deleteWorkLog = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
-exports.updateWorkLog = async (req, res) => {
-    const { id } = req.params;
-    const { task_name, task_date, equipment_name, transfer_item } = req.body;
-
-    try {
-        await workLogDao.updateWorkLog(id, task_name, task_date, equipment_name, transfer_item);
-        res.status(200).json({ message: "Work log updated" });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-};

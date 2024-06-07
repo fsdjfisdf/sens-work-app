@@ -29,10 +29,9 @@
             </div>
         </div>
     </nav>
-    
+
     <main>
         <section id="worklog">
-            
             <div class="inner">
                 <h2>Load Worklog</h2><br>
                 <div class="search-container">
@@ -61,38 +60,14 @@
                 </div>
                 <p id="worklog-count">Total Worklogs: 0</p>
                 <div id="worklog-cards" class="worklog-cards"></div>
-                
             </div>
         </section>
     </main>
-
-    
 
     <div id="logModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="logDetails"></div>
-        </div>
-    </div>
-
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="edit-close">&times;</span>
-            <form id="editForm">
-                <label for="edit_task_name">Title</label>
-                <input type="text" id="edit_task_name" name="task_name" required>
-                
-                <label for="edit_task_date">Date</label>
-                <input type="date" id="edit_task_date" name="task_date" required>
-                
-                <label for="edit_equipment_name">EQ Name</label>
-                <input type="text" id="edit_equipment_name" name="equipment_name" required>
-                
-                <label for="edit_transfer_item">Transfer Item</label>
-                <input type="text" id="edit_transfer_item" name="transfer_item" required>
-                
-                <button type="submit">Save</button>
-            </form>
         </div>
     </div>
 

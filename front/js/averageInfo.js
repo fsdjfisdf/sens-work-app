@@ -7,55 +7,41 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    loadUserInfo();
+    loadAverageInfo();
 
-    function loadUserInfo() {
-        axios.get('http://3.37.165.84:3001/user-info', {
+    function loadAverageInfo() {
+        axios.get('http://3.37.165.84:3001/average-info', {
             headers: { "x-access-token": token }
         }).then(response => {
-            const userInfo = response.data.result;
-            if (userInfo) {
-                const formattedHireDate = formatDate(userInfo.hire_date);
-
-                document.querySelector("#data-display").innerHTML = `
-                    <p>Name: ${userInfo.nickname}</p>
-                    <p>Group: ${userInfo.group}</p>
-                    <p>Site: ${userInfo.site}</p>
-                    <p>Level: ${userInfo.level}</p>
-                    <p>Hire date: ${formattedHireDate}</p>
+            const averageInfo = response.data.result;
+            if (averageInfo) {
+                document.querySelector("#average-data-display").innerHTML = `
+                    <p>Average Level: ${averageInfo.avg_level.toFixed(2)}</p>
+                    <p>Average Main CAPA: ${averageInfo.avg_main_capa.toFixed(2)}%</p>
+                    <p>Average Multi CAPA: ${averageInfo.avg_multi_capa.toFixed(2)}%</p>
+                    <p>Average Total CAPA: ${averageInfo.avg_total_capa.toFixed(2)}%</p>
                 `;
-                createCapaCharts(userInfo);
-                document.querySelector(".nickname").textContent = userInfo.nickname;
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
+                createAverageCapaCharts(averageInfo);
             } else {
-                alert("유저 정보를 가져올 수 없습니다.");
+                alert("평균 정보를 가져올 수 없습니다.");
             }
         }).catch(error => {
-            console.error("사용자 정보를 로드하는 중 오류 발생:", error);
+            console.error("평균 정보를 로드하는 중 오류 발생:", error);
         });
     }
 
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    function createCapaCharts(userInfo) {
-        const mainCtx = document.getElementById('mainCapaChart').getContext('2d');
-        const multiCtx = document.getElementById('multiCapaChart').getContext('2d');
-        const totalCtx = document.getElementById('totalCapaChart').getContext('2d');
+    function createAverageCapaCharts(averageInfo) {
+        const mainCtx = document.getElementById('averageMainCapaChart').getContext('2d');
+        const multiCtx = document.getElementById('averageMultiCapaChart').getContext('2d');
+        const totalCtx = document.getElementById('averageTotalCapaChart').getContext('2d');
 
         new Chart(mainCtx, {
             type: 'bar',
             data: {
-                labels: ['Main Set Up CAPA', 'Main Maint CAPA', 'Main CAPA'],
+                labels: ['Average Main Set Up CAPA', 'Average Main Maint CAPA', 'Average Main CAPA'],
                 datasets: [{
-                    label: 'Main CAPA',
-                    data: [userInfo.main_set_up_capa, userInfo.main_maint_capa, userInfo.main_capa],
+                    label: 'Average Main CAPA',
+                    data: [averageInfo.avg_main_capa, averageInfo.avg_main_capa, averageInfo.avg_main_capa],
                     backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderColor: ['#ff6384', '#36a2eb', '#cc65fe'],
                     borderWidth: 1
@@ -87,10 +73,10 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(multiCtx, {
             type: 'bar',
             data: {
-                labels: ['Multi Set Up CAPA', 'Multi Maint CAPA', 'Multi CAPA'],
+                labels: ['Average Multi Set Up CAPA', 'Average Multi Maint CAPA', 'Average Multi CAPA'],
                 datasets: [{
-                    label: 'Multi CAPA',
-                    data: [userInfo.multi_set_up_capa, userInfo.multi_maint_capa, userInfo.multi_capa],
+                    label: 'Average Multi CAPA',
+                    data: [averageInfo.avg_multi_capa, averageInfo.avg_multi_capa, averageInfo.avg_multi_capa],
                     backgroundColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderColor: ['#ff9f40', '#4bc0c0', '#9966ff'],
                     borderWidth: 1
@@ -122,10 +108,10 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(totalCtx, {
             type: 'bar',
             data: {
-                labels: ['Total CAPA'],
+                labels: ['Average Total CAPA'],
                 datasets: [{
-                    label: 'Total CAPA',
-                    data: [userInfo.total_capa],
+                    label: 'Average Total CAPA',
+                    data: [averageInfo.avg_total_capa],
                     backgroundColor: ['#ffcd56'],
                     borderColor: ['#ffcd56'],
                     borderWidth: 1
@@ -154,10 +140,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
-
-    document.getElementById("averageInfoButton").addEventListener("click", function() {
-        window.location.href = "./averageInfo.html";
-    });
 
     const signOutButton = document.querySelector("#sign-out");
 
