@@ -226,51 +226,35 @@ exports.example = async function (req, res) {
 };
 
 
-exports.getAverageInfo = async function (connection, group, site, level, nickname) {
-  let filterQuery = 'WHERE status = "A"';
-  const params = [];
+exports.getAverageInfo = async function (req, res) {
+  const { group, site, level, nickname } = req.query;
 
-  if (group) {
-      filterQuery += ' AND `group` = ?';
-      params.push(group);
+  try {
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const averageInfo = await indexDao.getAverageInfo(connection, group, site, level, nickname);
+          return res.status(200).json({
+              isSuccess: true,
+              code: 200,
+              message: "평균 정보 조회 성공",
+              result: averageInfo,
+          });
+      } catch (err) {
+          logger.error(`getAverageInfo Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "서버 오류입니다.",
+          });
+      } finally {
+          connection.release();
+      }
+  } catch (err) {
+      logger.error(`getAverageInfo DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "서버 오류입니다.",
+      });
   }
-
-  if (site) {
-      filterQuery += ' AND site = ?';
-      params.push(site);
-  }
-
-  if (level) {
-      filterQuery += ' AND level = ?';
-      params.push(level);
-  }
-
-  if (nickname) {
-      filterQuery += ' AND nickname LIKE ?';
-      params.push(`%${nickname}%`);
-  }
-
-  const Query = `
-      SELECT 
-          AVG(level) as avg_level,
-          COUNT(*) as total_users,
-          AVG(main_set_up_capa) as avg_main_set_up_capa,
-          AVG(main_maint_capa) as avg_main_maint_capa,
-          AVG(main_capa) as avg_main_capa,
-          AVG(multi_set_up_capa) as avg_multi_set_up_capa,
-          AVG(multi_maint_capa) as avg_multi_maint_capa,
-          AVG(multi_capa) as avg_multi_capa,
-          AVG(total_capa) as avg_total_capa,
-          SUM(CASE WHEN level = 0 THEN 1 ELSE 0 END) as level_0,
-          SUM(CASE WHEN level = 1 THEN 1 ELSE 0 END) as level_1,
-          SUM(CASE WHEN level = 2 THEN 1 ELSE 0 END) as level_2,
-          SUM(CASE WHEN level = 3 THEN 1 ELSE 0 END) as level_3,
-          SUM(CASE WHEN level = 4 THEN 1 ELSE 0 END) as level_4
-      FROM Users
-      ${filterQuery};
-  `;
-
-  const [rows] = await connection.query(Query, params);
-  return rows[0];
 };
-
