@@ -195,43 +195,39 @@ exports.getUserInfo = async function (req, res) {
     }
 };
 
-// 회원 정보 검색
-exports.searchUsers = async function (req, res) {
-    const { group, site, level, nickname } = req.query;
+exports.searchUsers = async (req, res) => {
+  const { group, site, level, nickname } = req.query;
 
-    try {
-        const connection = await pool.getConnection(async (conn) => conn);
-        try {
-            const searchResults = await indexDao.searchUsers(connection, group, site, level, nickname);
-            const averageStats = await indexDao.calculateAverageStats(connection, group, site, level, nickname);
+  try {
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const users = await indexDao.searchUsers(connection, group, site, level, nickname);
+          const averageStats = await indexDao.calculateAverageStats(connection, group, site, level, nickname);
 
-            return res.status(200).json({
-                isSuccess: true,
-                code: 200,
-                message: "회원 정보 검색 성공",
-                result: {
-                    users: searchResults,
-                    averageStats: averageStats,
-                },
-            });
-        } catch (err) {
-            logger.error(`searchUsers Query error\n: ${JSON.stringify(err)}`);
-            return res.status(500).json({
-                isSuccess: false,
-                code: 500,
-                message: "회원 정보 검색 중 오류가 발생했습니다.",
-            });
-        } finally {
-            connection.release();
-        }
-    } catch (err) {
-        logger.error(`searchUsers DB Connection error\n: ${JSON.stringify(err)}`);
-        return res.status(500).json({
-            isSuccess: false,
-            code: 500,
-            message: "회원 정보 검색 중 서버 오류가 발생했습니다.",
-        });
-    }
+          return res.send({
+              result: { users, averageStats },
+              isSuccess: true,
+              code: 200,
+              message: "회원 정보 검색 성공",
+          });
+      } catch (err) {
+          logger.error(`searchUsers Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "회원 정보 검색 중 서버 오류가 발생했습니다.",
+          });
+      } finally {
+          connection.release();
+      }
+  } catch (err) {
+      logger.error(`searchUsers DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "회원 정보 검색 중 서버 오류가 발생했습니다.",
+      });
+  }
 };
 
 // 예시 코드

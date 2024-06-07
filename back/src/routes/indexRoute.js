@@ -17,6 +17,6 @@ module.exports = function (app) {
     // 회원 정보 조회
     app.get("/user-info", jwtMiddleware, index.getUserInfo);
 
-    // 회원 정보 검색
-    app.get("/search-users", jwtMiddleware, index.searchUsers); // 새로운 라우트 추가
+    // 회원 검색
+    app.get("/search-users", jwtMiddleware, index.searchUsers);
 };
