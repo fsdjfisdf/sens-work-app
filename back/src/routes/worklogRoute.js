@@ -11,5 +11,8 @@ router.post('/work-logs', workLogController.addWorkLog);
 // 작업 이력 삭제
 router.delete('/work-logs/:id', workLogController.deleteWorkLog);
 
+// 새로운 엑셀 추출 엔드포인트
+router.get('/export-logs', workLogController.exportWorkLogs);
+
 
 module.exports = router;

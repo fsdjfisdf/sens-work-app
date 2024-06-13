@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 목록</title>
+    <title>Read Work log</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/readworklog.css" />
 </head>
@@ -33,7 +33,6 @@
     <main>
         <section id="worklog">
             <div class="inner">
-                <h2>Load Worklog</h2><br>
                 <div class="search-container">
                     <input type="date" id="searchStartDate">
                     <span>to</span>
@@ -57,6 +56,7 @@
                     <input type="text" id="searchWorker" placeholder="Search by Worker">
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
+                    <button id="exportButton">Export to Excel</button>
                 </div>
                 <p id="worklog-count">Total Worklogs: 0</p>
                 <div id="worklog-cards" class="worklog-cards"></div>
@@ -73,5 +73,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/readworklog.js"></script>
+    <script src="./js/exportToExcel.js"></script>
 </body>
 </html>
