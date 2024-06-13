@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     exportButton.addEventListener('click', async () => {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/export-logs', {
+            const response = await axios.get('http://3.37.165.84:3001/api/export-logs', {
                 responseType: 'arraybuffer'
             });
 
