@@ -1,7 +1,5 @@
 const workLogDao = require('../dao/workLogDao');
-const xlsx = require('xlsx');
-const fs = require('fs');
-const path = require('path');
+
 
 exports.getWorkLogs = async (req, res) => {
     try {
@@ -39,20 +37,32 @@ exports.deleteWorkLog = async (req, res) => {
     }
 };
 
+const xlsx = require('xlsx');
+const fs = require('fs');
+const path = require('path');
 
 exports.exportWorkLogs = async (req, res) => {
     try {
         const logs = await workLogDao.getWorkLogs();
 
+        // Work logs 데이터를 시트에 추가
         const worksheet = xlsx.utils.json_to_sheet(logs);
         const workbook = xlsx.utils.book_new();
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Work Logs');
 
-        const buffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+        // 파일을 임시 디렉토리에 저장
+        const filePath = path.join(__dirname, '../temp', 'work_logs.xlsx');
+        xlsx.writeFile(workbook, filePath);
 
-        res.setHeader('Content-Disposition', 'attachment; filename="work_logs.xlsx"');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.send(buffer);
+        // 파일을 클라이언트에 전송
+        res.download(filePath, 'work_logs.xlsx', err => {
+            if (err) {
+                console.error('Error downloading the file:', err);
+            }
+
+            // 다운로드 후 파일 삭제
+            fs.unlinkSync(filePath);
+        });
     } catch (err) {
         console.error('Error exporting work logs:', err);
         res.status(500).send('Error exporting work logs');

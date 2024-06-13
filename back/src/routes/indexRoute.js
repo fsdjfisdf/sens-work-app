@@ -1,7 +1,6 @@
 module.exports = function (app) {
     const index = require("../controllers/indexController");
     const jwtMiddleware = require("../../config/jwtMiddleware");
-    const worklogRoutes = require('./worklogRoute');
 
     // 회원가입
     app.post("/sign-up", index.createUsers);
@@ -17,7 +16,4 @@ module.exports = function (app) {
 
     // 평균 정보 조회
     app.get("/average-info", jwtMiddleware, index.getAverageInfo);
-
-    // 작업 로그 라우트 연결
-    app.use('/api', worklogRoutes); // /api 경로에 worklogRoutes 연결
 };
