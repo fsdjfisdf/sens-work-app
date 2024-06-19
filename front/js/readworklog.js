@@ -1,6 +1,17 @@
 document.addEventListener('DOMContentLoaded', async () => {
     let logs = [];
-    let currentUserNickname = null; // 현재 로그인한 사용자의 nickname을 저장할 변수
+    let currentUserNickname = null; // 현재 로그인한 사용자의 닉네임을 저장할 변수
+
+    // 사용자 로그인 상태를 확인하는 함수
+    function checkLogin() {
+        const token = localStorage.getItem('x-access-token');
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
+            return false;
+        }
+        return true;
+    }
 
     // 현재 로그인한 사용자 정보를 받아오는 함수
     async function getCurrentUser() {
@@ -10,9 +21,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'x-access-token': localStorage.getItem('x-access-token')
                 }
             });
-            currentUserNickname = response.data.result.nickname; // 현재 사용자의 nickname 저장
+            currentUserNickname = response.data.result.nickname; // 현재 사용자의 닉네임 저장
         } catch (error) {
-            console.error('Error getting current user info:', error);
+            console.error('현재 사용자 정보를 가져오는 중 오류 발생:', error);
         }
     }
 
@@ -23,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             displayLogs(logs);
         } catch (error) {
-            console.error('Error loading work logs:', error);
+            console.error('작업 로그를 불러오는 중 오류 발생:', error);
         }
     }
 
@@ -63,23 +74,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.className = 'worklog-card';
             card.dataset.id = log.id;
             card.innerHTML = `
-                <p><strong>Title:</strong> ${log.task_name}</p>
-                <p><strong>Date:</strong> ${formatDate(log.task_date)}</p>
-                <p><strong>Worker:</strong> ${log.task_man}</p>
-                <p><strong>Group:</strong> ${log.group}</p>
-                <p><strong>Site:</strong> ${log.site}</p>
-                <p><strong>EQ Name:</strong> ${log.equipment_name}</p>
-                <p><strong>Transfer Item:</strong> ${log.transfer_item}</p>
-                <p><strong>Task Duration:</strong> ${formatDuration(log.task_duration)}</p>
+                <p><strong>제목:</strong> ${log.task_name}</p>
+                <p><strong>날짜:</strong> ${formatDate(log.task_date)}</p>
+                <p><strong>작업자:</strong> ${log.task_man}</p>
+                <p><strong>그룹:</strong> ${log.group}</p>
+                <p><strong>현장:</strong> ${log.site}</p>
+                <p><strong>EQ 이름:</strong> ${log.equipment_name}</p>
+                <p><strong>전달 항목:</strong> ${log.transfer_item}</p>
+                <p><strong>작업 시간:</strong> ${formatDuration(log.task_duration)}</p>
                 <div class="actions">
-                    ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">X</button>` : ''}
+                    ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">삭제</button>` : ''}
                 </div>
             `;
             worklogCards.appendChild(card);
         });
 
         // 총 개수 업데이트
-        document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
+        document.getElementById('worklog-count').textContent = `총 작업 로그: ${logs.length}`;
 
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
@@ -107,26 +118,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         const logModal = document.getElementById('logModal');
         const logDetails = document.getElementById('logDetails');
         logDetails.innerHTML = `
-            <p><strong>Date :</strong> ${formatDate(log.task_date)}</p>
-            <p><strong>Group :</strong> ${log.group}</p>
-            <p><strong>Site :</strong> ${log.site}</p>
-            <p><strong>Line :</strong> ${log.line}</p>
-            <p><strong>Warranty :</strong> ${log.warranty}</p>
-            <p><strong>EQ Type :</strong> ${log.equipment_type}</p>
-            <p><strong>EQ Name :</strong> ${log.equipment_name}</p>
-            <p><strong>Title :</strong> ${log.task_name}</p>
-            <p><strong>Status :</strong> ${log.status}</p>
-            <p><strong>Action :</strong> ${log.task_description}</p>
-            <p><strong>Cause :</strong> ${log.task_cause}</p>
-            <p><strong>Result :</strong> ${log.task_result}</p>
-            <p><strong>Worker :</strong> ${log.task_man}</p>
+            <p><strong>날짜 :</strong> ${formatDate(log.task_date)}</p>
+            <p><strong>그룹 :</strong> ${log.group}</p>
+            <p><strong>현장 :</strong> ${log.site}</p>
+            <p><strong>라인 :</strong> ${log.line}</p>
+            <p><strong>보증 :</strong> ${log.warranty}</p>
+            <p><strong>EQ 타입 :</strong> ${log.equipment_type}</p>
+            <p><strong>EQ 이름 :</strong> ${log.equipment_name}</p>
+            <p><strong>제목 :</strong> ${log.task_name}</p>
+            <p><strong>상태 :</strong> ${log.status}</p>
+            <p><strong>작업 설명 :</strong> ${log.task_description}</p>
+            <p><strong>원인 :</strong> ${log.task_cause}</p>
+            <p><strong>결과 :</strong> ${log.task_result}</p>
+            <p><strong>작업자 :</strong> ${log.task_man}</p>
             <p><strong>SOP :</strong> ${log.SOP}</p>
-            <p><strong>TS Guide :</strong> ${log.tsguide}</p>
-            <p><strong>Work Type :</strong> ${log.work_type}</p>
-            <p><strong>Setup Item :</strong> ${log.setup_item}</p>
-            <p><strong>Maint Item :</strong> ${log.maint_item}</p>
-            <p><strong>Transfer Item :</strong> ${log.transfer_item}</p>
-            <p><strong>Task Duration :</strong> ${formatDuration(log.task_duration)}</p>
+            <p><strong>TS 가이드 :</strong> ${log.tsguide}</p>
+            <p><strong>작업 타입 :</strong> ${log.work_type}</p>
+            <p><strong>설치 항목 :</strong> ${log.setup_item}</p>
+            <p><strong>유지 항목 :</strong> ${log.maint_item}</p>
+            <p><strong>전달 항목 :</strong> ${log.transfer_item}</p>
+            <p><strong>작업 시간 :</strong> ${formatDuration(log.task_duration)}</p>
         `;
         logModal.style.display = 'block';
     }
@@ -146,7 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
         } catch (error) {
-            console.error('Error deleting log:', error);
+            console.error('작업 로그 삭제 중 오류 발생:', error);
         }
     }
 
@@ -186,7 +197,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayLogs(logs);
     });
 
-    loadWorkLogs();
+    // 로그인 상태를 확인하고, 로그인되어 있지 않으면 로그인 페이지로 리디렉션
+    if (checkLogin()) {
+        loadWorkLogs();
+    }
 
     const signOutButton = document.querySelector("#sign-out");
 

@@ -7,6 +7,8 @@ const path = require("path");
 const { pool } = require("./database");
 const { logger } = require("./winston");
 
+const supraNMaintRoute = require("./src/routes/supra_n_maint_route");
+
 module.exports = function () {
   const app = express();
 
@@ -24,6 +26,9 @@ module.exports = function () {
 
   /* 직접 구현해야 하는 모듈 */
   require("../src/routes/indexRoute")(app);
+
+  // SUPRA N Maint Routes 추가
+  app.use("/api", supraNMaintRoute);
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
