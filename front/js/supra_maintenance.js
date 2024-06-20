@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
   
+      // 이름 필드를 추가
+      data.name = formData.get('name');
+  
       try {
         const response = await axios.post('http://3.37.165.84:3001/supra-maintenance', data, {
           headers: {

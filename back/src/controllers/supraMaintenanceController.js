@@ -1,6 +1,6 @@
 const supraMaintenanceDao = require('../dao/supraMaintenanceDao');
 const jwt = require('jsonwebtoken');
-const secret = require('../../config/secret'); // secret 파일에서 jwt secret 키를 가져옴
+const secret = require('../../config/secret');
 
 exports.saveChecklist = async (req, res) => {
   const checklistData = req.body;
@@ -24,7 +24,14 @@ exports.saveChecklist = async (req, res) => {
     // 사용자 nickname을 checklistData에 추가
     checklistData.name = user.nickname;
 
-    await supraMaintenanceDao.saveChecklist(checklistData);
+    // 체크리스트 저장 또는 업데이트
+    const existingEntry = await supraMaintenanceDao.findByName(checklistData.name);
+    if (existingEntry) {
+      await supraMaintenanceDao.updateChecklist(checklistData);
+    } else {
+      await supraMaintenanceDao.insertChecklist(checklistData);
+    }
+
     res.status(201).json({ message: 'Checklist saved successfully' });
   } catch (err) {
     console.error('Error saving checklist:', err);
