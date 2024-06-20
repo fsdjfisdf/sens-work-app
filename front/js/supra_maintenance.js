@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
   
       try {
-        const response = await axios.post('http://your-server-url/supra-maintenance', data, {
+        const response = await axios.post('http://3.37.165.84:3001/supra-maintenance', data, {
           headers: {
             'Content-Type': 'application/json'
           }

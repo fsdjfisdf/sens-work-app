@@ -4,7 +4,7 @@ const secret = require('../../config/secret'); // secret 파일에서 jwt secret
 
 exports.saveChecklist = async (req, res) => {
   const checklistData = req.body;
-  
+
   // JWT 토큰에서 사용자 정보 추출
   const token = req.headers['x-access-token'];
   if (!token) {

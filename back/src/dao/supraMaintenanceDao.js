@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { pool } = require('../config/database'); // 올바른 경로로 수정
 
 exports.getUserById = async (userId) => {
   const connection = await pool.getConnection(async conn => conn);
@@ -30,7 +30,7 @@ exports.saveChecklist = async (checklistData) => {
     `;
 
     const values = [
-      checklistData.name, checklistData['LP ESCORT'], checklistData['ROBOT ESCORT'], checklistData['EFEM ROBOT TEACHING'],
+      checklistData.name, checklistData['LP_ESCORT'], checklistData['ROBOT_ESCORT'], checklistData['EFEM ROBOT TEACHING'],
       checklistData['EFEM ROBOT REP'], checklistData['EFEM ROBOT CONTROLLER REP'], checklistData['TM ROBOT TEACHING'],
       checklistData['TM ROBOT REP'], checklistData['TM ROBOT CONTROLLER REP'], checklistData['PASSIVE PAD REP'],
       checklistData['PIN CYLINDER'], checklistData['PUSHER CYLINDER'], checklistData['IB FLOW'], checklistData['DRT'],
