@@ -21,6 +21,17 @@ exports.addWorkLog = async (req, res) => {
             task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
             group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
         );
+
+        const workers = task_man.split(', ').map(w => {
+            const [name, role] = w.match(/(.*)\((main|support)\)/).slice(1);
+            return { name, role };
+        });
+
+        for (const worker of workers) {
+            const incrementValue = worker.role === 'main' ? 1 : 0.25;
+            await workLogDao.updateWorkerTaskCount(worker.name, transferItem, incrementValue);
+        }
+
         res.status(201).json({ message: "Work log added" });
     } catch (err) {
         res.status(500).json({ error: err.message });

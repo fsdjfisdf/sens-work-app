@@ -14,8 +14,7 @@
       <div class="nav-container">
         <h1 class="nav-title"><a href="./index.html">Maintenance System</a></h1>
         <div class="sign-container">
-          <div class="unsigned">
-          </div>
+          <div class="unsigned"></div>
           <div class="signed hidden">
             <div class="dropdown">
               <button class="dropbtn">MENU</button>
@@ -35,258 +34,308 @@
       <div class="inner">
         <form id="checklistForm">
           <div id="checklist-container">
-            <!-- 체크리스트 항목들 -->
-            <div>
-              <label>LP ESCORT</label>
-              <input type="checkbox" name="LP_ESCORT" value="O">
+            <div class="category">
+              <h2>Escort</h2>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>LP Escort</label>
+                <input type="checkbox" name="LP_ESCORT" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>Robot Escort</label>
+                <input type="checkbox" name="ROBOT_ESCORT" value="O">
+              </div>
             </div>
-            <div>
-              <label>ROBOT ESCORT</label>
-              <input type="checkbox" name="ROBOT_ESCORT" value="O">
+            <div class="category">
+              <h2>EFEM Robot</h2>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>EFEM ROBOT TEACHING</label>
+                <input type="checkbox" name="EFEM_ROBOT_TEACHING" value="O">
+              </div>
+              <div class="item" title="REP 후 Data Backup">
+                <label>EFEM Robot REP</label>
+                <input type="checkbox" name="EFEM_ROBOT_REP" value="O">
+              </div>
+              <div class="item" title="REP 후 Data Backup">
+                <label>EFEM Robot Controller REP</label>
+                <input type="checkbox" name="EFEM_ROBOT_CONTROLLER_REP" value="O">
+              </div>
             </div>
-            <div>
-              <label>EFEM ROBOT TEACHING</label>
-              <input type="checkbox" name="EFEM_ROBOT_TEACHING" value="O">
+            <div class="category">
+              <h2>TM Robot</h2>
+              <div class="item" title="작업 후 설비정상화">
+                <label>TM ROBOT TEACHING</label>
+                <input type="checkbox" name="TM_ROBOT_TEACHING" value="O">
+              </div>
+              <div class="item" title="REP 후 Data Backup">
+                <label>TM Robot REP</label>
+                <input type="checkbox" name="TM_ROBOT_REP" value="O">
+              </div>
+              <div class="item" title="REP 후 Data Backup">
+                <label>TM Robot Controller REP</label>
+                <input type="checkbox" name="TM_ROBOT_CONTROLLER_REP" value="O">
+              </div>
+              <div class="item" title="REP 후 Teaching">
+                <label>Passive Pad REP</label>
+                <input type="checkbox" name="PASSIVE_PAD_REP" value="O">
+              </div>
             </div>
-            <div>
-              <label>EFEM ROBOT REP</label>
-              <input type="checkbox" name="EFEM_ROBOT_REP" value="O">
+            <div class="category">
+              <h2>BM Module</h2>
+              <div class="item" title="Sensor, Speed Adjust">
+                <label>Pin Cylinder</label>
+                <input type="checkbox" name="PIN_CYLINDER" value="O">
+              </div>
+              <div class="item" title="Sensor, Speed Adjust">
+                <label>Pusher Cylinder</label>
+                <input type="checkbox" name="PUSHER_CYLINDER" value="O">
+              </div>
+              <div class="item" title="Pendant Teaching">
+                <label>IB Flow</label>
+                <input type="checkbox" name="IB_FLOW" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>DRT</label>
+                <input type="checkbox" name="DRT" value="O">
+              </div>
             </div>
-            <div>
-              <label>EFEM ROBOT CONTROLLER REP</label>
-              <input type="checkbox" name="EFEM_ROBOT_CONTROLLER_REP" value="O">
+            <div class="category">
+              <h2>FFU (EFEM, TM)</h2>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>FFU Controller</label>
+                <input type="checkbox" name="FFU_CONTROLLER" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Fan</label>
+                <input type="checkbox" name="FAN" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Motor Driver</label>
+                <input type="checkbox" name="MOTOR_DRIVER" value="O">
+              </div>
             </div>
-            <div>
-              <label>TM ROBOT TEACHING</label>
-              <input type="checkbox" name="TM_ROBOT_TEACHING" value="O">
+            <div class="category">
+              <h2>FCIP</h2>
+              <div class="item" title="R1, R3, R5 중 하나라도 메인 가능시, O">
+                <label>FCIP</label>
+                <input type="checkbox" name="FCIP" value="O">
+              </div>
+              <div class="item" title="REP 후 Power Cal 및 설비 정상화">
+                <label>R1</label>
+                <input type="checkbox" name="R1" value="O">
+              </div>
+              <div class="item" title="REP 후 Power Cal 및 설비 정상화">
+                <label>R3</label>
+                <input type="checkbox" name="R3" value="O">
+              </div>
+              <div class="item" title="REP 후 Power Cal 및 설비 정상화">
+                <label>R5</label>
+                <input type="checkbox" name="R5" value="O">
+              </div>
+              <div class="item" title="REP 후 Power Cal 및 설비 정상화">
+                <label>R3 To R5</label>
+                <input type="checkbox" name="R3_TO_R5" value="O">
+              </div>
             </div>
-            <div>
-              <label>TM ROBOT REP</label>
-              <input type="checkbox" name="TM_ROBOT_REP" value="O">
+            <div class="category">
+              <h2>Microwave</h2>
+              <div class="item" title="Head, Matcher, PPD REP">
+                <label>Microwave</label>
+                <input type="checkbox" name="MICROWAVE" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Applicator</label>
+                <input type="checkbox" name="APPLICATOR" value="O">
+              </div>
+              <div class="item" title="REP 후 D-net Cal">
+                <label>Generator</label>
+                <input type="checkbox" name="GENERATOR" value="O">
+              </div>
             </div>
-            <div>
-              <label>TM ROBOT CONTROLLER REP</label>
-              <input type="checkbox" name="TM_ROBOT_CONTROLLER_REP" value="O">
+            <div class="category">
+              <h2>Chuck</h2>
+              <div class="item" title="REP 후 미세 Teaching">
+                <label>Chuck</label>
+                <input type="checkbox" name="CHUCK" value="O">
+              </div>
             </div>
-            <div>
-              <label>PASSIVE PAD REP</label>
-              <input type="checkbox" name="PASSIVE_PAD_REP" value="O">
+            <div class="category">
+              <h2>Process Kit</h2>
+              <div class="item" title="Baffle, Focus REP">
+                <label>Process Kit</label>
+                <input type="checkbox" name="PROCESS_KIT" value="O">
+              </div>
             </div>
-            <div>
-              <label>PIN CYLINDER</label>
-              <input type="checkbox" name="PIN_CYLINDER" value="O">
+            <div class="category">
+              <h2>Leak</h2>
+              <div class="item" title="Leak Point Confirm">
+                <label>Helium Detector</label>
+                <input type="checkbox" name="HELIUM_DETECTOR" value="O">
+              </div>
             </div>
-            <div>
-              <label>PUSHER CYLINDER</label>
-              <input type="checkbox" name="PUSHER_CYLINDER" value="O">
+            <div class="category">
+              <h2>Pin</h2>
+              <div class="item" title="REP 후 Teaching">
+                <label>Hook Lift Pin</label>
+                <input type="checkbox" name="HOOK_LIFT_PIN" value="O">
+              </div>
+              <div class="item" title="REP 후 Teaching">
+                <label>Bellows</label>
+                <input type="checkbox" name="BELLOWS" value="O">
+              </div>
+              <div class="item" title="REP 후 Teaching">
+                <label>Pin Sensor</label>
+                <input type="checkbox" name="PIN_SENSOR" value="O">
+              </div>
+              <div class="item" title="REP 후 Teaching">
+                <label>LM Guide</label>
+                <input type="checkbox" name="LM_GUIDE" value="O">
+              </div>
+              <div class="item" title="REP 후 Teaching">
+                <label>Pin Motor Controller</label>
+                <input type="checkbox" name="PIN_MOTOR_CONTROLLER" value="O">
+              </div>
             </div>
-            <div>
-              <label>IB FLOW</label>
-              <input type="checkbox" name="IB_FLOW" value="O">
+            <div class="category">
+              <h2>EPD</h2>
+              <div class="item" title="REP 후 Set, Gain 값 Adjust">
+                <label>Single</label>
+                <input type="checkbox" name="SINGLE" value="O">
+              </div>
+              <div class="item" title="REP 후 Set, Gain 값 Adjust">
+                <label>Dual</label>
+                <input type="checkbox" name="DUAL" value="O">
+              </div>
             </div>
-            <div>
-              <label>DRT</label>
-              <input type="checkbox" name="DRT" value="O">
+            <div class="category">
+              <h2>Board</h2>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Gas Box Board</label>
+                <input type="checkbox" name="GAS_BOX_BOARD" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Temp Controller Board</label>
+                <input type="checkbox" name="TEMP_CONTROLLER_BOARD" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Power Distribution Board</label>
+                <input type="checkbox" name="POWER_DISTRIBUTION_BOARD" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>DC Power Supply</label>
+                <input type="checkbox" name="DC_POWER_SUPPLY" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>BM Sensor</label>
+                <input type="checkbox" name="BM_SENSOR" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>PIO Sensor</label>
+                <input type="checkbox" name="PIO_SENSOR" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Safety Module</label>
+                <input type="checkbox" name="SAFETY_MODULE" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>D-NET</label>
+                <input type="checkbox" name="D_NET" value="O">
+              </div>
             </div>
-            <div>
-              <label>FFU CONTROLLER</label>
-              <input type="checkbox" name="FFU_CONTROLLER" value="O">
+            <div class="category">
+              <h2>IGS Block</h2>
+              <div class="item" title="REP 후 Zero Cal">
+                <label>MFC</label>
+                <input type="checkbox" name="MFC" value="O">
+              </div>
+              <div class="item" title="Manual, Regulator, N.C REP">
+                <label>Valve</label>
+                <input type="checkbox" name="VALVE" value="O">
+              </div>
             </div>
-            <div>
-              <label>FAN</label>
-              <input type="checkbox" name="FAN" value="O">
+            <div class="category">
+              <h2>Valve</h2>
+              <div class="item" title="Ass;y & Solenoid Kit Rep">
+                <label>Solenoid</label>
+                <input type="checkbox" name="SOLENOID" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Fast Vac Valve</label>
+                <input type="checkbox" name="FAST_VAC_VALVE" value="O">
+              </div>
+              <div class="item" title="Pumping Time Adjust">
+                <label>Slow Vac Valve</label>
+                <input type="checkbox" name="SLOW_VAC_VALVE" value="O">
+              </div>
+              <div class="item" title="Blade & Body REP">
+                <label>Slit Door</label>
+                <input type="checkbox" name="SLIT_DOOR" value="O">
+              </div>
+              <div class="item" title="REP 후 Service Auto Learn">
+                <label>APC Valve</label>
+                <input type="checkbox" name="APC_VALVE" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Shutoff Valve</label>
+                <input type="checkbox" name="SHUTOFF_VALVE" value="O">
+              </div>
             </div>
-            <div>
-              <label>MOTOR DRIVER</label>
-              <input type="checkbox" name="MOTOR_DRIVER" value="O">
+            <div class="category">
+              <h2>ETC</h2>
+              <div class="item" title="REP 후 Gain 값 Adjust">
+                <label>Baratron Ass'y</label>
+                <input type="checkbox" name="BARATRON_ASSY" value="O">
+              </div>
+              <div class="item" title="REP 후 Gain 값 Adjust">
+                <label>Pirani Ass'y</label>
+                <input type="checkbox" name="PIRANI_ASSY" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>View Port Quartz</label>
+                <input type="checkbox" name="VIEW_PORT_QUARTZ" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Flow Switch</label>
+                <input type="checkbox" name="FLOW_SWITCH" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Ceramic Plate</label>
+                <input type="checkbox" name="CERAMIC_PLATE" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Monitor</label>
+                <input type="checkbox" name="MONITOR" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Keyboard</label>
+                <input type="checkbox" name="KEYBOARD" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Mouse</label>
+                <input type="checkbox" name="MOUSE" value="O">
+              </div>
             </div>
-            <div>
-              <label>FCIP</label>
-              <input type="checkbox" name="FCIP" value="O">
-            </div>
-            <div>
-              <label>R1</label>
-              <input type="checkbox" name="R1" value="O">
-            </div>
-            <div>
-              <label>R3</label>
-              <input type="checkbox" name="R3" value="O">
-            </div>
-            <div>
-              <label>R5</label>
-              <input type="checkbox" name="R5" value="O">
-            </div>
-            <div>
-              <label>R3 TO R5</label>
-              <input type="checkbox" name="R3_TO_R5" value="O">
-            </div>
-            <div>
-              <label>MICROWAVE</label>
-              <input type="checkbox" name="MICROWAVE" value="O">
-            </div>
-            <div>
-              <label>APPLICATOR</label>
-              <input type="checkbox" name="APPLICATOR" value="O">
-            </div>
-            <div>
-              <label>GENERATOR</label>
-              <input type="checkbox" name="GENERATOR" value="O">
-            </div>
-            <div>
-              <label>CHUCK</label>
-              <input type="checkbox" name="CHUCK" value="O">
-            </div>
-            <div>
-              <label>PROCESS KIT</label>
-              <input type="checkbox" name="PROCESS_KIT" value="O">
-            </div>
-            <div>
-              <label>HELIUM DETECTOR</label>
-              <input type="checkbox" name="HELIUM_DETECTOR" value="O">
-            </div>
-            <div>
-              <label>HOOK LIFT PIN</label>
-              <input type="checkbox" name="HOOK_LIFT_PIN" value="O">
-            </div>
-            <div>
-              <label>BELLOWS</label>
-              <input type="checkbox" name="BELLOWS" value="O">
-            </div>
-            <div>
-              <label>PIN SENSOR</label>
-              <input type="checkbox" name="PIN_SENSOR" value="O">
-            </div>
-            <div>
-              <label>LM GUIDE</label>
-              <input type="checkbox" name="LM_GUIDE" value="O">
-            </div>
-            <div>
-              <label>PIN MOTOR CONTROLLER</label>
-              <input type="checkbox" name="PIN_MOTOR_CONTROLLER" value="O">
-            </div>
-            <div>
-              <label>SINGLE</label>
-              <input type="checkbox" name="SINGLE" value="O">
-            </div>
-            <div>
-              <label>DUAL</label>
-              <input type="checkbox" name="DUAL" value="O">
-            </div>
-            <div>
-              <label>GAS BOX BOARD</label>
-              <input type="checkbox" name="GAS_BOX_BOARD" value="O">
-            </div>
-            <div>
-              <label>TEMP CONTROLLER BOARD</label>
-              <input type="checkbox" name="TEMP_CONTROLLER_BOARD" value="O">
-            </div>
-            <div>
-              <label>POWER DISTRIBUTION BOARD</label>
-              <input type="checkbox" name="POWER_DISTRIBUTION_BOARD" value="O">
-            </div>
-            <div>
-              <label>DC POWER SUPPLY</label>
-              <input type="checkbox" name="DC_POWER_SUPPLY" value="O">
-            </div>
-            <div>
-              <label>BM SENSOR</label>
-              <input type="checkbox" name="BM_SENSOR" value="O">
-            </div>
-            <div>
-              <label>PIO SENSOR</label>
-              <input type="checkbox" name="PIO_SENSOR" value="O">
-            </div>
-            <div>
-              <label>SAFETY MODULE</label>
-              <input type="checkbox" name="SAFETY_MODULE" value="O">
-            </div>
-            <div>
-              <label>D-NET</label>
-              <input type="checkbox" name="D_NET" value="O">
-            </div>
-            <div>
-              <label>MFC</label>
-              <input type="checkbox" name="MFC" value="O">
-            </div>
-            <div>
-              <label>VALVE</label>
-              <input type="checkbox" name="VALVE" value="O">
-            </div>
-            <div>
-              <label>SOLENOID</label>
-              <input type="checkbox" name="SOLENOID" value="O">
-            </div>
-            <div>
-              <label>FAST VAC VALVE</label>
-              <input type="checkbox" name="FAST_VAC_VALVE" value="O">
-            </div>
-            <div>
-              <label>SLOW VAC VALVE</label>
-              <input type="checkbox" name="SLOW_VAC_VALVE" value="O">
-            </div>
-            <div>
-              <label>SLIT DOOR</label>
-              <input type="checkbox" name="SLIT_DOOR" value="O">
-            </div>
-            <div>
-              <label>APC VALVE</label>
-              <input type="checkbox" name="APC_VALVE" value="O">
-            </div>
-            <div>
-              <label>SHUTOFF VALVE</label>
-              <input type="checkbox" name="SHUTOFF_VALVE" value="O">
-            </div>
-            <div>
-              <label>BARATRON ASS'Y</label>
-              <input type="checkbox" name="BARATRON_ASSY" value="O">
-            </div>
-            <div>
-              <label>PIRANI ASS'Y</label>
-              <input type="checkbox" name="PIRANI_ASSY" value="O">
-            </div>
-            <div>
-              <label>VIEW PORT QUARTZ</label>
-              <input type="checkbox" name="VIEW_PORT_QUARTZ" value="O">
-            </div>
-            <div>
-              <label>FLOW SWITCH</label>
-              <input type="checkbox" name="FLOW_SWITCH" value="O">
-            </div>
-            <div>
-              <label>CERAMIC PLATE</label>
-              <input type="checkbox" name="CERAMIC_PLATE" value="O">
-            </div>
-            <div>
-              <label>MONITOR</label>
-              <input type="checkbox" name="MONITOR" value="O">
-            </div>
-            <div>
-              <label>KEYBOARD</label>
-              <input type="checkbox" name="KEYBOARD" value="O">
-            </div>
-            <div>
-              <label>MOUSE</label>
-              <input type="checkbox" name="MOUSE" value="O">
-            </div>
-            <div>
-              <label>CTC</label>
-              <input type="checkbox" name="CTC" value="O">
-            </div>
-            <div>
-              <label>PMC</label>
-              <input type="checkbox" name="PMC" value="O">
-            </div>
-            <div>
-              <label>EDA</label>
-              <input type="checkbox" name="EDA" value="O">
-            </div>
-            <div>
-              <label>EFEM CONTROLLER</label>
-              <input type="checkbox" name="EFEM_CONTROLLER" value="O">
-            </div>
-            <div>
-              <label>S/W PATCH</label>
-              <input type="checkbox" name="SW_PATCH" value="O">
+            <div class="category">
+              <h2>Y24 신규</h2>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>CTC</label>
+                <input type="checkbox" name="CTC" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>PMC</label>
+                <input type="checkbox" name="PMC" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>EDA</label>
+                <input type="checkbox" name="EDA" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>EFEM CONTROLLER</label>
+                <input type="checkbox" name="EFEM_CONTROLLER" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>S/W Patch</label>
+                <input type="checkbox" name="SW_PATCH" value="O">
+              </div>
             </div>
           </div>
           <button type="submit">SAVE</button>
