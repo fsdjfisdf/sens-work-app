@@ -1,301 +1,92 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const token = localStorage.getItem("x-access-token");
+
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            window.location.replace("./signin.html");
+        }
+    });
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SUPRA Maintenance Checklist</title>
-  <link rel="stylesheet" href="./css/supra_maintenance.css" />
+  <title>Maintenance Checklist</title>
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-  <script src="./js/supra_maintenance.js" defer></script>
+  <script src="supra_maintenance.js"></script>
 </head>
 <body>
-  <nav>
-    <div class="inner">
-      <div class="nav-container">
-        <h1 class="nav-title"><a href="./index.html">Maintenance System</a></h1>
-        <div class="sign-container">
-          <div class="unsigned">
-          </div>
-          <div class="signed hidden">
-            <div class="dropdown">
-              <button class="dropbtn">MENU</button>
-              <div class="dropdown-content">
-                <a href="./info.html" class="dropdown-item">User Information</a>
-                <a href="./supra_maintenance.html" class="dropdown-item">SUPRA Maintenance</a>
-                <button id="sign-out" class="dropdown-item">Logout</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-  <main>
-    <section id="checklist-form">
-      <div class="inner">
-        <form id="checklistForm">
-          <div>
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" required>
-          </div>
-          <div id="checklist-container">
-            <div>
-              <label>LP ESCORT</label>
-              <input type="checkbox" name="LP_ESCORT" value="O">
-            </div>
-            <div>
-              <label>ROBOT ESCORT</label>
-              <input type="checkbox" name="ROBOT_ESCORT" value="O">
-            </div>
-            <div>
-              <label>EFEM ROBOT TEACHING</label>
-              <input type="checkbox" name="EFEM_ROBOT_TEACHING" value="O">
-            </div>
-            <div>
-              <label>EFEM ROBOT REP</label>
-              <input type="checkbox" name="EFEM_ROBOT_REP" value="O">
-            </div>
-            <div>
-              <label>EFEM ROBOT CONTROLLER REP</label>
-              <input type="checkbox" name="EFEM_ROBOT_CONTROLLER_REP" value="O">
-            </div>
-            <div>
-              <label>TM ROBOT TEACHING</label>
-              <input type="checkbox" name="TM_ROBOT_TEACHING" value="O">
-            </div>
-            <div>
-              <label>TM ROBOT REP</label>
-              <input type="checkbox" name="TM_ROBOT_REP" value="O">
-            </div>
-            <div>
-              <label>TM ROBOT CONTROLLER REP</label>
-              <input type="checkbox" name="TM_ROBOT_CONTROLLER_REP" value="O">
-            </div>
-            <div>
-              <label>PASSIVE PAD REP</label>
-              <input type="checkbox" name="PASSIVE_PAD_REP" value="O">
-            </div>
-            <div>
-              <label>PIN CYLINDER</label>
-              <input type="checkbox" name="PIN_CYLINDER" value="O">
-            </div>
-            <div>
-              <label>PUSHER CYLINDER</label>
-              <input type="checkbox" name="PUSHER_CYLINDER" value="O">
-            </div>
-            <div>
-              <label>IB FLOW</label>
-              <input type="checkbox" name="IB_FLOW" value="O">
-            </div>
-            <div>
-              <label>DRT</label>
-              <input type="checkbox" name="DRT" value="O">
-            </div>
-            <div>
-              <label>FFU CONTROLLER</label>
-              <input type="checkbox" name="FFU_CONTROLLER" value="O">
-            </div>
-            <div>
-              <label>FAN</label>
-              <input type="checkbox" name="FAN" value="O">
-            </div>
-            <div>
-              <label>MOTOR DRIVER</label>
-              <input type="checkbox" name="MOTOR_DRIVER" value="O">
-            </div>
-            <div>
-              <label>FCIP</label>
-              <input type="checkbox" name="FCIP" value="O">
-            </div>
-            <div>
-              <label>R1</label>
-              <input type="checkbox" name="R1" value="O">
-            </div>
-            <div>
-              <label>R3</label>
-              <input type="checkbox" name="R3" value="O">
-            </div>
-            <div>
-              <label>R5</label>
-              <input type="checkbox" name="R5" value="O">
-            </div>
-            <div>
-              <label>R3 TO R5</label>
-              <input type="checkbox" name="R3_TO_R5" value="O">
-            </div>
-            <div>
-              <label>MICROWAVE</label>
-              <input type="checkbox" name="MICROWAVE" value="O">
-            </div>
-            <div>
-              <label>APPLICATOR</label>
-              <input type="checkbox" name="APPLICATOR" value="O">
-            </div>
-            <div>
-              <label>GENERATOR</label>
-              <input type="checkbox" name="GENERATOR" value="O">
-            </div>
-            <div>
-              <label>CHUCK</label>
-              <input type="checkbox" name="CHUCK" value="O">
-            </div>
-            <div>
-              <label>PROCESS KIT</label>
-              <input type="checkbox" name="PROCESS_KIT" value="O">
-            </div>
-            <div>
-              <label>HELIUM DETECTOR</label>
-              <input type="checkbox" name="HELIUM_DETECTOR" value="O">
-            </div>
-            <div>
-              <label>HOOK LIFT PIN</label>
-              <input type="checkbox" name="HOOK_LIFT_PIN" value="O">
-            </div>
-            <div>
-              <label>BELLOWS</label>
-              <input type="checkbox" name="BELLOWS" value="O">
-            </div>
-            <div>
-              <label>PIN SENSOR</label>
-              <input type="checkbox" name="PIN_SENSOR" value="O">
-            </div>
-            <div>
-              <label>LM GUIDE</label>
-              <input type="checkbox" name="LM_GUIDE" value="O">
-            </div>
-            <div>
-              <label>PIN MOTOR CONTROLLER</label>
-              <input type="checkbox" name="PIN_MOTOR_CONTROLLER" value="O">
-            </div>
-            <div>
-              <label>SINGLE</label>
-              <input type="checkbox" name="SINGLE" value="O">
-            </div>
-            <div>
-              <label>DUAL</label>
-              <input type="checkbox" name="DUAL" value="O">
-            </div>
-            <div>
-              <label>GAS BOX BOARD</label>
-              <input type="checkbox" name="GAS_BOX_BOARD" value="O">
-            </div>
-            <div>
-              <label>TEMP CONTROLLER BOARD</label>
-              <input type="checkbox" name="TEMP_CONTROLLER_BOARD" value="O">
-            </div>
-            <div>
-              <label>POWER DISTRIBUTION BOARD</label>
-              <input type="checkbox" name="POWER_DISTRIBUTION_BOARD" value="O">
-            </div>
-            <div>
-              <label>DC POWER SUPPLY</label>
-              <input type="checkbox" name="DC_POWER_SUPPLY" value="O">
-            </div>
-            <div>
-              <label>BM SENSOR</label>
-              <input type="checkbox" name="BM_SENSOR" value="O">
-            </div>
-            <div>
-              <label>PIO SENSOR</label>
-              <input type="checkbox" name="PIO_SENSOR" value="O">
-            </div>
-            <div>
-              <label>SAFETY MODULE</label>
-              <input type="checkbox" name="SAFETY_MODULE" value="O">
-            </div>
-            <div>
-              <label>D-NET</label>
-              <input type="checkbox" name="D_NET" value="O">
-            </div>
-            <div>
-              <label>MFC</label>
-              <input type="checkbox" name="MFC" value="O">
-            </div>
-            <div>
-              <label>VALVE</label>
-              <input type="checkbox" name="VALVE" value="O">
-            </div>
-            <div>
-              <label>SOLENOID</label>
-              <input type="checkbox" name="SOLENOID" value="O">
-            </div>
-            <div>
-              <label>FAST VAC VALVE</label>
-              <input type="checkbox" name="FAST_VAC_VALVE" value="O">
-            </div>
-            <div>
-              <label>SLOW VAC VALVE</label>
-              <input type="checkbox" name="SLOW_VAC_VALVE" value="O">
-            </div>
-            <div>
-              <label>SLIT DOOR</label>
-              <input type="checkbox" name="SLIT_DOOR" value="O">
-            </div>
-            <div>
-              <label>APC VALVE</label>
-              <input type="checkbox" name="APC_VALVE" value="O">
-            </div>
-            <div>
-              <label>SHUTOFF VALVE</label>
-              <input type="checkbox" name="SHUTOFF_VALVE" value="O">
-            </div>
-            <div>
-              <label>BARATRON ASS'Y</label>
-              <input type="checkbox" name="BARATRON_ASSY" value="O">
-            </div>
-            <div>
-              <label>PIRANI ASS'Y</label>
-              <input type="checkbox" name="PIRANI_ASSY" value="O">
-            </div>
-            <div>
-              <label>VIEW PORT QUARTZ</label>
-              <input type="checkbox" name="VIEW_PORT_QUARTZ" value="O">
-            </div>
-            <div>
-              <label>FLOW SWITCH</label>
-              <input type="checkbox" name="FLOW_SWITCH" value="O">
-            </div>
-            <div>
-              <label>CERAMIC PLATE</label>
-              <input type="checkbox" name="CERAMIC_PLATE" value="O">
-            </div>
-            <div>
-              <label>MONITOR</label>
-              <input type="checkbox" name="MONITOR" value="O">
-            </div>
-            <div>
-              <label>KEYBOARD</label>
-              <input type="checkbox" name="KEYBOARD" value="O">
-            </div>
-            <div>
-              <label>MOUSE</label>
-              <input type="checkbox" name="MOUSE" value="O">
-            </div>
-            <div>
-              <label>CTC</label>
-              <input type="checkbox" name="CTC" value="O">
-            </div>
-            <div>
-              <label>PMC</label>
-              <input type="checkbox" name="PMC" value="O">
-            </div>
-            <div>
-              <label>EDA</label>
-              <input type="checkbox" name="EDA" value="O">
-            </div>
-            <div>
-              <label>EFEM CONTROLLER</label>
-              <input type="checkbox" name="EFEM_CONTROLLER" value="O">
-            </div>
-            <div>
-              <label>S/W PATCH</label>
-              <input type="checkbox" name="SW_PATCH" value="O">
-            </div>
-          </div>
-          <button type="submit">SAVE</button>
-        </form>
-      </div>
-    </section>
-  </main>
+  <h1>Maintenance Checklist</h1>
+  <form id="checklistForm">
+    <!-- 체크리스트 항목들 -->
+    <label>LP_ESCORT: <input type="checkbox" name="LP_ESCORT"></label><br>
+    <label>ROBOT_ESCORT: <input type="checkbox" name="ROBOT_ESCORT"></label><br>
+    <label>EFEM_ROBOT_TEACHING: <input type="checkbox" name="EFEM_ROBOT_TEACHING"></label><br>
+    <label>EFEM_ROBOT_REP: <input type="checkbox" name="EFEM_ROBOT_REP"></label><br>
+    <label>EFEM_ROBOT_CONTROLLER_REP: <input type="checkbox" name="EFEM_ROBOT_CONTROLLER_REP"></label><br>
+    <label>TM_ROBOT_TEACHING: <input type="checkbox" name="TM_ROBOT_TEACHING"></label><br>
+    <label>TM_ROBOT_REP: <input type="checkbox" name="TM_ROBOT_REP"></label><br>
+    <label>TM_ROBOT_CONTROLLER_REP: <input type="checkbox" name="TM_ROBOT_CONTROLLER_REP"></label><br>
+    <label>PASSIVE_PAD_REP: <input type="checkbox" name="PASSIVE_PAD_REP"></label><br>
+    <label>PIN_CYLINDER: <input type="checkbox" name="PIN_CYLINDER"></label><br>
+    <label>PUSHER_CYLINDER: <input type="checkbox" name="PUSHER_CYLINDER"></label><br>
+    <label>IB_FLOW: <input type="checkbox" name="IB_FLOW"></label><br>
+    <label>DRT: <input type="checkbox" name="DRT"></label><br>
+    <label>FFU_CONTROLLER: <input type="checkbox" name="FFU_CONTROLLER"></label><br>
+    <label>FAN: <input type="checkbox" name="FAN"></label><br>
+    <label>MOTOR_DRIVER: <input type="checkbox" name="MOTOR_DRIVER"></label><br>
+    <label>FCIP: <input type="checkbox" name="FCIP"></label><br>
+    <label>R1: <input type="checkbox" name="R1"></label><br>
+    <label>R3: <input type="checkbox" name="R3"></label><br>
+    <label>R5: <input type="checkbox" name="R5"></label><br>
+    <label>R3_TO_R5: <input type="checkbox" name="R3_TO_R5"></label><br>
+    <label>MICROWAVE: <input type="checkbox" name="MICROWAVE"></label><br>
+    <label>APPLICATOR: <input type="checkbox" name="APPLICATOR"></label><br>
+    <label>GENERATOR: <input type="checkbox" name="GENERATOR"></label><br>
+    <label>CHUCK: <input type="checkbox" name="CHUCK"></label><br>
+    <label>PROCESS_KIT: <input type="checkbox" name="PROCESS_KIT"></label><br>
+    <label>HELIUM_DETECTOR: <input type="checkbox" name="HELIUM_DETECTOR"></label><br>
+    <label>HOOK_LIFT_PIN: <input type="checkbox" name="HOOK_LIFT_PIN"></label><br>
+    <label>BELLOWS: <input type="checkbox" name="BELLOWS"></label><br>
+    <label>PIN_SENSOR: <input type="checkbox" name="PIN_SENSOR"></label><br>
+    <label>LM_GUIDE: <input type="checkbox" name="LM_GUIDE"></label><br>
+    <label>PIN_MOTOR_CONTROLLER: <input type="checkbox" name="PIN_MOTOR_CONTROLLER"></label><br>
+    <label>SINGLE: <input type="checkbox" name="SINGLE"></label><br>
+    <label>DUAL: <input type="checkbox" name="DUAL"></label><br>
+    <label>GAS_BOX_BOARD: <input type="checkbox" name="GAS_BOX_BOARD"></label><br>
+    <label>TEMP_CONTROLLER_BOARD: <input type="checkbox" name="TEMP_CONTROLLER_BOARD"></label><br>
+    <label>POWER_DISTRIBUTION_BOARD: <input type="checkbox" name="POWER_DISTRIBUTION_BOARD"></label><br>
+    <label>DC_POWER_SUPPLY: <input type="checkbox" name="DC_POWER_SUPPLY"></label><br>
+    <label>BM_SENSOR: <input type="checkbox" name="BM_SENSOR"></label><br>
+    <label>PIO_SENSOR: <input type="checkbox" name="PIO_SENSOR"></label><br>
+    <label>SAFETY_MODULE: <input type="checkbox" name="SAFETY_MODULE"></label><br>
+    <label>D_NET: <input type="checkbox" name="D_NET"></label><br>
+    <label>MFC: <input type="checkbox" name="MFC"></label><br>
+    <label>VALVE: <input type="checkbox" name="VALVE"></label><br>
+    <label>SOLENOID: <input type="checkbox" name="SOLENOID"></label><br>
+    <label>FAST_VAC_VALVE: <input type="checkbox" name="FAST_VAC_VALVE"></label><br>
+    <label>SLOW_VAC_VALVE: <input type="checkbox" name="SLOW_VAC_VALVE"></label><br>
+    <label>SLIT_DOOR: <input type="checkbox" name="SLIT_DOOR"></label><br>
+    <label>APC_VALVE: <input type="checkbox" name="APC_VALVE"></label><br>
+    <label>SHUTOFF_VALVE: <input type="checkbox" name="SHUTOFF_VALVE"></label><br>
+    <label>BARATRON_ASSY: <input type="checkbox" name="BARATRON_ASSY"></label><br>
+    <label>PIRANI_ASSY: <input type="checkbox" name="PIRANI_ASSY"></label><br>
+    <label>VIEW_PORT_QUARTZ: <input type="checkbox" name="VIEW_PORT_QUARTZ"></label><br>
+    <label>FLOW_SWITCH: <input type="checkbox" name="FLOW_SWITCH"></label><br>
+    <label>CERAMIC_PLATE: <input type="checkbox" name="CERAMIC_PLATE"></label><br>
+    <label>MONITOR: <input type="checkbox" name="MONITOR"></label><br>
+    <label>KEYBOARD: <input type="checkbox" name="KEYBOARD"></label><br>
+    <label>MOUSE: <input type="checkbox" name="MOUSE"></label><br>
+    <label>CTC: <input type="checkbox" name="CTC"></label><br>
+    <label>PMC: <input type="checkbox" name="PMC"></label><br>
+    <label>EDA: <input type="checkbox" name="EDA"></label><br>
+    <label>EFEM_CONTROLLER: <input type="checkbox" name="EFEM_CONTROLLER"></label><br>
+    <label>SW_PATCH: <input type="checkbox" name="SW_PATCH"></label><br>
+    <button type="submit">Save</button>
+  </form>
+  <button id="sign-out">Logout</button>
 </body>
 </html>

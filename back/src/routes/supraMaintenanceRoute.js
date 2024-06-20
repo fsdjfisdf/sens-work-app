@@ -1,7 +1,8 @@
-const supraMaintenanceController = require("../controllers/supraMaintenanceController");
-const jwtMiddleware = require("../../config/jwtMiddleware");
+const express = require('express');
+const router = express.Router();
+const supraMaintenanceController = require('../controllers/supraMaintenanceController');
 
-module.exports = function (app) {
-  // 체크리스트 저장
-  app.post("/supra-maintenance", jwtMiddleware, supraMaintenanceController.saveChecklist);
-};
+router.get('/supra-maintenance', supraMaintenanceController.getChecklist);
+router.post('/supra-maintenance', supraMaintenanceController.saveChecklist);
+
+module.exports = router;
