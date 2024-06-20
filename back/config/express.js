@@ -15,7 +15,7 @@ module.exports = function () {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(methodOverride());
-  app.use(cors()); // CORS 설정
+  app.use(cors());
   app.use(express.static("/home/ubuntu/food-map-dist-example/front"));
   app.use(express.static(path.join(__dirname, '../../front')));
   app.get("/", (req, res) => {
@@ -24,6 +24,7 @@ module.exports = function () {
 
   /* 직접 구현해야 하는 모듈 */
   require("../src/routes/indexRoute")(app);
+  require("../src/routes/supraMaintenanceRoute")(app);  // 추가된 라우트
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
