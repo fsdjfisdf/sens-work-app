@@ -115,3 +115,16 @@ exports.updateChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
+exports.getChecklistByName = async (name) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `SELECT * FROM SUPRA_N_MAINT_SELF WHERE name = ?`;
+    const [rows] = await connection.query(query, [name]);
+    connection.release();
+    return rows[0];
+  } catch (err) {
+    connection.release();
+    throw new Error(`Error retrieving checklist: ${err.message}`);
+  }
+};

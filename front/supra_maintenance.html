@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const token = localStorage.getItem("x-access-token");
-
-        if (!token) {
-            alert("로그인이 필요합니다.");
-            window.location.replace("./signin.html");
-        }
-    });
-  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maintenance Checklist</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>SUPRA Maintenance Checklist</title>
+  <link rel="stylesheet" href="./css/supra_maintenance.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-  <script src="supra_maintenance.js"></script>
+  <script src="./js/supra_maintenance.js" defer></script>
 </head>
 <body>
-  <h1>Maintenance Checklist</h1>
-  <form id="checklistForm">
-          <div>
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" required>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">Maintenance System</a></h1>
+        <div class="sign-container">
+          <div class="unsigned">
           </div>
+          <div class="signed hidden">
+            <div class="dropdown">
+              <button class="dropbtn">MENU</button>
+              <div class="dropdown-content">
+                <a href="./info.html" class="dropdown-item">User Information</a>
+                <a href="./supra_maintenance.html" class="dropdown-item">SUPRA Maintenance</a>
+                <button id="sign-out" class="dropdown-item">Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
           <div id="checklist-container">
+            <!-- 체크리스트 항목들 -->
             <div>
               <label>LP ESCORT</label>
               <input type="checkbox" name="LP_ESCORT" value="O">
