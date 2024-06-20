@@ -6,8 +6,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       const formData = new FormData(form);
       const data = {};
   
+      // 모든 체크리스트 항목을 0으로 초기화
+      const checklistFields = [
+        'LP_ESCORT', 'ROBOT_ESCORT', 'EFEM_ROBOT_TEACHING', 'EFEM_ROBOT_REP', 'EFEM_ROBOT_CONTROLLER_REP',
+        'TM_ROBOT_TEACHING', 'TM_ROBOT_REP', 'TM_ROBOT_CONTROLLER_REP', 'PASSIVE_PAD_REP', 'PIN_CYLINDER',
+        'PUSHER_CYLINDER', 'IB_FLOW', 'DRT', 'FFU_CONTROLLER', 'FAN', 'MOTOR_DRIVER', 'FCIP', 'R1', 'R3', 'R5',
+        'R3_TO_R5', 'MICROWAVE', 'APPLICATOR', 'GENERATOR', 'CHUCK', 'PROCESS_KIT', 'HELIUM_DETECTOR', 'HOOK_LIFT_PIN',
+        'BELLOWS', 'PIN_SENSOR', 'LM_GUIDE', 'PIN_MOTOR_CONTROLLER', 'SINGLE', 'DUAL', 'GAS_BOX_BOARD',
+        'TEMP_CONTROLLER_BOARD', 'POWER_DISTRIBUTION_BOARD', 'DC_POWER_SUPPLY', 'BM_SENSOR', 'PIO_SENSOR', 'SAFETY_MODULE',
+        'D_NET', 'MFC', 'VALVE', 'SOLENOID', 'FAST_VAC_VALVE', 'SLOW_VAC_VALVE', 'SLIT_DOOR', 'APC_VALVE', 'SHUTOFF_VALVE',
+        'BARATRON_ASSY', 'PIRANI_ASSY', 'VIEW_PORT_QUARTZ', 'FLOW_SWITCH', 'CERAMIC_PLATE', 'MONITOR', 'KEYBOARD', 'MOUSE',
+        'CTC', 'PMC', 'EDA', 'EFEM_CONTROLLER', 'SW_PATCH'
+      ];
+  
+      // 모든 필드를 0으로 초기화
+      checklistFields.forEach(field => {
+        data[field] = 0;
+      });
+  
+      // 체크된 항목을 100으로 설정
       formData.forEach((value, key) => {
-        data[key] = value === 'O' ? 100 : 'X';
+        if (value === 'O') {
+          data[key] = 100;
+        }
       });
   
       try {
