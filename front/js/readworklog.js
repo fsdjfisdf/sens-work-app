@@ -74,23 +74,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.className = 'worklog-card';
             card.dataset.id = log.id;
             card.innerHTML = `
-                <p><strong>제목:</strong> ${log.task_name}</p>
-                <p><strong>날짜:</strong> ${formatDate(log.task_date)}</p>
-                <p><strong>작업자:</strong> ${log.task_man}</p>
-                <p><strong>그룹:</strong> ${log.group}</p>
-                <p><strong>현장:</strong> ${log.site}</p>
-                <p><strong>EQ 이름:</strong> ${log.equipment_name}</p>
-                <p><strong>전달 항목:</strong> ${log.transfer_item}</p>
-                <p><strong>작업 시간:</strong> ${formatDuration(log.task_duration)}</p>
+                <p><strong>Title:</strong> ${log.task_name}</p>
+                <p><strong>Date:</strong> ${formatDate(log.task_date)}</p>
+                <p><strong>Worker:</strong> ${log.task_man}</p>
+                <p><strong>Group:</strong> ${log.group}</p>
+                <p><strong>Site:</strong> ${log.site}</p>
+                <p><strong>EQ Name:</strong> ${log.equipment_name}</p>
+                <p><strong>Transfer Item:</strong> ${log.transfer_item}</p>
+                <p><strong>Task Duration:</strong> ${formatDuration(log.task_duration)}</p>
                 <div class="actions">
-                    ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">삭제</button>` : ''}
+                    ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">X</button>` : ''}
                 </div>
             `;
             worklogCards.appendChild(card);
         });
 
         // 총 개수 업데이트
-        document.getElementById('worklog-count').textContent = `총 작업 로그: ${logs.length}`;
+        document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
 
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
@@ -118,26 +118,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         const logModal = document.getElementById('logModal');
         const logDetails = document.getElementById('logDetails');
         logDetails.innerHTML = `
-            <p><strong>날짜 :</strong> ${formatDate(log.task_date)}</p>
-            <p><strong>그룹 :</strong> ${log.group}</p>
-            <p><strong>현장 :</strong> ${log.site}</p>
-            <p><strong>라인 :</strong> ${log.line}</p>
-            <p><strong>보증 :</strong> ${log.warranty}</p>
-            <p><strong>EQ 타입 :</strong> ${log.equipment_type}</p>
-            <p><strong>EQ 이름 :</strong> ${log.equipment_name}</p>
-            <p><strong>제목 :</strong> ${log.task_name}</p>
-            <p><strong>상태 :</strong> ${log.status}</p>
-            <p><strong>작업 설명 :</strong> ${log.task_description}</p>
-            <p><strong>원인 :</strong> ${log.task_cause}</p>
-            <p><strong>결과 :</strong> ${log.task_result}</p>
-            <p><strong>작업자 :</strong> ${log.task_man}</p>
+            <p><strong>Date :</strong> ${formatDate(log.task_date)}</p>
+            <p><strong>Group :</strong> ${log.group}</p>
+            <p><strong>Site :</strong> ${log.site}</p>
+            <p><strong>Line :</strong> ${log.line}</p>
+            <p><strong>Warranty :</strong> ${log.warranty}</p>
+            <p><strong>EQ Type :</strong> ${log.equipment_type}</p>
+            <p><strong>EQ Name :</strong> ${log.equipment_name}</p>
+            <p><strong>Title :</strong> ${log.task_name}</p>
+            <p><strong>Status :</strong> ${log.status}</p>
+            <p><strong>Action :</strong> ${log.task_description}</p>
+            <p><strong>Cause :</strong> ${log.task_cause}</p>
+            <p><strong>Result :</strong> ${log.task_result}</p>
+            <p><strong>Worker :</strong> ${log.task_man}</p>
             <p><strong>SOP :</strong> ${log.SOP}</p>
-            <p><strong>TS 가이드 :</strong> ${log.tsguide}</p>
-            <p><strong>작업 타입 :</strong> ${log.work_type}</p>
-            <p><strong>설치 항목 :</strong> ${log.setup_item}</p>
-            <p><strong>유지 항목 :</strong> ${log.maint_item}</p>
-            <p><strong>전달 항목 :</strong> ${log.transfer_item}</p>
-            <p><strong>작업 시간 :</strong> ${formatDuration(log.task_duration)}</p>
+            <p><strong>TS Guide :</strong> ${log.tsguide}</p>
+            <p><strong>Work Type :</strong> ${log.work_type}</p>
+            <p><strong>Setup Item :</strong> ${log.setup_item}</p>
+            <p><strong>Maint Item :</strong> ${log.maint_item}</p>
+            <p><strong>Transfer Item :</strong> ${log.transfer_item}</p>
+            <p><strong>Task Duration :</strong> ${formatDuration(log.task_duration)}</p>
         `;
         logModal.style.display = 'block';
     }
