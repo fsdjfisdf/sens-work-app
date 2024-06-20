@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const response = await axios.post('http://3.37.165.84:3001/supra-maintenance', data, {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-access-token': localStorage.getItem('x-access-token') // JWT 토큰 추가
           }
         });
   
