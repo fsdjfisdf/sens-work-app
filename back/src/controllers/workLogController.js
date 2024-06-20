@@ -12,31 +12,20 @@ exports.getWorkLogs = async (req, res) => {
 
 exports.addWorkLog = async (req, res) => {
     const {
-      task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
-    } = req.body;
-  
-    try {
-      await workLogDao.addWorkLog(
         task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
         group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
-      );
-  
-      const workers = task_man.split(', ').map(w => {
-        const match = w.match(/(.*)\((main|support)\)/);
-        return { name: match[1], role: match[2] };
-      });
-  
-      for (const worker of workers) {
-        const incrementValue = worker.role === 'main' ? 1 : 0.25;
-        await workLogDao.updateWorkerTaskCount(worker.name, transferItem, incrementValue);
-      }
-  
-      res.status(201).json({ message: "Work log added" });
+    } = req.body;
+
+    try {
+        await workLogDao.addWorkLog(
+            task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+            group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
+        );
+        res.status(201).json({ message: "Work log added" });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+        res.status(500).json({ error: err.message });
     }
-  };
+};
 
 exports.deleteWorkLog = async (req, res) => {
     const { id } = req.params;
