@@ -45,11 +45,11 @@ exports.deleteWorkLog = async (id) => {
 
 
 
-exports.updateWorkerTaskCount = async (workerName, transferItem, incrementValue) => {
+exports.updateWorkerTaskCount = async (workerName, taskField, incrementValue) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const query = `UPDATE SUPRA_N_MAINT_SELF SET ?? = ?? + ? WHERE name = ?`;
-    const values = [transferItem, transferItem, incrementValue, workerName];
+    const query = `UPDATE SUPRA_N_MAINT_SELF SET \`${taskField}\` = \`${taskField}\` + ? WHERE name = ?`;
+    const values = [incrementValue, workerName];
     await connection.query(query, values);
   } catch (err) {
     throw new Error(`Error updating worker task count: ${err.message}`);
