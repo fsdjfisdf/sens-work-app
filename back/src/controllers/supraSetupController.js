@@ -24,6 +24,9 @@ exports.saveChecklist = async (req, res) => {
     // 사용자 nickname을 checklistData에 추가
     checklistData.name = user.nickname;
 
+    // 여기서 checklistData를 출력하여 데이터가 올바르게 전달되고 있는지 확인
+    console.log(checklistData);
+
     // 체크리스트 저장 또는 업데이트
     const existingEntry = await supraSetupDao.findByName(checklistData.name);
     if (existingEntry) {
