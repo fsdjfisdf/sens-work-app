@@ -14,7 +14,15 @@ module.exports = function () {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(methodOverride());
-  app.use(cors());
+
+  // CORS 설정
+  const corsOptions = {
+    origin: '*', // 모든 도메인에서의 요청을 허용
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token']
+  };
+  app.use(cors(corsOptions));
+
   app.use(express.static(path.join(__dirname, '../../front')));
 
   app.get("/", (req, res) => {
