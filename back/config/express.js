@@ -2,7 +2,6 @@ const express = require("express");
 const compression = require("compression");
 const methodOverride = require("method-override");
 const cors = require("cors");
-const bodyParser = require("body-parser");
 const path = require("path");
 const { pool } = require("./database");
 const { logger } = require("./winston");
@@ -16,8 +15,8 @@ module.exports = function () {
   app.use(express.urlencoded({ extended: true }));
   app.use(methodOverride());
   app.use(cors());
-  app.use(express.static("/home/ubuntu/food-map-dist-example/front"));
   app.use(express.static(path.join(__dirname, '../../front')));
+
   app.get("/", (req, res) => {
     res.redirect("/signin.html");
   });

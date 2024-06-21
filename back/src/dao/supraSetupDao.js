@@ -85,11 +85,11 @@ exports.insertChecklist = async (checklistData) => {
     ];
 
     await connection.query(query, values);
+    connection.release(); // 연결 해제 위치 수정
   } catch (err) {
+    connection.release(); // 연결 해제 위치 수정
     console.error('Error inserting checklist:', err);
     throw new Error(`Error inserting checklist: ${err.message}`);
-  } finally {
-    connection.release();
   }
 };
 
@@ -155,11 +155,11 @@ exports.updateChecklist = async (checklistData) => {
     ];
 
     await connection.query(query, values);
+    connection.release(); // 연결 해제 위치 수정
   } catch (err) {
+    connection.release(); // 연결 해제 위치 수정
     console.error('Error updating checklist:', err);
     throw new Error(`Error updating checklist: ${err.message}`);
-  } finally {
-    connection.release();
   }
 };
 
