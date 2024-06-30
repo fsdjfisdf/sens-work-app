@@ -21,7 +21,7 @@ async function signIn(event) {
     const isValidSignIn = signInReturn.data.code == 200;
 
     if (!isValidSignIn) {
-      return alert("요청에 문제가 생겼습니다.");
+      return alert("아이디 혹은 비밀번호가 틀렸습니다.");
     }
 
     const jwt = signInReturn.data.result.jwt;

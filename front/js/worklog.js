@@ -140,14 +140,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (response.status === 201) {
-          alert('작업 로그가 성공적으로 추가되었습니다.');
+          alert('작업 이력 추가 성공');
           loadWorkLogs();
-        } else {
-          alert('작업 로그 추가 중 오류가 발생했습니다.');
         }
       } catch (error) {
-        console.error(error);
-        alert('작업 로그 추가 중 오류가 발생했습니다.');
       }
     });
 
