@@ -68,7 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayLogs(logs) {
         const worklogCards = document.getElementById('worklog-cards');
         worklogCards.innerHTML = '';
-
+    
+        let totalWorktimeMinutes = 0; // 총 작업 시간을 저장할 변수
+    
         logs.forEach(log => {
             const card = document.createElement('div');
             card.className = 'worklog-card';
@@ -87,11 +89,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             worklogCards.appendChild(card);
+    
+            // 작업 시간 합산
+            const durationParts = log.task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            totalWorktimeMinutes += (hours * 60) + minutes;
         });
-
+    
         // 총 개수 업데이트
         document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
-
+    
+        // 총 작업 시간 업데이트
+        const totalWorkHours = Math.floor(totalWorktimeMinutes / 60);
+        const totalWorkMinutes = totalWorktimeMinutes % 60;
+        const totalWorkTimeText = `${totalWorkHours}시간 ${totalWorkMinutes}분`;
+        const totalWorktimeElement = document.createElement('p');
+        totalWorktimeElement.id = 'total-worktime';
+        totalWorktimeElement.textContent = `Total Worktime: ${totalWorkTimeText}`;
+        worklogCards.parentElement.insertBefore(totalWorktimeElement, worklogCards);
+    
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
                 if (!event.target.classList.contains('delete-log')) {
@@ -101,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         });
-
+    
         document.querySelectorAll('.delete-log').forEach(button => {
             button.addEventListener('click', async event => {
                 event.stopPropagation();
