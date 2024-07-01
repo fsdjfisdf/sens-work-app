@@ -53,8 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
             header: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'month,agendaWeek,agendaDay'
+                right: 'month'  // 월(Month) 보기만 사용
             },
+            defaultView: 'month',  // 월(Month) 보기가 기본값
             editable: false,
             events: eventArray,
             eventRender: function(event, element) {

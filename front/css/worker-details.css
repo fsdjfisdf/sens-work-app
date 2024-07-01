@@ -89,10 +89,42 @@ main {
 }
 
 #calendar {
-    width: 90%;
+    width: 100%;
     margin: 0 auto;
 }
 
-.fc-event {
-    cursor: pointer;
+.fc-day-grid-event .fc-content {
+    white-space: normal;
+}
+
+.fc-day-grid-event {
+    font-size: 0.8em;
+    padding: 5px;
+}
+
+.fc-unthemed .fc-content {
+    padding: 5px;
+}
+
+.fc-day-top {
+    font-size: 0.9em;
+}
+
+/* Responsive design for better view on mobile */
+@media screen and (max-width: 768px) {
+    .fc-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .fc-toolbar .fc-left,
+    .fc-toolbar .fc-center,
+    .fc-toolbar .fc-right {
+        margin-bottom: 10px;
+    }
+
+    .fc-view-container {
+        width: 100%;
+        overflow-x: auto;
+    }
 }
