@@ -334,13 +334,17 @@ button.delete-log:hover {
 
     
 }
-
 /* Container for Total Worklogs and Total Worktime */
+#summary {
+    margin-bottom: 20px;
+}
+
 #total-work {
     display: flex;
     justify-content: space-around;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 #worklog-count, #total-worktime {
@@ -351,7 +355,8 @@ button.delete-log:hover {
     font-size: 18px;
     font-weight: bold;
     color: #0044cc;
-    margin: 0 10px;
+    margin: 10px;
+    text-align: center;
 }
 
 /* Top 5 engineers container */
@@ -360,6 +365,7 @@ button.delete-log:hover {
     justify-content: space-around;
     align-items: flex-start;
     margin-bottom: 20px;
+    flex-wrap: wrap;
 }
 
 .worker-stats {
@@ -369,6 +375,7 @@ button.delete-log:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
     width: 45%;
+    margin: 10px;
 }
 
 .worker-stats h2 {
@@ -434,5 +441,14 @@ button.delete-log:hover {
     .worker-stats {
         width: 90%;
         margin-bottom: 20px;
+    }
+
+    #total-work {
+        flex-direction: column;
+    }
+
+    #worklog-count, #total-worktime {
+        width: 90%;
+        margin-bottom: 10px;
     }
 }
