@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Details</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/worker-details.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
+                <div class="sign-container">
+                    <div class="unsigned"></div>
+                    <div class="signed hidden">
+                        <div class="dropdown">
+                            <button class="dropbtn">MENU</button>
+                            <div class="dropdown-content">
+                                <a href="./info.html" class="dropdown-item">Eng'r Information</a>
+                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                <button id="sign-out" class="dropdown-item">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div id="calendar"></div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="./js/worker-details.js"></script>
+</body>
+</html>

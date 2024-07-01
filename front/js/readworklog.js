@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
     let logs = [];
     let currentUserNickname = null; // 현재 로그인한 사용자의 닉네임을 저장할 변수
+    let currentWorker = null; // 현재 검색된 작업자의 이름 저장
+    let displayCount = 5; // 표시할 작업자 수
 
     // 사용자 로그인 상태를 확인하는 함수
     function checkLogin() {
@@ -207,28 +209,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayWorkerStats(sortedWorkerStats, containerId, title) {
         const workerStatsContainer = document.getElementById(containerId);
         workerStatsContainer.className = 'worker-stats';
-        workerStatsContainer.innerHTML = `<h2>Top 5 Eng'r by ${title}</h2>`;
-        
-        sortedWorkerStats.slice(0, 5).forEach(([worker, value], index) => {
+        workerStatsContainer.innerHTML = `<h2>Top ${currentWorker ? 1 : displayCount} Eng'r by ${title}</h2>`;
+
+        if (currentWorker) {
+            const worker = sortedWorkerStats.find(([worker]) => worker.toLowerCase().includes(currentWorker));
             const workerStat = document.createElement('div');
-            workerStat.className = 'worker-stat';
-            if (index === 0) {
-                workerStat.classList.add('top-1');
-            }
+            workerStat.className = 'worker-stat top-1';
+            const value = worker[1];
             if (title === 'Worktime') {
                 const hours = Math.floor(value / 60);
                 const minutes = value % 60;
                 workerStat.innerHTML = `
-                    <p class="name">${worker}</p>
+                    <p class="name" data-worker="${worker[0]}">${worker[0]}</p>
                     <p>${hours}시간 ${minutes}분</p>
                 `;
             } else {
                 workerStat.innerHTML = `
-                    <p class="name">${worker}</p>
+                    <p class="name" data-worker="${worker[0]}">${worker[0]}</p>
                     <p>${value} 개</p>
                 `;
             }
             workerStatsContainer.appendChild(workerStat);
+
+            // 빈 공간 추가
+            for (let i = 1; i < 5; i++) {
+                const emptyStat = document.createElement('div');
+                emptyStat.className = 'worker-stat empty';
+                workerStatsContainer.appendChild(emptyStat);
+            }
+        } else {
+            const topWorkers = sortedWorkerStats.slice(0, displayCount);
+            topWorkers.forEach(([worker, value], index) => {
+                const workerStat = document.createElement('div');
+                workerStat.className = 'worker-stat';
+                if (index === 0 && !currentWorker) {
+                    workerStat.classList.add('top-1');
+                }
+                if (title === 'Worktime') {
+                    const hours = Math.floor(value / 60);
+                    const minutes = value % 60;
+                    workerStat.innerHTML = `
+                        <p class="name" data-worker="${worker}">${worker}</p>
+                        <p>${hours}시간 ${minutes}분</p>
+                    `;
+                } else {
+                    workerStat.innerHTML = `
+                        <p class="name" data-worker="${worker}">${worker}</p>
+                        <p>${value} 개</p>
+                    `;
+                }
+                workerStatsContainer.appendChild(workerStat);
+            });
+        }
+
+        // 확장 및 축소 버튼 표시 여부 설정
+        const expandButton = document.getElementById('expandButton');
+        const collapseButton = document.getElementById('collapseButton');
+        if (!currentWorker && sortedWorkerStats.length > displayCount) {
+            expandButton.style.display = 'block';
+        } else {
+            expandButton.style.display = 'none';
+        }
+
+        if (!currentWorker && displayCount > 5) {
+            collapseButton.style.display = 'block';
+        } else {
+            collapseButton.style.display = 'none';
+        }
+
+        // 작업자 이름 클릭 이벤트 추가
+        document.querySelectorAll('.worker-stat .name').forEach(nameElement => {
+            nameElement.addEventListener('click', event => {
+                const workerName = event.target.dataset.worker;
+                window.location.href = `worker-details.html?worker=${workerName}`;
+            });
         });
     }
 
@@ -254,6 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         });
 
+        currentWorker = searchWorker ? searchWorker : null;
         displayLogs(filteredLogs);
         calculateWorkerStats(filteredLogs); // 필터링된 로그로 작업자 통계 계산 함수 호출
     });
@@ -266,8 +321,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('searchTitle').value = '';
         document.getElementById('searchGroup').value = '';
         document.getElementById('searchSite').value = '';
+        currentWorker = null;
+        displayCount = 5;
         displayLogs(logs);
         calculateWorkerStats(logs); // 전체 로그로 작업자 통계 계산 함수 호출
+    });
+
+    document.getElementById('expandButton').addEventListener('click', () => {
+        displayCount += 5;
+        calculateWorkerStats(logs); // 확장된 수에 따라 작업자 통계 계산 함수 호출
+    });
+
+    document.getElementById('collapseButton').addEventListener('click', () => {
+        displayCount = Math.max(5, displayCount - 5);
+        calculateWorkerStats(logs); // 축소된 수에 따라 작업자 통계 계산 함수 호출
     });
 
     // 로그인 상태를 확인하고, 로그인되어 있지 않으면 로그인 페이지로 리디렉션
