@@ -104,10 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalWorkHours = Math.floor(totalWorktimeMinutes / 60);
         const totalWorkMinutes = totalWorktimeMinutes % 60;
         const totalWorkTimeText = `${totalWorkHours}시간 ${totalWorkMinutes}분`;
-        const totalWorktimeElement = document.createElement('p');
-        totalWorktimeElement.id = 'total-worktime';
-        totalWorktimeElement.textContent = `Total Worktime: ${totalWorkTimeText}`;
-        worklogCards.parentElement.insertBefore(totalWorktimeElement, worklogCards);
+        document.getElementById('total-worktime').textContent = `Total Worktime: ${totalWorkTimeText}`;
     
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
@@ -130,7 +127,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     }
+    
+    function formatDuration(duration) {
+        const parts = duration.split(':');
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+    
+        if (hours < 0 || minutes < 0) {
+            return '<span class="error-text">수정 필요</span>';
+        }
+    
+        let formattedDuration = '';
+        if (hours > 0) {
+            formattedDuration += `${hours}시간 `;
+        }
+        if (minutes > 0) {
+            formattedDuration += `${minutes}분`;
+        }
+        return formattedDuration.trim() || '0분';
+    }
 
+    
     function showLogDetails(log) {
         const logModal = document.getElementById('logModal');
         const logDetails = document.getElementById('logDetails');
