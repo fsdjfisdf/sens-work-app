@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await axios.get('http://3.37.165.84:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             displayLogs(logs);
+            calculateWorkerStats(logs); // 작업자 통계 계산 함수 호출
         } catch (error) {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);
         }
@@ -68,9 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayLogs(logs) {
         const worklogCards = document.getElementById('worklog-cards');
         worklogCards.innerHTML = '';
-    
+
         let totalWorktimeMinutes = 0; // 총 작업 시간을 저장할 변수
-    
+
         logs.forEach(log => {
             const card = document.createElement('div');
             card.className = 'worklog-card';
@@ -89,23 +90,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             worklogCards.appendChild(card);
-    
+
             // 작업 시간 합산
             const durationParts = log.task_duration.split(':');
             const hours = parseInt(durationParts[0], 10);
             const minutes = parseInt(durationParts[1], 10);
             totalWorktimeMinutes += (hours * 60) + minutes;
         });
-    
+
         // 총 개수 업데이트
         document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
-    
+
         // 총 작업 시간 업데이트
         const totalWorkHours = Math.floor(totalWorktimeMinutes / 60);
         const totalWorkMinutes = totalWorktimeMinutes % 60;
         const totalWorkTimeText = `${totalWorkHours}시간 ${totalWorkMinutes}분`;
         document.getElementById('total-worktime').textContent = `Total Worktime: ${totalWorkTimeText}`;
-    
+
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
                 if (!event.target.classList.contains('delete-log')) {
@@ -115,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         });
-    
+
         document.querySelectorAll('.delete-log').forEach(button => {
             button.addEventListener('click', async event => {
                 event.stopPropagation();
@@ -127,27 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     }
-    
-    function formatDuration(duration) {
-        const parts = duration.split(':');
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
-    
-        if (hours < 0 || minutes < 0) {
-            return '<span class="error-text">수정 필요</span>';
-        }
-    
-        let formattedDuration = '';
-        if (hours > 0) {
-            formattedDuration += `${hours}시간 `;
-        }
-        if (minutes > 0) {
-            formattedDuration += `${minutes}분`;
-        }
-        return formattedDuration.trim() || '0분';
-    }
 
-    
     function showLogDetails(log) {
         const logModal = document.getElementById('logModal');
         const logDetails = document.getElementById('logDetails');
@@ -195,6 +176,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    function calculateWorkerStats(logs) {
+        const workerStats = {};
+        const workerTaskCount = {};
+
+        logs.forEach(log => {
+            const workers = log.task_man.split(',').map(worker => worker.split('(')[0].trim());
+            const durationParts = log.task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const totalMinutes = (hours * 60) + minutes;
+
+            workers.forEach(worker => {
+                if (!workerStats[worker]) {
+                    workerStats[worker] = 0;
+                    workerTaskCount[worker] = 0;
+                }
+                workerStats[worker] += totalMinutes;
+                workerTaskCount[worker] += 1;
+            });
+        });
+
+        const sortedWorkerStats = Object.entries(workerStats).sort((a, b) => b[1] - a[1]);
+        const sortedWorkerTaskCount = Object.entries(workerTaskCount).sort((a, b) => b[1] - a[1]);
+
+        displayWorkerStats(sortedWorkerStats, 'top5-worktime-stats', 'Worktime');
+        displayWorkerStats(sortedWorkerTaskCount, 'top5-taskcount-stats', 'Task Count');
+    }
+
+    function displayWorkerStats(sortedWorkerStats, containerId, title) {
+        const workerStatsContainer = document.getElementById(containerId);
+        workerStatsContainer.className = 'worker-stats';
+        workerStatsContainer.innerHTML = `<h2>Top 5 Eng'r by ${title}</h2>`;
+        
+        sortedWorkerStats.slice(0, 5).forEach(([worker, value], index) => {
+            const workerStat = document.createElement('div');
+            workerStat.className = 'worker-stat';
+            if (index === 0) {
+                workerStat.classList.add('top-1');
+            }
+            if (title === 'Worktime') {
+                const hours = Math.floor(value / 60);
+                const minutes = value % 60;
+                workerStat.innerHTML = `
+                    <p class="name">${worker}</p>
+                    <p>${hours}시간 ${minutes}분</p>
+                `;
+            } else {
+                workerStat.innerHTML = `
+                    <p class="name">${worker}</p>
+                    <p>${value} 개</p>
+                `;
+            }
+            workerStatsContainer.appendChild(workerStat);
+        });
+    }
+
     document.getElementById('searchButton').addEventListener('click', () => {
         const searchWorker = document.getElementById('searchWorker').value.toLowerCase();
         const searchStartDate = document.getElementById('searchStartDate').value;
@@ -218,6 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         displayLogs(filteredLogs);
+        calculateWorkerStats(filteredLogs); // 필터링된 로그로 작업자 통계 계산 함수 호출
     });
 
     document.getElementById('resetButton').addEventListener('click', () => {
@@ -229,6 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('searchGroup').value = '';
         document.getElementById('searchSite').value = '';
         displayLogs(logs);
+        calculateWorkerStats(logs); // 전체 로그로 작업자 통계 계산 함수 호출
     });
 
     // 로그인 상태를 확인하고, 로그인되어 있지 않으면 로그인 페이지로 리디렉션

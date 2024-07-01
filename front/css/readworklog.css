@@ -318,7 +318,7 @@ button.delete-log:hover {
     }
 }
 
-#worklog-count {
+#worklog-count, #total-worktime {
     text-align: center;
     font-size: 18px;
     font-weight: bold;
@@ -326,10 +326,113 @@ button.delete-log:hover {
     margin-bottom: 20px;
 }
 
-/* Add this to your existing CSS file */
-
 /* Style for "수정 필요" */
 .error-text {
     color: red;
     font-weight: bold;
+
+
+    
+}
+
+/* Container for Total Worklogs and Total Worktime */
+#total-work {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#worklog-count, #total-worktime {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+    font-weight: bold;
+    color: #0044cc;
+    margin: 0 10px;
+}
+
+/* Top 5 engineers container */
+#top5-engineers {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.worker-stats {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 45%;
+}
+
+.worker-stats h2 {
+    font-size: 20px;
+    color: #0044cc;
+    margin-bottom: 10px;
+}
+
+.worker-stat {
+    background-color: #f4f4f9;
+    padding: 5px;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin: 5px 0;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.worker-stat p {
+    font-size: 14px;
+    color: #333;
+    margin: 5px 0;
+}
+
+.worker-stat p.name {
+    font-weight: bold;
+    color: #0044cc;
+}
+
+/* Top 1 worker special style */
+.worker-stat.top-1 {
+    background-color: #0044cc;
+    color: #fff;
+}
+
+.worker-stat.top-1 p.name {
+    color: #ffd700; /* Gold color for top 1 worker name */
+}
+
+.worker-stat.top-1 p {
+    color: #fff;
+}
+
+.worker-stat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive design for worker statistics */
+@media screen and (max-width: 768px) {
+    .worker-stat p {
+        font-size: 12px;
+    }
+
+    .worker-stats h2 {
+        font-size: 16px;
+    }
+    
+    #top5-engineers {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .worker-stats {
+        width: 90%;
+        margin-bottom: 20px;
+    }
 }
