@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Read Work log</title>
+    <title>Group and Site Stats</title>
     <link rel="stylesheet" href="./css/styles.css" />
-    <link rel="stylesheet" href="./css/readworklog.css" />
+    <link rel="stylesheet" href="./css/group-site-stats.css" />
 </head>
 <body>
     <nav>
@@ -31,24 +31,8 @@
     </nav>
 
     <main>
-        <section id="worklog">
+        <section id="filter">
             <div class="inner">
-
-                <div id="summary">
-                    <div id="total-work">
-                        <p id="total-worktime">Total Worktime: 0시간 0분</p>
-                        <p id="worklog-count">Total Worklogs: 0</p>
-                    </div>
-                    <div id="top5-engineers">
-                        <div id="top5-worktime-stats"></div>
-                        <div id="top5-taskcount-stats"></div>
-                    </div>
-                    <div id="buttons-container">
-                        <button id="expandButton" style="display: none;">Show More</button>
-                        <button id="collapseButton" style="display: none;">Show Less</button>
-                    </div>
-                </div>
-
                 <div class="search-container">
                     <input type="date" id="searchStartDate">
                     <span>to</span>
@@ -67,25 +51,21 @@
                         <option value="CJ">CJ</option>
                         <option value="PSKH">PSKH</option>
                     </select>
-                    <input type="text" id="searchEqName" placeholder="Search by EQ Name">
-                    <input type="text" id="searchTitle" placeholder="Search by Title">
-                    <input type="text" id="searchWorker" placeholder="Search by Worker">
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                 </div>
-                <div id="worklog-cards" class="worklog-cards"></div>
+            </div>
+        </section>
+
+        <section id="summary">
+            <div id="overall-stats" class="stats-section">
+                <h2>Overall Stats</h2>
+                <div id="overall-stats-content"></div>
             </div>
         </section>
     </main>
 
-    <div id="logModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div id="logDetails"></div>
-        </div>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-    <script src="./js/readworklog.js"></script>
+    <script src="./js/group-site-stats.js"></script>
 </body>
 </html>

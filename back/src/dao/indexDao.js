@@ -160,3 +160,9 @@ exports.getAverageInfo = async function (connection, group, site, level, nicknam
 };
 
 
+// 사용자 목록 조회
+exports.getUsers = async function (connection) {
+  const Query = `SELECT userID, nickname, \`group\`, site, level FROM Users WHERE status = 'A';`;
+  const [rows] = await connection.query(Query);
+  return rows;
+};
