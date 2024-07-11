@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'x-access-token': localStorage.getItem('x-access-token')
                 }
             });
-            engineers = response.data.result;
+            console.log('Engineers data:', response.data); // 데이터를 확인하기 위해 콘솔에 출력
+            engineers = Array.isArray(response.data.result) ? response.data.result : [];
         } catch (error) {
             console.error('엔지니어 데이터를 불러오는 중 오류 발생:', error);
         }
@@ -29,7 +30,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/logs');
+            const response = await axios.get('http://3.37.165.84:3001/logs', {
+                headers: {
+                    'x-access-token': localStorage.getItem('x-access-token')
+                }
+            });
+            console.log('Logs data:', response.data); // 데이터를 확인하기 위해 콘솔에 출력
             logs = response.data;
             displayOverallStats();
         } catch (error) {
@@ -70,6 +76,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const [group, site] = key.split(' ');
             const totalEngineers = engineers.filter(engineer => engineer.group === group && engineer.site === site).length;
 
+            console.log(`Group: ${group}, Site: ${site}, Total Engineers: ${totalEngineers}`); // 디버그를 위해 출력
+
             if (totalEngineers > 0) {
                 const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
                 const hours = Math.floor(totalMinutes / 60);
@@ -79,7 +87,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 statDiv.innerHTML = `
                     <p><strong>${key}</strong></p>
                     <p>Total Worktime: ${hours}시간 ${minutes}분</p>
-                    <p>Required Engineers (Avg/day): ${requiredEngineers.toFixed(2)}</p>
+                    <p>Required Engineers (Avg/day): ${requiredEngineers.toFixed(2)}명</p>
+                    <p>Total Engineers: ${totalEngineers}명</p>
                     <p>Operation Rate: ${operationRate.toFixed(2)}%</p>
                 `;
                 overallStatsContent.appendChild(statDiv);
@@ -140,6 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const [group, site] = key.split(' ');
             const totalEngineers = engineers.filter(engineer => engineer.group === group && engineer.site === site).length;
 
+            console.log(`Group: ${group}, Site: ${site}, Total Engineers: ${totalEngineers}`); // 디버그를 위해 출력
+
             if (totalEngineers > 0) {
                 const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
                 const hours = Math.floor(totalMinutes / 60);
@@ -149,7 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 statDiv.innerHTML = `
                     <p><strong>${key}</strong></p>
                     <p>Total Worktime: ${hours}시간 ${minutes}분</p>
-                    <p>Required Engineers (Avg/day): ${requiredEngineers.toFixed(2)}</p>
+                    <p>Required Engineers (Avg/day): ${requiredEngineers.toFixed(2)}명</p>
+                    <p>Total Engineers: ${totalEngineers}명</p>
                     <p>Operation Rate: ${operationRate.toFixed(2)}%</p>
                 `;
                 overallStatsContent.appendChild(statDiv);
@@ -168,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 로그인 상태를 확인하고, 로그인되어 있지 않으면 로그인 페이지로 리디렉션
     if (checkLogin()) {
         await loadEngineers();
-        loadWorkLogs();
+        await loadWorkLogs();
     }
 
     const signOutButton = document.querySelector("#sign-out");

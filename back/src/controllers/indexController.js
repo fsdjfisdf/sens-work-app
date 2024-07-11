@@ -260,34 +260,34 @@ exports.getAverageInfo = async function (req, res) {
 };
 
 
-// 사용자 목록 조회
-exports.getUsers = async function (req, res) {
+exports.getAllUsers = async function (req, res) {
   try {
-    const connection = await pool.getConnection(async (conn) => conn);
-    try {
-      const [rows] = await indexDao.getUsers(connection);
-      return res.status(200).json({
-        isSuccess: true,
-        code: 200,
-        message: "사용자 목록 조회 성공",
-        result: rows,
-      });
-    } catch (err) {
-      logger.error(`getUsers Query error\n: ${JSON.stringify(err)}`);
-      return res.status(500).json({
-        isSuccess: false,
-        code: 500,
-        message: "서버 오류입니다.",
-      });
-    } finally {
-      connection.release();
-    }
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const query = "SELECT userID, nickname, `group`, site, level FROM Users WHERE status = 'A'";
+          const [rows] = await connection.query(query);
+          return res.status(200).json({
+              isSuccess: true,
+              code: 200,
+              message: "사용자 목록 조회 성공",
+              result: rows,
+          });
+      } catch (err) {
+          logger.error(`getAllUsers Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "서버 오류입니다.",
+          });
+      } finally {
+          connection.release();
+      }
   } catch (err) {
-    logger.error(`getUsers DB Connection error\n: ${JSON.stringify(err)}`);
-    return res.status(500).json({
-      isSuccess: false,
-      code: 500,
-      message: "서버 오류입니다.",
-    });
+      logger.error(`getAllUsers DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "서버 오류입니다.",
+      });
   }
 };
