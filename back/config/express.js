@@ -27,6 +27,7 @@ module.exports = function () {
   app.use(express.static(path.join(__dirname, '../../front')));
   app.use(express.static(path.join(__dirname, '../../front/css')));
   app.use(express.static(path.join(__dirname, '../../front/js')));
+  app.use('/calendar', express.static(path.join(__dirname, '../../front/calendar')));
 
   app.get("/", (req, res) => {
     res.redirect("/signin.html");

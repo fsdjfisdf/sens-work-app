@@ -1,99 +1,67 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const ENGINEER_WORK_HOURS_PER_DAY = 3.5;
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
+document.addEventListener('DOMContentLoaded', async () => {
+    const calendarElement = document.getElementById('calendar');
+    const logsData = JSON.parse(window.opener.logsData);
+    const engineersData = JSON.parse(window.opener.engineersData);
 
-    async function fetchDailyOperationRates(group, site, startDate, endDate) {
-        const response = await fetch(`http://localhost:3001/daily-operation-rates?group=${group}&site=${site}&startDate=${startDate}&endDate=${endDate}`, {
-            headers: {
-                'x-access-token': localStorage.getItem('x-access-token')
-            }
+    function calculateDailyOperationRate(logs, engineers, date) {
+        const logsForTheDay = logs.filter(log => log.task_date === date);
+        let totalMinutes = 0;
+        let totalEngineers = engineers.length;
+
+        logsForTheDay.forEach(log => {
+            const durationParts = log.task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            totalMinutes += taskDurationMinutes * numWorkers;
         });
-        const data = await response.json();
-        return data.result;
+
+        const uniqueDates = logsForTheDay.length ? 1 : 0;
+        if (totalEngineers > 0 && uniqueDates > 0) {
+            const operationRate = (totalMinutes / (uniqueDates * ENGINEER_WORK_HOURS_PER_DAY * 60)) / totalEngineers * 100;
+            return operationRate;
+        }
+        return null;
     }
 
-    function calculateOperationRate(totalMinutes, uniqueDates, totalEngineers) {
-        const totalHours = totalMinutes / 60;
-        const averageDailyHours = totalHours / uniqueDates;
-        const requiredEngineers = averageDailyHours / ENGINEER_WORK_HOURS_PER_DAY;
-        return (requiredEngineers / totalEngineers) * 100;
-    }
+    function generateCalendar(year, month) {
+        calendarElement.innerHTML = '';
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+        const firstDayIndex = firstDayOfMonth.getDay();
+        const lastDate = lastDayOfMonth.getDate();
 
-    async function renderCalendar(month, year) {
-        const calendar = document.getElementById('calendar');
-        calendar.innerHTML = '';
+        const days = [];
 
-        const firstDay = new Date(year, month).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const group = 'PEE1';
-        const site = 'PT';
-        const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-        const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${daysInMonth}`;
-        const dailyRates = await fetchDailyOperationRates(group, site, startDate, endDate);
-
-        const operationRates = {};
-        dailyRates.forEach(rate => {
-            const totalMinutes = rate.total_minutes;
-            const uniqueDates = rate.unique_dates;
-            const totalEngineers = rate.total_engineers;
-            operationRates[rate.task_date] = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
-        });
-
-        const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        dayLabels.forEach(day => {
-            const dayLabelElement = document.createElement('div');
-            dayLabelElement.classList.add('day-label');
-            dayLabelElement.innerText = day;
-            calendar.appendChild(dayLabelElement);
-        });
-
-        for (let i = 0; i < firstDay; i++) {
-            const dayElement = document.createElement('div');
-            dayElement.classList.add('day');
-            calendar.appendChild(dayElement);
+        for (let i = 0; i < firstDayIndex; i++) {
+            days.push('<div class="day na"></div>');
         }
 
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayElement = document.createElement('div');
-            dayElement.classList.add('day');
-            const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const rate = operationRates[date];
+        for (let date = 1; date <= lastDate; date++) {
+            const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+            const operationRate = calculateDailyOperationRate(logsData, engineersData, fullDate);
+            let className = 'day';
+            let text = `${date}<br>N/A`;
 
-            if (rate !== undefined) {
-                dayElement.innerText = `${day}\n${rate.toFixed(2)}%`;
-                if (rate >= 100) {
-                    dayElement.classList.add('red');
-                } else if (rate >= 70) {
-                    dayElement.classList.add('green');
+            if (operationRate !== null) {
+                if (operationRate >= 100) {
+                    className += ' lack';
+                    text = `${date}<br>${operationRate.toFixed(2)}%<br>Lack`;
+                } else if (operationRate >= 70) {
+                    className += ' optimal';
+                    text = `${date}<br>${operationRate.toFixed(2)}%<br>Optimal`;
                 } else {
-                    dayElement.classList.add('yellow');
+                    className += ' surplus';
+                    text = `${date}<br>${operationRate.toFixed(2)}%<br>Surplus`;
                 }
-            } else {
-                dayElement.innerText = `${day}\nN/A`;
             }
-
-            calendar.appendChild(dayElement);
+            days.push(`<div class="${className}">${text}</div>`);
         }
+
+        calendarElement.innerHTML = days.join('');
     }
 
-    document.getElementById('prevMonth').addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) {
-            currentMonth = 11;
-            currentYear--;
-        }
-        renderCalendar(currentMonth, currentYear);
-    });
-
-    document.getElementById('nextMonth').addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) {
-            currentMonth = 0;
-            currentYear++;
-        }
-        renderCalendar(currentMonth, currentYear);
-    });
-
-    renderCalendar(currentMonth, currentYear);
+    const now = new Date();
+    generateCalendar(now.getFullYear(), now.getMonth());
 });
