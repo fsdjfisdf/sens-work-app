@@ -19,7 +19,7 @@ module.exports = function (app) {
 
     // 모든 사용자 조회
     app.get("/users", jwtMiddleware, index.getAllUsers);
-
-    // 특정 날짜의 작업 시간 조회
+    
+    // 작업 시간 조회
     app.get("/worktime-by-date", jwtMiddleware, index.getWorkTimeByDate);
 };
