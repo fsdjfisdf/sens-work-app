@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operation Rate</title>
+    <title>Operating Rate</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/group-site-stats.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script defer src="group-site-stats.js"></script>
 </head>
 <body>
     <nav>
         <div class="inner">
             <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">SEnS Working System</a></h1>
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
                 <div class="sign-container">
                     <div class="unsigned"></div>
                     <div class="signed hidden">
@@ -24,6 +23,7 @@
                                 <a href="./info.html" class="dropdown-item">Eng'r Information</a>
                                 <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
                                 <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                <a href="./group-site-stats.html" class="dropdown-item">Operating Rate</a>
                                 <button id="sign-out" class="dropdown-item">Logout</button>
                             </div>
                         </div>
@@ -65,10 +65,7 @@
                 </div>
 
                 <div id="overall-stats-content"></div>
-                <div id="operation-rate-indicator" class="traffic-light">
-                    <div class="light" id="light-red"></div>
-                    <div class="light" id="light-green"></div>
-                    <div class="light" id="light-yellow"></div>
+                <div id="calendarContainer" class="calendar-container"></div>
                 <canvas id="monthlyWorktimeChart"></canvas>
                 <canvas id="operationRateChart"></canvas>
             </div>

@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let engineers = [];
     let monthlyWorktimeChartInstance;
     let operationRateChartInstance;
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
 
     function checkLogin() {
         const token = localStorage.getItem('x-access-token');
@@ -24,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             console.log('Engineers data:', response.data);
             engineers = Array.isArray(response.data.result) ? response.data.result : [];
-            window.engineersData = JSON.stringify(engineers);
         } catch (error) {
             console.error('엔지니어 데이터를 불러오는 중 오류 발생:', error);
         }
@@ -39,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             console.log('Logs data:', response.data);
             logs = response.data;
-            window.logsData = JSON.stringify(logs);
             displayOverallStats(logs, engineers);
             renderMonthlyWorktimeChart(logs);
             renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
@@ -54,11 +54,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const requiredEngineers = averageDailyHours / ENGINEER_WORK_HOURS_PER_DAY;
         return (requiredEngineers / totalEngineers) * 100;
     }
-
     function displayOverallStats(filteredLogs, filteredEngineers) {
         let totalMinutes = 0;
         const dates = new Set();
-
+    
         filteredLogs.forEach(log => {
             const durationParts = log.task_duration.split(':');
             const hours = parseInt(durationParts[0], 10);
@@ -66,16 +65,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const taskDurationMinutes = (hours * 60) + minutes;
             const numWorkers = log.task_man.split(',').length;
             totalMinutes += taskDurationMinutes * numWorkers;
-
+    
             dates.add(log.task_date);
         });
-
+    
         const uniqueDates = dates.size;
         const totalEngineers = filteredEngineers.length;
-
-        console.log(`Total Engineers: ${totalEngineers}`);
-        console.log(`Unique Work Days: ${Array.from(dates).join(', ')}`);
-
+    
         if (totalEngineers > 0) {
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
             const hours = Math.floor(totalMinutes / 60);
@@ -84,30 +80,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             const avgWorkTimePerEngineer = totalMinutes / (uniqueDates * totalEngineers);
             const avgWorkHours = Math.floor(avgWorkTimePerEngineer / 60);
             const avgWorkMinutes = Math.round(avgWorkTimePerEngineer % 60);
-
+    
             const overallStatsContent = document.getElementById('overall-stats-content');
             overallStatsContent.innerHTML = `
-                <div class="stat-item" title="총 작업 시간">
-                    <p>Total Worktime: ${hours}시간 ${minutes}분</p>
-                </div>
-                <div class="stat-item" title="작업 날짜 수">
-                    <p>Unique Work Days: ${uniqueDates}일</p>
-                </div>
-                <div class="stat-item" title="필요 엔지니어 수 (총 작업 시간 / 작업 날짜 수 / 3.5 시간)">
-                    <p>Required Engineers (Avg/day): ${requiredEngineers.toFixed(2)}명</p>
-                </div>
-                <div class="stat-item" title="총 엔지니어 수 (선택된 조건에 따라 필터링된 엔지니어 수)">
-                    <p>Total Engineers: ${totalEngineers}명</p>
-                </div>
-                <div class="stat-item blue-text" title="가동율 (필요 엔지니어 수 / 총 엔지니어 수 * 100)">
-                    <p>Operation Rate: ${operationRate.toFixed(2)}%</p>
-                </div>
-                <div class="stat-item blue-text" title="엔지니어 한명당 하루 평균 근무 시간 (총 작업 시간 / 총 엔지니어 수 / 작업 날짜 수)">
-                    <p>Average Worktime per Engineer: ${avgWorkHours}시간 ${avgWorkMinutes}분</p>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <h3>Total Worktime:</h3>
+                        <p>${hours}시간 ${minutes}분</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Work Days:</h3>
+                        <p>${uniqueDates}일</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Required Engineers:</h3>
+                        <p>${requiredEngineers.toFixed(2)}명</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Total Engineers:</h3>
+                        <p>${totalEngineers}명</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 class="blue-text">Operating Rate:</h3>
+                        <p class="blue-text">${operationRate.toFixed(2)}%</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 class="blue-text">Average Worktime per Engineer:</h3>
+                        <p class="blue-text">${avgWorkHours}시간 ${avgWorkMinutes}분</p>
+                    </div>
                 </div>
             `;
-
-            updateTrafficLight(operationRate);
         }
     }
 
@@ -264,24 +266,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function updateTrafficLight(operationRate) {
-        const lightRed = document.getElementById('light-red');
-        const lightGreen = document.getElementById('light-green');
-        const lightYellow = document.getElementById('light-yellow');
-
-        lightRed.classList.remove('red');
-        lightGreen.classList.remove('green');
-        lightYellow.classList.remove('yellow');
-
-        if (operationRate >= 100) {
-            lightRed.classList.add('red');
-        } else if (operationRate >= 70) {
-            lightGreen.classList.add('green');
-        } else {
-            lightYellow.classList.add('yellow');
-        }
-    }
-
     document.getElementById('searchButton').addEventListener('click', () => {
         const searchGroup = document.getElementById('searchGroup').value;
         const searchSite = document.getElementById('searchSite').value;
@@ -311,6 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayOverallStats(filteredLogs, filteredEngineers);
         renderMonthlyWorktimeChart(filteredLogs);
         renderOperationRateChart(filteredLogs, filteredEngineers);
+        renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
     });
 
     document.getElementById('resetButton').addEventListener('click', () => {
@@ -322,6 +307,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayOverallStats(logs, engineers);
         renderMonthlyWorktimeChart(logs);
         renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
+        renderCalendar(logs, engineers, currentYear, currentMonth);
+    });
+
+    document.getElementById('showCalendarButton').addEventListener('click', () => {
+        renderCalendar(logs, engineers, currentYear, currentMonth);
     });
 
     function formatDate(dateString) {
@@ -338,15 +328,140 @@ document.addEventListener('DOMContentLoaded', async () => {
         return day !== 0 && day !== 6;
     }
 
-    document.getElementById('showCalendarButton').addEventListener('click', openCalendarPopup);
+    function renderCalendar(logs, engineers, year, month) {
+        const calendarContainer = document.getElementById('calendarContainer');
+        calendarContainer.innerHTML = '';
 
-    function openCalendarPopup() {
-        window.open('calendar.html', 'calendar', 'width=800,height=600');
+        const currentMonthLogs = logs.filter(log => {
+            const logDate = new Date(log.task_date);
+            return logDate.getFullYear() === year && logDate.getMonth() === month;
+        });
+
+        
+        const prevMonthButton = document.createElement('button');
+        prevMonthButton.className = 'calendar-nav-button';
+        prevMonthButton.textContent = 'Previous Month';
+        prevMonthButton.onclick = () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar(logs, engineers, currentYear, currentMonth);
+        };
+        calendarContainer.appendChild(prevMonthButton);
+
+        const nextMonthButton = document.createElement('button');
+        nextMonthButton.className = 'calendar-nav-button';
+        nextMonthButton.textContent = 'Next Month';
+        nextMonthButton.onclick = () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar(logs, engineers, currentYear, currentMonth);
+        };
+        calendarContainer.appendChild(nextMonthButton);
+
+        const calendarLegend = document.createElement('div');
+        calendarLegend.className = 'calendar-legend';
+        calendarLegend.innerHTML = `
+            <div class="legend-item lack">Lack (>= 100%)</div>
+            <div class="legend-item optimal">Optimal (70% - 99%)</div>
+            <div class="legend-item surplus">Surplus (< 70%)</div>
+        `;
+        calendarContainer.appendChild(calendarLegend);
+
+
+        const daysInWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startDay = (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1); // 월요일 시작
+
+        const calendarHeader = document.createElement('div');
+        calendarHeader.className = 'calendar-header';
+        daysInWeek.forEach(day => {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-header-day';
+            dayElement.textContent = day;
+            calendarHeader.appendChild(dayElement);
+        });
+        calendarContainer.appendChild(calendarHeader);
+
+        const calendarTitle = document.createElement('div');
+        calendarTitle.className = 'calendar-title';
+        calendarTitle.textContent = `${year}-${String(month + 1).padStart(2, '0')}`;
+        calendarContainer.appendChild(calendarTitle);
+
+        const calendarRows = [];
+        let calendarRow = document.createElement('div');
+        calendarRow.className = 'calendar-row';
+        for (let i = 0; i < startDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'calendar-day empty';
+            calendarRow.appendChild(emptyDay);
+        }
+
+        for (let date = 1; date <= daysInMonth; date++) {
+            if ((date + startDay - 1) % 7 === 0) {
+                calendarContainer.appendChild(calendarRow);
+                calendarRow = document.createElement('div');
+                calendarRow.className = 'calendar-row';
+            }
+
+            const currentDate = new Date(year, month, date);
+            const dateString = formatDate(currentDate.toISOString());
+
+            const dailyLogs = currentMonthLogs.filter(log => log.task_date.startsWith(dateString));
+            const totalMinutes = dailyLogs.reduce((acc, log) => {
+                const durationParts = log.task_duration.split(':');
+                const hours = parseInt(durationParts[0], 10);
+                const minutes = parseInt(durationParts[1], 10);
+                const taskDurationMinutes = (hours * 60) + minutes;
+                const numWorkers = log.task_man.split(',').length;
+                return acc + (taskDurationMinutes * numWorkers);
+            }, 0);
+
+            if (totalMinutes === 0) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day empty';
+                calendarRow.appendChild(emptyDay);
+                continue;
+            }
+
+            const uniqueDates = 1;
+            const totalEngineers = engineers.length;
+            const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
+            const requiredEngineers = (totalMinutes / uniqueDates) / (ENGINEER_WORK_HOURS_PER_DAY * 60);
+
+            const calendarDay = document.createElement('div');
+            calendarDay.className = 'calendar-day';
+
+            if (operationRate >= 100) {
+                calendarDay.classList.add('lack');
+            } else if (operationRate >= 70) {
+                calendarDay.classList.add('optimal');
+            } else {
+                calendarDay.classList.add('surplus');
+            }
+
+            calendarDay.innerHTML = `
+                <p style="font-weight: bold;">${dateString}</p>
+                <p>${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min</p>
+                <p>필요 Eng'r: ${requiredEngineers.toFixed(2)}명</p>
+                <p style="color: blue;">가동율: ${operationRate.toFixed(2)}%</p>
+            `;
+            calendarRow.appendChild(calendarDay);
+        }
+        calendarContainer.appendChild(calendarRow);
+
     }
 
     if (checkLogin()) {
         await loadEngineers();
         await loadWorkLogs();
+        renderCalendar(logs, engineers, currentYear, currentMonth);
     }
 
     const signOutButton = document.querySelector("#sign-out");
