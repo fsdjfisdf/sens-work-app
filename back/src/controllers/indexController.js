@@ -291,3 +291,36 @@ exports.getAllUsers = async function (req, res) {
       });
   }
 };
+
+exports.getDailyOperationRates = async function (req, res) {
+  const { group, site, startDate, endDate } = req.query;
+
+  try {
+    const connection = await pool.getConnection(async (conn) => conn);
+    try {
+      const dailyRates = await indexDao.getDailyOperationRates(connection, group, site, startDate, endDate);
+      return res.status(200).json({
+        isSuccess: true,
+        code: 200,
+        message: "일일 가동율 조회 성공",
+        result: dailyRates,
+      });
+    } catch (err) {
+      logger.error(`getDailyOperationRates Query error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+        isSuccess: false,
+        code: 500,
+        message: "서버 오류입니다.",
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    logger.error(`getDailyOperationRates DB Connection error\n: ${JSON.stringify(err)}`);
+    return res.status(500).json({
+      isSuccess: false,
+      code: 500,
+      message: "서버 오류입니다.",
+    });
+  }
+};

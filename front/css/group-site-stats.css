@@ -1,3 +1,4 @@
+/* Reset some basic elements */
 body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
@@ -94,34 +95,11 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
     padding: 20px 0;
 }
 
-.stats-section {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 10px;
-    width: 90%;
-}
-
-.stats-section h2 {
+h2 {
     text-align: center;
-    margin-bottom: 20px;
-    color: #0044cc;
-}
-
-.stats-section div {
-    text-align: center;
-}
-
-#filter {
-    display: flex;
-    justify-content: center;
-    width: 90%;
-    flex-wrap: wrap;
     margin-bottom: 20px;
 }
 
@@ -177,14 +155,146 @@ main {
     background-color: #555;
 }
 
-@media screen and (max-width: 768px) {
-    .stats-section {
-        width: 90%;
-        margin-bottom: 20px;
-    }
+#overall-stats-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
 
-    #filter {
+.stat-item {
+    position: relative;
+    display: block;
+    margin: 10px 0;
+    cursor: pointer;
+}
+
+.stat-item::after {
+    content: attr(title);
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    top: 50%;
+    left: 100%;
+    transform: translateX(10px) translateY(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1;
+    font-size: 12px;
+    max-width: 300px;
+    overflow-wrap: break-word;
+}
+
+.stat-item:hover::after {
+    opacity: 1;
+}
+
+.blue-text {
+    color: #0044cc;
+    font-weight: bold;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+}
+
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.calendar-header, .calendar-row {
+    display: flex;
+    width: 100%;
+}
+
+.calendar-header-day, .calendar-day {
+    flex: 1;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.calendar-day {
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.calendar-day.lack {
+    background-color: #ffcccc;
+}
+
+.calendar-day.optimal {
+    background-color: #ccffcc;
+}
+
+.calendar-day.surplus {
+    background-color: #ffffcc;
+}
+
+.calendar-day.empty {
+    background-color: transparent;
+    border: none;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
+    .nav-container {
         flex-direction: column;
         align-items: center;
+    }
+
+    .nav-title a {
+        font-size: 20px;
+    }
+
+    .sign-link, .dropbtn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .dropdown-content {
+        min-width: 100px;
+    }
+
+    .dropdown-content .dropdown-item {
+        padding: 10px 12px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .search-container {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .search-container input,
+    .search-container select {
+        width: 100%;
+    }
+
+    .search-container .date-container {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .search-container .date-to {
+        margin: 10px 0;
+    }
+
+    .search-container button {
+        width: 100%;
     }
 }

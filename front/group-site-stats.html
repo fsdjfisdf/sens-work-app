@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Group and Site Stats</title>
+    <title>Operation Rate</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/group-site-stats.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script defer src="group-site-stats.js"></script>
 </head>
 <body>
     <nav>
@@ -31,7 +34,7 @@
     </nav>
 
     <main>
-        <section id="filter">
+        <section id="worklog">
             <div class="inner">
                 <div class="search-container">
                     <input type="date" id="searchStartDate">
@@ -51,16 +54,23 @@
                         <option value="CJ">CJ</option>
                         <option value="PSKH">PSKH</option>
                     </select>
+                    <select id="searchWorkType" name="searchWorkType">
+                        <option value="ALL">ALL</option>
+                        <option value="Workday">Workday</option>
+                        <option value="Holiday">Holiday</option>
+                    </select>
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
+                    <button id="showCalendarButton">Show Calendar</button>
                 </div>
-            </div>
-        </section>
 
-        <section id="summary">
-            <div id="overall-stats" class="stats-section">
-                <h2>Overall Stats</h2>
                 <div id="overall-stats-content"></div>
+                <div id="operation-rate-indicator" class="traffic-light">
+                    <div class="light" id="light-red"></div>
+                    <div class="light" id="light-green"></div>
+                    <div class="light" id="light-yellow"></div>
+                <canvas id="monthlyWorktimeChart"></canvas>
+                <canvas id="operationRateChart"></canvas>
             </div>
         </section>
     </main>

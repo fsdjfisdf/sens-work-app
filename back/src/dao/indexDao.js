@@ -166,3 +166,21 @@ exports.getUsers = async function (connection) {
   const [rows] = await connection.query(Query);
   return rows;
 };
+
+
+exports.getDailyOperationRates = async function (connection, group, site, startDate, endDate) {
+  const query = `
+    SELECT 
+      task_date,
+      SUM(TIMESTAMPDIFF(MINUTE, start_time, end_time) * (LENGTH(task_man) - LENGTH(REPLACE(task_man, ',', '')) + 1)) AS total_minutes,
+      COUNT(DISTINCT task_date) AS unique_dates,
+      (SELECT COUNT(*) FROM Users WHERE status = 'A' AND \`group\` = ? AND site = ?) AS total_engineers
+    FROM work_log
+    WHERE \`group\` = ? AND site = ? AND task_date BETWEEN ? AND ?
+    GROUP BY task_date
+  `;
+  const params = [group, site, group, site, startDate, endDate];
+
+  const [rows] = await connection.query(query, params);
+  return rows;
+};
