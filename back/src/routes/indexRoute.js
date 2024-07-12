@@ -22,4 +22,7 @@ module.exports = function (app) {
 
     // 일별 가동율 조회
     app.get("/daily-operation-rates", jwtMiddleware, index.getDailyOperationRates);
+
+    // 특정 날짜의 작업 시간 조회
+    app.get("/worktime-by-date", jwtMiddleware, index.getWorkTimeByDate);
 };

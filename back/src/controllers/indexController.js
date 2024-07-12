@@ -335,3 +335,45 @@ exports.getDailyOperationRates = async function (req, res) {
       });
   }
 };
+
+
+// 특정 날짜의 작업 시간 조회
+exports.getWorkTimeByDate = async function (req, res) {
+  const { startDate, endDate } = req.query;
+
+  try {
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const query = `
+              SELECT task_date, SUM(TIME_TO_SEC(task_duration)) / 3600 AS work_hours
+              FROM work_log
+              WHERE task_date BETWEEN ? AND ?
+              GROUP BY task_date
+          `;
+          const [rows] = await connection.query(query, [startDate, endDate]);
+
+          return res.send({
+              result: rows,
+              isSuccess: true,
+              code: 200,
+              message: "특정 날짜의 작업 시간 조회 성공",
+          });
+      } catch (err) {
+          logger.error(`getWorkTimeByDate Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "서버 오류입니다.",
+          });
+      } finally {
+          connection.release();
+      }
+  } catch (err) {
+      logger.error(`getWorkTimeByDate DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "서버 오류입니다.",
+      });
+  }
+};

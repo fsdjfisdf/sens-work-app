@@ -4,11 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendar</title>
-    <link rel="stylesheet" href="./css/calendar.css">
+    <link rel="stylesheet" href="css/calendar.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/calendar.js" defer></script>
 </head>
 <body>
-    <h1>Calendar</h1>
-    <div id="calendar"></div>
-    <script src="./js/calendar.js"></script>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button id="prev">&lt;</button>
+            <span id="monthAndYear"></span>
+            <button id="next">&gt;</button>
+        </div>
+        <div class="calendar" id="calendar"></div>
+    </div>
 </body>
 </html>

@@ -1,67 +1,86 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const calendarElement = document.getElementById('calendar');
-    const logsData = JSON.parse(window.opener.logsData);
-    const engineersData = JSON.parse(window.opener.engineersData);
+    const monthElement = document.getElementById('month');
+    const yearElement = document.getElementById('year');
 
-    function calculateDailyOperationRate(logs, engineers, date) {
-        const logsForTheDay = logs.filter(log => log.task_date === date);
-        let totalMinutes = 0;
-        let totalEngineers = engineers.length;
+    const currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
 
-        logsForTheDay.forEach(log => {
-            const durationParts = log.task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            totalMinutes += taskDurationMinutes * numWorkers;
-        });
-
-        const uniqueDates = logsForTheDay.length ? 1 : 0;
-        if (totalEngineers > 0 && uniqueDates > 0) {
-            const operationRate = (totalMinutes / (uniqueDates * ENGINEER_WORK_HOURS_PER_DAY * 60)) / totalEngineers * 100;
-            return operationRate;
-        }
-        return null;
-    }
-
-    function generateCalendar(year, month) {
+    function renderCalendar(month, year) {
         calendarElement.innerHTML = '';
-        const firstDayOfMonth = new Date(year, month, 1);
-        const lastDayOfMonth = new Date(year, month + 1, 0);
-        const firstDayIndex = firstDayOfMonth.getDay();
-        const lastDate = lastDayOfMonth.getDate();
+        const firstDay = new Date(year, month).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
 
-        const days = [];
+        const monthAndYear = document.getElementById('monthAndYear');
+        monthAndYear.innerHTML = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-        for (let i = 0; i < firstDayIndex; i++) {
-            days.push('<div class="day na"></div>');
+        // 빈 칸 채우기
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.classList.add('calendar-day', 'empty');
+            calendarElement.appendChild(emptyCell);
         }
 
-        for (let date = 1; date <= lastDate; date++) {
-            const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-            const operationRate = calculateDailyOperationRate(logsData, engineersData, fullDate);
-            let className = 'day';
-            let text = `${date}<br>N/A`;
+        // 날짜 채우기
+        for (let day = 1; day <= lastDate; day++) {
+            const dateCell = document.createElement('div');
+            dateCell.classList.add('calendar-day');
+            const dateText = document.createElement('span');
+            dateText.textContent = day;
+            dateCell.appendChild(dateText);
 
-            if (operationRate !== null) {
-                if (operationRate >= 100) {
-                    className += ' lack';
-                    text = `${date}<br>${operationRate.toFixed(2)}%<br>Lack`;
-                } else if (operationRate >= 70) {
-                    className += ' optimal';
-                    text = `${date}<br>${operationRate.toFixed(2)}%<br>Optimal`;
-                } else {
-                    className += ' surplus';
-                    text = `${date}<br>${operationRate.toFixed(2)}%<br>Surplus`;
-                }
-            }
-            days.push(`<div class="${className}">${text}</div>`);
+            calendarElement.appendChild(dateCell);
         }
 
-        calendarElement.innerHTML = days.join('');
+        // 작업 시간 표시
+        loadWorkTimeData(month, year);
     }
 
-    const now = new Date();
-    generateCalendar(now.getFullYear(), now.getMonth());
+    async function loadWorkTimeData(month, year) {
+        const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+        const endDate = `${year}-${String(month + 1).padStart(2, '0')}-${new Date(year, month + 1, 0).getDate()}`;
+
+        try {
+            const response = await axios.get('http://localhost:3001/worktime-by-date', {
+                headers: {
+                    'x-access-token': localStorage.getItem('x-access-token')
+                },
+                params: {
+                    startDate: startDate,
+                    endDate: endDate
+                }
+            });
+
+            const workTimeData = response.data.result;
+
+            workTimeData.forEach(item => {
+                const date = new Date(item.task_date).getDate();
+                const cell = document.querySelector(`.calendar-day:nth-child(${date + new Date(year, month).getDay()})`);
+                cell.innerHTML += `<br>${item.work_hours.toFixed(2)} hrs`;
+            });
+        } catch (error) {
+            console.error('작업 시간 데이터를 불러오는 중 오류 발생:', error);
+        }
+    }
+
+    document.getElementById('prev').addEventListener('click', () => {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar(currentMonth, currentYear);
+    });
+
+    document.getElementById('next').addEventListener('click', () => {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderCalendar(currentMonth, currentYear);
+    });
+
+    renderCalendar(currentMonth, currentYear);
 });
