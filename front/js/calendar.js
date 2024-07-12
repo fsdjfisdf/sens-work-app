@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const ENGINEER_WORK_HOURS_PER_DAY = 3.5;
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
@@ -33,7 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const operationRates = {};
         dailyRates.forEach(rate => {
-            operationRates[rate.task_date] = calculateOperationRate(rate.total_minutes, rate.unique_dates, rate.total_engineers);
+            const totalMinutes = rate.total_minutes;
+            const uniqueDates = rate.unique_dates;
+            const totalEngineers = rate.total_engineers;
+            operationRates[rate.task_date] = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
         });
 
         for (let i = 0; i < firstDay; i++) {

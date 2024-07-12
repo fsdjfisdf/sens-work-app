@@ -23,7 +23,10 @@ module.exports = function () {
   };
   app.use(cors(corsOptions));
 
+  // 정적 파일 경로 설정
   app.use(express.static(path.join(__dirname, '../../front')));
+  app.use(express.static(path.join(__dirname, '../../front/css')));
+  app.use(express.static(path.join(__dirname, '../../front/js')));
 
   app.get("/", (req, res) => {
     res.redirect("/signin.html");
