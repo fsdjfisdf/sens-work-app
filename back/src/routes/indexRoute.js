@@ -20,7 +20,6 @@ module.exports = function (app) {
     // 모든 사용자 조회
     app.get("/users", jwtMiddleware, index.getAllUsers);
 
-    // 일일 가동율 조회
+    // 일별 가동율 조회
     app.get("/daily-operation-rates", jwtMiddleware, index.getDailyOperationRates);
-
 };

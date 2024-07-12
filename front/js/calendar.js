@@ -40,6 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
             operationRates[rate.task_date] = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
         });
 
+        const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayLabels.forEach(day => {
+            const dayLabelElement = document.createElement('div');
+            dayLabelElement.classList.add('day-label');
+            dayLabelElement.innerText = day;
+            calendar.appendChild(dayLabelElement);
+        });
+
         for (let i = 0; i < firstDay; i++) {
             const dayElement = document.createElement('div');
             dayElement.classList.add('day');

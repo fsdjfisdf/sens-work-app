@@ -296,31 +296,42 @@ exports.getDailyOperationRates = async function (req, res) {
   const { group, site, startDate, endDate } = req.query;
 
   try {
-    const connection = await pool.getConnection(async (conn) => conn);
-    try {
-      const dailyRates = await indexDao.getDailyOperationRates(connection, group, site, startDate, endDate);
-      return res.status(200).json({
-        isSuccess: true,
-        code: 200,
-        message: "일일 가동율 조회 성공",
-        result: dailyRates,
-      });
-    } catch (err) {
-      logger.error(`getDailyOperationRates Query error\n: ${JSON.stringify(err)}`);
-      return res.status(500).json({
-        isSuccess: false,
-        code: 500,
-        message: "서버 오류입니다.",
-      });
-    } finally {
-      connection.release();
-    }
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const query = `
+              SELECT task_date, 
+                     SUM(TIME_TO_SEC(task_duration)) / 60 AS total_minutes,
+                     COUNT(DISTINCT task_date) AS unique_dates,
+                     COUNT(DISTINCT task_man) AS total_engineers
+              FROM work_log
+              WHERE (\`group\` = ? OR ? IS NULL)
+                AND (site = ? OR ? IS NULL)
+                AND (task_date BETWEEN ? AND ?)
+              GROUP BY task_date;
+          `;
+          const [rows] = await connection.query(query, [group, group, site, site, startDate, endDate]);
+          return res.status(200).json({
+              isSuccess: true,
+              code: 200,
+              message: "Daily operation rates fetched successfully",
+              result: rows,
+          });
+      } catch (err) {
+          logger.error(`getDailyOperationRates Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "Server error",
+          });
+      } finally {
+          connection.release();
+      }
   } catch (err) {
-    logger.error(`getDailyOperationRates DB Connection error\n: ${JSON.stringify(err)}`);
-    return res.status(500).json({
-      isSuccess: false,
-      code: 500,
-      message: "서버 오류입니다.",
-    });
+      logger.error(`getDailyOperationRates DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "Server error",
+      });
   }
 };

@@ -17,6 +17,12 @@ body {
     gap: 10px;
 }
 
+.day-label {
+    font-weight: bold;
+    padding: 10px;
+    text-align: center;
+}
+
 .day {
     padding: 10px;
     border: 1px solid #ddd;
