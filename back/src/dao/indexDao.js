@@ -29,6 +29,20 @@ exports.getUserById = async function (connection, userIdx) {
   return rows;
 };
 
+// 작업 시간 조회
+exports.getWorkTimeByDate = async function (connection, startDate, endDate) {
+  const query = `
+    SELECT task_date, SUM(TIME_TO_SEC(task_duration)) / 3600 AS work_hours
+    FROM work_log
+    WHERE task_date BETWEEN ? AND ?
+    GROUP BY task_date
+  `;
+  const params = [startDate, endDate];
+  const [rows] = await connection.query(query, params);
+  return rows;
+};
+
+
 
 exports.selectRestaurants = async function (connection, category) {
   const selectAllRestaurantsQuery = `SELECT title, address, category, videoUrl FROM Restaurants where status = 'A';`;
