@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             console.log('Logs data:', response.data);
             logs = response.data;
+            localStorage.setItem('logs', JSON.stringify(logs)); // logs 데이터를 localStorage에 저장
             displayOverallStats(logs, engineers);
             renderMonthlyWorktimeChart(logs);
             renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);
         }
     }
+    
 
     function calculateOperationRate(totalMinutes, uniqueDates, totalEngineers) {
         const totalHours = totalMinutes / 60;
@@ -54,10 +56,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const requiredEngineers = averageDailyHours / ENGINEER_WORK_HOURS_PER_DAY;
         return (requiredEngineers / totalEngineers) * 100;
     }
+
     function displayOverallStats(filteredLogs, filteredEngineers) {
         let totalMinutes = 0;
         const dates = new Set();
-    
+
         filteredLogs.forEach(log => {
             const durationParts = log.task_duration.split(':');
             const hours = parseInt(durationParts[0], 10);
@@ -65,13 +68,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const taskDurationMinutes = (hours * 60) + minutes;
             const numWorkers = log.task_man.split(',').length;
             totalMinutes += taskDurationMinutes * numWorkers;
-    
+
             dates.add(log.task_date);
         });
-    
+
         const uniqueDates = dates.size;
         const totalEngineers = filteredEngineers.length;
-    
+
         if (totalEngineers > 0) {
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
             const hours = Math.floor(totalMinutes / 60);
@@ -80,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const avgWorkTimePerEngineer = totalMinutes / (uniqueDates * totalEngineers);
             const avgWorkHours = Math.floor(avgWorkTimePerEngineer / 60);
             const avgWorkMinutes = Math.round(avgWorkTimePerEngineer % 60);
-    
+
             const overallStatsContent = document.getElementById('overall-stats-content');
             overallStatsContent.innerHTML = `
                 <div class="stats-container">
@@ -452,10 +455,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p>필요 Eng'r: ${requiredEngineers.toFixed(2)}명</p>
                 <p style="color: blue;">가동율: ${operationRate.toFixed(2)}%</p>
             `;
+            calendarDay.addEventListener('click', () => showDetailedStats(dateString, dailyLogs));
             calendarRow.appendChild(calendarDay);
         }
         calendarContainer.appendChild(calendarRow);
+    }
 
+    function showDetailedStats(date, dailyLogs) {
+        localStorage.setItem('selectedDate', date);
+        localStorage.setItem('dailyLogs', JSON.stringify(dailyLogs));
+        window.open('detailed-stats.html', '_blank');
     }
 
     if (checkLogin()) {

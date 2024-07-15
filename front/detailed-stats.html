@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Stats</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/detailed-stats.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+<body>
+    <main>
+        <section id="detailed-stats">
+            <div class="inner">
+                <h2 id="date-title"></h2>
+                <div id="work-type-summary"></div>
+                <div id="logs-summary"></div>
+                <canvas id="workTypeCountChart"></canvas>
+                <canvas id="workTypeDurationChart"></canvas>
+            </div>
+        </section>
+    </main>
+    <script src="./js/detailed-stats.js"></script>
+</body>
+</html>
