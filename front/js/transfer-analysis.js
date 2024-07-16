@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const logs = JSON.parse(localStorage.getItem('logs')) || [];
-    const engineers = JSON.parse(localStorage.getItem('engineers')) || [];
+    let logs = JSON.parse(localStorage.getItem('logs')) || [];
+    let engineers = JSON.parse(localStorage.getItem('engineers')) || [];
 
     if (logs.length === 0) {
         console.error('No logs data available');
@@ -13,19 +13,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterStartDate = document.getElementById('filterStartDate');
     const filterEndDate = document.getElementById('filterEndDate');
     const applyFiltersButton = document.getElementById('applyFilters');
+    const resetFiltersButton = document.getElementById('resetFilters');
 
-    // Populate engineers filter dropdown
-    engineers.forEach(engineer => {
-        const option = document.createElement('option');
-        option.value = engineer.userID;
-        option.textContent = engineer.nickname;
-        filterEngineer.appendChild(option);
-    });
+    let countChartInstance = null;
+    let durationChartInstance = null;
+    let avgDurationChartInstance = null;
 
     applyFiltersButton.addEventListener('click', () => {
         const selectedGroup = filterGroup.value;
         const selectedSite = filterSite.value;
-        const selectedEngineer = filterEngineer.value;
+        const selectedEngineer = filterEngineer.value.toLowerCase();
         const startDate = filterStartDate.value;
         const endDate = filterEndDate.value;
 
@@ -35,11 +32,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             const endDateMatch = !endDate || logDate <= new Date(endDate);
             const groupMatch = !selectedGroup || log.group === selectedGroup;
             const siteMatch = !selectedSite || log.site === selectedSite;
-            const engineerMatch = !selectedEngineer || log.task_man.includes(selectedEngineer);
+            const engineerMatch = !selectedEngineer || log.task_man.toLowerCase().includes(selectedEngineer);
             return startDateMatch && endDateMatch && groupMatch && siteMatch && engineerMatch;
         });
 
         renderCharts(filteredLogs);
+    });
+
+    resetFiltersButton.addEventListener('click', () => {
+        filterGroup.value = '';
+        filterSite.value = '';
+        filterEngineer.value = '';
+        filterStartDate.value = '';
+        filterEndDate.value = '';
+        renderCharts(logs);
     });
 
     function renderCharts(logs) {
@@ -54,15 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const hours = parseInt(durationParts[0], 10);
             const minutes = parseInt(durationParts[1], 10);
             const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            const totalTaskDuration = taskDurationMinutes * numWorkers;
 
             if (!transferItemCounts[transferItem]) {
                 transferItemCounts[transferItem] = 0;
                 transferItemDurations[transferItem] = 0;
             }
             transferItemCounts[transferItem] += 1;
-            transferItemDurations[transferItem] += totalTaskDuration;
+            transferItemDurations[transferItem] += taskDurationMinutes;
         });
 
         const transferItemLabels = Object.keys(transferItemCounts);
@@ -77,9 +81,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const durationMaxValue = Math.ceil(durationMax * 1.2);
         const avgDurationMaxValue = Math.ceil(avgDurationMax * 1.2);
 
+        // Destroy previous chart instances if they exist
+        if (countChartInstance) {
+            countChartInstance.destroy();
+        }
+        if (durationChartInstance) {
+            durationChartInstance.destroy();
+        }
+        if (avgDurationChartInstance) {
+            avgDurationChartInstance.destroy();
+        }
+
         // Count Chart
         const ctxCount = document.getElementById('transferItemCountChart').getContext('2d');
-        new Chart(ctxCount, {
+        countChartInstance = new Chart(ctxCount, {
             type: 'bar',
             data: {
                 labels: transferItemLabels,
@@ -104,6 +119,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         title: {
                             display: true,
                             text: 'Transfer Item'
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 90,
+                            minRotation: 90
                         }
                     },
                     y: {
@@ -120,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Duration Chart
         const ctxDuration = document.getElementById('transferItemDurationChart').getContext('2d');
-        new Chart(ctxDuration, {
+        durationChartInstance = new Chart(ctxDuration, {
             type: 'bar',
             data: {
                 labels: transferItemLabels,
@@ -145,6 +165,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         title: {
                             display: true,
                             text: 'Transfer Item'
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 90,
+                            minRotation: 90
                         }
                     },
                     y: {
@@ -161,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Average Duration Chart
         const ctxAvgDuration = document.getElementById('transferItemAvgDurationChart').getContext('2d');
-        new Chart(ctxAvgDuration, {
+        avgDurationChartInstance = new Chart(ctxAvgDuration, {
             type: 'bar',
             data: {
                 labels: transferItemLabels,
@@ -186,6 +211,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         title: {
                             display: true,
                             text: 'Transfer Item'
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 90,
+                            minRotation: 90
                         }
                     },
                     y: {
