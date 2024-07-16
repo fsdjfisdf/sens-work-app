@@ -59,10 +59,14 @@
                         <option value="Workday">Workday</option>
                         <option value="Holiday">Holiday</option>
                     </select>
+                    <div>
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
-                    <button id="showCalendarButton">Show Calendar</button>
-                    <button id="transferAnalysisButton">Go to Transfer Analysis</button>
+                    </div>
+                    <div>
+                    <button id="transferAnalysisButton">Transfer Analysis</button>
+                    <button id="setupAnalysisButton">Setup Analysis</button>
+                    </div>
                 </div>
 
                 <div id="overall-stats-content"></div>
@@ -90,5 +94,11 @@
             window.location.href = './transfer-analysis.html';
         });
     </script>
+    <script>
+        document.getElementById('setupAnalysisButton').addEventListener('click', () => {
+            window.location.href = './setup-analysis.html';
+        });
+    </script>
+    
 </body>
 </html>

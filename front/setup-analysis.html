@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transfer Analysis</title>
+    <title>Setup Item Analysis</title>
     <link rel="stylesheet" href="./css/styles.css" />
-    <link rel="stylesheet" href="./css/transfer-analysis.css" />
+    <link rel="stylesheet" href="./css/setup-analysis.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -33,9 +33,9 @@
     </nav>
 
     <main>
-        <section id="transfer-analysis">
+        <section id="setup-analysis">
             <div class="inner">
-                <h2>Transfer Analysis</h2>
+                <h2>Setup Item Analysis</h2>
                 <div class="filter-container">
                     <select id="filterGroup">
                         <option value="">All Groups</option>
@@ -56,23 +56,23 @@
                     <span>to</span>
                     <input type="date" id="filterEndDate">
                     <button id="applyFilters">SEARCH</button>
-                    <button id="resetFilters">RESET</button>
+                    <button id="resetButton">RESET</button>
                 </div>
                 <div class="chart-container">
-                    <h3>Count of Transfer Task</h3>
-                    <canvas id="transferItemCountChart"></canvas>
+                    <h3>Count of Set up Task</h3>
+                    <canvas id="setupItemCountChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>Working Time of Transfer Task (hours)</h3>
-                    <canvas id="transferItemDurationChart"></canvas>
+                    <h3>Working Time of Set up Task (hours)</h3>
+                    <canvas id="setupItemDurationChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>Average Working Time per Transfer Task (hours)</h3>
-                    <canvas id="transferItemAvgDurationChart"></canvas>
+                    <h3>Average Working Time per Set up Task (hours)</h3>
+                    <canvas id="setupItemAvgDurationChart"></canvas>
                 </div>
             </div>
         </section>
     </main>
-    <script src="./js/transfer-analysis.js"></script>
+    <script src="./js/setup-analysis.js"></script>
 </body>
 </html>

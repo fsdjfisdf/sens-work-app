@@ -26,7 +26,13 @@ document.addEventListener('DOMContentLoaded', function() {
         let actions = [];
         let cause = '';
         let results = [];
-        let sopTsGuide = '';
+        let sop = '';
+        let tsGuide = '';
+        let workers = '';
+        let startTime = '';
+        let endTime = '';
+        let noneTime = '';
+        let moveTime = '';
 
         let currentSection = '';
         let actionSectionEnded = false;
@@ -52,9 +58,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentSection = 'result';
                 actionSectionEnded = true;  // End of action section
                 resultSectionEnded = false;
-            } else if (line.startsWith('5) SOP 및 T/S Guide 활용')) {
+            } else if (line.startsWith('5) SOP 및 T/S guide 활용')) {
                 currentSection = 'sopTsGuide';
                 resultSectionEnded = true;  // End of result section
+            } else if (line.startsWith('작업자 :')) {
+                workers = line.replace('작업자 :', '').trim();
+            } else if (line.startsWith('작업 시간 :')) {
+                const times = line.replace('작업 시간 :', '').trim();
+                if (times.includes('~')) {
+                    [startTime, endTime] = times.split('~').map(t => t.trim());
+                } else if (times.includes('-')) {
+                    [startTime, endTime] = times.split('-').map(t => t.trim());
+                }
+            } else if (line.match(/(None|none|논|Non)\s*\d+/i)) {
+                noneTime = line.match(/\d+/)[0];
+            } else if (line.match(/(Move|move|Mov|무브)\s*\d+/i)) {
+                moveTime = line.match(/(Move|move|Mov|무브)\s*(\d+)/i)[2];
             } else {
                 if (currentSection === 'status' && line.startsWith('-. ')) {
                     status = line.replace('-. ', '').trim();
@@ -77,7 +96,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         results[results.length - 1] += '\n' + line.trim();
                     }
                 } else if (currentSection === 'sopTsGuide' && line.startsWith('-. ')) {
-                    sopTsGuide = line.replace('-. ', '').trim();
+                    const parts = line.replace('-. ', '').trim().split('/');
+                    if (parts.length === 2) {
+                        sop = parts[0].trim();
+                        tsGuide = parts[1].trim();
+                    } else {
+                        sop = line.replace('-. ', '').trim();
+                    }
                 }
             }
         });
@@ -141,15 +166,79 @@ document.addEventListener('DOMContentLoaded', function() {
         // SOP 및 T/S Guide 필드 채우기
         const sopElement = document.getElementById('SOP');
         if (sopElement) {
-            sopElement.value = sopTsGuide;
+            const sopOptions = Array.from(sopElement.options);
+            const sopOption = sopOptions.find(option => option.textContent === sop);
+            if (sopOption) {
+                sopElement.value = sopOption.value;
+            } else {
+                console.error('SOP option not found');
+            }
         } else {
             console.error('SOP element not found');
         }
+
         const tsGuideElement = document.getElementById('tsguide');
         if (tsGuideElement) {
-            tsGuideElement.value = sopTsGuide;
+            const tsGuideOptions = Array.from(tsGuideElement.options);
+            const tsGuideOption = tsGuideOptions.find(option => option.textContent === tsGuide);
+            if (tsGuideOption) {
+                tsGuideElement.value = tsGuideOption.value;
+            } else {
+                console.error('TS Guide option not found');
+            }
         } else {
             console.error('TS Guide element not found');
+        }
+
+        // Worker 필드 채우기
+        const workerContainer = document.getElementById('task-mans-container');
+        if (workerContainer) {
+            const workerContainers = workerContainer.querySelectorAll('.task-man-container');
+            workerContainers.forEach(container => container.remove());
+            workers.split(',').forEach(worker => {
+                const workerField = document.createElement('div');
+                workerField.className = 'task-man-container';
+                workerField.innerHTML = `<textarea name="task_man" class="task-man-input" required>${worker.trim()}</textarea>
+                                         <select name="task_man_role" class="task-man-select" required>
+                                             <option value="main">main</option>
+                                             <option value="support">support</option>
+                                         </select>`;
+                workerContainer.appendChild(workerField);
+            });
+        } else {
+            console.error('Worker container not found');
+        }
+
+        // Start Time 필드 채우기
+        const startTimeElement = document.getElementById('start_time');
+        if (startTimeElement) {
+            startTimeElement.value = startTime;
+        } else {
+            console.error('Start time element not found');
+        }
+
+        // End Time 필드 채우기
+        const endTimeElement = document.getElementById('end_time');
+        if (endTimeElement) {
+            endTimeElement.value = endTime;
+        } else {
+            console.error('End time element not found');
+        }
+
+        // None Time 필드 채우기
+        const noneTimeElement = document.getElementById('noneTime');
+        if (noneTimeElement) {
+            noneTimeElement.value = noneTime;
+        } else {
+            console.error('None time element not found');
+        }
+
+        // Move Time 필드 채우기
+        const moveTimeElement = document.getElementById('moveTime');
+        if (moveTimeElement) {
+            moveTimeElement.value = moveTime;
+        } else {
+            console.error('Move time element not found');
         }
 
         // 'remove-field' 버튼에 이벤트 리스너 추가

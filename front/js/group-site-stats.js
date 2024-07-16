@@ -313,9 +313,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderCalendar(logs, engineers, currentYear, currentMonth);
     });
 
-    document.getElementById('showCalendarButton').addEventListener('click', () => {
-        renderCalendar(logs, engineers, currentYear, currentMonth);
-    });
 
     function formatDate(dateString) {
         const date = new Date(dateString);

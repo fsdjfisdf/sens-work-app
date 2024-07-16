@@ -13,9 +13,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterStartDate = document.getElementById('filterStartDate');
     const filterEndDate = document.getElementById('filterEndDate');
     const applyFiltersButton = document.getElementById('applyFilters');
-    const resetFiltersButton = document.getElementById('resetFilters');
+    const resetFiltersButton = document.getElementById('resetButton');
 
-    let transferItemCountChart, transferItemDurationChart, transferItemAvgDurationChart;
+    let setupItemCountChart, setupItemDurationChart, setupItemAvgDurationChart;
+
+    const setupItemOrder = [
+        "INSTALLATION PREPARATION", "FAB IN", "DOCKING", "CABLE HOOK UP",
+        "PUMP CABLE HOOK UP", "CABLE HOOK UP : SILICON", "POWER TURN ON",
+        "UTILITY TURN ON", "GAS TURN ON", "LEVELING", "TEACHING",
+        "PART INSTALLATION", "LEAK CHECK", "TTTM", 
+        "CUSTOMER CERTIFICATION 중간 인증 준비",
+        "CUSTOMER CERTIFICATION(PIO 장착)",
+        "CUSTOMER CERTIFICATION 사전 중간 인증",
+        "CUSTOMER CERTIFICATION 중간 인증",
+        "PROCESS CONFIRM", "MAINTENANCE"
+    ];
 
     applyFiltersButton.addEventListener('click', () => {
         const selectedGroup = filterGroup.value;
@@ -47,60 +59,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function renderCharts(allLogs, filteredLogs) {
-        const transferItemCounts = {};
-        const transferItemDurations = {};
+        const setupItemCounts = {};
+        const setupItemDurations = {};
 
         function processLogs(logs, counts, durations) {
             logs.forEach(log => {
-                const transferItem = log.transfer_item ? log.transfer_item.trim().toUpperCase() : '';
-                if (transferItem === 'SELECT' || !transferItem) return;
+                const setupItem = log.setup_item ? log.setup_item.trim().toUpperCase() : '';
+                if (setupItem === 'SELECT' || !setupItem) return;
 
                 const durationParts = log.task_duration.split(':');
                 const hours = parseInt(durationParts[0], 10);
                 const minutes = parseInt(durationParts[1], 10);
                 const taskDurationMinutes = (hours * 60) + minutes;
 
-                if (!counts[transferItem]) {
-                    counts[transferItem] = 0;
-                    durations[transferItem] = 0;
+                if (!counts[setupItem]) {
+                    counts[setupItem] = 0;
+                    durations[setupItem] = 0;
                 }
-                counts[transferItem] += 1;
-                durations[transferItem] += taskDurationMinutes;
+                counts[setupItem] += 1;
+                durations[setupItem] += taskDurationMinutes;
             });
         }
 
-        processLogs(filteredLogs, transferItemCounts, transferItemDurations);
+        processLogs(filteredLogs, setupItemCounts, setupItemDurations);
 
-        const transferItemLabels = Object.keys(transferItemCounts);
-        const transferItemCountData = transferItemLabels.map(item => transferItemCounts[item] || 0);
-        const transferItemDurationData = transferItemLabels.map(item => (transferItemDurations[item] / 60).toFixed(1));
+        const setupItemLabels = setupItemOrder.filter(item => setupItemCounts[item]);
+        const setupItemCountData = setupItemLabels.map(item => setupItemCounts[item] || 0);
+        const setupItemDurationData = setupItemLabels.map(item => (setupItemDurations[item] / 60).toFixed(1));
+        
+        const overallSetupItemCounts = {};
+        const overallSetupItemDurations = {};
+        processLogs(allLogs, overallSetupItemCounts, overallSetupItemDurations);
+        const overallSetupItemAvgDurationData = setupItemLabels.map(item => (overallSetupItemDurations[item] / overallSetupItemCounts[item] / 60).toFixed(1));
+        const setupItemAvgDurationData = setupItemLabels.map(item => (setupItemDurations[item] / setupItemCounts[item] / 60).toFixed(1));
 
-        const overallTransferItemCounts = {};
-        const overallTransferItemDurations = {};
-        processLogs(allLogs, overallTransferItemCounts, overallTransferItemDurations);
-        const overallTransferItemAvgDurationData = transferItemLabels.map(item => (overallTransferItemDurations[item] / overallTransferItemCounts[item] / 60).toFixed(1));
-        const transferItemAvgDurationData = transferItemLabels.map(item => (transferItemDurations[item] / transferItemCounts[item] / 60).toFixed(1));
-
-        const countMax = Math.max(...transferItemCountData);
-        const durationMax = Math.max(...transferItemDurationData);
-        const avgDurationMax = Math.max(...transferItemAvgDurationData, ...overallTransferItemAvgDurationData);
+        const countMax = Math.max(...setupItemCountData);
+        const durationMax = Math.max(...setupItemDurationData);
+        const avgDurationMax = Math.max(...setupItemAvgDurationData, ...overallSetupItemAvgDurationData);
         const countMaxValue = Math.ceil(countMax * 1.2);
         const durationMaxValue = Math.ceil(durationMax * 1.2);
         const avgDurationMaxValue = Math.ceil(avgDurationMax * 1.2);
 
-        if (transferItemCountChart) transferItemCountChart.destroy();
-        if (transferItemDurationChart) transferItemDurationChart.destroy();
-        if (transferItemAvgDurationChart) transferItemAvgDurationChart.destroy();
+        if (setupItemCountChart) setupItemCountChart.destroy();
+        if (setupItemDurationChart) setupItemDurationChart.destroy();
+        if (setupItemAvgDurationChart) setupItemAvgDurationChart.destroy();
 
-        const ctxCount = document.getElementById('transferItemCountChart').getContext('2d');
-        transferItemCountChart = new Chart(ctxCount, {
+        const ctxCount = document.getElementById('setupItemCountChart').getContext('2d');
+        setupItemCountChart = new Chart(ctxCount, {
             type: 'bar',
             data: {
-                labels: transferItemLabels,
+                labels: setupItemLabels,
                 datasets: [
                     {
                         label: 'Count of Logs',
-                        data: transferItemCountData,
+                        data: setupItemCountData,
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
@@ -125,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     x: {
                         title: {
                             display: true,
-                            text: 'Transfer Item'
+                            text: 'Setup Item'
                         },
                         ticks: {
                             maxRotation: 90,
@@ -145,15 +157,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        const ctxDuration = document.getElementById('transferItemDurationChart').getContext('2d');
-        transferItemDurationChart = new Chart(ctxDuration, {
+        const ctxDuration = document.getElementById('setupItemDurationChart').getContext('2d');
+        setupItemDurationChart = new Chart(ctxDuration, {
             type: 'bar',
             data: {
-                labels: transferItemLabels,
+                labels: setupItemLabels,
                 datasets: [
                     {
                         label: 'Total Duration of Logs (hours)',
-                        data: transferItemDurationData,
+                        data: setupItemDurationData,
                         backgroundColor: 'rgba(153, 102, 255, 0.2)',
                         borderColor: 'rgba(153, 102, 255, 1)',
                         borderWidth: 1
@@ -178,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     x: {
                         title: {
                             display: true,
-                            text: 'Transfer Item'
+                            text: 'Setup Item'
                         },
                         ticks: {
                             maxRotation: 90,
@@ -198,22 +210,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        const ctxAvgDuration = document.getElementById('transferItemAvgDurationChart').getContext('2d');
-        transferItemAvgDurationChart = new Chart(ctxAvgDuration, {
+        const ctxAvgDuration = document.getElementById('setupItemAvgDurationChart').getContext('2d');
+        setupItemAvgDurationChart = new Chart(ctxAvgDuration, {
             type: 'bar',
             data: {
-                labels: transferItemLabels,
+                labels: setupItemLabels,
                 datasets: [
                     {
                         label: 'Average Duration per Log (Filtered) (hours)',
-                        data: transferItemAvgDurationData,
+                        data: setupItemAvgDurationData,
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                     },
                     {
                         label: 'Average Duration per Log (Overall) (hours)',
-                        data: overallTransferItemAvgDurationData,
+                        data: overallSetupItemAvgDurationData,
                         backgroundColor: 'rgba(153, 102, 255, 0.2)',
                         borderColor: 'rgba(153, 102, 255, 1)',
                         borderWidth: 1
@@ -238,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     x: {
                         title: {
                             display: true,
-                            text: 'Transfer Item'
+                            text: 'Setup Item'
                         },
                         ticks: {
                             maxRotation: 90,
