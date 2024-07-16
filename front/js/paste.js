@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let results = [];
         let sop = '';
         let tsGuide = '';
-        let workers = '';
+        let workers = [];
         let startTime = '';
         let endTime = '';
         let noneTime = '';
@@ -52,28 +52,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 actionSectionEnded = false;
             } else if (line.startsWith('3) CAUSE')) {
                 currentSection = 'cause';
-                actionSectionEnded = true;  // End of action section
-                resultSectionEnded = true;  // End of result section
+                actionSectionEnded = true;
+                resultSectionEnded = true;
             } else if (line.startsWith('4) RESULT')) {
                 currentSection = 'result';
-                actionSectionEnded = true;  // End of action section
+                actionSectionEnded = true;
                 resultSectionEnded = false;
             } else if (line.startsWith('5) SOP 및 T/S guide 활용')) {
                 currentSection = 'sopTsGuide';
-                resultSectionEnded = true;  // End of result section
-            } else if (line.startsWith('작업자 :')) {
-                workers = line.replace('작업자 :', '').trim();
-            } else if (line.startsWith('작업 시간 :')) {
-                const times = line.replace('작업 시간 :', '').trim();
-                if (times.includes('~')) {
-                    [startTime, endTime] = times.split('~').map(t => t.trim());
-                } else if (times.includes('-')) {
-                    [startTime, endTime] = times.split('-').map(t => t.trim());
-                }
-            } else if (line.match(/(None|none|논|Non)\s*\d+/i)) {
-                noneTime = line.match(/\d+/)[0];
-            } else if (line.match(/(Move|move|Mov|무브)\s*\d+/i)) {
-                moveTime = line.match(/(Move|move|Mov|무브)\s*(\d+)/i)[2];
+                resultSectionEnded = true;
             } else {
                 if (currentSection === 'status' && line.startsWith('-. ')) {
                     status = line.replace('-. ', '').trim();
@@ -96,18 +83,36 @@ document.addEventListener('DOMContentLoaded', function() {
                         results[results.length - 1] += '\n' + line.trim();
                     }
                 } else if (currentSection === 'sopTsGuide' && line.startsWith('-. ')) {
-                    const parts = line.replace('-. ', '').trim().split('/');
-                    if (parts.length === 2) {
-                        sop = parts[0].trim();
-                        tsGuide = parts[1].trim();
-                    } else {
-                        sop = line.replace('-. ', '').trim();
+                    const sopTsMatch = line.replace('-. ', '').trim().split(' / ');
+                    if (sopTsMatch.length === 2) {
+                        sop = sopTsMatch[0].trim();
+                        tsGuide = sopTsMatch[1].trim();
                     }
                 }
             }
+
+            // 작업자, 작업 시간, None 시간 및 Move 시간 추출
+            const workerMatch = line.match(/작업자\s*[:：]?\s*(.*)/);
+            const timeMatch = line.match(/작업\s*시간\s*[:：]?\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/);
+            const noneMatch = line.match(/(?:Non|None|none|논)\s*(\d+)/i);
+            const moveMatch = line.match(/(?:move|mov|무브)\s*(\d+)/i);
+
+            if (workerMatch) {
+                workers = workerMatch[1].split(/[ ,]/).filter(Boolean);
+            }
+            if (timeMatch) {
+                startTime = timeMatch[1];
+                endTime = timeMatch[2];
+            }
+            if (noneMatch) {
+                noneTime = noneMatch[1];
+            }
+            if (moveMatch) {
+                moveTime = moveMatch[1];
+            }
         });
 
-        // Title 필드 채우기
+        // 필드 채우기
         const titleElement = document.getElementById('task_name');
         if (titleElement) {
             titleElement.value = title;
@@ -115,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Title element not found');
         }
 
-        // Status 필드 채우기
         const statusElement = document.getElementById('status');
         if (statusElement) {
             statusElement.value = status;
@@ -123,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Status element not found');
         }
 
-        // Action 필드 채우기
         const actionContainer = document.getElementById('task-descriptions-container');
         if (actionContainer) {
             const actionContainers = actionContainer.querySelectorAll('.task-description-container');
@@ -139,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Action container not found');
         }
 
-        // Cause 필드 채우기
         const causeElement = document.querySelector('.task-cause-input');
         if (causeElement) {
             causeElement.value = cause;
@@ -147,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Cause element not found');
         }
 
-        // Result 필드 채우기
         const resultContainer = document.getElementById('task-results-container');
         if (resultContainer) {
             const resultContainers = resultContainer.querySelectorAll('.task-result-container');
@@ -163,15 +164,14 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Result container not found');
         }
 
-        // SOP 및 T/S Guide 필드 채우기
         const sopElement = document.getElementById('SOP');
         if (sopElement) {
             const sopOptions = Array.from(sopElement.options);
-            const sopOption = sopOptions.find(option => option.textContent === sop);
-            if (sopOption) {
-                sopElement.value = sopOption.value;
+            const matchingOption = sopOptions.find(option => option.textContent.trim() === sop);
+            if (matchingOption) {
+                sopElement.value = matchingOption.value;
             } else {
-                console.error('SOP option not found');
+                sopElement.value = sopOptions.find(option => option.textContent.includes('Not Utilized')).value;
             }
         } else {
             console.error('SOP element not found');
@@ -180,36 +180,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const tsGuideElement = document.getElementById('tsguide');
         if (tsGuideElement) {
             const tsGuideOptions = Array.from(tsGuideElement.options);
-            const tsGuideOption = tsGuideOptions.find(option => option.textContent === tsGuide);
-            if (tsGuideOption) {
-                tsGuideElement.value = tsGuideOption.value;
+            const matchingOption = tsGuideOptions.find(option => option.textContent.trim() === tsGuide);
+            if (matchingOption) {
+                tsGuideElement.value = matchingOption.value;
             } else {
-                console.error('TS Guide option not found');
+                tsGuideElement.value = tsGuideOptions.find(option => option.textContent.includes('Not Utilized')).value;
             }
         } else {
             console.error('TS Guide element not found');
         }
 
-        // Worker 필드 채우기
-        const workerContainer = document.getElementById('task-mans-container');
-        if (workerContainer) {
-            const workerContainers = workerContainer.querySelectorAll('.task-man-container');
+        const workersContainer = document.getElementById('task-mans-container');
+        if (workersContainer) {
+            const workerContainers = workersContainer.querySelectorAll('.task-man-container');
             workerContainers.forEach(container => container.remove());
-            workers.split(',').forEach(worker => {
-                const workerField = document.createElement('div');
-                workerField.className = 'task-man-container';
-                workerField.innerHTML = `<textarea name="task_man" class="task-man-input" required>${worker.trim()}</textarea>
-                                         <select name="task_man_role" class="task-man-select" required>
-                                             <option value="main">main</option>
-                                             <option value="support">support</option>
-                                         </select>`;
-                workerContainer.appendChild(workerField);
+            workers.forEach((worker, index) => {
+                const newField = document.createElement('div');
+                newField.className = 'task-man-container';
+                newField.innerHTML = `<textarea name="task_man" class="task-man-input" required>${worker}</textarea>
+                                      <select name="task_man_role" class="task-man-select" required>
+                                          <option value="main">main</option>
+                                          <option value="support">support</option>
+                                      </select>
+                                      <button type="button" class="remove-field">-</button>`;
+                workersContainer.appendChild(newField);
             });
         } else {
-            console.error('Worker container not found');
+            console.error('Workers container not found');
         }
 
-        // Start Time 필드 채우기
         const startTimeElement = document.getElementById('start_time');
         if (startTimeElement) {
             startTimeElement.value = startTime;
@@ -217,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Start time element not found');
         }
 
-        // End Time 필드 채우기
         const endTimeElement = document.getElementById('end_time');
         if (endTimeElement) {
             endTimeElement.value = endTime;
@@ -225,7 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('End time element not found');
         }
 
-        // None Time 필드 채우기
         const noneTimeElement = document.getElementById('noneTime');
         if (noneTimeElement) {
             noneTimeElement.value = noneTime;
@@ -233,7 +230,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('None time element not found');
         }
 
-        // Move Time 필드 채우기
         const moveTimeElement = document.getElementById('moveTime');
         if (moveTimeElement) {
             moveTimeElement.value = moveTime;
