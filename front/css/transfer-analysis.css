@@ -9,10 +9,94 @@ body, h1, h2, p, a, input, select, label, textarea, button {
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
-    color: #333;
+    color: #0044cc;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+}
+
+nav {
+    width: 100%;
+    background-color: #0044cc;
+    color: #fff;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 20px;
+}
+
+.nav-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-title a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.sign-container {
+    display: flex;
+    align-items: center;
+}
+
+.signed,
+.unsigned {
+    display: flex;
+    align-items: center;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: #0044cc;
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-content a,
+.dropdown-content button {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.dropdown-content a:hover,
+.dropdown-content button:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #0044cc;
 }
 
 main {

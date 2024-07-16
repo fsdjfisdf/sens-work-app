@@ -62,6 +62,7 @@
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                     <button id="showCalendarButton">Show Calendar</button>
+                    <button id="transferAnalysisButton">Go to Transfer Analysis</button>
                 </div>
 
                 <div id="overall-stats-content"></div>
@@ -72,10 +73,10 @@
         </section>
     </main>
 
-    <!-- Popup -->
+    <!-- 팝업창을 위한 HTML 요소 -->
     <div id="popup" class="popup hidden">
         <div class="popup-content">
-            <span id="closePopup" class="close-popup">&times;</span>
+            <span class="close-button" id="closePopup">&times;</span>
             <h2 id="popup-date-title"></h2>
             <div id="popup-work-type-summary"></div>
             <div id="popup-logs-summary"></div>
@@ -84,5 +85,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/group-site-stats.js"></script>
+    <script>
+        document.getElementById('transferAnalysisButton').addEventListener('click', () => {
+            window.location.href = './transfer-analysis.html';
+        });
+    </script>
 </body>
 </html>
