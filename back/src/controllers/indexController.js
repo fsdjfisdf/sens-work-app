@@ -40,9 +40,9 @@ exports.createJwt = async function (req, res) {
         });
       }
 
-      const { userIdx, nickname } = rows[0];
+      const { userIdx, nickname, role } = rows[0]; // 역할(role)을 포함
       const token = jwt.sign(
-        { userIdx: userIdx, nickname: nickname },
+        { userIdx: userIdx, nickname: nickname, role: role }, // 역할(role)을 포함
         secret.jwtsecret
       );
 
@@ -71,6 +71,7 @@ exports.createJwt = async function (req, res) {
     });
   }
 };
+
 
 
 exports.createUsers = async function (req, res) {

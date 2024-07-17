@@ -115,6 +115,15 @@ h2 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.search-container .date-filter,
+.search-container .group-site-filter,
+.search-container .worktype-availability-filter,
+.search-container .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .search-container input,
 .search-container select {
     padding: 10px;
@@ -154,6 +163,23 @@ h2 {
 #resetButton:hover {
     background-color: #555;
 }
+
+#transferAnalysisButton {
+    background-color: #5500ff;
+}
+
+#transferAnalysisButton:hover {
+    background-color: #4200c7;
+}
+
+#setupAnalysisButton {
+    background-color: #5500ff;
+}
+
+#setupAnalysisButton:hover {
+    background-color: #4200c7;
+}
+
 
 #overall-stats-content {
     display: flex;
@@ -423,5 +449,3 @@ canvas {
 .hidden {
     display: none;
 }
-
-

@@ -37,35 +37,44 @@
         <section id="worklog">
             <div class="inner">
                 <div class="search-container">
-                    <input type="date" id="searchStartDate">
-                    <span>to</span>
-                    <input type="date" id="searchEndDate"><br>
-                    <select id="searchGroup">
-                        <option value="">Search by Group</option>
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PEE3">PEE3</option>
-                    </select>
-                    <select id="searchSite">
-                        <option value="">Search by Site</option>
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="searchWorkType" name="searchWorkType">
-                        <option value="ALL">ALL</option>
-                        <option value="Workday">Workday</option>
-                        <option value="Holiday">Holiday</option>
-                    </select>
-                    <div>
-                    <button id="searchButton">Search</button>
-                    <button id="resetButton">Reset</button>
+                    <div class="date-filter">
+                        <input type="date" id="searchStartDate">
+                        <input type="date" id="searchEndDate">
                     </div>
-                    <div>
-                    <button id="transferAnalysisButton">Transfer Analysis</button>
-                    <button id="setupAnalysisButton">Setup Analysis</button>
+                    <div class="group-site-filter">
+                        <select id="searchGroup">
+                            <option value="">Search by Group</option>
+                            <option value="PEE1">PEE1</option>
+                            <option value="PEE2">PEE2</option>
+                            <option value="PEE3">PEE3</option>
+                        </select>
+                        <select id="searchSite">
+                            <option value="">Search by Site</option>
+                            <option value="PT">PT</option>
+                            <option value="HS">HS</option>
+                            <option value="IC">IC</option>
+                            <option value="CJ">CJ</option>
+                            <option value="PSKH">PSKH</option>
+                        </select>
+                    </div>
+                    <div class="worktype-availability-filter">
+                        <select id="searchWorkType" name="searchWorkType">
+                            <option value="ALL">ALL</option>
+                            <option value="Workday">Workday</option>
+                            <option value="Holiday">Holiday</option>
+                        </select>
+                        <select id="engineerAvailability" name="engineerAvailability">
+                            <option value="100%">Total</option>
+                            <option value="90%">Considered</option>
+                        </select>
+                    </div>
+                    <div class="button-group">
+                        <button id="searchButton">Search</button>
+                        <button id="resetButton">Reset</button>
+                    </div>
+                    <div class="button-group">
+                        <button id="transferAnalysisButton">Analysis for Transfer Task</button>
+                        <button id="setupAnalysisButton">Analysis for Setup Task</button>
                     </div>
                 </div>
 
@@ -93,8 +102,7 @@
         document.getElementById('transferAnalysisButton').addEventListener('click', () => {
             window.location.href = './transfer-analysis.html';
         });
-    </script>
-    <script>
+
         document.getElementById('setupAnalysisButton').addEventListener('click', () => {
             window.location.href = './setup-analysis.html';
         });
@@ -102,3 +110,4 @@
     
 </body>
 </html>
+

@@ -26,6 +26,11 @@ async function signIn(event) {
 
     const jwt = signInReturn.data.result.jwt;
     localStorage.setItem("x-access-token", jwt);
+
+    // JWT 디코딩하여 역할(role) 출력
+    const decodedToken = JSON.parse(atob(jwt.split('.')[1]));
+    console.log('User role:', decodedToken.role);
+
     alert(signInReturn.data.message);
 
     // 로그인 성공 시 "정보 조회" 페이지로 이동
