@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let logs = [];
     let currentUserNickname = null; // 현재 로그인한 사용자의 닉네임을 저장할 변수
     let currentWorker = null; // 현재 검색된 작업자의 이름 저장
+    const userRole = localStorage.getItem("user-role"); // 현재 사용자의 역할을 저장할 변수
 
     // 사용자 로그인 상태를 확인하는 함수
     function checkLogin() {
@@ -70,9 +71,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayLogs(logs) {
         const worklogCards = document.getElementById('worklog-cards');
         worklogCards.innerHTML = '';
-
+    
         let totalWorktimeMinutes = 0; // 총 작업 시간을 저장할 변수
-
+    
         logs.forEach(log => {
             const card = document.createElement('div');
             card.className = 'worklog-card';
@@ -87,37 +88,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>Transfer Item:</strong> ${log.transfer_item}</p>
                 <p><strong>Task Duration:</strong> ${formatDuration(log.task_duration)}</p>
                 <div class="actions">
-                    ${log.task_man.includes(currentUserNickname) ? `<button class="delete-log" data-id="${log.id}">X</button>` : ''}
+                    ${log.task_man.includes(currentUserNickname) || userRole === 'admin' ? `
+                    <button class="delete-log" data-id="${log.id}">X</button>
+                    <button class="edit-log" data-id="${log.id}">Edit</button>` : ''}
                 </div>
             `;
             worklogCards.appendChild(card);
-
+    
             // 작업 시간 합산
             const durationParts = log.task_duration.split(':');
             const hours = parseInt(durationParts[0], 10);
             const minutes = parseInt(durationParts[1], 10);
             totalWorktimeMinutes += (hours * 60) + minutes;
         });
-
+    
         // 총 개수 업데이트
         document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
-
+    
         // 총 작업 시간 업데이트
         const totalWorkHours = Math.floor(totalWorktimeMinutes / 60);
         const totalWorkMinutes = totalWorktimeMinutes % 60;
         const totalWorkTimeText = `${totalWorkHours}시간 ${totalWorkMinutes}분`;
         document.getElementById('total-worktime').textContent = `Total Worktime: ${totalWorkTimeText}`;
-
+    
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
-                if (!event.target.classList.contains('delete-log')) {
+                if (!event.target.classList.contains('delete-log') && !event.target.classList.contains('edit-log')) {
                     const id = card.dataset.id;
                     const log = logs.find(log => log.id == id);
                     showLogDetails(log);
                 }
             });
         });
-
+    
         document.querySelectorAll('.delete-log').forEach(button => {
             button.addEventListener('click', async event => {
                 event.stopPropagation();
@@ -128,7 +131,85 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         });
+    
+        document.querySelectorAll('.edit-log').forEach(button => {
+            button.addEventListener('click', event => {
+                event.stopPropagation();
+                const id = button.dataset.id;
+                const log = logs.find(log => log.id == id);
+                showEditForm(log);
+            });
+        });
     }
+    
+
+    function showEditForm(log) {
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editWorklogForm');
+    
+        // 기존 로그 데이터를 폼에 채우기
+        editForm.elements['group'].value = log.group;
+        editForm.elements['site'].value = log.site;
+        editForm.elements['line'].value = log.line;
+        editForm.elements['equipment_type'].value = log.equipment_type;
+        editForm.elements['warranty'].value = log.warranty;
+        editForm.elements['work_type'].value = log.work_type;
+        editForm.elements['transfer_item'].value = log.transfer_item;
+        editForm.elements['setup_item'].value = log.setup_item;
+        editForm.elements['equipment_name'].value = log.equipment_name;
+        editForm.elements['task_man'].value = log.task_man;
+        editForm.elements['task_date'].value = log.task_date;
+        editForm.elements['start_time'].value = log.start_time;
+        editForm.elements['end_time'].value = log.end_time;
+        editForm.elements['task_name'].value = log.task_name;
+        editForm.elements['status'].value = log.status;
+        editForm.elements['task_description'].value = log.task_description;
+        editForm.elements['task_cause'].value = log.task_cause;
+        editForm.elements['task_result'].value = log.task_result;
+    
+        editModal.style.display = 'block';
+    
+        editForm.onsubmit = async (event) => {
+            event.preventDefault();
+    
+            const updatedLog = {
+                group: editForm.elements['group'].value,
+                site: editForm.elements['site'].value,
+                line: editForm.elements['line'].value,
+                equipment_type: editForm.elements['equipment_type'].value,
+                warranty: editForm.elements['warranty'].value,
+                work_type: editForm.elements['work_type'].value,
+                transfer_item: editForm.elements['transfer_item'].value,
+                setup_item: editForm.elements['setup_item'].value,
+                equipment_name: editForm.elements['equipment_name'].value,
+                task_man: editForm.elements['task_man'].value,
+                task_date: editForm.elements['task_date'].value,
+                start_time: editForm.elements['start_time'].value,
+                end_time: editForm.elements['end_time'].value,
+                task_name: editForm.elements['task_name'].value,
+                status: editForm.elements['status'].value,
+                task_description: editForm.elements['task_description'].value,
+                task_cause: editForm.elements['task_cause'].value,
+                task_result: editForm.elements['task_result'].value,
+            };
+    
+            try {
+                await axios.put(`http://3.37.165.84:3001/logs/${log.id}`, updatedLog);
+                editModal.style.display = 'none';
+                loadWorkLogs();
+            } catch (error) {
+                console.error('작업 로그 수정 중 오류 발생:', error);
+            }
+        };
+    }
+    
+    // 팝업 창 닫기 기능 추가
+    document.querySelectorAll('.modal .close').forEach(closeBtn => {
+        closeBtn.addEventListener('click', () => {
+            document.getElementById('editModal').style.display = 'none';
+        });
+    });
+    
 
     function showLogDetails(log) {
         const logModal = document.getElementById('logModal');
@@ -296,3 +377,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+

@@ -35,7 +35,6 @@
     <main>
         <section id="worklog">
             <div class="inner">
-
                 <div id="summary">
                     <div id="total-work">
                         <p id="total-worktime">Total Worktime: 0시간 0분</p>
@@ -87,8 +86,63 @@
         </div>
     </div>
 
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="editWorklogForm">
+                <div>
+                    <label for="editGroup">GROUP</label>
+                    <select id="editGroup" name="group" required>
+                        <option value="SELECT">SELECT</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PEE3">PEE3</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="editSite">SITE</label>
+                    <select id="editSite" name="site" required>
+                        <option value="SELECT">SELECT</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                </div>
+                <!-- Add other fields similar to the above for LINE, EQ TYPE, etc. -->
+                <div>
+                    <label for="editLine">LINE</label>
+                    <input type="text" id="editLine" name="line" required>
+                </div>
+                <div>
+                    <label for="editEquipmentType">EQ TYPE</label>
+                    <input type="text" id="editEquipmentType" name="equipment_type" required>
+                </div>
+                <div>
+                    <label for="editWarranty">WARRANTY</label>
+                    <input type="text" id="editWarranty" name="warranty" required>
+                </div>
+                <div>
+                    <label for="editWorkType">WORKTYPE</label>
+                    <input type="text" id="editWorkType" name="work_type" required>
+                </div>
+                <div>
+                    <label for="editTransferItem">TRANSFER ITEM</label>
+                    <input type="text" id="editTransferItem" name="transfer_item" required>
+                </div>
+                <div>
+                    <label for="editSetupItem">SET UP ITEM</label>
+                    <input type="text" id="editSetupItem" name="setup_item" required>
+                </div>
+                <button type="submit">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/readworklog.js"></script>
+    <script src="./js/editworklog.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
@@ -122,3 +176,4 @@
     </script>
 </body>
 </html>
+
