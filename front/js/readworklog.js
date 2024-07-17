@@ -71,9 +71,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function displayLogs(logs) {
         const worklogCards = document.getElementById('worklog-cards');
         worklogCards.innerHTML = '';
-    
+
         let totalWorktimeMinutes = 0; // 총 작업 시간을 저장할 변수
-    
+
         logs.forEach(log => {
             const card = document.createElement('div');
             card.className = 'worklog-card';
@@ -94,23 +94,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             worklogCards.appendChild(card);
-    
+
             // 작업 시간 합산
             const durationParts = log.task_duration.split(':');
             const hours = parseInt(durationParts[0], 10);
             const minutes = parseInt(durationParts[1], 10);
             totalWorktimeMinutes += (hours * 60) + minutes;
         });
-    
+
         // 총 개수 업데이트
         document.getElementById('worklog-count').textContent = `Total Worklogs: ${logs.length}`;
-    
+
         // 총 작업 시간 업데이트
         const totalWorkHours = Math.floor(totalWorktimeMinutes / 60);
         const totalWorkMinutes = totalWorktimeMinutes % 60;
         const totalWorkTimeText = `${totalWorkHours}시간 ${totalWorkMinutes}분`;
         document.getElementById('total-worktime').textContent = `Total Worktime: ${totalWorkTimeText}`;
-    
+
         document.querySelectorAll('.worklog-card').forEach(card => {
             card.addEventListener('click', event => {
                 if (!event.target.classList.contains('delete-log') && !event.target.classList.contains('edit-log')) {
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         });
-    
+
         document.querySelectorAll('.delete-log').forEach(button => {
             button.addEventListener('click', async event => {
                 event.stopPropagation();
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         });
-    
+
         document.querySelectorAll('.edit-log').forEach(button => {
             button.addEventListener('click', event => {
                 event.stopPropagation();
@@ -141,12 +141,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     }
-    
 
     function showEditForm(log) {
         const editModal = document.getElementById('editModal');
         const editForm = document.getElementById('editWorklogForm');
-    
+
         // 기존 로그 데이터를 폼에 채우기
         editForm.elements['group'].value = log.group;
         editForm.elements['site'].value = log.site;
@@ -166,12 +165,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         editForm.elements['task_description'].value = log.task_description;
         editForm.elements['task_cause'].value = log.task_cause;
         editForm.elements['task_result'].value = log.task_result;
-    
+
         editModal.style.display = 'block';
-    
+
         editForm.onsubmit = async (event) => {
             event.preventDefault();
-    
+
             const updatedLog = {
                 group: editForm.elements['group'].value,
                 site: editForm.elements['site'].value,
@@ -192,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 task_cause: editForm.elements['task_cause'].value,
                 task_result: editForm.elements['task_result'].value,
             };
-    
+
             try {
                 await axios.put(`http://3.37.165.84:3001/logs/${log.id}`, updatedLog);
                 editModal.style.display = 'none';
@@ -202,14 +201,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
     }
-    
+
     // 팝업 창 닫기 기능 추가
     document.querySelectorAll('.modal .close').forEach(closeBtn => {
         closeBtn.addEventListener('click', () => {
             document.getElementById('editModal').style.display = 'none';
         });
     });
-    
 
     function showLogDetails(log) {
         const logModal = document.getElementById('logModal');
