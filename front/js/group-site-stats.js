@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
-        // Check if user is admin
-        const userRole = localStorage.getItem('user-role');
-        console.log("User role:", userRole); // role 정보를 콘솔에 출력
-        if (userRole !== 'admin') {
-            alert("접근 권한이 없습니다.");
-            window.location.replace("./index.html");
-            return;
-        }
+    // Check if user is admin
+    const userRole = localStorage.getItem('user-role');
+    console.log("User role:", userRole); // role 정보를 콘솔에 출력
+    if (userRole !== 'admin') {
+        alert("접근 권한이 없습니다.");
+        window.location.replace("./index.html");
+        return;
+    }
 
     const holidays = [
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',

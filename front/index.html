@@ -20,7 +20,7 @@
                             <a href="./info.html" class="dropdown-item">Eng'r Information</a>
                             <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
                             <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
-                            <a href="./group-site-stats.html" class="dropdown-item">Operating Rate</a>
+                            <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
                             <button id="sign-out" class="dropdown-item">Logout</button>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                     <a href="./info.html" class="button">Eng'r Information</a>
                     <a href="./worklog.html" class="button">Create Worklog</a>
                     <a href="./readworklog.html" class="button">Load Worklog</a>
-                    <a href="./group-site-stats.html" class="button">Operating Rate</a>
+                    <a href="./group-site-stats.html" class="button admin-only">Operating Rate</a>
                 </div>
             </div>
         </section>
@@ -57,7 +57,7 @@
                         <h4>Load Worklog</h4>
                         <p>작업 이력들을 검색하고 삭제할 수 있습니다.</p>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-item admin-only">
                         <h4>Operating Rate</h4>
                         <p>가동율을 확인할 수 있습니다.</p>
                     </div>
@@ -75,6 +75,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
 
             if (!token) {
                 document.querySelector(".unsigned").classList.remove("hidden");
@@ -84,11 +85,49 @@
                 document.querySelector(".signed").classList.remove("hidden");
             }
 
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
             const signOutButton = document.querySelector("#sign-out");
 
             if (signOutButton) {
                 signOutButton.addEventListener("click", function() {
                     localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
                     alert("로그아웃 되었습니다.");
                     window.location.replace("./signin.html");
                 });

@@ -27,9 +27,9 @@ async function signIn(event) {
     const jwt = signInReturn.data.result.jwt;
     localStorage.setItem("x-access-token", jwt);
 
-    // JWT 디코딩하여 역할(role) 출력
+    // JWT 디코딩하여 역할(role)을 로컬 스토리지에 저장
     const decodedToken = JSON.parse(atob(jwt.split('.')[1]));
-    console.log('User role:', decodedToken.role);
+    localStorage.setItem('user-role', decodedToken.role);
 
     alert(signInReturn.data.message);
 
