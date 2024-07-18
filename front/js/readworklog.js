@@ -314,7 +314,6 @@ function showEditForm(log) {
     const editForm = document.getElementById('editWorklogForm');
 
     // 기존 로그 데이터를 폼에 채우기
-    console.log(editForm.elements['group']); // Debugging line
     editForm.elements['group'].value = log.group;
     editForm.elements['site'].value = log.site;
     editForm.elements['line'].value = log.line;
@@ -362,11 +361,14 @@ function showEditForm(log) {
 
         try {
             console.log(`Updating log with ID: ${log.id}`);
-            await axios.put(`http://3.37.165.84:3001/work-logs/${log.id}`, updatedLog);
+            console.log('Updated log data:', updatedLog);
+            const response = await axios.put(`http://3.37.165.84:3001/work-logs/${log.id}`, updatedLog);
+            console.log('Response from server:', response);
             editModal.style.display = 'none';
             loadWorkLogs(); // 작업 로그 다시 불러오기
         } catch (error) {
             console.error('작업 로그 수정 중 오류 발생:', error);
+            console.error('Error response data:', error.response.data);
         }
     };
 }

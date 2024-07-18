@@ -77,6 +77,9 @@ exports.updateWorkLog = async (req, res) => {
         group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
     } = req.body;
 
+    console.log(`Received update request for ID: ${id}`);
+    console.log('Updated log data:', req.body);
+
     try {
         await workLogDao.updateWorkLog(
             id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
@@ -84,6 +87,7 @@ exports.updateWorkLog = async (req, res) => {
         );
         res.status(200).json({ message: "Work log updated" });
     } catch (err) {
+        console.error(`Error updating work log with ID: ${id}`, err);
         res.status(500).json({ error: err.message });
     }
 };
