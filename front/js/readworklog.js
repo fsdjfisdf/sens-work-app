@@ -313,7 +313,6 @@ function showEditForm(log) {
     const editModal = document.getElementById('editModal');
     const editForm = document.getElementById('editWorklogForm');
 
-    // 기존의 값을 폼에 채워줍니다.
     editForm.elements['group'].value = log.group || '';
     editForm.elements['site'].value = log.site || '';
     editForm.elements['line'].value = log.line || '';
@@ -338,25 +337,26 @@ function showEditForm(log) {
     editForm.onsubmit = async (event) => {
         event.preventDefault();
 
-        const updatedLog = {};
-        if (editForm.elements['group'].value) updatedLog.group = editForm.elements['group'].value;
-        if (editForm.elements['site'].value) updatedLog.site = editForm.elements['site'].value;
-        if (editForm.elements['line'].value) updatedLog.line = editForm.elements['line'].value;
-        if (editForm.elements['equipment_type'].value) updatedLog.equipment_type = editForm.elements['equipment_type'].value;
-        if (editForm.elements['warranty'].value) updatedLog.warranty = editForm.elements['warranty'].value;
-        if (editForm.elements['work_type'].value) updatedLog.work_type = editForm.elements['work_type'].value;
-        if (editForm.elements['transfer_item'].value) updatedLog.transfer_item = editForm.elements['transfer_item'].value;
-        if (editForm.elements['setup_item'].value) updatedLog.setup_item = editForm.elements['setup_item'].value;
-        if (editForm.elements['equipment_name'].value) updatedLog.equipment_name = editForm.elements['equipment_name'].value;
-        if (editForm.elements['task_man'].value) updatedLog.task_man = editForm.elements['task_man'].value;
-        if (editForm.elements['task_date'].value) updatedLog.task_date = editForm.elements['task_date'].value;
-        if (editForm.elements['start_time'].value) updatedLog.start_time = editForm.elements['start_time'].value;
-        if (editForm.elements['end_time'].value) updatedLog.end_time = editForm.elements['end_time'].value;
-        if (editForm.elements['task_name'].value) updatedLog.task_name = editForm.elements['task_name'].value;
-        if (editForm.elements['status'].value) updatedLog.status = editForm.elements['status'].value;
-        if (editForm.elements['task_description'].value) updatedLog.task_description = editForm.elements['task_description'].value;
-        if (editForm.elements['task_cause'].value) updatedLog.task_cause = editForm.elements['task_cause'].value;
-        if (editForm.elements['task_result'].value) updatedLog.task_result = editForm.elements['task_result'].value;
+        const updatedLog = {
+            group: editForm.elements['group'].value || null,
+            site: editForm.elements['site'].value || null,
+            line: editForm.elements['line'].value || null,
+            equipment_type: editForm.elements['equipment_type'].value || null,
+            warranty: editForm.elements['warranty'].value || null,
+            work_type: editForm.elements['work_type'].value || null,
+            transfer_item: editForm.elements['transfer_item'].value || null,
+            setup_item: editForm.elements['setup_item'].value || null,
+            equipment_name: editForm.elements['equipment_name'].value || null,
+            task_man: editForm.elements['task_man'].value || null,
+            task_date: editForm.elements['task_date'].value || null,
+            start_time: editForm.elements['start_time'].value || null,
+            end_time: editForm.elements['end_time'].value || null,
+            task_name: editForm.elements['task_name'].value || null,
+            status: editForm.elements['status'].value || null,
+            task_description: editForm.elements['task_description'].value || null,
+            task_cause: editForm.elements['task_cause'].value || null,
+            task_result: editForm.elements['task_result'].value || null,
+        };
 
         try {
             console.log(`Updating log with ID: ${log.id}`);
@@ -372,7 +372,6 @@ function showEditForm(log) {
     };
 }
 
-
 // 팝업 창 닫기 기능 추가
 document.querySelectorAll('.modal .close').forEach(closeBtn => {
     closeBtn.addEventListener('click', () => {
@@ -385,4 +384,3 @@ window.onclick = event => {
         document.getElementById('editModal').style.display = 'none';
     }
 };
-

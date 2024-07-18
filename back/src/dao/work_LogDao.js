@@ -44,16 +44,36 @@ exports.deleteWorkLog = async (id) => {
 };
 
 
-exports.updateWorkLog = async (id, updatedFields) => {
+exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+  group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status) => {
+
   const fields = [];
   const values = [];
 
-  for (const [key, value] of Object.entries(updatedFields)) {
-      if (value !== null && value !== undefined) {
-          fields.push(`${key} = ?`);
-          values.push(value);
-      }
-  }
+  if (task_name !== undefined) { fields.push("task_name = ?"); values.push(task_name); }
+  if (task_result !== undefined) { fields.push("task_result = ?"); values.push(task_result); }
+  if (task_cause !== undefined) { fields.push("task_cause = ?"); values.push(task_cause); }
+  if (task_man !== undefined) { fields.push("task_man = ?"); values.push(task_man); }
+  if (task_description !== undefined) { fields.push("task_description = ?"); values.push(task_description); }
+  if (task_date !== undefined) { fields.push("task_date = ?"); values.push(task_date); }
+  if (start_time !== undefined) { fields.push("start_time = ?"); values.push(start_time); }
+  if (end_time !== undefined) { fields.push("end_time = ?"); values.push(end_time); }
+  if (none_time !== undefined) { fields.push("none_time = ?"); values.push(none_time); }
+  if (move_time !== undefined) { fields.push("move_time = ?"); values.push(move_time); }
+  if (group !== undefined) { fields.push("`group` = ?"); values.push(group); }
+  if (site !== undefined) { fields.push("site = ?"); values.push(site); }
+  if (SOP !== undefined) { fields.push("SOP = ?"); values.push(SOP); }
+  if (tsguide !== undefined) { fields.push("tsguide = ?"); values.push(tsguide); }
+  if (line !== undefined) { fields.push("`line` = ?"); values.push(line); }
+  if (warranty !== undefined) { fields.push("warranty = ?"); values.push(warranty); }
+  if (equipment_type !== undefined) { fields.push("equipment_type = ?"); values.push(equipment_type); }
+  if (equipment_name !== undefined) { fields.push("equipment_name = ?"); values.push(equipment_name); }
+  if (workType !== undefined) { fields.push("work_type = ?"); values.push(workType); }
+  if (setupItem !== undefined) { fields.push("setup_item = ?"); values.push(setupItem); }
+  if (maintItem !== undefined) { fields.push("maint_item = ?"); values.push(maintItem); }
+  if (transferItem !== undefined) { fields.push("transfer_item = ?"); values.push(transferItem); }
+  if (task_maint !== undefined) { fields.push("task_maint = ?"); values.push(task_maint); }
+  if (status !== undefined) { fields.push("status = ?"); values.push(status); }
 
   values.push(id);
 
@@ -77,7 +97,5 @@ exports.updateWorkLog = async (id, updatedFields) => {
       throw err;  // 에러를 다시 던져 컨트롤러에서 잡을 수 있게 합니다.
   }
 };
-
-
 
 
