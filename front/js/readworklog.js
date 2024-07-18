@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentWorker = null; // 현재 검색된 작업자의 이름 저장
     const userRole = localStorage.getItem("user-role"); // 현재 사용자의 역할을 저장할 변수
 
+        // 로딩 애니메이션 시작
+        showLoading();
+
     // 사용자 로그인 상태를 확인하는 함수
     function checkLogin() {
         const token = localStorage.getItem('x-access-token');
@@ -32,12 +35,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadWorkLogs() {
         try {
             await getCurrentUser(); // 현재 사용자 정보 불러오기
+            updateLoadingPercentage(60); // 로딩 퍼센티지 업데이트
+
             const response = await axios.get('http://3.37.165.84:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             displayLogs(logs);
             calculateWorkerStats(logs); // 작업자 통계 계산 함수 호출
+
+            updateLoadingPercentage(90); // 로딩 퍼센티지 업데이트
+
+            // 로딩 애니메이션 종료
+            completeLoading();
         } catch (error) {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);
+
+            // 로딩 애니메이션 종료
+            completeLoading();
         }
     }
 

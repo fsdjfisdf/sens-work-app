@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
+    // 로딩 애니메이션 시작
+    showLoading();
+
     // Check if user is admin
     const userRole = localStorage.getItem('user-role');
     console.log("User role:", userRole); // role 정보를 콘솔에 출력
@@ -64,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             console.log('Engineers data:', response.data);
             engineers = Array.isArray(response.data.result) ? response.data.result : [];
+            updateLoadingPercentage(50); // 로딩 퍼센티지 업데이트
         } catch (error) {
             console.error('엔지니어 데이터를 불러오는 중 오류 발생:', error);
         }
@@ -82,8 +86,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             displayOverallStats(logs, engineers);
             renderMonthlyWorktimeChart(logs);
             renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
+            updateLoadingPercentage(100); // 로딩 퍼센티지 업데이트
+            completeLoading(); // 로딩 애니메이션 종료
         } catch (error) {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);
+            completeLoading(); // 로딩 애니메이션 종료
         }
     }
 
@@ -570,4 +577,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
-

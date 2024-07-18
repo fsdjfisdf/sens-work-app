@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S-WORKS</title>
     <link rel="stylesheet" href="./css/index.css" />
+    <link rel="stylesheet" href="./css/nav-menu.css" />
 </head>
 <body>
     <nav>
@@ -15,14 +16,13 @@
                     <a href="./signin.html" class="sign-link">Login</a>
                 </div>
                 <div class="sign-container signed hidden">
-                    <div class="dropdown">
-                        <div class="dropdown-content">
-                            <a href="./info.html" class="dropdown-item">Eng'r Information</a>
-                            <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
-                            <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
-                            <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
-                            <button id="sign-out" class="dropdown-item">Logout</button>
-                        </div>
+                    <button class="menu-btn">MENU</button>
+                    <div class="menu-content">
+                        <a href="./info.html" class="menu-item">Eng'r Information</a>
+                        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                        <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                        <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                        <button id="sign-out" class="menu-item">Logout</button>
                     </div>
                 </div>
             </div>
@@ -101,37 +101,19 @@
                     window.location.replace("./signin.html");
                 });
             }
-        });
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-            const userRole = localStorage.getItem("user-role");
 
-            if (!token) {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuContent = document.querySelector('.menu-content');
 
-            if (!token || userRole !== 'admin') {
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = 'none';
-                });
-            }
+            menuBtn.addEventListener('click', function() {
+                menuContent.classList.toggle('show');
+            });
 
-            const signOutButton = document.querySelector("#sign-out");
-
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    localStorage.removeItem("user-role");
-                    alert("로그아웃 되었습니다.");
-                    window.location.replace("./signin.html");
-                });
-            }
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuContent.contains(event.target)) {
+                    menuContent.classList.remove('show');
+                }
+            });
         });
     </script>
 </body>

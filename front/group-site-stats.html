@@ -6,10 +6,18 @@
     <title>Operating Rate</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/group-site-stats.css" />
+    <link rel="stylesheet" href="./css/loading.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div>
+                <div class="loading-spinner"></div>
+                <div class="loading-percentage" id="loadingPercentage">0%</div>
+            </div>
+        </div>
     <nav>
         <div class="inner">
             <div class="nav-container">
@@ -98,6 +106,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/group-site-stats.js"></script>
+    <script src="./js/loading.js"></script>
     <script>
         document.getElementById('transferAnalysisButton').addEventListener('click', () => {
             window.location.href = './transfer-analysis.html';

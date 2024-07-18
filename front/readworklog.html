@@ -6,8 +6,16 @@
     <title>Read Work log</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/readworklog.css" />
+    <link rel="stylesheet" href="./css/loading.css" />
 </head>
 <body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div>
+            <div class="loading-spinner"></div>
+            <div class="loading-percentage" id="loadingPercentage">0%</div>
+        </div>
+    </div>
     <nav>
         <div class="inner">
             <div class="nav-container">
@@ -86,90 +94,101 @@
         </div>
     </div>
 
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <form id="editWorklogForm">
-                <div>
-                    <label for="editGroup">GROUP</label>
-                    <select id="editGroup" name="group" required>
-                        <option value="SELECT">SELECT</option>
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PEE3">PEE3</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="editSite">SITE</label>
-                    <select id="editSite" name="site" required>
-                        <option value="SELECT">SELECT</option>
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="editLine">LINE</label>
-                    <input type="text" id="editLine" name="line" required>
-                </div>
-                <div>
-                    <label for="editEquipmentType">EQ TYPE</label>
-                    <input type="text" id="editEquipmentType" name="equipment_type" required>
-                </div>
-                <div>
-                    <label for="editWarranty">WARRANTY</label>
-                    <input type="text" id="editWarranty" name="warranty" required>
-                </div>
-                <div>
-                    <label for="editEquipmentName">EQ NAME</label>
-                    <input type="text" id="editEquipmentName" name="equipment_name" required>
-                </div>
-                <div>
-                    <label for="editWorker">WORKER</label>
-                    <input type="text" id="editWorker" name="task_man" required>
-                </div>
-                <div>
-                    <label for="editTaskDate">WORK DATE</label>
-                    <input type="date" id="editTaskDate" name="task_date" required>
-                </div>
-                <div>
-                    <label for="editStartTime">START TIME</label>
-                    <input type="time" id="editStartTime" name="start_time" required>
-                </div>
-                <div>
-                    <label for="editEndTime">END TIME</label>
-                    <input type="time" id="editEndTime" name="end_time" required>
-                </div>
-                <div>
-                    <label for="editTaskName">TITLE</label>
-                    <input type="text" id="editTaskName" name="task_name" required>
-                </div>
-                <div>
-                    <label for="editStatus">STATUS</label>
-                    <input type="text" id="editStatus" name="status" required>
-                </div>
-                <div>
-                    <label for="editTaskDescription">ACTION</label>
-                    <textarea id="editTaskDescription" name="task_description" required></textarea>
-                </div>
-                <div>
-                    <label for="editTaskCause">CAUSE</label>
-                    <textarea id="editTaskCause" name="task_cause" required></textarea>
-                </div>
-                <div>
-                    <label for="editTaskResult">RESULT</label>
-                    <textarea id="editTaskResult" name="task_result" required></textarea>
-                </div>
-                <button type="submit">Save Changes</button>
-            </form>
-        </div>
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Edit Work Log</h2>
+        <form id="editWorklogForm">
+            <div>
+                <label for="editGroup">GROUP</label>
+                <select id="editGroup" name="group" required>
+                    <option value="SELECT">SELECT</option>
+                    <option value="PEE1">PEE1</option>
+                    <option value="PEE2">PEE2</option>
+                    <option value="PEE3">PEE3</option>
+                </select>
+            </div>
+            <div>
+                <label for="editSite">SITE</label>
+                <select id="editSite" name="site" required>
+                    <option value="SELECT">SELECT</option>
+                    <option value="PT">PT</option>
+                    <option value="HS">HS</option>
+                    <option value="IC">IC</option>
+                    <option value="CJ">CJ</option>
+                    <option value="PSKH">PSKH</option>
+                </select>
+            </div>
+            <div>
+                <label for="editLine">LINE</label>
+                <input type="text" id="editLine" name="line" required>
+            </div>
+            <div>
+                <label for="editEquipmentType">EQ TYPE</label>
+                <select id="editEquipmentType" name="equipment_type" required>
+                    <option value="SELECT">SELECT</option>
+                    <option value="SUPRA N">SUPRA N</option>
+                    <option value="SUPRA XP">SUPRA XP</option>
+                    <option value="INTEGER">INTEGER</option>
+                    <option value="PRECIA">PRECIA</option>
+                    <option value="ECOLITE">ECOLITE</option>
+                    <option value="JENEVA">JENEVA</option>
+                </select>
+            </div>
+            <div>
+                <label for="editWarranty">WARRANTY</label>
+                <input type="text" id="editWarranty" name="warranty" required>
+            </div>
+            <div>
+                <label for="editEquipmentName">EQ NAME</label>
+                <input type="text" id="editEquipmentName" name="equipment_name" required>
+            </div>
+            <div>
+                <label for="editWorker">WORKER</label>
+                <input type="text" id="editWorker" name="task_man" required>
+            </div>
+            <div>
+                <label for="editTaskDate">WORK DATE</label>
+                <input type="date" id="editTaskDate" name="task_date" required>
+            </div>
+            <div>
+                <label for="editStartTime">START TIME</label>
+                <input type="time" id="editStartTime" name="start_time" required>
+            </div>
+            <div>
+                <label for="editEndTime">END TIME</label>
+                <input type="time" id="editEndTime" name="end_time" required>
+            </div>
+            <div>
+                <label for="editTaskName">TITLE</label>
+                <input type="text" id="editTaskName" name="task_name" required>
+            </div>
+            <div>
+                <label for="editStatus">STATUS</label>
+                <input type="text" id="editStatus" name="status" required>
+            </div>
+            <div>
+                <label for="editTaskDescription">ACTION</label>
+                <textarea id="editTaskDescription" name="task_description" required></textarea>
+            </div>
+            <div>
+                <label for="editTaskCause">CAUSE</label>
+                <textarea id="editTaskCause" name="task_cause" required></textarea>
+            </div>
+            <div>
+                <label for="editTaskResult">RESULT</label>
+                <textarea id="editTaskResult" name="task_result" required></textarea>
+            </div>
+            <button type="submit">Save Changes</button>
+        </form>
     </div>
+</div>
+
+    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/readworklog.js"></script>
-    <script src="./js/editworklog.js"></script>
+    <script src="./js/loading.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
