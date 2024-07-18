@@ -318,9 +318,6 @@ function showEditForm(log) {
     editForm.elements['line'].value = log.line || '';
     editForm.elements['equipment_type'].value = log.equipment_type || '';
     editForm.elements['warranty'].value = log.warranty || '';
-    editForm.elements['work_type'].value = log.work_type || '';
-    editForm.elements['transfer_item'].value = log.transfer_item || '';
-    editForm.elements['setup_item'].value = log.setup_item || '';
     editForm.elements['equipment_name'].value = log.equipment_name || '';
     editForm.elements['task_man'].value = log.task_man || '';
     editForm.elements['task_date'].value = log.task_date || '';
@@ -343,9 +340,6 @@ function showEditForm(log) {
             line: editForm.elements['line'].value || null,
             equipment_type: editForm.elements['equipment_type'].value || null,
             warranty: editForm.elements['warranty'].value || null,
-            work_type: editForm.elements['work_type'].value || null,
-            transfer_item: editForm.elements['transfer_item'].value || null,
-            setup_item: editForm.elements['setup_item'].value || null,
             equipment_name: editForm.elements['equipment_name'].value || null,
             task_man: editForm.elements['task_man'].value || null,
             task_date: editForm.elements['task_date'].value || null,

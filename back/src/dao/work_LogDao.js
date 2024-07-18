@@ -57,8 +57,8 @@ exports.getWorkLogById = async (id) => {
 };
 
 
-exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-  group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status) => {
+exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time,
+  group, site, line, warranty, equipment_type, equipment_name, status) => {
 
   const fields = [];
   const values = [];
@@ -71,21 +71,12 @@ exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man,
   if (task_date !== undefined) { fields.push("task_date = ?"); values.push(task_date); }
   if (start_time !== undefined) { fields.push("start_time = ?"); values.push(start_time); }
   if (end_time !== undefined) { fields.push("end_time = ?"); values.push(end_time); }
-  if (none_time !== undefined) { fields.push("none_time = ?"); values.push(none_time); }
-  if (move_time !== undefined) { fields.push("move_time = ?"); values.push(move_time); }
   if (group !== undefined) { fields.push("`group` = ?"); values.push(group); }
   if (site !== undefined) { fields.push("site = ?"); values.push(site); }
-  if (SOP !== undefined) { fields.push("SOP = ?"); values.push(SOP); }
-  if (tsguide !== undefined) { fields.push("tsguide = ?"); values.push(tsguide); }
   if (line !== undefined) { fields.push("`line` = ?"); values.push(line); }
   if (warranty !== undefined) { fields.push("warranty = ?"); values.push(warranty); }
   if (equipment_type !== undefined) { fields.push("equipment_type = ?"); values.push(equipment_type); }
   if (equipment_name !== undefined) { fields.push("equipment_name = ?"); values.push(equipment_name); }
-  if (workType !== undefined) { fields.push("work_type = ?"); values.push(workType); }
-  if (setupItem !== undefined) { fields.push("setup_item = ?"); values.push(setupItem); }
-  if (maintItem !== undefined) { fields.push("maint_item = ?"); values.push(maintItem); }
-  if (transferItem !== undefined) { fields.push("transfer_item = ?"); values.push(transferItem); }
-  if (task_maint !== undefined) { fields.push("task_maint = ?"); values.push(task_maint); }
   if (status !== undefined) { fields.push("status = ?"); values.push(status); }
 
   values.push(id);
