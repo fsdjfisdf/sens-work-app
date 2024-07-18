@@ -36,7 +36,6 @@ module.exports = function () {
   require("../src/routes/indexRoute")(app);
   require("../src/routes/supraMaintenanceRoute")(app);
   require("../src/routes/supraSetupRoute")(app);  // 추가된 라우트
-  require("../src/routes/worklogRoute")(app); // 작업 로그 라우트 추가
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
@@ -191,6 +190,7 @@ module.exports = function () {
       res.status(500).send('작업 이력 삭제 중 오류가 발생했습니다.');
     }
   });
+
 
   return app;
 };
