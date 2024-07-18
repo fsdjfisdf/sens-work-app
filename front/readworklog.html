@@ -110,7 +110,6 @@
                         <option value="PSKH">PSKH</option>
                     </select>
                 </div>
-                <!-- Add other fields similar to the above for LINE, EQ TYPE, etc. -->
                 <div>
                     <label for="editLine">LINE</label>
                     <input type="text" id="editLine" name="line" required>
@@ -135,6 +134,46 @@
                     <label for="editSetupItem">SET UP ITEM</label>
                     <input type="text" id="editSetupItem" name="setup_item" required>
                 </div>
+                <div>
+                    <label for="editEquipmentName">EQ NAME</label>
+                    <input type="text" id="editEquipmentName" name="equipment_name" required>
+                </div>
+                <div>
+                    <label for="editWorker">WORKER</label>
+                    <input type="text" id="editWorker" name="task_man" required>
+                </div>
+                <div>
+                    <label for="editTaskDate">WORK DATE</label>
+                    <input type="date" id="editTaskDate" name="task_date" required>
+                </div>
+                <div>
+                    <label for="editStartTime">START TIME</label>
+                    <input type="time" id="editStartTime" name="start_time" required>
+                </div>
+                <div>
+                    <label for="editEndTime">END TIME</label>
+                    <input type="time" id="editEndTime" name="end_time" required>
+                </div>
+                <div>
+                    <label for="editTaskName">TITLE</label>
+                    <input type="text" id="editTaskName" name="task_name" required>
+                </div>
+                <div>
+                    <label for="editStatus">STATUS</label>
+                    <input type="text" id="editStatus" name="status" required>
+                </div>
+                <div>
+                    <label for="editTaskDescription">ACTION</label>
+                    <textarea id="editTaskDescription" name="task_description" required></textarea>
+                </div>
+                <div>
+                    <label for="editTaskCause">CAUSE</label>
+                    <textarea id="editTaskCause" name="task_cause" required></textarea>
+                </div>
+                <div>
+                    <label for="editTaskResult">RESULT</label>
+                    <textarea id="editTaskResult" name="task_result" required></textarea>
+                </div>
                 <button type="submit">Save Changes</button>
             </form>
         </div>
@@ -142,6 +181,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/readworklog.js"></script>
+    <script src="./js/editworklog.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
@@ -175,4 +215,3 @@
     </script>
 </body>
 </html>
-
