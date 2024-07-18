@@ -44,6 +44,19 @@ exports.deleteWorkLog = async (id) => {
 };
 
 
+exports.getWorkLogById = async (id) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+      const [rows] = await connection.query('SELECT * FROM work_log WHERE id = ?', [id]);
+      connection.release();
+      return rows[0];
+  } catch (err) {
+      connection.release();
+      throw new Error(`Error retrieving work log: ${err.message}`);
+  }
+};
+
+
 exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
   group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status) => {
 
@@ -97,5 +110,6 @@ exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man,
       throw err;  // 에러를 다시 던져 컨트롤러에서 잡을 수 있게 합니다.
   }
 };
+
 
 

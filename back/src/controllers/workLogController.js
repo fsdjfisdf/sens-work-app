@@ -80,9 +80,37 @@ exports.updateWorkLog = async (req, res) => {
     console.log('Updated log data:', req.body);
 
     try {
+        const existingLog = await workLogDao.getWorkLogById(id);
+        if (!existingLog) {
+            return res.status(404).json({ error: "Log not found" });
+        }
+
         await workLogDao.updateWorkLog(
-            id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-            group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
+            id,
+            task_name !== undefined ? task_name : existingLog.task_name,
+            task_result !== undefined ? task_result : existingLog.task_result,
+            task_cause !== undefined ? task_cause : existingLog.task_cause,
+            task_man !== undefined ? task_man : existingLog.task_man,
+            task_description !== undefined ? task_description : existingLog.task_description,
+            task_date !== undefined ? task_date : existingLog.task_date,
+            start_time !== undefined ? start_time : existingLog.start_time,
+            end_time !== undefined ? end_time : existingLog.end_time,
+            none_time !== undefined ? none_time : existingLog.none_time,
+            move_time !== undefined ? move_time : existingLog.move_time,
+            group !== undefined ? group : existingLog.group,
+            site !== undefined ? site : existingLog.site,
+            SOP !== undefined ? SOP : existingLog.SOP,
+            tsguide !== undefined ? tsguide : existingLog.tsguide,
+            line !== undefined ? line : existingLog.line,
+            warranty !== undefined ? warranty : existingLog.warranty,
+            equipment_type !== undefined ? equipment_type : existingLog.equipment_type,
+            equipment_name !== undefined ? equipment_name : existingLog.equipment_name,
+            workType !== undefined ? workType : existingLog.work_type,
+            setupItem !== undefined ? setupItem : existingLog.setup_item,
+            maintItem !== undefined ? maintItem : existingLog.maint_item,
+            transferItem !== undefined ? transferItem : existingLog.transfer_item,
+            task_maint !== undefined ? task_maint : existingLog.task_maint,
+            status !== undefined ? status : existingLog.status
         );
         res.status(200).json({ message: "Work log updated" });
     } catch (err) {
