@@ -313,7 +313,6 @@ function showEditForm(log) {
     const editModal = document.getElementById('editModal');
     const editForm = document.getElementById('editWorklogForm');
 
-    // 기존 로그 데이터를 폼에 채우기
     editForm.elements['group'].value = log.group || '';
     editForm.elements['site'].value = log.site || '';
     editForm.elements['line'].value = log.line || '';
@@ -385,3 +384,4 @@ window.onclick = event => {
         document.getElementById('editModal').style.display = 'none';
     }
 };
+

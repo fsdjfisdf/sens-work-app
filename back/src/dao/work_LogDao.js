@@ -55,6 +55,9 @@ exports.updateWorkLog = async (req, res) => {
       group || null, site || null, SOP || null, tsguide || null, line || null, warranty || null, equipment_type || null, equipment_name || null, workType || null, setupItem || null, maintItem || null, transferItem || null, task_maint || null, status || null, id
   ];
 
+  console.log('작업 로그 수정 쿼리:');
+  console.log('수정할 값:', values);
+
   try {
       const query = `
           UPDATE work_log SET
@@ -69,5 +72,6 @@ exports.updateWorkLog = async (req, res) => {
       res.status(500).json({ error: err.message });
   }
 };
+
 
 
