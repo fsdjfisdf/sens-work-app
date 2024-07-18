@@ -49,8 +49,10 @@ exports.updateWorkLog = async (id, updatedFields) => {
   const values = [];
 
   for (const [key, value] of Object.entries(updatedFields)) {
-      fields.push(`${key} = ?`);
-      values.push(value);
+      if (value !== null && value !== undefined) {
+          fields.push(`${key} = ?`);
+          values.push(value);
+      }
   }
 
   values.push(id);

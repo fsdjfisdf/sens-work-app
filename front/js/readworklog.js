@@ -372,6 +372,7 @@ function showEditForm(log) {
     };
 }
 
+
 // 팝업 창 닫기 기능 추가
 document.querySelectorAll('.modal .close').forEach(closeBtn => {
     closeBtn.addEventListener('click', () => {
