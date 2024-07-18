@@ -43,29 +43,32 @@ exports.deleteWorkLog = async (id) => {
   }
 };
 
+const { pool } = require('../config/database');
+
 exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-  group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status) => {
+    group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status) => {
 
-  const values = [
-      task_name || null, task_result || null, task_cause || null, task_man || null, task_description || null, task_date || null, start_time || null, end_time || null, none_time || null, move_time || null,
-      group || null, site || null, SOP || null, tsguide || null, line || null, warranty || null, equipment_type || null, equipment_name || null, workType || null, setupItem || null, maintItem || null, transferItem || null, task_maint || null, status || null, id
-  ];
+    const values = [
+        task_name || null, task_result || null, task_cause || null, task_man || null, task_description || null, task_date || null, start_time || null, end_time || null, none_time || null, move_time || null,
+        group || null, site || null, SOP || null, tsguide || null, line || null, warranty || null, equipment_type || null, equipment_name || null, workType || null, setupItem || null, maintItem || null, transferItem || null, task_maint || null, status || null, id
+    ];
 
-  console.log('작업 로그 수정 쿼리:');
-  console.log('수정할 값:', values);
+    console.log('작업 로그 수정 쿼리:');
+    console.log('수정할 값:', values);
 
-  try {
-      const query = `
-          UPDATE work_log SET
-              task_name = ?, task_result = ?, task_cause = ?, task_man = ?, task_description = ?, task_date = ?, start_time = ?, end_time = ?, none_time = ?, move_time = ?,
-              \`group\` = ?, site = ?, SOP = ?, tsguide = ?, \`line\` = ?, warranty = ?, equipment_type = ?, equipment_name = ?, work_type = ?, setup_item = ?, maint_item = ?, transfer_item = ?, task_maint = ?, status = ?
-          WHERE id = ?
-      `;
-      await pool.query(query, values);
-  } catch (err) {
-      console.error('Error updating work log:', err.message);
-      throw err;
-  }
+    try {
+        const query = `
+            UPDATE work_log SET
+                task_name = ?, task_result = ?, task_cause = ?, task_man = ?, task_description = ?, task_date = ?, start_time = ?, end_time = ?, none_time = ?, move_time = ?,
+                \`group\` = ?, site = ?, SOP = ?, tsguide = ?, \`line\` = ?, warranty = ?, equipment_type = ?, equipment_name = ?, work_type = ?, setup_item = ?, maint_item = ?, transfer_item = ?, task_maint = ?, status = ?
+            WHERE id = ?
+        `;
+        await pool.query(query, values);
+        console.log('쿼리 실행 성공');
+    } catch (err) {
+        console.error('Error updating work log:', err.message);
+        throw err;  // 에러를 다시 던져 컨트롤러에서 잡을 수 있게 합니다.
+    }
 };
 
 

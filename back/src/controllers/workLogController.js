@@ -69,7 +69,6 @@ exports.exportWorkLogs = async (req, res) => {
     }
 };
 
-
 exports.updateWorkLog = async (req, res) => {
     const { id } = req.params;
     const {
