@@ -36,6 +36,7 @@ module.exports = function () {
   require("../src/routes/indexRoute")(app);
   require("../src/routes/supraMaintenanceRoute")(app);
   require("../src/routes/supraSetupRoute")(app);  // 추가된 라우트
+  require("../src/routes/worklogRoute")(app); // 작업 로그 라우트 추가
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
@@ -188,39 +189,6 @@ module.exports = function () {
       res.status(200).send('작업 이력이 성공적으로 삭제되었습니다.');
     } catch (err) {
       res.status(500).send('작업 이력 삭제 중 오류가 발생했습니다.');
-    }
-  });
-
-  // 작업 이력 수정 추가
-  app.put('/work-logs/:id', async (req, res) => {
-    const { id } = req.params;
-    const {
-      task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
-    } = req.body;
-
-    try {
-      const query = `
-        UPDATE work_log SET
-        task_name = ?, task_result = ?, task_cause = ?, task_man = ?, task_description = ?, task_date = ?, start_time = ?, end_time = ?, none_time = ?, move_time = ?,
-        \`group\` = ?, site = ?, SOP = ?, tsguide = ?, \`line\` = ?, warranty = ?, equipment_type = ?, equipment_name = ?, work_type = ?, setup_item = ?, maint_item = ?, transfer_item = ?, task_maint = ?, status = ?
-        WHERE id = ?
-      `;
-      const values = [
-        task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-        group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status, id
-      ];
-
-      logger.info('작업 로그 수정 쿼리:', query);
-      logger.info('수정할 값:', values);
-
-      await pool.execute(query, values);
-
-      logger.info('작업 로그가 성공적으로 수정되었습니다.');
-      res.status(200).send('작업 로그가 성공적으로 수정되었습니다.');
-    } catch (err) {
-      logger.error('작업 로그 수정 중 오류 발생:', err.message);
-      res.status(500).send('작업 로그 수정 중 오류가 발생했습니다.');
     }
   });
 

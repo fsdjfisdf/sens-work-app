@@ -43,12 +43,8 @@ exports.deleteWorkLog = async (id) => {
   }
 };
 
-exports.updateWorkLog = async (req, res) => {
-  const { id } = req.params;
-  const {
-      task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status
-  } = req.body;
+exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+  group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status) => {
 
   const values = [
       task_name || null, task_result || null, task_cause || null, task_man || null, task_description || null, task_date || null, start_time || null, end_time || null, none_time || null, move_time || null,
@@ -66,10 +62,9 @@ exports.updateWorkLog = async (req, res) => {
           WHERE id = ?
       `;
       await pool.query(query, values);
-      res.status(200).json({ message: "Work log updated" });
   } catch (err) {
       console.error('Error updating work log:', err.message);
-      res.status(500).json({ error: err.message });
+      throw err;
   }
 };
 
