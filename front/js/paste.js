@@ -22,9 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const lines = text.split('\n');
 
         let title = '';
-        let status = '';
+        let statuses = [];
         let actions = [];
-        let cause = '';
+        let causes = [];
         let results = [];
         let sop = '';
         let tsGuide = '';
@@ -43,27 +43,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         lines.forEach(line => {
-            if (line.startsWith('1) STATUS')) {
+            if (/^\s*1\)\s*status\s*/i.test(line)) {
                 currentSection = 'status';
                 actionSectionEnded = false;
                 resultSectionEnded = false;
-            } else if (line.startsWith('2) ACTION')) {
+            } else if (/^\s*2\)\s*action\s*/i.test(line)) {
                 currentSection = 'action';
                 actionSectionEnded = false;
-            } else if (line.startsWith('3) CAUSE')) {
+            } else if (/^\s*3\)\s*cause\s*/i.test(line)) {
                 currentSection = 'cause';
                 actionSectionEnded = true;
                 resultSectionEnded = true;
-            } else if (line.startsWith('4) RESULT')) {
+            } else if (/^\s*4\)\s*result\s*/i.test(line)) {
                 currentSection = 'result';
                 actionSectionEnded = true;
                 resultSectionEnded = false;
-            } else if (line.startsWith('5) SOP 및 T/S guide 활용')) {
+            } else if (/^\s*5\)\s*sop\s*및\s*t\s*\/\s*s\s*guide\s*활용\s*/i.test(line)) {
                 currentSection = 'sopTsGuide';
                 resultSectionEnded = true;
             } else {
                 if (currentSection === 'status' && line.startsWith('-. ')) {
-                    status = line.replace('-. ', '').trim();
+                    statuses.push(line.replace('-. ', '').trim());
                 } else if (currentSection === 'action' && !actionSectionEnded) {
                     if (line.trim() === '') {
                         actionSectionEnded = true;
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         actions[actions.length - 1] += '\n' + line.trim();
                     }
                 } else if (currentSection === 'cause' && line.startsWith('-. ')) {
-                    cause = line.replace('-. ', '').trim();
+                    causes.push(line.replace('-. ', '').trim());
                 } else if (currentSection === 'result' && !resultSectionEnded) {
                     if (line.trim() === '') {
                         resultSectionEnded = true;
@@ -94,8 +94,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // 작업자, 작업 시간, None 시간 및 Move 시간 추출
             const workerMatch = line.match(/작업자\s*[:：]?\s*(.*)/);
             const timeMatch = line.match(/작업\s*시간\s*[:：]?\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/);
+            const emsTimeMatch = line.match(/ems\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/i);
             const noneMatch = line.match(/(?:Non|None|none|논)\s*(\d+)/i);
             const moveMatch = line.match(/(?:move|mov|무브)\s*(\d+)/i);
+            
+            // 새로운 양식에서 None 시간 및 Move 시간 추출
+            const noneTimeMatch = line.match(/Non\s*Working\s*Time\s*[:：]?\s*([\d\-]+)/i);
+            const moveTimeMatch = line.match(/Moving\s*Time\s*\(.*\)\s*[:：]?\s*(\d+)m/i);
 
             if (workerMatch) {
                 workers = workerMatch[1].split(/[ ,]/).filter(Boolean);
@@ -104,11 +109,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 startTime = timeMatch[1];
                 endTime = timeMatch[2];
             }
+            if (emsTimeMatch) {
+                startTime = emsTimeMatch[1];
+                endTime = emsTimeMatch[2];
+            }
             if (noneMatch) {
                 noneTime = noneMatch[1];
             }
             if (moveMatch) {
                 moveTime = moveMatch[1];
+            }
+            if (noneTimeMatch) {
+                noneTime = noneTimeMatch[1] === '-' ? '0' : noneTimeMatch[1];
+            }
+            if (moveTimeMatch) {
+                moveTime = moveTimeMatch[1];
             }
         });
 
@@ -122,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const statusElement = document.getElementById('status');
         if (statusElement) {
-            statusElement.value = status;
+            statusElement.value = statuses.join('\n');
         } else {
             console.error('Status element not found');
         }
@@ -144,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const causeElement = document.querySelector('.task-cause-input');
         if (causeElement) {
-            causeElement.value = cause;
+            causeElement.value = causes.join('\n');
         } else {
             console.error('Cause element not found');
         }

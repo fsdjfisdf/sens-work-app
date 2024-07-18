@@ -404,7 +404,7 @@ form textarea {
 }
 
 .remove-field {
-    flex-basis: 20px; /* - 버튼이 차지하는 공간을 줄이기 */
+    flex-basis: 0px; /* - 버튼이 차지하는 공간을 줄이기 */
     display: flex;
     align-items: center;
     justify-content: center;
