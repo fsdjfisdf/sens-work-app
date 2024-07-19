@@ -249,3 +249,11 @@ h3 {
 }
 
 
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+}

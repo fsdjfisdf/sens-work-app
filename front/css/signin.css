@@ -200,3 +200,11 @@ main {
         font-size: 10px;
     }
 }
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+}

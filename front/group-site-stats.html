@@ -18,31 +18,30 @@
                 <div class="loading-percentage" id="loadingPercentage">0%</div>
             </div>
         </div>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container">
-                    <div class="unsigned"></div>
-                    <div class="signed hidden">
-                        <div class="dropdown">
-                            <button class="dropbtn">MENU</button>
-                            <div class="dropdown-content">
-                                <a href="./info.html" class="dropdown-item">Eng'r Information</a>
-                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
-                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
-                                <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
-                                <button id="sign-out" class="dropdown-item">Logout</button>
+        <nav>
+            <div class="inner">
+                <div class="nav-container">
+                    <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                    <div class="sign-container">
+                        <div class="unsigned"></div>
+                        <div class="signed hidden">
+                            <div class="dropdown">
+                                <button class="dropbtn">MENU</button>
+                                <div class="dropdown-content">
+                                    <a href="./info.html" class="dropdown-item">Eng'r Information</a>
+                                    <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                                    <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                    <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
+                                    <button id="sign-out" class="dropdown-item">Logout</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </nav>
-
-    <main>
-        <section id="worklog">
+        </nav>
+        
+        <div class="search-container-fixed">
             <div class="inner">
                 <div class="search-container">
                     <div class="date-filter">
@@ -85,14 +84,44 @@
                         <button id="setupAnalysisButton">Analysis for Setup Task</button>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div id="overall-stats-content"></div>
+    <main class="main-content">
+        <section id="operating-rate-section" class="section">
+            <div class="inner">
+                <h2 class="section-title">Operating Rate</h2>
+                <div id="overall-stats-content" class="operation-rate-container"></div>
+            </div>
+        </section>
+    
+        <section id="calendar-section" class="section">
+            <div class="inner">
+                <h2 class="section-title">Calendar for Operating Rate</h2>
                 <div id="calendarContainer" class="calendar-container"></div>
+            </div>
+        </section>
+    
+        <section id="monthly-worktime-section" class="section">
+            <div class="inner">
+                <h2 class="section-title">Monthly Worktime</h2>
                 <canvas id="monthlyWorktimeChart"></canvas>
+            </div>
+        </section>
+    
+        <section id="operation-rate-chart-section" class="section">
+            <div class="inner">
+                <h2 class="section-title">Operation Rate by Site</h2>
                 <canvas id="operationRateChart"></canvas>
             </div>
         </section>
     </main>
+
+    <footer>
+        <div class="inner">
+            <p>Developed by SEnS Jeong Hyeon Woo</p>
+        </div>
+    </footer>
 
     <!-- 팝업창을 위한 HTML 요소 -->
     <div id="popup" class="popup hidden">
@@ -150,4 +179,3 @@
     </script>
 </body>
 </html>
-

@@ -140,3 +140,12 @@ main {
         padding: 8px;
     }
 }
+
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+}

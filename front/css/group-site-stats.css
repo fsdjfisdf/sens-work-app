@@ -20,6 +20,10 @@ body {
 nav {
     background-color: #0044cc;
     padding: 10px 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
 }
 
 .nav-container {
@@ -96,6 +100,7 @@ main {
     align-items: center;
     justify-content: center;
     padding: 20px 0;
+    flex-direction: column; /* Ensure the main content is displayed in column */
 }
 
 h2 {
@@ -103,16 +108,35 @@ h2 {
     margin-bottom: 20px;
 }
 
+.search-container-fixed {
+    position: fixed;
+    top: 50px; /* Adjust based on nav height */
+    width: 100%;
+    background-color: #f4f4f9;
+    padding: 10px 0;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.main-content {
+    margin-top: 190px; /* Adjust based on combined height of nav and search container */
+    width: 100%; /* Ensure it takes the full width */
+}
+
 .search-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
     background-color: #fff;
-    padding: 20px;
+    padding: 5px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-section {
+    margin-top: 180px; /* 네비게이션 바와 검색 컨테이너의 높이 만큼 마진 추가 */
+    width: 100%;
 }
 
 .search-container .date-filter,
@@ -180,53 +204,104 @@ h2 {
     background-color: #4200c7;
 }
 
+/* 섹션 구분을 위한 기본 스타일 추가 */
+.section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
 
-#overall-stats-content {
+.section-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* 기타 스타일 생략 */
+
+.operation-rate-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+.donut-chart-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    position: relative;
+}
+
+.donut-chart-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+}
+
+.stat-items-container {
+    display: flex;
+    flex-direction: column;
     gap: 10px;
 }
 
 .stat-item {
-    position: relative;
-    display: block;
-    margin: 10px 0;
-    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.stat-item::after {
-    content: attr(title);
-    position: absolute;
-    background-color: #333;
-    color: #fff;
-    padding: 5px;
-    border-radius: 5px;
-    top: 50%;
-    left: 100%;
-    transform: translateX(10px) translateY(-50%);
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity 0.3s;
-    z-index: 1;
-    font-size: 12px;
-    max-width: 300px;
-    overflow-wrap: break-word;
+.stat-item h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
 }
 
-.stat-item:hover::after {
-    opacity: 1;
-}
-
-.blue-text {
-    color: #0044cc;
+.stat-item p {
+    margin: 0;
+    font-size: 16px;
     font-weight: bold;
+    color: #555;
 }
 
-canvas {
-    max-width: 100%;
-    height: auto;
-    margin-top: 20px;
+.stat-item .blue-text {
+    color: #0044cc;
+}
+
+@media (max-width: 768px) {
+    .operation-rate-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .donut-chart-text {
+        font-size: 20px;
+    }
+
+    .stat-items-container {
+        width: 100%;
+        align-items: center;
+    }
+
+    .stat-item {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 /* Calendar styles */
@@ -349,68 +424,13 @@ canvas {
         font-size: 12px;
     }
 
-    .calendar-navigation span {
+    .calendar-title {
         font-size: 14px;
     }
 
     .legend-item {
         font-size: 10px;
         padding: 2px 5px;
-    }
-}
-
-/* General styles for the stats container */
-.stats-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.stat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.stat-item h3 {
-    margin: 0;
-    font-size: 16px;
-    color: #333;
-}
-
-.stat-item p {
-    margin: 0;
-    font-size: 16px;
-    font-weight: bold;
-    color: #555;
-}
-
-.stat-item .blue-text {
-    color: #0044cc;
-}
-
-@media (max-width: 768px) {
-    .stats-container {
-        padding: 15px;
-    }
-
-    .stat-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .stat-item h3 {
-        margin-bottom: 5px;
     }
 }
 
@@ -448,4 +468,12 @@ canvas {
 
 .hidden {
     display: none;
+}
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
 }

@@ -121,6 +121,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         return (requiredEngineers / totalEngineers) * 100;
     }
 
+    function renderOperationRateDonutChart(operationRate) {
+        const ctx = document.getElementById('operationRateDonutChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, '#4f8df5');
+        gradient.addColorStop(1, '#1f5bb5');
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [operationRate, 100 - operationRate],
+                    backgroundColor: [gradient, '#e0e0e0'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
     function displayOverallStats(filteredLogs, filteredEngineers) {
         let totalMinutes = 0;
         const dates = new Set();
@@ -137,7 +164,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const uniqueDates = dates.size;
-        const totalEngineers = filteredEngineers.length;
+
+        const availabilityRate = document.getElementById('engineerAvailability').value === '90%' ? 0.9 : 1;
+        const totalEngineers = filteredEngineers.length * availabilityRate;
 
         if (totalEngineers > 0) {
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
@@ -150,7 +179,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const overallStatsContent = document.getElementById('overall-stats-content');
             overallStatsContent.innerHTML = `
-                <div class="stats-container">
+                <div class="donut-chart-container">
+                    <canvas id="operationRateDonutChart"></canvas>
+                    <div class="donut-chart-text">
+                        ${operationRate.toFixed(2)}%
+                    </div>
+                </div>
+                <div class="stat-items-container">
                     <div class="stat-item">
                         <h3>Total Worktime:</h3>
                         <p>${hours}시간 ${minutes}분</p>
@@ -165,20 +200,40 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <div class="stat-item">
                         <h3>Total Engineers:</h3>
-                        <p>${totalEngineers}명</p>
+                        <p>${totalEngineers.toFixed(0)}명</p>
                     </div>
-                    <div class="stat-item">
-                        <h3 class="blue-text">Operating Rate:</h3>
-                        <p class="blue-text">${operationRate.toFixed(2)}%</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3 class="blue-text">Average Worktime per Engineer:</h3>
-                        <p class="blue-text">${avgWorkHours}시간 ${avgWorkMinutes}분</p>
+                    <div class="stat-item blue-text">
+                        <h3>Average Worktime per Eng'r:</h3>
+                        <p>${avgWorkHours}시간 ${avgWorkMinutes}분</p>
                     </div>
                 </div>
             `;
+            renderOperationRateDonutChart(operationRate);
         }
     }
+
+    document.getElementById('engineerAvailability').addEventListener('change', () => {
+        const filteredLogs = logs.filter(log => {
+            const logDate = formatDate(log.task_date);
+            const isWorkday = document.getElementById('searchWorkType').value === 'ALL' || (document.getElementById('searchWorkType').value === 'Workday' && isWorkdayDate(logDate)) || (document.getElementById('searchWorkType').value === 'Holiday' && !isWorkdayDate(logDate));
+            return (
+                (document.getElementById('searchGroup').value === '' || log.group === document.getElementById('searchGroup').value) &&
+                (document.getElementById('searchSite').value === '' || log.site === document.getElementById('searchSite').value) &&
+                (document.getElementById('searchStartDate').value === '' || logDate >= document.getElementById('searchStartDate').value) &&
+                (document.getElementById('searchEndDate').value === '' || logDate <= document.getElementById('searchEndDate').value) &&
+                isWorkday
+            );
+        });
+
+        const filteredEngineers = engineers.filter(engineer => {
+            return (
+                (document.getElementById('searchGroup').value === '' || engineer.group === document.getElementById('searchGroup').value) &&
+                (document.getElementById('searchSite').value === '' || engineer.site === document.getElementById('searchSite').value)
+            );
+        });
+
+        displayOverallStats(filteredLogs, filteredEngineers);
+    });
 
     function renderMonthlyWorktimeChart(logs) {
         if (monthlyWorktimeChartInstance) {
@@ -412,6 +467,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return logDate.getFullYear() === year && logDate.getMonth() === month;
         });
 
+        const navigationContainer = document.createElement('div');
+        navigationContainer.className = 'calendar-navigation';
+
         const prevMonthButton = document.createElement('button');
         prevMonthButton.className = 'calendar-nav-button';
         prevMonthButton.textContent = 'Last Month';
@@ -423,7 +481,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             renderCalendar(logs, engineers, currentYear, currentMonth);
         };
-        calendarContainer.appendChild(prevMonthButton);
+        navigationContainer.appendChild(prevMonthButton);
 
         const nextMonthButton = document.createElement('button');
         nextMonthButton.className = 'calendar-nav-button';
@@ -436,21 +494,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             renderCalendar(logs, engineers, currentYear, currentMonth);
         };
-        calendarContainer.appendChild(nextMonthButton);
+        navigationContainer.appendChild(nextMonthButton);
 
-        const calendarLegend = document.createElement('div');
-        calendarLegend.className = 'calendar-legend';
-        calendarLegend.innerHTML = `
-            <div class="legend-item lack">Lack (>= 100%)</div>
-            <div class="legend-item optimal">Optimal (70% - 99%)</div>
-            <div class="legend-item surplus">Surplus (< 70%)</div>
-        `;
-        calendarContainer.appendChild(calendarLegend);
-
-        const calendarTitle = document.createElement('div');
+        const calendarTitle = document.createElement('span');
         calendarTitle.className = 'calendar-title';
         calendarTitle.textContent = `${year}-${String(month + 1).padStart(2, '0')}`;
-        calendarContainer.appendChild(calendarTitle);
+
+        const calendarNavigation = document.createElement('div');
+        calendarNavigation.className = 'calendar-navigation';
+        calendarNavigation.appendChild(prevMonthButton);
+        calendarNavigation.appendChild(calendarTitle);
+        calendarNavigation.appendChild(nextMonthButton);
+
+        calendarContainer.appendChild(calendarNavigation);
+
 
         const daysInWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -466,7 +523,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             calendarHeader.appendChild(dayElement);
         });
         calendarContainer.appendChild(calendarHeader);
-
 
         const calendarRows = [];
         let calendarRow = document.createElement('div');
@@ -553,7 +609,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             calendarRow.appendChild(calendarDay);
         }
         calendarContainer.appendChild(calendarRow);
+
+        const calendarLegend = document.createElement('div');
+        calendarLegend.className = 'calendar-legend';
+        calendarLegend.innerHTML = `
+            <div class="legend-item lack">Lack (>= 100%)</div>
+            <div class="legend-item optimal">Optimal (70% - 99%)</div>
+            <div class="legend-item surplus">Surplus (< 70%)</div>
+        `;
+        calendarContainer.appendChild(calendarLegend);
     }
+
+    
 
     function showDetailedStats(date, dailyLogs) {
         localStorage.setItem('selectedDate', date);
@@ -577,3 +644,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
