@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const noticesController = require('../controllers/noticesController');
 
-router.use(require('./noticesRoute')); // 추가된 라우트
+router.get('/notices', noticesController.getNotices);
+router.post('/notices', noticesController.createNotice);
+router.put('/notices/:id', noticesController.updateNotice);
+router.delete('/notices/:id', noticesController.deleteNotice);
 
 module.exports = router;

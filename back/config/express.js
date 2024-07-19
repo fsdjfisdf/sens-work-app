@@ -6,6 +6,7 @@ const path = require("path");
 const { pool } = require("./database");
 const { logger } = require("./winston");
 
+
 module.exports = function () {
   const app = express();
 
@@ -36,6 +37,8 @@ module.exports = function () {
   require("../src/routes/indexRoute")(app);
   require("../src/routes/supraMaintenanceRoute")(app);
   require("../src/routes/supraSetupRoute")(app);  // 추가된 라우트
+  require("../src/routes/noticesRoute")(app); // 추가된 라우트
+  
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {
