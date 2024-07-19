@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항</title>
+    <link rel="stylesheet" href="./css/notices.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>공지사항</h1>
+        <div id="calendarContainer" class="calendar-container"></div>
+        <div id="noticeForm" class="notice-form hidden">
+            <h2>공지사항 작성</h2>
+            <input type="hidden" id="noticeId">
+            <input type="date" id="noticeDate" required>
+            <input type="text" id="noticeTitle" placeholder="제목" required>
+            <textarea id="noticeContent" placeholder="내용" required></textarea>
+            <button id="saveNotice">저장</button>
+            <button id="deleteNotice" class="hidden">삭제</button>
+            <button id="cancelNotice">취소</button>
+        </div>
+        <div id="noticeDetail" class="notice-detail hidden">
+            <h2 id="detailTitle"></h2>
+            <p id="detailDate"></p>
+            <p id="detailContent"></p>
+            <button id="closeDetail">닫기</button>
+        </div>
+    </div>
+
+    <script src="./js/notices.js"></script>
+</body>
+</html>
