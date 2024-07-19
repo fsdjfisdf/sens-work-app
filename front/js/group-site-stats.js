@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             displayOverallStats(logs, engineers);
             renderMonthlyWorktimeChart(logs);
             renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
+            renderLineWorkStatsChart(logs); // 새로운 그래프 호출
             updateLoadingPercentage(100); // 로딩 퍼센티지 업데이트
             completeLoading(); // 로딩 애니메이션 종료
         } catch (error) {
@@ -240,7 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             monthlyWorktimeChartInstance.destroy();
         }
         const monthlyWorktime = {};
-
+    
         logs.forEach(log => {
             const date = new Date(log.task_date);
             const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -254,10 +255,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             monthlyWorktime[month] += taskDurationMinutes * numWorkers;
         });
-
+    
         const labels = Object.keys(monthlyWorktime).sort();
         const data = labels.map(month => monthlyWorktime[month] / 60);
-
+    
         const ctx = document.getElementById('monthlyWorktimeChart').getContext('2d');
         monthlyWorktimeChartInstance = new Chart(ctx, {
             type: 'line',
@@ -268,7 +269,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     data: data,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 2,
-                    fill: false
+                    fill: true,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)'
                 }]
             },
             options: {
@@ -292,13 +294,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function renderOperationRateChart(logs, engineers, defaultGroup1 = '', defaultSite1 = '', defaultGroup2 = '', defaultSite2 = '') {
+    function renderOperationRateChart(logs, engineers) {
         if (operationRateChartInstance) {
             operationRateChartInstance.destroy();
         }
         const groupSiteWorktime = {};
         const groupSiteDates = {};
-
+    
         logs.forEach(log => {
             const key = `${log.group}-${log.site}`;
             const durationParts = log.task_duration.split(':');
@@ -313,43 +315,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             groupSiteWorktime[key] += taskDurationMinutes * numWorkers;
             groupSiteDates[key].add(log.task_date);
         });
-
+    
         const labels = [];
         const data = [];
         const dataWithReducedAvailability = [];
-
-        const groupSiteKeys = Object.keys(groupSiteWorktime);
-
-        if (defaultGroup1 && defaultSite1) {
-            const key1 = `${defaultGroup1}-${defaultSite1}`;
-            if (groupSiteKeys.includes(key1)) {
-                const totalMinutes = groupSiteWorktime[key1];
-                const uniqueDates = groupSiteDates[key1].size;
-                const totalEngineers = getMonthlyEngineerCount(defaultGroup1, defaultSite1, new Date(), 1); // 100% availability
-                const totalEngineersReduced = getMonthlyEngineerCount(defaultGroup1, defaultSite1, new Date(), 0.9); // 90% availability
-                const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
-                const operationRateReduced = calculateOperationRate(totalMinutes, uniqueDates, totalEngineersReduced);
-                labels.push(key1);
-                data.push(operationRate);
-                dataWithReducedAvailability.push(operationRateReduced);
-            }
-        }
-
-        if (defaultGroup2 && defaultSite2) {
-            const key2 = `${defaultGroup2}-${defaultSite2}`;
-            if (groupSiteKeys.includes(key2)) {
-                const totalMinutes = groupSiteWorktime[key2];
-                const uniqueDates = groupSiteDates[key2].size;
-                const totalEngineers = getMonthlyEngineerCount(defaultGroup2, defaultSite2, new Date(), 1); // 100% availability
-                const totalEngineersReduced = getMonthlyEngineerCount(defaultGroup2, defaultSite2, new Date(), 0.9); // 90% availability
-                const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
-                const operationRateReduced = calculateOperationRate(totalMinutes, uniqueDates, totalEngineersReduced);
-                labels.push(key2);
-                data.push(operationRate);
-                dataWithReducedAvailability.push(operationRateReduced);
-            }
-        }
-
+    
+        Object.keys(groupSiteWorktime).forEach(key => {
+            const totalMinutes = groupSiteWorktime[key];
+            const uniqueDates = groupSiteDates[key].size;
+            const totalEngineers = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], new Date(), 1); // 100% availability
+            const totalEngineersReduced = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], new Date(), 0.9); // 90% availability
+            const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
+            const operationRateReduced = calculateOperationRate(totalMinutes, uniqueDates, totalEngineersReduced);
+            labels.push(key);
+            data.push(operationRate);
+            dataWithReducedAvailability.push(operationRateReduced);
+        });
+    
         const ctx = document.getElementById('operationRateChart').getContext('2d');
         operationRateChartInstance = new Chart(ctx, {
             type: 'bar',
@@ -394,14 +376,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    document.getElementById('searchButton').addEventListener('click', () => {
+    function applyFilters(logs, engineers) {
         const searchGroup = document.getElementById('searchGroup').value;
         const searchSite = document.getElementById('searchSite').value;
         const searchStartDate = document.getElementById('searchStartDate').value;
         const searchEndDate = document.getElementById('searchEndDate').value;
         const searchWorkType = document.getElementById('searchWorkType').value;
-        const engineerAvailability = document.getElementById('engineerAvailability').value;
-
+    
         const filteredLogs = logs.filter(log => {
             const logDate = formatDate(log.task_date);
             const isWorkday = searchWorkType === 'ALL' || (searchWorkType === 'Workday' && isWorkdayDate(logDate)) || (searchWorkType === 'Holiday' && !isWorkdayDate(logDate));
@@ -413,32 +394,44 @@ document.addEventListener('DOMContentLoaded', async () => {
                 isWorkday
             );
         });
-
+    
         const filteredEngineers = engineers.filter(engineer => {
             return (
                 (searchGroup === '' || engineer.group === searchGroup) &&
                 (searchSite === '' || engineer.site === searchSite)
             );
         });
+    
+        return { filteredLogs, filteredEngineers };
+    }
+    
 
+
+    document.getElementById('searchButton').addEventListener('click', () => {
+        const { filteredLogs, filteredEngineers } = applyFilters(logs, engineers);
         displayOverallStats(filteredLogs, filteredEngineers);
         renderMonthlyWorktimeChart(filteredLogs);
         renderOperationRateChart(filteredLogs, filteredEngineers);
+        renderLineWorkStatsChart(filteredLogs);
         renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
     });
 
-    document.getElementById('resetButton').addEventListener('click', () => {
-        document.getElementById('searchGroup').value = '';
-        document.getElementById('searchSite').value = '';
-        document.getElementById('searchStartDate').value = '';
-        document.getElementById('searchEndDate').value = '';
-        document.getElementById('searchWorkType').value = 'ALL';
-        document.getElementById('engineerAvailability').value = '100%';
-        displayOverallStats(logs, engineers);
-        renderMonthlyWorktimeChart(logs);
-        renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
-        renderCalendar(logs, engineers, currentYear, currentMonth);
-    });
+document.getElementById('resetButton').addEventListener('click', () => {
+    document.getElementById('searchGroup').value = '';
+    document.getElementById('searchSite').value = '';
+    document.getElementById('searchStartDate').value = '';
+    document.getElementById('searchEndDate').value = '';
+    document.getElementById('searchWorkType').value = 'ALL';
+    document.getElementById('engineerAvailability').value = '100%';
+    const { filteredLogs, filteredEngineers } = applyFilters(logs, engineers);
+    displayOverallStats(filteredLogs, filteredEngineers);
+    renderMonthlyWorktimeChart(filteredLogs);
+    renderOperationRateChart(filteredLogs, filteredEngineers);
+    renderLineWorkStatsChart(filteredLogs);
+    renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
+});
+
+    
 
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -628,6 +621,188 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.open('detailed-stats.html', '_blank');
     }
 
+    let lineWorkStatsChartInstance; // 기존의 차트 인스턴스를 저장하기 위한 변수
+
+    function renderLineWorkStatsChart(logs) {
+        if (lineWorkStatsChartInstance) {
+            lineWorkStatsChartInstance.destroy();
+        }
+    
+        const siteOrder = {
+            "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
+            "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
+            "IC": ["M14", "M16"],
+            "CJ": ["M11", "M12", "M15"],
+            "PSKH": ["PSKH"]
+        };
+    
+        const siteColors = {
+            "PT": 'rgba(153, 102, 255, 0.2)',
+            "HS": 'rgba(255, 99, 132, 0.2)',
+            "IC": 'rgba(54, 162, 235, 0.2)',
+            "CJ": 'rgba(255, 206, 86, 0.2)',
+            "PSKH": 'rgba(153, 102, 255, 0.2)'
+        };
+    
+        const siteBorderColors = {
+            "PT": 'rgba(153, 102, 255, 1)',
+            "HS": 'rgba(255, 99, 132, 1)',
+            "IC": 'rgba(54, 162, 235, 1)',
+            "CJ": 'rgba(255, 206, 86, 1)',
+            "PSKH": 'rgba(153, 102, 255, 1)'
+        };
+    
+        const siteLineWorkData = {};
+    
+        logs.forEach(log => {
+            const { site, line, task_duration } = log;
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            const totalDuration = taskDurationMinutes * numWorkers;
+    
+            if (!siteLineWorkData[site]) {
+                siteLineWorkData[site] = {};
+            }
+    
+            if (!siteLineWorkData[site][line]) {
+                siteLineWorkData[site][line] = {
+                    worktime: 0,
+                    taskCount: 0
+                };
+            }
+    
+            siteLineWorkData[site][line].worktime += totalDuration;
+            siteLineWorkData[site][line].taskCount += 1;
+        });
+    
+        const labels = [];
+        const worktimeValues = [];
+        const taskCountValues = [];
+        const backgroundColors = [];
+        const borderColors = [];
+    
+        for (const [site, lines] of Object.entries(siteLineWorkData)) {
+            const sortedLines = Object.entries(lines).sort((a, b) => b[1].worktime - a[1].worktime);
+    
+            sortedLines.forEach(([line, data]) => {
+                labels.push(`${site}-${line}`);
+                worktimeValues.push(data.worktime / 60); // hours
+                taskCountValues.push(data.taskCount);
+                backgroundColors.push(siteColors[site]);
+                borderColors.push(siteBorderColors[site]);
+            });
+        }
+    
+        const ctx = document.getElementById('lineWorkStatsChart').getContext('2d');
+        lineWorkStatsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total Worktime (hours)',
+                        data: worktimeValues,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Task Count',
+                        data: taskCountValues,
+                        type: 'line',
+                        borderColor: 'rgba(75, 192, 193, 10)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 2,
+                        yAxisID: 'y-axis-taskCount'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Line'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Total Worktime (hours)'
+                        },
+                        beginAtZero: true
+                    },
+                    'y-axis-taskCount': {
+                        title: {
+                            display: true,
+                            text: 'Task Count'
+                        },
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+
+
+        // 그래프 클릭 이벤트 추가
+        document.getElementById('monthlyWorktimeChart').addEventListener('click', () => {
+            showModal('monthlyWorktimeModal', 'monthlyWorktimeChartModal', monthlyWorktimeChartInstance.data);
+        });
+    
+        document.getElementById('operationRateChart').addEventListener('click', () => {
+            showModal('operationRateModal', 'operationRateChartModal', operationRateChartInstance.data);
+        });
+    
+        document.getElementById('lineWorkStatsChart').addEventListener('click', () => {
+            showModal('lineWorkStatsModal', 'lineWorkStatsChartModal', lineWorkStatsChartInstance.data);
+        });
+    
+        // 모달 닫기 이벤트
+        document.getElementById('closeMonthlyWorktime').addEventListener('click', () => {
+            closeModal('monthlyWorktimeModal');
+        });
+    
+        document.getElementById('closeOperationRate').addEventListener('click', () => {
+            closeModal('operationRateModal');
+        });
+    
+        document.getElementById('closeLineWorkStats').addEventListener('click', () => {
+            closeModal('lineWorkStatsModal');
+        });
+    
+        function showModal(modalId, canvasId, chartData) {
+            const modal = document.getElementById(modalId);
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'bar', // 필요한 차트 타입으로 변경 가능
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            modal.style.display = 'block';
+        }
+    
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+            const canvas = modal.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        
     if (checkLogin()) {
         await loadEngineers();
         await loadWorkLogs();

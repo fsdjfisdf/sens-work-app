@@ -102,24 +102,35 @@
             </div>
         </section>
     
-        <section id="monthly-worktime-section" class="section">
-            <div class="inner">
-                <h2 class="section-title">Monthly Worktime</h2>
-                <canvas id="monthlyWorktimeChart"></canvas>
-            </div>
-        </section>
-    
-        <section id="operation-rate-chart-section" class="section">
-            <div class="inner">
-                <h2 class="section-title">Operation Rate by Site</h2>
-                <canvas id="operationRateChart"></canvas>
-            </div>
-        </section>
-    </main>
+        <div class="graph-container">
+            <section id="monthly-worktime-section" class="section graph-item">
+                <div class="inner">
+                    <h2 class="section-title">Monthly Worktime</h2>
+                    <canvas id="monthlyWorktimeChart"></canvas>
+                </div>
+            </section>
+        
+            <section id="operation-rate-chart-section" class="section graph-item">
+                <div class="inner">
+                    <h2 class="section-title">Operation Rate by Site</h2>
+                    <canvas id="operationRateChart"></canvas>
+                </div>
+            </section>
+        
+            <section id="line-work-stats-section" class="section graph-item">
+                <div class="inner">
+                    <h2 class="section-title">Work Time and Count by LINE</h2>
+                    <canvas id="lineWorkStatsChart"></canvas>
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+</main>
 
     <footer>
         <div class="inner">
-            <p>Developed by SEnS Jeong Hyeon Woo</p>
+            <p>Developed by PEE1 Jeong Hyeon Woo</p>
         </div>
     </footer>
 
@@ -132,6 +143,32 @@
             <div id="popup-logs-summary"></div>
         </div>
     </div>
+
+
+    <!-- Monthly Worktime Modal -->
+<div id="monthlyWorktimeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeMonthlyWorktime">&times;</span>
+        <canvas id="monthlyWorktimeChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Operation Rate by Site Modal -->
+<div id="operationRateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeOperationRate">&times;</span>
+        <canvas id="operationRateChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Work Time and Count by LINE Modal -->
+<div id="lineWorkStatsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeLineWorkStats">&times;</span>
+        <canvas id="lineWorkStatsChartModal"></canvas>
+    </div>
+</div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/group-site-stats.js"></script>
