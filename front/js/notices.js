@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailDate = document.getElementById('detailDate');
     const detailContent = document.getElementById('detailContent');
     const closeDetail = document.getElementById('closeDetail');
+    const createNoticeButton = document.getElementById('createNotice');
 
     let notices = [];
 
@@ -126,9 +127,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 공지사항 작성 폼 열기
-    document.getElementById('createNotice').addEventListener('click', () => {
+    createNoticeButton.addEventListener('click', () => {
         clearForm();
         noticeForm.classList.remove('hidden');
+        deleteNotice.classList.add('hidden');
     });
 
     // 공지사항 작성 폼 닫기
