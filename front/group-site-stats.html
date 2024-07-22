@@ -72,7 +72,7 @@
                         </select>
                         <select id="engineerAvailability" name="engineerAvailability">
                             <option value="100%">Total</option>
-                            <option value="90%">Considered</option>
+                            <option value="90%">Available to Work</option>
                         </select>
                     </div>
                     <div class="button-group">
@@ -87,46 +87,67 @@
             </div>
         </div>
 
-    <main class="main-content">
-        <section id="operating-rate-section" class="section">
-            <div class="inner">
-                <h2 class="section-title">Operating Rate</h2>
-                <div id="overall-stats-content" class="operation-rate-container"></div>
-            </div>
-        </section>
-    
-        <section id="calendar-section" class="section">
-            <div class="inner">
-                <h2 class="section-title">Calendar for Operating Rate</h2>
-                <div id="calendarContainer" class="calendar-container"></div>
-            </div>
-        </section>
-    
-        <div class="graph-container">
-            <section id="monthly-worktime-section" class="section graph-item">
+        <main class="main-content">
+            <section id="operating-rate-section" class="section">
                 <div class="inner">
-                    <h2 class="section-title">Monthly Worktime</h2>
-                    <canvas id="monthlyWorktimeChart"></canvas>
+                    <h2 class="section-title">
+                        Operating Rate
+                        <button class="info-button" id="operatingRateInfoBtn">?</button>
+                    </h2>
+                    <div id="overall-stats-content" class="operation-rate-container"></div>
                 </div>
             </section>
         
-            <section id="operation-rate-chart-section" class="section graph-item">
+            <section id="calendar-section" class="section">
                 <div class="inner">
-                    <h2 class="section-title">Operation Rate by Site</h2>
-                    <canvas id="operationRateChart"></canvas>
+                    <h2 class="section-title">Calendar for Operating Rate</h2>
+                    <div id="calendarContainer" class="calendar-container"></div>
                 </div>
             </section>
         
-            <section id="line-work-stats-section" class="section graph-item">
-                <div class="inner">
-                    <h2 class="section-title">Work Time and Count by LINE</h2>
-                    <canvas id="lineWorkStatsChart"></canvas>
-                </div>
-            </section>
+            <div class="graph-container">
+                <section id="monthly-worktime-section" class="section graph-item">
+                    <div class="inner">
+                        <h2 class="section-title">
+                            Monthly Worktime
+                            <button class="info-button" id="monthlyWorktimeInfoBtn">?</button>
+                        </h2>
+                        <canvas id="monthlyWorktimeChart"></canvas>
+                    </div>
+                </section>
+                
+                <section id="operation-rate-chart-section" class="section graph-item">
+                    <div class="inner">
+                        <h2 class="section-title">
+                            Operation Rate by Site
+                            <button class="info-button" id="operationRateSiteInfoBtn">?</button>
+                        </h2>
+                        <canvas id="operationRateChart"></canvas>
+                    </div>
+                </section>
+                
+                <section id="line-work-stats-section" class="section graph-item">
+                    <div class="inner">
+                        <h2 class="section-title">
+                            Work Time & Count by LINE
+                            <button class="info-button" id="lineWorkStatsInfoBtn">?</button>
+                        </h2>
+                        <canvas id="lineWorkStatsChart"></canvas>
+                    </div>
+                </section>
+            </div>
+        </main>
+        
+        <!-- Info Modals -->
+        <div id="infoModal" class="info-modal hidden">
+            <div class="info-modal-content">
+                <span class="close-info" id="closeInfo">&times;</span>
+                <div id="infoModalText"></div>
+            </div>
         </div>
-    </div>
-</section>
-</main>
+        
+        
+        
 
     <footer>
         <div class="inner">

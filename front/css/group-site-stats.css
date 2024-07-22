@@ -550,3 +550,67 @@ footer {
     color: black;
     text-decoration: none;
 }
+
+
+/* 정보 버튼 스타일 */
+.info-button {
+    background-color: #0044cc;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 10px; /* 타이틀과 버튼 사이의 간격 조정 */
+    position: relative;
+}
+
+/* 모달 배경 */
+.info-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+/* 모달 콘텐츠 */
+.info-modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    position: relative;
+    text-align: center;
+}
+
+/* 닫기 버튼 */
+.close-info {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-info:hover,
+.close-info:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.info-modal.visible {
+    display: flex;
+}

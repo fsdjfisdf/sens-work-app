@@ -802,6 +802,37 @@ document.getElementById('resetButton').addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
+        const infoModal = document.getElementById('infoModal');
+        const infoModalText = document.getElementById('infoModalText');
+        const closeInfo = document.getElementById('closeInfo');
+    
+        function showInfo(text) {
+            infoModalText.textContent = text;
+            infoModal.classList.add('visible');
+        }
+    
+        function hideInfo() {
+            infoModal.classList.remove('visible');
+        }
+    
+        closeInfo.addEventListener('click', hideInfo);
+    
+        document.getElementById("operatingRateInfoBtn").addEventListener("click", () => {
+            showInfo("운영율은 선택한 기간 동안의 운영 효율성을 나타냅니다.");
+        });
+    
+        document.getElementById("monthlyWorktimeInfoBtn").addEventListener("click", () => {
+            showInfo("월별 작업 시간은 매월 총 작업 시간을 표시합니다.");
+        });
+    
+        document.getElementById("operationRateSiteInfoBtn").addEventListener("click", () => {
+            showInfo("사이트별 운영율은 각 사이트의 운영 효율성을 비교합니다.");
+        });
+    
+        document.getElementById("lineWorkStatsInfoBtn").addEventListener("click", () => {
+            showInfo("라인별 작업 시간과 작업 건수를 나타냅니다.");
+        });
+
         
     if (checkLogin()) {
         await loadEngineers();
