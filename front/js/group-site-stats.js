@@ -803,14 +803,14 @@ document.getElementById('resetButton').addEventListener('click', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.1, // 원하는 비율로 조정
+                aspectRatio: 1.4, // 원하는 비율로 조정
                 plugins: {
                     legend: {
                         position: 'bottom',
                         labels: {
                             color: '#333',
                             font: {
-                                size: 14
+                                size: 11
                             }
                         }
                     },
@@ -872,14 +872,14 @@ document.getElementById('resetButton').addEventListener('click', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.2, // 원하는 비율로 조정
+                aspectRatio: 1.5, // 원하는 비율로 조정
                 plugins: {
                     legend: {
                         position: 'bottom',
                         labels: {
                             color: '#333',
                             font: {
-                                size: 14
+                                size: 11
                             }
                         }
                     },
@@ -945,14 +945,14 @@ document.getElementById('resetButton').addEventListener('click', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.2, // 원하는 비율로 조정
+                aspectRatio: 1.5, // 원하는 비율로 조정
                 plugins: {
                     legend: {
                         position: 'bottom',
                         labels: {
                             color: '#333',
                             font: {
-                                size: 14
+                                size: 11
                             }
                         }
                     },
