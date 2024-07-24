@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let engineers = [];
     let monthlyWorktimeChartInstance;
     let operationRateChartInstance;
+    let workTypeStatsChartInstance;
+    let equipmentTypeStatsChartInstance;
+    let amPmStatsChartInstance;
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
@@ -67,12 +70,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             console.log('Engineers data:', response.data);
             engineers = Array.isArray(response.data.result) ? response.data.result : [];
-            updateLoadingPercentage(50); // 로딩 퍼센티지 업데이트
+            updateLoadingPercentage(67); // 로딩 퍼센티지 업데이트
         } catch (error) {
             console.error('엔지니어 데이터를 불러오는 중 오류 발생:', error);
         }
     }
-
     async function loadWorkLogs() {
         try {
             const response = await axios.get('http://3.37.165.84:3001/logs', {
@@ -87,7 +89,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderMonthlyWorktimeChart(logs);
             renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
             renderLineWorkStatsChart(logs); // 새로운 그래프 호출
-            updateLoadingPercentage(100); // 로딩 퍼센티지 업데이트
+            renderWorkTypeStatsChart(logs); // 새로운 그래프 호출
+            renderEquipmentTypeStatsChart(logs); // 새로운 그래프 호출
+            renderAmPmStatsChart(logs); // 새로운 그래프 호출
             completeLoading(); // 로딩 애니메이션 종료
         } catch (error) {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);
@@ -345,13 +349,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         borderColor: 'rgba(153, 102, 255, 1)',
                         borderWidth: 1
                     },
-                    {
-                        label: 'Operation Rate (90% Availability) (%)',
-                        data: dataWithReducedAvailability,
-                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        borderWidth: 1
-                    }
                 ]
             },
             options: {
@@ -413,6 +410,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderMonthlyWorktimeChart(filteredLogs);
         renderOperationRateChart(filteredLogs, filteredEngineers);
         renderLineWorkStatsChart(filteredLogs);
+        renderWorkTypeStatsChart(filteredLogs); // 새로운 그래프 호출
+        renderEquipmentTypeStatsChart(filteredLogs); // 새로운 그래프 호출
+        renderAmPmStatsChart(filteredLogs); // 새로운 그래프 호출
         renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
     });
 
@@ -428,6 +428,9 @@ document.getElementById('resetButton').addEventListener('click', () => {
     renderMonthlyWorktimeChart(filteredLogs);
     renderOperationRateChart(filteredLogs, filteredEngineers);
     renderLineWorkStatsChart(filteredLogs);
+    renderWorkTypeStatsChart(filteredLogs); // 새로운 그래프 호출
+    renderEquipmentTypeStatsChart(filteredLogs); // 새로운 그래프 호출
+    renderAmPmStatsChart(filteredLogs); // 새로운 그래프 호출
     renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
 });
 
@@ -721,6 +724,9 @@ document.getElementById('resetButton').addEventListener('click', () => {
                 ]
             },
             options: {
+                
+                
+                
                 responsive: true,
                 scales: {
                     x: {
@@ -752,6 +758,228 @@ document.getElementById('resetButton').addEventListener('click', () => {
         });
     }
 
+    function renderWorkTypeStatsChart(logs) {
+        if (workTypeStatsChartInstance) {
+            workTypeStatsChartInstance.destroy();
+        }
+    
+        const workTypeData = {
+            'SET UP': 0,
+            'MAINT': 0,
+            'RELOCATION': 0
+        };
+    
+        logs.forEach(log => {
+            const { work_type, task_duration } = log;
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            const totalDuration = taskDurationMinutes * numWorkers;
+    
+            if (workTypeData[work_type] !== undefined) {
+                workTypeData[work_type] += totalDuration;
+            }
+        });
+    
+        const labels = Object.keys(workTypeData);
+        const worktimeValues = labels.map(type => workTypeData[type] / 60); // hours
+        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+    
+        const ctx = document.getElementById('workTypeStatsChart').getContext('2d');
+        workTypeStatsChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: worktimeValues,
+                    backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(91, 223, 105, 0.61)', 'rgba(255, 206, 86, 0.6)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(91, 223, 105, 1)', 'rgba(255, 206, 86, 1)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1.1, // 원하는 비율로 조정
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#333',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = percentages[context.dataIndex];
+                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function renderEquipmentTypeStatsChart(logs) {
+        if (equipmentTypeStatsChartInstance) {
+            equipmentTypeStatsChartInstance.destroy();
+        }
+    
+        const equipmentTypeData = {};
+    
+        logs.forEach(log => {
+            const { equipment_type, task_duration } = log;
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            const totalDuration = taskDurationMinutes * numWorkers;
+    
+            if (!equipmentTypeData[equipment_type]) {
+                equipmentTypeData[equipment_type] = 0;
+            }
+    
+            equipmentTypeData[equipment_type] += totalDuration;
+        });
+    
+        const labels = Object.keys(equipmentTypeData);
+        const worktimeValues = labels.map(type => equipmentTypeData[type] / 60); // hours
+        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+    
+        const ctx = document.getElementById('equipmentTypeStatsChart').getContext('2d');
+        equipmentTypeStatsChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: worktimeValues,
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(181, 86, 235, 0.61)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(181, 86, 235, 1)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1.2, // 원하는 비율로 조정
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#333',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = percentages[context.dataIndex];
+                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function renderAmPmStatsChart(logs) {
+        if (amPmStatsChartInstance) {
+            amPmStatsChartInstance.destroy();
+        }
+    
+        const amPmData = {
+            'AM': 0,
+            'PM': 0
+        };
+    
+        logs.forEach(log => {
+            const { start_time, task_duration } = log;
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            const totalDuration = taskDurationMinutes * numWorkers;
+    
+            const startTimeParts = start_time.split(':');
+            const startHour = parseInt(startTimeParts[0], 10);
+    
+            const period = startHour < 12 ? 'AM' : 'PM';
+    
+            amPmData[period] += totalDuration;
+        });
+    
+        const labels = Object.keys(amPmData);
+        const worktimeValues = labels.map(period => amPmData[period] / 60); // hours
+        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+    
+        const ctx = document.getElementById('amPmStatsChart').getContext('2d');
+        amPmStatsChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: worktimeValues,
+                    backgroundColor: ['rgba(255, 166, 197, 0.61)', 'rgba(3, 14, 33, 0.2)'],
+                    borderColor: ['rgba(255, 166, 197, 1)', 'rgba(3, 14, 33, 0.3)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 1.2, // 원하는 비율로 조정
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#333',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = percentages[context.dataIndex];
+                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    
+    
+    
+                       
+    
+    
+
+    
+
 
 
         // 그래프 클릭 이벤트 추가
@@ -766,6 +994,24 @@ document.getElementById('resetButton').addEventListener('click', () => {
         document.getElementById('lineWorkStatsChart').addEventListener('click', () => {
             showModal('lineWorkStatsModal', 'lineWorkStatsChartModal', lineWorkStatsChartInstance.data);
         });
+
+
+        document.getElementById('workTypeStatsChart').addEventListener('click', () => {
+            showModal('workTypeStatsModal', 'workTypeStatsChartModal', workTypeStatsChartInstance.data);
+        });
+        
+        document.getElementById('equipmentTypeStatsChart').addEventListener('click', () => {
+            showModal('equipmentTypeStatsModal', 'equipmentTypeStatsChartModal', equipmentTypeStatsChartInstance.data);
+        });
+        
+        document.getElementById('amPmStatsChart').addEventListener('click', () => {
+            showModal('amPmStatsModal', 'amPmStatsChartModal', amPmStatsChartInstance.data);
+        });
+               
+
+
+
+
     
         // 모달 닫기 이벤트
         document.getElementById('closeMonthlyWorktime').addEventListener('click', () => {
@@ -779,6 +1025,20 @@ document.getElementById('resetButton').addEventListener('click', () => {
         document.getElementById('closeLineWorkStats').addEventListener('click', () => {
             closeModal('lineWorkStatsModal');
         });
+
+        document.getElementById('closeWorkTypeStats').addEventListener('click', () => {
+            closeModal('workTypeStatsModal');
+        });
+        
+        document.getElementById('closeEquipmentTypeStats').addEventListener('click', () => {
+            closeModal('equipmentTypeStatsModal');
+        });
+        
+        document.getElementById('closeAmPmStats').addEventListener('click', () => {
+            closeModal('amPmStatsModal');
+        });
+
+        
     
         function showModal(modalId, canvasId, chartData) {
             const modal = document.getElementById(modalId);
@@ -807,31 +1067,84 @@ document.getElementById('resetButton').addEventListener('click', () => {
         const closeInfo = document.getElementById('closeInfo');
     
         function showInfo(text) {
-            infoModalText.textContent = text;
+            infoModalText.innerHTML = text; // 변경된 부분
             infoModal.classList.add('visible');
         }
-    
+        
         function hideInfo() {
             infoModal.classList.remove('visible');
         }
-    
+        
         closeInfo.addEventListener('click', hideInfo);
-    
+        
         document.getElementById("operatingRateInfoBtn").addEventListener("click", () => {
-            showInfo("운영율은 선택한 기간 동안의 운영 효율성을 나타냅니다.");
+            showInfo(`
+                <strong style="color: red;">가동율</strong>은 SEnS가 보유한 Eng'r중 가동된 Eng'r의 비율을 말합니다.<br>
+                이 비율은 SEnS의 업무 부하를 판단하는 중요한 지표로 활용됩니다.<br><br>
+                <span style="color: black;">** Eng'r 수 산정 근거 : 1인당 하루 평균 FAB IN TIME = 3.5Hrs</span><br>
+                <span style="color: black;">** Required Engineers = Total Worktime / Work Days / 3.5Hrs</span><br>
+                <span style="color: black;">** Operating Rate(%) = Required Engineers / Total Engineers * 100</span><br>
+                <span style="color: black;">** Average Worktime per Eng'r = Total Worktime / Total Engineers</span>
+            `);
         });
-    
+        
         document.getElementById("monthlyWorktimeInfoBtn").addEventListener("click", () => {
-            showInfo("월별 작업 시간은 매월 총 작업 시간을 표시합니다.");
+            showInfo(`
+                <strong style="color: red;">월별 작업 시간</strong>은 매월 총 작업 시간을 표시합니다.<br>
+                이를 통해 각 월별 작업량의 변동을 파악할 수 있습니다.
+            `);
         });
-    
+        
         document.getElementById("operationRateSiteInfoBtn").addEventListener("click", () => {
-            showInfo("사이트별 운영율은 각 사이트의 운영 효율성을 비교합니다.");
+            showInfo(`
+                <strong style="color: red;">사이트별 가동율</strong>은 사이트별로 얼마나 업무 부하를 받고 있는지에 대하여 비교합니다.<br>
+                이를 통해 각 사이트의 가동 효율성을 평가하고, 신입 사원 인력 배치를 효율적으로 할 수 있습니다.
+            `);
         });
-    
+        
         document.getElementById("lineWorkStatsInfoBtn").addEventListener("click", () => {
-            showInfo("라인별 작업 시간과 작업 건수를 나타냅니다.");
+            showInfo(`
+                <strong style="color: red;">라인별 작업 시간과 작업 건수</strong>를 나타냅니다.<br>
+                이를 통해 각 라인의 작업 부하와 작업량을 파악할 수 있습니다.<br>
+                <strong style="color: blue;">Total Worktime (hours)</strong>: 작업 시간의 총 합<br>
+                <strong style="color: blue;">Task Count</strong>: 수행된 작업의 총 개수
+            `);
         });
+        
+        document.getElementById("workTypeInfoBtn").addEventListener("click", () => {
+            showInfo(`
+                <strong style="color: red;">작업 유형별 작업 시간과 작업 건수</strong>를 나타냅니다.<br>
+                이를 통해 각 작업 유형별 빈도를 파악할 수 있습니다.
+            `);
+        });
+        
+        document.getElementById("equipmentTypeInfoBtn").addEventListener("click", () => {
+            showInfo(`
+                <strong style="color: red;">설비 종류별 작업 시간과 작업 건수</strong>를 나타냅니다.<br>
+                이를 통해 각 설비의 작업 빈도와 부하를 파악할 수 있습니다.
+            `);
+        });
+        
+        document.getElementById("amPmInfoBtn").addEventListener("click", () => {
+            showInfo(`
+                <strong style="color: red;">오전과 오후 작업 비율</strong>을 나타냅니다.<br>
+                이를 통해 작업 시간의 분포를 파악하고, 작업 스케줄을 최적화할 수 있습니다<br>
+                <strong style="color: blue;">AM Work</strong>: 오전 작업 비율<br>
+                <strong style="color: blue;">PM Work</strong>: 오후 작업 비율.<br><br>
+                **오전 작업과 오후작업의 분류 기준은 작업 시작 시간이 정오 12시 이전인지 이후인지로 판단합니다.
+            `);
+        });
+
+        document.getElementById("calendarInfoBtn").addEventListener("click", () => {
+            showInfo(`<strong style="color:red;"> 가동율 캘린더는 일별 작업 시간과 가동율을 표시합니다.</strong> <br>
+            <br>각 날짜에는 총 작업 시간, 필요한 엔지니어 수, 가동율이 표시됩니다.
+            <br>또한 날짜를 클릭하여 해당 일의 Work Time, Work Count 등을 확인할 수 있습니다.
+            <br><br><strong style>** 색상 설명</strong>
+            <br>- <span style="color: green;">초록색</span> : 최적의 가동(70%-99%)
+            <br>- <span style="color: orange;">노란색</span> : 잉여 엔지니어 발생(<70%)
+            <br>- <span style="color: red;">빨간색</span> : 엔지니어 부족(>=100%)`);
+        });
+        
 
         
     if (checkLogin()) {

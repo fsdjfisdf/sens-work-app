@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadWorkLogs() {
         try {
             await getCurrentUser(); // 현재 사용자 정보 불러오기
-            updateLoadingPercentage(60); // 로딩 퍼센티지 업데이트
+            updateLoadingPercentage(62); // 로딩 퍼센티지 업데이트
 
             const response = await axios.get('http://3.37.165.84:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));

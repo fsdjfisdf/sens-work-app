@@ -100,39 +100,86 @@
         
             <section id="calendar-section" class="section">
                 <div class="inner">
-                    <h2 class="section-title">Calendar for Operating Rate</h2>
+                    <h2 class="section-title">
+                        Calendar for Operating Rate
+                        <button class="info-button" id="calendarInfoBtn">?</button>
+                    </h2>
                     <div id="calendarContainer" class="calendar-container"></div>
                 </div>
             </section>
         
             <div class="graph-container">
-                <section id="monthly-worktime-section" class="section graph-item">
+                <section id="monthly-worktime-section" class="section graph-item small">
                     <div class="inner">
                         <h2 class="section-title">
                             Monthly Worktime
                             <button class="info-button" id="monthlyWorktimeInfoBtn">?</button>
                         </h2>
-                        <canvas id="monthlyWorktimeChart"></canvas>
+                        <div class="canvas-container">
+                            <canvas id="monthlyWorktimeChart"></canvas>
+                        </div>
                     </div>
                 </section>
-                
-                <section id="operation-rate-chart-section" class="section graph-item">
+            
+                <section id="operation-rate-chart-section" class="section graph-item small">
                     <div class="inner">
                         <h2 class="section-title">
                             Operation Rate by Site
                             <button class="info-button" id="operationRateSiteInfoBtn">?</button>
                         </h2>
-                        <canvas id="operationRateChart"></canvas>
+                        <div class="canvas-container">
+                            <canvas id="operationRateChart"></canvas>
+                        </div>
                     </div>
                 </section>
-                
-                <section id="line-work-stats-section" class="section graph-item">
+            
+                <section id="line-work-stats-section" class="section graph-item small">
                     <div class="inner">
                         <h2 class="section-title">
-                            Work Time & Count by LINE
+                            Time, Count by LINE
                             <button class="info-button" id="lineWorkStatsInfoBtn">?</button>
                         </h2>
-                        <canvas id="lineWorkStatsChart"></canvas>
+                        <div class="canvas-container">
+                            <canvas id="lineWorkStatsChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+                </div>
+
+                <div class="graph-container">
+                <section id="work-type-stats-section" class="section graph-item large">
+                    <div class="inner">
+                        <h2 class="section-title">
+                            Time by Work Type
+                            <button class="info-button" id="workTypeInfoBtn">?</button>
+                        </h2>
+                        <div class="canvas-container">
+                            <canvas id="workTypeStatsChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            
+                <section id="equipment-stats-section" class="section graph-item large">
+                    <div class="inner">
+                        <h2 class="section-title">
+                            Time by EQ Type
+                            <button class="info-button" id="equipmentTypeInfoBtn">?</button>
+                        </h2>
+                        <div class="canvas-container">
+                            <canvas id="equipmentTypeStatsChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            
+                <section id="am-pm-stats-section" class="section graph-item large">
+                    <div class="inner">
+                        <h2 class="section-title">
+                            AM vs PM Work
+                            <button class="info-button" id="amPmInfoBtn">?</button>
+                        </h2>
+                        <div class="canvas-container">
+                            <canvas id="amPmStatsChart"></canvas>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -187,6 +234,30 @@
     <div class="modal-content">
         <span class="close" id="closeLineWorkStats">&times;</span>
         <canvas id="lineWorkStatsChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Work Time and Count by LINE Modal -->
+<div id="workTypeStatsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeWorkTypeStats">&times;</span>
+        <canvas id="workTypeStatsChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Work Time and Count by LINE Modal -->
+<div id="equipmentTypeStatsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeEquipmentTypeStats">&times;</span>
+        <canvas id="equipmentTypeStatsChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Work Time and Count by LINE Modal -->
+<div id="amPmStatsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeAmPmStats">&times;</span>
+        <canvas id="amPmStatsChartModal"></canvas>
     </div>
 </div>
 
