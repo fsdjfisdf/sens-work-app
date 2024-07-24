@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let workTypeStatsChartInstance;
     let equipmentTypeStatsChartInstance;
     let amPmStatsChartInstance;
+    let overtimeChartInstance;
+    let timeRangeChartInstance;
+    let warrantyChartInstance;
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
@@ -92,6 +95,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderWorkTypeStatsChart(logs); // 새로운 그래프 호출
             renderEquipmentTypeStatsChart(logs); // 새로운 그래프 호출
             renderAmPmStatsChart(logs); // 새로운 그래프 호출
+            renderOvertimeChart(logs);
+            renderTimeRangeChart(logs);
+            renderWarrantyChart(logs);
             completeLoading(); // 로딩 애니메이션 종료
         } catch (error) {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);
@@ -322,18 +328,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     
         const labels = [];
         const data = [];
-        const dataWithReducedAvailability = [];
     
         Object.keys(groupSiteWorktime).forEach(key => {
             const totalMinutes = groupSiteWorktime[key];
             const uniqueDates = groupSiteDates[key].size;
             const totalEngineers = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], new Date(), 1); // 100% availability
-            const totalEngineersReduced = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], new Date(), 0.9); // 90% availability
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
-            const operationRateReduced = calculateOperationRate(totalMinutes, uniqueDates, totalEngineersReduced);
             labels.push(key);
             data.push(operationRate);
-            dataWithReducedAvailability.push(operationRateReduced);
         });
     
         const ctx = document.getElementById('operationRateChart').getContext('2d');
@@ -348,25 +350,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                         backgroundColor: 'rgba(153, 102, 255, 0.2)',
                         borderColor: 'rgba(153, 102, 255, 1)',
                         borderWidth: 1
-                    },
+                    }
                 ]
             },
             options: {
                 responsive: true,
+                indexAxis: 'y', // 가로 막대형 그래프로 변경
                 scales: {
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Group-Site'
-                        }
-                    },
-                    y: {
                         title: {
                             display: true,
                             text: 'Operation Rate (%)'
                         },
                         beginAtZero: true,
                         max: 100
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Group-Site'
+                        }
                     }
                 }
             }
@@ -412,7 +415,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderLineWorkStatsChart(filteredLogs);
         renderWorkTypeStatsChart(filteredLogs); // 새로운 그래프 호출
         renderEquipmentTypeStatsChart(filteredLogs); // 새로운 그래프 호출
-        renderAmPmStatsChart(filteredLogs); // 새로운 그래프 호출
+        renderAmPmStatsChart(filteredLogs);// 새로운 그래프 호출
+        renderOvertimeChart(filteredLogs);
+        renderTimeRangeChart(filteredLogs);// 새로운 그래프 호출
+        renderWarrantyChart(filteredLogs);// 새로운 그래프 호출
         renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
     });
 
@@ -431,6 +437,10 @@ document.getElementById('resetButton').addEventListener('click', () => {
     renderWorkTypeStatsChart(filteredLogs); // 새로운 그래프 호출
     renderEquipmentTypeStatsChart(filteredLogs); // 새로운 그래프 호출
     renderAmPmStatsChart(filteredLogs); // 새로운 그래프 호출
+    renderOvertimeChart(filteredLogs);
+    renderTimeRangeChart(filteredLogs);// 새로운 그래프 호출
+    renderWarrantyChart(filteredLogs);// 새로운 그래프 호출
+
     renderCalendar(filteredLogs, filteredEngineers, currentYear, currentMonth);
 });
 
@@ -790,7 +800,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
     
         const ctx = document.getElementById('workTypeStatsChart').getContext('2d');
         workTypeStatsChartInstance = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
@@ -803,7 +813,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.4, // 원하는 비율로 조정
+                aspectRatio: 1.5, // 원하는 비율로 조정
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -859,7 +869,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
     
         const ctx = document.getElementById('equipmentTypeStatsChart').getContext('2d');
         equipmentTypeStatsChartInstance = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
@@ -932,7 +942,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
     
         const ctx = document.getElementById('amPmStatsChart').getContext('2d');
         amPmStatsChartInstance = new Chart(ctx, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
@@ -955,6 +965,221 @@ document.getElementById('resetButton').addEventListener('click', () => {
                                 size: 11
                             }
                         }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = percentages[context.dataIndex];
+                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+
+    function renderOvertimeChart(logs) {
+        if (overtimeChartInstance) {
+            overtimeChartInstance.destroy();
+        }
+    
+        const overtimeData = {
+            'Overtime': 0,
+            'Regular': 0
+        };
+    
+        logs.forEach(log => {
+            const { end_time, task_duration } = log;
+            const endTimeParts = end_time.split(':');
+            const endHour = parseInt(endTimeParts[0], 10);
+            const endMinutes = parseInt(endTimeParts[1], 10);
+    
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            const totalDuration = taskDurationMinutes * numWorkers;
+    
+            if ((endHour >= 18 || endHour < 8) || (endHour === 8 && endMinutes <= 30)) {
+                overtimeData['Overtime'] += totalDuration;
+            } else {
+                overtimeData['Regular'] += totalDuration;
+            }
+        });
+    
+        const labels = Object.keys(overtimeData);
+        const worktimeValues = labels.map(type => overtimeData[type] / 60); // hours
+        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+    
+        const ctx = document.getElementById('overtimeChart').getContext('2d');
+        overtimeChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: worktimeValues,
+                    backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                indexAxis: 'y', // 수평 막대 그래프
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = percentages[context.dataIndex];
+                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    
+    function renderTimeRangeChart(logs) {
+        if (timeRangeChartInstance) {
+            timeRangeChartInstance.destroy();
+        }
+    
+        const timeRangeData = {
+            '0-1 hours': 0,
+            '1-2 hours': 0,
+            '2-3 hours': 0,
+            '3-4 hours': 0,
+            '4+ hours': 0
+        };
+    
+        logs.forEach(log => {
+            const { task_duration } = log;
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+    
+            if (taskDurationMinutes <= 60) {
+                timeRangeData['0-1 hours'] += 1; // 작업 건수 증가
+            } else if (taskDurationMinutes <= 120) {
+                timeRangeData['1-2 hours'] += 1;
+            } else if (taskDurationMinutes <= 180) {
+                timeRangeData['2-3 hours'] += 1;
+            } else if (taskDurationMinutes <= 240) {
+                timeRangeData['3-4 hours'] += 1;
+            } else {
+                timeRangeData['4+ hours'] += 1;
+            }
+        });
+    
+        const labels = Object.keys(timeRangeData);
+        const worktimeValues = labels.map(type => timeRangeData[type]); // 작업 건수
+        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+    
+        const ctx = document.getElementById('timeRangeChart').getContext('2d');
+        timeRangeChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: worktimeValues,
+                    backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)'],
+                    borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                indexAxis: 'y', // 수평 막대 그래프
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const percentage = percentages[context.dataIndex];
+                                return `${label}: ${value} tasks (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+
+    
+
+    function renderWarrantyChart(logs) {
+        if (warrantyChartInstance) {
+            warrantyChartInstance.destroy();
+        }
+    
+        const warrantyData = {
+            'WI': 0,
+            'WO': 0
+        };
+    
+        logs.forEach(log => {
+            const { warranty, task_duration } = log;
+            const durationParts = task_duration.split(':');
+            const hours = parseInt(durationParts[0], 10);
+            const minutes = parseInt(durationParts[1], 10);
+            const taskDurationMinutes = (hours * 60) + minutes;
+            const numWorkers = log.task_man.split(',').length;
+            const totalDuration = taskDurationMinutes * numWorkers;
+    
+            if (warranty === 'WI' || warranty === 'WO') {
+                warrantyData[warranty] += totalDuration;
+            }
+        });
+    
+        const labels = Object.keys(warrantyData);
+        const worktimeValues = labels.map(type => warrantyData[type] / 60); // hours
+        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+    
+        const ctx = document.getElementById('warrantyChart').getContext('2d');
+        warrantyChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: worktimeValues,
+                    backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)'],
+                    borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                indexAxis: 'y', // 수평 막대 그래프
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                plugins: {
+                    legend: {
+                        display: false
                     },
                     tooltip: {
                         callbacks: {
@@ -1007,6 +1232,19 @@ document.getElementById('resetButton').addEventListener('click', () => {
         document.getElementById('amPmStatsChart').addEventListener('click', () => {
             showModal('amPmStatsModal', 'amPmStatsChartModal', amPmStatsChartInstance.data);
         });
+
+
+        document.getElementById('overtimeChart').addEventListener('click', () => {
+            showModal('overtimeModal', 'overtimeChartModal', overtimeChartInstance.data);
+        });
+        
+        document.getElementById('timeRangeChart').addEventListener('click', () => {
+            showModal('timeRangeModal', 'timeRangeChartModal', timeRangeChartInstance.data);
+        });
+        
+        document.getElementById('warrantyChart').addEventListener('click', () => {
+            showModal('warrantyModal', 'warrantyChartModal', warrantyChartInstance.data);
+        });
                
 
 
@@ -1036,6 +1274,19 @@ document.getElementById('resetButton').addEventListener('click', () => {
         
         document.getElementById('closeAmPmStats').addEventListener('click', () => {
             closeModal('amPmStatsModal');
+        });
+
+
+        document.getElementById('closeOvertime').addEventListener('click', () => {
+            closeModal('overtimeModal');
+        });
+        
+        document.getElementById('closeTimeRange').addEventListener('click', () => {
+            closeModal('timeRangeModal');
+        });
+        
+        document.getElementById('closeWarranty').addEventListener('click', () => {
+            closeModal('warrantyModal');
         });
 
         
@@ -1143,6 +1394,29 @@ document.getElementById('resetButton').addEventListener('click', () => {
             <br>- <span style="color: green;">초록색</span> : 최적의 가동(70%-99%)
             <br>- <span style="color: orange;">노란색</span> : 잉여 엔지니어 발생(<70%)
             <br>- <span style="color: red;">빨간색</span> : 엔지니어 부족(>=100%)`);
+        });
+
+        document.getElementById("overtimeInfoBtn").addEventListener("click", () => {
+            showInfo(`
+                <strong style="color: red;">야근과 비야근 그래프</strong>는 초과 근무 비율을 나타냅니다.<br><br>
+                <strong style="color: blue;">Overtime</strong>: 야근<br>
+                <strong style="color: blue;">Regular</strong>: 비야근.<br><br>
+                **Overtime의 기준은 작업 종료 시간이 오후 6시 이후인 경우입니다.
+            `);
+        });
+        
+        document.getElementById("timeRangeInfoBtn").addEventListener("click", () => {
+            showInfo(`
+                <strong style="color: red;">작업 시간 범위별 그래프</strong>는 시간대별로 분류하여 작업 건 수의 비율을 나타냅니다.<br>
+            `);
+        });
+        
+        document.getElementById("warrantyInfoBtn").addEventListener("click", () => {
+            showInfo(`
+                <strong style="color: red;">워런티 그래프</strong>는 워런티(WI, WO)별 작업 비율을 나타냅니다.<br><br>
+                <strong style="color: blue;">WI</strong>: 워런티 내 작업<br>
+                <strong style="color: blue;">WO</strong>: 워런티 외 작업.
+            `);
         });
         
 

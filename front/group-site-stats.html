@@ -136,7 +136,7 @@
                 <section id="line-work-stats-section" class="section graph-item small">
                     <div class="inner">
                         <h2 class="section-title">
-                            Time, Count by LINE
+                            LINE
                             <button class="info-button" id="lineWorkStatsInfoBtn">?</button>
                         </h2>
                         <div class="canvas-container">
@@ -147,10 +147,10 @@
                 </div>
 
                 <div class="graph-container">
-                <section id="work-type-stats-section" class="section graph-item large">
+                <section id="work-type-stats-section" class="section graph-item middle">
                     <div class="inner">
                         <h2 class="section-title">
-                            Time by Work Type
+                            Work Type
                             <button class="info-button" id="workTypeInfoBtn">?</button>
                         </h2>
                         <div class="canvas-container">
@@ -159,10 +159,10 @@
                     </div>
                 </section>
             
-                <section id="equipment-stats-section" class="section graph-item large">
+                <section id="equipment-stats-section" class="section graph-item middle">
                     <div class="inner">
                         <h2 class="section-title">
-                            Time by EQ Type
+                            EQ Type
                             <button class="info-button" id="equipmentTypeInfoBtn">?</button>
                         </h2>
                         <div class="canvas-container">
@@ -171,10 +171,10 @@
                     </div>
                 </section>
             
-                <section id="am-pm-stats-section" class="section graph-item large">
+                <section id="am-pm-stats-section" class="section graph-item middle">
                     <div class="inner">
                         <h2 class="section-title">
-                            AM vs PM Work
+                            AM vs PM
                             <button class="info-button" id="amPmInfoBtn">?</button>
                         </h2>
                         <div class="canvas-container">
@@ -183,6 +183,46 @@
                     </div>
                 </section>
             </div>
+
+
+            <div class="graph-container">
+            <section id="overtime-section" class="section graph-item large">
+                <div class="inner">
+                    <h2 class="section-title">
+                        Overtime vs Regular
+                        <button class="info-button" id="overtimeInfoBtn">?</button>
+                    </h2>
+                    <div class="canvas-container">
+                        <canvas id="overtimeChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="time-range-section" class="section graph-item large">
+                <div class="inner">
+                    <h2 class="section-title">
+                        Time Range
+                        <button class="info-button" id="timeRangeInfoBtn">?</button>
+                    </h2>
+                    <div class="canvas-container">
+                        <canvas id="timeRangeChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="warranty-section" class="section graph-item large">
+                <div class="inner">
+                    <h2 class="section-title">
+                        Warranty
+                        <button class="info-button" id="warrantyInfoBtn">?</button>
+                    </h2>
+                    <div class="canvas-container">
+                        <canvas id="warrantyChart"></canvas>
+                    </div>
+                </div>
+            </section>
+            </div>
+
         </main>
         
         <!-- Info Modals -->
@@ -258,6 +298,31 @@
     <div class="modal-content">
         <span class="close" id="closeAmPmStats">&times;</span>
         <canvas id="amPmStatsChartModal"></canvas>
+    </div>
+</div>
+
+
+<!-- Overtime Modal -->
+<div id="overtimeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeOvertime">&times;</span>
+        <canvas id="overtimeChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Time Range Modal -->
+<div id="timeRangeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeTimeRange">&times;</span>
+        <canvas id="timeRangeChartModal"></canvas>
+    </div>
+</div>
+
+<!-- Warranty Modal -->
+<div id="warrantyModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeWarranty">&times;</span>
+        <canvas id="warrantyChartModal"></canvas>
     </div>
 </div>
 

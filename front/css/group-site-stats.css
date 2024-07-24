@@ -555,16 +555,16 @@ footer {
 
 /* 정보 버튼 스타일 */
 .info-button {
-    background-color: #0044cc;
+    background-color: #d2d4d6;
     color: white;
     border: none;
     border-radius: 50%;
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     text-align: center;
-    font-size: 16px;
+    font-size: 13px;
     cursor: pointer;
-    margin-left: 10px; /* 타이틀과 버튼 사이의 간격 조정 */
+    margin-left: 5px; /* 타이틀과 버튼 사이의 간격 조정 */
     position: relative;
 }
 
@@ -634,19 +634,24 @@ footer {
 
 .graph-item {
     flex: 1;
-    min-width: 300px;
-    max-width: 400px;
+    min-width: 400px;
+    max-width: 450px;
     margin: 10px;
 }
 
-/* 아래 3개 그래프 */
+/* large 그래프 */
 .graph-item.large {
-    height: 255px;
+    height: 280px;
 }
 
-/* 위 3개 그래프 */
+/* middle 그래프 */
+.graph-item.middle {
+    height: 240px;
+}
+
+/* small 그래프 */
 .graph-item.small {
-    height: 200px;
+    height: 230px;
 }
 
 
