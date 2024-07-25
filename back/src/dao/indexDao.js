@@ -148,8 +148,7 @@ exports.getAverageInfo = async function (connection, group, site, level, nicknam
           SUM(level = 1) as level_1,
           SUM(level = 2) as level_2,
           SUM(level = 3) as level_3,
-          SUM(level = 4) as level_4,
-          tenure
+          SUM(level = 4) as level_4
       FROM Users
       WHERE status = 'A'
   `;
@@ -173,9 +172,8 @@ exports.getAverageInfo = async function (connection, group, site, level, nicknam
   }
 
   const [rows] = await connection.query(query, params);
-  return rows;
+  return rows[0];
 };
-
 
 
 // 사용자 목록 조회

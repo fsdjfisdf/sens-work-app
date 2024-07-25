@@ -261,7 +261,6 @@ exports.getAverageInfo = async function (req, res) {
 };
 
 
-
 exports.getAllUsers = async function (req, res) {
   try {
       const connection = await pool.getConnection(async (conn) => conn);
