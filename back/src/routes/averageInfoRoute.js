@@ -22,9 +22,9 @@ router.get('/', async (req, res) => {
                 SUM(CASE WHEN level = 2 THEN 1 ELSE 0 END) as level_2,
                 SUM(CASE WHEN level = 3 THEN 1 ELSE 0 END) as level_3,
                 SUM(CASE WHEN level = 4 THEN 1 ELSE 0 END) as level_4,
-                DATEDIFF(CURDATE(), hire_date) / 365.25 AS tenure
+                FLOOR(DATEDIFF(CURDATE(), hire_date) / 365.25) as tenure
             FROM Users
-            WHERE 1=1
+            WHERE status = 'A'
         `;
 
         const params = [];
@@ -68,6 +68,7 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+
 
 
 // 새로운 라우트 추가

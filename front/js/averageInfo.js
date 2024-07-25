@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 headers: { "x-access-token": token },
                 params: { group, site, level, nickname }
             });
-            const averageInfo = response.data.result || {};
+            const averageInfo = response.data.result || [];
             if (averageInfo.length > 0) {
                 const totalUsers = averageInfo[0].total_users || 0;
 
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 };
 
                 averageInfo.forEach(user => {
-                    const tenure = user.tenure;
+                    const tenure = parseFloat(user.tenure);
                     if (tenure < 1) {
                         tenureCounts['0-1']++;
                     } else if (tenure < 2) {
