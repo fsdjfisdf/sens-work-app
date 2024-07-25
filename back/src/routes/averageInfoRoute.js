@@ -21,7 +21,8 @@ router.get('/', async (req, res) => {
                 SUM(CASE WHEN level = 1 THEN 1 ELSE 0 END) as level_1,
                 SUM(CASE WHEN level = 2 THEN 1 ELSE 0 END) as level_2,
                 SUM(CASE WHEN level = 3 THEN 1 ELSE 0 END) as level_3,
-                SUM(CASE WHEN level = 4 THEN 1 ELSE 0 END) as level_4
+                SUM(CASE WHEN level = 4 THEN 1 ELSE 0 END) as level_4,
+                DATEDIFF(CURDATE(), hire_date) / 365.25 AS tenure
             FROM Users
             WHERE 1=1
         `;
@@ -52,7 +53,10 @@ router.get('/', async (req, res) => {
         const [rows] = await pool.query(query, params);
 
         if (rows.length > 0) {
-            const result = rows[0];
+            const result = rows.map(row => ({
+                ...row,
+                tenure: parseFloat(row.tenure).toFixed(2) // tenure를 소수점 두 자리까지 반올림하여 문자열로 변환
+            }));
             res.status(200).json({ result });
         } else {
             res.status(404).json({ message: 'No data found' });
@@ -64,6 +68,7 @@ router.get('/', async (req, res) => {
 });
 
 module.exports = router;
+
 
 // 새로운 라우트 추가
 router.get('/search', async (req, res) => {

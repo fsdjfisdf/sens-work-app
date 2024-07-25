@@ -133,6 +133,7 @@ main {
     align-items: center;
     justify-content: center;
     padding: 20px;
+    flex-direction: column;
 }
 
 #info {
@@ -162,15 +163,81 @@ h3 {
     font-size: 16px;
     line-height: 1.5;
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-#data-display p {
-    margin: 10px 0;
+#data-display .data-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+    width: 100%;
+    max-width: 400px;
 }
 
-#data-display p:first-child {
+#data-display .data-title {
     font-weight: bold;
+    color: #0044cc;
+    margin-right: 10px;
+    flex-basis: 150px;
+    text-align: right;
+}
+
+#data-display .data-content {
+    color: #333;
+    flex-grow: 1;
+    padding-left: 10px;
+    text-align: left;
+}
+
+/* Chart container styles */
+.chart-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.chart-wrapper {
+    flex: 1;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    min-width: 220px;
+    max-width: 300px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100px !important;
+}
+
+/* Button styles */
+button#view-average-info {
+    background-color: #4600bf;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
     font-size: 18px;
+    transition: background-color 0.3s, transform 0.3s;
+    margin-top: 20px;
+}
+
+button#view-average-info:hover {
+    background-color: #003bb5;
+    transform: scale(1.05);
+}
+
+button#view-average-info:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 0, 255, 0.3);
 }
 
 /* Responsive design */
@@ -214,8 +281,34 @@ h3 {
         font-size: 14px;
     }
 
-    #data-display p {
-        margin: 8px 0;
+    #data-display .data-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #data-display .data-title {
+        margin-bottom: 5px;
+        text-align: left;
+        flex-basis: auto;
+    }
+
+    #data-display .data-content {
+        padding-left: 0;
+    }
+
+    .chart-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chart-wrapper {
+        margin-bottom: 20px;
+        width: 100%;
+    }
+
+    canvas {
+        width: 100% !important;
+        height: 250px !important;
     }
 }
 

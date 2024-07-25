@@ -17,15 +17,13 @@ document.addEventListener("DOMContentLoaded", function() {
             if (userInfo) {
                 const formattedHireDate = formatDate(userInfo.hire_date);
 
-                document.querySelector("#data-display").innerHTML = `
-                    <p>Name: ${userInfo.nickname}</p>
-                    <p>Group: ${userInfo.group}</p>
-                    <p>Site: ${userInfo.site}</p>
-                    <p>Level: ${userInfo.level}</p>
-                    <p>Hire date: ${formattedHireDate}</p>
-                `;
+                document.getElementById('user-name').textContent = userInfo.nickname;
+                document.getElementById('user-group').textContent = userInfo.group;
+                document.getElementById('user-site').textContent = userInfo.site;
+                document.getElementById('user-level').textContent = userInfo.level;
+                document.getElementById('user-hire-date').textContent = formattedHireDate;
+
                 createCapaCharts(userInfo);
-                document.querySelector(".nickname").textContent = userInfo.nickname;
                 document.querySelector(".unsigned").classList.add("hidden");
                 document.querySelector(".signed").classList.remove("hidden");
             } else {
@@ -52,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(mainCtx, {
             type: 'bar',
             data: {
-                labels: ['Main Set Up CAPA', 'Main Maint CAPA', 'Main CAPA'],
+                labels: ['Set Up', 'Maint', 'Avg'],
                 datasets: [{
                     label: 'Main CAPA',
                     data: [userInfo.main_set_up_capa, userInfo.main_maint_capa, userInfo.main_capa],
@@ -62,8 +60,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 }]
             },
             options: {
+                indexAxis: 'y',
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true,
                         max: 100
                     }
@@ -87,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(multiCtx, {
             type: 'bar',
             data: {
-                labels: ['Multi Set Up CAPA', 'Multi Maint CAPA', 'Multi CAPA'],
+                labels: ['Set Up', 'Maint', 'Avg'],
                 datasets: [{
                     label: 'Multi CAPA',
                     data: [userInfo.multi_set_up_capa, userInfo.multi_maint_capa, userInfo.multi_capa],
@@ -97,8 +96,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 }]
             },
             options: {
+                indexAxis: 'y',
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true,
                         max: 100
                     }
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(totalCtx, {
             type: 'bar',
             data: {
-                labels: ['Total CAPA'],
+                labels: ['Total'],
                 datasets: [{
                     label: 'Total CAPA',
                     data: [userInfo.total_capa],
@@ -132,8 +132,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 }]
             },
             options: {
+                indexAxis: 'y',
                 scales: {
-                    y: {
+                    x: {
                         beginAtZero: true,
                         max: 100
                     }
@@ -159,13 +160,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (signOutButton) {
         signOutButton.addEventListener("click", function() {
-            localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
+            localStorage.removeItem("x-access-token");
             alert("로그아웃 되었습니다.");
-            window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
+            window.location.replace("./signin.html");
         });
     }
 
-    // "View Average Info" 버튼 클릭 이벤트 추가
     const viewAverageInfoButton = document.getElementById("view-average-info");
 
     if (viewAverageInfoButton) {

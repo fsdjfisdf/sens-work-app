@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eng'r Information</title>
-    <link rel="stylesheet" href="./css/info.css" />
+    <link rel="stylesheet" href="./css/info.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
     <nav>
@@ -34,18 +34,47 @@
     </nav>
 
     <main>
+        <button id="view-average-info">SECM</button><br>
         <section id="info">
             <div class="inner">
                 <h2>Eng'r Information</h2>
-                <button id="view-average-info">View Average Info</button>
-                <div id="data-display">
+                <div id="data-display" class="data-display">
+                    <div class="data-row">
+                        <span class="data-title">Name:</span>
+                        <span class="data-content" id="user-name"></span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-title">Group:</span>
+                        <span class="data-content" id="user-group"></span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-title">Site:</span>
+                        <span class="data-content" id="user-site"></span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-title">Level:</span>
+                        <span class="data-content" id="user-level"></span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-title">Hire date:</span>
+                        <span class="data-content" id="user-hire-date"></span>
+                    </div>
                 </div>
-                <h3>Main CAPA</h3>
-                <canvas id="mainCapaChart" width="400" height="200"></canvas>
-                <h3>Multi CAPA</h3>
-                <canvas id="multiCapaChart" width="400" height="200"></canvas>
-                <h3>Total CAPA</h3>
-                <canvas id="totalCapaChart" width="400" height="200"></canvas>
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <h3>Main CAPA</h3>
+                        <canvas id="mainCapaChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Multi CAPA</h3>
+                        <canvas id="multiCapaChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Total CAPA</h3>
+                        <canvas id="totalCapaChart"></canvas>
+                        <div class="donut-chart-text" id="totalCapaValue"></div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
