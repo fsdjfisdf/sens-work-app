@@ -38,21 +38,13 @@ document.addEventListener("DOMContentLoaded", async function() {
                     4: parseInt(averageInfo.level_4) || 0
                 };
 
-                console.log("Level Counts:", levelCounts);
-
-                // 평균 레벨 계산
                 const totalLevels = Object.entries(levelCounts).reduce((sum, [level, count]) => {
                     const levelValue = parseInt(level);
                     const levelContribution = levelValue * count;
-                    console.log(`Level ${levelValue}: ${count} users, contribution to total: ${levelContribution}`);
                     return sum + levelContribution;
                 }, 0);
                 const totalLevelUsers = Object.values(levelCounts).reduce((sum, count) => sum + count, 0);
-                console.log("Total Levels Sum:", totalLevels);
-                console.log("Total Level Users:", totalLevelUsers);
                 const avgLevel = totalLevelUsers > 0 ? (totalLevels / totalLevelUsers).toFixed(2) : 'N/A';
-
-                console.log("Average Level:", avgLevel);
 
                 document.querySelector("#average-data-display").innerHTML = `
                     <div class="info-box">
@@ -94,7 +86,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         levelChart = new Chart(levelCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Level 0', 'Level 1', 'Level 2', 'Level 3', 'Level 4'],
+                labels: ['Lv.0', 'Lv.1', 'Lv.2', 'Lv.3', 'Lv.4'],
                 datasets: [{
                     label: 'Number of Users',
                     data: [
@@ -104,16 +96,17 @@ document.addEventListener("DOMContentLoaded", async function() {
                         levelCounts[3],
                         levelCounts[4]
                     ],
-                    backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(255, 205, 86, 0.6)', 'rgba(54, 162, 235, 0.6)'],
-                    borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 205, 86, 1)', 'rgba(54, 162, 235, 1)'],
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(201, 203, 207, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(201, 203, 207, 1)', 'rgba(255, 99, 132, 1)'],
                     borderWidth: 2
                 }]
             },
             options: {
+                aspectRatio: 0.9, // 원하는 비율로 조정
                 responsive: true,
                 plugins: {
                     legend: {
-                        position: 'top'
+                        position: 'bottom'
                     },
                     tooltip: {
                         callbacks: {
@@ -132,11 +125,15 @@ document.addEventListener("DOMContentLoaded", async function() {
                             const percentage = ((value * 100) / sum).toFixed(2) + "%";
                             return percentage;
                         },
-                        color: '#fff',
+                        color: '#333', // 라벨 색상을 어두운 회색으로 변경
                     }
                 }
             },
             plugins: [ChartDataLabels]
+        });
+
+        document.getElementById('levelDistributionChart').addEventListener('click', () => {
+            showModal(levelChart);
         });
     }
 
@@ -148,7 +145,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         mainCapaChart = new Chart(mainCtx, {
             type: 'bar',
             data: {
-                labels: ['Main Set Up CAPA', 'Main Maint CAPA', 'Main CAPA'],
+                labels: ['Set Up', 'Maint', 'CAPA'],
                 datasets: [{
                     label: 'Average Main CAPA',
                     data: [
@@ -156,8 +153,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                         (typeof averageInfo.avg_main_maint_capa === 'number') ? averageInfo.avg_main_maint_capa.toFixed(2) : 0,
                         (typeof averageInfo.avg_main_capa === 'number') ? averageInfo.avg_main_capa.toFixed(2) : 0
                     ],
-                    backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(75, 192, 192, 0.6)'],
-                    borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)'],
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
                     borderWidth: 2
                 }]
             },
@@ -182,7 +179,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                         },
                         font: {
                             weight: 'bold'
-                        }
+                        },
+                        color: '#333' // 라벨 색상을 어두운 회색으로 변경
                     }
                 }
             },
@@ -192,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         multiCapaChart = new Chart(multiCtx, {
             type: 'bar',
             data: {
-                labels: ['Multi Set Up CAPA', 'Multi Maint CAPA', 'Multi CAPA'],
+                labels: ['Set Up', 'Maint', 'CAPA'],
                 datasets: [{
                     label: 'Average Multi CAPA',
                     data: [
@@ -200,8 +198,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                         (typeof averageInfo.avg_multi_maint_capa === 'number') ? averageInfo.avg_multi_maint_capa.toFixed(2) : 0,
                         (typeof averageInfo.avg_multi_capa === 'number') ? averageInfo.avg_multi_capa.toFixed(2) : 0
                     ],
-                    backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(75, 192, 192, 0.6)'],
-                    borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(75, 192, 192, 1)'],
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
                     borderWidth: 2
                 }]
             },
@@ -226,7 +224,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                         },
                         font: {
                             weight: 'bold'
-                        }
+                        },
+                        color: '#333' // 라벨 색상을 어두운 회색으로 변경
                     }
                 }
             },
@@ -236,14 +235,14 @@ document.addEventListener("DOMContentLoaded", async function() {
         totalCapaChart = new Chart(totalCtx, {
             type: 'bar',
             data: {
-                labels: ['Total CAPA'],
+                labels: ['CAPA'],
                 datasets: [{
                     label: 'Average Total CAPA',
                     data: [
                         (typeof averageInfo.avg_total_capa === 'number') ? averageInfo.avg_total_capa.toFixed(2) : 0
                     ],
-                    backgroundColor: ['rgba(153, 102, 255, 0.6)'],
-                    borderColor: ['rgba(153, 102, 255, 1)'],
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)'],
                     borderWidth: 2
                 }]
             },
@@ -268,12 +267,50 @@ document.addEventListener("DOMContentLoaded", async function() {
                         },
                         font: {
                             weight: 'bold'
-                        }
+                        },
+                        color: '#333' // 라벨 색상을 어두운 회색으로 변경
                     }
                 }
             },
             plugins: [ChartDataLabels]
         });
+
+        document.getElementById('averageMainCapaChart').addEventListener('click', () => {
+            showModal(mainCapaChart);
+        });
+        document.getElementById('averageMultiCapaChart').addEventListener('click', () => {
+            showModal(multiCapaChart);
+        });
+        document.getElementById('averageTotalCapaChart').addEventListener('click', () => {
+            showModal(totalCapaChart);
+        });
+    }
+
+    function showModal(chartInstance) {
+        const modal = document.getElementById('modal');
+        const modalContent = document.querySelector('.modal-content');
+        const ctx = document.getElementById('modalChart').getContext('2d');
+
+        modal.style.display = 'flex'; // Display the modal as a flex container
+
+        new Chart(ctx, {
+            type: chartInstance.config.type,
+            data: chartInstance.data,
+            options: chartInstance.options
+        });
+
+        modalContent.querySelector('.close').onclick = function() {
+            modal.style.display = 'none';
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        };
+
+        // Add an event listener to close the modal when clicking outside the modal content
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            }
+        };
     }
 
     loadAverageInfo(); // 페이지 로드 시 평균 정보 불러오기

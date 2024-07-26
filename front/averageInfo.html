@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SEARCH INFORMATION</title>
-    <link rel="stylesheet" href="./css/styles.css">
-    <link rel="stylesheet" href="./css/averageInfo.css">
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/averageInfo.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
@@ -72,28 +72,58 @@
                     <!-- 평균 데이터가 여기에 표시됩니다. -->
                 </div>
 
-                <!-- 차트 표시 -->
-                <div class="chart-container">
-                    <div class="chart-item">
-                        <h3>Level Distribution</h3>
-                        <canvas id="levelDistributionChart" width="400" height="200"></canvas>
-                    </div>
-                    <div class="chart-item">
-                        <h3>Main CAPA</h3>
-                        <canvas id="averageMainCapaChart" width="400" height="200"></canvas>
-                    </div>
-                    <div class="chart-item">
-                        <h3>Multi CAPA</h3>
-                        <canvas id="averageMultiCapaChart" width="400" height="200"></canvas>
-                    </div>
-                    <div class="chart-item">
-                        <h3>Total CAPA</h3>
-                        <canvas id="averageTotalCapaChart" width="400" height="200"></canvas>
-                    </div>
-                    <div class="chart-item">
-                        <h3>Tenure Distribution</h3>
-                        <canvas id="tenureDistributionChart" width="400" height="200"></canvas>
-                    </div>
+                <!-- 도넛 차트 표시 -->
+                <div class="graph-container">
+                    <section id="level-distribution-section" class="section graph-item large">
+                        <div class="inner">
+                            <h2 class="section-title">
+                                Level Distribution
+                                <button class="info-button" id="levelDistributionInfoBtn">?</button>
+                            </h2>
+                            <div class="canvas-container">
+                                <canvas id="levelDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 가로 막대 차트 표시 -->
+                <div class="graph-container horizontal">
+                    <section id="main-capa-section" class="section graph-item small">
+                        <div class="inner">
+                            <h2 class="section-title">
+                                Main CAPA
+                                <button class="info-button" id="mainCapaInfoBtn">?</button>
+                            </h2>
+                            <div class="canvas-container">
+                                <canvas id="averageMainCapaChart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="multi-capa-section" class="section graph-item small">
+                        <div class="inner">
+                            <h2 class="section-title">
+                                Multi CAPA
+                                <button class="info-button" id="multiCapaInfoBtn">?</button>
+                            </h2>
+                            <div class="canvas-container">
+                                <canvas id="averageMultiCapaChart"></canvas>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="total-capa-section" class="section graph-item small">
+                        <div class="inner">
+                            <h2 class="section-title">
+                                Total CAPA
+                                <button class="info-button" id="totalCapaInfoBtn">?</button>
+                            </h2>
+                            <div class="canvas-container">
+                                <canvas id="averageTotalCapaChart"></canvas>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
         </section>
@@ -105,8 +135,22 @@
         </div>
     </footer>
 
+    <!-- Modal Elements -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <canvas id="modalChart"></canvas>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="./js/averageInfo.js"></script>
+</body>
+</html>
+
+
+
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
@@ -138,5 +182,3 @@
             }
         });
     </script>
-</body>
-</html>

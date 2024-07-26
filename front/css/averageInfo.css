@@ -1,3 +1,4 @@
+/* 기본 스타일 */
 body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
@@ -154,60 +155,65 @@ h3 {
     color: #333;
 }
 
-.chart-container {
+.graph-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px; /* 그래프 간의 간격 조정 */
+    margin-bottom: 20px; /* 섹션 간의 간격 조정 */
 }
 
-.chart-item {
-    width: 100%;
+.graph-item {
+    flex: 1;
+    min-width: 300px;
+    max-width: 300px;
+    margin: 20px;
+    background-color: #ffffff; /* 배경색 추가 */
+    padding: 20px; /* 패딩 추가 */
+    border-radius: 8px; /* 모서리 둥글게 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 그림자 효과 추가 */
 }
 
-@media screen and (max-width: 768px) {
-    .nav-container {
+/* 도넛 그래프의 크기 조절 */
+.graph-item.large {
+    height: 300px; /* 높이를 줄여서 도넛 그래프 크기 조절 */
+    max-width: 350px; /* 최대 너비를 설정 */
+    margin: 0 auto; /* 중앙 정렬 */
+}
+
+/* 가로 막대 그래프 크기 조절 */
+.graph-item.small {
+    flex: 1;
+    margin: 10px;
+    min-width: 280px;
+    max-width: 350px;
+    height: 200px; /* 가로 막대 그래프 높이 */
+}
+
+/* 큰 화면에서 그래프 컨테이너의 배치 조정 */
+@media (min-width: 769px) {
+    .graph-container {
+        display: flex;
         flex-direction: column;
         align-items: center;
-        text-align: center;
     }
 
-    .nav-title a {
-        font-size: 20px;
-    }
-
-    .dropbtn {
-        padding: 8px 12px;
-        font-size: 14px;
-    }
-
-    .dropdown-content {
-        min-width: 100px;
-    }
-
-    .dropdown-content .dropdown-item {
-        padding: 10px 12px;
-    }
-
-    h2 {
-        font-size: 24px;
-    }
-
-    h3 {
-        font-size: 20px;
-    }
-
-    #average-info {
-        padding: 15px;
-    }
-
-    #average-data-display {
-        flex-direction: column;
-        font-size: 14px;
-    }
-
-    .info-box {
+    .horizontal {
+        display: flex;
+        justify-content: space-between;
         width: 100%;
+    }
+}
+
+/* 작은 화면에서 그래프 컨테이너의 배치 조정 */
+@media (max-width: 768px) {
+    .graph-container {
+        display: block;
+    }
+
+    .horizontal {
+        flex-direction: column;
+        align-items: center;
     }
 
     .chart-item {
@@ -248,12 +254,120 @@ h3 {
     background-color: #003bb5;
 }
 
-
-
 footer {
     background-color: #0044cc;
     color: #fff;
     text-align: center;
     padding: 20px 0;
     margin-top: auto;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* 정보 버튼 스타일 */
+.info-button {
+    background-color: #d2d4d6;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: 5px; /* 타이틀과 버튼 사이의 간격 조정 */
+    position: relative;
+}
+
+.info-modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding-top: 500px;
+}
+
+.info-modal-content {
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: auto;
+    font-family: Arial, sans-serif;
+}
+
+.info-modal-content strong {
+    font-weight: bold;
+}
+
+.info-modal-content strong.color-red {
+    color: red;
+}
+
+.info-modal-content strong.color-blue {
+    color: blue;
+}
+
+.info-modal.visible {
+    display: block;
+}
+
+/* 닫기 버튼 */
+.close-info {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-info:hover,
+.close-info:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
