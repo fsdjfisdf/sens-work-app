@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const equipmentContainer = document.getElementById('equipment-container');
+    const equipmentContainer = document.getElementById('equipment-cards');
     
     async function loadEquipment() {
         try {
             console.log('Loading equipment data...');
-            const response = await axios.get('http://3.37.165.84:3001/api/equipment');
+            const response = await axios.get('http://localhost:3001/equipment'); // 포트 번호 확인
             console.log('Equipment data loaded:', response.data);
             const equipments = response.data;
             displayEquipments(equipments);
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         equipmentContainer.innerHTML = '';
         equipments.forEach(equipment => {
             const equipmentElement = document.createElement('div');
-            equipmentElement.className = 'equipment-item';
+            equipmentElement.className = 'equipment-card';
             equipmentElement.innerHTML = `
                 <p><strong>EQ Name:</strong> ${equipment.EQNAME}</p>
                 <p><strong>Bay:</strong> ${equipment.BAY}</p>
