@@ -1,4 +1,4 @@
-const { pool } = require('../database');
+const { pool } = require('../../config/database');
 
 exports.getEquipment = async () => {
     const connection = await pool.getConnection(async conn => conn);
