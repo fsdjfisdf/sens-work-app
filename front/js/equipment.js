@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fetch equipment data from the server
     async function loadEquipment() {
         try {
-            const response = await axios.get('http://3.37.165.84/equipment');
+            const response = await axios.get('http://3.37.165.84:3001/equipment');
             equipments = response.data;
             displayEquipments(equipments);
         } catch (error) {
