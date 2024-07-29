@@ -38,12 +38,54 @@
                 <h2>Equipment Information</h2>
                 <div class="search-container">
                     <input type="text" id="searchEqName" placeholder="Search by EQ Name">
-                    <input type="text" id="searchGroup" placeholder="Search by Group">
-                    <input type="text" id="searchSite" placeholder="Search by Site">
+                    <select id="searchGroup">
+                        <option value="">Search by Group</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PEE3">PEE3</option>
+                    </select>
+                    <select id="searchSite">
+                        <option value="">Search by Site</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <input type="text" id="searchType" placeholder="Search by Type">
+                    <input type="text" id="searchLine" placeholder="Search by Line">
+                    <select id="searchWarrantyStatus">
+                        <option value="">Search by Warranty Status</option>
+                        <option value="WI">WI</option>
+                        <option value="WO">WO</option>
+                    </select>
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                 </div>
-                <div id="equipment-cards" class="equipment-cards"></div>
+                <p id="equipment-count">Total Equipment: 0</p>
+                <table id="equipment-table" class="equipment-table">
+                    <thead>
+                        <tr>
+                            <th>EQ Name</th>
+                            <th>Bay</th>
+                            <th>Group</th>
+                            <th>Site</th>
+                            <th>Type</th>
+                            <th>Line</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Warranty Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipment-tbody">
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prevPage">Previous</button>
+                    <span id="currentPage">1</span>
+                    <button id="nextPage">Next</button>
+                </div>
+                <canvas id="equipmentChart"></canvas>
             </div>
         </section>
     </main>
@@ -55,6 +97,7 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./js/equipment.js"></script>
 </body>
 </html>

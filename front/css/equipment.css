@@ -1,4 +1,4 @@
-body, h1, h2, p, a, input, select, label, textarea, button {
+body, h1, h2, p, a, input, select, label, textarea, button, table, th, td {
     margin: 0;
     padding: 0;
     text-decoration: none;
@@ -15,7 +15,6 @@ body {
     min-height: 100vh;
 }
 
-/* Navigation styles */
 nav {
     background-color: #0044cc;
     padding: 10px 0;
@@ -151,32 +150,54 @@ h2 {
     background-color: #555;
 }
 
-.equipment-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-}
-
-.equipment-card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+.equipment-table {
     width: 100%;
-    max-width: 300px;
-    position: relative;
-    transition: box-shadow 0.3s, transform 0.3s;
+    border-collapse: collapse;
+    margin-bottom: 20px;
 }
 
-.equipment-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transform: translateY(-5px);
+.equipment-table th,
+.equipment-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
 }
 
-.equipment-card p {
-    margin: 10px 0;
+.equipment-table th {
+    background-color: #f4f4f9;
+    font-weight: bold;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.pagination button {
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    margin: 0 5px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.pagination button:hover {
+    background-color: #003bb5;
+}
+
+.pagination span {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#equipmentChart {
+    max-width: 800px;
+    margin: 20px auto;
 }
 
 footer {
