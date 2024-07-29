@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const equipmentController = require('../controllers/equipmentController');
 
-router.get('/equipment', equipmentController.getEquipment);
+// 장비 목록 조회
+router.get('/api/equipment', equipmentController.getEquipments);
 
 module.exports = router;

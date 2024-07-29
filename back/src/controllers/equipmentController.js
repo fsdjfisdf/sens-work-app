@@ -1,10 +1,12 @@
-const equipmentDao = require('../dao/equipmentDao');
-
-exports.getEquipment = async (req, res) => {
+exports.getEquipments = async (req, res) => {
     try {
-        const equipments = await equipmentDao.getEquipment();
-        res.status(200).json(equipments);
+      console.log('Fetching equipment data...');
+      const [rows] = await pool.query('SELECT * FROM Equipment');
+      console.log('Fetched equipment data:', rows);
+      res.status(200).json(rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      console.error('Error retrieving equipment data:', err);
+      res.status(500).json({ error: 'Error retrieving equipment data' });
     }
-};
+  };
+  

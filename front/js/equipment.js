@@ -1,27 +1,27 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    let equipments = [];
-
-    // Fetch equipment data from the server
+    const equipmentContainer = document.getElementById('equipment-container');
+    
     async function loadEquipment() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/Equipment');
-            equipments = response.data;
+            console.log('Loading equipment data...');
+            const response = await axios.get('http://3.37.165.84:3001/api/equipment');
+            console.log('Equipment data loaded:', response.data);
+            const equipments = response.data;
             displayEquipments(equipments);
         } catch (error) {
             console.error('Error loading equipment data:', error);
+            equipmentContainer.innerHTML = '<p>Error loading equipment data.</p>';
         }
     }
-
+    
     function displayEquipments(equipments) {
-        const equipmentCards = document.getElementById('equipment-cards');
-        equipmentCards.innerHTML = '';
-
+        equipmentContainer.innerHTML = '';
         equipments.forEach(equipment => {
-            const card = document.createElement('div');
-            card.className = 'equipment-card';
-            card.innerHTML = `
+            const equipmentElement = document.createElement('div');
+            equipmentElement.className = 'equipment-item';
+            equipmentElement.innerHTML = `
                 <p><strong>EQ Name:</strong> ${equipment.EQNAME}</p>
-                <p><strong>BAY:</strong> ${equipment.BAY}</p>
+                <p><strong>Bay:</strong> ${equipment.BAY}</p>
                 <p><strong>Group:</strong> ${equipment.GROUP}</p>
                 <p><strong>Site:</strong> ${equipment.SITE}</p>
                 <p><strong>Type:</strong> ${equipment.TYPE}</p>
@@ -30,32 +30,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>End Date:</strong> ${equipment.END_DATE}</p>
                 <p><strong>Warranty Status:</strong> ${equipment.WARRANTY_STATUS}</p>
             `;
-            equipmentCards.appendChild(card);
+            equipmentContainer.appendChild(equipmentElement);
         });
     }
-
-    document.getElementById('searchButton').addEventListener('click', () => {
-        const searchEqName = document.getElementById('searchEqName').value.toLowerCase();
-        const searchGroup = document.getElementById('searchGroup').value.toLowerCase();
-        const searchSite = document.getElementById('searchSite').value.toLowerCase();
-
-        const filteredEquipments = equipments.filter(equipment => {
-            return (
-                (searchEqName === '' || equipment.EQNAME.toLowerCase().includes(searchEqName)) &&
-                (searchGroup === '' || equipment.GROUP.toLowerCase().includes(searchGroup)) &&
-                (searchSite === '' || equipment.SITE.toLowerCase().includes(searchSite))
-            );
-        });
-
-        displayEquipments(filteredEquipments);
-    });
-
-    document.getElementById('resetButton').addEventListener('click', () => {
-        document.getElementById('searchEqName').value = '';
-        document.getElementById('searchGroup').value = '';
-        document.getElementById('searchSite').value = '';
-        displayEquipments(equipments);
-    });
 
     loadEquipment();
 });
