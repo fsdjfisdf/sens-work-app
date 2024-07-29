@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadEquipment() {
         try {
             console.log('Loading equipment data...');
-            const response = await axios.get('http://localhost:3001/equipment'); // 포트 번호 확인
+            const response = await axios.get('http://3.37.165.84:3001/equipment'); // 포트 번호 확인
             console.log('Equipment data loaded:', response.data);
             const equipments = response.data;
             displayEquipments(equipments);
