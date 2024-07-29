@@ -37,6 +37,10 @@ module.exports = function () {
   require("../src/routes/indexRoute")(app);
   require("../src/routes/supraMaintenanceRoute")(app);
   require("../src/routes/supraSetupRoute")(app);  // 추가된 라우트
+
+    // New equipment route
+    const equipmentRoutes = require('../src/routes/equipmentRoute');
+    app.use('/api', equipmentRoutes);
   
 
   // 회원가입

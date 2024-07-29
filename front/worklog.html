@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const token = localStorage.getItem("x-access-token");
-
-        if (!token) {
-            alert("로그인이 필요합니다.");
-            window.location.replace("./signin.html");
-        }
-    });
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Work log</title>
@@ -61,7 +51,7 @@
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
                 <div class="sign-container">
-                    <div class="unsigned">
+                    <div class="unsigned hidden">
                     </div>
                     <div class="signed hidden">
                         <div class="dropdown">
@@ -83,161 +73,161 @@
     <main>
         <section id="worklog-form">
             <div class="inner">
-              <br><br>
+                <br><br>
                 <button id="paste-button">PASTE</button>
                 <form id="worklogForm">
-                <div>
-                  <div>
-                    <label for="group">GROUP</label>
-                    <select id="group" name="group" required>
-                        <option value="SELECT">SELECT</option>
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PEE3">PEE3</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="site">SITE</label>
-                    <select id="site" name="site" required>
-                        <option value="SELECT">SELECT</option>
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="line">LINE</label>
-                    <select id="line" name="line" required>
-                        <option value="SELECT">SELECT</option>
-                    </select>
-                </div>
-                <div>
-                  <label for="equipment_type">EQ TYPE</label>
-                  <select id="equipment_type" name="equipment_type" required>
-                      <option value="SELECT">SELECT</option>
-                      <option value="SUPRA N">SUPRA N</option>
-                      <option value="SUPRA XP">SUPRA XP</option>
-                      <option value="INTEGER">INTEGER</option>
-                      <option value="PRECIA">PRECIA</option>
-                      <option value="ECOLITE">ECOLITE</option>
-                      <option value="JENEVA">JENEVA</option>
-                  </select>
-              </div>
-                <div>
-                    <label for="equipment_name">EQ NAME</label>
-                    <input type="text" id="equipment_name" name="equipment_name" required>
-                </div>
-                <div>
-                  <label for="warranty">warranty</label>
-                  <select id="warranty" name="warranty" required>
-                      <option value="SELECT">SELECT</option>
-                      <option value="WI">WI</option>
-                      <option value="WO">WO</option>
-                  </select>
-              </div>
-                <div>
-                    <label for="workType">WORKTYPE</label>
-                    <select id="workType" name="workType" required>
-                        <option value="SELECT">SELECT</option>
-                        <option value="SET UP">SET UP</option>
-                        <option value="RELOCATION">RELOCATION</option>
-                        <option value="MAINT">MAINT</option>
-                    </select>
-                </div>
-                <div id="additionalOptions" class="additionalOption" style="display:none;">
-                    <label for="additionalWorkType">SET UP ITEM</label>
-                    <select id="additionalWorkType" name="additionalWorkType">
-                        <option value="SELECT">SELECT</option>
-                        <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
-                        <option value="FAB IN">FAB IN</option>
-                        <option value="DOCKING">DOCKING</option>
-                        <option value="CABLE HOOK UP">CABLE HOOK UP</option>
-                        <option value="PUMP CABLE HOOK UP">PUMP CABLE HOOK UP</option>
-                        <option value="CABLE HOOK UP : SILICON">CABLE HOOK UP : SILICON</option>
-                        <option value="POWER TURN ON">POWER TURN ON</option>
-                        <option value="UTILITY TURN ON">UTILITY TURN ON</option>
-                        <option value="GAS TURN ON">GAS TURN ON</option>
-                        <option value="LEVELING">LEVELING</option>
-                        <option value="TEACHING">TEACHING</option>
-                        <option value="PART INSTALLATION">PART INSTALLATION</option>
-                        <option value="LEAK CHECK">LEAK CHECK</option>
-                        <option value="TTTM">TTTM</option>
-                        <option value="CUSTOMER CERTIFICATION 중간 인증 준비">CUSTOMER CERTIFICATION 중간 인증 준비</option>
-                        <option value="CUSTOMER CERTIFICATION(PIO 장착)">CUSTOMER CERTIFICATION(PIO 장착)</option>
-                        <option value="CUSTOMER CERTIFICATION 사전 중간 인증">CUSTOMER CERTIFICATION 사전 중간 인증</option>
-                        <option value="CUSTOMER CERTIFICATION 중간 인증">CUSTOMER CERTIFICATION 중간 인증</option>
-                        <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
-                        <option value="MAINTENANCE">MAINTENANCE</option>
-                    </select>
-                </div>
-                <div id="maintOptions" class="maintOption" style="display:none;">
-                  <label for="maintOptionSelect">MAINT ITEM</label>
-                  <select id="maintOptionSelect" name="maintOption">
-                    <option value="SELECT">SELECT</option>
-                  </select>
-                </div>
-                <div id="transferOptions" class="transferOption" style="display:none;">
-                  <label for="transferOptionSelect">TRANSFER ITEM</label>
-                  <select id="transferOptionSelect" name="transferOption">
-                      <option value="SELECT">SELECT</option>
-                  </select>
-              </div>
-                <div id="task-mans-container">
-                    <div class="label-container">
-                        <label>WORKER</label>
-                        <div class="add-remove-buttons">
-                            <button type="button" id="add-task-man">+</button>
+                    <div>
+                        <div>
+                            <label for="group">GROUP</label>
+                            <select id="group" name="group" required>
+                                <option value="SELECT">SELECT</option>
+                                <option value="PEE1">PEE1</option>
+                                <option value="PEE2">PEE2</option>
+                                <option value="PEE3">PEE3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="site">SITE</label>
+                            <select id="site" name="site" required>
+                                <option value="SELECT">SELECT</option>
+                                <option value="PT">PT</option>
+                                <option value="HS">HS</option>
+                                <option value="IC">IC</option>
+                                <option value="CJ">CJ</option>
+                                <option value="PSKH">PSKH</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="line">LINE</label>
+                            <select id="line" name="line" required>
+                                <option value="SELECT">SELECT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="equipment_type">EQ TYPE</label>
+                            <select id="equipment_type" name="equipment_type" required>
+                                <option value="SELECT">SELECT</option>
+                                <option value="SUPRA N">SUPRA N</option>
+                                <option value="SUPRA XP">SUPRA XP</option>
+                                <option value="INTEGER">INTEGER</option>
+                                <option value="PRECIA">PRECIA</option>
+                                <option value="ECOLITE">ECOLITE</option>
+                                <option value="JENEVA">JENEVA</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="equipment_name">EQ NAME</label>
+                            <input type="text" id="equipment_name" name="equipment_name" required>
+                        </div>
+                        <div>
+                            <label for="warranty">warranty</label>
+                            <select id="warranty" name="warranty" required>
+                                <option value="SELECT">SELECT</option>
+                                <option value="WI">WI</option>
+                                <option value="WO">WO</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="workType">WORKTYPE</label>
+                            <select id="workType" name="workType" required>
+                                <option value="SELECT">SELECT</option>
+                                <option value="SET UP">SET UP</option>
+                                <option value="RELOCATION">RELOCATION</option>
+                                <option value="MAINT">MAINT</option>
+                            </select>
+                        </div>
+                        <div id="additionalOptions" class="additionalOption" style="display:none;">
+                            <label for="additionalWorkType">SET UP ITEM</label>
+                            <select id="additionalWorkType" name="additionalWorkType">
+                                <option value="SELECT">SELECT</option>
+                                <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+                                <option value="FAB IN">FAB IN</option>
+                                <option value="DOCKING">DOCKING</option>
+                                <option value="CABLE HOOK UP">CABLE HOOK UP</option>
+                                <option value="PUMP CABLE HOOK UP">PUMP CABLE HOOK UP</option>
+                                <option value="CABLE HOOK UP : SILICON">CABLE HOOK UP : SILICON</option>
+                                <option value="POWER TURN ON">POWER TURN ON</option>
+                                <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+                                <option value="GAS TURN ON">GAS TURN ON</option>
+                                <option value="LEVELING">LEVELING</option>
+                                <option value="TEACHING">TEACHING</option>
+                                <option value="PART INSTALLATION">PART INSTALLATION</option>
+                                <option value="LEAK CHECK">LEAK CHECK</option>
+                                <option value="TTTM">TTTM</option>
+                                <option value="CUSTOMER CERTIFICATION 중간 인증 준비">CUSTOMER CERTIFICATION 중간 인증 준비</option>
+                                <option value="CUSTOMER CERTIFICATION(PIO 장착)">CUSTOMER CERTIFICATION(PIO 장착)</option>
+                                <option value="CUSTOMER CERTIFICATION 사전 중간 인증">CUSTOMER CERTIFICATION 사전 중간 인증</option>
+                                <option value="CUSTOMER CERTIFICATION 중간 인증">CUSTOMER CERTIFICATION 중간 인증</option>
+                                <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+                                <option value="MAINTENANCE">MAINTENANCE</option>
+                            </select>
+                        </div>
+                        <div id="maintOptions" class="maintOption" style="display:none;">
+                            <label for="maintOptionSelect">MAINT ITEM</label>
+                            <select id="maintOptionSelect" name="maintOption">
+                                <option value="SELECT">SELECT</option>
+                            </select>
+                        </div>
+                        <div id="transferOptions" class="transferOption" style="display:none;">
+                            <label for="transferOptionSelect">TRANSFER ITEM</label>
+                            <select id="transferOptionSelect" name="transferOption">
+                                <option value="SELECT">SELECT</option>
+                            </select>
+                        </div>
+                        <div id="task-mans-container">
+                            <div class="label-container">
+                                <label>WORKER</label>
+                                <div class="add-remove-buttons">
+                                    <button type="button" id="add-task-man">+</button>
+                                </div>
+                            </div>
+                            <div class="task-man-container">
+                                <textarea name="task_man" class="task-man-input" required></textarea>
+                                <select name="task_man_role" class="task-man-select" required>
+                                    <option value="main">main</option>
+                                    <option value="support">support</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="SOP">SOP</label>
+                            <select id="SOP" name="SOP" required>
+                                <option value="Not Utilized (No Need)">Not Utilized (No Need)</option>
+                                <option value="Utilized">Utilized</option>
+                                <option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option>
+                                <option value="No document (Need)">No document (Need)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="tsguide">TS guide</label>
+                            <select id="tsguide" name="tsguide" required>
+                                <option value="Not Utilized (No Need)">Not Utilized (No Need)</option>
+                                <option value="Utilized">Utilized</option>
+                                <option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option>
+                                <option value="No document (Need)">No document (Need)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="task_date">WORK DATE</label>
+                            <input type="date" id="task_date" name="task_date" required>
+                        </div>
+                        <div>
+                            <label for="start_time">START TIME</label>
+                            <input type="time" id="start_time" name="start_time" required>
+                        </div>
+                        <div>
+                            <label for="end_time">END TIME</label>
+                            <input type="time" id="end_time" name="end_time" required>
+                        </div>
+                        <div>
+                            <label for="noneTime">NONE TIME</label>
+                            <input type="number" id="noneTime" name="noneTime">
+                        </div>
+                        <div>
+                            <label for="moveTime">MOVE TIME</label>
+                            <input type="number" id="moveTime" name="moveTime">
                         </div>
                     </div>
-                  <div class="task-man-container">
-                      <textarea name="task_man" class="task-man-input" required></textarea>
-                      <select name="task_man_role" class="task-man-select" required>
-                          <option value="main">main</option>
-                          <option value="support">support</option>
-                      </select>
-                  </div>
-              </div>
-              <div>
-                <label for="SOP">SOP</label>
-                <select id="SOP" name="SOP" required>
-                    <option value="Not Utilized (No Need)">Not Utilized (No Need)</option>
-                    <option value="Utilized">Utilized</option>
-                    <option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option>
-                    <option value="No document (Need)">No document (Need)</option>
-                </select>
-            </div>
-            <div>
-              <label for="tsguide">TS guide</label>
-              <select id="tsguide" name="tsguide" required>
-                  <option value="Not Utilized (No Need)">Not Utilized (No Need)</option>
-                  <option value="Utilized">Utilized</option>
-                  <option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option>
-                  <option value="No document (Need)">No document (Need)</option>
-              </select>
-          </div>
-              <div>
-                <label for="task_date">WORK DATE</label>
-                <input type="date" id="task_date" name="task_date" required>
-            </div>
-            <div>
-                <label for="start_time">START TIME</label>
-                <input type="time" id="start_time" name="start_time" required>
-            </div>
-            <div>
-                <label for="end_time">END TIME</label>
-                <input type="time" id="end_time" name="end_time" required>
-            </div>
-            <div>
-                <label for="noneTime">NONE TIME</label>
-                <input type="number" id="noneTime" name="noneTime">
-            </div>
-            <div>
-                <label for="moveTime">MOVE TIME</label>
-                <input type="number" id="moveTime" name="moveTime">
-            </div>
-                </div>
                     <div>
                         <label for="task_name">TITLE</label>
                         <input type="text" id="task_name" name="task_name" required>
@@ -280,12 +270,13 @@
                         </div>
                     </div>
                     <div>
-                        <button type="submit">SAVE</button>
+                        <button type="button" id="preview-save">SAVE</button>
+                        <button type="submit" style="display: none;" id="save-button">SAVE</button>
                     </div>
                     <div>
-                    <button id="print-inform">PRINT INFORM</button>
-                    <button id="copy-inform">COPY</button><br>
-                  </div>
+                        <button id="print-inform">PRINT INFORM</button>
+                        <button id="copy-inform">COPY</button><br>
+                    </div>
                 </form>
             </div>
         </section>
@@ -297,7 +288,26 @@
         </div>
     </footer>
 
-    <div class="overlay"></div>
+    <div class="overlay" id="modal-overlay"></div>
+    <div class="print-container" id="preview-modal">
+        <h2>작성 내용 확인</h2>
+        <p><strong class="important">Date:</strong> <span id="preview-task_date"></span></p>
+        <p><strong class="important">Start Time:</strong> <span id="preview-start_time"></span></p>
+        <p><strong class="important">End Time:</strong> <span id="preview-end_time"></span></p>
+        <p><strong>Task Name:</strong> <span id="preview-task_name"></span></p>
+        <p><strong>Equipment Name:</strong> <span id="preview-equipment_name"></span></p>
+        <p><strong>Setup Item:</strong> <span id="preview-setupItem"></span></p>
+        <p><strong>Transfer Item:</strong> <span id="preview-transferItem"></span></p>
+        <p><strong>Worker:</strong> <span id="preview-task_man"></span></p>
+        <br>
+        <p>내용을 잘 확인하신 후 <strong>SAVE</strong> 버튼을 눌러주세요.</p>
+        <div class="modal-buttons">
+            <button type="button" id="confirm-save">SAVE</button>
+            <button type="button" id="cancel-save">CANCEL</button>
+        </div>
+    </div>
+    
+
     <div id="popup">
         <h3>PASTE INFORM</h3>
         <textarea id="paste-textarea"></textarea>

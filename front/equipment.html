@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Information</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/equipment.css" />
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container">
+                    <div class="unsigned"></div>
+                    <div class="signed hidden">
+                        <div class="dropdown">
+                            <button class="dropbtn">MENU</button>
+                            <div class="dropdown-content">
+                                <a href="./info.html" class="dropdown-item">Eng'r Information</a>
+                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
+                                <a href="./equipment.html" class="dropdown-item">Equipment Info</a>
+                                <button id="sign-out" class="dropdown-item">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="equipment-info">
+            <div class="inner">
+                <h2>Equipment Information</h2>
+                <div class="search-container">
+                    <input type="text" id="searchEqName" placeholder="Search by EQ Name">
+                    <input type="text" id="searchGroup" placeholder="Search by Group">
+                    <input type="text" id="searchSite" placeholder="Search by Site">
+                    <button id="searchButton">Search</button>
+                    <button id="resetButton">Reset</button>
+                </div>
+                <div id="equipment-cards" class="equipment-cards"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="inner">
+            <p>Developed by PEE1 Jeong Hyeon Woo</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="./js/equipment.js"></script>
+</body>
+</html>
