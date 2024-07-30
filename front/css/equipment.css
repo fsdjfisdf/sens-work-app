@@ -120,7 +120,7 @@ h2 {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
-    min-width: 200px;
+    min-width: 100px;
 }
 
 .search-container input::placeholder,
@@ -148,6 +148,22 @@ h2 {
 
 #resetButton:hover {
     background-color: #555;
+}
+
+.equipment-count {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #e7f1ff;
+    border-radius: 8px;
+}
+
+.equipment-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
 }
 
 .equipment-table {
@@ -190,14 +206,27 @@ h2 {
     background-color: #003bb5;
 }
 
-.pagination span {
-    font-size: 18px;
-    font-weight: bold;
+.chart-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
-#equipmentChart {
-    max-width: 800px;
-    margin: 20px auto;
+.chart-wrapper {
+    flex: 1;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+canvas {
+    max-width: 100%;
+    height: 200px;
+    margin: 20px 0;
 }
 
 footer {
@@ -206,4 +235,73 @@ footer {
     text-align: center;
     padding: 20px 0;
     margin-top: auto;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 800px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.equipment-row:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.equipment-row:hover {
+    background-color: #f1f1f1;
+    cursor: pointer;
+}
+
+.equipment-row td {
+    padding: 15px 10px;
+    font-size: 14px;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
+    .search-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chart-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chart-wrapper {
+        width: 100%;
+    }
 }

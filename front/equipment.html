@@ -39,53 +39,79 @@
                 <div class="search-container">
                     <input type="text" id="searchEqName" placeholder="Search by EQ Name">
                     <select id="searchGroup">
-                        <option value="">Search by Group</option>
+                        <option value="">Group</option>
                         <option value="PEE1">PEE1</option>
                         <option value="PEE2">PEE2</option>
                         <option value="PEE3">PEE3</option>
                     </select>
                     <select id="searchSite">
-                        <option value="">Search by Site</option>
+                        <option value="">Site</option>
                         <option value="PT">PT</option>
                         <option value="HS">HS</option>
                         <option value="IC">IC</option>
                         <option value="CJ">CJ</option>
                         <option value="PSKH">PSKH</option>
                     </select>
-                    <input type="text" id="searchType" placeholder="Search by Type">
-                    <input type="text" id="searchLine" placeholder="Search by Line">
+                    <select id="searchLine">
+                        <option value="">Line</option>
+                    </select>
+                    <select id="searchType">
+                        <option value="">EQ Type</option>
+                        <option value="SUPRA N">SUPRA N</option>
+                        <option value="SUPRA NM">SUPRA NM</option>
+                        <option value="SUPRA XP">SUPRA XP</option>
+                        <option value="INTEGER">INTEGER</option>
+                        <option value="PRECIA">PRECIA</option>
+                        <option value="ECOLITE">ECOLITE</option>
+                        <option value="JENEVA">JENEVA</option>
+                    </select>
                     <select id="searchWarrantyStatus">
-                        <option value="">Search by Warranty Status</option>
+                        <option value="">Warranty</option>
                         <option value="WI">WI</option>
                         <option value="WO">WO</option>
                     </select>
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
                 </div>
-                <p id="equipment-count">Total Equipment: 0</p>
-                <table id="equipment-table" class="equipment-table">
-                    <thead>
-                        <tr>
-                            <th>EQ Name</th>
-                            <th>Bay</th>
-                            <th>Group</th>
-                            <th>Site</th>
-                            <th>Type</th>
-                            <th>Line</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Warranty Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="equipment-tbody">
-                    </tbody>
-                </table>
-                <div class="pagination">
-                    <button id="prevPage">Previous</button>
-                    <span id="currentPage">1</span>
-                    <button id="nextPage">Next</button>
+                <div id="equipment-count" class="equipment-count"></div>
+                <div class="equipment-table-wrapper">
+                    <table id="equipment-table" class="equipment-table">
+                        <thead>
+                            <tr>
+                                <th>EQ Name</th>
+                                <th>Bay</th>
+                                <th>Group</th>
+                                <th>Site</th>
+                                <th>Type</th>
+                                <th>Line</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Warranty Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="equipment-tbody">
+                        </tbody>
+                    </table>
                 </div>
-                <canvas id="equipmentChart"></canvas>
+                <div class="pagination">
+                    <button id="prevPage">&lt;</button>
+                    <span id="currentPage">1</span>
+                    <button id="nextPage">&gt;</button>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <h3>Line</h3>
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Warranty</h3>
+                        <canvas id="warrantyChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>EQ TYPE</h3>
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -96,8 +122,16 @@
         </div>
     </footer>
 
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="modalClose">&times;</span>
+            <canvas id="modalCanvas"></canvas>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="./js/equipment.js"></script>
 </body>
 </html>
