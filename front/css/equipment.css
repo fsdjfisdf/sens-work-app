@@ -184,6 +184,11 @@ h2 {
     font-weight: bold;
 }
 
+.equipment-table th {
+    background-color: #0044cc;
+    color: #fff;
+}
+
 .pagination {
     display: flex;
     justify-content: center;

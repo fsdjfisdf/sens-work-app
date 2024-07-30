@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const prevPage = document.getElementById('prevPage');
     const nextPage = document.getElementById('nextPage');
     const currentPage = document.getElementById('currentPage');
+    const pageOf = document.getElementById('pageOf');
     const lineChart = document.getElementById('lineChart').getContext('2d');
     const warrantyChart = document.getElementById('warrantyChart').getContext('2d');
     const typeChart = document.getElementById('typeChart').getContext('2d');
@@ -68,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         displayEquipments();
         updateCharts();
+        updatePagination();
     }
 
     function displayEquipments() {
@@ -81,15 +83,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const equipmentRow = document.createElement('tr');
             equipmentRow.classList.add('equipment-row');
             equipmentRow.innerHTML = `
-                <td>${equipment.EQNAME}</td>
-                <td>${equipment.BAY}</td>
                 <td>${equipment.GROUP}</td>
                 <td>${equipment.SITE}</td>
                 <td>${equipment.TYPE}</td>
+                <td>${equipment.EQNAME}</td>
                 <td>${equipment.LINE}</td>
+                <td>${equipment.BAY}</td>
+                <td>${equipment.WARRANTY_STATUS}</td>
                 <td>${formatDate(equipment.START_DATE)}</td>
                 <td>${formatDate(equipment.END_DATE)}</td>
-                <td>${equipment.WARRANTY_STATUS}</td>
             `;
             equipmentTbody.appendChild(equipmentRow);
         });
@@ -161,9 +163,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 },
                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const count = lineData[context.label];
+                                const percentage = context.raw.toFixed(2) + '%';
+                                return `${count}대 (${percentage})`;
+                            }
+                        }
+                    },
                     datalabels: {
                         formatter: (value, ctx) => {
-                            return `${value.toFixed(2)}%`;
+                            const count = lineData[ctx.chart.data.labels[ctx.dataIndex]];
+                            return `${count} (${value.toFixed(2)}%)`;
                         },
                         color: '#000',
                         anchor: 'end',
@@ -208,9 +220,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 },
                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const count = warrantyData[context.label];
+                                const percentage = context.raw.toFixed(2) + '%';
+                                return `${count} (${percentage})`;
+                            }
+                        }
+                    },
                     datalabels: {
                         formatter: (value, ctx) => {
-                            return `${value.toFixed(2)}%`;
+                            const count = warrantyData[ctx.chart.data.labels[ctx.dataIndex]];
+                            return `${count} (${value.toFixed(2)}%)`;
                         },
                         color: '#000',
                         anchor: 'end',
@@ -255,9 +277,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 },
                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const count = typeData[context.label];
+                                const percentage = context.raw.toFixed(2) + '%';
+                                return `${count} (${percentage})`;
+                            }
+                        }
+                    },
                     datalabels: {
                         formatter: (value, ctx) => {
-                            return `${value.toFixed(2)}%`;
+                            const count = typeData[ctx.chart.data.labels[ctx.dataIndex]];
+                            return `${count} (${value.toFixed(2)}%)`;
                         },
                         color: '#000',
                         anchor: 'end',
@@ -266,6 +298,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredEquipments.length / itemsPerPage);
+        pageOf.textContent = `of ${totalPages}`;
+        currentPage.textContent = page;
+        currentPage.style.fontWeight = 'bold';
     }
 
     searchButton.addEventListener('click', () => {
@@ -297,6 +336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             page--;
             displayEquipments();
             currentPage.textContent = page;
+            updatePagination();
         }
     });
 
@@ -305,6 +345,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             page++;
             displayEquipments();
             currentPage.textContent = page;
+            updatePagination();
         }
     });
 
@@ -353,10 +394,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: true,
                         text: chartInstance.options.plugins.title.text
                     },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const count = chartInstance.data.datasets[0].data[context.dataIndex];
+                                const percentage = ((count / totalEquipments) * 100).toFixed(2) + '%';
+                                return `${count} (${percentage})`;
+                            }
+                        }
+                    },
                     datalabels: {
                         formatter: (value, ctx) => {
-                            const percentage = ((value / totalEquipments) * 100).toFixed(2);
-                            return `${value} (${percentage}%)`;
+                            const count = chartInstance.data.datasets[0].data[ctx.dataIndex];
+                            return `${count} (${value.toFixed(2)}%)`;
                         },
                         color: '#000',
                         anchor: 'end',
