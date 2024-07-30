@@ -95,6 +95,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function calculateMaxValue(data) {
+        const maxValue = Math.max(...data);
+        return Math.ceil(maxValue * 1.2);
+    }
+
     function updateCharts() {
         const totalEquipments = filteredEquipments.length;
 
@@ -117,13 +122,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (warrantyChartInstance) warrantyChartInstance.destroy();
         if (typeChartInstance) typeChartInstance.destroy();
 
+        const lineMaxValue = calculateMaxValue(Object.values(lineData).map(value => (value / totalEquipments) * 100));
+        const warrantyMaxValue = calculateMaxValue(Object.values(warrantyData).map(value => (value / totalEquipments) * 100));
+        const typeMaxValue = calculateMaxValue(Object.values(typeData).map(value => (value / totalEquipments) * 100));
+
         lineChartInstance = new Chart(lineChart, {
             type: 'bar',
             data: {
                 labels: Object.keys(lineData).sort((a, b) => lineData[b] - lineData[a]),
                 datasets: [{
                     label: 'Line',
-                    data: Object.values(lineData).sort((a, b) => b - a),
+                    data: Object.values(lineData).map(value => (value / totalEquipments) * 100),
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 1
@@ -135,18 +144,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 scales: {
                     x: {
                         beginAtZero: true,
+                        max: lineMaxValue,
                         ticks: {
-                            maxTicksLimit: 10,
+                            callback: value => value + '%',
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     },
                     y: {
                         ticks: {
-                            maxTicksLimit: 10,
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     }
@@ -154,8 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 plugins: {
                     datalabels: {
                         formatter: (value, ctx) => {
-                            const percentage = ((value / totalEquipments) * 100).toFixed(2);
-                            return `${value} (${percentage}%)`;
+                            return `${value.toFixed(2)}%`;
                         },
                         color: '#000',
                         anchor: 'end',
@@ -171,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 labels: Object.keys(warrantyData),
                 datasets: [{
                     label: 'Warranty',
-                    data: Object.values(warrantyData),
+                    data: Object.values(warrantyData).map(value => (value / totalEquipments) * 100),
                     backgroundColor: 'rgba(153, 102, 255, 0.2)',
                     borderColor: 'rgba(153, 102, 255, 1)',
                     borderWidth: 1
@@ -183,18 +191,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 scales: {
                     x: {
                         beginAtZero: true,
+                        max: warrantyMaxValue,
                         ticks: {
-                            maxTicksLimit: 10,
+                            callback: value => value + '%',
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     },
                     y: {
                         ticks: {
-                            maxTicksLimit: 10,
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     }
@@ -202,8 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 plugins: {
                     datalabels: {
                         formatter: (value, ctx) => {
-                            const percentage = ((value / totalEquipments) * 100).toFixed(2);
-                            return `${value} (${percentage}%)`;
+                            return `${value.toFixed(2)}%`;
                         },
                         color: '#000',
                         anchor: 'end',
@@ -219,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 labels: Object.keys(typeData),
                 datasets: [{
                     label: 'EQ TYPE',
-                    data: Object.values(typeData),
+                    data: Object.values(typeData).map(value => (value / totalEquipments) * 100),
                     backgroundColor: 'rgba(255, 206, 86, 0.2)',
                     borderColor: 'rgba(255, 206, 86, 1)',
                     borderWidth: 1
@@ -231,18 +238,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 scales: {
                     x: {
                         beginAtZero: true,
+                        max: typeMaxValue,
                         ticks: {
-                            maxTicksLimit: 10,
+                            callback: value => value + '%',
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     },
                     y: {
                         ticks: {
-                            maxTicksLimit: 10,
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     }
@@ -250,8 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 plugins: {
                     datalabels: {
                         formatter: (value, ctx) => {
-                            const percentage = ((value / totalEquipments) * 100).toFixed(2);
-                            return `${value} (${percentage}%)`;
+                            return `${value.toFixed(2)}%`;
                         },
                         color: '#000',
                         anchor: 'end',
@@ -336,6 +342,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (modalChartInstance) {
             modalChartInstance.destroy();
         }
+        const totalEquipments = chartInstance.data.datasets[0].data.reduce((a, b) => a + b, 0);
+        const modalMaxValue = calculateMaxValue(chartInstance.data.datasets[0].data.map(value => (value / totalEquipments) * 100));
         modalChartInstance = new Chart(modalCanvas, {
             type: 'bar',
             data: chartInstance.data,
@@ -345,24 +353,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: true,
                         text: chartInstance.options.plugins.title.text
                     },
-                    datalabels: chartInstance.options.plugins.datalabels
+                    datalabels: {
+                        formatter: (value, ctx) => {
+                            const percentage = ((value / totalEquipments) * 100).toFixed(2);
+                            return `${value} (${percentage}%)`;
+                        },
+                        color: '#000',
+                        anchor: 'end',
+                        align: 'end',
+                        display: true
+                    }
                 },
-                indexAxis: 'y',
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
+                        max: modalMaxValue,
                         ticks: {
-                            maxTicksLimit: 10,
+                            callback: value => value + '%',
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     },
-                    y: {
+                    x: {
                         ticks: {
-                            maxTicksLimit: 10,
                             font: {
-                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                                size: 14
                             }
                         }
                     }
