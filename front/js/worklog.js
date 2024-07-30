@@ -42,7 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           const input = container.querySelector('.task-man-input').value;
           const role = container.querySelector('.task-man-select').value;
           return `${input} (${role})`;
-      }).join(', ');
+      })
+
+      const uniqueTaskMans = [...new Set(taskMans)].join(', ');
 
       document.getElementById('preview-task_date').innerText = task_date;
       document.getElementById('preview-start_time').innerText = start_time;
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('preview-equipment_name').innerText = equipment_name;
       document.getElementById('preview-setupItem').innerText = setupItem;
       document.getElementById('preview-transferItem').innerText = transferItem;
-      document.getElementById('preview-task_man').innerText = taskMans;
+      document.getElementById('preview-task_man').innerText = uniqueTaskMans;
 
       document.getElementById('modal-overlay').classList.add('visible');
       document.getElementById('preview-modal').classList.add('visible');

@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
+
     const equipmentTbody = document.getElementById('equipment-tbody');
     const searchButton = document.getElementById('searchButton');
     const resetButton = document.getElementById('resetButton');
@@ -126,7 +134,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 indexAxis: 'y',
                 scales: {
                     x: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
                     }
                 },
                 plugins: {
@@ -160,7 +182,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 indexAxis: 'y',
                 scales: {
                     x: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
                     }
                 },
                 plugins: {
@@ -194,7 +230,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 indexAxis: 'y',
                 scales: {
                     x: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
                     }
                 },
                 plugins: {
@@ -300,7 +350,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 indexAxis: 'y',
                 scales: {
                     x: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 14 // 축 레이블의 글꼴 크기를 조정
+                            }
+                        }
                     }
                 }
             }
