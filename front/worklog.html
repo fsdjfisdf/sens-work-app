@@ -9,40 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="./css/worklog.css" />
     <style>
-        .label-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .label-container label {
-            flex-grow: 1;
-        }
-        .add-remove-buttons {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .add-remove-buttons button {
-            margin-top: 0;
-        }
-        .print-container {
-            display: none;
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #ccc;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            max-width: 80%;
-            max-height: 80%;
-            overflow-y: auto;
-        }
-        .print-container.visible {
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -60,6 +26,7 @@
                                 <a href="./info.html" class="dropdown-item">Eng'r Information</a>
                                 <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
                                 <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                <a href="./equipment.html" class="dropdown-item">Search Equipment</a>
                                 <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
                                 <button id="sign-out" class="dropdown-item">Logout</button>
                             </div>
