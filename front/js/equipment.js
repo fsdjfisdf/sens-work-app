@@ -33,6 +33,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     let warrantyChartInstance = null;
     let typeChartInstance = null;
 
+    const siteLineOrder = {
+        "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
+        "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
+        "IC": ["M10", "M14", "M16", "R3"],
+        "CJ": ["M11", "M12", "M15"]
+    };
+
+    const siteColors = {
+        "PT": 'rgba(75, 192, 192, 0.2)',
+        "HS": 'rgba(153, 102, 255, 0.2)',
+        "IC": 'rgba(255, 206, 86, 0.2)',
+        "CJ": 'rgba(54, 162, 235, 0.2)'
+    };
+
+    const siteBorderColors = {
+        "PT": 'rgba(75, 192, 192, 1)',
+        "HS": 'rgba(153, 102, 255, 1)',
+        "IC": 'rgba(255, 206, 86, 1)',
+        "CJ": 'rgba(54, 162, 235, 1)'
+    };
+
     function formatDate(dateString) {
         const date = new Date(dateString);
         const year = date.getFullYear();
@@ -116,23 +137,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             return acc;
         }, {});
 
+        console.log('Line Data:', lineData);
+        console.log('Warranty Data:', warrantyData);
+        console.log('Type Data:', typeData);
+
         if (lineChartInstance) lineChartInstance.destroy();
         if (warrantyChartInstance) warrantyChartInstance.destroy();
         if (typeChartInstance) typeChartInstance.destroy();
 
-        const lineMaxValue = calculateMaxValue(Object.values(lineData).map(value => (value / totalEquipments) * 100));
-        const warrantyMaxValue = calculateMaxValue(Object.values(warrantyData).map(value => (value / totalEquipments) * 100));
-        const typeMaxValue = calculateMaxValue(Object.values(typeData).map(value => (value / totalEquipments) * 100));
+        const sortedLineLabels = Object.keys(siteLineOrder).reduce((acc, site) => {
+            const lines = siteLineOrder[site].filter(line => lineData[line]);
+            lines.sort((a, b) => lineData[b] - lineData[a]);
+            return acc.concat(lines);
+        }, []);
+
+        const linePercentData = sortedLineLabels.map(label => (lineData[label] / totalEquipments) * 100);
+        const lineMaxValue = calculateMaxValue(linePercentData);
+
+        const lineBackgroundColors = sortedLineLabels.map(label => {
+            const site = Object.keys(siteLineOrder).find(site => siteLineOrder[site].includes(label));
+            return siteColors[site];
+        });
+
+        const lineBorderColors = sortedLineLabels.map(label => {
+            const site = Object.keys(siteLineOrder).find(site => siteLineOrder[site].includes(label));
+            return siteBorderColors[site];
+        });
 
         lineChartInstance = new Chart(lineChart, {
             type: 'bar',
             data: {
-                labels: Object.keys(lineData).sort((a, b) => lineData[b] - lineData[a]),
+                labels: sortedLineLabels,
                 datasets: [{
                     label: 'Line',
-                    data: Object.values(lineData).map(value => (value / totalEquipments) * 100),
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
+                    data: linePercentData,
+                    backgroundColor: lineBackgroundColors,
+                    borderColor: lineBorderColors,
                     borderWidth: 1
                 }]
             },
@@ -180,13 +220,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        const warrantyLabels = Object.keys(warrantyData).sort((a, b) => warrantyData[b] - warrantyData[a]);
+        const warrantyPercentData = warrantyLabels.map(label => (warrantyData[label] / totalEquipments) * 100);
+        const warrantyMaxValue = calculateMaxValue(warrantyPercentData);
+
         warrantyChartInstance = new Chart(warrantyChart, {
             type: 'bar',
             data: {
-                labels: Object.keys(warrantyData),
+                labels: warrantyLabels,
                 datasets: [{
                     label: 'Warranty',
-                    data: Object.values(warrantyData).map(value => (value / totalEquipments) * 100),
+                    data: warrantyPercentData,
                     backgroundColor: 'rgba(153, 102, 255, 0.2)',
                     borderColor: 'rgba(153, 102, 255, 1)',
                     borderWidth: 1
@@ -236,13 +280,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        const typeLabels = Object.keys(typeData).sort((a, b) => typeData[b] - typeData[a]);
+        const typePercentData = typeLabels.map(label => (typeData[label] / totalEquipments) * 100);
+        const typeMaxValue = calculateMaxValue(typePercentData);
+
         typeChartInstance = new Chart(typeChart, {
             type: 'bar',
             data: {
-                labels: Object.keys(typeData),
+                labels: typeLabels,
                 datasets: [{
                     label: 'EQ TYPE',
-                    data: Object.values(typeData).map(value => (value / totalEquipments) * 100),
+                    data: typePercentData,
                     backgroundColor: 'rgba(255, 206, 86, 0.2)',
                     borderColor: 'rgba(255, 206, 86, 1)',
                     borderWidth: 1
@@ -350,24 +398,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         lineSelect.innerHTML = '<option value="">Search by Line</option>';
       
         // SITE에 따른 LINE 옵션 정의
-        const lineOptions = {
-          "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
-          "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3",  "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
-          "IC": ["M10", "M14", "M16", "R3"],
-          "CJ": ["M11", "M12", "M15"],
-          "PSKH": ["PSKH"] // PSKH의 경우 선택할 수 있는 하나의 옵션만 존재
-        };
+        const lineOptions = siteLineOrder[siteSelection] || [];
       
         // 선택된 SITE에 맞는 LINE 옵션 추가
-        if (lineOptions[siteSelection]) {
-          lineOptions[siteSelection].forEach(function(line) {
+        lineOptions.forEach(function(line) {
             const option = document.createElement('option');
             option.value = line;
             option.textContent = line;
             lineSelect.appendChild(option);
-          });
-        }
-      });
+        });
+    });
 
     loadEquipment();
 });
