@@ -59,9 +59,16 @@
                         <option value="">EQ Type</option>
                         <option value="SUPRA N">SUPRA N</option>
                         <option value="SUPRA NM">SUPRA NM</option>
+                        <option value="SUPRA III">SUPRA III</option>
+                        <option value="SUPRA IV">SUPRA IV</option>
+                        <option value="SUPRA V">SUPRA V</option>    
+                        <option value="SUPRA Vplus">SUPRA Vplus</option>     
+                        <option value="SUPRA VM">SUPRA VM</option>    
+                        <option value="SUPRA XP">SUPRA XP</option>               
                         <option value="TERA21">TERA21</option>
-                        <option value="SUPRA XP">SUPRA XP</option>
-                        <option value="INTEGER">INTEGER</option>
+                        <option value="INTEGER IVr">INTEGER IVr</option>
+                        <option value="INTEGER plus">INTEGER plus</option>
+                        <option value="INTEGER XP">INTEGER XP</option>
                         <option value="PRECIA">PRECIA</option>
                         <option value="ECOLITE">ECOLITE</option>
                         <option value="JENEVA">JENEVA</option>
@@ -81,13 +88,13 @@
                             <tr>
                                 <th>Group</th>
                                 <th>Site</th>
-                                <th>TYPE</th>
+                                <th>EQ TYPE</th>
                                 <th>EQ NAME</th>
-                                <th>Line</th>
-                                <th>Bay</th>
-                                <th>Warranty Status</th>
-                                <th>Start Date</th>
-                                <th>End Date</th>
+                                <th>LINE</th>
+                                <th>FLOOR</th>                               
+                                <th>BAY</th>
+                                <th>WARRANTY</th>
+                                <th>END DATE</th>
                             </tr>
                         </thead>
                         <tbody id="equipment-tbody">
@@ -123,13 +130,6 @@
             <p>Developed by PEE1 Jeong Hyeon Woo</p>
         </div>
     </footer>
-
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="modalClose">&times;</span>
-            <canvas id="modalCanvas"></canvas>
-        </div>
-    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

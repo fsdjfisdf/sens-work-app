@@ -24,9 +24,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const lineChart = document.getElementById('lineChart').getContext('2d');
     const warrantyChart = document.getElementById('warrantyChart').getContext('2d');
     const typeChart = document.getElementById('typeChart').getContext('2d');
-    const modal = document.getElementById('modal');
-    const modalClose = document.getElementById('modalClose');
-    const modalCanvas = document.getElementById('modalCanvas').getContext('2d');
 
     let equipments = [];
     let filteredEquipments = [];
@@ -35,7 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lineChartInstance = null;
     let warrantyChartInstance = null;
     let typeChartInstance = null;
-    let modalChartInstance = null;
 
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -88,9 +84,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${equipment.TYPE}</td>
                 <td>${equipment.EQNAME}</td>
                 <td>${equipment.LINE}</td>
+                <td>${equipment.FLOOR}</td>
                 <td>${equipment.BAY}</td>
                 <td>${equipment.WARRANTY_STATUS}</td>
-                <td>${formatDate(equipment.START_DATE)}</td>
                 <td>${formatDate(equipment.END_DATE)}</td>
             `;
             equipmentTbody.appendChild(equipmentRow);
@@ -142,9 +138,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             plugins: [ChartDataLabels],
             options: {
-                indexAxis: 'y',
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
                         max: lineMaxValue,
                         ticks: {
@@ -154,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     },
-                    y: {
+                    x: {
                         ticks: {
                             font: {
                                 size: 14
@@ -199,9 +194,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             plugins: [ChartDataLabels],
             options: {
-                indexAxis: 'y',
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
                         max: warrantyMaxValue,
                         ticks: {
@@ -211,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     },
-                    y: {
+                    x: {
                         ticks: {
                             font: {
                                 size: 14
@@ -256,9 +250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             plugins: [ChartDataLabels],
             options: {
-                indexAxis: 'y',
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
                         max: typeMaxValue,
                         ticks: {
@@ -268,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     },
-                    y: {
+                    x: {
                         ticks: {
                             font: {
                                 size: 14
@@ -377,80 +370,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
     loadEquipment();
-
-    function showModal(chartInstance) {
-        modal.style.display = 'block';
-        if (modalChartInstance) {
-            modalChartInstance.destroy();
-        }
-        const totalEquipments = chartInstance.data.datasets[0].data.reduce((a, b) => a + b, 0);
-        const modalMaxValue = calculateMaxValue(chartInstance.data.datasets[0].data.map(value => (value / totalEquipments) * 100));
-        modalChartInstance = new Chart(modalCanvas, {
-            type: 'bar',
-            data: chartInstance.data,
-            options: {
-                plugins: {
-                    title: {
-                        display: true,
-                        text: chartInstance.options.plugins.title.text
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const count = chartInstance.data.datasets[0].data[context.dataIndex];
-                                const percentage = ((count / totalEquipments) * 100).toFixed(2) + '%';
-                                return `${count} (${percentage})`;
-                            }
-                        }
-                    },
-                    datalabels: {
-                        formatter: (value, ctx) => {
-                            const count = chartInstance.data.datasets[0].data[ctx.dataIndex];
-                            return `${count} (${value.toFixed(2)}%)`;
-                        },
-                        color: '#000',
-                        anchor: 'end',
-                        align: 'end',
-                        display: true
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: modalMaxValue,
-                        ticks: {
-                            callback: value => value + '%',
-                            font: {
-                                size: 14
-                            }
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                size: 14
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function closeModal() {
-        modal.style.display = 'none';
-        if (modalChartInstance) {
-            modalChartInstance.destroy();
-        }
-    }
-
-    lineChart.canvas.parentNode.addEventListener('click', () => showModal(lineChartInstance));
-    warrantyChart.canvas.parentNode.addEventListener('click', () => showModal(warrantyChartInstance));
-    typeChart.canvas.parentNode.addEventListener('click', () => showModal(typeChartInstance));
-    modalClose.addEventListener('click', closeModal);
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
 });
