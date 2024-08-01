@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch(`http://3.37.165.84/api/equipment?eqname=${equipmentName}`)
+        fetch(`http://3.37.165.84:3001/api/equipment?eqname=${equipmentName}`)
             .then(response => {
                 console.log('Response status:', response.status); // 응답 상태 코드 확인
                 return response.json();
