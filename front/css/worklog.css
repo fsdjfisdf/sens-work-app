@@ -202,7 +202,7 @@ h3 {
 
 .form-row input[type="text"],
 .form-row input[type="date"],
-.form-row input[type="time"],
+	form-row input[type="time"],
 .form-row input[type="number"],
 .form-row select,
 .form-row textarea,
@@ -216,7 +216,7 @@ h3 {
     background-color: #f8f9fa;
 }
 
-.form-row input[type="text"]:focus,
+.form-row.input[type="text"]:focus,
 .form-row input[type="date"]:focus,
 .form-row input[type="time"]:focus,
 .form-row input[type="number"]:focus,
@@ -340,6 +340,10 @@ h3 {
 
 .btn-add:hover {
     background-color: #218838;
+}
+
+.form-row-wide select {
+    width: calc(100% - 20px); /* Adjust width */
 }
 
 .print-container {
