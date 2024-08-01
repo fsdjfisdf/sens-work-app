@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        fetch(`/api/equipment?eqname=${equipmentName}`)
+        fetch(`http://3.37.165.84/api/equipment?eqname=${equipmentName}`)
             .then(response => response.json())
             .then(data => {
                 console.log('Fetched data:', data); // 콘솔에 데이터를 출력하여 확인
