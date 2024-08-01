@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', async () => {
+
+    
+    function checkLogin() {
+        const token = localStorage.getItem('x-access-token');
+        if (!token) {
+            alert("로그인이 필요합니다.");
+            window.location.replace("./signin.html");
+            return false;
+        }
+        return true;
+    }
+
+    
   function getTodayDate() {
       const today = new Date();
       const year = today.getFullYear();
@@ -6,6 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const day = String(today.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
   }
+
+  
+
 
   document.getElementById('task_date').value = getTodayDate();
 
@@ -187,7 +203,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (error) {
       }
   });
-
+  if (checkLogin()) {
+    await loadEngineers();
+    await loadWorkLogs();
+    renderCalendar(logs, engineers, currentYear, currentMonth);
+}
   const signOutButton = document.querySelector("#sign-out");
 
   if (signOutButton) {

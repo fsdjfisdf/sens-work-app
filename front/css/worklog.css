@@ -567,3 +567,15 @@ footer {
     color: #0044cc;
     font-weight: bold;
 }
+
+
+/* 추가 스타일 */
+.input-button-row {
+    display: flex;
+    gap: 10px;
+}
+
+.input-button-row input[type="text"] {
+    flex-grow: 1;
+}
+

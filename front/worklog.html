@@ -40,7 +40,14 @@
                 <button id="paste-button" class="btn-paste">PASTE</button>
                 <form id="worklogForm" class="form">
                     <div class="form-step active" data-step="1">
-                        <h3>Step 1: 기본 정보</h3>
+                        <h3>Step 1: 설비 및 기본 정보</h3>
+                        <div class="form-row">
+                            <label for="equipment_name">EQ NAME</label>
+                            <div class="input-button-row">
+                                <input type="text" id="equipment_name" name="equipment_name" required>
+                                <button type="button" id="check-warranty" class="btn-primary">CHECK</button>
+                            </div>
+                        </div>
                         <div class="form-row">
                             <label for="group">GROUP</label>
                             <select id="group" name="group" required>
@@ -67,14 +74,6 @@
                                 <option value="SELECT">SELECT</option>
                             </select>
                         </div>
-                        <p class="form-description">작업자의 기본 정보를 입력하세요</p><br>
-                        <div class="form-buttons">
-                            <button type="button" class="btn-secondary prev-step" style="visibility: hidden;">이전</button>
-                            <button type="button" class="btn-primary next-step">다음</button>
-                        </div>
-                    </div>
-                    <div class="form-step" data-step="2">
-                        <h3>Step 2: 설비 정보</h3>
                         <div class="form-row">
                             <label for="equipment_type">EQ TYPE</label>
                             <select id="equipment_type" name="equipment_type" required>
@@ -88,11 +87,6 @@
                             </select>
                         </div>
                         <div class="form-row">
-                            <label for="equipment_name">EQ NAME</label>
-                            <input type="text" id="equipment_name" name="equipment_name" required>
-                            <button type="button" id="check-warranty" class="btn-primary">Warranty check</button>
-                        </div>
-                        <div class="form-row">
                             <label for="warranty">WARRANTY</label>
                             <select id="warranty" name="warranty" required>
                                 <option value="SELECT">SELECT</option>
@@ -100,14 +94,13 @@
                                 <option value="WO">WO</option>
                             </select>
                         </div>
-                        <p class="form-description">설비 종류와 설비 명을 입력하세요.<br>Warranty Check 버튼을 누르시면 워런티 상태를 확인합니다.</p><br>
+                        <p class="form-description">설비 정보를 입력한 후 CHECK 버튼을 누르면 자동으로 항목들이 채워집니다.</p><br>
                         <div class="form-buttons">
-                            <button type="button" class="btn-secondary prev-step">이전</button>
                             <button type="button" class="btn-primary next-step">다음</button>
                         </div>
                     </div>
-                    <div class="form-step" data-step="3">
-                        <h3>Step 3: 작업 정보</h3>
+                    <div class="form-step" data-step="2">
+                        <h3>Step 2: 작업 정보</h3>
                         <div class="form-row">
                             <label for="workType">WORK TYPE</label>
                             <select id="workType" name="workType" required>
@@ -161,8 +154,8 @@
                             <button type="button" class="btn-primary next-step">다음</button>
                         </div>
                     </div>
-                    <div class="form-step" data-step="4">
-                        <h3>Step 4: 작업자 정보 및 SOP/TS GUIDE</h3>
+                    <div class="form-step" data-step="3">
+                        <h3>Step 3: 작업자 정보 및 SOP/TS GUIDE</h3>
                         <div id="task-mans-container" class="form-group">
                             <label>WORKER</label>
                             <div class="task-man-container">
@@ -202,8 +195,8 @@
                             <button type="button" class="btn-primary next-step">다음</button>
                         </div>
                     </div>
-                    <div class="form-step" data-step="5">
-                        <h3>Step 5: 날짜 및 시간</h3>
+                    <div class="form-step" data-step="4">
+                        <h3>Step 4: 날짜 및 시간</h3>
                         <div class="form-row">
                             <label for="task_date">WORK DATE</label>
                             <input type="date" id="task_date" name="task_date" required>
@@ -230,8 +223,8 @@
                             <button type="button" class="btn-primary next-step">다음</button>
                         </div>
                     </div>
-                    <div class="form-step" data-step="6">
-                        <h3>Step 6: 작업 내용</h3>
+                    <div class="form-step" data-step="5">
+                        <h3>Step 5: 작업 내용</h3>
                         <div class="form-row">
                             <label for="task_name">TITLE</label>
                             <input type="text" id="task_name" name="task_name" required>

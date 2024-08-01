@@ -51,6 +51,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE2-HS': { weekday: 0, weekend: 0 },
             'PEE3-PSKH': { weekday: 0, weekend: 0 }
         },
+        '2024-08': {
+            'PEE1-PT': { weekday: 17, weekend: 3 },
+            'PEE1-HS': { weekday: 17, weekend: 4 },
+            'PEE1-IC': { weekday: 4, weekend: 0.5 },
+            'PEE1-CJ': { weekday: 4, weekend: 0.5 },
+            'PEE2-PT': { weekday: 8, weekend: 1 },
+            'PEE2-HS': { weekday: 6, weekend: 1 },
+            'PEE3-PSKH': { weekday: 0, weekend: 0 }
+        },
         // 각 월별로 데이터를 추가
     };
 
@@ -90,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('logs', JSON.stringify(logs)); // logs 데이터를 localStorage에 저장
             displayOverallStats(logs, engineers);
             renderMonthlyWorktimeChart(logs);
-            renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS');
+            renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS', 'PEE1', 'IC');
             renderLineWorkStatsChart(logs); // 새로운 그래프 호출
             renderWorkTypeStatsChart(logs); // 새로운 그래프 호출
             renderEquipmentTypeStatsChart(logs); // 새로운 그래프 호출
