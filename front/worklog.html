@@ -8,8 +8,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="./css/worklog.css" />
-    <style>
-    </style>
 </head>
 <body>
     <nav>
@@ -17,8 +15,7 @@
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
                 <div class="sign-container">
-                    <div class="unsigned hidden">
-                    </div>
+                    <div class="unsigned hidden"></div>
                     <div class="signed hidden">
                         <div class="dropdown">
                             <button class="dropbtn">MENU</button>
@@ -40,11 +37,11 @@
     <main>
         <section id="worklog-form">
             <div class="inner">
-                <br><br>
-                <button id="paste-button">PASTE</button>
-                <form id="worklogForm">
-                    <div>
-                        <div>
+                <button id="paste-button" class="btn-paste">PASTE</button>
+                <form id="worklogForm" class="form">
+                    <div class="form-step active" data-step="1">
+                        <h3>Step 1: 기본 정보</h3>
+                        <div class="form-row">
                             <label for="group">GROUP</label>
                             <select id="group" name="group" required>
                                 <option value="SELECT">SELECT</option>
@@ -53,7 +50,7 @@
                                 <option value="PEE3">PEE3</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="site">SITE</label>
                             <select id="site" name="site" required>
                                 <option value="SELECT">SELECT</option>
@@ -64,13 +61,21 @@
                                 <option value="PSKH">PSKH</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="line">LINE</label>
                             <select id="line" name="line" required>
                                 <option value="SELECT">SELECT</option>
                             </select>
                         </div>
-                        <div>
+                        <p class="form-description">적절한 그룹, 사이트 및 라인을 선택하세요.</p>
+                        <div class="form-buttons">
+                            <button type="button" class="btn-secondary prev-step" style="visibility: hidden;">이전</button>
+                            <button type="button" class="btn-primary next-step">다음</button>
+                        </div>
+                    </div>
+                    <div class="form-step" data-step="2">
+                        <h3>Step 2: 장비 정보</h3>
+                        <div class="form-row">
                             <label for="equipment_type">EQ TYPE</label>
                             <select id="equipment_type" name="equipment_type" required>
                                 <option value="SELECT">SELECT</option>
@@ -82,20 +87,29 @@
                                 <option value="JENEVA">JENEVA</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="equipment_name">EQ NAME</label>
                             <input type="text" id="equipment_name" name="equipment_name" required>
+                            <button type="button" id="check-warranty" class="btn-primary">워런티 확인</button>
                         </div>
-                        <div>
-                            <label for="warranty">warranty</label>
+                        <div class="form-row">
+                            <label for="warranty">WARRANTY</label>
                             <select id="warranty" name="warranty" required>
                                 <option value="SELECT">SELECT</option>
                                 <option value="WI">WI</option>
                                 <option value="WO">WO</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="workType">WORKTYPE</label>
+                        <p class="form-description">장비의 세부 정보를 입력하세요. 유형, 이름 및 보증 상태를 포함합니다.</p>
+                        <div class="form-buttons">
+                            <button type="button" class="btn-secondary prev-step">이전</button>
+                            <button type="button" class="btn-primary next-step">다음</button>
+                        </div>
+                    </div>
+                    <div class="form-step" data-step="3">
+                        <h3>Step 3: 작업 정보</h3>
+                        <div class="form-row">
+                            <label for="workType">WORK TYPE</label>
                             <select id="workType" name="workType" required>
                                 <option value="SELECT">SELECT</option>
                                 <option value="SET UP">SET UP</option>
@@ -103,7 +117,7 @@
                                 <option value="MAINT">MAINT</option>
                             </select>
                         </div>
-                        <div id="additionalOptions" class="additionalOption" style="display:none;">
+                        <div id="additionalOptions" class="form-row" style="display:none;">
                             <label for="additionalWorkType">SET UP ITEM</label>
                             <select id="additionalWorkType" name="additionalWorkType">
                                 <option value="SELECT">SELECT</option>
@@ -129,34 +143,39 @@
                                 <option value="MAINTENANCE">MAINTENANCE</option>
                             </select>
                         </div>
-                        <div id="maintOptions" class="maintOption" style="display:none;">
+                        <div id="maintOptions" class="form-row" style="display:none;">
                             <label for="maintOptionSelect">MAINT ITEM</label>
                             <select id="maintOptionSelect" name="maintOption">
                                 <option value="SELECT">SELECT</option>
                             </select>
                         </div>
-                        <div id="transferOptions" class="transferOption" style="display:none;">
+                        <div id="transferOptions" class="form-row" style="display:none;">
                             <label for="transferOptionSelect">TRANSFER ITEM</label>
                             <select id="transferOptionSelect" name="transferOption">
                                 <option value="SELECT">SELECT</option>
                             </select>
                         </div>
-                        <div id="task-mans-container">
-                            <div class="label-container">
-                                <label>WORKER</label>
-                                <div class="add-remove-buttons">
-                                    <button type="button" id="add-task-man">+</button>
-                                </div>
-                            </div>
+                        <p class="form-description">적절한 작업 유형과 해당되는 추가 옵션을 선택하세요.</p>
+                        <div class="form-buttons">
+                            <button type="button" class="btn-secondary prev-step">이전</button>
+                            <button type="button" class="btn-primary next-step">다음</button>
+                        </div>
+                    </div>
+                    <div class="form-step" data-step="4">
+                        <h3>Step 4: 작업자 정보</h3>
+                        <div id="task-mans-container" class="form-group">
+                            <label>WORKER</label>
                             <div class="task-man-container">
                                 <textarea name="task_man" class="task-man-input" required></textarea>
                                 <select name="task_man_role" class="task-man-select" required>
                                     <option value="main">main</option>
                                     <option value="support">support</option>
                                 </select>
+                                <button type="button" class="remove-field btn-remove" disabled>-</button>
                             </div>
+                            <button type="button" id="add-task-man" class="btn-add">작업자 추가 +</button>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="SOP">SOP</label>
                             <select id="SOP" name="SOP" required>
                                 <option value="Not Utilized (No Need)">Not Utilized (No Need)</option>
@@ -165,8 +184,8 @@
                                 <option value="No document (Need)">No document (Need)</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="tsguide">TS guide</label>
+                        <div class="form-row">
+                            <label for="tsguide">TS GUIDE</label>
                             <select id="tsguide" name="tsguide" required>
                                 <option value="Not Utilized (No Need)">Not Utilized (No Need)</option>
                                 <option value="Utilized">Utilized</option>
@@ -174,76 +193,82 @@
                                 <option value="No document (Need)">No document (Need)</option>
                             </select>
                         </div>
-                        <div>
+                        <p class="form-description">작업자 정보를 추가하고 SOP와 TS 가이드를 선택하세요.</p>
+                        <div class="form-buttons">
+                            <button type="button" class="btn-secondary prev-step">이전</button>
+                            <button type="button" class="btn-primary next-step">다음</button>
+                        </div>
+                    </div>
+                    <div class="form-step" data-step="5">
+                        <h3>Step 5: 작업 시간 및 기타 정보</h3>
+                        <div class="form-row">
                             <label for="task_date">WORK DATE</label>
                             <input type="date" id="task_date" name="task_date" required>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="start_time">START TIME</label>
                             <input type="time" id="start_time" name="start_time" required>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="end_time">END TIME</label>
                             <input type="time" id="end_time" name="end_time" required>
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="noneTime">NONE TIME</label>
                             <input type="number" id="noneTime" name="noneTime">
                         </div>
-                        <div>
+                        <div class="form-row">
                             <label for="moveTime">MOVE TIME</label>
                             <input type="number" id="moveTime" name="moveTime">
                         </div>
+                        <p class="form-description">작업 날짜, 시작 및 종료 시간, 그리고 추가 시간을 입력하세요.</p>
+                        <div class="form-buttons">
+                            <button type="button" class="btn-secondary prev-step">이전</button>
+                            <button type="button" class="btn-primary next-step">다음</button>
+                        </div>
                     </div>
-                    <div>
-                        <label for="task_name">TITLE</label>
-                        <input type="text" id="task_name" name="task_name" required>
-                    </div>
-                    <div>
-                        <label for="status">STATUS</label>
-                        <input type="text" id="status" name="status" required>
-                    </div>
-                    <div id="task-descriptions-container">
-                        <div class="label-container">
+                    <div class="form-step" data-step="6">
+                        <h3>Step 6: 작업 내용</h3>
+                        <div class="form-row">
+                            <label for="task_name">TITLE</label>
+                            <input type="text" id="task_name" name="task_name" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="status">STATUS</label>
+                            <input type="text" id="status" name="status" required>
+                        </div>
+                        <div id="task-descriptions-container" class="form-group">
                             <label>ACTION</label>
-                            <div class="add-remove-buttons">
-                                <button type="button" id="add-task-description">+</button>
+                            <div class="task-description-container">
+                                <textarea name="task_description" class="task-description-input" required></textarea>
+                                <button type="button" class="remove-field btn-remove" disabled>-</button>
                             </div>
+                            <button type="button" id="add-task-description" class="btn-add">작업 내용 추가 +</button>
                         </div>
-                        <div class="task-description-container">
-                            <textarea name="task_description" class="task-description-input" required></textarea>
-                        </div>
-                    </div>
-                    <div id="task-causes-container">
-                        <div class="label-container">
+                        <div id="task-causes-container" class="form-group">
                             <label>CAUSE</label>
-                            <div class="add-remove-buttons">
-                                <button type="button" id="add-task-cause">+</button>
+                            <div class="task-cause-container">
+                                <textarea name="task_cause" class="task-cause-input" required></textarea>
+                                <button type="button" class="remove-field btn-remove" disabled>-</button>
                             </div>
+                            <button type="button" id="add-task-cause" class="btn-add">원인 추가 +</button>
                         </div>
-                        <div class="task-cause-container">
-                            <textarea name="task_cause" class="task-cause-input" required></textarea>
-                        </div>
-                    </div>
-                    <div id="task-results-container">
-                        <div class="label-container">
+                        <div id="task-results-container" class="form-group">
                             <label>RESULT</label>
-                            <div class="add-remove-buttons">
-                                <button type="button" id="add-task-result">+</button>
+                            <div class="task-result-container">
+                                <textarea name="task_result" class="task-result-input" required></textarea>
+                                <button type="button" class="remove-field btn-remove" disabled>-</button>
                             </div>
+                            <button type="button" id="add-task-result" class="btn-add">결과 추가 +</button>
                         </div>
-                        <div class="task-result-container">
-                            <textarea name="task_result" class="task-result-input" required></textarea>
+                        <p class="form-description">작업에서 수행된 작업, 원인 및 결과를 기술하세요.</p>
+                        <div class="form-buttons">
+                            <button type="button" class="btn-secondary prev-step">이전</button>
+                            <button type="button" class="btn-primary" id="preview-save">미리보기</button>
+                            <button type="submit" style="display: none;" id="save-button">저장</button>
                         </div>
                     </div>
-                    <div>
-                        <button type="button" id="preview-save">SAVE</button>
-                        <button type="submit" style="display: none;" id="save-button">SAVE</button>
-                    </div>
-                    <div>
-                        <button id="print-inform">PRINT INFORM</button>
-                        <button id="copy-inform">COPY</button><br>
-                    </div>
+                    
                 </form>
             </div>
         </section>
@@ -269,17 +294,16 @@
         <br>
         <p>내용을 잘 확인하신 후 <strong>SAVE</strong> 버튼을 눌러주세요.</p>
         <div class="modal-buttons">
-            <button type="button" id="confirm-save">SAVE</button>
-            <button type="button" id="cancel-save">CANCEL</button>
+            <button type="button" id="confirm-save" class="btn-primary">SAVE</button>
+            <button type="button" id="cancel-save" class="btn-secondary">CANCEL</button>
         </div>
     </div>
-    
 
     <div id="popup">
         <h3>PASTE INFORM</h3>
         <textarea id="paste-textarea"></textarea>
-        <button id="paste-submit">WRITE</button>
-        <button id="paste-cancel">CANCEL</button>
+        <button id="paste-submit" class="btn-primary">WRITE</button>
+        <button id="paste-cancel" class="btn-secondary">CANCEL</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -289,10 +313,10 @@
     <script src="./js/url.js"></script>
     <script src="./js/worklog.js"></script>
     <script src="./js/site.js"></script>
-    <script src="./js/addandremove.js"></script>
     <script src="./js/printInform.js"></script>
     <script src="./js/maintOption.js"></script>
     <script src="./js/paste.js"></script>
+    <script src="./js/equipmentwarranty.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
@@ -323,6 +347,102 @@
                 });
             }
         });
+
+        document.querySelectorAll('.next-step').forEach(button => {
+            button.addEventListener('click', () => {
+                const currentStep = document.querySelector('.form-step.active');
+                const nextStep = document.querySelector(`.form-step[data-step="${parseInt(currentStep.dataset.step) + 1}"]`);
+                currentStep.classList.add('fade-out');
+                setTimeout(() => {
+                    currentStep.classList.remove('active', 'fade-out');
+                    nextStep.classList.add('active', 'fade-in');
+                }, 150);
+            });
+        });
+
+        document.querySelectorAll('.prev-step').forEach(button => {
+            button.addEventListener('click', () => {
+                const currentStep = document.querySelector('.form-step.active');
+                const prevStep = document.querySelector(`.form-step[data-step="${parseInt(currentStep.dataset.step) - 1}"]`);
+                currentStep.classList.add('fade-out');
+                setTimeout(() => {
+                    currentStep.classList.remove('active', 'fade-out');
+                    prevStep.classList.add('active', 'fade-in');
+                }, 150);
+            });
+        });
+
+        function setupDynamicFields(containerId, inputClass, template) {
+            const container = document.getElementById(containerId);
+            const addButton = container.querySelector(`#add-${inputClass}`);
+            
+            addButton.addEventListener('click', function() {
+                const newField = document.createElement('div');
+                newField.className = `${inputClass}-container`;
+                newField.innerHTML = template;
+                container.insertBefore(newField, addButton);
+
+                newField.querySelector('.remove-field').addEventListener('click', function() {
+                    newField.remove();
+                    updateRemoveButtons(container, inputClass);
+                });
+
+                updateRemoveButtons(container, inputClass);
+            });
+
+            new Sortable(container, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                handle: `.${inputClass}-container`,
+            });
+
+            updateRemoveButtons(container, inputClass);
+        }
+
+        function updateRemoveButtons(container, inputClass) {
+            const items = container.querySelectorAll(`.${inputClass}-container`);
+            items.forEach(item => {
+                const removeButton = item.querySelector('.remove-field');
+                removeButton.disabled = items.length === 1;
+            });
+        }
+
+        const taskManTemplate = `
+            <div class="task-man-container">
+                <textarea name="task_man" class="task-man-input" required></textarea>
+                <select name="task_man_role" class="task-man-select" required>
+                    <option value="main">main</option>
+                    <option value="support">support</option>
+                </select>
+                <button type="button" class="remove-field btn-remove">-</button>
+            </div>
+        `;
+
+        const taskResultTemplate = `
+            <div class="task-result-container">
+                <textarea name="task_result" class="task-result-input" required></textarea>
+                <button type="button" class="remove-field btn-remove">-</button>
+            </div>
+        `;
+
+        const taskCauseTemplate = `
+            <div class="task-cause-container">
+                <textarea name="task_cause" class="task-cause-input" required></textarea>
+                <button type="button" class="remove-field btn-remove">-</button>
+            </div>
+        `;
+
+        const taskDescriptionTemplate = `
+            <div class="task-description-container">
+                <textarea name="task_description" class="task-description-input" required></textarea>
+                <button type="button" class="remove-field btn-remove">-</button>
+            </div>
+        `;
+
+        setupDynamicFields('task-results-container', 'task-result', taskResultTemplate);
+        setupDynamicFields('task-causes-container', 'task-cause', taskCauseTemplate);
+        setupDynamicFields('task-mans-container', 'task-man', taskManTemplate);
+        setupDynamicFields('task-descriptions-container', 'task-description', taskDescriptionTemplate);
     </script>
 </body>
 </html>

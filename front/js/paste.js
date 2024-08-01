@@ -150,8 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newField = document.createElement('div');
                 newField.className = 'task-description-container';
                 newField.innerHTML = `<textarea name="task_description" class="task-description-input" required>${action}</textarea>
-                                      <button type="button" class="remove-field">-</button>`;
-                actionContainer.appendChild(newField);
+                                      <button type="button" class="remove-field btn-remove">-</button>`;
+                actionContainer.insertBefore(newField, actionContainer.querySelector('.btn-add'));
             });
         } else {
             console.error('Action container not found');
@@ -165,8 +165,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newField = document.createElement('div');
                 newField.className = 'task-cause-container';
                 newField.innerHTML = `<textarea name="task_cause" class="task-cause-input" required>${cause}</textarea>
-                                      <button type="button" class="remove-field">-</button>`;
-                causeContainer.appendChild(newField);
+                                      <button type="button" class="remove-field btn-remove">-</button>`;
+                causeContainer.insertBefore(newField, causeContainer.querySelector('.btn-add'));
             });
         } else {
             console.error('Cause container not found');
@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const newField = document.createElement('div');
                 newField.className = 'task-result-container';
                 newField.innerHTML = `<textarea name="task_result" class="task-result-input" required>${result}</textarea>
-                                      <button type="button" class="remove-field">-</button>`;
-                resultContainer.appendChild(newField);
+                                      <button type="button" class="remove-field btn-remove">-</button>`;
+                resultContainer.insertBefore(newField, resultContainer.querySelector('.btn-add'));
             });
         } else {
             console.error('Result container not found');
@@ -225,8 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                           <option value="main">main</option>
                                           <option value="support">support</option>
                                       </select>
-                                      <button type="button" class="remove-field">-</button>`;
-                workersContainer.appendChild(newField);
+                                      <button type="button" class="remove-field btn-remove">-</button>`;
+                workersContainer.insertBefore(newField, workersContainer.querySelector('.btn-add'));
             });
         } else {
             console.error('Workers container not found');
