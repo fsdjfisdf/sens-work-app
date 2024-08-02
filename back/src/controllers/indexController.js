@@ -46,6 +46,9 @@ exports.createJwt = async function (req, res) {
         secret.jwtsecret
       );
 
+            // 로그인 성공 시 nickname을 콘솔에 출력
+            console.log(`User logged in: ${nickname}`);
+
       return res.send({
         result: { jwt: token },
         isSuccess: true,
