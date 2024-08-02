@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p><strong>Transfer Item:</strong> ${log.transfer_item}</p>
                 <p><strong>Task Duration:</strong> ${formatDuration(log.task_duration)}</p>
                 <div class="actions">
-                    ${log.task_man.includes(currentUserNickname) || userRole === 'admin' ? `
+                    ${log.task_man.includes(currentUserNickname) || userRole === 'admin' || userRole === 'editor' ? `
                     <button class="delete-log" data-id="${log.id}">X</button>
                     <button class="edit-log" data-id="${log.id}">Edit</button>` : ''}
                 </div>

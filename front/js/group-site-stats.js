@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('logs', JSON.stringify(logs)); // logs 데이터를 localStorage에 저장
             displayOverallStats(logs, engineers);
             renderMonthlyWorktimeChart(logs);
-            renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS', 'PEE1', 'IC');
+            renderOperationRateChart(logs, engineers, 'PEE1', 'PT', 'PEE1', 'HS', 'PEE1', 'IC', 'PEE1', 'CJ', 'PEE2', 'PT', 'PEE2', 'HS');
             renderLineWorkStatsChart(logs); // 새로운 그래프 호출
             renderWorkTypeStatsChart(logs); // 새로운 그래프 호출
             renderEquipmentTypeStatsChart(logs); // 새로운 그래프 호출
@@ -115,7 +115,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getMonthlyEngineerCount(group, site, date, availabilityRate = 1) {
-        const month = date.toISOString().slice(0, 7);
+        let month = date.toISOString().slice(0, 7);
+    
+        // 날짜가 1일인 경우 해당 월의 엔지니어 수를 사용하도록 수정
+        if (date.getDate() === 1) {
+            const nextDay = new Date(date);
+            nextDay.setDate(2);
+            month = nextDay.toISOString().slice(0, 7);
+        }
+    
         const dayOfWeek = date.getDay();
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
         if (engineerCount[month] && engineerCount[month][`${group}-${site}`]) {
@@ -479,7 +487,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
         const currentMonthLogs = logs.filter(log => {
             const logDate = new Date(log.task_date);
-            return logDate.getFullYear() === year && logDate.getMonth() === month;
+            const localDate = new Date(logDate.getTime() + (logDate.getTimezoneOffset() * 60000) + (9 * 3600000)); // 서버 시간 9시간 보정
+            return localDate.getFullYear() === year && localDate.getMonth() === month;
         });
 
         const navigationContainer = document.createElement('div');
@@ -587,9 +596,10 @@ document.getElementById('resetButton').addEventListener('click', () => {
             if (searchGroup && searchSite) {
                 totalEngineers = getMonthlyEngineerCount(searchGroup, searchSite, currentDate, availabilityRate);
             } else if (searchGroup) {
-                totalEngineers = Object.keys(engineerCount).reduce((acc, month) => {
-                    if (engineerCount[month][`${searchGroup}-${searchSite}`]) {
-                        return acc + (isWeekend ? engineerCount[month][`${searchGroup}-${searchSite}`].weekend : engineerCount[month][`${searchGroup}-${searchSite}`].weekday) * availabilityRate;
+                totalEngineers = Object.keys(engineerCount).reduce((acc, key) => {
+                    if (key.startsWith(`${searchGroup}-`)) {
+                        const site = key.split('-')[1];
+                        return acc + getMonthlyEngineerCount(searchGroup, site, currentDate, availabilityRate);
                     }
                     return acc;
                 }, 0);
@@ -1446,4 +1456,3 @@ document.getElementById('resetButton').addEventListener('click', () => {
         });
     }
 });
-
