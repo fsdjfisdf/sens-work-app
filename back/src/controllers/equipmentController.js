@@ -12,6 +12,11 @@ exports.getEquipments = async (req, res) => {
     }
 
     const [rows] = await pool.query(query, params);
+
+        // 조회 성공 시 콘솔에 로그 출력
+        console.log(`Equipment data retrieved${eqname ? ` for ${eqname}` : ''}`);
+
+    
     res.status(200).json(rows);
   } catch (err) {
     console.error('Error retrieving equipment data:', err);
