@@ -1,14 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Select2 for maintOptionSelect and transferOptionSelect
     $('#maintOptionSelect').select2();
-    $('#transferOptionSelect').select2(); // 추가된 부분
+    $('#transferOptionSelect').select2();
 
     const workTypeSelect = document.getElementById('workType');
     const equipmentTypeSelect = document.getElementById('equipment_type');
     const maintOptionContainer = document.getElementById('maintOptions');
     const maintOptionSelect = document.getElementById('maintOptionSelect');
-    const transferOptionContainer = document.getElementById('transferOptions'); // 추가된 부분
-    const transferOptionSelect = document.getElementById('transferOptionSelect'); // 추가된 부분
+    const transferOptionContainer = document.getElementById('transferOptions');
+    const transferOptionSelect = document.getElementById('transferOptionSelect');
 
     const maintOptions = {
         "SUPRA N": ["SELECT", "LP ESCORT", "EFEM ROBOT TEACHING", "EFEM ROBOT REP", "EFEM ROBOT CONTROLLER", "TM ROBOT TEACHING", "TM ROBOT REP",
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         "JENEVA": ["SELECT"]
     };
 
-    const transferOptions = { // 추가된 부분
+    const transferOptions = {
         "SUPRA N": ["SELECT", "LP ESCORT", "EFEM ROBOT TEACHING", "EFEM ROBOT REP", "EFEM ROBOT CONTROLLER", "TM ROBOT TEACHING", "TM ROBOT REP",
         "TM ROBOT CONTROLLER", "PASSIVE PAD REP", "PIN CYLINDER", "PUSHER CYLINDER", "IB FLOW", "DRT", "FFU CONTROLLER", "FAN", "MOTOR DRIVER",
         "R1","R3","R5","R3 TO R5", "MICROWAVE", "APPLICATOR", "GENERATOR", "CHUCK", "PROCESS KIT", "HELIUM DETECTOR", "HOOK LIFT PIN", "BELLOWS",
@@ -48,32 +48,46 @@ document.addEventListener('DOMContentLoaded', function() {
         "JENEVA": ["SELECT"]
     };
 
+    const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM"];
+    const integerModels = ["INTEGER IVr", "INTEGER plus", "INTEGER XP"];
+
+    // Assign the same options for SUPRA N to other SUPRA models
+    supraModels.forEach(model => {
+        maintOptions[model] = maintOptions["SUPRA N"];
+        transferOptions[model] = transferOptions["SUPRA N"];
+    });
+
+    // Assign the same options for INTEGER to other INTEGER models
+    integerModels.forEach(model => {
+        maintOptions[model] = maintOptions["INTEGER"];
+        transferOptions[model] = transferOptions["INTEGER"];
+    });
+
+    function updateOptions(selectElement, options) {
+        selectElement.innerHTML = "";
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.innerHTML = option;
+            selectElement.appendChild(opt);
+        });
+        $(selectElement).select2(); // re-initialize Select2 with new options
+    }
+
     function updateMaintOptions() {
         if (workTypeSelect.value === 'MAINT') {
-            maintOptionContainer.style.display = 'none';
-            transferOptionContainer.style.display = 'block'; // 추가된 부분
+            maintOptionContainer.style.display = 'block';
+            transferOptionContainer.style.display = 'none';
             const maintOptionsList = maintOptions[equipmentTypeSelect.value] || ["SELECT"];
-            maintOptionSelect.innerHTML = "";
-            maintOptionsList.forEach(option => {
-                const opt = document.createElement('option');
-                opt.value = option;
-                opt.innerHTML = option;
-                maintOptionSelect.appendChild(opt);
-            });
-            $('#maintOptionSelect').select2();
-
-            const transferOptionsList = transferOptions[equipmentTypeSelect.value] || ["SELECT"]; // 추가된 부분
-            transferOptionSelect.innerHTML = ""; // 기존 옵션 초기화
-            transferOptionsList.forEach(option => {
-                const opt = document.createElement('option');
-                opt.value = option;
-                opt.innerHTML = option;
-                transferOptionSelect.appendChild(opt);
-            });
-            $('#transferOptionSelect').select2(); // re-initialize Select2 with new options
+            updateOptions(maintOptionSelect, maintOptionsList);
+        } else if (workTypeSelect.value === 'TRANSFER') {
+            maintOptionContainer.style.display = 'none';
+            transferOptionContainer.style.display = 'block';
+            const transferOptionsList = transferOptions[equipmentTypeSelect.value] || ["SELECT"];
+            updateOptions(transferOptionSelect, transferOptionsList);
         } else {
             maintOptionContainer.style.display = 'none';
-            transferOptionContainer.style.display = 'none'; // 추가된 부분
+            transferOptionContainer.style.display = 'none';
         }
     }
 
