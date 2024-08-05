@@ -37,6 +37,7 @@
             <div class="inner">
                 <h2>Equipment Information</h2>
                 <div class="search-container">
+                    <h3>Search Equipment</h3>
                     <input type="text" id="searchEqName" placeholder="Search by EQ Name">
                     <select id="searchGroup">
                         <option value="">Group</option>
@@ -101,11 +102,40 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div id="work-log-container" class="work-log-container hidden">
-                    <h3>Work Logs for <span id="work-log-eq-name"></span></h3>
-                    <ul id="work-log-list"></ul>
-                </div>
+<!-- 모달 -->
+<div id="worklogModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Work Logs</span>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <table id="worklog-table">
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>WORK TYPE</th>
+                        <th>TITLE</th>
+                        <th>RESULT</th>
+                        <th>WORKER</th>
+                        <th>TASK DURATION</th>
+                    </tr>
+                </thead>
+                <tbody id="worklog-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div id="worklogDetailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Work Log Details</span>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body" id="worklog-detail"></div>
+    </div>
+</div>
 
                 <div class="pagination">
                     <button id="prevPage">&lt;</button>

@@ -25,10 +25,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const warrantyChart = document.getElementById('warrantyChart').getContext('2d');
     const typeChart = document.getElementById('typeChart').getContext('2d');
 
-    const workLogContainer = document.getElementById('work-log-container');
-    const workLogEqName = document.getElementById('work-log-eq-name');
-    const workLogList = document.getElementById('work-log-list');
-
     let equipments = [];
     let filteredEquipments = [];
     let page = 1;
@@ -36,7 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lineChartInstance = null;
     let warrantyChartInstance = null;
     let typeChartInstance = null;
-    let selectedRow = null;
 
     const siteLineOrder = {
         "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
@@ -115,37 +110,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${equipment.WARRANTY_STATUS}</td>
                 <td>${formatDate(equipment.END_DATE)}</td>
             `;
-            equipmentRow.addEventListener('click', () => {
-                if (selectedRow) {
-                    selectedRow.classList.remove('selected');
-                }
-                selectedRow = equipmentRow;
-                equipmentRow.classList.add('selected');
-                displayWorkLogs(equipment.EQNAME);
+            equipmentRow.addEventListener('click', async () => {
+                await loadWorkLogsForEquipment(equipment.EQNAME);
             });
             equipmentTbody.appendChild(equipmentRow);
         });
-    }
-
-    async function displayWorkLogs(equipmentName) {
-        try {
-            const response = await axios.get(`http://3.37.165.84:3001/api/work-logs?equipment_name=${encodeURIComponent(equipmentName)}`);
-            const workLogs = response.data;
-            workLogEqName.textContent = equipmentName;
-            workLogList.innerHTML = '';
-            if (workLogs.length === 0) {
-                workLogList.innerHTML = '<li>No work logs found.</li>';
-            } else {
-                workLogs.forEach(log => {
-                    const logItem = document.createElement('li');
-                    logItem.textContent = `${log.task_date}: ${log.task_description}`;
-                    workLogList.appendChild(logItem);
-                });
-            }
-            workLogContainer.classList.remove('hidden');
-        } catch (error) {
-            console.error('Error fetching work logs:', error);
-        }
     }
 
     function calculateMaxValue(data) {
@@ -176,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Type Data:', typeData);
 
         if (lineChartInstance) lineChartInstance.destroy();
-        if (warrantyChartInstance) lineChartInstance.destroy();
+        if (warrantyChartInstance) warrantyChartInstance.destroy();
         if (typeChartInstance) typeChartInstance.destroy();
 
         const sortedLineLabels = Object.keys(siteLineOrder).reduce((acc, site) => {
@@ -444,4 +413,127 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     loadEquipment();
+
+    // 장비 테이블 행에 클릭 이벤트 추가
+    document.getElementById('equipment-tbody').addEventListener('click', async (event) => {
+        if (event.target && event.target.nodeName === 'TD') {
+            const eqName = event.target.parentElement.querySelector('td:nth-child(4)').innerText;
+            console.log(`Selected Equipment Name: ${eqName}`);
+            await loadWorkLogsForEquipment(eqName);
+        }
+    });
+
+    // 특정 장비의 작업 로그를 조회하는 함수
+    async function loadWorkLogsForEquipment(eqName) {
+        try {
+            const response = await axios.get('http://3.37.165.84:3001/logs');
+            console.log('Work logs API response:', response);
+            const workLogs = response.data.filter(log => log.equipment_name === eqName);
+            if (workLogs.length === 0) {
+                alert('작업 이력이 없습니다.');
+                return;
+            }
+            displayWorkLogs(workLogs);
+        } catch (error) {
+            console.error('Error loading work logs for equipment:', error);
+        }
+    }
+
+    // 작업 로그를 화면에 테이블 형식으로 표시하는 함수
+    function displayWorkLogs(workLogs) {
+        const worklogModal = document.getElementById('worklogModal');
+        const worklogTbody = document.getElementById('worklog-tbody');
+        worklogTbody.innerHTML = '';
+
+        workLogs.forEach(log => {
+            const logRow = document.createElement('tr');
+            logRow.className = 'worklog-row';
+            logRow.innerHTML = `
+                <td>${formatDate(log.task_date)}</td>
+                <td>${log.work_type}</td>
+                <td>${log.task_name}</td>
+                <td>${log.task_result}</td>
+                <td>${log.task_man}</td>
+                <td>${formatDuration(log.task_duration)}</td>
+            `;
+            logRow.addEventListener('click', () => {
+                displayWorkLogDetail(log);
+            });
+            worklogTbody.appendChild(logRow);
+        });
+
+        worklogModal.style.display = 'block';
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDuration(duration) {
+        const parts = duration.split(':');
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+
+        if (hours < 0 || minutes < 0) {
+            return '<span class="error-text">수정 필요</span>';
+        }
+
+        let formattedDuration = '';
+        if (hours > 0) {
+            formattedDuration += `${hours}시간 `;
+        }
+        if (minutes > 0) {
+            formattedDuration += `${minutes}분`;
+        }
+        return formattedDuration.trim() || '0분';
+    }
+
+    // 작업 로그 상세 정보 표시 함수
+    function displayWorkLogDetail(log) {
+        const worklogDetailModal = document.getElementById('worklogDetailModal');
+        const worklogDetail = document.getElementById('worklog-detail');
+        worklogDetail.innerHTML = `
+            <p><strong>Title:</strong> ${log.task_name}</p>
+            <p><strong>Cause:</strong> ${log.task_cause}</p>
+            <p><strong>Result:</strong> ${log.task_result}</p>
+            <p><strong>Description:</strong> ${log.task_description.replace(/<br\s*\/?>/g, '\n')}</p>
+        `;
+        worklogDetailModal.style.display = 'block';
+    }
+
+    // 모달 닫기 이벤트
+    const modalCloseButtons = document.querySelectorAll('.modal .close');
+    modalCloseButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = button.closest('.modal');
+            modal.style.display = 'none';
+        });
+    });
+
+    // 테이블 헤더 크기 조정
+    const headers = document.querySelectorAll('#worklog-table th');
+    headers.forEach(header => {
+        header.addEventListener('mousedown', initResize);
+    });
+
+    function initResize(event) {
+        window.addEventListener('mousemove', resizeColumn);
+        window.addEventListener('mouseup', stopResize);
+        const startX = event.pageX;
+        const startWidth = event.target.offsetWidth;
+
+        function resizeColumn(e) {
+            const newWidth = startWidth + (e.pageX - startX);
+            event.target.style.width = newWidth + 'px';
+        }
+
+        function stopResize() {
+            window.removeEventListener('mousemove', resizeColumn);
+            window.removeEventListener('mouseup', stopResize);
+        }
+    }
 });
