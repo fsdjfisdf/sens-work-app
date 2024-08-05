@@ -2,8 +2,9 @@ const workLogDao = require('../dao/workLogDao');
 
 
 exports.getWorkLogs = async (req, res) => {
+    const { equipment_name } = req.query;
     try {
-        const logs = await workLogDao.getWorkLogs();
+        const logs = await workLogDao.getWorkLogs(equipment_name);
         res.status(200).json(logs);
     } catch (err) {
         res.status(500).json({ error: err.message });

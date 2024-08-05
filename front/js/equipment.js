@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const warrantyChart = document.getElementById('warrantyChart').getContext('2d');
     const typeChart = document.getElementById('typeChart').getContext('2d');
 
+    const workLogContainer = document.getElementById('work-log-container');
+    const workLogEqName = document.getElementById('work-log-eq-name');
+    const workLogList = document.getElementById('work-log-list');
+
     let equipments = [];
     let filteredEquipments = [];
     let page = 1;
@@ -32,6 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lineChartInstance = null;
     let warrantyChartInstance = null;
     let typeChartInstance = null;
+    let selectedRow = null;
 
     const siteLineOrder = {
         "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
@@ -110,8 +115,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${equipment.WARRANTY_STATUS}</td>
                 <td>${formatDate(equipment.END_DATE)}</td>
             `;
+            equipmentRow.addEventListener('click', () => {
+                if (selectedRow) {
+                    selectedRow.classList.remove('selected');
+                }
+                selectedRow = equipmentRow;
+                equipmentRow.classList.add('selected');
+                displayWorkLogs(equipment.EQNAME);
+            });
             equipmentTbody.appendChild(equipmentRow);
         });
+    }
+
+    async function displayWorkLogs(equipmentName) {
+        try {
+            const response = await axios.get(`http://3.37.165.84:3001/api/work-logs?equipment_name=${encodeURIComponent(equipmentName)}`);
+            const workLogs = response.data;
+            workLogEqName.textContent = equipmentName;
+            workLogList.innerHTML = '';
+            if (workLogs.length === 0) {
+                workLogList.innerHTML = '<li>No work logs found.</li>';
+            } else {
+                workLogs.forEach(log => {
+                    const logItem = document.createElement('li');
+                    logItem.textContent = `${log.task_date}: ${log.task_description}`;
+                    workLogList.appendChild(logItem);
+                });
+            }
+            workLogContainer.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error fetching work logs:', error);
+        }
     }
 
     function calculateMaxValue(data) {
@@ -142,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('Type Data:', typeData);
 
         if (lineChartInstance) lineChartInstance.destroy();
-        if (warrantyChartInstance) warrantyChartInstance.destroy();
+        if (warrantyChartInstance) lineChartInstance.destroy();
         if (typeChartInstance) typeChartInstance.destroy();
 
         const sortedLineLabels = Object.keys(siteLineOrder).reduce((acc, site) => {
