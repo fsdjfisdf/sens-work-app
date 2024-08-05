@@ -94,7 +94,7 @@
                                 <th>LINE</th>
                                 <th>FLOOR</th>                               
                                 <th>BAY</th>
-                                <th>WARRANTY</th>
+                                <th>WI/WO</th>
                                 <th>END DATE</th>
                             </tr>
                         </thead>
@@ -110,6 +110,9 @@
             <span class="close">&times;</span>
         </div>
         <div class="modal-body">
+            <div id="selectedEquipmentContainer">
+                <span id="selectedEquipment" class="modal-title"></span>
+            </div>
             <table id="worklog-table">
                 <thead>
                     <tr>
@@ -124,6 +127,7 @@
                 <tbody id="worklog-tbody">
                 </tbody>
             </table>
+            <canvas id="workTypeChart"></canvas>
         </div>
     </div>
 </div>

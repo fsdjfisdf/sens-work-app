@@ -1,3 +1,5 @@
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
 
@@ -414,6 +416,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loadEquipment();
 
+
+
     // 장비 테이블 행에 클릭 이벤트 추가
     document.getElementById('equipment-tbody').addEventListener('click', async (event) => {
         if (event.target && event.target.nodeName === 'TD') {
@@ -423,27 +427,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+
+
+    let workTypeChartInstance = null;
+
     // 특정 장비의 작업 로그를 조회하는 함수
     async function loadWorkLogsForEquipment(eqName) {
         try {
             const response = await axios.get('http://3.37.165.84:3001/logs');
             console.log('Work logs API response:', response);
             const workLogs = response.data.filter(log => log.equipment_name === eqName);
-            if (workLogs.length === 0) {
-                alert('작업 이력이 없습니다.');
-                return;
-            }
-            displayWorkLogs(workLogs);
+            displayWorkLogs(workLogs, eqName);
         } catch (error) {
             console.error('Error loading work logs for equipment:', error);
         }
     }
 
     // 작업 로그를 화면에 테이블 형식으로 표시하는 함수
-    function displayWorkLogs(workLogs) {
+    function displayWorkLogs(workLogs, eqName) {
         const worklogModal = document.getElementById('worklogModal');
         const worklogTbody = document.getElementById('worklog-tbody');
+        const selectedEquipment = document.getElementById('selectedEquipment');
         worklogTbody.innerHTML = '';
+
+        selectedEquipment.textContent = `${eqName} - ${workLogs.length}건`;
+
+        if (workLogs.length === 0) {
+            alert('작업 이력이 없습니다.');
+            worklogModal.style.display = 'none';
+            return;
+        }
 
         workLogs.forEach(log => {
             const logRow = document.createElement('tr');
@@ -463,7 +476,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         worklogModal.style.display = 'block';
+
+        updateWorkTypeChart(workLogs);
     }
+
+        // 작업 종류별 작업 건수를 시각화하는 함수
+        function updateWorkTypeChart(workLogs) {
+            const workTypeData = workLogs.reduce((acc, log) => {
+                acc[log.work_type] = (acc[log.work_type] || 0) + 1;
+                return acc;
+            }, {});
+    
+            const workTypeLabels = Object.keys(workTypeData);
+            const workTypeCounts = Object.values(workTypeData);
+    
+            if (workTypeChartInstance) workTypeChartInstance.destroy();
+    
+            const workTypeChart = document.getElementById('workTypeChart').getContext('2d');
+            workTypeChartInstance = new Chart(workTypeChart, {
+                type: 'bar',
+                data: {
+                    labels: workTypeLabels,
+                    datasets: [{
+                        label: 'Work Type',
+                        data: workTypeCounts,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
 
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -504,6 +554,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
         worklogDetailModal.style.display = 'block';
     }
+    
 
     // 모달 닫기 이벤트
     const modalCloseButtons = document.querySelectorAll('.modal .close');
@@ -517,11 +568,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 테이블 헤더 크기 조정
     const headers = document.querySelectorAll('#worklog-table th');
     headers.forEach(header => {
-        header.addEventListener('mousedown', initResize);
+        const resizer = document.createElement('div');
+        resizer.className = 'resizer';
+        header.appendChild(resizer);
+        resizer.addEventListener('mousedown', initResize);
     });
 
     function initResize(event) {
-        const header = event.target;
+        const header = event.target.parentElement;
         const startX = event.pageX;
         const startWidth = header.offsetWidth;
 
