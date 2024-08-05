@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <p><strong>Title:</strong> ${log.task_name}</p>
             <p><strong>Cause:</strong> ${log.task_cause}</p>
             <p><strong>Result:</strong> ${log.task_result}</p>
-            <p><strong>Description:</strong> ${log.task_description.replace(/<br\s*\/?>/g, '\n')}</p>
+            <p><strong>Description:</strong> ${log.task_description.replace(/<br\s*\/?>/g, '\n').replace(/\n/g, '<br>')}</p>
         `;
         worklogDetailModal.style.display = 'block';
     }
@@ -521,19 +521,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function initResize(event) {
-        window.addEventListener('mousemove', resizeColumn);
-        window.addEventListener('mouseup', stopResize);
+        const header = event.target;
         const startX = event.pageX;
-        const startWidth = event.target.offsetWidth;
+        const startWidth = header.offsetWidth;
 
         function resizeColumn(e) {
             const newWidth = startWidth + (e.pageX - startX);
-            event.target.style.width = newWidth + 'px';
+            header.style.width = newWidth + 'px';
         }
 
         function stopResize() {
             window.removeEventListener('mousemove', resizeColumn);
             window.removeEventListener('mouseup', stopResize);
         }
+
+        window.addEventListener('mousemove', resizeColumn);
+        window.addEventListener('mouseup', stopResize);
     }
 });
