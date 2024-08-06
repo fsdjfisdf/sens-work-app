@@ -431,54 +431,53 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let workTypeChartInstance = null;
 
-    // 특정 장비의 작업 로그를 조회하는 함수
-    async function loadWorkLogsForEquipment(eqName) {
-        try {
-            const response = await axios.get('http://3.37.165.84:3001/logs');
-            console.log('Work logs API response:', response);
-            const workLogs = response.data.filter(log => log.equipment_name === eqName);
-            displayWorkLogs(workLogs, eqName);
-        } catch (error) {
-            console.error('Error loading work logs for equipment:', error);
-        }
-    }
-
-    // 작업 로그를 화면에 테이블 형식으로 표시하는 함수
-    function displayWorkLogs(workLogs, eqName) {
-        const worklogModal = document.getElementById('worklogModal');
-        const worklogTbody = document.getElementById('worklog-tbody');
-        const selectedEquipment = document.getElementById('selectedEquipment');
-        worklogTbody.innerHTML = '';
-
-        selectedEquipment.textContent = `${eqName} - ${workLogs.length}건`;
+// 특정 장비의 작업 로그를 조회하는 함수
+async function loadWorkLogsForEquipment(eqName) {
+    try {
+        const response = await axios.get('http://3.37.165.84:3001/logs');
+        console.log('Work logs API response:', response);
+        const workLogs = response.data.filter(log => log.equipment_name === eqName);
 
         if (workLogs.length === 0) {
-            alert('작업 이력이 없습니다.');
-            worklogModal.style.display = 'none';
-            return;
+        } else {
+            displayWorkLogs(workLogs, eqName);
         }
-
-        workLogs.forEach(log => {
-            const logRow = document.createElement('tr');
-            logRow.className = 'worklog-row';
-            logRow.innerHTML = `
-                <td>${formatDate(log.task_date)}</td>
-                <td>${log.work_type}</td>
-                <td>${log.task_name}</td>
-                <td>${log.task_result}</td>
-                <td>${log.task_man}</td>
-                <td>${formatDuration(log.task_duration)}</td>
-            `;
-            logRow.addEventListener('click', () => {
-                displayWorkLogDetail(log);
-            });
-            worklogTbody.appendChild(logRow);
-        });
-
-        worklogModal.style.display = 'block';
-
-        updateWorkTypeChart(workLogs);
+    } catch (error) {
+        console.error('Error loading work logs for equipment:', error);
     }
+}
+
+// 작업 로그를 화면에 테이블 형식으로 표시하는 함수
+function displayWorkLogs(workLogs, eqName) {
+    const worklogModal = document.getElementById('worklogModal');
+    const worklogTbody = document.getElementById('worklog-tbody');
+    const selectedEquipment = document.getElementById('selectedEquipment');
+    worklogTbody.innerHTML = '';
+
+    selectedEquipment.textContent = `${eqName} - ${workLogs.length}건`;
+
+    workLogs.forEach(log => {
+        const logRow = document.createElement('tr');
+        logRow.className = 'worklog-row';
+        logRow.innerHTML = `
+            <td>${formatDate(log.task_date)}</td>
+            <td>${log.work_type}</td>
+            <td>${log.task_name}</td>
+            <td>${log.task_result}</td>
+            <td>${log.task_man}</td>
+            <td>${formatDuration(log.task_duration)}</td>
+        `;
+        logRow.addEventListener('click', () => {
+            displayWorkLogDetail(log);
+        });
+        worklogTbody.appendChild(logRow);
+    });
+
+    worklogModal.style.display = 'block';
+
+    updateWorkTypeChart(workLogs);
+}
+
 
         // 작업 종류별 작업 건수를 시각화하는 함수
         function updateWorkTypeChart(workLogs) {
