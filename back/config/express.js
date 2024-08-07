@@ -39,6 +39,7 @@ module.exports = function () {
   require("../src/routes/supraSetupRoute")(app);  // 추가된 라우트
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
+  require('../src/routes/SECMRoute')(app);
   
 
   // 회원가입
