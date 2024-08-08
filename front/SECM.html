@@ -4,65 +4,182 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SECM Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./css/secm.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script defer src="SECM.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>SECM Dashboard</h1>
-        <table id="secmTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>NAME</th>
-                    <th>GROUP</th>
-                    <th>SITE</th>
-                    <th>HIRE</th>
-                    <th>LEVEL</th>
-                    <th>MULTI LEVEL</th>
-                    <th>MAIN EQ</th>
-                    <th>MULTI EQ</th>
-                    <th>Level1 Achieve</th>
-                    <th>Level2 Achieve</th>
-                    <th>Level3 Achieve</th>
-                    <th>Level4 Achieve</th>
-                    <th>SUPRA N SET UP</th>
-                    <th>SUPRA N MAINT</th>
-                    <th>SUPRA XP SET UP</th>
-                    <th>SURPA XP MAINT</th>
-                    <th>INTEGER SET UP</th>
-                    <th>INTEGER MAINT</th>
-                    <th>PRECIA SET UP</th>
-                    <th>PRECIA MAINT</th>
-                    <th>ECOLITE SET UP</th>
-                    <th>ECOLITE MAINT</th>
-                    <th>GENEVA SET UP</th>
-                    <th>GENEVA MAINT</th>
-                    <th>24YJAN</th>
-                    <th>24YFEB</th>
-                    <th>24YMAR</th>
-                    <th>24Y APR</th>
-                    <th>24Y MAY</th>
-                    <th>24Y JUN</th>
-                    <th>24Y JUL</th>
-                    <th>24Y AUG</th>
-                    <th>24Y SEP</th>
-                    <th>24Y OCT</th>
-                    <th>24Y NOV</th>
-                    <th>24Y DEC</th>
-                    <th>24Y LEVEL GOAL</th>
-                    <th>24Y MULTI LEVEL GOAL</th>
-                    <th>24Y CAPA GOAL</th>
-                    <th>SET UP CAPA</th>
-                    <th>MAINT CAPA</th>
-                    <th>MULTI CAPA</th>
-                    <th>CAPA</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- 데이터가 여기에 표시됩니다. -->
-            </tbody>
-        </table>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading...</div>
     </div>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container">
+                    <div class="unsigned"></div>
+                    <div class="signed hidden">
+                        <div class="dropdown">
+                            <button class="dropbtn">MENU</button>
+                            <div class="dropdown-content">
+                                <a href="./info.html" class="dropdown-item">Eng'r Information</a>
+                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                <a href="./equipment.html" class="dropdown-item">Equipment</a>
+                                <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
+                                <button id="sign-out" class="dropdown-item">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <section id="dashboard-section" class="section">
+            <div class="inner">
+                <h2 class="section-title">SECM Dashboard</h2>
+                <div class="search-container">
+                    <select id="searchGroup">
+                        <option value="">Select Group</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <select id="searchSite">
+                        <option value="">Select Site</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <select id="searchLevel">
+                        <option value="">Select Level</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                    <select id="searchMultiLevel">
+                        <option value="">Select Multi Level</option>
+                        <option value="0">4</option>
+                        <option value="1">4-1(B)</option>
+                        <option value="2">4-1(A)</option>
+                    </select>
+                    <input list="names" id="searchName" placeholder="Enter Name">
+                    <datalist id="names"></datalist>
+                    <button id="searchButton">SEARCH</button>
+                    <button id="resetButton">RESET</button>
+                </div>
+                
+                <div class="graph-container">
+                    <!-- Engineer Group -->
+                    <div class="graph-group">
+                        <h3 class="group-title">Engineer</h3>
+                        <div class="graph-item wide">
+                            <h3>Head Count</h3>
+                            <div class="canvas-container">
+                                <canvas id="engineerCountChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="graph-row">
+                            <div class="graph-item medium">
+                                <h3>Years of Service</h3>
+                                <div class="canvas-container">
+                                    <canvas id="yearsOfServiceChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="graph-item medium">
+                                <h3>Group & Site</h3>
+                                <div class="canvas-container">
+                                    <canvas id="groupSiteDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Level Group -->
+                    <div class="graph-group">
+                        <h3 class="group-title">Level</h3>
+                        <div class="graph-row">
+                            <div class="graph-item medium same-height">
+                                <h3>Level</h3>
+                                <div class="canvas-container">
+                                    <canvas id="levelDistributionChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="graph-item medium same-height">
+                                <h3>Multi Level</h3>
+                                <div class="canvas-container">
+                                    <canvas id="multiLevelDistributionChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="graph-item medium same-height">
+                                <h3>Achieve Time</h3>
+                                <div class="canvas-container">
+                                    <canvas id="averageTimeToAchieveChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CAPA Group -->
+                    <div class="graph-group">
+                        <h3 class="group-title">CAPA</h3>
+                        <div class="graph-item wide">
+                            <h3>Monthly</h3>
+                            <div class="canvas-container">
+                                <canvas id="monthlyCapaChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="graph-row">
+                            <div class="graph-item small same-size">
+                                <h3>SET UP</h3>
+                                <div class="canvas-container">
+                                    <canvas id="setupCapaChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="graph-item small same-size">
+                                <h3>MAINT</h3>
+                                <div class="canvas-container">
+                                    <canvas id="maintCapaChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="graph-item small same-size">
+                                <h3>TOTAL</h3>
+                                <div class="canvas-container">
+                                    <canvas id="averageCapaChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="inner">
+            <p>Developed by PEE1 Jeong Hyeon Woo</p>
+        </div>
+    </footer>
+
+    <script>
+        // 페이지 로드 시 로딩 오버레이를 숨김
+        window.addEventListener('load', () => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
