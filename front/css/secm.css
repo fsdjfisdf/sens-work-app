@@ -336,3 +336,31 @@ footer {
         margin-bottom: 20px;
     }
 }
+
+/* 버튼 컨테이너 스타일 추가 */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.button-container button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #00b1cc;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.button-container button:hover {
+    background-color: #003bb5;
+    transform: scale(1.1);
+}
+
+.button-container button.active {
+    background-color: #003bb5;
+    transform: scale(1.1);
+}

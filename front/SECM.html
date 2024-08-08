@@ -78,10 +78,17 @@
                     <button id="searchButton">SEARCH</button>
                     <button id="resetButton">RESET</button>
                 </div>
-                
+
+                <!-- 추가: 그룹 선택 버튼 -->
+                <div class="button-container">
+                    <button id="showEngineerGroup" class="toggle-button">Engineer</button>
+                    <button id="showLevelGroup" class="toggle-button">Level</button>
+                    <button id="showCapaGroup" class="toggle-button">Capa</button>
+                </div>
+
                 <div class="graph-container">
                     <!-- Engineer Group -->
-                    <div class="graph-group">
+                    <div class="graph-group" id="engineerGroup">
                         <h3 class="group-title">Engineer</h3>
                         <div class="graph-item wide">
                             <h3>Head Count</h3>
@@ -106,7 +113,7 @@
                     </div>
                     
                     <!-- Level Group -->
-                    <div class="graph-group">
+                    <div class="graph-group" id="levelGroup">
                         <h3 class="group-title">Level</h3>
                         <div class="graph-row">
                             <div class="graph-item medium same-height">
@@ -131,7 +138,7 @@
                     </div>
                     
                     <!-- CAPA Group -->
-                    <div class="graph-group">
+                    <div class="graph-group" id="capaGroup">
                         <h3 class="group-title">CAPA</h3>
                         <div class="graph-item wide">
                             <h3>Monthly</h3>
@@ -180,6 +187,33 @@
                 loadingOverlay.style.display = 'none';
             }, 1000);
         });
+
+        // 그룹 표시 버튼 기능 추가
+        function toggleButton(buttonId, groupToShow) {
+            const buttons = document.querySelectorAll('.toggle-button');
+            const groups = document.querySelectorAll('.graph-group');
+
+            buttons.forEach(button => button.classList.remove('active'));
+            groups.forEach(group => group.style.display = 'none');
+
+            document.getElementById(buttonId).classList.add('active');
+            document.getElementById(groupToShow).style.display = 'block';
+        }
+
+        document.getElementById('showEngineerGroup').addEventListener('click', () => {
+            toggleButton('showEngineerGroup', 'engineerGroup');
+        });
+
+        document.getElementById('showLevelGroup').addEventListener('click', () => {
+            toggleButton('showLevelGroup', 'levelGroup');
+        });
+
+        document.getElementById('showCapaGroup').addEventListener('click', () => {
+            toggleButton('showCapaGroup', 'capaGroup');
+        });
+
+        // 초기 로드 시 Engineer 그룹만 표시
+        document.getElementById('showEngineerGroup').click();
     </script>
 </body>
 </html>
