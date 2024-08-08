@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchData() {
         try {
-            const response = await fetch('http://3.37.165.84:3001/api/userDB');
+            const response = await fetch('http://3.37.165.84:3001/api/secm');
             const data = await response.json();
             originalData = data;
             return data;
