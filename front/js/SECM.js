@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
+    
     const levelDistributionChartCtx = document.getElementById('levelDistributionChart').getContext('2d');
     const multiLevelDistributionChartCtx = document.getElementById('multiLevelDistributionChart').getContext('2d');
     const yearsOfServiceChartCtx = document.getElementById('yearsOfServiceChart').getContext('2d');
@@ -9,6 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const maintCapaChartCtx = document.getElementById('maintCapaChart').getContext('2d');
     const averageCapaChartCtx = document.getElementById('averageCapaChart').getContext('2d');
     const engineerCountChartCtx = document.getElementById('engineerCountChart').getContext('2d');
+    const levelChangesChartCtx = document.getElementById('levelChangesChart').getContext('2d');
     const monthlyCapaChange = document.getElementById('monthlyCapaChange');
 
     const searchButton = document.getElementById('searchButton');
@@ -19,6 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchMultiLevel = document.getElementById('searchMultiLevel');
     const searchName = document.getElementById('searchName');
     const namesDatalist = document.getElementById('names');
+    const personInfo = document.getElementById('personInfo');
+    const personName = document.getElementById('personName');
+    const personHireDate = document.getElementById('personHireDate');
+    const personGroup = document.getElementById('personGroup');
+    const personSite = document.getElementById('personSite');
 
     let originalData = [];
     let charts = {};
@@ -61,70 +75,162 @@ document.addEventListener('DOMContentLoaded', async () => {
         charts[ctx.canvas.id] = new Chart(ctx, config);
     }
 
-    function renderCharts(data) {
-        const totalEngineers = data.length;
-
-        // Engineer Count over time
-        const startYear = new Date().getFullYear();
-        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-        const currentMonthIndex = new Date().getMonth();
-        const monthlyLabels = months.slice(0, currentMonthIndex + 1).map((month, index) => `${startYear} ${month}`);
-        
-        const engineerCountsOverTime = monthlyLabels.map((label, index) => {
-            const [year, month] = label.split(' ');
-            const monthIndex = months.indexOf(month);
-            const engineersInMonth = data.filter(row => {
-                const hireDate = new Date(row.HIRE);
-                return hireDate.getFullYear() < startYear || (hireDate.getFullYear() === startYear && hireDate.getMonth() <= monthIndex);
-            }).length;
-            return engineersInMonth;
+    function calculateQuarterDistribution(data) {
+        const startYear = 2022;
+        const endYear = 2024;
+    
+        const quarters = [];
+        for (let year = startYear; year <= endYear; year++) {
+            for (let quarter = 1; quarter <= 4; quarter++) {
+                quarters.push(`${year}Q${quarter}`);
+            }
+        }
+    
+        const levelDistribution = quarters.map(() => ({
+            level0: 0,
+            level1: 0,
+            level2: 0,
+            level3: 0,
+            level4: 0,
+        }));
+    
+        const getQuarterIndex = (date) => {
+            const year = date.getFullYear();
+            const quarter = Math.floor((date.getMonth() + 3) / 3);
+            return (year - startYear) * 4 + (quarter - 1);
+        };
+    
+        data.forEach(row => {
+            const hireDate = new Date(row.HIRE);
+            const levelDates = [
+                hireDate,
+                row['Level1 Achieve'] ? new Date(row['Level1 Achieve']) : null,
+                row['Level2 Achieve'] ? new Date(row['Level2 Achieve']) : null,
+                row['Level3 Achieve'] ? new Date(row['Level3 Achieve']) : null,
+                row['Level4 Achieve'] ? new Date(row['Level4 Achieve']) : null,
+            ];
+    
+            let currentLevel = 0;
+            let levelIndex = 0;
+            quarters.forEach((quarter, index) => {
+                const quarterEnd = new Date(startYear + Math.floor(index / 4), (index % 4 + 1) * 3, 0);
+    
+                while (levelIndex < levelDates.length && levelDates[levelIndex] && levelDates[levelIndex] <= quarterEnd) {
+                    currentLevel = levelIndex;
+                    levelIndex++;
+                }
+    
+                if (hireDate <= quarterEnd) {
+                    levelDistribution[index][`level${currentLevel}`]++;
+                }
+            });
         });
+    
+        return { quarters, levelDistribution };
+    }
 
-        createChart(engineerCountChartCtx, {
-            type: 'line',
-            data: {
-                labels: monthlyLabels,
-                datasets: [{
-                    label: 'Number of Engineers',
-                    data: engineerCountsOverTime,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    fill: false
-                }]
-            },
-            plugins: [ChartDataLabels],
-            options: {
-                plugins: {
-                    datalabels: {
-                        formatter: value => value,
-                        color: 'white',
-                        font: {
-                            size: 12
-                        },
-                        anchor: 'end',
-                        align: 'end'
-                    },
-                    legend: {
-                        display: false // 범례 숨김
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: 'silver' // x축 레이블 색상
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        suggestedMax: Math.max(...engineerCountsOverTime) * 1.2,
-                        ticks: {
-                            color: 'silver' // y축 레이블 색상
-                        }
+    function calculateMonthlyEngineerCount(data) {
+        const startYear = 2023;
+        const endYear = new Date().getFullYear();
+        const endMonth = new Date().getMonth();
+        const months = [];
+    
+        for (let year = startYear; year <= endYear; year++) {
+            for (let month = 0; month < 12; month++) {
+                if (year === endYear && month > endMonth) break;
+                months.push(`${year}-${String(month + 1).padStart(2, '0')}`);
+            }
+        }
+    
+        const engineerCount = months.map(() => 0);
+    
+        data.forEach(row => {
+            const hireDate = new Date(row.HIRE);
+            const hireYear = hireDate.getFullYear();
+            const hireMonth = hireDate.getMonth();
+            
+            for (let year = hireYear; year <= endYear; year++) {
+                for (let month = year === hireYear ? hireMonth : 0; month < 12; month++) {
+                    if (year === endYear && month > endMonth) break;
+                    const index = (year - startYear) * 12 + month;
+                    if (index >= 0) {
+                        engineerCount[index]++;
                     }
                 }
             }
         });
+    
+        return { months, engineerCount };
+    }
+    
+    function getMonthIndex(date) {
+        const startYear = 2023;
+        return (date.getFullYear() - startYear) * 12 + date.getMonth();
+    }
+
+
+    function renderCharts(data) {
+        const totalEngineers = data.length;
+
+        if (totalEngineers === 1) {
+            const person = data[0];
+            personName.textContent = person.NAME;
+            personHireDate.textContent = formatDate(person.HIRE);
+            personGroup.textContent = person.GROUP;
+            personSite.textContent = person.SITE;
+            personInfo.classList.remove('hidden');
+        } else {
+            personInfo.classList.add('hidden');
+        }
+
+
+    // Monthly Engineer Count
+    const { months, engineerCount } = calculateMonthlyEngineerCount(data);
+    createChart(engineerCountChartCtx, {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Number of Engineers',
+                data: engineerCount,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: true
+            }]
+        },
+        plugins: [ChartDataLabels],
+        options: {
+            plugins: {
+                datalabels: {
+                    formatter: value => value,
+                    color: 'white',
+                    font: {
+                        size: 12
+                    },
+                    anchor: 'end',
+                    align: 'end'
+                },
+                legend: {
+                    display: false // 범례 숨김
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: 'silver' // x축 레이블 색상
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...engineerCount) * 1.2,
+                    ticks: {
+                        color: 'silver' // y축 레이블 색상
+                    }
+                }
+            }
+        }
+    });
 
         // Level Distribution 데이터 처리
         const levels = data.map(row => row.LEVEL);
@@ -260,6 +366,74 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+
+    // Level Changes Over Time
+    const { quarters, levelDistribution } = calculateQuarterDistribution(data);
+    const levelDistributionData = {
+        labels: quarters,
+        datasets: [
+            {
+                label: 'Level 0',
+                data: levelDistribution.map(l => l.level0),
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                fill: false,
+            },
+            {
+                label: 'Level 1',
+                data: levelDistribution.map(l => l.level1),
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                fill: false,
+            },
+            {
+                label: 'Level 2',
+                data: levelDistribution.map(l => l.level2),
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: false,
+            },
+            {
+                label: 'Level 3',
+                data: levelDistribution.map(l => l.level3),
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                fill: false,
+            },
+            {
+                label: 'Level 4',
+                data: levelDistribution.map(l => l.level4),
+                backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1,
+                fill: false,
+            },
+        ],
+    };
+
+    createChart(levelChangesChartCtx, {
+        type: 'line',
+        data: levelDistributionData,
+        options: {
+            scales: {
+                x: {
+                    ticks: {
+                        color: 'silver',
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: 'silver',
+                    },
+                },
+            },
+        },
+    });
 
         // Years of Service 데이터 처리
         const currentDate = new Date();

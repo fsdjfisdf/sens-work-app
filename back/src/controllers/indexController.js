@@ -165,42 +165,47 @@ exports.createUsers = async function (req, res) {
 
 // 회원 정보 조회
 exports.getUserInfo = async function (req, res) {
-  const userIdx = req.verifiedToken.userIdx;
+  const { nickname } = req.verifiedToken;  // 가져온 토큰에서 nickname 추출
 
   try {
-    const connection = await pool.getConnection(async (conn) => conn);
-    try {
-      const userInfo = await indexDao.getUserById(connection, userIdx);
-      if (userInfo.length < 1) {
-        return res.status(404).json({
-          isSuccess: false,
-          code: 404,
-          message: "사용자 정보를 찾을 수 없습니다.",
-        });
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const query = `
+              SELECT *
+              FROM userDB
+              WHERE NAME = ? AND status = 'A'
+          `;
+          const [userInfo] = await connection.query(query, [nickname]);
+          if (userInfo.length < 1) {
+              return res.status(404).json({
+                  isSuccess: false,
+                  code: 404,
+                  message: "사용자 정보를 찾을 수 없습니다.",
+              });
+          }
+          return res.status(200).json({
+              isSuccess: true,
+              code: 200,
+              message: "사용자 정보 조회 성공",
+              result: userInfo[0],
+          });
+      } catch (err) {
+          logger.error(`getUserInfo Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "서버 오류입니다.",
+          });
+      } finally {
+          connection.release();
       }
-      return res.status(200).json({
-        isSuccess: true,
-        code: 200,
-        message: "사용자 정보 조회 성공",
-        result: userInfo[0],
-      });
-    } catch (err) {
-      logger.error(`getUserInfo Query error\n: ${JSON.stringify(err)}`);
-      return res.status(500).json({
-        isSuccess: false,
-        code: 500,
-        message: "서버 오류입니다.",
-      });
-    } finally {
-      connection.release();
-    }
   } catch (err) {
-    logger.error(`getUserInfo DB Connection error\n: ${JSON.stringify(err)}`);
-    return res.status(500).json({
-      isSuccess: false,
-      code: 500,
-      message: "서버 오류입니다.",
-    });
+      logger.error(`getUserInfo DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "서버 오류입니다.",
+      });
   }
 };
 
