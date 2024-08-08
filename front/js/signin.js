@@ -34,7 +34,7 @@ async function signIn(event) {
     alert(signInReturn.data.message);
 
     // 로그인 성공 시 "정보 조회" 페이지로 이동
-    window.location.replace("./info.html");
+    window.location.replace("./user_info.html");
   } catch (error) {
     console.error("로그인 요청 중 오류 발생:", error);
     alert("로그인 요청 중 오류가 발생했습니다.");
