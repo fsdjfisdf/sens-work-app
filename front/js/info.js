@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (viewAverageInfoButton) {
         viewAverageInfoButton.addEventListener("click", function() {
-            window.location.href = "./secm.html";
+            window.location.href = "./SECM.html";
         });
     }
 });
