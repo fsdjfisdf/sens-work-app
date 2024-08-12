@@ -1,3 +1,4 @@
+/* General reset and body styles */
 body, h1, h2, h3, h4, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
@@ -15,11 +16,15 @@ body {
     min-height: 100vh;
 }
 
+/* Navigation bar styles */
 nav {
     background-color: #0044cc;
     padding: 10px 0;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1000;
 }
 
 .nav-container {
@@ -29,7 +34,10 @@ nav {
     width: 100%;
     max-width: 1200px;
     padding: 0 20px;
-    position: relative;
+}
+
+.nav-title {
+    flex-grow: 1;
 }
 
 .nav-title a {
@@ -43,76 +51,84 @@ nav {
     align-items: center;
 }
 
-.sign-link {
-    color: #fff;
-    padding: 8px 16px;
-    border: 1px solid #fff;
-    border-radius: 4px;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.sign-link:hover {
-    background-color: #fff;
-    color: #0044cc;
-}
-
+/* Menu button styles */
 .menu-btn {
-    background-color: #0044cc;
-    color: #fff;
-    padding: 8px 16px;
+    background: none;
     border: none;
+    color: #fff;
     cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s;
+    padding: 8px;
+    position: fixed;
+    top: 3%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1100;
 }
 
-.menu-btn:hover {
-    background-color: #003bb5;
-}
-
-.menu-content {
+.menu-icon {
     display: flex;
     flex-direction: column;
-    position: absolute;
-    background-color: #fff;
-    width: 100%;
-    max-width: 200px;
-    top: 60px;
-    right: 0;
-    z-index: 1;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-    border-radius: 4px;
+    justify-content: space-between;
+    width: 25px;
+    height: 18px;
 }
 
-.menu-content.show {
-    max-height: 500px;
-}
-
-.menu-content .menu-item {
-    color: #0044cc;
-    padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
+.menu-icon span {
     display: block;
-    text-align: left;
+    height: 5px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Menu bar styles */
+.menu-bar {
+    position: fixed;
+    top: 0;
+    right: -350px; /* 메뉴 바가 초기 화면에서 완전히 숨겨짐 */
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1001;
+}
+
+.menu-bar.open {
+    right: 0;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-item {
+    color: #0044cc;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
     transition: background-color 0.3s, color 0.3s;
 }
 
-.menu-content .menu-item:hover {
+.menu-item:hover {
     background-color: #f4f4f9;
     color: #003bb5;
 }
 
-.menu-content .menu-item:last-child {
+.menu-item:last-child {
     border-bottom: none;
 }
 
+/* Hidden and utility classes */
 .hidden {
     display: none;
 }
 
+/* Main content and footer styles */
 .inner {
     max-width: 1200px;
     margin: 0 auto;
@@ -206,19 +222,6 @@ footer {
 
     .nav-title a {
         font-size: 28px;
-    }
-
-    .menu-content {
-        width: 100%;
-        max-width: none;
-        position: static;
-        box-shadow: none;
-        transition: none;
-        max-height: none;
-    }
-
-    .menu-content.show {
-        max-height: none;
     }
 
     .button-container {

@@ -1,3 +1,4 @@
+/* General reset and body styles */
 body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
@@ -67,8 +68,8 @@ nav {
 .dropdown-content .dropdown-item {
     color: #333;
     padding: 12px 16px;
-    text-decoration: none;
     display: block;
+    transition: background-color 0.3s;
 }
 
 .dropdown-content .dropdown-item:hover {
@@ -79,16 +80,19 @@ nav {
     display: block;
 }
 
+/* Hidden utility class */
 .hidden {
     display: none;
 }
 
+/* Inner container styles */
 .inner {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
 
+/* Main content styles */
 main {
     flex-grow: 1;
     display: flex;
@@ -103,6 +107,7 @@ h2 {
     margin-bottom: 20px;
 }
 
+/* Search container styles */
 .search-container {
     display: flex;
     flex-wrap: wrap;
@@ -155,6 +160,7 @@ h2 {
     background-color: #555;
 }
 
+/* Worklog cards styles */
 .worklog-cards {
     display: flex;
     flex-wrap: wrap;
@@ -190,7 +196,8 @@ h2 {
 }
 
 button.view-details,
-button.delete-log {
+button.delete-log,
+button.edit-log {
     background-color: #0044cc;
     color: #fff;
     border: none;
@@ -199,9 +206,11 @@ button.delete-log {
     cursor: pointer;
     transition: background-color 0.3s, transform 0.3s;
     font-size: 14px;
+    margin: 0 5px;
 }
 
-button.view-details:hover {
+button.view-details:hover,
+button.edit-log:hover {
     background-color: #003bb5;
     transform: scale(1.05);
 }
@@ -215,76 +224,44 @@ button.delete-log:hover {
     transform: scale(1.05);
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgb(0, 0, 0);
-    background-color: rgba(0, 0, 0, 0.4);
-    padding-top: 60px;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px;
-    position: relative;
-    border-radius: 8px;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* Container for Total Worklogs and Total Worktime */
+/* Summary section */
 #summary {
     display: flex;
-    justify-content: space-around;
+    flex-direction: column; /* 수직으로 쌓이도록 설정 */
     align-items: center;
     width: 100%;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+    margin-bottom: 30px; /* 섹션 간격을 좀 더 여유롭게 설정 */
 }
 
 #total-work {
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
+    gap: 20px; /* 카드 사이에 여유 간격 추가 */
     margin-bottom: 20px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* 작은 화면에서 카드가 줄 바꿈되도록 설정 */
 }
 
 #worklog-count, #total-worktime {
     background-color: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 18px;
+    padding: 15px 25px; /* 여유로운 패딩 설정 */
+    border-radius: 10px; /* 부드러운 모서리 처리 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과를 강화하여 입체감 부여 */
+    font-size: 20px; /* 텍스트 크기 조금 확대 */
     font-weight: bold;
     color: #0044cc;
     margin: 10px;
     text-align: center;
+    min-width: 200px; /* 카드 최소 너비 설정 */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* 마우스 오버 효과 추가 */
 }
 
-/* Top 5 engineers container */
+#worklog-count:hover, #total-worktime:hover {
+    transform: translateY(-5px); /* 마우스 오버 시 카드가 살짝 올라오는 효과 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* 그림자 강화 */
+}
+
+/* Top 5 engineers section */
 #top5-engineers {
     display: flex;
     justify-content: space-around;
@@ -302,8 +279,8 @@ button.delete-log:hover {
     text-align: center;
     width: 45%;
     margin: 10px;
-    max-height: 300px; /* Added max height for scroll */
-    overflow-y: auto; /* Scroll for overflow */
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .worker-stats h2 {
@@ -339,7 +316,7 @@ button.delete-log:hover {
 }
 
 .worker-stat.top-1 p.name {
-    color: #ffd700; /* Gold color for top 1 worker name */
+    color: #ffd700;
 }
 
 .worker-stat.top-1 p {
@@ -356,119 +333,25 @@ button.delete-log:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive design */
-@media screen and (max-width: 768px) {
-    .nav-container {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .nav-title a {
-        font-size: 20px;
-    }
-
-    .sign-link, .dropbtn {
-        padding: 8px 12px;
-        font-size: 14px;
-    }
-
-    .dropdown-content {
-        min-width: 100px;
-    }
-
-    .dropdown-content .dropdown-item {
-        padding: 10px 12px;
-    }
-
-    h2 {
-        font-size: 24px;
-    }
-
-    .search-container {
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
-    }
-
-    .search-container input,
-    .search-container select {
-        width: 100%;
-    }
-
-    .search-container .date-container {
-        width: 100%;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .search-container .date-to {
-        margin: 10px 0;
-    }
-
-    .search-container button {
-        width: 100%;
-    }
-
-    .worklog-cards {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .worklog-card {
-        width: 90%;
-    }
-
-    #top5-engineers {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .worker-stats {
-        width: 90%;
-        margin-bottom: 20px;
-    }
-
-    #total-work {
-        flex-direction: column;
-    }
-
-    #worklog-count, #total-worktime {
-        width: 90%;
-        margin-bottom: 10px;
-    }
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
 }
 
-
-button.edit-log,
-button.delete-log {
-    background-color: #0044cc;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    font-size: 14px;
-    margin: 0 5px;
-}
-
-button.edit-log:hover {
-    background-color: #003bb5;
-    transform: scale(1.05);
-}
-
-button.delete-log:hover {
-    background-color: #b20000;
-    transform: scale(1.05);
-}
-
-
-/* Modal Styling */
 .modal-content {
-    background-color: #fff;
+    background-color: #fefefe;
     margin: 5% auto;
     padding: 20px;
-    border: 1px solid #ccc;
+    border: 1px solid #888;
     width: 80%;
     max-width: 600px;
     position: relative;
@@ -477,7 +360,6 @@ button.delete-log:hover {
     animation: fadeIn 0.5s;
 }
 
-/* Close Button Styling */
 .close {
     color: #aaa;
     float: right;
@@ -487,12 +369,12 @@ button.delete-log:hover {
 
 .close:hover,
 .close:focus {
-    color: #000;
+    color: black;
     text-decoration: none;
     cursor: pointer;
 }
 
-/* Form Element Styling */
+/* Form element styling */
 .modal-content form {
     display: flex;
     flex-direction: column;
@@ -537,17 +419,121 @@ button.delete-log:hover {
     transform: scale(1.05);
 }
 
+/* Button styles */
+#exportExcelButton, #exportTransferExcelButton {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+    margin-left: 10px;
+}
+
+#exportTransferExcelButton {
+    background-color: #17a2b8;
+}
+
+#exportExcelButton:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+#exportTransferExcelButton:hover {
+    background-color: #138496;
+    transform: scale(1.05);
+}
+
 /* Animation */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-
+/* Footer styles */
 footer {
     background-color: #0044cc;
     color: #fff;
     text-align: center;
     padding: 20px 0;
     margin-top: auto;
+}
+
+/* Responsive design */
+@media screen and (max-width: 768px) {
+    .nav-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .nav-title a {
+        font-size: 20px;
+    }
+
+    .sign-link, .dropbtn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .dropdown-content {
+        min-width: 100px;
+    }
+
+    .dropdown-content .dropdown-item {
+        padding: 10px 12px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .search-container {
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .search-container input,
+    .search-container select {
+        width: 100%;
+    }
+
+    .search-container button {
+        width: 100%;
+    }
+
+    .worklog-cards {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .worklog-card {
+        width: 90%;
+    }
+
+    #top5-engineers {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .worker-stats {
+        width: 90%;
+        margin-bottom: 20px;
+    }
+
+    #total-work {
+        flex-direction: column;
+    }
+
+    #worklog-count, #total-worktime {
+        width: 90%;
+        margin-bottom: 10px;
+    }
+
+    #exportExcelButton, #exportTransferExcelButton {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 10px;
+    }
 }

@@ -18,19 +18,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return true;
     }
 
-    // 현재 로그인한 사용자 정보를 받아오는 함수
-    async function getCurrentUser() {
-        try {
-            const response = await axios.get('http://3.37.165.84:3001/user-info', {
-                headers: {
-                    'x-access-token': localStorage.getItem('x-access-token')
-                }
-            });
-            currentUserNickname = response.data.result.nickname; // 현재 사용자의 닉네임 저장
-        } catch (error) {
-            console.error('현재 사용자 정보를 가져오는 중 오류 발생:', error);
-        }
+// 현재 로그인한 사용자 정보를 받아오는 함수
+async function getCurrentUser() {
+    try {
+        const response = await axios.get('http://3.37.165.84:3001/api/user-info', {
+            headers: {
+                'x-access-token': localStorage.getItem('x-access-token')
+            }
+        });
+        currentUserNickname = response.data.name; // 현재 사용자의 이름 저장
+    } catch (error) {
+        console.error('현재 사용자 정보를 가져오는 중 오류 발생:', error);
     }
+}
+
 
     async function loadWorkLogs() {
         try {
@@ -53,6 +54,85 @@ document.addEventListener('DOMContentLoaded', async () => {
             completeLoading();
         }
     }
+
+        // Excel export function
+        function exportToExcel() {
+            const worksheet = XLSX.utils.json_to_sheet(logs.map(log => ({
+                "Title": log.task_name,
+                "Date": formatDate(log.task_date),
+                "Worker": log.task_man,
+                "Group": log.group,
+                "Site": log.site,
+                "Line": log.line,
+                "EQ Type": log.equipment_type,
+                "Warranty": log.warranty,
+                "EQ Name": log.equipment_name,
+                "Status": log.status,
+                "Action": log.task_description,
+                "Cause": log.task_cause,
+                "Result": log.task_result,
+                "SOP": log.SOP,
+                "TS Guide": log.tsguide,
+                "Work Type": log.work_type,
+                "Setup Item": log.setup_item,
+                "Maint Item": log.maint_item,
+                "Transfer Item": log.transfer_item,
+                "Task Duration": formatDuration(log.task_duration),
+                "Start Time": log.start_time,
+                "End Time": log.end_time
+            })));
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Worklogs");
+            XLSX.writeFile(workbook, 'SEnS_worklogs(task).xlsx');
+        }
+
+    
+        function exportTransferToExcel() {
+            const transferLogs = [];
+    
+            logs.forEach(log => {
+                const workers = log.task_man.split(',').map(worker => worker.trim());
+                workers.forEach((worker, index) => {
+                    const role = index === 0 ? 'main' : 'support';
+                    transferLogs.push({
+                        "Title": log.task_name,
+                        "Date": formatDate(log.task_date),
+                        "Worker": worker.split('(')[0].trim(),
+                        "Role": role,
+                        "Group": log.group,
+                        "Site": log.site,
+                        "Line": log.line,
+                        "EQ Type": log.equipment_type,
+                        "Warranty": log.warranty,
+                        "EQ Name": log.equipment_name,
+                        "Status": log.status,
+                        "Action": log.task_description,
+                        "Cause": log.task_cause,
+                        "Result": log.task_result,
+                        "SOP": log.SOP,
+                        "TS Guide": log.tsguide,
+                        "Work Type": log.work_type,
+                        "Setup Item": log.setup_item,
+                        "Maint Item": log.maint_item,
+                        "Transfer Item": log.transfer_item,
+                        "Task Duration": formatDuration(log.task_duration),
+                        "Start Time": log.start_time,
+                        "End Time": log.end_time
+                    });
+                });
+            });
+    
+            const worksheet = XLSX.utils.json_to_sheet(transferLogs);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Transfer Worklogs");
+            XLSX.writeFile(workbook, 'SEnS_worklogs(worker).xlsx');
+        }
+    
+        document.getElementById('exportExcelButton').addEventListener('click', exportToExcel);
+        document.getElementById('exportTransferExcelButton').addEventListener('click', exportTransferToExcel);
+    
+        
+
 
     function formatDate(dateString) {
         const date = new Date(dateString);
