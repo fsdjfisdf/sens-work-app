@@ -21,12 +21,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 현재 로그인한 사용자 정보를 받아오는 함수
 async function getCurrentUser() {
     try {
-        const response = await axios.get('http://3.37.165.84:3001/api/user-info', {
+        const response = await axios.get('http://3.37.165.84:3001/user-info', {
             headers: {
                 'x-access-token': localStorage.getItem('x-access-token')
             }
         });
-        currentUserNickname = response.data.name; // 현재 사용자의 이름 저장
+
+        // 전체 response.data 출력하여 구조 확인
+        console.log('response.data:', response.data);
+
+        // 여기서 response.data의 구조에 맞게 NAME을 가져옴
+        // 예시: response.data[0].NAME (만약 첫 번째 요소에 NAME이 있는 경우)
+        currentUserNickname = response.data.result.NAME; // NAME 필드 가져오기
+
+        // 콘솔에 저장된 이름 출력
+        console.log('현재 로그인한 사용자 이름:', currentUserNickname);
+
     } catch (error) {
         console.error('현재 사용자 정보를 가져오는 중 오류 발생:', error);
     }
@@ -171,6 +181,13 @@ async function getCurrentUser() {
             const card = document.createElement('div');
             card.className = 'worklog-card';
             card.dataset.id = log.id;
+
+            const workers = log.task_man.split(',').map(worker => worker.split('(')[0].trim());
+
+            // 로그인한 사용자가 작업자 목록에 포함되는지 확인
+            const isUserWorker = workers.includes(currentUserNickname);
+
+
             card.innerHTML = `
                 <p><strong>Title:</strong> ${log.task_name}</p>
                 <p><strong>Date:</strong> ${formatDate(log.task_date)}</p>
