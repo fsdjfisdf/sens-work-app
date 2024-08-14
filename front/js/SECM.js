@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.replace('./signin.html');
         return;
     }
-    
+
+    // Chart context 초기화
     const levelDistributionChartCtx = document.getElementById('levelDistributionChart').getContext('2d');
     const multiLevelDistributionChartCtx = document.getElementById('multiLevelDistributionChart').getContext('2d');
     const yearsOfServiceChartCtx = document.getElementById('yearsOfServiceChart').getContext('2d');
@@ -18,8 +19,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const averageCapaChartCtx = document.getElementById('averageCapaChart').getContext('2d');
     const engineerCountChartCtx = document.getElementById('engineerCountChart').getContext('2d');
     const levelChangesChartCtx = document.getElementById('levelChangesChart').getContext('2d');
+    const mpiDistributionChartCtx = document.getElementById('mpiDistributionChart').getContext('2d'); // 추가된 부분
     const monthlyCapaChange = document.getElementById('monthlyCapaChange');
 
+    // 기타 DOM 요소 초기화
     const searchButton = document.getElementById('searchButton');
     const resetButton = document.getElementById('resetButton');
     const searchGroup = document.getElementById('searchGroup');
@@ -37,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let originalData = [];
     let charts = {};
     
-
     async function fetchData() {
         try {
             const response = await fetch('http://3.37.165.84:3001/api/secm');
@@ -56,14 +58,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const level = searchLevel.value;
         const multiLevel = searchMultiLevel.value;
         const name = searchName.value.toLowerCase();
-
+        const multiEngr = searchMultiEngr.value;
+    
         return data.filter(row => {
+            const isMultiEngr = multiEngr === 'O' ? row.MPI >= 2 : multiEngr === 'X' ? row.MPI < 2 : true;
             return (
                 (!group || row.GROUP === group) &&
                 (!site || row.SITE === site) &&
                 (!level || row.LEVEL == level) &&
                 (!multiLevel || row['MULTI LEVEL'] == multiLevel) &&
-                (!name || row.NAME.toLowerCase().includes(name))
+                (!name || row.NAME.toLowerCase().includes(name)) &&
+                isMultiEngr
             );
         });
     }
@@ -163,12 +168,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { months, engineerCount };
     }
     
-    function getMonthIndex(date) {
-        const startYear = 2023;
-        return (date.getFullYear() - startYear) * 12 + date.getMonth();
-    }
-
-
     function renderCharts(data) {
         const totalEngineers = data.length;
 
@@ -183,54 +182,53 @@ document.addEventListener('DOMContentLoaded', async () => {
             personInfo.classList.add('hidden');
         }
 
-
-    // Monthly Engineer Count
-    const { months, engineerCount } = calculateMonthlyEngineerCount(data);
-    createChart(engineerCountChartCtx, {
-        type: 'line',
-        data: {
-            labels: months,
-            datasets: [{
-                label: 'Number of Engineers',
-                data: engineerCount,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-                fill: true
-            }]
-        },
-        plugins: [ChartDataLabels],
-        options: {
-            plugins: {
-                datalabels: {
-                    formatter: value => value,
-                    color: 'white',
-                    font: {
-                        size: 12
-                    },
-                    anchor: 'end',
-                    align: 'end'
-                },
-                legend: {
-                    display: false // 범례 숨김
-                }
+        // Monthly Engineer Count
+        const { months, engineerCount } = calculateMonthlyEngineerCount(data);
+        createChart(engineerCountChartCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Number of Engineers',
+                    data: engineerCount,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: true
+                }]
             },
-            scales: {
-                x: {
-                    ticks: {
-                        color: 'silver' // x축 레이블 색상
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        formatter: value => value,
+                        color: 'white',
+                        font: {
+                            size: 12
+                        },
+                        anchor: 'end',
+                        align: 'end'
+                    },
+                    legend: {
+                        display: false // 범례 숨김
                     }
                 },
-                y: {
-                    beginAtZero: true,
-                    suggestedMax: Math.max(...engineerCount) * 1.2,
-                    ticks: {
-                        color: 'silver' // y축 레이블 색상
+                scales: {
+                    x: {
+                        ticks: {
+                            color: 'silver' // x축 레이블 색상
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: Math.max(...engineerCount) * 1.2,
+                        ticks: {
+                            color: 'silver' // y축 레이블 색상
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 
         // Level Distribution 데이터 처리
         const levels = data.map(row => row.LEVEL);
@@ -270,8 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: true,
                         text: `Average Level: ${averageLevel}`,
                         font: {
-                            size:13
-                    
+                            size: 13
                         },
                         color: 'Yellow' // 제목 색상
                     },
@@ -341,8 +338,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: true,
                         text: `Average Multi Level: ${averageMultiLevel}`,
                         font: {
-                            size:13
-                    
+                            size: 13
                         },
                         color: 'Yellow' // 제목 색상
                     },
@@ -367,73 +363,73 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-    // Level Changes Over Time
-    const { quarters, levelDistribution } = calculateQuarterDistribution(data);
-    const levelDistributionData = {
-        labels: quarters,
-        datasets: [
-            {
-                label: 'Level 0',
-                data: levelDistribution.map(l => l.level0),
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1,
-                fill: false,
-            },
-            {
-                label: 'Level 1',
-                data: levelDistribution.map(l => l.level1),
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1,
-                fill: false,
-            },
-            {
-                label: 'Level 2',
-                data: levelDistribution.map(l => l.level2),
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-                fill: false,
-            },
-            {
-                label: 'Level 3',
-                data: levelDistribution.map(l => l.level3),
-                backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 1,
-                fill: false,
-            },
-            {
-                label: 'Level 4',
-                data: levelDistribution.map(l => l.level4),
-                backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1,
-                fill: false,
-            },
-        ],
-    };
+        // Level Changes Over Time
+        const { quarters, levelDistribution } = calculateQuarterDistribution(data);
+        const levelDistributionData = {
+            labels: quarters,
+            datasets: [
+                {
+                    label: 'Level 0',
+                    data: levelDistribution.map(l => l.level0),
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                },
+                {
+                    label: 'Level 1',
+                    data: levelDistribution.map(l => l.level1),
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                },
+                {
+                    label: 'Level 2',
+                    data: levelDistribution.map(l => l.level2),
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                },
+                {
+                    label: 'Level 3',
+                    data: levelDistribution.map(l => l.level3),
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                },
+                {
+                    label: 'Level 4',
+                    data: levelDistribution.map(l => l.level4),
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1,
+                    fill: false,
+                },
+            ],
+        };
 
-    createChart(levelChangesChartCtx, {
-        type: 'line',
-        data: levelDistributionData,
-        options: {
-            scales: {
-                x: {
-                    ticks: {
-                        color: 'silver',
+        createChart(levelChangesChartCtx, {
+            type: 'line',
+            data: levelDistributionData,
+            options: {
+                scales: {
+                    x: {
+                        ticks: {
+                            color: 'silver',
+                        },
                     },
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: 'silver',
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'silver',
+                        },
                     },
                 },
             },
-        },
-    });
+        });
 
         // Years of Service 데이터 처리
         const currentDate = new Date();
@@ -478,8 +474,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         display: true,
                         text: `Average Years of Service: ${averageServiceYears}`,
                         font: {
-                            size:13
-                    
+                            size: 13
                         },
                         color: 'Yellow' // 제목 색상
                     },
@@ -854,6 +849,120 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+
+        // MPI 데이터 처리 및 차트 생성
+        processMpiData(data);
+    }
+
+    function processMpiData(data) {
+        let totalMpi = 0;
+        let multiEngineerCount = 0;
+        let equipmentStats = {
+            'SUPRA N': { count: 0, engineers: [] },
+            'SUPRA XP': { count: 0, engineers: [] },
+            'INTEGER': { count: 0, engineers: [] },
+            'PRECIA': { count: 0, engineers: [] },
+            'ECOLITE': { count: 0, engineers: [] },
+            'GENEVA': { count: 0, engineers: [] }
+        };
+
+        data.forEach(row => {
+            totalMpi += row.MPI;
+
+            if (row.MPI >= 2) {
+                multiEngineerCount++;
+            }
+
+            if (row['SUPRA N MPI'] === 1) {
+                equipmentStats['SUPRA N'].count++;
+                equipmentStats['SUPRA N'].engineers.push(row.NAME);
+            }
+            if (row['SUPRA XP MPI'] === 1) {
+                equipmentStats['SUPRA XP'].count++;
+                equipmentStats['SUPRA XP'].engineers.push(row.NAME);
+            }
+            if (row['INTEGER MPI'] === 1) {
+                equipmentStats['INTEGER'].count++;
+                equipmentStats['INTEGER'].engineers.push(row.NAME);
+            }
+            if (row['PRECIA MPI'] === 1) {
+                equipmentStats['PRECIA'].count++;
+                equipmentStats['PRECIA'].engineers.push(row.NAME);
+            }
+            if (row['ECOLITE MPI'] === 1) {
+                equipmentStats['ECOLITE'].count++;
+                equipmentStats['ECOLITE'].engineers.push(row.NAME);
+            }
+            if (row['GENEVA MPI'] === 1) {
+                equipmentStats['GENEVA'].count++;
+                equipmentStats['GENEVA'].engineers.push(row.NAME);
+            }
+        });
+
+        const averageMpi = (totalMpi / data.length).toFixed(2);
+        const multiEngineerPercentage = ((multiEngineerCount / data.length) * 100).toFixed(2);
+
+        // HTML에 값 출력
+        document.getElementById('averageMpi').textContent = averageMpi;
+        document.getElementById('multiEngineerCount').textContent = `${multiEngineerCount} (${multiEngineerPercentage}%)`;
+
+        // MPI Distribution Chart 생성
+        createChart(mpiDistributionChartCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(equipmentStats),
+                datasets: [{
+                    label: 'Number of Engineers',
+                    data: Object.values(equipmentStats).map(equip => equip.count),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(255, 205, 86, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(201, 203, 207, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(201, 203, 207, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'black',
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: 'silver'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: 'silver'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Engineers'
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function updateCharts() {
@@ -866,12 +975,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         namesDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
     }
 
+    // 기존 이벤트 리스너에 추가된 필터 연결
     searchButton.addEventListener('click', updateCharts);
     resetButton.addEventListener('click', () => {
         searchGroup.value = '';
         searchSite.value = '';
         searchLevel.value = '';
         searchMultiLevel.value = '';
+        searchMultiEngr.value = ''; // 추가된 필터 초기화
         searchName.value = '';
         updateCharts();
     });
@@ -880,7 +991,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchSite.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
     searchLevel.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
     searchMultiLevel.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
+    searchMultiEngr.addEventListener('change', () => updateDatalistOptions(filterData(originalData))); // Multi Eng'r 필터 추가
 
+    // 초기 데이터 로딩
     const data = await fetchData();
     updateDatalistOptions(data);
     renderCharts(data);

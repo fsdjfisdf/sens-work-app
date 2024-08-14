@@ -69,6 +69,11 @@
                         <option value="3">3</option>
                         <option value="4">4</option>
                     </select>
+                    <select id="searchMultiEngr">
+                        <option value="">Multi Eng'r</option>
+                        <option value="O">O</option>
+                        <option value="X">X</option>
+                    </select>
                     <select id="searchMultiLevel">
                         <option value="">Select Multi Level</option>
                         <option value="0">4</option>
@@ -84,6 +89,7 @@
                     <button id="showEngineerGroup" class="active">Engineer</button>
                     <button id="showLevelGroup">Level</button>
                     <button id="showCapaGroup">CAPA</button>
+                    <button id="showMpiGroup">MPI</button>
                 </div>
                 <div id="personInfo" class="person-info hidden">
                     <p><strong>Name:</strong> <span id="personName"></span></p>
@@ -214,6 +220,27 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- MPI Group -->
+                    <div class="graph-group hidden" id="mpiGroup"> <!-- hidden 클래스를 추가 -->
+                        <h3 class="group-title">MPI</h3>
+                        <div class="mpi-stats">
+                            <button class="info-button" data-modal="mpiInfo">?</button>
+                            <p><strong>Avg MPI:</strong> <span id="averageMpi"></span></p>
+                            <p><strong>Multi Engineers:</strong> <span id="multiEngineerCount"></span></p>
+                        </div>
+                        <div class="graph-row">
+                            <div class="graph-item wide">
+                                <div class="graph-header">
+                                    <h3>MPI Distribution</h3>
+                                    <button class="info-button" data-modal="mpiDistributionInfo">?</button>
+                                </div>
+                                <div class="canvas-container">
+                                    <canvas id="mpiDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -292,6 +319,20 @@
             <p>TOTAL CAPA 그래프는 전체 CAPA를 보여줍니다.</p>
         </div>
     </div>
+    <div id="mpiInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>MPI(Multi Player Index)는 SEnS의 Multi Player를 선정하고 육성하기 위해 만들어진 기준입니다.<br><br>
+            ** MPI 부여 기준 : 설비 SET UP 역량 70% 이상 수행 가능한 Eng'r 에게 설비당 1점 부여<br>
+            ** Multi Player 선정 기준 : MPI 2점 이상 획득한 Eng'r</p>
+        </div>
+    </div>
+    <div id="mpiDistributionInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>MPI Distribution 그래프는 각 설비별 MPI를 취득한 Eng'r의 분포를 보여줍니다.</p>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -336,6 +377,9 @@
         });
         document.getElementById('showCapaGroup').addEventListener('click', () => {
             toggleButton('showCapaGroup', 'capaGroup');
+        });
+        document.getElementById('showMpiGroup').addEventListener('click', () => {
+        toggleButton('showMpiGroup', 'mpiGroup');
         });
 
         // 모달 창 제어
