@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Site Title</title>
+    <link rel="stylesheet" href="subtitle.css"> <!-- 외부 스타일 시트 링크 -->
+</head>
+<body>
+    <div class="container">
+        <h1>Submit a Title for the Site</h1>
+        <form id="titleForm">
+            <div class="form-group">
+                <label for="name">Your Name:</label><br>
+                <input type="text" id="name" name="name" required><br><br>
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label><br>
+                <input type="text" id="title" name="title" required><br><br>
+            </div>
+            <div class="form-group">
+                <label for="reason">Reason:</label><br>
+                <textarea id="reason" name="reason" required></textarea><br><br>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+
+        <p id="responseMessage"></p>
+    </div>
+
+    <script src="subtitle.js"></script> <!-- 외부 스크립트 링크 -->
+</body>
+</html>

@@ -40,6 +40,7 @@ module.exports = function () {
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
   require('../src/routes/SECMRoute')(app);
+  require('../src/routes/TitleRoute')(app);
   
 
   // 회원가입
