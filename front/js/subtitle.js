@@ -24,7 +24,7 @@ document.getElementById('titleForm').addEventListener('submit', async function(e
         const responseMessage = document.getElementById('responseMessage');
 
         if (result.success) {
-            responseMessage.textContent = 'Title submitted successfully!';
+            responseMessage.textContent = '제목 추천을 성공하였습니다. 당선 시, 10만원 상품권이 지급됩니다.';
             responseMessage.style.color = 'green';
             document.getElementById('titleForm').reset();
         } else {
