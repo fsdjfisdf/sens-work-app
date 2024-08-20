@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const ENGINEER_WORK_HOURS_PER_DAY = 3.5;
+    const ENGINEER_WORK_HOURS_PER_DAY = 3.3; // 1인당 하루 일하는 라인 업무 시간 설정하는 곳
     let logs = [];
     let engineers = [];
     let monthlyWorktimeChartInstance;
@@ -52,12 +52,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE3-PSKH': { weekday: 0, weekend: 0 }
         },
         '2024-08': {
-            'PEE1-PT': { weekday: 17, weekend: 3 },
+            'PEE1-PT': { weekday: 16, weekend: 3 }, // 조지훈, 정현우 8월 서류업무로 라인대응 거의 못함
             'PEE1-HS': { weekday: 17, weekend: 4 },
-            'PEE1-IC': { weekday: 4, weekend: 0.5 },
-            'PEE1-CJ': { weekday: 4, weekend: 0.5 },
-            'PEE2-PT': { weekday: 8, weekend: 1 },
-            'PEE2-HS': { weekday: 6, weekend: 1 },
+            'PEE1-IC': { weekday: 4, weekend: 1 },
+            'PEE1-CJ': { weekday: 4, weekend: 1 },
+            'PEE2-PT': { weekday: 8, weekend: 2 },
+            'PEE2-HS': { weekday: 6, weekend: 2 },
             'PEE3-PSKH': { weekday: 0, weekend: 0 }
         },
         // 각 월별로 데이터를 추가
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function getMonthlyEngineerCount(group, site, date, availabilityRate = 1) {
+    function getMonthlyEngineerCount(group, site, date, availabilityRate = 1, isHolidayFilter = false) {
         let month = date.toISOString().slice(0, 7);
     
         // 날짜가 1일인 경우 해당 월의 엔지니어 수를 사용하도록 수정
@@ -125,27 +125,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     
         const dayOfWeek = date.getDay();
-        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const dateString = formatDate(date.toISOString());
+        const isHolidayFlag = isHoliday(dateString);
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6 || isHolidayFlag);
+    
+        // Holiday 필터가 선택된 경우 weekend 값을 사용
+        const useWeekend = isHolidayFilter || isWeekend;
+    
         if (engineerCount[month] && engineerCount[month][`${group}-${site}`]) {
-            const count = isWeekend ? engineerCount[month][`${group}-${site}`].weekend : engineerCount[month][`${group}-${site}`].weekday;
+            const count = useWeekend ? engineerCount[month][`${group}-${site}`].weekend : engineerCount[month][`${group}-${site}`].weekday;
             return Math.round(count * availabilityRate);
         }
         return 0;
     }
-
+    
     function calculateTotalEngineersForMonth(date, isWeekend, availabilityRate = 1) {
         const month = date.toISOString().slice(0, 7);
+        const dateString = formatDate(date.toISOString());
+        const isHolidayFlag = isHoliday(dateString);
+        const isHolidayOrWeekend = isWeekend || isHolidayFlag; // 주말 또는 공휴일 여부 확인
+    
         if (engineerCount[month]) {
-            return Object.values(engineerCount[month]).reduce((acc, count) => acc + (isWeekend ? count.weekend : count.weekday) * availabilityRate, 0);
+            return Object.values(engineerCount[month]).reduce((acc, count) => {
+                return acc + (isHolidayOrWeekend ? count.weekend : count.weekday) * availabilityRate;
+            }, 0);
         }
         return 0;
     }
-
     function calculateOperationRate(totalMinutes, uniqueDates, totalEngineers) {
-        if (totalEngineers === 0) return 0; // 엔지니어 수가 0인 경우 가동율을 0으로 설정
+        if (totalEngineers === 0 || uniqueDates === 0) return 0; // 엔지니어 수가 0이거나 날짜가 없는 경우 가동율을 0으로 설정
+    
         const totalHours = totalMinutes / 60;
         const averageDailyHours = totalHours / uniqueDates;
         const requiredEngineers = averageDailyHours / ENGINEER_WORK_HOURS_PER_DAY;
+    
         return (requiredEngineers / totalEngineers) * 100;
     }
 
@@ -325,8 +338,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (operationRateChartInstance) {
             operationRateChartInstance.destroy();
         }
+    
         const groupSiteWorktime = {};
         const groupSiteDates = {};
+        const groupSiteFirstDates = {};
     
         logs.forEach(log => {
             const key = `${log.group}-${log.site}`;
@@ -335,22 +350,67 @@ document.addEventListener('DOMContentLoaded', async () => {
             const minutes = parseInt(durationParts[1], 10);
             const taskDurationMinutes = (hours * 60) + minutes;
             const numWorkers = log.task_man.split(',').length;
+    
             if (!groupSiteWorktime[key]) {
                 groupSiteWorktime[key] = 0;
                 groupSiteDates[key] = new Set();
+                groupSiteFirstDates[key] = log.task_date; // 작업이 처음 있었던 날짜 설정
             }
+    
             groupSiteWorktime[key] += taskDurationMinutes * numWorkers;
             groupSiteDates[key].add(log.task_date);
+    
+            // 작업이 처음 시작된 날짜를 업데이트 (평일, 주말 관계없이 가장 처음 날짜를 찾기 위해)
+            if (new Date(log.task_date) < new Date(groupSiteFirstDates[key])) {
+                groupSiteFirstDates[key] = log.task_date;
+            }
         });
     
         const labels = [];
         const data = [];
     
+        const endDateInput = document.getElementById('searchEndDate').value;
+        const endDate = endDateInput ? new Date(endDateInput) : new Date(); // end date가 없으면 오늘 날짜 사용
+    
+        const isHolidayFilter = document.getElementById('searchWorkType').value === 'Holiday';
+    
         Object.keys(groupSiteWorktime).forEach(key => {
-            const totalMinutes = groupSiteWorktime[key];
-            const uniqueDates = groupSiteDates[key].size;
-            const totalEngineers = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], new Date(), 1); // 100% availability
+            let totalMinutes = groupSiteWorktime[key];
+            const firstDate = new Date(groupSiteFirstDates[key]);
+            let uniqueDates = 0;
+    
+            console.log(`Calculating for: ${key}`);
+            console.log(`First date: ${firstDate.toISOString().split('T')[0]}`);
+            console.log(`End date: ${endDate.toISOString().split('T')[0]}`);
+    
+            let date = new Date(firstDate);
+            while (date <= endDate) {
+                const formattedDate = formatDate(date.toISOString());
+                const dayOfWeek = date.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHoliday = holidays.includes(formattedDate);
+    
+                if (isHolidayFilter) {
+                    if (isWeekend || isHoliday) {
+                        uniqueDates++;
+                    }
+                } else {
+                    uniqueDates++;
+                }
+                date.setDate(date.getDate() + 1);
+            }
+    
+            console.log(`Total unique dates (only weekends and holidays for Holiday filter): ${uniqueDates}`);
+            console.log(`Total minutes: ${totalMinutes}`);
+    
+            const totalEngineers = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], endDate, 1, isHolidayFilter);
+    
+            console.log(`Total engineers for ${key.split('-')[0]}-${key.split('-')[1]}: ${totalEngineers}`);
+    
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
+    
+            console.log(`Operation rate: ${operationRate}%`);
+    
             labels.push(key);
             data.push(operationRate);
         });
@@ -392,6 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    
 
     function applyFilters(logs, engineers) {
         const searchGroup = document.getElementById('searchGroup').value;
@@ -484,16 +545,16 @@ document.getElementById('resetButton').addEventListener('click', () => {
     function renderCalendar(logs, engineers, year, month) {
         const calendarContainer = document.getElementById('calendarContainer');
         calendarContainer.innerHTML = '';
-
+    
         const currentMonthLogs = logs.filter(log => {
             const logDate = new Date(log.task_date);
             const localDate = new Date(logDate.getTime() + (logDate.getTimezoneOffset() * 60000) + (9 * 3600000)); // 서버 시간 9시간 보정
             return localDate.getFullYear() === year && localDate.getMonth() === month;
         });
-
+    
         const navigationContainer = document.createElement('div');
         navigationContainer.className = 'calendar-navigation';
-
+    
         const prevMonthButton = document.createElement('button');
         prevMonthButton.className = 'calendar-nav-button';
         prevMonthButton.textContent = 'Last Month';
@@ -506,7 +567,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             renderCalendar(logs, engineers, currentYear, currentMonth);
         };
         navigationContainer.appendChild(prevMonthButton);
-
+    
         const nextMonthButton = document.createElement('button');
         nextMonthButton.className = 'calendar-nav-button';
         nextMonthButton.textContent = 'Next Month';
@@ -519,25 +580,24 @@ document.getElementById('resetButton').addEventListener('click', () => {
             renderCalendar(logs, engineers, currentYear, currentMonth);
         };
         navigationContainer.appendChild(nextMonthButton);
-
+    
         const calendarTitle = document.createElement('span');
         calendarTitle.className = 'calendar-title';
         calendarTitle.textContent = `${year}-${String(month + 1).padStart(2, '0')}`;
-
+    
         const calendarNavigation = document.createElement('div');
         calendarNavigation.className = 'calendar-navigation';
         calendarNavigation.appendChild(prevMonthButton);
         calendarNavigation.appendChild(calendarTitle);
         calendarNavigation.appendChild(nextMonthButton);
-
+    
         calendarContainer.appendChild(calendarNavigation);
-
-
+    
         const daysInWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         const firstDayOfMonth = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const startDay = (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1); // 월요일 시작
-
+    
         const calendarHeader = document.createElement('div');
         calendarHeader.className = 'calendar-header';
         daysInWeek.forEach(day => {
@@ -547,7 +607,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             calendarHeader.appendChild(dayElement);
         });
         calendarContainer.appendChild(calendarHeader);
-
+    
         const calendarRows = [];
         let calendarRow = document.createElement('div');
         calendarRow.className = 'calendar-row';
@@ -556,18 +616,18 @@ document.getElementById('resetButton').addEventListener('click', () => {
             emptyDay.className = 'calendar-day empty';
             calendarRow.appendChild(emptyDay);
         }
-
+    
         for (let date = 1; date <= daysInMonth; date++) {
             if ((date + startDay - 1) % 7 === 0) {
                 calendarContainer.appendChild(calendarRow);
                 calendarRow = document.createElement('div');
                 calendarRow.className = 'calendar-row';
             }
-
+    
             const currentDate = new Date(year, month, date);
             const dateString = formatDate(currentDate.toISOString());
             const isHolidayFlag = isHoliday(dateString);
-
+    
             const dailyLogs = currentMonthLogs.filter(log => log.task_date.startsWith(dateString));
             const totalMinutes = dailyLogs.reduce((acc, log) => {
                 const durationParts = log.task_duration.split(':');
@@ -577,22 +637,25 @@ document.getElementById('resetButton').addEventListener('click', () => {
                 const numWorkers = log.task_man.split(',').length;
                 return acc + (taskDurationMinutes * numWorkers);
             }, 0);
-
+    
+            const taskCount = dailyLogs.length; // 작업 건수 계산
+    
             if (totalMinutes === 0) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'calendar-day empty';
                 calendarRow.appendChild(emptyDay);
                 continue;
             }
-
+    
             const uniqueDates = 1;
             let totalEngineers = 0;
             const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-
+            const isHolidayOrWeekend = isWeekend || isHolidayFlag; // 주말 또는 공휴일 여부 확인
+    
             const searchGroup = document.getElementById('searchGroup').value;
             const searchSite = document.getElementById('searchSite').value;
             const availabilityRate = document.getElementById('engineerAvailability').value === '90%' ? 0.9 : 1;
-
+    
             if (searchGroup && searchSite) {
                 totalEngineers = getMonthlyEngineerCount(searchGroup, searchSite, currentDate, availabilityRate);
             } else if (searchGroup) {
@@ -604,18 +667,18 @@ document.getElementById('resetButton').addEventListener('click', () => {
                     return acc;
                 }, 0);
             } else {
-                totalEngineers = calculateTotalEngineersForMonth(currentDate, isWeekend, availabilityRate);
+                totalEngineers = calculateTotalEngineersForMonth(currentDate, isHolidayOrWeekend, availabilityRate);
             }
-
+    
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
             const requiredEngineers = (totalMinutes / uniqueDates) / (ENGINEER_WORK_HOURS_PER_DAY * 60);
-
+    
             const calendarDay = document.createElement('div');
             calendarDay.className = 'calendar-day';
-            if (isWeekend || isHolidayFlag) {
+            if (isHolidayOrWeekend) {
                 calendarDay.style.color = 'red';
             }
-
+    
             if (operationRate >= 100) {
                 calendarDay.classList.add('lack');
             } else if (operationRate >= 70) {
@@ -623,10 +686,11 @@ document.getElementById('resetButton').addEventListener('click', () => {
             } else {
                 calendarDay.classList.add('surplus');
             }
-
+    
             calendarDay.innerHTML = `
                 <p style="font-weight: bold;">${dateString}</p>
                 <p>${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min</p>
+                <p>건 수: ${taskCount}건</p> <!-- 작업 건수를 표시 -->
                 <p>필요 Eng'r: ${requiredEngineers.toFixed(2)}명</p>
                 <p style="color: blue;">가동율: ${operationRate.toFixed(2)}%</p>
             `;
@@ -634,7 +698,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             calendarRow.appendChild(calendarDay);
         }
         calendarContainer.appendChild(calendarRow);
-
+    
         const calendarLegend = document.createElement('div');
         calendarLegend.className = 'calendar-legend';
         calendarLegend.innerHTML = `
@@ -799,23 +863,15 @@ document.getElementById('resetButton').addEventListener('click', () => {
         };
     
         logs.forEach(log => {
-            const { work_type, task_duration } = log;
-            const durationParts = task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            const totalDuration = taskDurationMinutes * numWorkers;
-    
+            const { work_type } = log;
             if (workTypeData[work_type] !== undefined) {
-                workTypeData[work_type] += totalDuration;
+                workTypeData[work_type] += 1; // 작업 건수만 증가
             }
         });
     
         const labels = Object.keys(workTypeData);
-        const worktimeValues = labels.map(type => workTypeData[type] / 60); // hours
-        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
-        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+        const workCountValues = labels.map(type => workTypeData[type]);
+        const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
     
         const ctx = document.getElementById('workTypeStatsChart').getContext('2d');
         workTypeStatsChartInstance = new Chart(ctx, {
@@ -823,7 +879,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    data: worktimeValues,
+                    data: workCountValues,
                     backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(91, 223, 105, 0.61)', 'rgba(255, 206, 86, 0.6)'],
                     borderColor: ['rgba(255, 99, 132, 1)', 'rgba(91, 223, 105, 1)', 'rgba(255, 206, 86, 1)'],
                     borderWidth: 2
@@ -832,7 +888,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.5, // 원하는 비율로 조정
+                aspectRatio: 1.5,
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -848,8 +904,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
                             label: function(context) {
                                 const label = context.label || '';
                                 const value = context.raw || 0;
-                                const percentage = percentages[context.dataIndex];
-                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                                const percentage = ((value / totalTasks) * 100).toFixed(2);
+                                return `${label}: ${value} tasks (${percentage}%)`;
                             }
                         }
                     }
@@ -857,6 +913,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             }
         });
     }
+    
     
     function renderEquipmentTypeStatsChart(logs) {
         if (equipmentTypeStatsChartInstance) {
@@ -866,66 +923,71 @@ document.getElementById('resetButton').addEventListener('click', () => {
         const equipmentTypeData = {};
     
         logs.forEach(log => {
-            const { equipment_type, task_duration } = log;
-            const durationParts = task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            const totalDuration = taskDurationMinutes * numWorkers;
+            const { equipment_type } = log;
     
             if (!equipmentTypeData[equipment_type]) {
                 equipmentTypeData[equipment_type] = 0;
             }
     
-            equipmentTypeData[equipment_type] += totalDuration;
+            equipmentTypeData[equipment_type] += 1; // 작업 건수만 증가
         });
     
         const labels = Object.keys(equipmentTypeData);
-        const worktimeValues = labels.map(type => equipmentTypeData[type] / 60); // hours
-        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
-        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+        const workCountValues = labels.map(type => equipmentTypeData[type]);
+        const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
     
         const ctx = document.getElementById('equipmentTypeStatsChart').getContext('2d');
         equipmentTypeStatsChartInstance = new Chart(ctx, {
-            type: 'doughnut',
+            type: 'bar', // 그래프 유형을 막대형(bar)으로 변경
             data: {
                 labels: labels,
                 datasets: [{
-                    data: worktimeValues,
-                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)', 'rgba(181, 86, 235, 0.61)'],
-                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(181, 86, 235, 1)'],
+                    data: workCountValues,
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
                     borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.5, // 원하는 비율로 조정
+                aspectRatio: 1.5,
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#333',
-                            font: {
-                                size: 11
-                            }
-                        }
+                        display: false // 범례 비활성화
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const label = context.label || '';
                                 const value = context.raw || 0;
-                                const percentage = percentages[context.dataIndex];
-                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                                const percentage = ((value / totalTasks) * 100).toFixed(2);
+                                return `${label}: ${value} tasks (${percentage}%)`;
                             }
                         }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Equipment Type'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Number of Tasks'
+                        },
+                        beginAtZero: true
                     }
                 }
             }
         });
     }
+    
+    
+    
     
     function renderAmPmStatsChart(logs) {
         if (amPmStatsChartInstance) {
@@ -938,26 +1000,18 @@ document.getElementById('resetButton').addEventListener('click', () => {
         };
     
         logs.forEach(log => {
-            const { start_time, task_duration } = log;
-            const durationParts = task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            const totalDuration = taskDurationMinutes * numWorkers;
-    
+            const { start_time } = log;
             const startTimeParts = start_time.split(':');
             const startHour = parseInt(startTimeParts[0], 10);
     
             const period = startHour < 12 ? 'AM' : 'PM';
     
-            amPmData[period] += totalDuration;
+            amPmData[period] += 1; // 작업 건수만 증가
         });
     
         const labels = Object.keys(amPmData);
-        const worktimeValues = labels.map(period => amPmData[period] / 60); // hours
-        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
-        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+        const workCountValues = labels.map(period => amPmData[period]);
+        const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
     
         const ctx = document.getElementById('amPmStatsChart').getContext('2d');
         amPmStatsChartInstance = new Chart(ctx, {
@@ -965,7 +1019,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    data: worktimeValues,
+                    data: workCountValues,
                     backgroundColor: ['rgba(255, 166, 197, 0.61)', 'rgba(3, 14, 33, 0.2)'],
                     borderColor: ['rgba(255, 166, 197, 1)', 'rgba(3, 14, 33, 0.3)'],
                     borderWidth: 2
@@ -974,7 +1028,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                aspectRatio: 1.5, // 원하는 비율로 조정
+                aspectRatio: 1.5,
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -990,8 +1044,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
                             label: function(context) {
                                 const label = context.label || '';
                                 const value = context.raw || 0;
-                                const percentage = percentages[context.dataIndex];
-                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                                const percentage = ((value / totalTasks) * 100).toFixed(2);
+                                return `${label}: ${value} tasks (${percentage}%)`;
                             }
                         }
                     }
@@ -999,6 +1053,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
             }
         });
     }
+    
+    
     
 
     function renderOvertimeChart(logs) {
@@ -1012,29 +1068,21 @@ document.getElementById('resetButton').addEventListener('click', () => {
         };
     
         logs.forEach(log => {
-            const { end_time, task_duration } = log;
+            const { end_time } = log;
             const endTimeParts = end_time.split(':');
             const endHour = parseInt(endTimeParts[0], 10);
             const endMinutes = parseInt(endTimeParts[1], 10);
     
-            const durationParts = task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            const totalDuration = taskDurationMinutes * numWorkers;
-    
             if ((endHour >= 18 || endHour < 8) || (endHour === 8 && endMinutes <= 30)) {
-                overtimeData['Overtime'] += totalDuration;
+                overtimeData['Overtime'] += 1; // 작업 건수만 증가
             } else {
-                overtimeData['Regular'] += totalDuration;
+                overtimeData['Regular'] += 1;
             }
         });
     
         const labels = Object.keys(overtimeData);
-        const worktimeValues = labels.map(type => overtimeData[type] / 60); // hours
-        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
-        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+        const workCountValues = labels.map(type => overtimeData[type]);
+        const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
     
         const ctx = document.getElementById('overtimeChart').getContext('2d');
         overtimeChartInstance = new Chart(ctx, {
@@ -1042,7 +1090,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    data: worktimeValues,
+                    data: workCountValues,
                     backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)'],
                     borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
                     borderWidth: 2
@@ -1062,8 +1110,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
                             label: function(context) {
                                 const label = context.label || '';
                                 const value = context.raw || 0;
-                                const percentage = percentages[context.dataIndex];
-                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                                const percentage = ((value / totalTasks) * 100).toFixed(2);
+                                return `${label}: ${value} tasks (${percentage}%)`;
                             }
                         }
                     }
@@ -1071,7 +1119,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             }
         });
     }
-
+    
     
     function renderTimeRangeChart(logs) {
         if (timeRangeChartInstance) {
@@ -1161,23 +1209,16 @@ document.getElementById('resetButton').addEventListener('click', () => {
         };
     
         logs.forEach(log => {
-            const { warranty, task_duration } = log;
-            const durationParts = task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            const totalDuration = taskDurationMinutes * numWorkers;
+            const { warranty } = log;
     
             if (warranty === 'WI' || warranty === 'WO') {
-                warrantyData[warranty] += totalDuration;
+                warrantyData[warranty] += 1; // 작업 건수만 증가
             }
         });
     
         const labels = Object.keys(warrantyData);
-        const worktimeValues = labels.map(type => warrantyData[type] / 60); // hours
-        const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
-        const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+        const workCountValues = labels.map(type => warrantyData[type]);
+        const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
     
         const ctx = document.getElementById('warrantyChart').getContext('2d');
         warrantyChartInstance = new Chart(ctx, {
@@ -1185,7 +1226,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    data: worktimeValues,
+                    data: workCountValues,
                     backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)'],
                     borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
                     borderWidth: 2
@@ -1205,8 +1246,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
                             label: function(context) {
                                 const label = context.label || '';
                                 const value = context.raw || 0;
-                                const percentage = percentages[context.dataIndex];
-                                return `${label}: ${value.toFixed(2)} hours (${percentage}%)`;
+                                const percentage = ((value / totalTasks) * 100).toFixed(2);
+                                return `${label}: ${value} tasks (${percentage}%)`;
                             }
                         }
                     }

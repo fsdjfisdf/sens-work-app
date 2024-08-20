@@ -237,3 +237,26 @@ footer {
         width: 100%;
     }
 }
+
+
+.confidentiality {
+    background-color: #f4f4f9; /* 페이지 배경과 유사한 색상으로 설정 */
+    color: #333; /* 텍스트 색상을 본문 텍스트 색상과 일치 */
+    padding: 30px 20px; /* 여백을 적절히 조정 */
+    text-align: center;
+    margin-top: 0px;
+    border-radius: 8px; /* 모서리를 부드럽게 처리 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 약간의 그림자를 추가하여 구분 */
+}
+
+.confidentiality h3 {
+    font-size: 20px; /* 제목 크기를 약간 줄임 */
+    margin-bottom: 15px;
+    color: #0044cc; /* 제목 색상을 내비게이션과 일치시키기 위해 파란색으로 설정 */
+}
+
+.confidentiality p {
+    font-size: 16px;
+    line-height: 1.5;
+}
+

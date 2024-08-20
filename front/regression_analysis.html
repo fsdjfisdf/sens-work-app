@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regression Analysis</title>
+    <link rel="stylesheet" href="./css/regression_analysis.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./js/regression_analysis.js" defer></script>
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container">
+                    <div class="unsigned hidden"></div>
+                    <div class="signed hidden">
+                        <div class="dropdown">
+                            <button class="dropbtn">MENU</button>
+                            <div class="dropdown-content">
+                                <a href="./user_info.html" class="dropdown-item">SECM</a>
+                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
+                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
+                                <a href="./equipment.html" class="dropdown-item">Equipment</a>
+                                <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
+                                <a href="./regression_analysis.html" class="dropdown-item">Regression Analysis</a>
+                                <button id="sign-out" class="dropdown-item">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="analysis-section">
+            <div class="inner">
+                <h2>Regression Analysis: Task Count vs Required Engineers</h2>
+        
+                <div class="filter-container">
+                    <label for="groupFilter">Group:</label>
+                    <select id="groupFilter">
+                        <option value="">All</option>
+                        <option value="PEE1">PEE1(SUPRA)</option>
+                        <option value="PEE2">PEE2(INTEGER)</option>
+                        <option value="PEE3">PEE3(PSKH)</option>
+                    </select>
+        
+                    <label for="siteFilter">Site:</label>
+                    <select id="siteFilter">
+                        <option value="">All</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+        
+                    <button id="filterButton" class="btn-primary">Filter</button>
+                    <button id="resetButton" class="btn-secondary">Reset</button>
+                </div>
+
+                <div class="chart-container">
+                    <h3>SET UP & RELOCATION</h3>
+                    <canvas id="setupRelocationChart"></canvas>
+                    <div class="regression-info">
+                        <p><strong>Regression Equation:</strong> <span id="setupRelocationEquation" class="equation"></span></p>
+                        <p><strong>R²:</strong> <span id="setupRelocationRSquared" class="rsquared"></span></p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>MAINT</h3>
+                    <canvas id="maintChart"></canvas>
+                    <div class="regression-info">
+                        <p><strong>Regression Equation:</strong> <span id="maintEquation" class="equation"></span></p>
+                        <p><strong>R²:</strong> <span id="maintRSquared" class="rsquared"></span></p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3>Task Count Prediction for Next Month</h3>
+                    <canvas id="taskPredictionChart"></canvas>
+                    <p id="predictionText" class="prediction"></p>
+                </div>
+
+                <div class="chart-container">
+                    <h3>Required Engineers for Next Month</h3>
+                    <div id="engineersRequiredSection"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="inner">
+            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+        </div>
+    </footer>
+</body>
+</html>
