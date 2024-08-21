@@ -25,7 +25,7 @@
                                 <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
                                 <a href="./equipment.html" class="dropdown-item">Equipment</a>
                                 <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
-                                <a href="./regression_analysis.html" class="dropdown-item">Regression Analysis</a>
+                                <a href="./regression_analysis.html" class="dropdown-item admin-only">Predicted Workers</a>
                                 <button id="sign-out" class="dropdown-item">Logout</button>
                             </div>
                         </div>
@@ -38,7 +38,6 @@
     <main>
         <section class="analysis-section">
             <div class="inner">
-                <h2>Regression Analysis: Task Count vs Required Engineers</h2>
         
                 <div class="filter-container">
                     <label for="groupFilter">Group:</label>
@@ -61,8 +60,8 @@
         
                     <button id="filterButton" class="btn-primary">Filter</button>
                     <button id="resetButton" class="btn-secondary">Reset</button>
-                </div>
-
+                </div><br>
+                <h2>Regression Analysis: Task Count vs Required Engineers</h2><br>
                 <div class="chart-container">
                     <h3>SET UP & RELOCATION</h3>
                     <canvas id="setupRelocationChart"></canvas>
@@ -80,20 +79,60 @@
                         <p><strong>R²:</strong> <span id="maintRSquared" class="rsquared"></span></p>
                     </div>
                 </div>
-                
+                <h2>Worker Prediction for Next Month</h2>
                 <div class="chart-container">
-                    <h3>Task Count Prediction for Next Month</h3>
                     <canvas id="taskPredictionChart"></canvas>
                     <p id="predictionText" class="prediction"></p>
-                </div>
-
-                <div class="chart-container">
-                    <h3>Required Engineers for Next Month</h3>
-                    <div id="engineersRequiredSection"></div>
                 </div>
             </div>
         </section>
     </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+    </script>
+
 
     <footer>
         <div class="inner">

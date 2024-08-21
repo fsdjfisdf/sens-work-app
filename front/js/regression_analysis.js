@@ -70,24 +70,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calculateTaskCountAndEngineers(logs) {
         const taskData = {};
-
+    
         logs.forEach(log => {
             const logDate = log.task_date.split('T')[0];
             if (!isWeekday(logDate)) return;
-
+    
             const durationParts = log.task_duration.split(':');
             const hours = parseInt(durationParts[0], 10);
             const minutes = parseInt(durationParts[1], 10);
             const taskDurationMinutes = (hours * 60) + minutes;
-
+    
+            // 작업자 인원 수를 계산
+            const workerCount = log.task_man ? log.task_man.split(" ").filter(name => name.includes("(main)") || name.includes("(support)")).length : 1;
+    
+            // 작업 인원 수를 고려하여 작업 시간을 계산
+            const effectiveDuration = taskDurationMinutes * workerCount;
+    
             if (!taskData[logDate]) {
                 taskData[logDate] = { taskCount: 0, totalMinutes: 0 };
             }
-
+    
             taskData[logDate].taskCount += 1;
-            taskData[logDate].totalMinutes += taskDurationMinutes;
+            taskData[logDate].totalMinutes += effectiveDuration;
         });
-
+    
         return Object.entries(taskData).map(([date, data]) => ({
             date,
             taskCount: data.taskCount,
@@ -96,26 +102,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function performLinearRegression(data) {
-        const taskCounts = data.map(item => item.taskCount);
-        const requiredEngineers = data.map(item => item.requiredEngineers);
-
+        // 데이터의 3/4 분위에 해당하는 인덱스를 계산합니다.
+        const threeQuarterIndex = Math.floor(data.length * 0.75);
+        const taskCounts = data.slice(0, threeQuarterIndex).map(item => item.taskCount);
+        const requiredEngineers = data.slice(0, threeQuarterIndex).map(item => item.requiredEngineers);
+    
         const n = taskCounts.length;
         const sumX = taskCounts.reduce((a, b) => a + b, 0);
         const sumY = requiredEngineers.reduce((a, b) => a + b, 0);
         const sumXY = taskCounts.reduce((sum, x, i) => sum + x * requiredEngineers[i], 0);
         const sumXX = taskCounts.reduce((sum, x) => sum + x * x, 0);
-
+    
         const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
         const intercept = (sumY - slope * sumX) / n;
-
+    
         const rSquared = 1 - (taskCounts.reduce((sum, x, i) => {
             const predictedY = slope * x + intercept;
             const actualY = requiredEngineers[i];
             return sum + Math.pow(predictedY - actualY, 2);
         }, 0) / requiredEngineers.reduce((sum, y) => sum + Math.pow(y - sumY / n, 2), 0));
-
+    
         return { slope, intercept, rSquared };
     }
+    
 
     function renderRegressionCharts(ctx1, ctx2, data1, data2, chartInstance1, chartInstance2, equationElementId1, rSquaredElementId1, equationElementId2, rSquaredElementId2) {
         // 기존 차트를 삭제합니다.
@@ -231,12 +240,16 @@ document.addEventListener('DOMContentLoaded', () => {
             weeks[week].taskCount += item.taskCount;
             weeks[week].totalMinutes += item.requiredEngineers * (ENGINEER_WORK_HOURS_PER_DAY * 60);
         });
-
-        return Object.entries(weeks).map(([week, data]) => ({
+    
+        const weeklyData = Object.entries(weeks).map(([week, data]) => ({
             week,
             taskCount: data.taskCount,
             requiredEngineers: data.totalMinutes / (ENGINEER_WORK_HOURS_PER_DAY * 60)
         }));
+    
+        // 3/4 분위 계산
+        const threeQuarterIndex = Math.floor(weeklyData.length * 0.75);
+        return weeklyData.slice(0, threeQuarterIndex);
     }
 
     function getWeekNumber(date) {
