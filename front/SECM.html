@@ -87,10 +87,11 @@
                     <button id="resetButton">RESET</button>
                 </div>
                 <div class="button-container">
-                    <button id="showEngineerGroup" class="active">Engineer</button>
-                    <button id="showLevelGroup">Level</button>
+                    <button id="showEngineerGroup" class="active">INFO</button>
+                    <button id="showLevelGroup">LEVEL</button>
                     <button id="showCapaGroup">CAPA</button>
                     <button id="showMpiGroup">MPI</button>
+                    <button id="showWorkGroup">WORK</button>
                 </div>
                 <div id="personInfo" class="person-info hidden">
                     <p><strong>Name:</strong> <span id="personName"></span></p>
@@ -242,6 +243,85 @@
                             </div>
                         </div>
                     </div>
+
+<!-- Work Group -->
+<div class="graph-group hidden" id="workGroup"> <!-- 새로운 섹션 추가 -->
+    <h3 class="group-title">WORK</h3>
+    <div class="graph-row">
+        <div class="graph-item wide">
+            <div class="graph-header">
+                <h3>Monthly Work Time & Count Trend</h3>
+                <button class="info-button" data-modal="workTimeCountInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="workTimeCountTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="graph-row">
+        <div class="graph-item medium">
+            <div class="graph-header">
+                <h3>SET UP, MAINT, RELOCATION</h3>
+                <button class="info-button" data-modal="workTypeRatioInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="workTypeRatioChart"></canvas>
+            </div>
+        </div>
+        <div class="graph-item medium">
+            <div class="graph-header">
+                <h3>AM vs PM</h3>
+                <button class="info-button" data-modal="amPmWorkInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="itemWorkCountChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="graph-row">
+        <div class="graph-item medium">
+            <div class="graph-header">
+                <h3>Overtime vs Regular</h3>
+                <button class="info-button" data-modal="overtimeRegularInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="overtimeRegularChart"></canvas>
+            </div>
+        </div>
+        <div class="graph-item medium">
+            <div class="graph-header">
+                <h3>Time Range</h3>
+                <button class="info-button" data-modal="timeRangeInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="timeRangeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="graph-row">
+        <div class="graph-item wide">
+            <div class="graph-header">
+                <h3>SET UP TASK</h3>
+                <button class="info-button" data-modal="setupTaskInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="setupTaskChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="graph-row">
+        <div class="graph-item wide">
+            <div class="graph-header">
+                <h3>MAINT TASK</h3>
+                <button class="info-button" data-modal="maintTaskInfo">?</button>
+            </div>
+            <div class="canvas-container">
+                <canvas id="maintTaskChart"></canvas>
+            </div>
+        </div>
+    </div>
+
                 </div>
             </div>
         </section>
@@ -334,6 +414,38 @@
             <p>MPI Distribution 그래프는 각 설비별 MPI를 취득한 Eng'r의 분포를 보여줍니다.</p>
         </div>
     </div>
+    <!-- SET UP TASK Info -->
+    <div id="setupTaskInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>SET UP TASK 그래프는 각 SET UP 항목별 작업 건수를 나타냅니다.</p>
+        </div>
+    </div>
+
+    <!-- MAINT TASK Info -->
+    <div id="maintTaskInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>MAINT TASK 그래프는 각 MAINT 항목별 작업 건수를 나타냅니다.</p>
+        </div>
+    </div>
+    
+    <!-- Overtime vs Regular Info -->
+    <div id="overtimeRegularInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Overtime vs Regular 그래프는 작업 종료 시간을 기준으로 Regular(18시 이전)와 Overtime(18시 이후) 작업 건수를 비교합니다.</p>
+        </div>
+    </div>
+    
+    <!-- Time Range Info -->
+    <div id="timeRangeInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Time Range 그래프는 작업에 걸린 시간 구간별 작업 건수를 나타냅니다.<br>구간은 0-1시간, 1-2시간, 2-3시간, 3-4시간, 4시간 이상으로 나뉩니다.</p>
+        </div>
+    </div>
+    
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>

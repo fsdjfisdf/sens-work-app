@@ -1,3 +1,5 @@
+let workLogs = []; // 전역 변수로 선언, fetchWorkLogs로 데이터를 채우게 됩니다.
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
 
@@ -21,6 +23,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const levelChangesChartCtx = document.getElementById('levelChangesChart').getContext('2d');
     const mpiDistributionChartCtx = document.getElementById('mpiDistributionChart').getContext('2d'); // 추가된 부분
     const monthlyCapaChange = document.getElementById('monthlyCapaChange');
+    const workTimeCountTrendChartCtx = document.getElementById('workTimeCountTrendChart').getContext('2d');
+    const workTypeRatioChartCtx = document.getElementById('workTypeRatioChart').getContext('2d');
+    const itemWorkCountChartCtx = document.getElementById('itemWorkCountChart').getContext('2d');
+    const overtimeRegularChartCtx = document.getElementById('overtimeRegularChart').getContext('2d');
+    const timeRangeChartCtx = document.getElementById('timeRangeChart').getContext('2d');
+    const setupTaskChartCtx = document.getElementById('setupTaskChart').getContext('2d');
+    const maintTaskChartCtx = document.getElementById('maintTaskChart').getContext('2d');
+
+
+
 
     // 기타 DOM 요소 초기화
     const searchButton = document.getElementById('searchButton');
@@ -965,9 +977,506 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    function updateCharts() {
-        const filteredData = filterData(originalData);
-        renderCharts(filteredData);
+
+      // 기존 toggleButton 함수에 "Work" 탭 추가
+      document.getElementById('showWorkGroup').addEventListener('click', () => {
+        toggleButton('showWorkGroup', 'workGroup');
+    });
+
+
+    async function fetchWorkLogs() {
+        try {
+            const response = await axios.get('http://3.37.165.84:3001/logs');
+            workLogs = response.data; // 작업 이력 데이터를 저장
+            return workLogs;
+        } catch (error) {
+            console.error('Error fetching work logs:', error);
+            return [];
+        }
+    }
+
+    function filterWorkLogData(data) {
+        const group = searchGroup.value;
+        const site = searchSite.value;
+        const taskMan = searchName.value.toLowerCase();
+    
+        return data.filter(log => {
+            const matchesGroup = !group || log.group === group;
+            const matchesSite = !site || log.site === site;
+            const matchesTaskMan = !taskMan || log.task_man.toLowerCase().includes(taskMan);
+            
+            return matchesGroup && matchesSite && matchesTaskMan;
+        });
+    }
+    
+
+    function renderWorkCharts(data) {
+        // 필터링된 데이터 사용
+        const filteredData = filterWorkLogData(data);
+        // 1. Monthly Work Time & Count Trend
+        const monthlyData = {};
+        
+        data.forEach(log => {
+            const date = new Date(log.task_date);
+            const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+            if (!monthlyData[month]) {
+                monthlyData[month] = { time: 0, count: 0 };
+            }
+        
+            // task_duration을 분 단위로 변환
+            const durationParts = log.task_duration.split(':');
+            const workTime = (parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]) + parseInt(durationParts[2]) / 60);
+        
+            // 작업자의 수를 계산 (예: task_man에 있는 콤마로 구분된 이름의 수)
+            const workerCount = log.task_man.split(',').length;
+        
+            // 작업 시간에 작업자 수를 곱해서 합산
+            monthlyData[month].time += workTime * workerCount;
+            monthlyData[month].count += 1; // 작업 개수 증가
+        });
+        
+        const months = Object.keys(monthlyData);
+        const workTimes = months.map(month => (monthlyData[month].time / 60).toFixed(2)); // hours로 변환
+        const workCounts = months.map(month => monthlyData[month].count);
+        
+        // 최대값 계산
+        const maxWorkTime = Math.max(...workTimes.map(Number));
+        const maxWorkCount = Math.max(...workCounts);
+        
+        createChart(workTimeCountTrendChartCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Working Time (hours)',
+                        data: workTimes,
+                        backgroundColor: 'rgba(54, 162, 235, 0)', // 아래 색상 채우기 없음
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y-time'
+                    },
+                    {
+                        label: 'Task Count',
+                        data: workCounts,
+                        backgroundColor: 'rgba(255, 99, 132, 0)', // 아래 색상 채우기 없음
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y-count'
+                    }
+                ]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        formatter: value => value,
+                        color: 'white', // 데이터 레이블 색상: 흰색
+                        font: {
+                            size: 12
+                        },
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                },
+                scales: {
+                    'y-time': {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: true,
+                        suggestedMax: maxWorkTime * 1.2, // 최대값의 1.2배로 설정
+                        ticks: {
+                            color: 'silver' // y-time 축 레이블 색상: 회색
+                        }
+                    },
+                    'y-count': {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        suggestedMax: maxWorkCount * 1.2, // 최대값의 1.2배로 설정
+                        ticks: {
+                            color: 'silver' // y-count 축 레이블 색상: 회색
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'silver' // x축 레이블 색상: 회색
+                        }
+                    }
+                }
+            }
+        });
+    
+        // 2. SET UP, MAINT, RELOCATION Work Ratio
+        const workTypeCounts = { SETUP: 0, MAINT: 0, RELOCATION: 0 };
+    
+        data.forEach(log => {
+            // work_type을 공백 제거 및 대문자로 변환하여 처리
+            const workType = log.work_type.replace(/\s+/g, '').toUpperCase();
+            if (workType === 'SETUP' || workType === 'MAINT' || workType === 'RELOCATION') {
+                workTypeCounts[workType] += 1;
+            }
+        });
+        
+        const workTypes = ['SETUP', 'MAINT', 'RELOCATION'];
+        const counts = workTypes.map(type => workTypeCounts[type]);
+        
+        // 최대값 계산
+        const maxCount = Math.max(...counts);
+        
+        createChart(workTypeRatioChartCtx, {
+            type: 'bar',
+            data: {
+                labels: workTypes,
+                datasets: [{
+                    label: 'Work Type Count',
+                    data: counts,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 205, 86, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 205, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        formatter: value => value,
+                        color: 'white', // 데이터 레이블 색상: 흰색
+                        font: {
+                            size: 12
+                        },
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: 'silver' // x축 레이블 색상: 회색
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: maxCount * 1.2, // 최대값의 1.2배로 설정
+                        ticks: {
+                            color: 'silver' // y축 레이블 색상: 회색
+                        }
+                    }
+                }
+            }
+        });
+    
+        // 3. Work Count by AM vs PM
+        const amPmWorkCounts = { AM: 0, PM: 0 };
+    
+        data.forEach(log => {
+            const startTime = new Date(`1970-01-01T${log.start_time}`);
+            if (startTime.getHours() < 12) {
+                amPmWorkCounts.AM += 1;
+            } else {
+                amPmWorkCounts.PM += 1;
+            }
+        });
+        
+        const amPmLabels = ['AM', 'PM'];
+        const amPmValues = amPmLabels.map(time => amPmWorkCounts[time]);
+        
+        // 최대값 계산
+        const maxTimeCount = Math.max(...amPmValues);
+        
+        createChart(itemWorkCountChartCtx, {
+            type: 'bar',
+            data: {
+                labels: amPmLabels,
+                datasets: [{
+                    label: 'Work Time Count',
+                    data: amPmValues,
+                    backgroundColor: [
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(54, 162, 235, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        formatter: value => value,
+                        color: 'white', // 데이터 레이블 색상: 흰색
+                        font: {
+                            size: 12
+                        },
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: 'silver' // x축 레이블 색상: 회색
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: maxTimeCount * 1.2, // 최대값의 1.2배로 설정
+                        ticks: {
+                            color: 'silver' // y축 레이블 색상: 회색
+                        }
+                    }
+                }
+            }
+        });
+    
+        // 4. Overtime vs Regular Work Count
+        const overtimeRegularCounts = { Regular: 0, Overtime: 0 };
+        
+        data.forEach(log => {
+            const endTime = new Date(`1970-01-01T${log.end_time}`);
+            if (endTime.getHours() < 18) {
+                overtimeRegularCounts.Regular += 1;
+            } else {
+                overtimeRegularCounts.Overtime += 1;
+            }
+        });
+        
+        const overtimeRegularLabels = ['Regular', 'Overtime'];
+        const overtimeRegularValues = [overtimeRegularCounts.Regular, overtimeRegularCounts.Overtime];
+        
+        createChart(overtimeRegularChartCtx, {
+            type: 'bar',
+            data: {
+                labels: overtimeRegularLabels,
+                datasets: [{
+                    label: 'Work Count',
+                    data: overtimeRegularValues,
+                    backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        formatter: value => value,
+                        color: 'white',
+                        font: { size: 12 },
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: 'silver' } },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: Math.max(...overtimeRegularValues) * 1.2,
+                        ticks: { color: 'silver' }
+                    }
+                }
+            }
+        });
+    
+        // 5. Time Range Work Count
+        const timeRanges = { '0-1 hour': 0, '1-2 hours': 0, '2-3 hours': 0, '3-4 hours': 0, '4+ hours': 0 };
+        
+        data.forEach(log => {
+            const [hours, minutes, seconds] = log.task_duration.split(':').map(Number);
+            const totalHours = hours + minutes / 60 + seconds / 3600;
+        
+            if (totalHours <= 1) {
+                timeRanges['0-1 hour'] += 1;
+            } else if (totalHours <= 2) {
+                timeRanges['1-2 hours'] += 1;
+            } else if (totalHours <= 3) {
+                timeRanges['2-3 hours'] += 1;
+            } else if (totalHours <= 4) {
+                timeRanges['3-4 hours'] += 1;
+            } else {
+                timeRanges['4+ hours'] += 1;
+            }
+        });
+        
+        const timeRangeLabels = Object.keys(timeRanges);
+        const timeRangeValues = Object.values(timeRanges);
+        
+        createChart(timeRangeChartCtx, {
+            type: 'bar',
+            data: {
+                labels: timeRangeLabels,
+                datasets: [{
+                    label: 'Work Count',
+                    data: timeRangeValues,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.2)', 
+                        'rgba(75, 192, 192, 0.2)', 
+                        'rgba(255, 205, 86, 0.2)', 
+                        'rgba(255, 159, 64, 0.2)', 
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)', 
+                        'rgba(75, 192, 192, 1)', 
+                        'rgba(255, 205, 86, 1)', 
+                        'rgba(255, 159, 64, 1)', 
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+                plugins: {
+                    datalabels: {
+                        formatter: value => value,
+                        color: 'white',
+                        font: { size: 12 },
+                        anchor: 'end',
+                        align: 'end'
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: 'silver' } },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: Math.max(...timeRangeValues) * 1.2,
+                        ticks: { color: 'silver' }
+                    }
+                }
+            }
+        });
+
+            // 6. SET UP TASK 그래프
+            const setupTaskCounts = {};
+
+            data.forEach(log => {
+                if (log.work_type.replace(/\s+/g, '').toUpperCase() === 'SETUP') {
+                    const setupItem = log.setup_item;
+                    if (setupItem && setupItem.toUpperCase() !== 'SELECT') {
+                        setupTaskCounts[setupItem] = (setupTaskCounts[setupItem] || 0) + 1;
+                    }
+                }
+            });
+        
+            const setupLabels = Object.keys(setupTaskCounts);
+            const setupValues = Object.values(setupTaskCounts);
+        
+            createChart(setupTaskChartCtx, { // setupTaskChartCtx를 사용
+                type: 'bar',
+                data: {
+                    labels: setupLabels,
+                    datasets: [{
+                        label: 'SET UP Task Count',
+                        data: setupValues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    plugins: {
+                        datalabels: {
+                            formatter: value => value,
+                            color: 'white',
+                            font: { size: 12 },
+                            anchor: 'end',
+                            align: 'end'
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: 'silver' } },
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: Math.max(...setupValues) * 1.2,
+                            ticks: { color: 'silver' }
+                        }
+                    }
+                }
+            });
+
+    // 7. MAINT TASK 그래프
+    const maintTaskCounts = {};
+
+    data.forEach(log => {
+        if (log.work_type.replace(/\s+/g, '').toUpperCase() === 'MAINT') {
+            const transferItem = log.transfer_item;
+            if (transferItem && transferItem !== '이관항목 없음' && transferItem.toUpperCase() !== 'SELECT') {
+                maintTaskCounts[transferItem] = (maintTaskCounts[transferItem] || 0) + 1;
+            }
+        }
+    });
+
+    const maintLabels = Object.keys(maintTaskCounts);
+    const maintValues = Object.values(maintTaskCounts);
+
+    createChart(maintTaskChartCtx, { // maintTaskChartCtx를 사용
+        type: 'bar',
+        data: {
+            labels: maintLabels,
+            datasets: [{
+                label: 'MAINT Task Count',
+                data: maintValues,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        plugins: [ChartDataLabels],
+        options: {
+            plugins: {
+                datalabels: {
+                    formatter: value => value,
+                    color: 'white',
+                    font: { size: 12 },
+                    anchor: 'end',
+                    align: 'end'
+                }
+            },
+            scales: {
+                x: { ticks: { color: 'silver' } },
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: Math.max(...maintValues) * 1.2,
+                    ticks: { color: 'silver' }
+                }
+            }
+        }
+    });
+
+    }
+    
+    
+
+
+    renderWorkCharts(workLogs);
+
+
+
+    function updateAllCharts() {
+        const filteredEngineerData = filterData(originalData); // 기존 엔지니어 데이터 필터링
+        renderCharts(filteredEngineerData);
+    
+        // 작업 로그 데이터 필터링
+        const filteredWorkLogs = filterWorkLogData(workLogs);
+        renderWorkCharts(filteredWorkLogs);
+        renderOvertimeRegularChart(filteredWorkLogs);
+        renderTimeRangeChart(filteredWorkLogs);
+        renderSetupTaskChart(filteredWorkLogs);
+        renderMaintTaskChart(filteredWorkLogs);
     }
 
     function updateDatalistOptions(data) {
@@ -976,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 기존 이벤트 리스너에 추가된 필터 연결
-    searchButton.addEventListener('click', updateCharts);
+    searchButton.addEventListener('click', updateAllCharts);
     resetButton.addEventListener('click', () => {
         searchGroup.value = '';
         searchSite.value = '';
@@ -984,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchMultiLevel.value = '';
         searchMultiEngr.value = ''; // 추가된 필터 초기화
         searchName.value = '';
-        updateCharts();
+        updateAllCharts();
     });
 
     searchGroup.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
@@ -993,8 +1502,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     searchMultiLevel.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
     searchMultiEngr.addEventListener('change', () => updateDatalistOptions(filterData(originalData))); // Multi Eng'r 필터 추가
 
-    // 초기 데이터 로딩
-    const data = await fetchData();
-    updateDatalistOptions(data);
-    renderCharts(data);
+// 데이터 로딩 및 차트 렌더링
+const data = await fetchData();
+await fetchWorkLogs(); // 작업 이력 데이터 로드
+updateDatalistOptions(data);
+renderCharts(data);
+renderWorkCharts(workLogs); // 작업 이력 데이터 렌더링
 });
