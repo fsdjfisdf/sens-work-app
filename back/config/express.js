@@ -33,6 +33,15 @@ module.exports = function () {
     res.redirect("/signin.html");
   });
 
+
+  // readworklog 페이지 접근 로그 남기기
+  app.get('/readworklog', jwtMiddleware, logPageAccess, (req, res) => {
+    res.sendFile(path.join(__dirname, '../../front/readworklog.html'));
+  });
+  
+
+  
+
   /* 라우트 설정 */
   require("../src/routes/indexRoute")(app);
   require("../src/routes/supraMaintenanceRoute")(app);
