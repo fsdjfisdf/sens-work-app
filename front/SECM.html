@@ -261,7 +261,7 @@
     <div class="graph-row">
         <div class="graph-item medium">
             <div class="graph-header">
-                <h3>SET UP, MAINT, RELOCATION</h3>
+                <h3>Set uP & Maint & Relocation</h3>
                 <button class="info-button" data-modal="workTypeRatioInfo">?</button>
             </div>
             <div class="canvas-container">
@@ -271,7 +271,7 @@
         <div class="graph-item medium">
             <div class="graph-header">
                 <h3>AM vs PM</h3>
-                <button class="info-button" data-modal="amPmWorkInfo">?</button>
+                <button class="info-button" data-modal="itemWorkCountInfo">?</button>
             </div>
             <div class="canvas-container">
                 <canvas id="itemWorkCountChart"></canvas>
@@ -445,6 +445,30 @@
             <p>Time Range 그래프는 작업에 걸린 시간 구간별 작업 건수를 나타냅니다.<br>구간은 0-1시간, 1-2시간, 2-3시간, 3-4시간, 4시간 이상으로 나뉩니다.</p>
         </div>
     </div>
+<!-- Monthly Work Time & Count Trend 모달 -->
+<div id="workTimeCountInfo" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>Monthly Work Time & Count Trend 그래프는 월별 작업 시간과 작업 건수를 나타냅니다.</p>
+    </div>
+</div>
+
+<!-- SET UP, MAINT, RELOCATION 모달 -->
+<div id="workTypeRatioInfo" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>SET UP, MAINT, RELOCATION 별로 수행된 작업 건수를 나타냅니다.</p>
+    </div>
+</div>
+
+<!-- AM vs PM 모달 -->
+<div id="itemWorkCountInfo" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <p>AM vs PM 그래프는 작업 시작 시간을 기준으로<br> 오전(12시 이전) 작업과 오후(12시 이후) 작업의 건수를 비교합니다.</p>
+    </div>
+</div>
+
     
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
