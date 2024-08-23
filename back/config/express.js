@@ -16,14 +16,11 @@ const { logPageAccess } = require('../src/controllers/indexController');
 module.exports = function () {
   const app = express();
 
-  /* 모든 요청에 대해 URL 로그를 남기는 미들웨어 */
-  app.use(jwtMiddleware); // JWT 미들웨어를 먼저 실행
-  app.use((req, res, next) => {
-    const nickname = req.verifiedToken ? req.verifiedToken.nickname : 'Unknown'; // 토큰에서 닉네임 가져오기
-
-    console.log(`Received request for URL: ${req.originalUrl}, User: ${nickname}`);
-    next();
-  });
+    /* 모든 요청에 대해 URL 로그를 남기는 미들웨어 */
+    app.use((req, res, next) => {
+      console.log(`Received request for URL: ${req.originalUrl}`);
+      next();
+    });
 
   /* 미들웨어 설정 */
   app.use(compression());
