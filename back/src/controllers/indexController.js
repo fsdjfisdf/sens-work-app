@@ -338,7 +338,8 @@ exports.logPageAccess = function (req, res, next) {
   const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   const requestedUrl = req.originalUrl;
 
-  console.log(`User: ${nickname}, IP: ${clientIp}, Accessed URL: ${requestedUrl}`);
+    // 로그 추가
+    console.log(`User: ${nickname}, IP: ${clientIp}, Accessed URL: ${requestedUrl}`);
 
   next(); // 다음 미들웨어로 요청 전달
 };
