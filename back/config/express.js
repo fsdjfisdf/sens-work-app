@@ -16,6 +16,12 @@ const { logPageAccess } = require('../src/controllers/indexController');
 module.exports = function () {
   const app = express();
 
+    /* 모든 요청에 대해 URL 로그를 남기는 미들웨어 */
+    app.use((req, res, next) => {
+      console.log(`Received request for URL: ${req.originalUrl}`);
+      next();
+    });
+
   /* 미들웨어 설정 */
   app.use(compression());
   app.use(express.json());
@@ -44,6 +50,7 @@ module.exports = function () {
   app.get('/readworklog', jwtMiddleware, logPageAccess, (req, res) => {
     res.sendFile(path.join(__dirname, '../../front/readworklog.html'));
 });
+
 
   
 
