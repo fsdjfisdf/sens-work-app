@@ -9,7 +9,7 @@ const { logger } = require("./winston");
 
 
 const jwtMiddleware = require('./jwtMiddleware');  
-const { logPageAccess } = require('../controllers/indexController'); 
+const { logPageAccess } = require('../src/controllers/indexController'); 
 
 
 
