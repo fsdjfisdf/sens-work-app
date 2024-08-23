@@ -334,12 +334,20 @@ exports.getWorkTimeByDate = async function (req, res) {
 
 // 페이지 접근 시 사용자 정보를 로그로 남기는 미들웨어
 exports.logPageAccess = function (req, res, next) {
-  const { nickname } = req.verifiedToken; // 로그인된 사용자의 닉네임 가져오기
-  const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  const requestedUrl = req.originalUrl;
+  if (req.verifiedToken) {
+    const { nickname } = req.verifiedToken; // 로그인된 사용자의 닉네임 가져오기
+    const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const requestedUrl = req.originalUrl;
 
-    // 로그 추가
-    console.log(`User: ${nickname}, IP: ${clientIp}, Accessed URL: ${requestedUrl}`);
+    if (requestedUrl === '/readworklog') { // 특정 URL에 대한 로그 처리
+      console.log(`User: ${nickname} accessed readworklog from IP: ${clientIp}`);
+    } else {
+      console.log(`User: ${nickname}, IP: ${clientIp}, Accessed URL: ${requestedUrl}`);
+    }
+  } else {
+    console.log('No verified token found.');
+  }
 
   next(); // 다음 미들웨어로 요청 전달
 };
+

@@ -43,8 +43,7 @@ module.exports = function () {
   // readworklog 페이지 접근 로그 남기기
   app.get('/readworklog', jwtMiddleware, logPageAccess, (req, res) => {
     res.sendFile(path.join(__dirname, '../../front/readworklog.html'));
-  });
-  
+});
 
   
 
