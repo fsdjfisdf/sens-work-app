@@ -339,12 +339,12 @@ exports.logPageAccess = function (req, res, next) {
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const requestedUrl = req.originalUrl;
 
-    console.log(`Requested URL: ${requestedUrl}`); // 어떤 URL이 요청되었는지 로그 출력
+    // 요청된 URL과 닉네임 로그 출력
+    console.log(`User: ${nickname}, IP: ${clientIp}, Accessed URL: ${requestedUrl}`);
 
-    if (requestedUrl === '/readworklog') { // 특정 URL에 대한 로그 처리
+    if (requestedUrl === '/readworklog') {
+      // readworklog 페이지에 대한 특정 로그
       console.log(`User: ${nickname} accessed readworklog from IP: ${clientIp}`);
-    } else {
-      console.log(`User: ${nickname}, IP: ${clientIp}, Accessed URL: ${requestedUrl}`);
     }
   } else {
     console.log('No verified token found.');
@@ -352,5 +352,6 @@ exports.logPageAccess = function (req, res, next) {
 
   next(); // 다음 미들웨어로 요청 전달
 };
+
 
 
