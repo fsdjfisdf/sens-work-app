@@ -339,6 +339,8 @@ exports.logPageAccess = function (req, res, next) {
     const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     const requestedUrl = req.originalUrl;
 
+    console.log(`Requested URL: ${requestedUrl}`); // 어떤 URL이 요청되었는지 로그 출력
+
     if (requestedUrl === '/readworklog') { // 특정 URL에 대한 로그 처리
       console.log(`User: ${nickname} accessed readworklog from IP: ${clientIp}`);
     } else {
@@ -350,4 +352,5 @@ exports.logPageAccess = function (req, res, next) {
 
   next(); // 다음 미들웨어로 요청 전달
 };
+
 
