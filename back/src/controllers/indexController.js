@@ -355,4 +355,87 @@ exports.logPageAccess = function (req, res, next) {
 
 
 
+// 아이디 찾기
+exports.findId = async function (req, res) {
+  const { name, group, site, hireDate } = req.body;
 
+  try {
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const [rows] = await indexDao.findUserId(connection, name, group, site, hireDate);
+
+          if (rows.length < 1) {
+              return res.send({
+                  isSuccess: false,
+                  code: 404,
+                  message: "일치하는 사용자를 찾을 수 없습니다.",
+              });
+          }
+
+          return res.send({
+              result: { userID: rows[0].userID },
+              isSuccess: true,
+              code: 200,
+              message: "아이디 찾기 성공",
+          });
+      } catch (err) {
+          logger.error(`findId Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "서버 오류가 발생했습니다.",
+          });
+      } finally {
+          connection.release();
+      }
+  } catch (err) {
+      logger.error(`findId DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "서버 오류가 발생했습니다.",
+      });
+  }
+};
+
+// 비밀번호 찾기
+exports.findPw = async function (req, res) {
+  const { userID, name, group, site, hireDate } = req.body;
+
+  try {
+      const connection = await pool.getConnection(async (conn) => conn);
+      try {
+          const [rows] = await indexDao.findUserByCredentials(connection, userID, name, group, site, hireDate);
+
+          if (rows.length < 1) {
+              return res.send({
+                  isSuccess: false,
+                  code: 404,
+                  message: "일치하는 계정을 찾을 수 없습니다.",
+              });
+          }
+
+          return res.send({
+              isSuccess: true,
+              code: 200,
+              message: "계정 확인 성공",
+          });
+      } catch (err) {
+          logger.error(`findPw Query error\n: ${JSON.stringify(err)}`);
+          return res.status(500).json({
+              isSuccess: false,
+              code: 500,
+              message: "서버 오류가 발생했습니다.",
+          });
+      } finally {
+          connection.release();
+      }
+  } catch (err) {
+      logger.error(`findPw DB Connection error\n: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+          isSuccess: false,
+          code: 500,
+          message: "서버 오류가 발생했습니다.",
+      });
+  }
+};
