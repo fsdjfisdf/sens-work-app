@@ -354,5 +354,75 @@ exports.logPageAccess = function (req, res, next) {
 };
 
 
+// 아이디 찾기
+exports.findId = async function (req, res) {
+  const { name, group, site, hireDate } = req.body;
+
+  try {
+    const connection = await pool.getConnection(async (conn) => conn);
+    try {
+      const query = `SELECT userID FROM Users WHERE nickname = ? AND \`group\` = ? AND site = ? AND hire_date = ? AND status = 'A'`;
+      const params = [name, group, site, hireDate];
+      const [rows] = await connection.query(query, params);
+
+      if (rows.length < 1) {
+        return res.status(404).json({
+          isSuccess: false,
+          message: "일치하는 아이디가 없습니다.",
+        });
+      }
+
+      return res.status(200).json({
+        isSuccess: true,
+        message: `아이디는 ${rows[0].userID} 입니다.`,
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error("아이디 찾기 오류:", err);
+    return res.status(500).json({
+      isSuccess: false,
+      message: "아이디 찾기 중 서버 오류가 발생했습니다.",
+    });
+  }
+};
+
+// 비밀번호 재설정
+exports.resetPassword = async function (req, res) {
+  const { userID, name, group, site, hireDate, newPassword } = req.body;
+
+  try {
+    const connection = await pool.getConnection(async (conn) => conn);
+    try {
+      const query = `SELECT userIdx FROM Users WHERE userID = ? AND nickname = ? AND \`group\` = ? AND site = ? AND hire_date = ? AND status = 'A'`;
+      const params = [userID, name, group, site, hireDate];
+      const [rows] = await connection.query(query, params);
+
+      if (rows.length < 1) {
+        return res.status(404).json({
+          isSuccess: false,
+          message: "일치하는 회원 정보가 없습니다.",
+        });
+      }
+
+      const updateQuery = `UPDATE Users SET password = ? WHERE userIdx = ?`;
+      await connection.query(updateQuery, [newPassword, rows[0].userIdx]);
+
+      return res.status(200).json({
+        isSuccess: true,
+        message: "비밀번호가 성공적으로 변경되었습니다.",
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    console.error("비밀번호 재설정 오류:", err);
+    return res.status(500).json({
+      isSuccess: false,
+      message: "비밀번호 재설정 중 서버 오류가 발생했습니다.",
+    });
+  }
+};
 
 
