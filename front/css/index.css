@@ -260,3 +260,21 @@ footer {
     line-height: 1.5;
 }
 
+/* 로그인 버튼 스타일 */
+.sign-link {
+    background-color: #0044cc;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid transparent;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    text-align: center;
+}
+
+.sign-link:hover {
+    background-color: #fff;
+    color: #0044cc;
+    border-color: #0044cc;
+}

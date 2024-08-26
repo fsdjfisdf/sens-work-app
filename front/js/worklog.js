@@ -214,4 +214,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
         });
     }
+
+    const menuBtn = document.querySelector('.menu-btn');
+    const menuContent = document.querySelector('.menu-content');
+
+    menuBtn.addEventListener('click', function() {
+        menuContent.classList.toggle('show');
+        if (menuContent.classList.contains('show')) {
+            animateMenuItems();
+        }
+    });
+
+    document.addEventListener('click', function(event) {
+        if (!menuBtn.contains(event.target) && !menuContent.contains(event.target)) {
+            menuContent.classList.remove('show');
+        }
+    });
+
+    function animateMenuItems() {
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach((item, index) => {
+            item.style.transform = `translateX(${index % 2 === 0 ? '-' : ''}100px)`;
+            item.style.opacity = '0';
+            setTimeout(() => {
+                item.style.transform = 'translateX(0)';
+                item.style.opacity = '1';
+            }, index * 100);
+        });
+    }
 });

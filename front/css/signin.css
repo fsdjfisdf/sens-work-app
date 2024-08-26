@@ -61,17 +61,22 @@ nav {
 }
 
 .sign-link {
+    background-color: #0044cc;
     color: #fff;
-    padding: 8px 16px;
-    border: 1px solid #fff;
-    border-radius: 4px;
-    transition: background-color 0.3s, color 0.3s;
-    margin: 0 5px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid transparent;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    text-align: center;
 }
+
 
 .sign-link:hover {
     background-color: #fff;
     color: #0044cc;
+    border-color: #0044cc;
 }
 
 /* Main content styles */

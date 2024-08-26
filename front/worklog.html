@@ -14,23 +14,29 @@
         <div class="inner">
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container">
-                    <div class="unsigned hidden"></div>
-                    <div class="signed hidden">
-                        <div class="dropdown">
-                            <button class="dropbtn">MENU</button>
-                            <div class="dropdown-content">
-                                <a href="./user_info.html" class="dropdown-item">SECM</a>
-                                <a href="./worklog.html" class="dropdown-item">Create Worklog</a>
-                                <a href="./readworklog.html" class="dropdown-item">Load Worklog</a>
-                                <a href="./equipment.html" class="dropdown-item">Equipment</a>
-                                <a href="./group-site-stats.html" class="dropdown-item admin-only">Operating Rate</a>
-                                <a href="./regression_analysis.html" class="dropdown-item admin-only">Predicted Workers</a>
-                                <button id="sign-out" class="dropdown-item">Logout</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
                 </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <button id="sign-out" class="menu-item">Logout</button>
             </div>
         </div>
     </nav>
@@ -351,6 +357,18 @@
                     window.location.replace("./signin.html");
                 });
             }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
         });
 
         document.querySelectorAll('.next-step').forEach(button => {

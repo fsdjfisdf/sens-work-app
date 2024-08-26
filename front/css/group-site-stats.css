@@ -656,3 +656,121 @@ footer {
 
 
 
+/* Menu button styles */
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 8px;
+    position: fixed;
+    top: 3%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1100;
+}
+
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25px;
+    height: 18px;
+}
+
+.menu-icon span {
+    display: block;
+    height: 5px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+
+/* Menu bar styles */
+.menu-bar {
+    position: fixed;
+    top: 0;
+    right: -350px; /* 메뉴 바가 초기 화면에서 완전히 숨겨짐 */
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1001;
+}
+
+.menu-bar.open {
+    right: 0;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-item {
+    color: #0044cc;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #f4f4f9;
+    color: #003bb5;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+/* Hidden and utility classes */
+.hidden {
+    display: none;
+}
+
+/* Main content and footer styles */
+.inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.hero {
+    background-color: #0044cc;
+    color: #fff;
+    padding: 60px 0;
+    text-align: center;
+}
+
+.hero p {
+    font-size: 18px;
+    margin-bottom: 40px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.button {
+    background-color: #fff;
+    color: #0044cc;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.3s, color 0.3s;
+    text-align: center;
+}
+
+.button:hover {
+    background-color: #003bb5;
+    color: #fff;
+}
