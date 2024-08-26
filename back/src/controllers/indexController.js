@@ -358,6 +358,7 @@ exports.logPageAccess = function (req, res, next) {
 // 아이디 찾기
 exports.findId = async function (req, res) {
   const { name, group, site, hireDate } = req.body;
+  console.log("서버에서 받은 데이터:", req.body);  // 서버에서 받은 데이터 출력
 
   try {
       const connection = await pool.getConnection(async (conn) => conn);
@@ -365,6 +366,7 @@ exports.findId = async function (req, res) {
           const [rows] = await indexDao.findUserId(connection, name, group, site, hireDate);
 
           if (rows.length < 1) {
+              console.log("일치하는 사용자 없음");
               return res.send({
                   isSuccess: false,
                   code: 404,
@@ -372,6 +374,7 @@ exports.findId = async function (req, res) {
               });
           }
 
+          console.log("사용자 ID:", rows[0].userID);
           return res.send({
               result: { userID: rows[0].userID },
               isSuccess: true,
@@ -379,7 +382,7 @@ exports.findId = async function (req, res) {
               message: "아이디 찾기 성공",
           });
       } catch (err) {
-          logger.error(`findId Query error\n: ${JSON.stringify(err)}`);
+          console.error("findId Query error:", err);
           return res.status(500).json({
               isSuccess: false,
               code: 500,
@@ -389,7 +392,7 @@ exports.findId = async function (req, res) {
           connection.release();
       }
   } catch (err) {
-      logger.error(`findId DB Connection error\n: ${JSON.stringify(err)}`);
+      console.error("findId DB Connection error:", err);
       return res.status(500).json({
           isSuccess: false,
           code: 500,
@@ -439,3 +442,4 @@ exports.findPw = async function (req, res) {
       });
   }
 };
+

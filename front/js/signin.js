@@ -1,8 +1,11 @@
 const btnSignIn = document.querySelector("#signin");
 
-btnSignIn.addEventListener("click", signIn);
+btnSignIn.addEventListener("click", function(event) {
+    event.preventDefault();
+    signIn();
+});
 
-async function signIn(event) {
+async function signIn() {
   const userID = document.querySelector("#userID").value;
   const password = document.querySelector("#password").value;
 
@@ -45,17 +48,17 @@ document.querySelector("#findPw").addEventListener("click", findPw);
 
 async function findPw() {
     const userID = prompt("아이디를 입력하세요:");
-    const name = prompt("본인의 이름을 입력하세요:");
+    const nickname = prompt("본인의 이름을 입력하세요:");
     const group = prompt("본인의 그룹을 입력하세요:");
     const site = prompt("본인의 사이트를 입력하세요:");
-    const hireDate = prompt("본인의 입사일을 입력하세요 (YYYY-MM-DD):");
+    const hire_date = prompt("본인의 입사일을 입력하세요 (YYYY-MM-DD):");
 
-    if (!userID || !name || !group || !site || !hireDate) {
+    if (!userID || !nickname || !group || !site || !hire_date) {
         return alert("모든 정보를 입력해주세요.");
     }
 
     try {
-        const response = await axios.post("http://3.37.165.84:3001/find-pw", { userID, name, group, site, hireDate });
+        const response = await axios.post("http://3.37.165.84:3001/find-pw", { userID, nickname, group, site, hire_date });
         if (response.data.isSuccess) {
             const newPassword = prompt("새 비밀번호를 입력하세요:");
             if (!newPassword) {
@@ -80,24 +83,27 @@ async function findPw() {
 document.querySelector("#findId").addEventListener("click", findId);
 
 async function findId() {
-    const name = prompt("본인의 이름을 입력하세요:");
-    const group = prompt("본인의 그룹을 입력하세요:");
-    const site = prompt("본인의 사이트를 입력하세요:");
-    const hireDate = prompt("본인의 입사일을 입력하세요 (YYYY-MM-DD):");
+  const nickname = prompt("본인의 이름을 입력하세요:");
+  const group = prompt("본인의 그룹을 입력하세요:");
+  const site = prompt("본인의 사이트를 입력하세요:");
+  const hire_date = prompt("본인의 입사일을 입력하세요 (YYYY-MM-DD):");
 
-    if (!name || !group || !site || !hireDate) {
-        return alert("모든 정보를 입력해주세요.");
-    }
+  if (!nickname || !group || !site || !hire_date) {
+      return alert("모든 정보를 입력해주세요.");
+  }
 
-    try {
-        const response = await axios.post("http://3.37.165.84:3001/find-id", { name, group, site, hireDate });
-        if (response.data.isSuccess) {
-            alert(`아이디는 ${response.data.result.userID} 입니다.`);
-        } else {
-            alert("입력하신 정보와 일치하는 아이디가 없습니다.");
-        }
-    } catch (error) {
-        console.error("아이디 찾기 요청 중 오류 발생:", error);
-        alert("아이디 찾기 요청 중 오류가 발생했습니다.");
-    }
+  console.log("요청 데이터:", { nickname, group, site, hire_date });  // 콘솔에 요청 데이터를 출력
+
+  try {
+      const response = await axios.post("http://3.37.165.84:3001/find-id", { nickname, group, site, hire_date });
+      console.log("서버 응답:", response);  // 서버에서 돌아온 응답을 콘솔에 출력
+      if (response.data.isSuccess) {
+          alert(`아이디는 ${response.data.result.userID} 입니다.`);
+      } else {
+          alert("입력하신 정보와 일치하는 아이디가 없습니다.");
+      }
+  } catch (error) {
+      console.error("아이디 찾기 요청 중 오류 발생:", error);  // 오류 발생 시 에러 로그 출력
+      alert("아이디 찾기 요청 중 오류가 발생했습니다.");
+  }
 }
