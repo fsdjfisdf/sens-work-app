@@ -22,13 +22,5 @@ module.exports = function (app) {
     
     // 작업 시간 조회
     app.get("/worktime-by-date", jwtMiddleware, index.getWorkTimeByDate);
-
-    // 아이디 찾기
-    app.post("/find-id", index.findId);
-
-    // 비밀번호 찾기
-    app.post("/find-pw", index.findPw);
     
-    // 비밀번호 재설정
-    app.post("/reset-pw", index.resetPw);
 };

@@ -210,14 +210,3 @@ exports.getUserInfoByNickname = async function (connection, nickname) {
   return rows;
 };
 
-exports.findUserId = async function (connection, name, group, site, hireDate) {
-  const query = `SELECT userID FROM Users WHERE name = ? AND \`group\` = ? AND site = ? AND hire_date = ? AND status = 'A';`;
-  const [rows] = await connection.query(query, [name, group, site, hireDate]);
-  return rows;
-};
-
-exports.findUserByCredentials = async function (connection, userID, name, group, site, hireDate) {
-  const query = `SELECT userID FROM Users WHERE userID = ? AND name = ? AND \`group\` = ? AND site = ? AND hire_date = ? AND status = 'A';`;
-  const [rows] = await connection.query(query, [userID, name, group, site, hireDate]);
-  return rows;
-};
