@@ -47,9 +47,34 @@ nav {
     text-align: center;
 }
 
-.sign-container {
+.auth-container {
+    position: absolute;
+    top: 10px;
+    right: 20px; /* 화면의 가장 오른쪽 위에 위치하도록 설정 */
     display: flex;
     align-items: center;
+    gap: 20px;
+}
+
+.sign-link {
+    background-color: #0044cc; /* 버튼 배경을 파란색으로 설정 */
+    color: #fff; /* 텍스트를 흰색으로 설정 */
+    border-color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px; /* 모서리를 둥글게 처리 */
+    font-size: 16px;
+    font-weight: bold;
+    border: 2px solid transparent;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+}
+
+.sign-link:hover {
+    background-color: #003bb5; /* 호버 시 더 진한 파란색으로 변경 */
+    color: #fff;
+    border-color: #fff;
 }
 
 /* Hidden and utility classes */

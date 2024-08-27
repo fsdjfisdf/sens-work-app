@@ -11,8 +11,9 @@
         <div class="inner">
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                    <a href="./signin.html" class="sign-link">Login</a>
+                <div class="auth-container">
+                    <a href="./signin.html" class="sign-link hidden" id="login-btn">Login</a>
+                    <button id="logout-btn" class="sign-link hidden">Logout</button>
                 </div>
             </div>
         </div>
@@ -53,7 +54,26 @@
             const descriptionText = document.getElementById("description-text");
             const clickHint = document.getElementById("click-hint");
             const buttons = document.querySelectorAll(".button");
+            const loginBtn = document.getElementById("login-btn");
+            const logoutBtn = document.getElementById("logout-btn");
             let isOpen = false;
+
+            // 로그인 상태 체크
+            const token = localStorage.getItem("x-access-token");
+
+            if (token) {
+                loginBtn.classList.add("hidden");
+                logoutBtn.classList.remove("hidden");
+            } else {
+                loginBtn.classList.remove("hidden");
+                logoutBtn.classList.add("hidden");
+            }
+
+            logoutBtn.addEventListener("click", function() {
+                localStorage.removeItem("x-access-token");
+                alert("로그아웃 되었습니다.");
+                window.location.replace("./signin.html");
+            });
 
             sworksTitle.addEventListener("click", function() {
                 if (!isOpen) {

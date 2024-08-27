@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
     const monthInput = document.getElementById('month');
     const calendarContainer = document.getElementById('calendar');
     const copyButton = document.getElementById('copy-report');
@@ -33,6 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selection.removeAllRanges();
         alert('보고서 내용이 복사되었습니다.');
     });
+
+    
 
     function generateCalendar(year, month) {
         calendarContainer.innerHTML = ''; // 이전 달력 초기화
