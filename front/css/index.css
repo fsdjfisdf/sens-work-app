@@ -29,6 +29,7 @@ nav {
 
 .nav-container {
     display: flex;
+    color : #777;
     justify-content: space-between;
     align-items: center;
     width: 100%;
@@ -106,6 +107,7 @@ nav {
     flex-direction: column;
     gap: 50px;
     position: relative;
+
 }
 
 .main-title {

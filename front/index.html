@@ -47,128 +47,100 @@
     </footer>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const sworksTitle = document.getElementById("sworks-title");
-            const buttonContainer = document.getElementById("button-container");
-            const descriptionBox = document.getElementById("description-box");
-            const descriptionText = document.getElementById("description-text");
-            const clickHint = document.getElementById("click-hint");
-            const buttons = document.querySelectorAll(".button");
-            const loginBtn = document.getElementById("login-btn");
-            const logoutBtn = document.getElementById("logout-btn");
-            let isOpen = false;
+document.addEventListener("DOMContentLoaded", function() {
+    const token = localStorage.getItem("x-access-token");
+    const userRole = localStorage.getItem("user-role");
 
-            // 로그인 상태 체크
-            const token = localStorage.getItem("x-access-token");
+    const loginBtn = document.getElementById("login-btn");
+    const logoutBtn = document.getElementById("logout-btn");
 
-            if (token) {
-                loginBtn.classList.add("hidden");
-                logoutBtn.classList.remove("hidden");
-            } else {
-                loginBtn.classList.remove("hidden");
-                logoutBtn.classList.add("hidden");
-            }
+    if (token) {
+        loginBtn.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
 
-            logoutBtn.addEventListener("click", function() {
-                localStorage.removeItem("x-access-token");
-                alert("로그아웃 되었습니다.");
-                window.location.replace("./signin.html");
+        // admin-only 요소 숨기기
+        if (userRole !== 'admin') {
+            document.querySelectorAll('.admin-only').forEach(element => {
+                element.style.display = 'none';
             });
+        }
+    } else {
+        loginBtn.classList.remove("hidden");
+        logoutBtn.classList.add("hidden");
 
-            sworksTitle.addEventListener("click", function() {
-                if (!isOpen) {
-                    sworksTitle.classList.add("move-up");
-                    sworksTitle.classList.add("shrink");
-                    clickHint.classList.add("hidden");
-                    buttonContainer.classList.remove("hidden");
-                    buttonContainer.classList.add("visible");
-                    buttons.forEach(button => {
-                        button.classList.remove("disabled");
-                    });
-                    isOpen = true;
-                } else {
-                    buttonContainer.classList.add("hidden");
-                    buttonContainer.classList.remove("visible");
-                    buttons.forEach(button => {
-                        button.classList.add("disabled");
-                    });
-                    sworksTitle.classList.remove("move-up");
-                    sworksTitle.classList.remove("shrink");
-                    clickHint.classList.remove("hidden");
-                    isOpen = false;
-                }
-            });
+        // 로그인하지 않은 사용자는 admin-only 요소가 보이지 않도록 보장
+        document.querySelectorAll('.admin-only').forEach(element => {
+            element.style.display = 'none';
+        });
+    }
 
+    logoutBtn.addEventListener("click", function() {
+        localStorage.removeItem("x-access-token");
+        localStorage.removeItem("user-role");
+        alert("로그아웃 되었습니다.");
+        window.location.replace("./signin.html");
+    });
+
+    const sworksTitle = document.getElementById("sworks-title");
+    const buttonContainer = document.getElementById("button-container");
+    const descriptionBox = document.getElementById("description-box");
+    const descriptionText = document.getElementById("description-text");
+    const clickHint = document.getElementById("click-hint");
+    const buttons = document.querySelectorAll(".button");
+    let isOpen = false;
+
+    sworksTitle.addEventListener("click", function() {
+        if (!isOpen) {
+            sworksTitle.classList.add("move-up");
+            sworksTitle.classList.add("shrink");
+            clickHint.classList.add("hidden");
+            buttonContainer.classList.remove("hidden");
+            buttonContainer.classList.add("visible");
             buttons.forEach(button => {
-                button.addEventListener("mouseover", function() {
-                    if (!button.classList.contains("disabled")) {
-                        descriptionText.textContent = this.getAttribute("data-description");
-                        descriptionBox.classList.remove("hidden");
-                        descriptionBox.classList.add("visible");
-                    }
-                });
-
-                button.addEventListener("mouseout", function() {
-                    if (!button.classList.contains("disabled")) {
-                        descriptionBox.classList.remove("visible");
-                        descriptionBox.classList.add("hidden");
-                    }
-                });
-
-                button.addEventListener("click", function(event) {
-                    event.preventDefault(); // 기본 링크 이동 방지
-                    if (!button.classList.contains("disabled")) {
-                        this.classList.add("clicked");
-                        setTimeout(() => {
-                            window.location.href = this.getAttribute("href");
-                        }, 500); // 애니메이션 후에 페이지 이동
-                    }
-                });
+                button.classList.remove("disabled");
             });
+            isOpen = true;
+        } else {
+            buttonContainer.classList.add("hidden");
+            buttonContainer.classList.remove("visible");
+            buttons.forEach(button => {
+                button.classList.add("disabled");
+            });
+            sworksTitle.classList.remove("move-up");
+            sworksTitle.classList.remove("shrink");
+            clickHint.classList.remove("hidden");
+            isOpen = false;
+        }
+    });
+
+    buttons.forEach(button => {
+        button.addEventListener("mouseover", function() {
+            if (!button.classList.contains("disabled")) {
+                descriptionText.textContent = this.getAttribute("data-description");
+                descriptionBox.classList.remove("hidden");
+                descriptionBox.classList.add("visible");
+            }
         });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-            const userRole = localStorage.getItem("user-role");
-
-            if (!token) {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
+        button.addEventListener("mouseout", function() {
+            if (!button.classList.contains("disabled")) {
+                descriptionBox.classList.remove("visible");
+                descriptionBox.classList.add("hidden");
             }
-
-            if (!token || userRole !== 'admin') {
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = 'none';
-                });
-            }
-
-            const signOutButton = document.querySelector("#sign-out");
-
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    localStorage.removeItem("user-role");
-                    alert("로그아웃 되었습니다.");
-                    window.location.replace("./signin.html");
-                });
-            }
-
-            const menuBtn = document.querySelector('.menu-btn');
-            const menuBar = document.querySelector('.menu-bar');
-
-            menuBtn.addEventListener('click', function() {
-                menuBar.classList.toggle('open');
-            });
-
-            document.addEventListener('click', function(event) {
-                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                    menuBar.classList.remove('open');
-                }
-            });
         });
+
+        button.addEventListener("click", function(event) {
+            event.preventDefault(); // 기본 링크 이동 방지
+            if (!button.classList.contains("disabled")) {
+                this.classList.add("clicked");
+                setTimeout(() => {
+                    window.location.href = this.getAttribute("href");
+                }, 500); // 애니메이션 후에 페이지 이동
+            }
+        });
+    });
+});
+
     </script>
 </body>
 </html>
