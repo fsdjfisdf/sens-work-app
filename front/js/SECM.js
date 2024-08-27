@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const timeRangeChartCtx = document.getElementById('timeRangeChart').getContext('2d');
     const setupTaskChartCtx = document.getElementById('setupTaskChart').getContext('2d');
     const maintTaskChartCtx = document.getElementById('maintTaskChart').getContext('2d');
+    const weekdayWeekendChartCtx = document.getElementById('weekdayWeekendChart').getContext('2d'); // 새로운 차트 컨텍스트
 
 
 
@@ -178,6 +179,86 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     
         return { months, engineerCount };
+    }
+
+    const weekendEngineerCountsBySite = {
+        "PEE1 Group PT Site": 4,
+        "PEE1 Group HS Site": 4,
+        "PEE1 Group IC Site": 2,
+        "PEE1 Group CJ Site": 2,
+        "PEE2 Group PT Site": 2,
+        "PEE2 Group HS Site": 2
+    };
+    
+    function getTotalWeekendEngineers(group, site) {
+        console.log("Group:", group);
+        console.log("Site:", site);
+        
+        if (site) {
+            // 특정 사이트가 선택된 경우
+            const key = `${group} Group ${site} Site`;
+            console.log("Constructed key:", key);
+            return weekendEngineerCountsBySite[key] || 0;
+        } else if (group) {
+            // 그룹만 선택된 경우
+            let totalEngineers = 0;
+            for (let key in weekendEngineerCountsBySite) {
+                if (key.startsWith(`${group} Group`)) {
+                    totalEngineers += weekendEngineerCountsBySite[key];
+                }
+            }
+            console.log("Total engineers for group:", totalEngineers);
+            return totalEngineers;
+        } else {
+            // 그룹과 사이트 모두 선택되지 않은 경우 (전체 합산)
+            const totalEngineers = Object.values(weekendEngineerCountsBySite).reduce((sum, count) => sum + count, 0);
+            console.log("Total engineers for all:", totalEngineers);
+            return totalEngineers;
+        }
+    }
+
+    function calculateAverageTasksPerDay(data, group, site) {
+        let weekdayTaskCount = 0;
+        let weekendTaskCount = 0;
+        let weekdayEngineersSet = new Set();
+        let weekdayDaysSet = new Set();
+        let weekendDaysSet = new Set();
+    
+        data.forEach(log => {
+            const taskDate = new Date(log.task_date);
+            const dayOfWeek = taskDate.getDay(); // 0: Sunday, 6: Saturday
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+    
+            const engineers = log.task_man.split(',').map(e => e.split('(')[0].trim());
+    
+            if (isWeekend) {
+                weekendTaskCount += 1;
+                weekendDaysSet.add(taskDate.toDateString());
+            } else {
+                engineers.forEach(engineer => weekdayEngineersSet.add(engineer));
+                weekdayTaskCount += 1;
+                weekdayDaysSet.add(taskDate.toDateString());
+            }
+        });
+    
+        const totalWeekdayDays = weekdayDaysSet.size;
+        const totalWeekendDays = weekendDaysSet.size;
+    
+        const totalWeekendEngineers = getTotalWeekendEngineers(group, site);
+        const totalWeekdayEngineers = weekdayEngineersSet.size;
+    
+        console.log("Total Weekend Engineers:", totalWeekendEngineers);
+    
+        const avgWeekdayTasks = ((weekdayTaskCount / totalWeekdayDays) / totalWeekdayEngineers) * 2;
+        const avgWeekendTasks = ((weekendTaskCount / totalWeekendDays) / totalWeekendEngineers) * 2;
+    
+        console.log(`Total Weekday Tasks: ${weekdayTaskCount}, Total Weekend Tasks: ${weekendTaskCount}`);
+        console.log(`Total Weekday Engineers: ${totalWeekdayEngineers}, Total Weekend Engineers: ${totalWeekendEngineers}`);
+        console.log(`Total Weekday Days: ${totalWeekdayDays}, Total Weekend Days: ${totalWeekendDays}`);
+        console.log(`Average Weekday Tasks per Engineer per Day (after *2): ${avgWeekdayTasks}`);
+        console.log(`Average Weekend Tasks per Engineer per Day (after *2): ${avgWeekendTasks}`);
+    
+        return { avgWeekdayTasks, avgWeekendTasks };
     }
     
     function renderCharts(data) {
@@ -1358,6 +1439,70 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+
+        function renderCharts() {
+            const group = searchGroup.value;
+            const site = searchSite.value;
+            const filteredWorkLogs = filterWorkLogData(workLogs);
+        
+            const { avgWeekdayTasks, avgWeekendTasks } = calculateAverageTasksPerDay(filteredWorkLogs, group, site);
+        
+            createChart(weekdayWeekendChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Weekday', 'Weekend'],
+                    datasets: [{
+                        label: 'Average Tasks per Engineer per Day',
+                        data: [avgWeekdayTasks.toFixed(2), avgWeekendTasks.toFixed(2)],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    plugins: {
+                        datalabels: {
+                            formatter: value => {
+                                return typeof value === 'number' ? value.toFixed(2) : value;
+                            },
+                            color: 'white',
+                            font: {
+                                size: 12
+                            },
+                            anchor: 'end',
+                            align: 'end'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: 'silver'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: Math.max(avgWeekdayTasks, avgWeekendTasks) * 1.2,
+                            ticks: {
+                                color: 'silver'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 함수 호출 확인
+        console.log('Render Charts Function Called');
+        renderCharts();
+        
+        
 
             // 6. SET UP TASK 그래프
             const setupTaskCounts = {};
