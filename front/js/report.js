@@ -111,15 +111,16 @@ document.addEventListener('DOMContentLoaded', function() {
             weekdaysWorked: 0,
             holidayCount: 0,
             holidayWork: 0,
+            personalLeaveDays: 0, // 연차 일수 누적
             personalLeave: [],
             holidayDetails: [],
             officeWork: [],
             blankWeekdays: 0,
         };
-
+    
         const selectedMonth = new Date(monthInput.value);
         const { weekdays, weekends } = countWeekdays(selectedMonth.getFullYear(), selectedMonth.getMonth());
-
+    
         inputs.forEach(input => {
             const value = input.value.trim();
             const date = input.id.split('-');
@@ -129,9 +130,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const isHoliday = holidays.includes(dateId);
             const isRedDay = isWeekend || isHoliday;
             const formattedDate = `${parseInt(date[1], 10)}월 ${parseInt(date[2], 10)}일`;
-
+    
             if (value === '휴가') {
                 reportData.personalLeave.push(formattedDate);
+                reportData.personalLeaveDays += 1;
+            } else if (value === '반차') {
+                reportData.personalLeave.push(formattedDate);
+                reportData.personalLeaveDays += 0.5;
+            } else if (value === '반반차') {
+                reportData.personalLeave.push(formattedDate);
+                reportData.personalLeaveDays += 0.25;
             } else if (value === '주말근무' || value === '근무') {
                 reportData.holidayWork += 1;
                 reportData.holidayDetails.push(formattedDate);
@@ -141,13 +149,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 reportData.blankWeekdays += 1; // 평일 중 '평일'로 선택된 날짜
             }
         });
-
+    
         return {
             weekdays: weekdays,
             weekends: weekends,
             weekdaysWorked: reportData.blankWeekdays, // 평일 중 '평일'로 선택된 날짜의 수
             holidayCount: weekends,
             holidayWork: reportData.holidayWork,
+            personalLeaveDays: reportData.personalLeaveDays,
             personalLeave: reportData.personalLeave,
             holidayDetails: reportData.holidayDetails,
             officeWork: reportData.officeWork,
@@ -195,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `<p class="report-date">${data.personalLeave.join('</p><p class="report-date">')}</p>` 
                 : `<p class="inline-text">- 없음${'&nbsp;'.repeat(50)}-끝-</p>`}
             <div class="report-summary" style="margin-top: ${data.endTextMargin}px;">
-                ${data.personalLeave.length > 0 ? `<p>* 연차소진으로 인한 ${data.personalLeave.length}일 연차 사용${'&nbsp;'.repeat(12)}-끝-</p>` : ''}
+                ${data.personalLeave.length > 0 ? `<p>* 연차소진으로 인한 ${data.personalLeaveDays}일 연차 사용${'&nbsp;'.repeat(12)}-끝-</p>` : ''}
             </div>
         `;
     
