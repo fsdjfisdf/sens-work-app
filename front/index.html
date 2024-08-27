@@ -14,99 +14,99 @@
                 <div class="sign-container unsigned">
                     <a href="./signin.html" class="sign-link">Login</a>
                 </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment.html" class="menu-item">Equipment</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
-                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <button id="sign-out" class="menu-item">Logout</button>
             </div>
         </div>
     </nav>
 
     <main>
         <section class="hero">
-            <div class="inner">
-                <p>SEnS 만을 위한 작업 이력 작성, 관리, 분석 TOOL</p>
-                <div class="button-container">
-                    <a href="./user_info.html" class="button">SECM</a>
-                    <a href="./worklog.html" class="button">Create Worklog</a>
-                    <a href="./readworklog.html" class="button">Load Worklog</a>
-                    <a href="./equipment.html" class="button">Equipment</a>
-                    <a href="./report.html" class="button">국내 출장 보고서</a>
-                    <a href="./group-site-stats.html" class="button admin-only">Operating Rate</a>
-                    <a href="./regression_analysis.html" class="button admin-only">Worker Forecast</a>
+            <div class="hero-content">
+                <h1 class="main-title" id="sworks-title">S-WORKS</h1>
+                <p class="click-hint" id="click-hint">S-WORKS 클릭하여 기능을 확인하세요</p>
+                <div class="button-container hidden" id="button-container">
+                    <a href="./user_info.html" class="button disabled" data-description="SECM 정보를 확인할 수 있습니다.">SECM</a>
+                    <a href="./worklog.html" class="button disabled" data-description="작업 이력을 작성할 수 있습니다.">Create Worklog</a>
+                    <a href="./readworklog.html" class="button disabled" data-description="작업 이력을 불러올 수 있습니다.">Load Worklog</a>
+                    <a href="./equipment.html" class="button disabled" data-description="설비 정보를 확인할 수 있습니다.">Equipment</a>
+                    <a href="./report.html" class="button disabled" data-description="국내 출장 보고서를 작성할 수 있습니다.">국내 출장 보고서</a>
+                    <a href="./group-site-stats.html" class="button admin-only disabled" data-description="가동율을 확인할 수 있습니다.">Operating Rate</a>
+                    <a href="./regression_analysis.html" class="button admin-only disabled" data-description="미래 필요 작업자 수를 예측할 수 있습니다.">Worker Forecast</a>
+                </div>
+                <div id="description-box" class="description-box hidden">
+                    <p id="description-text"></p>
                 </div>
             </div>
         </section>
-        <section class="features">
-            <div class="inner">
-                <h3>Features</h3>
-                <div class="feature-list">
-                    <div class="feature-item">
-                        <h4>SECM</h4>
-                        <p>Eng'r의 Level, CAPA 등의 정보들을 분석 및 확인 할 수 있습니다.</p>
-                    </div>
-                    <div class="feature-item">
-                        <h4>Create Worklog</h4>
-                        <p>작업 이력을 작성할 수 있습니다.</p>
-                    </div>
-                    <div class="feature-item">
-                        <h4>Load Worklog</h4>
-                        <p>작업 이력들을 검색하고 삭제할 수 있습니다.</p>
-                    </div>
-                    <div class="feature-item">
-                        <h4>Equipment</h4>
-                        <p>설비를 검색하여 위치와 워런티를 확인할 수 있습니다.</p>
-                    </div>
-                    <div class="feature-item">
-                        <h4>국내 출장 보고서</h4>
-                        <p>국내 출장 보고서를 쉽게 작성할 수 있습니다.</p>
-                    </div>
-                    <div class="feature-item admin-only">
-                        <h4>Operating Rate</h4>
-                        <p>가동율을 확인할 수 있습니다.</p>
-                    </div>
-                    <div class="feature-item admin-only">
-                        <h4>Predicted Workers</h4>
-                        <p>미래 필요 작업자 수를 예측할 수 있습니다.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="confidentiality">
-            <div class="inner">
-                <h3>사외비</h3>
-                <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
-            </div>
-        </section>
-
-
     </main>
 
     <footer>
         <div class="inner">
-            <p>Developed by PEE1 Jeong Hyeon Woo</p>
+            <p>Developed by SEnS Jeong Hyeon Woo</p>
         </div>
     </footer>
 
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sworksTitle = document.getElementById("sworks-title");
+            const buttonContainer = document.getElementById("button-container");
+            const descriptionBox = document.getElementById("description-box");
+            const descriptionText = document.getElementById("description-text");
+            const clickHint = document.getElementById("click-hint");
+            const buttons = document.querySelectorAll(".button");
+            let isOpen = false;
+
+            sworksTitle.addEventListener("click", function() {
+                if (!isOpen) {
+                    sworksTitle.classList.add("move-up");
+                    sworksTitle.classList.add("shrink");
+                    clickHint.classList.add("hidden");
+                    buttonContainer.classList.remove("hidden");
+                    buttonContainer.classList.add("visible");
+                    buttons.forEach(button => {
+                        button.classList.remove("disabled");
+                    });
+                    isOpen = true;
+                } else {
+                    buttonContainer.classList.add("hidden");
+                    buttonContainer.classList.remove("visible");
+                    buttons.forEach(button => {
+                        button.classList.add("disabled");
+                    });
+                    sworksTitle.classList.remove("move-up");
+                    sworksTitle.classList.remove("shrink");
+                    clickHint.classList.remove("hidden");
+                    isOpen = false;
+                }
+            });
+
+            buttons.forEach(button => {
+                button.addEventListener("mouseover", function() {
+                    if (!button.classList.contains("disabled")) {
+                        descriptionText.textContent = this.getAttribute("data-description");
+                        descriptionBox.classList.remove("hidden");
+                        descriptionBox.classList.add("visible");
+                    }
+                });
+
+                button.addEventListener("mouseout", function() {
+                    if (!button.classList.contains("disabled")) {
+                        descriptionBox.classList.remove("visible");
+                        descriptionBox.classList.add("hidden");
+                    }
+                });
+
+                button.addEventListener("click", function(event) {
+                    event.preventDefault(); // 기본 링크 이동 방지
+                    if (!button.classList.contains("disabled")) {
+                        this.classList.add("clicked");
+                        setTimeout(() => {
+                            window.location.href = this.getAttribute("href");
+                        }, 500); // 애니메이션 후에 페이지 이동
+                    }
+                });
+            });
+        });
+
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
             const userRole = localStorage.getItem("user-role");

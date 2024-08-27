@@ -8,8 +8,8 @@ body, h1, h2, h3, h4, p, a, input, select, label, textarea, button {
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    font-family: 'Roboto', sans-serif;
+    background-color: #0044cc;
     color: #333;
     display: flex;
     flex-direction: column;
@@ -18,7 +18,7 @@ body {
 
 /* Navigation bar styles */
 nav {
-    background-color: #0044cc;
+    background-color: transparent;
     padding: 10px 0;
     display: flex;
     justify-content: space-between;
@@ -52,107 +52,96 @@ nav {
     align-items: center;
 }
 
-/* Menu button styles */
-.menu-btn {
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    padding: 8px;
-    position: fixed;
-    top: 3%;
-    right: 20px;
-    transform: translateY(-50%);
-    z-index: 1100;
-}
-
-.menu-icon {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 25px;
-    height: 18px;
-}
-
-.menu-icon span {
-    display: block;
-    height: 5px;
-    background-color: #fff;
-    border-radius: 2px;
-    transition: all 0.3s ease-in-out;
-}
-
-/* Menu bar styles */
-.menu-bar {
-    position: fixed;
-    top: 0;
-    right: -350px; /* 메뉴 바가 초기 화면에서 완전히 숨겨짐 */
-    width: 300px;
-    height: 100%;
-    background-color: #fff;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    transition: right 0.3s ease;
-    z-index: 1001;
-}
-
-.menu-bar.open {
-    right: 0;
-}
-
-.menu-bar-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.menu-item {
-    color: #0044cc;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.menu-item:hover {
-    background-color: #f4f4f9;
-    color: #003bb5;
-}
-
-.menu-item:last-child {
-    border-bottom: none;
-}
-
 /* Hidden and utility classes */
 .hidden {
     display: none;
 }
 
-/* Main content and footer styles */
-.inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+.visible {
+    display: flex;
 }
 
+/* Main content and footer styles */
 .hero {
     background-color: #0044cc;
     color: #fff;
-    padding: 60px 0;
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 20px;
     text-align: center;
+    position: relative;
 }
 
-.hero p {
-    font-size: 18px;
-    margin-bottom: 40px;
+.hero-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 50px;
+    position: relative;
+}
+
+.main-title {
+    font-size: 120px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    animation: pulse 2s infinite;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.5s ease, font-size 0.5s ease;
+}
+
+.main-title.shrink {
+    font-size: 72px;
+}
+
+.main-title.move-up {
+    transform: translateY(-300px);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.click-hint {
+    font-size: 16px;
+    color: #fff;
+    margin-top: -20px;
+    animation: fadeInOut 3s infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
 }
 
 .button-container {
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 20px;
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    opacity: 0;
+    transform: translateY(50px);
+}
+
+.button-container.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .button {
@@ -161,8 +150,11 @@ nav {
     padding: 12px 24px;
     border-radius: 4px;
     font-size: 16px;
-    transition: background-color 0.3s, color 0.3s;
+    font-weight: 600;
+    transition: background-color 0.3s, color 0.3s, transform 0.3s ease, opacity 0.3s ease;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    flex-basis: calc(25% - 20px);
 }
 
 .button:hover {
@@ -170,111 +162,62 @@ nav {
     color: #fff;
 }
 
-.features {
+.button.clicked {
+    transform: scale(1.1);
+    opacity: 0;
+}
+
+.description-box {
+    padding: 0;
     background-color: #fff;
-    padding: 60px 20px;
+    color: #0044cc;
     text-align: center;
-}
-
-.features h3 {
-    font-size: 28px;
-    margin-bottom: 40px;
-}
-
-.feature-list {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.feature-item {
-    background-color: #f4f4f9;
-    padding: 20px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 250px;
-    text-align: left;
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    transition: height 0.5s ease, padding 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.feature-item h4 {
-    font-size: 20px;
-    margin-bottom: 10px;
-}
-
-.feature-item p {
-    font-size: 16px;
+.description-box.visible {
+    height: 60px;
+    padding: 20px;
+    transition: height 0.5s ease, padding 0.5s ease;
 }
 
 footer {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #ffffff;
+    color: #000000;
     text-align: center;
     padding: 20px 0;
     margin-top: auto;
+    font-weight: bold;
 }
 
 /* Media Queries for Responsive Design */
 @media (max-width: 768px) {
-    .nav-container {
-        flex-direction: column;
-        align-items: flex-start;
+    .main-title {
+        font-size: 48px;
     }
 
-    .nav-title a {
-        font-size: 28px;
+    .main-title.shrink {
+        font-size: 36px;
     }
 
-    .button-container {
-        flex-direction: column;
-    }
-
-    .features {
-        padding: 30px 10px;
-    }
-
-    .feature-item {
-        width: 100%;
+    .button {
+        flex-basis: calc(50% - 20px);
     }
 }
 
-
-.confidentiality {
-    background-color: #f4f4f9; /* 페이지 배경과 유사한 색상으로 설정 */
-    color: #333; /* 텍스트 색상을 본문 텍스트 색상과 일치 */
-    padding: 30px 20px; /* 여백을 적절히 조정 */
-    text-align: center;
-    margin-top: 0px;
-    border-radius: 8px; /* 모서리를 부드럽게 처리 */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 약간의 그림자를 추가하여 구분 */
-}
-
-.confidentiality h3 {
-    font-size: 20px; /* 제목 크기를 약간 줄임 */
-    margin-bottom: 15px;
-    color: #0044cc; /* 제목 색상을 내비게이션과 일치시키기 위해 파란색으로 설정 */
-}
-
-.confidentiality p {
-    font-size: 16px;
-    line-height: 1.5;
-}
-
-/* 로그인 버튼 스타일 */
-.sign-link {
-    background-color: #0044cc;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    border: 2px solid transparent;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    text-align: center;
-}
-
-.sign-link:hover {
-    background-color: #fff;
-    color: #0044cc;
-    border-color: #0044cc;
+@media (max-width: 480px) {
+    .button {
+        flex-basis: 100%;
+    }
 }
