@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eng'r Information</title>
-    <link rel="stylesheet" href="./css/user_info.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>S-WORKS</title>
+    <link rel="stylesheet" href="./css/report.css" />
 </head>
 <body>
     <nav>
@@ -33,7 +31,7 @@
                 <a href="./worklog.html" class="menu-item">Create Worklog</a>
                 <a href="./readworklog.html" class="menu-item">Load Worklog</a>
                 <a href="./equipment.html" class="menu-item">Equipment</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./report.html" class="menu-item">국내출장보고서</a>
                 <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
                 <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
                 <button id="sign-out" class="menu-item">Logout</button>
@@ -42,61 +40,35 @@
     </nav>
 
     <main>
-        <button id="view-average-info">SECM</button><br>
-        <section id="info">
+        <section class="report-generator">
             <div class="inner">
-                <h2>Eng'r Information</h2>
-                <div id="data-display" class="data-display">
-                    <div class="data-row">
-                        <span class="data-title">Name:</span>
-                        <span class="data-content" id="userName"></span>
+                <h2>국내 출장 보고서 생성기</h2>
+                <form id="report-form">
+                    <div class="form-group">
+                        <label for="month">보고서 생성 월:</label>
+                        <div class="month-picker">
+                            <input type="month" id="month" name="month" required>
+                        </div>
+                        <button type="button" id="generate-report" class="btn-generate">보고서 생성</button>
                     </div>
-                    <div class="data-row">
-                        <span class="data-title">Group:</span>
-                        <span class="data-content" id="userGroup"></span>
+                    <div class="calendar-container" id="calendar">
+                        <!-- 달력이 여기에 동적으로 생성됩니다. -->
                     </div>
-                    <div class="data-row">
-                        <span class="data-title">Site:</span>
-                        <span class="data-content" id="userSite"></span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-title">Hire Date:</span>
-                        <span class="data-content" id="userHireDate"></span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-title">Level:</span>
-                        <span class="data-content" id="userLevel"></span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-title">Multi Level:</span>
-                        <span class="data-content" id="userMultiLevel"></span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-title">Main EQ:</span>
-                        <span class="data-content" id="userMainEq"></span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-title">Multi EQ:</span>
-                        <span class="data-content" id="userMultiEq"></span>
-                    </div>
+                </form>
+
+                <div id="report-output">
+                    <!-- 생성된 보고서가 이곳에 표시됩니다 -->
                 </div>
-                <div class="chart-container">
-                    <div class="chart-wrapper">
-                        <h3>Level Achievement</h3>
-                        <canvas id="achievementChart"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <h3>CAPA</h3>
-                        <canvas id="capaChart"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <h3>Monthly CAPA</h3>
-                        <canvas id="monthlyCapaChart"></canvas>
-                    </div>
-                </div>
+                <button id="copy-report" class="btn-generate">복사하기</button>
             </div>
         </section>
     </main>
+
+    <footer>
+        <div class="inner">
+            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+        </div>
+    </footer>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -142,16 +114,6 @@
             });
         });
     </script>
-
-    <footer>
-        <div class="inner">
-            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-    <script src="./js/user_info.js"></script>
+    <script src="./js/report.js"></script>
 </body>
 </html>
