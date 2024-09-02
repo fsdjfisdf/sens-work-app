@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const engineerCount = {
         '2024-06': {
-            'PEE1-PT': { weekday: 17, weekend: 3 },
+            'PEE1-PT': { weekday: 16, weekend: 3 }, // 최용수 김범진
             'PEE1-HS': { weekday: 0, weekend: 0 },
             'PEE1-IC': { weekday: 0, weekend: 0 },
             'PEE1-CJ': { weekday: 0, weekend: 0 },
@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE3-PSKH': { weekday: 0, weekend: 0 }
         },
         '2024-07': {
-            'PEE1-PT': { weekday: 17, weekend: 3 },
-            'PEE1-HS': { weekday: 17, weekend: 4 },
+            'PEE1-PT': { weekday: 16, weekend: 3 }, // 손석현, 김범진
+            'PEE1-HS': { weekday: 17, weekend: 4 }, // 이성열, 송다운
             'PEE1-IC': { weekday: 0, weekend: 0 },
             'PEE1-CJ': { weekday: 0, weekend: 0 },
             'PEE2-PT': { weekday: 0, weekend: 0 },
@@ -52,8 +52,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE3-PSKH': { weekday: 0, weekend: 0 }
         },
         '2024-08': {
-            'PEE1-PT': { weekday: 16, weekend: 3 }, // 조지훈, 정현우 8월 서류업무로 라인대응 거의 못함
-            'PEE1-HS': { weekday: 17, weekend: 4 },
+            'PEE1-PT': { weekday: 15, weekend: 3 }, // 손석현, 김범진, 조지훈, 정현우 8월 서류업무로 라인대응 거의 못함
+            'PEE1-HS': { weekday: 17, weekend: 4 }, // 이성열, 송다운
+            'PEE1-IC': { weekday: 4, weekend: 1 },
+            'PEE1-CJ': { weekday: 4, weekend: 1 },
+            'PEE2-PT': { weekday: 8, weekend: 2 },
+            'PEE2-HS': { weekday: 6, weekend: 2 },
+            'PEE3-PSKH': { weekday: 0, weekend: 0 }
+        },
+        '2024-09': {
+            'PEE1-PT': { weekday: 15, weekend: 3 }, // 손석현, 김범진, 조지훈, 정현우 8월 서류업무로 라인대응 거의 못함
+            'PEE1-HS': { weekday: 17, weekend: 4 }, // 이성열, 송다운
             'PEE1-IC': { weekday: 4, weekend: 1 },
             'PEE1-CJ': { weekday: 4, weekend: 1 },
             'PEE2-PT': { weekday: 8, weekend: 2 },
