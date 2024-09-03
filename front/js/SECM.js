@@ -1654,3 +1654,8 @@ updateDatalistOptions(data);
 renderCharts(data);
 renderWorkCharts(workLogs); // 작업 이력 데이터 렌더링
 });
+
+document.getElementById('exportButton').addEventListener('click', () => {
+    window.location.href = 'http://3.37.165.84:3001/api/export-to-excel';
+  });
+  
