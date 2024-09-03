@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE1-CJ': { weekday: 4, weekend: 1 },
             'PEE2-PT': { weekday: 8, weekend: 2 },
             'PEE2-HS': { weekday: 6, weekend: 2 },
-            'PEE3-PSKH': { weekday: 0, weekend: 0 }
+            'PSKH-PSKH': { weekday: 7, weekend: 1 }
         },
         // 각 월별로 데이터를 추가
     };
