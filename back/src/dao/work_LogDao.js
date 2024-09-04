@@ -114,6 +114,7 @@ exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man,
 
 
 
+// 작업 이력 카운트 증가 기능
 exports.incrementTaskCount = async (engineer_name, task_name) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
