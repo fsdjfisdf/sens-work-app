@@ -1,3 +1,5 @@
+const path = require('path');
+console.log(__dirname);  // 현재 경로 확인
 const { pool } = require('../config/database');
 
 exports.getWorkLogs = async (equipment_name) => {
