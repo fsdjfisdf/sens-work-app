@@ -53,41 +53,41 @@ exports.insertChecklist = async (checklistData) => {
       RACK_CERTIFICATION_PREP, CERTIFICATION_RESPONSE, ENVIRONMENTAL_QUAL_RESPONSE, AGING_TEST_PROCESS_CONFIRM, 
       EES_REPORT_PROCEDURE
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;  
+    `;  
 
     const values = [
-      checklistData.name, checklistData['DRAWING_TEMPLATE_SETUP'], checklistData['DRAWING_TEMPLATE_MARKING'],
-      checklistData['CUSTOMER_OHT_LINE_CHECK'], checklistData['UTILITY_SPEC_UNDERSTANDING'], checklistData['EQUIPMENT_IMPORT_CAUTION'],
-      checklistData['EQUIPMENT_IMPORT_ORDER'], checklistData['EQUIPMENT_SPACING_CHECK'], checklistData['PACKING_LIST_CHECK'],
-      checklistData['TOOL_SIZE_UNDERSTANDING'], checklistData['LASER_JIG_ALIGNMENT'], checklistData['LIFT_CASTER_REMOVAL'],
-      checklistData['MODULE_HEIGHT_DOCKING'], checklistData['MODULE_DOCKING'], checklistData['DOCKING_REALIGNMENT'],
-      checklistData['LEVELER_POSITION_UNDERSTANDING'], checklistData['MODULE_LEVELING'], checklistData['HOOK_UP'],
-      checklistData['TRAY_CHECK'], checklistData['CABLE_SORTING'], checklistData['GRATING_OPEN_CAUTION'], 
-      checklistData['LADDER_SAFETY_RULES'], checklistData['CABLE_INSTALLATION'], checklistData['CABLE_CONNECTION'], 
-      checklistData['CABLE_TRAY_ARRANGEMENT'], checklistData['CABLE_CUTTING'], checklistData['PUMP_CABLE_TRAY'], 
-      checklistData['PUMP_CABLE_ARRANGEMENT'], checklistData['CABLE_PM_PUMP_CONNECTION'], checklistData['GPS_UPS_SPS_UNDERSTANDING'], 
-      checklistData['POWER_TURN_ON_SEQUENCE'], checklistData['RACK_CB_UNDERSTANDING'], checklistData['SYCON_NUMBER_UNDERSTANDING'], 
-      checklistData['MODULE_CB_TURN_ON'], checklistData['SAFETY_MODULE_UNDERSTANDING'], checklistData['EMO_CHECK'], 
-      checklistData['POWER_TURN_ON_ALARM_TROUBLESHOOTING'], checklistData['UTILITY_TURN_ON_SEQUENCE'], checklistData['VACUUM_TURN_ON'], 
-      checklistData['CDA_TURN_ON'], checklistData['PCW_TURN_ON'], checklistData['GAS_TURN_ON'], checklistData['GAS_TURN_ON_CHECK'], 
-      checklistData['OX_NX_GAS_TURN_ON'], checklistData['MANOMETER_LIMIT_ADJUST'], checklistData['EFEM_ROBOT_PENDANT_CONTROL'], 
-      checklistData['EFEM_ROBOT_LEVELING'], checklistData['EFEM_ROBOT_ARM_LEVELING'], checklistData['EFEM_TEACHING_DATA_SAVE'], 
-      checklistData['TM_ROBOT_PENDANT_CONTROL'], checklistData['TM_ROBOT_PICK_ADJUST'], checklistData['TM_ROBOT_BM_TEACHING'], 
-      checklistData['TM_ROBOT_PM_TEACHING'], checklistData['TM_TEACHING_DATA_SAVE'], checklistData['WAFER_JIG_USE'], 
-      checklistData['LASER_JIG_USE'], checklistData['FINE_TEACHING'], checklistData['MARGIN_CHECK'], checklistData['SEMI_AUTO_TRANSFER'], 
-      checklistData['AGING_TEST'], checklistData['BARATRON_PIRANI_GAUGE_INSTALLATION'], checklistData['EPD_INSTALLATION'], 
-      checklistData['PIO_SENSOR_CABLE_INSTALLATION'], checklistData['RACK_SIGNAL_TOWER_INSTALLATION'], checklistData['CTC_INSTALLATION'], 
-      checklistData['PORTABLE_RACK_INSTALLATION'], checklistData['PM_SAFETY_COVER_INSTALLATION'], checklistData['PROCESS_KIT_INSTALLATION'], 
-      checklistData['PUMP_TURN_ON'], checklistData['PM_LEAK_CHECK'], checklistData['GAS_LINE_LEAK_CHECK'], 
-      checklistData['HELIUM_DETECTOR_USE'], checklistData['ECID_MATCHING'], checklistData['COOLING_STAGE_PIN_CONTROL'], 
-      checklistData['PUMP_VENT_TIME_ADJUST'], checklistData['EPD_PEAK_OFFSET_ADJUST'], checklistData['TEMP_AUTOTUNE'], 
-      checklistData['DOOR_VALVE_CONTROL'], checklistData['APC_AUTOLEARN'], checklistData['PIN_SPEED_HEIGHT_ADJUST'], 
-      checklistData['GAS_SUPPLY_PRESSURE_CHECK'], checklistData['MFC_HUNTING_CHECK'], checklistData['FCIP_CAL'], 
-      checklistData['TTTM_SHEET_COMPLETION'], checklistData['OHT_LAY_OUT_CERTIFICATION'], checklistData['OHT_CERTIFICATION'], 
-      checklistData['TOOL_PREP_CERTIFICATION'], checklistData['EFEM_CERTIFICATION_PREP'], checklistData['TM_CERTIFICATION_PREP'], 
-      checklistData['PM_CERTIFICATION_PREP'], checklistData['SUB_UNIT_CERTIFICATION_PREP'], checklistData['RACK_CERTIFICATION_PREP'], 
-      checklistData['CERTIFICATION_RESPONSE'], checklistData['ENVIRONMENTAL_QUAL_RESPONSE'], checklistData['AGING_TEST_PROCESS_CONFIRM'], 
-      checklistData['EES_REPORT_PROCEDURE']
+      checklistData.name, checklistData.DRAWING_TEMPLATE_SETUP, checklistData.DRAWING_TEMPLATE_MARKING,
+      checklistData.CUSTOMER_OHT_LINE_CHECK, checklistData.UTILITY_SPEC_UNDERSTANDING, checklistData.EQUIPMENT_IMPORT_CAUTION,
+      checklistData.EQUIPMENT_IMPORT_ORDER, checklistData.EQUIPMENT_SPACING_CHECK, checklistData.PACKING_LIST_CHECK,
+      checklistData.TOOL_SIZE_UNDERSTANDING, checklistData.LASER_JIG_ALIGNMENT, checklistData.LIFT_CASTER_REMOVAL,
+      checklistData.MODULE_HEIGHT_DOCKING, checklistData.MODULE_DOCKING, checklistData.DOCKING_REALIGNMENT,
+      checklistData.LEVELER_POSITION_UNDERSTANDING, checklistData.MODULE_LEVELING, checklistData.HOOK_UP,
+      checklistData.TRAY_CHECK, checklistData.CABLE_SORTING, checklistData.GRATING_OPEN_CAUTION, 
+      checklistData.LADDER_SAFETY_RULES, checklistData.CABLE_INSTALLATION, checklistData.CABLE_CONNECTION, 
+      checklistData.CABLE_TRAY_ARRANGEMENT, checklistData.CABLE_CUTTING, checklistData.PUMP_CABLE_TRAY, 
+      checklistData.PUMP_CABLE_ARRANGEMENT, checklistData.CABLE_PM_PUMP_CONNECTION, checklistData.GPS_UPS_SPS_UNDERSTANDING, 
+      checklistData.POWER_TURN_ON_SEQUENCE, checklistData.RACK_CB_UNDERSTANDING, checklistData.SYCON_NUMBER_UNDERSTANDING, 
+      checklistData.MODULE_CB_TURN_ON, checklistData.SAFETY_MODULE_UNDERSTANDING, checklistData.EMO_CHECK, 
+      checklistData.POWER_TURN_ON_ALARM_TROUBLESHOOTING, checklistData.UTILITY_TURN_ON_SEQUENCE, checklistData.VACUUM_TURN_ON, 
+      checklistData.CDA_TURN_ON, checklistData.PCW_TURN_ON, checklistData.GAS_TURN_ON, checklistData.GAS_TURN_ON_CHECK, 
+      checklistData.OX_NX_GAS_TURN_ON, checklistData.MANOMETER_LIMIT_ADJUST, checklistData.EFEM_ROBOT_PENDANT_CONTROL, 
+      checklistData.EFEM_ROBOT_LEVELING, checklistData.EFEM_ROBOT_ARM_LEVELING, checklistData.EFEM_TEACHING_DATA_SAVE, 
+      checklistData.TM_ROBOT_PENDANT_CONTROL, checklistData.TM_ROBOT_PICK_ADJUST, checklistData.TM_ROBOT_BM_TEACHING, 
+      checklistData.TM_ROBOT_PM_TEACHING, checklistData.TM_TEACHING_DATA_SAVE, checklistData.WAFER_JIG_USE, 
+      checklistData.LASER_JIG_USE, checklistData.FINE_TEACHING, checklistData.MARGIN_CHECK, checklistData.SEMI_AUTO_TRANSFER, 
+      checklistData.AGING_TEST, checklistData.BARATRON_PIRANI_GAUGE_INSTALLATION, checklistData.EPD_INSTALLATION, 
+      checklistData.PIO_SENSOR_CABLE_INSTALLATION, checklistData.RACK_SIGNAL_TOWER_INSTALLATION, checklistData.CTC_INSTALLATION, 
+      checklistData.PORTABLE_RACK_INSTALLATION, checklistData.PM_SAFETY_COVER_INSTALLATION, checklistData.PROCESS_KIT_INSTALLATION, 
+      checklistData.PUMP_TURN_ON, checklistData.PM_LEAK_CHECK, checklistData.GAS_LINE_LEAK_CHECK, 
+      checklistData.HELIUM_DETECTOR_USE, checklistData.ECID_MATCHING, checklistData.COOLING_STAGE_PIN_CONTROL, 
+      checklistData.PUMP_VENT_TIME_ADJUST, checklistData.EPD_PEAK_OFFSET_ADJUST, checklistData.TEMP_AUTOTUNE, 
+      checklistData.DOOR_VALVE_CONTROL, checklistData.APC_AUTOLEARN, checklistData.PIN_SPEED_HEIGHT_ADJUST, 
+      checklistData.GAS_SUPPLY_PRESSURE_CHECK, checklistData.MFC_HUNTING_CHECK, checklistData.FCIP_CAL, 
+      checklistData.TTTM_SHEET_COMPLETION, checklistData.OHT_LAY_OUT_CERTIFICATION, checklistData.OHT_CERTIFICATION, 
+      checklistData.TOOL_PREP_CERTIFICATION, checklistData.EFEM_CERTIFICATION_PREP, checklistData.TM_CERTIFICATION_PREP, 
+      checklistData.PM_CERTIFICATION_PREP, checklistData.SUB_UNIT_CERTIFICATION_PREP, checklistData.RACK_CERTIFICATION_PREP, 
+      checklistData.CERTIFICATION_RESPONSE, checklistData.ENVIRONMENTAL_QUAL_RESPONSE, checklistData.AGING_TEST_PROCESS_CONFIRM, 
+      checklistData.EES_REPORT_PROCEDURE
     ];
 
     await connection.query(query, values);
@@ -98,6 +98,7 @@ exports.insertChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 exports.updateChecklist = async (checklistData) => {
