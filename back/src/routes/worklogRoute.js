@@ -14,4 +14,7 @@ router.delete('/work-logs/:id', workLogController.deleteWorkLog);
 // 작업 이력 수정
 router.put('/work-logs/:id', workLogController.updateWorkLog);
 
+router.post('/api/update-task-count', workLogController.updateTaskCount);
+
+
 module.exports = router;

@@ -109,3 +109,16 @@ exports.updateWorkLog = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// 작업 카운트 업데이트
+exports.updateTaskCount = async (req, res) => {
+    const { engineer_name, task_name } = req.body;
+
+    try {
+        await workLogDao.incrementTaskCount(engineer_name, task_name);
+        res.status(200).json({ message: '작업 카운트가 성공적으로 업데이트되었습니다.' });
+    } catch (err) {
+        console.error('작업 카운트 업데이트 중 오류 발생:', err.message);
+        res.status(500).json({ error: '작업 카운트 업데이트 중 오류가 발생했습니다.' });
+    }
+};

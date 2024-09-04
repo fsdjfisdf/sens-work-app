@@ -193,6 +193,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.status === 201) {
                 alert('작업 이력 추가 성공');
                 loadWorkLogs();
+
+                // 작업 카운트 증가 요청
+                const engineers = taskMans.split(',').map(engineer => engineer.trim().split('(')[0]); // 작업자 이름 추출
+                for (const engineer of engineers) {
+                    try {
+                        await axios.post('http://3.37.165.84:3001/api/update-task-count', {
+                            engineer_name: engineer,
+                            task_name: task_name
+                        });
+                    } catch (error) {
+                        console.error(`작업 카운트 업데이트 실패 (${engineer} - ${task_name}):`, error);
+                    }
+                }
             }
         } catch (error) {
             console.error('작업 이력 추가 실패:', error);
