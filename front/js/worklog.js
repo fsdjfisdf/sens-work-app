@@ -95,6 +95,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             return `${input}(${role})`;
         });
         taskMans = [...new Set(taskMans)].join(', ');
+
+                // 데이터 전송 로그 추가
+                console.log('TaskMans:', taskMans);
+                console.log('Transfer Item:', transferItem);
+
         const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('<br>');
 
         let task_date = document.getElementById('task_date').value;
@@ -198,10 +203,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const engineers = taskMans.split(',').map(engineer => engineer.trim().split('(')[0]); // 작업자 이름 추출
                 for (const engineer of engineers) {
                     try {
+                        console.log(`Updating count for: ${engineer}, Task: ${transferItem}`);  // 디버깅용 로그
+
                         const response = await axios.post('http://3.37.165.84:3001/api/update-task-count', {
                             task_man: engineer.trim(),  // 각 엔지니어 이름을 전송
                             transfer_item: transferItem  // 작업 항목
                         });
+
+                        console.log('카운트 업데이트 응답:', response.data);
+                        
                     } catch (error) {
                         console.error(`작업 카운트 업데이트 실패 (${engineer} - ${transferItem}):`, error);
                     }

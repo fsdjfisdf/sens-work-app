@@ -114,11 +114,14 @@ exports.updateWorkLog = async (req, res) => {
 exports.updateTaskCount = async (req, res) => {
     const { task_man, transfer_item } = req.body;
 
+    console.log('Received task count update request for:', task_man, transfer_item);  // 디버그 로그
+
     try {
         // task_man을 분리하여 각 엔지니어 이름을 추출
         const engineers = task_man.split(',').map(engineer => engineer.trim().split('(')[0].trim());
 
         for (const engineer of engineers) {
+            console.log(`Updating task count for engineer: ${engineer}, task: ${transfer_item}`);  // 디버그 로그
             await workLogDao.incrementTaskCount(engineer, transfer_item);
         }
 

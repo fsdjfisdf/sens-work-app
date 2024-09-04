@@ -128,24 +128,26 @@ exports.incrementTaskCount = async (engineer_name, transfer_item) => {
     'EFEM CONTROLLER', 'S/W PATCH'
   ];
 
+
   if (!validColumns.includes(transfer_item)) {
+    console.error(`Invalid task name: ${transfer_item}`);  // 디버그 로그
     throw new Error(`Invalid task name: ${transfer_item}`);
-  }
+}
 
-  const connection = await pool.getConnection(async conn => conn);
-  try {
-      const query = `
-          INSERT INTO task_count (engineer_name, \`${transfer_item}\`)
-          VALUES (?, 1)
-          ON DUPLICATE KEY UPDATE \`${transfer_item}\` = \`${transfer_item}\` + 1
-      `;
-      await connection.query(query, [engineer_name]);
-  } catch (err) {
-      console.error('Error updating task count:', err);
-      throw new Error(`Error updating task count: ${err.message}`);
-  } finally {
-      connection.release();
-  }
+const connection = await pool.getConnection(async conn => conn);
+try {
+    const query = `
+        INSERT INTO task_count (engineer_name, \`${transfer_item}\`)
+        VALUES (?, 1)
+        ON DUPLICATE KEY UPDATE \`${transfer_item}\` = \`${transfer_item}\` + 1
+    `;
+    console.log(`Executing query: ${query} for engineer: ${engineer_name}`);  // 디버그 로그
+    await connection.query(query, [engineer_name]);
+} catch (err) {
+    console.error('Error updating task count:', err);
+    throw new Error(`Error updating task count: ${err.message}`);
+} finally {
+    connection.release();
+}
 };
-
 
