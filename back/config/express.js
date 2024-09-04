@@ -63,7 +63,10 @@ module.exports = function () {
   require('../src/routes/SECMRoute')(app);
   require('../src/routes/TitleRoute')(app);
 
-  
+  const workLogController = require('../src/controllers/workLogController'); // 추가
+
+// 작업 카운트 증가 API 라우트 추가
+app.post('/api/update-task-count', workLogController.updateTaskCount);
 
   // 회원가입
   app.post('/sign-up', async (req, res) => {

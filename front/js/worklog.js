@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('task_date').value = getTodayDate();
 
+    // Work Type 변경 이벤트 처리
     document.getElementById('workType').addEventListener('change', function() {
         const workTypeValue = this.value;
         const additionalOptions = document.getElementById('additionalOptions');
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             maintOptions.style.display = 'none';
             transferOptions.style.display = 'none';
         } else if (workTypeValue === 'MAINT') {
-            transferOptions.style.display = 'block'; // MAINT 시 TRANSFER 옵션도 보이게 함
+            transferOptions.style.display = 'block';
             additionalOptions.style.display = 'none';
         } else {
             additionalOptions.style.display = 'none';
@@ -39,6 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // 미리보기 이벤트 처리
     document.getElementById('preview-save').addEventListener('click', () => {
         const task_date = document.getElementById('task_date').value;
         const start_time = document.getElementById('start_time').value;
@@ -96,9 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         taskMans = [...new Set(taskMans)].join(', ');
 
-                // 데이터 전송 로그 추가
-                console.log('TaskMans:', taskMans);
-                console.log('Transfer Item:', transferItem);
+        console.log('TaskMans:', taskMans);
 
         const taskDescriptions = Array.from(document.getElementsByClassName('task-description-input')).map(input => input.value).join('<br>');
 
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
         const maintItem = (workType === 'MAINT') ? document.getElementById('maintOptionSelect').value : 'SELECT';
         const transferItem = (workType === 'MAINT') ? document.getElementById('transferOptionSelect').value : 'SELECT';
-        const task_maint = maintItem; // 새로 추가된 필드
+        const task_maint = maintItem;
 
         console.log('전송 데이터:', {
             task_name,
@@ -158,8 +158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             workType,
             setupItem,
             maintItem,
-            transferItem, // 추가된 필드
-            task_maint, // 새로 추가된 필드
+            transferItem,
+            task_maint,
             status
         });
 
@@ -186,8 +186,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 workType,
                 setupItem,
                 maintItem,
-                transferItem, // 추가된 필드
-                task_maint, // 새로 추가된 필드
+                transferItem,
+                task_maint,
                 status
             }, {
                 headers: {
@@ -199,19 +199,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('작업 이력 추가 성공');
                 loadWorkLogs();
             
-                // 작업 카운트 증가 요청
-                const engineers = taskMans.split(',').map(engineer => engineer.trim().split('(')[0]); // 작업자 이름 추출
+                const engineers = taskMans.split(',').map(engineer => engineer.trim().split('(')[0]);
                 for (const engineer of engineers) {
                     try {
-                        console.log(`Updating count for: ${engineer}, Task: ${transferItem}`);  // 디버깅용 로그
+                        console.log(`Updating count for: ${engineer}, Task: ${transferItem}`);
 
                         const response = await axios.post('http://3.37.165.84:3001/api/update-task-count', {
-                            task_man: engineer.trim(),  // 각 엔지니어 이름을 전송
-                            transfer_item: transferItem  // 작업 항목
+                            task_man: engineer.trim(),
+                            transfer_item: transferItem
                         });
 
                         console.log('카운트 업데이트 응답:', response.data);
-                        
+
                     } catch (error) {
                         console.error(`작업 카운트 업데이트 실패 (${engineer} - ${transferItem}):`, error);
                     }
@@ -232,9 +231,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (signOutButton) {
         signOutButton.addEventListener("click", function() {
-            localStorage.removeItem("x-access-token"); // JWT 토큰 삭제
+            localStorage.removeItem("x-access-token");
             alert("로그아웃 되었습니다.");
-            window.location.replace("./signin.html"); // 로그인 페이지로 리디렉션
+            window.location.replace("./signin.html");
         });
     }
 
@@ -243,9 +242,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     menuBtn.addEventListener('click', function() {
         menuContent.classList.toggle('show');
-        if (menuContent.classList.contains('show')) {
-            animateMenuItems();
-        }
     });
 
     document.addEventListener('click', function(event) {
