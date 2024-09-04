@@ -12,7 +12,7 @@
   <nav>
     <div class="inner">
       <div class="nav-container">
-        <h1 class="nav-title"><a href="./index.html">Setup System</a></h1>
+        <h1 class="nav-title"><a href="./index.html">SUPRA Setup System</a></h1>
         <div class="sign-container">
           <div class="unsigned"></div>
           <div class="signed hidden">
@@ -34,429 +34,452 @@
       <div class="inner">
         <form id="checklistForm">
           <div id="checklist-container">
+            
+            <!-- INSTALLATION PREPARATION Section -->
             <div class="category">
               <h2>INSTALLATION PREPERATION</h2>
-              <div class="item">
+              <div class="item" title="Drawing Template을 기준선에 맞춰 배치 알고 있는가?">
                 <label>Drawing Template을 기준선에 맞춰 배치 알고 있는가?</label>
-                <input type="checkbox" name="DRAWING_TEMPLATE_ALIGNMENT" value="O">
+                <input type="checkbox" name="DRAWING_TEMPLATE_SETUP" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Drawing Template를 펼쳐 타공, H빔 및 Adjust 를 Marking 알고 있는가?">
                 <label>Drawing Template를 펼쳐 타공, H빔 및 Adjust 를 Marking 알고 있는가?</label>
                 <input type="checkbox" name="DRAWING_TEMPLATE_MARKING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="고객사에서 그린 기준선과 OHT라인이 일치하는지 확인 알고 있는가?">
                 <label>고객사에서 그린 기준선과 OHT라인이 일치하는지 확인 알고 있는가?</label>
-                <input type="checkbox" name="LINE_ALIGNMENT_CHECK" value="O">
+                <input type="checkbox" name="CUSTOMER_OHT_LINE_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="타공별 Utility Spec을 숙지하고 있는가?">
                 <label>타공별 Utility Spec을 숙지하고 있는가?</label>
-                <input type="checkbox" name="UTILITY_SPEC_KNOWLEDGE" value="O">
+                <input type="checkbox" name="UTILITY_SPEC_UNDERSTANDING" value="O">
               </div>
             </div>
+
+            <!-- FAB IN Section -->
             <div class="category">
               <h2>FAB IN</h2>
-              <div class="item">
+              <div class="item" title="설비반입 주의 사항에 대해 숙지하고 있는가?">
                 <label>설비반입 주의 사항에 대해 숙지하고 있는가?</label>
-                <input type="checkbox" name="FAB_IN_CAUTION" value="O">
+                <input type="checkbox" name="EQUIPMENT_IMPORT_CAUTION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="설비반입 순서를 숙지하고 있는가?">
                 <label>설비반입 순서를 숙지하고 있는가?</label>
-                <input type="checkbox" name="FAB_IN_ORDER" value="O">
+                <input type="checkbox" name="EQUIPMENT_IMPORT_ORDER" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="설비간 유격거리가 충분한지 확인 알고 있는가?">
                 <label>설비간 유격거리가 충분한지 확인 알고 있는가?</label>
-                <input type="checkbox" name="GAP_CHECK" value="O">
+                <input type="checkbox" name="EQUIPMENT_SPACING_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Packing List 확인하여 반입 Part 확인이 가능 한가?">
                 <label>Packing List 확인하여 반입 Part 확인이 가능 한가?</label>
                 <input type="checkbox" name="PACKING_LIST_CHECK" value="O">
               </div>
             </div>
+
+            <!-- Docking Section -->
             <div class="category">
               <h2>Docking</h2>
-              <div class="item">
+              <div class="item" title="장비별 Tool size를 숙지하고 있는가?">
                 <label>장비별 Tool size를 숙지하고 있는가?</label>
-                <input type="checkbox" name="TOOL_SIZE_KNOWLEDGE" value="O">
+                <input type="checkbox" name="TOOL_SIZE_UNDERSTANDING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Laser Jig 를 이용하여 OHT Line 과 설비를 정렬 알고 있는가?">
                 <label>Laser Jig 를 이용하여 OHT Line 과 설비를 정렬 알고 있는가?</label>
                 <input type="checkbox" name="LASER_JIG_ALIGNMENT" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Lift를 활용하여 EFEM의 Caster 를 제거 알고 있는가?">
                 <label>Lift를 활용하여 EFEM의 Caster 를 제거 알고 있는가?</label>
-                <input type="checkbox" name="LIFT_USE" value="O">
+                <input type="checkbox" name="LIFT_CASTER_REMOVAL" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="각 Module의 지면에서 frame의 높이를 알고 Spec에 맞춰 Docking 알고 있는가?">
                 <label>각 Module의 지면에서 frame의 높이를 알고 Spec에 맞춰 Docking 알고 있는가?</label>
-                <input type="checkbox" name="MODULE_HEIGHT_KNOWLEDGE" value="O">
+                <input type="checkbox" name="MODULE_HEIGHT_DOCKING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Module간 Docking 할 수 있는가?">
                 <label>Module간 Docking 할 수 있는가?</label>
                 <input type="checkbox" name="MODULE_DOCKING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Docking작업 중 설비와 OHT Line 정렬이 틀어졌을 경우 재정렬 알고 있는가?">
                 <label>Docking작업 중 설비와 OHT Line 정렬이 틀어졌을 경우 재정렬 알고 있는가?</label>
                 <input type="checkbox" name="DOCKING_REALIGNMENT" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="각 Moudule의 Leveler 정위치를 숙지하고 있는가?">
                 <label>각 Moudule의 Leveler 정위치를 숙지하고 있는가?</label>
-                <input type="checkbox" name="LEVELER_POSITION_KNOWLEDGE" value="O">
+                <input type="checkbox" name="LEVELER_POSITION_UNDERSTANDING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="각 Moudule의 Leveling Spec을 알고 Adjust를 이용, Leveling 알고 있는가?">
                 <label>각 Moudule의 Leveling Spec을 알고 Adjust를 이용, Leveling 알고 있는가?</label>
-                <input type="checkbox" name="LEVELING_SPEC_KNOWLEDGE" value="O">
+                <input type="checkbox" name="MODULE_LEVELING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="내부 Hook Up 알고 있는가?">
                 <label>내부 Hook Up 알고 있는가?</label>
-                <input type="checkbox" name="INTERNAL_HOOK_UP" value="O">
+                <input type="checkbox" name="HOOK_UP" value="O">
               </div>
             </div>
+
+            <!-- Cable Hook Up Section -->
             <div class="category">
               <h2>Cable Hook Up</h2>
-              <div class="item">
+              <div class="item" title="설비에서 Rack까지 Tray 확인 및 작업가능여부 판단알고 있는가?">
                 <label>설비에서 Rack까지 Tray 확인 및 작업가능여부 판단알고 있는가?</label>
                 <input type="checkbox" name="TRAY_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Cable 각 Module별로 분류 알고 있는가?">
                 <label>Cable 각 Module별로 분류 알고 있는가?</label>
-                <input type="checkbox" name="CABLE_CLASSIFICATION" value="O">
+                <input type="checkbox" name="CABLE_SORTING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Grating Open시 주의 사항을 숙지하고 있는가?">
                 <label>Grating Open시 주의 사항을 숙지하고 있는가?</label>
                 <input type="checkbox" name="GRATING_OPEN_CAUTION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="사다리 작업시 환경안전수칙을 숙지하고 있는가?">
                 <label>사다리 작업시 환경안전수칙을 숙지하고 있는가?</label>
-                <input type="checkbox" name="LADDER_SAFETY" value="O">
+                <input type="checkbox" name="LADDER_SAFETY_RULES" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="설비에서 Rack까지 포설 알고 있는가?">
                 <label>설비에서 Rack까지 포설 알고 있는가?</label>
                 <input type="checkbox" name="CABLE_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Cable을 설비에 정확히 연결 알고 있는가?">
                 <label>Cable을 설비에 정확히 연결 알고 있는가?</label>
                 <input type="checkbox" name="CABLE_CONNECTION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Cable을 Tray에 규격에 맞게 정리 알고 있는가?">
                 <label>Cable을 Tray에 규격에 맞게 정리 알고 있는가?</label>
-                <input type="checkbox" name="CABLE_TRAY_ORGANIZATION" value="O">
+                <input type="checkbox" name="CABLE_TRAY_ARRANGEMENT" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="설비와 Rack간의 거리를 고려해 Cable 재단 알고 있는가?">
                 <label>설비와 Rack간의 거리를 고려해 Cable 재단 알고 있는가?</label>
                 <input type="checkbox" name="CABLE_CUTTING" value="O">
               </div>
-              <div class="item">
-                <label>Cable을 Rack에 정확히 연결알고 있는가?</label>
-                <input type="checkbox" name="CABLE_RACK_CONNECTION" value="O">
-              </div>
-              <div class="item">
+              <div class="item" title="Pump Cable의 종류를 알고 알맞은 Tray로 내려줄 수 있는가?">
                 <label>Pump Cable의 종류를 알고 알맞은 Tray로 내려줄 수 있는가?</label>
-                <input type="checkbox" name="PUMP_CABLE_TYPE_KNOWLEDGE" value="O">
+                <input type="checkbox" name="PUMP_CABLE_TRAY" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Pump단에서 Cable 포설 및 정리 알고 있는가?">
                 <label>Pump단에서 Cable 포설 및 정리 알고 있는가?</label>
-                <input type="checkbox" name="PUMP_CABLE_INSTALLATION" value="O">
+                <input type="checkbox" name="PUMP_CABLE_ARRANGEMENT" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Cable을 구분하여 PM별로 Pump에 정확히 연결 알고 있는가?">
                 <label>Cable을 구분하여 PM별로 Pump에 정확히 연결 알고 있는가?</label>
-                <input type="checkbox" name="PUMP_CABLE_PM_CONNECTION" value="O">
+                <input type="checkbox" name="CABLE_PM_PUMP_CONNECTION" value="O">
               </div>
             </div>
+
+            <!-- Power Turn on Section -->
             <div class="category">
-              <h2>Power Turn On</h2>
-              <div class="item">
+              <h2>Power Turn on</h2>
+              <div class="item" title="GPS, UPS, SPS 의 역할과 원리에 대해 숙지하고 있는가?">
                 <label>GPS, UPS, SPS 의 역할과 원리에 대해 숙지하고 있는가?</label>
-                <input type="checkbox" name="POWER_SYSTEM_KNOWLEDGE" value="O">
+                <input type="checkbox" name="GPS_UPS_SPS_UNDERSTANDING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Power turn on 순서를 숙지하고 있는가?">
                 <label>Power turn on 순서를 숙지하고 있는가?</label>
-                <input type="checkbox" name="POWER_ON_ORDER" value="O">
+                <input type="checkbox" name="POWER_TURN_ON_SEQUENCE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Rack의 CB 종류와 기능을 숙지하고 있는가?">
                 <label>Rack의 CB 종류와 기능을 숙지하고 있는가?</label>
-                <input type="checkbox" name="CB_TYPE_KNOWLEDGE" value="O">
+                <input type="checkbox" name="RACK_CB_UNDERSTANDING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Sycon number 별 의미하는  Part를 숙지하고 있는가?">
                 <label>Sycon number 별 의미하는 Part를 숙지하고 있는가?</label>
-                <input type="checkbox" name="SYCON_NUMBER_KNOWLEDGE" value="O">
+                <input type="checkbox" name="SYCON_NUMBER_UNDERSTANDING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Module별 CB 위치를 알고 Turn on 알고 있는가?">
                 <label>Module별 CB 위치를 알고 Turn on 알고 있는가?</label>
                 <input type="checkbox" name="MODULE_CB_TURN_ON" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Safety Module의 위치와 기능을 숙지하고 있는가?">
                 <label>Safety Module의 위치와 기능을 숙지하고 있는가?</label>
-                <input type="checkbox" name="SAFETY_MODULE_KNOWLEDGE" value="O">
+                <input type="checkbox" name="SAFETY_MODULE_UNDERSTANDING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="EMO 동작 Check 알고 있는가?">
                 <label>EMO 동작 Check 알고 있는가?</label>
                 <input type="checkbox" name="EMO_CHECK" value="O">
               </div>
-              <div class="item">
-                <label>Power turn on 후 발생하는 Alram Trouble Shooting 알고 있는가?</label>
-                <input type="checkbox" name="ALARM_TROUBLE_SHOOTING" value="O">
+              <div class="item" title="Power turn on 후 발생하는 Alram Troble Shooting 알고 있는가?">
+                <label>Power turn on 후 발생하는 Alram Troble Shooting 알고 있는가?</label>
+                <input type="checkbox" name="POWER_TURN_ON_ALARM_TROUBLESHOOTING" value="O">
               </div>
             </div>
+
+            <!-- Utility Turn On Section -->
             <div class="category">
               <h2>Utility Turn On</h2>
-              <div class="item">
+              <div class="item" title="Utility turn on 의 순서를 숙지하고 있는가?">
                 <label>Utility turn on 의 순서를 숙지하고 있는가?</label>
-                <input type="checkbox" name="UTILITY_ON_ORDER" value="O">
+                <input type="checkbox" name="UTILITY_TURN_ON_SEQUENCE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Vacuum Turn on 및 Spec에 맞게 조정 알고 있는가?">
                 <label>Vacuum Turn on 및 Spec에 맞게 조정 알고 있는가?</label>
-                <input type="checkbox" name="VACUUM_ON_ADJUSTMENT" value="O">
+                <input type="checkbox" name="VACUUM_TURN_ON" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="CDA Turn on 및 Spec에 맞게 조정 알고 있는가?">
                 <label>CDA Turn on 및 Spec에 맞게 조정 알고 있는가?</label>
-                <input type="checkbox" name="CDA_ON_ADJUSTMENT" value="O">
+                <input type="checkbox" name="CDA_TURN_ON" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="PCW Turn on 및 Spec에 맞게 조정 알고 있는가?">
                 <label>PCW Turn on 및 Spec에 맞게 조정 알고 있는가?</label>
-                <input type="checkbox" name="PCW_ON_ADJUSTMENT" value="O">
+                <input type="checkbox" name="PCW_TURN_ON" value="O">
               </div>
             </div>
+
+            <!-- GAS TURN ON Section -->
             <div class="category">
               <h2>GAS TURN ON</h2>
-              <div class="item">
+              <div class="item" title="GAS Turn On에 대해 알고 있는가?">
                 <label>GAS Turn On에 대해 알고 있는가?</label>
-                <input type="checkbox" name="GAS_ON_KNOWLEDGE" value="O">
+                <input type="checkbox" name="GAS_TURN_ON" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="GAS Turn On 전, 후 확인 사항에 대해 알고 있는가?">
                 <label>GAS Turn On 전, 후 확인 사항에 대해 알고 있는가?</label>
-                <input type="checkbox" name="GAS_ON_CHECK" value="O">
+                <input type="checkbox" name="GAS_TURN_ON_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="OX, NX 가스 Turn on 및 가스 유입유무를 확인 알고 있는가?">
                 <label>OX, NX 가스 Turn on 및 가스 유입유무를 확인 알고 있는가?</label>
-                <input type="checkbox" name="GAS_FLOW_CHECK" value="O">
+                <input type="checkbox" name="OX_NX_GAS_TURN_ON" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Manometer의 Low, High Limit 값 Spec에 맞게 조정 알고 있는가?">
                 <label>Manometer의 Low, High Limit 값 Spec에 맞게 조정 알고 있는가?</label>
-                <input type="checkbox" name="MANOMETER_ADJUSTMENT" value="O">
+                <input type="checkbox" name="MANOMETER_LIMIT_ADJUST" value="O">
               </div>
             </div>
+
+            <!-- Teaching Section -->
             <div class="category">
               <h2>Teaching</h2>
-              <div class="item">
+              <div class="item" title="EFEM Robot Pendant 조작 가능한가?">
                 <label>EFEM Robot Pendant 조작 가능한가?</label>
-                <input type="checkbox" name="EFEM_ROBOT_PENDANT" value="O">
+                <input type="checkbox" name="EFEM_ROBOT_PENDANT_CONTROL" value="O">
               </div>
-              <div class="item">
-                <label>EFEM Robot Leveling 알고 있는가?? ( SANKYO )</label>
+              <div class="item" title="EFEM Robot Leveling 알고 있는가?? (SANKYO)">
+                <label>EFEM Robot Leveling 알고 있는가?? (SANKYO)</label>
                 <input type="checkbox" name="EFEM_ROBOT_LEVELING" value="O">
               </div>
-              <div class="item">
-                <label>EFEM Robot Arm Leveling 알고 있는가?? ( SANKYO )</label>
-                <input type="checkbox" name="EFEM_ARM_LEVELING" value="O">
+              <div class="item" title="EFEM Robot Arm Leveling 알고 있는가?? (SANKYO)">
+                <label>EFEM Robot Arm Leveling 알고 있는가?? (SANKYO)</label>
+                <input type="checkbox" name="EFEM_ROBOT_ARM_LEVELING" value="O">
               </div>
-              <div class="item">
-                <label>EFEM Teaching Data 저장 가능한가 ? ( SANKYO )</label>
-                <input type="checkbox" name="EFEM_DATA_SAVE" value="O">
+              <div class="item" title="EFEM Teaching Data 저장 가능한가? (SANKYO)">
+                <label>EFEM Teaching Data 저장 가능한가? (SANKYO)</label>
+                <input type="checkbox" name="EFEM_TEACHING_DATA_SAVE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="TM Robot Pendant 조작 가능한가?">
                 <label>TM Robot Pendant 조작 가능한가?</label>
-                <input type="checkbox" name="TM_ROBOT_PENDANT" value="O">
+                <input type="checkbox" name="TM_ROBOT_PENDANT_CONTROL" value="O">
               </div>
-              <div class="item">
-                <label>TM Robot Pick 38Xmm Adjust (직교) 가능 한가? ? ( SANKYO )</label>
-                <input type="checkbox" name="TM_PICK_ADJUST" value="O">
+              <div class="item" title="TM Robot Pick 38Xmm Adjust (직교) 가능 한가? (SANKYO)">
+                <label>TM Robot Pick 38Xmm Adjust (직교) 가능 한가? (SANKYO)</label>
+                <input type="checkbox" name="TM_ROBOT_PICK_ADJUST" value="O">
               </div>
-              <div class="item">
-                <label>TM Robot BM Teaching 가능 한가 ? ( SANKYO )</label>
-                <input type="checkbox" name="TM_BM_TEACHING" value="O">
+              <div class="item" title="TM Robot BM Teaching 가능 한가? (SANKYO)">
+                <label>TM Robot BM Teaching 가능 한가? (SANKYO)</label>
+                <input type="checkbox" name="TM_ROBOT_BM_TEACHING" value="O">
               </div>
-              <div class="item">
-                <label>TM Robot PM Teeaching 가능 한가 ? ( SANKYO )</label>
-                <input type="checkbox" name="TM_PM_TEACHING" value="O">
+              <div class="item" title="TM Robot PM Teeaching 가능 한가? (SANKYO)">
+                <label>TM Robot PM Teeaching 가능 한가? (SANKYO)</label>
+                <input type="checkbox" name="TM_ROBOT_PM_TEACHING" value="O">
               </div>
-              <div class="item">
-                <label>TM Robot Teaching Data 저장 가능한가 ? ( SANKYO )</label>
-                <input type="checkbox" name="TM_DATA_SAVE" value="O">
+              <div class="item" title="TM Robot Teaching Data 저장 가능한가? (SANKYO)">
+                <label>TM Robot Teaching Data 저장 가능한가? (SANKYO)</label>
+                <input type="checkbox" name="TM_TEACHING_DATA_SAVE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Teachig Wafer Jig 사용 가능한가?">
                 <label>Teachig Wafer Jig 사용 가능한가?</label>
                 <input type="checkbox" name="WAFER_JIG_USE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Laser Teaching Jig 사용 가능한가?">
                 <label>Laser Teaching Jig 사용 가능한가?</label>
                 <input type="checkbox" name="LASER_JIG_USE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="미세 Teaching 가능한가?">
                 <label>미세 Teaching 가능한가?</label>
                 <input type="checkbox" name="FINE_TEACHING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="마진 Check 가능한가?">
                 <label>마진 Check 가능한가?</label>
                 <input type="checkbox" name="MARGIN_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Semi Auto Transfer 알고 있는가?">
                 <label>Semi Auto Transfer 알고 있는가?</label>
                 <input type="checkbox" name="SEMI_AUTO_TRANSFER" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Aging Test 알고 있는가?">
                 <label>Aging Test 알고 있는가?</label>
                 <input type="checkbox" name="AGING_TEST" value="O">
               </div>
             </div>
+
+            <!-- PART INSTALLATION Section -->
             <div class="category">
               <h2>PART INSTALLATION</h2>
-              <div class="item">
+              <div class="item" title="Baratron, Pirani Gauge 장착이 가능한가?">
                 <label>Baratron, Pirani Gauge 장착이 가능한가?</label>
-                <input type="checkbox" name="GAUGE_INSTALLATION" value="O">
+                <input type="checkbox" name="BARATRON_PIRANI_GAUGE_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="EPD 장착이 가능한가?">
                 <label>EPD 장착이 가능한가?</label>
                 <input type="checkbox" name="EPD_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="PIO Sensor, Cable 장착이 가능한가?">
                 <label>PIO Sensor, Cable 장착이 가능한가?</label>
-                <input type="checkbox" name="PIO_INSTALLATION" value="O">
+                <input type="checkbox" name="PIO_SENSOR_CABLE_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Rack Signal Tower 설치가 가능한가?">
                 <label>Rack Signal Tower 설치가 가능한가?</label>
-                <input type="checkbox" name="SIGNAL_TOWER_INSTALLATION" value="O">
+                <input type="checkbox" name="RACK_SIGNAL_TOWER_INSTALLATION" value="O">
               </div>
-              <div class="item">
-                <label>CTC 장착이 가능 한가?</label>
+              <div class="item" title="CTC 장착이 가능한가?">
+                <label>CTC 장착이 가능한가?</label>
                 <input type="checkbox" name="CTC_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Portable Rack 설치 가능 한가?">
                 <label>Portable Rack 설치 가능 한가?</label>
                 <input type="checkbox" name="PORTABLE_RACK_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="PM Safety Cover 장착 가능 한가?">
                 <label>PM Safety Cover 장착 가능 한가?</label>
-                <input type="checkbox" name="SAFETY_COVER_INSTALLATION" value="O">
+                <input type="checkbox" name="PM_SAFETY_COVER_INSTALLATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Process kit 장착 가능 한가?">
                 <label>Process kit 장착 가능 한가?</label>
                 <input type="checkbox" name="PROCESS_KIT_INSTALLATION" value="O">
               </div>
             </div>
+
+            <!-- LEAK CHECK Section -->
             <div class="category">
               <h2>LEAK CHECK</h2>
-              <div class="item">
+              <div class="item" title="PUMP Turn On 알고 있는가?">
                 <label>PUMP Turn On 알고 있는가?</label>
-                <input type="checkbox" name="PUMP_ON" value="O">
+                <input type="checkbox" name="PUMP_TURN_ON" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="PM Leak Check에 대해 알고 있는가?">
                 <label>PM Leak Check에 대해 알고 있는가?</label>
                 <input type="checkbox" name="PM_LEAK_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Gas Line Leak Check에 대해 알고 있는가?">
                 <label>Gas Line Leak Check에 대해 알고 있는가?</label>
-                <input type="checkbox" name="GAS_LEAK_CHECK" value="O">
+                <input type="checkbox" name="GAS_LINE_LEAK_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Helium Detector 사용 방법에 대해 알고 있는가?">
                 <label>Helium Detector 사용 방법에 대해 알고 있는가?</label>
                 <input type="checkbox" name="HELIUM_DETECTOR_USE" value="O">
               </div>
             </div>
+
+            <!-- TTTM Section -->
             <div class="category">
               <h2>TTTM</h2>
-              <div class="item">
+              <div class="item" title="ECID Matching할 수 있는가?">
                 <label>ECID Matching할 수 있는가?</label>
                 <input type="checkbox" name="ECID_MATCHING" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Cooling Stage Pin UP,Down Time 조절 가능한가?">
                 <label>Cooling Stage Pin UP,Down Time 조절 가능한가?</label>
-                <input type="checkbox" name="COOLING_STAGE_ADJUSTMENT" value="O">
+                <input type="checkbox" name="COOLING_STAGE_PIN_CONTROL" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Puming / Venting Time 조절 가능한가?">
                 <label>Puming / Venting Time 조절 가능한가?</label>
-                <input type="checkbox" name="PUMPING_VENTING_ADJUSTMENT" value="O">
+                <input type="checkbox" name="PUMP_VENT_TIME_ADJUST" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="EPD Peak, Offset 조절 가능한가?">
                 <label>EPD Peak, Offset 조절 가능한가?</label>
-                <input type="checkbox" name="EPD_ADJUSTMENT" value="O">
+                <input type="checkbox" name="EPD_PEAK_OFFSET_ADJUST" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Temp autotune 가능 한가?">
                 <label>Temp autotune 가능 한가?</label>
                 <input type="checkbox" name="TEMP_AUTOTUNE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Door Valve Open,Close Time 조절 가능 한가?">
                 <label>Door Valve Open,Close Time 조절 가능 한가?</label>
-                <input type="checkbox" name="DOOR_VALVE_ADJUSTMENT" value="O">
+                <input type="checkbox" name="DOOR_VALVE_CONTROL" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="APC Autolearn 가능 한가?">
                 <label>APC Autolearn 가능 한가?</label>
                 <input type="checkbox" name="APC_AUTOLEARN" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Pin speed, height Adjust 가능 한가?">
                 <label>Pin speed, height Adjust 가능 한가?</label>
-                <input type="checkbox" name="PIN_SPEED_ADJUSTMENT" value="O">
+                <input type="checkbox" name="PIN_SPEED_HEIGHT_ADJUST" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="Gas Supply Pressure Check 가능 한가?">
                 <label>Gas Supply Pressure Check 가능 한가?</label>
-                <input type="checkbox" name="GAS_PRESSURE_CHECK" value="O">
+                <input type="checkbox" name="GAS_SUPPLY_PRESSURE_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="MFC Normal 상태 Hunting 유/무 확인 가능 한가?">
                 <label>MFC Normal 상태 Hunting 유/무 확인 가능 한가?</label>
                 <input type="checkbox" name="MFC_HUNTING_CHECK" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="FCIP Cal 가능한가? (R3, R5)">
                 <label>FCIP Cal 가능한가? (R3, R5)</label>
                 <input type="checkbox" name="FCIP_CAL" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="TTTM Sheet 작성 가능한가?">
                 <label>TTTM Sheet 작성 가능한가?</label>
-                <input type="checkbox" name="TTTM_SHEET" value="O">
+                <input type="checkbox" name="TTTM_SHEET_COMPLETION" value="O">
               </div>
             </div>
+
+            <!-- CUSTOMER CERTIFICATION Section -->
             <div class="category">
               <h2>CUSTOMER CERTIFICATION</h2>
-              <div class="item">
+              <div class="item" title="OHT Lay Out 인증에 대해 알고 대응 할 수 있는가?">
                 <label>OHT Lay Out 인증에 대해 알고 대응 할 수 있는가?</label>
-                <input type="checkbox" name="OHT_LAYOUT_CERTIFICATION" value="O">
+                <input type="checkbox" name="OHT_LAY_OUT_CERTIFICATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="OHT 인증에 대해 알고 대응 할 수 있는가?">
                 <label>OHT 인증에 대해 알고 대응 할 수 있는가?</label>
                 <input type="checkbox" name="OHT_CERTIFICATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="중간인증준비(8계통)에 필요한 Tool에 대해 알고 있는가?">
                 <label>중간인증준비(8계통)에 필요한 Tool에 대해 알고 있는가?</label>
-                <input type="checkbox" name="MID_CERTIFICATION_TOOL_KNOWLEDGE" value="O">
+                <input type="checkbox" name="TOOL_PREP_CERTIFICATION" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="EFEM 중간인증준비(8계통) 할 수 있는가?">
                 <label>EFEM 중간인증준비(8계통) 할 수 있는가?</label>
-                <input type="checkbox" name="EFEM_MID_CERTIFICATION" value="O">
+                <input type="checkbox" name="EFEM_CERTIFICATION_PREP" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="TM 중간인증준비(8계통) 할 수 있는가?">
                 <label>TM 중간인증준비(8계통) 할 수 있는가?</label>
-                <input type="checkbox" name="TM_MID_CERTIFICATION" value="O">
+                <input type="checkbox" name="TM_CERTIFICATION_PREP" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="PM 중간인증준비(8계통) 할 수 있는가?">
                 <label>PM 중간인증준비(8계통) 할 수 있는가?</label>
-                <input type="checkbox" name="PM_MID_CERTIFICATION" value="O">
+                <input type="checkbox" name="PM_CERTIFICATION_PREP" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="SUB UNIT 중간인증준비(8계통) 할 수 있는가?">
                 <label>SUB UNIT 중간인증준비(8계통) 할 수 있는가?</label>
-                <input type="checkbox" name="SUB_UNIT_MID_CERTIFICATION" value="O">
+                <input type="checkbox" name="SUB_UNIT_CERTIFICATION_PREP" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="RACK 중간인증준비(8계통) 할 수 있는가?">
                 <label>RACK 중간인증준비(8계통) 할 수 있는가?</label>
-                <input type="checkbox" name="RACK_MID_CERTIFICATION" value="O">
+                <input type="checkbox" name="RACK_CERTIFICATION_PREP" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="중간인증에 대해 알고 대응 할 수 있는가?">
                 <label>중간인증에 대해 알고 대응 할 수 있는가?</label>
-                <input type="checkbox" name="MID_CERTIFICATION_RESPONSE" value="O">
+                <input type="checkbox" name="CERTIFICATION_RESPONSE" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="환경Qual에 대해 알고 대응 할 수 있는가?">
                 <label>환경Qual에 대해 알고 대응 할 수 있는가?</label>
-                <input type="checkbox" name="ENV_QUAL_RESPONSE" value="O">
+                <input type="checkbox" name="ENVIRONMENTAL_QUAL_RESPONSE" value="O">
               </div>
             </div>
+
+            <!-- PROCESS CONFIRM Section -->
             <div class="category">
               <h2>PROCESS CONFIRM</h2>
-              <div class="item">
+              <div class="item" title="Aging Test 알고 있는가?">
                 <label>Aging Test 알고 있는가?</label>
-                <input type="checkbox" name="AGING_TEST_KNOWLEDGE" value="O">
+                <input type="checkbox" name="AGING_TEST_PROCESS_CONFIRM" value="O">
               </div>
-              <div class="item">
+              <div class="item" title="EES Report 진행 방법 알고 있는가?">
                 <label>EES Report 진행 방법 알고 있는가?</label>
                 <input type="checkbox" name="EES_REPORT_PROCEDURE" value="O">
               </div>
             </div>
+
           </div>
           <button type="submit">SAVE</button>
         </form>
@@ -465,4 +488,3 @@
   </main>
 </body>
 </html>
-
