@@ -1,4 +1,4 @@
-const workLogDao = require('../dao/workLogDao');
+const workLogDao = require('../dao/work_LogDao');
 
 
 exports.getWorkLogs = async (req, res) => {
