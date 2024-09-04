@@ -63,8 +63,6 @@ module.exports = function () {
   require('../src/routes/SECMRoute')(app);
   require('../src/routes/TitleRoute')(app);
 
-  const workLogController = require('../src/controllers/workLogController');
-app.post('/api/update-task-count', workLogController.updateTaskCount);
   
 
   // 회원가입
