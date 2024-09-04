@@ -1,6 +1,4 @@
-const path = require('path');
-console.log(__dirname);  // 현재 경로 확인
-const { pool } = require('../config/database');
+const { pool } = require('../../config/database');
 
 exports.getWorkLogs = async (equipment_name) => {
     const connection = await pool.getConnection(async conn => conn);
