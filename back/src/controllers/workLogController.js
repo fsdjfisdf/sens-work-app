@@ -112,13 +112,20 @@ exports.updateWorkLog = async (req, res) => {
 
 // 작업 카운트 업데이트
 exports.updateTaskCount = async (req, res) => {
-    const { engineer_name, task_name } = req.body;
+    const { task_man, transfer_item } = req.body;
 
     try {
-        await workLogDao.incrementTaskCount(engineer_name, task_name);
-        res.status(200).json({ message: '작업 카운트가 성공적으로 업데이트되었습니다.' });
+        // task_man을 분리하여 각 엔지니어 이름을 추출
+        const engineers = task_man.split(',').map(engineer => engineer.trim().split('(')[0].trim());
+
+        for (const engineer of engineers) {
+            await workLogDao.incrementTaskCount(engineer, transfer_item);
+        }
+
+        res.status(200).json({ message: 'Task count updated successfully' });
     } catch (err) {
-        console.error('작업 카운트 업데이트 중 오류 발생:', err.message);
-        res.status(500).json({ error: '작업 카운트 업데이트 중 오류가 발생했습니다.' });
+        console.error('Error updating task count:', err.message);
+        res.status(500).json({ error: 'Error updating task count' });
     }
 };
+

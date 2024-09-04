@@ -114,19 +114,38 @@ exports.updateWorkLog = async (id, task_name, task_result, task_cause, task_man,
 
 
 
-// 작업 이력 카운트 증가 기능
-exports.incrementTaskCount = async (engineer_name, task_name) => {
-    const connection = await pool.getConnection(async conn => conn);
-    try {
-        const query = `
-            INSERT INTO task_count (engineer_name, \`${task_name}\`)
-            VALUES (?, 1)
-            ON DUPLICATE KEY UPDATE \`${task_name}\` = \`${task_name}\` + 1
-        `;
-        await connection.query(query, [engineer_name]);
-    } catch (err) {
-        throw new Error(`Error updating task count: ${err.message}`);
-    } finally {
-        connection.release();
-    }
+exports.incrementTaskCount = async (engineer_name, transfer_item) => {
+  const validColumns = [
+    'LP ESCORT', 'EFEM ROBOT TEACHING', 'EFEM ROBOT REP', 'EFEM ROBOT CONTROLLER', 'TM ROBOT TEACHING',
+    'TM ROBOT REP', 'TM ROBOT CONTROLLER', 'PASSIVE PAD REP', 'PIN CYLINDER', 'PUSHER CYLINDER', 
+    'IB FLOW', 'DRT', 'FFU CONTROLLER', 'FAN', 'MOTOR DRIVER', 'R1', 'R3', 'R5', 'R3 TO R5', 
+    'MICROWAVE', 'APPLICATOR', 'GENERATOR', 'CHUCK', 'PROCESS KIT', 'HELIUM DETECTOR', 'HOOK LIFT PIN', 
+    'BELLOWS', 'PIN SENSOR', 'LM GUIDE', 'PIN MOTOR CONTROLLER', 'SINGLE EPD', 'DUAL EPD', 'GAS BOX BOARD', 
+    'TEMP CONTROLLER BOARD', 'POWER DISTRIBUTION BOARD', 'DC POWER SUPPLY', 'BM SENSOR', 'PIO SENSOR', 
+    'SAFETY MODULE', 'D-NET', 'MFC', 'VALVE', 'SOLENOID', 'FAST VAC VALVE', 'SLOW VAC VALVE', 
+    'SLIT DOOR', 'APC VALVE', 'SHUTOFF VALVE', 'BARATRON ASS\'Y', 'PIRANI ASS\'Y', 'VIEW PORT QUARTZ', 
+    'FLOW SWITCH', 'CERAMIC PLATE', 'MONITOR', 'KEYBOARD', 'MOUSE', 'CTC', 'PMC', 'EDA', 
+    'EFEM CONTROLLER', 'S/W PATCH'
+  ];
+
+  if (!validColumns.includes(transfer_item)) {
+    throw new Error(`Invalid task name: ${transfer_item}`);
+  }
+
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+      const query = `
+          INSERT INTO task_count (engineer_name, \`${transfer_item}\`)
+          VALUES (?, 1)
+          ON DUPLICATE KEY UPDATE \`${transfer_item}\` = \`${transfer_item}\` + 1
+      `;
+      await connection.query(query, [engineer_name]);
+  } catch (err) {
+      console.error('Error updating task count:', err);
+      throw new Error(`Error updating task count: ${err.message}`);
+  } finally {
+      connection.release();
+  }
 };
+
+
