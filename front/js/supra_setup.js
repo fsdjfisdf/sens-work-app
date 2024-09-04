@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const formData = new FormData(form);
         const data = {};
 
+        const username = localStorage.getItem('username') || 'Default Name'; // 사용자 이름이 없을 때 기본값 설정
+
         // 모든 체크리스트 항목을 0으로 초기화
         const checklistFields = [
             'DRAWING_TEMPLATE_SETUP', 'DRAWING_TEMPLATE_MARKING', 'CUSTOMER_OHT_LINE_CHECK', 'UTILITY_SPEC_UNDERSTANDING',

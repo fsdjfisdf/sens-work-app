@@ -26,6 +26,30 @@ exports.findByName = async (name) => {
   }
 };
 
+exports.saveChecklist = async (checklistData) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    // 1. 먼저 이름으로 기존 데이터가 있는지 확인
+    const queryFind = `SELECT * FROM SUPRA_SETUP WHERE name = ?`;
+    const [rows] = await connection.query(queryFind, [checklistData.name]);
+
+    if (rows.length > 0) {
+      // 2. 만약 데이터가 있으면 업데이트
+      await this.updateChecklist(checklistData);
+    } else {
+      // 3. 데이터가 없으면 새로 삽입
+      await this.insertChecklist(checklistData);
+    }
+
+  } catch (err) {
+    console.error('Error saving checklist:', err);
+    throw new Error(`Error saving checklist: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};
+
+
 exports.insertChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
