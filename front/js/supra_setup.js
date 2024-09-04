@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
+    const username = localStorage.getItem('username'); // 사용자 이름을 저장한 localStorage에서 가져옴
+
+    // 토큰이 없는 경우 로그인 페이지로 리다이렉트
+    if (!token) {
+        alert("로그인이 필요합니다.");
+        window.location.replace("./signin.html");
+        return;
+    }
 
     // 체크리스트 불러오기
     if (token) {
@@ -14,6 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const checklistData = response.data;
                 const form = document.getElementById('checklistForm');
 
+                // 불러온 데이터로 체크박스 설정
                 for (const [key, value] of Object.entries(checklistData)) {
                     if (value === 100) {
                         const checkbox = form.querySelector(`input[name="${key}"]`);
@@ -64,6 +73,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             'AGING_TEST_PROCESS_CONFIRM', 'EES_REPORT_PROCEDURE'
         ];
 
+        // 사용자 이름 추가 (name 필드)
+        if (username) {
+            data.name = username;  // 사용자 이름 추가
+        }
+
         // 모든 필드를 0으로 초기화
         checklistFields.forEach(field => {
             data[field] = 0;
@@ -85,13 +99,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (response.status === 201) {
-                alert('Checklist saved successfully.');
+                alert('체크리스트가 성공적으로 저장되었습니다.');
             } else {
-                alert('Error saving checklist.');
+                alert('체크리스트 저장 중 오류가 발생했습니다.');
             }
         } catch (error) {
             console.error(error);
-            alert('Error saving checklist.');
+            alert('체크리스트 저장 중 오류가 발생했습니다.');
         }
     });
 
@@ -99,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (signOutButton) {
         signOutButton.addEventListener("click", function () {
             localStorage.removeItem("x-access-token");
-            alert("Logged out successfully.");
+            alert("로그아웃 되었습니다.");
             window.location.replace("./signin.html");
         });
     }
