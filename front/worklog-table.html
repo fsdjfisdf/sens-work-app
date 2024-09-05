@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 이력 테이블</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/worklog-table.css" />
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <h1><a href="./index.html">S-WORKS</a></h1>
+        </div>
+    </nav>
+    
+    <main>
+        <section id="worklog">
+            <div class="inner">
+                <h2>작업 이력 테이블</h2>
+
+                                <!-- 검색 기능 추가 -->
+                                <div class="search-container">
+                                    <input type="text" id="search-name" placeholder="이름 검색">
+                                    <button id="search-button">검색</button>
+                                    <button id="reset-button">초기화</button>
+                                </div>
+
+                <!-- 테이블을 감싸는 div 추가 (가로 및 세로 스크롤 및 고정 헤더를 적용하기 위함) -->
+                <div class="table-container">
+                    <table id="task-count-table">
+                        <thead id="task-count-table-head">
+                            <!-- 작업자가 가로로 나열되는 헤더가 여기에 추가됩니다 -->
+                        </thead>
+                        <tbody id="task-count-table-body">
+                            <!-- 작업 항목과 작업자별 카운트, 퍼센티지, 기준 작업 수가 여기에 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="./js/worklog-table.js"></script>
+</body>
+</html>

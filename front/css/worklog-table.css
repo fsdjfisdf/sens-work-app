@@ -1,0 +1,108 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 80vh;
+    margin-top: 20px;
+    position: relative;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    table-layout: fixed; /* 열 너비를 고정하기 위해 사용 */
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    font-size: 12px;
+    word-wrap: break-word; /* 긴 텍스트가 잘리지 않도록 설정 */
+}
+
+th {
+    background-color: #0044cc;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f4f4f9;
+}
+
+table th:first-child, table td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #f0f0f0;
+    z-index: 2;
+}
+
+td strong {
+    font-weight: bold;
+}
+
+/* 작업자 이름 폰트 크기 조정 */
+th {
+    font-size: 12px;
+}
+
+td {
+    font-size: 12px;
+}
+
+thead th, tbody td {
+    width: 68px; /* 모든 열을 동일한 너비로 설정 */
+}
+
+/* 100%, 0% 색상 설정 */
+td.blue {
+    color: blue;
+}
+
+td.red {
+    color: red;
+}
+
+.search-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.search-container input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.search-container button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #0044cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-container button:hover {
+    background-color: #003bb5;
+}

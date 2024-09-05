@@ -62,6 +62,7 @@ module.exports = function () {
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
   require('../src/routes/SECMRoute')(app);
   require('../src/routes/TitleRoute')(app);
+  require('../src/routes/taskCountRoute')(app);  // 추가
 
   const workLogController = require('../src/controllers/workLogController'); // 추가
 
