@@ -128,3 +128,17 @@ exports.getChecklistByName = async (name) => {
     throw new Error(`Error retrieving checklist: ${err.message}`);
   }
 };
+
+exports.getAllChecklists = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    // 모든 사용자 체크리스트 데이터를 가져오는 쿼리
+    const query = `SELECT * FROM SUPRA_N_MAINT_SELF`;
+    const [rows] = await connection.query(query);
+    connection.release();
+    return rows; // 모든 사용자의 체크리스트 데이터를 반환
+  } catch (err) {
+    connection.release();
+    throw new Error(`Error retrieving all checklists: ${err.message}`);
+  }
+};

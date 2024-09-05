@@ -67,3 +67,19 @@ exports.getChecklist = async (req, res) => {
     res.status(500).json({ error: 'Error retrieving checklist' });
   }
 };
+
+// 모든 사용자 체크리스트 불러오기 (새로운 기능 추가)
+exports.getAllChecklists = async (req, res) => {
+  try {
+    // 모든 체크리스트 데이터를 가져오는 Dao 함수 호출
+    const allChecklists = await supraMaintenanceDao.getAllChecklists();
+    if (!allChecklists || allChecklists.length === 0) {
+      return res.status(404).json({ message: 'No checklist data found' });
+    }
+
+    res.status(200).json(allChecklists); // 모든 사용자 데이터를 반환
+  } catch (err) {
+    console.error('Error retrieving all checklists:', err);
+    res.status(500).json({ error: 'Error retrieving all checklists' });
+  }
+};

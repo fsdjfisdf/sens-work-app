@@ -32,6 +32,7 @@
                 <a href="./worklog.html" class="menu-item">Create Worklog</a>
                 <a href="./readworklog.html" class="menu-item">Load Worklog</a>
                 <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./worklog-table.html" class="menu-item">PCI</a>
                 <a href="./report.html" class="menu-item">국내 출장 보고서</a>
                 <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
                 <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
@@ -68,6 +69,17 @@
                     </table>
                 </div>
 
+                <div class="table-container">
+                    <table id="supra-maintenance-table">
+                        <thead id="supra-maintenance-table-head">
+                            <!-- 작업 항목과 작업자가 동적으로 추가됩니다 -->
+                        </thead>
+                        <tbody id="supra-maintenance-table-body">
+                            <!-- 작업 항목과 각 작업자 데이터가 여기에 동적으로 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </section>
     </main>
@@ -81,6 +93,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/worklog-table.js"></script>
+    <script src="./js/supra_maintenance_check.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
