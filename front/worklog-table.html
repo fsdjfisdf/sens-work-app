@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 테이블</title>
+    <title>WORKLOG TABLE</title>
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/worklog-table.css" />
 </head>
@@ -17,16 +17,20 @@
     <main>
         <section id="worklog">
             <div class="inner">
-                <h2>작업 이력 테이블</h2>
+                <h2>WORKLOG TABLE</h2>
 
-                                <!-- 검색 기능 추가 -->
-                                <div class="search-container">
-                                    <input type="text" id="search-name" placeholder="이름 검색">
-                                    <button id="search-button">검색</button>
-                                    <button id="reset-button">초기화</button>
-                                </div>
+                <!-- 분석 결과를 보여주는 섹션 -->
+                <div id="analysis-results" class="analysis-container"></div>
 
-                <!-- 테이블을 감싸는 div 추가 (가로 및 세로 스크롤 및 고정 헤더를 적용하기 위함) -->
+                <!-- 검색 기능 -->
+                <div class="search-container">
+                    <input type="text" id="search-name" placeholder="이름 검색">
+                    <button id="search-button">SEARCH</button>
+                    <button id="reset-button">RESET</button>
+                </div>
+
+
+                <!-- 테이블 컨테이너 -->
                 <div class="table-container">
                     <table id="task-count-table">
                         <thead id="task-count-table-head">
@@ -37,6 +41,7 @@
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </section>
     </main>

@@ -1,6 +1,6 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f6f9;
     color: #333;
     margin: 0;
     padding: 0;
@@ -9,6 +9,8 @@ body {
 h2 {
     text-align: center;
     margin-bottom: 20px;
+    color: #0044cc;
+    font-size: 1.8rem;
 }
 
 .table-container {
@@ -17,41 +19,43 @@ h2 {
     max-height: 80vh;
     margin-top: 20px;
     position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+    border-radius: 8px; /* 테두리 둥글게 */
+    background-color: white; /* 배경색 흰색 */
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
-    table-layout: fixed; /* 열 너비를 고정하기 위해 사용 */
+    table-layout: fixed;
+    font-size: 14px; /* 전체 글씨 약간 키우기 */
 }
 
 th, td {
     border: 1px solid #ddd;
-    padding: 8px;
+    padding: 10px;
     text-align: center;
-    font-size: 12px;
-    word-wrap: break-word; /* 긴 텍스트가 잘리지 않도록 설정 */
+    word-wrap: break-word;
 }
 
 th {
     background-color: #0044cc;
     color: white;
+    font-size: 1rem; /* 헤더 글씨 크기 키우기 */
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2; /* 헤더는 상단 고정 */
+}
+
+td {
+    font-size: 0.95rem; /* 테이블 셀 글씨 크기 */
 }
 
 tbody tr:nth-child(even) {
-    background-color: #f4f4f9;
+    background-color: #f7f9fc; /* 짝수 행에 연한 파란색 배경 */
 }
 
-table th:first-child, table td:first-child {
-    position: sticky;
-    left: 0;
-    background-color: #f0f0f0;
-    z-index: 2;
-}
 
 td strong {
     font-weight: bold;
@@ -67,18 +71,30 @@ td {
 }
 
 thead th, tbody td {
-    width: 68px; /* 모든 열을 동일한 너비로 설정 */
+    width: 69px; /* 모든 열을 동일한 너비로 설정 */
+    padding: 12px; /* 패딩 키우기 */
+}
+
+/* 중분류 항목 강조 */
+td[rowspan] {
+    background-color: #e0e0e0; /* 중분류 배경 */
+    font-weight: bold;
+    font-size: 1rem; /* 중분류 항목 글씨 크기 */
+    color: #0044cc; /* 중분류 글씨 색상 */
 }
 
 /* 100%, 0% 색상 설정 */
 td.blue {
-    color: blue;
+    color: #007BFF; /* 파란색 100% */
+    font-weight: bold;
 }
 
 td.red {
-    color: red;
+    color: #FF0000; /* 빨간색 0% */
+    font-weight: bold;
 }
 
+/* 검색 기능 스타일 */
 .search-container {
     display: flex;
     justify-content: center;
@@ -86,23 +102,172 @@ td.red {
 }
 
 .search-container input {
-    padding: 8px;
+    padding: 10px;
     font-size: 14px;
-    border: 1px solid #ccc;
+    border: 2px solid #ccc;
     border-radius: 4px;
     margin-right: 10px;
+    width: 200px; /* 검색창 너비 */
 }
 
-.search-container button {
-    padding: 8px 16px;
+/* Search 버튼 스타일 */
+.search-container button#search-button {
+    padding: 10px 20px;
     font-size: 14px;
     background-color: #0044cc;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    margin-right: 10px; /* 버튼 간 간격 추가 */
 }
 
-.search-container button:hover {
+.search-container button#search-button:hover {
     background-color: #003bb5;
+}
+
+/* Reset 버튼 스타일 */
+.search-container button#reset-button {
+    padding: 10px 20px;
+    font-size: 14px;
+    background-color: #cccccc;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-container button#reset-button:hover {
+    background-color: #aaaaaa;
+}
+
+/* AVERAGE 행 강조 */
+td[style*="background-color: #e0e0e0"] {
+    background-color: #0044cc;
+    color: white;
+    font-weight: bold;
+}
+
+/* 중분류 항목에 대한 강조 스타일 */
+td[rowspan] {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* 테이블에 약간의 여백 추가 */
+table {
+    margin-top: 20px;
+}
+
+/* hover 시 row 강조 */
+tbody tr:hover {
+    background-color: #e6f2ff;
+}
+
+
+/* 분석 결과 스타일링 */
+.analysis-container {
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 80%;
+}
+
+.analysis-container h3 {
+    color: #0044cc;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.analysis-container ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    padding-left: 0;
+    color: #333;
+}
+
+.analysis-container li {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.analysis-container p {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 10px;
+    padding-left: 10px;
+    border-left: 4px solid #0044cc;
+    background-color: #eef4fc;
+}
+
+.analysis-container li::marker {
+    color: #0044cc;
+}
+
+/* 필터 버튼 스타일링 */
+.filter-buttons {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* 버튼 간 간격 */
+}
+
+.filter-buttons button {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: normal; /* 일반 글씨 두께 */
+    border: 1px solid #ccc; /* 버튼 테두리 */
+    border-radius: 4px; /* 각진 버튼 */
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 버튼에 약간의 그림자 */
+    outline: none;
+}
+
+/* 0% 작업 항목 버튼 (차분한 빨간색 계열) */
+#filter-red {
+    background-color: #710000; /* 부드러운 빨간색 */
+    color: white;
+}
+
+#filter-red:hover {
+    background-color: #c10000; /* 진한 빨간색으로 변경 */
+}
+
+/* 100% 작업 항목 버튼 (차분한 파란색 계열) */
+#filter-blue {
+    background-color: #0044cc; /* 부드러운 파란색 */
+    color: white;
+}
+
+#filter-blue:hover {
+    background-color: #0051f4; /* 진한 파란색으로 변경 */
+}
+
+/* 1% ~ 99% 작업 항목 버튼 (부드러운 회색 계열) */
+#filter-black {
+    background-color: #4d10a1; /* 부드러운 회색 */
+    color: white;
+}
+
+#filter-black:hover {
+    background-color: #6415d2; /* 진한 회색으로 변경 */
+}
+
+/* 필터 해제 버튼 (중간톤의 그린 계열) */
+#filter-reset {
+    background-color: #aaaaaa; /* 부드러운 초록색 */
+    color: white;
+}
+
+#filter-reset:hover {
+    background-color: #aaaaaad3; /* 진한 초록색으로 변경 */
+}
+
+/* 필터 버튼 클릭 시 active 효과 */
+.filter-buttons button:active {
+    transform: scale(0.98); /* 클릭 시 살짝 눌리는 효과 */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
