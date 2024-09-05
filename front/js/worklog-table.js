@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
+    
+
     let logs = [];
     let taskCounts = {};  // 전역으로 이동
     let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체

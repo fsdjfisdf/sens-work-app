@@ -271,3 +271,41 @@ tbody tr:hover {
     transform: scale(0.98); /* 클릭 시 살짝 눌리는 효과 */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
+/* Navigation styles */
+nav {
+    background-color: #0044cc;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+.nav-title {
+    flex-grow: 1;
+    text-align: center;
+    margin-right: 50px; /* Add margin to the right */
+}
+
+.nav-title a {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+}

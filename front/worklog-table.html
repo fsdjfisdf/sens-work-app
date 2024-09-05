@@ -3,21 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORKLOG TABLE</title>
-    <link rel="stylesheet" href="./css/styles.css" />
+    <title>PCI</title>
     <link rel="stylesheet" href="./css/worklog-table.css" />
+    <link rel="stylesheet" href="./css/readworklog.css" />
 </head>
 <body>
     <nav>
-        <div class="nav-container">
-            <h1><a href="./index.html">S-WORKS</a></h1>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
         </div>
     </nav>
     
     <main>
         <section id="worklog">
             <div class="inner">
-                <h2>WORKLOG TABLE</h2>
+                <h2>PCI</h2>
 
                 <!-- 분석 결과를 보여주는 섹션 -->
                 <div id="analysis-results" class="analysis-container"></div>
@@ -46,7 +72,57 @@
         </section>
     </main>
 
+    
+    <footer>
+        <div class="inner">
+            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+        </div>
+    </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/worklog-table.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
