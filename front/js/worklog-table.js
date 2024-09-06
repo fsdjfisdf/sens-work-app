@@ -206,7 +206,6 @@ async function saveAggregatedDataToServer(aggregatedData) {
                 'x-access-token': localStorage.getItem('x-access-token')
             }
         });
-        console.log('Aggregated data saved successfully:', response.data);
     } catch (error) {
         console.error('Error saving aggregated data:', error);
     }
@@ -278,21 +277,26 @@ saveAggregatedDataToServer(taskCounts);
 
     function calculateAveragePercentages(taskCounts) {
         const percentages = {};
-    
+        
+        // 각 작업자별로 퍼센트를 계산
         Object.keys(taskCounts).forEach(worker => {
             if (!percentages[worker]) {
                 percentages[worker] = {};
             }
     
             Object.keys(taskCounts[worker]).forEach(task => {
-                const count = taskCounts[worker][task].count;
-                const 기준작업수 = taskCounts[worker][task].기준작업수;
-                const percentage = Math.min((count / 기준작업수) * 100, 100);
+                const taskData = taskCounts[worker][task] || { count: 0, 기준작업수: 1 };  // 기본값 설정
+                const count = taskData.count;
+                const 기준작업수 = taskData.기준작업수;
     
-                percentages[worker][task] = percentage;
+                // 기준 작업 수가 0 이상일 때 퍼센트를 계산하고, 그렇지 않으면 0으로 설정
+                if (기준작업수 > 0) {
+                    const percentage = Math.min((count / 기준작업수) * 100, 100);
+                    percentages[worker][task] = percentage;
+                } else {
+                    percentages[worker][task] = 0;  // 기준작업수가 0일 경우 퍼센트는 0
+                }
     
-                // 각 작업자의 작업 항목별 퍼센트 값을 콘솔에 출력
-                console.log(`작업자: ${worker}, 작업 항목: ${task}, 작업 수: ${count}, 기준 작업 수: ${기준작업수}, 퍼센트: ${percentage}%`);
             });
         });
     
@@ -305,11 +309,20 @@ saveAggregatedDataToServer(taskCounts);
     function calculateOverallAverage(averagePercentages) {
         let total = 0;
         let count = 0;
-        Object.values(averagePercentages).forEach(percentage => {
-            total += percentage;
-            count++;
+    
+        // 각 작업자의 퍼센트 값들만 더함
+        Object.values(averagePercentages).forEach(workerPercentages => {
+            Object.values(workerPercentages).forEach(percentage => {
+                // NaN 또는 잘못된 값이 아닌 경우에만 계산
+                if (!isNaN(percentage) && percentage !== null && percentage !== undefined) {
+                    total += percentage;
+                    count++;
+                }
+            });
         });
-        return (total / count).toFixed(2);
+    
+        // count가 0 이상인 경우에만 평균을 계산
+        return count > 0 ? (total / count).toFixed(2) : '0.00';
     }
 
     function findTopIncompleteTasks(taskCounts, limit = 5) {
@@ -365,17 +378,18 @@ saveAggregatedDataToServer(taskCounts);
         });
     
         const averagePercentages = calculateAveragePercentages(filteredTaskCounts);
+        console.log(averagePercentages);  // averagePercentages 값 확인
         const overallAverage = calculateOverallAverage(averagePercentages);
         const topIncompleteTasks = findTopIncompleteTasks(filteredTaskCounts);
         const topIncompletePercentages = findTopIncompletePercentages(filteredTaskCounts);
     
         analysisDiv.innerHTML = `
-            <h3>ENG'r AVERAGE CAPA: ${overallAverage}%</h3>
-            <h3>작업 수가 부족한 작업:</h3>
-            <ul>${topIncompleteTasks.map(task => `<li>${task}</li>`).join('')}</ul>
-            <h3>CAPA가 부족한 항목:</h3>
-            <ul>${topIncompletePercentages.map(task => `<li>${task}</li>`).join('')}</ul>
-        `;
+        <h3>ENG'r AVERAGE CAPA: ${overallAverage}%</h3>
+        <h3>작업 수가 부족한 작업:</h3>
+        <ul>${topIncompleteTasks.map(task => `<li>${task}</li>`).join('')}</ul>
+        <h3>CAPA가 부족한 항목:</h3>
+        <ul>${topIncompletePercentages.map(task => `<li>${task}</li>`).join('')}</ul>
+    `;
     }
 
     function displayTaskCounts(taskCounts, filterWorker = null) {
@@ -385,13 +399,14 @@ saveAggregatedDataToServer(taskCounts);
         tableBody.innerHTML = '';
     
         const averagePercentages = calculateAveragePercentages(taskCounts);
+        const workerAveragePercents = calculateWorkerAveragePercent(averagePercentages);  // 작업자별 평균 퍼센트 계산
     
         // 검색된 작업자가 있을 경우 해당 작업자만 정렬
         const sortedWorkers = filterWorker 
             ? [filterWorker]
             : Object.keys(averagePercentages)
                 .filter(worker => !excludedWorkers.includes(worker))
-                .sort((a, b) => averagePercentages[b] - averagePercentages[a]);
+                .sort((a, b) => workerAveragePercents[b] - workerAveragePercents[a]);  // 평균 퍼센트로 정렬
     
         // 작업자 이름을 테이블 헤더에 추가
         const headerRow = document.createElement('tr');
@@ -406,7 +421,7 @@ saveAggregatedDataToServer(taskCounts);
         });
         tableHead.appendChild(headerRow);
     
-        // 작업자별 평균 퍼센트 출력
+        // 작업자별 평균 퍼센트 출력 (AVERAGE 행)
         const averageRow = document.createElement('tr');
         averageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';  // 이관항목 빈 열
         averageRow.appendChild(document.createElement('td')).textContent = '';  // 작업 항목 빈 열
@@ -414,14 +429,14 @@ saveAggregatedDataToServer(taskCounts);
     
         sortedWorkers.forEach(worker => {
             const averageCell = document.createElement('td');
-            averageCell.textContent = `${Math.round(averagePercentages[worker])}%`;
+            averageCell.textContent = `${workerAveragePercents[worker]}%`;  // 작업자별 평균 퍼센트 표시
     
             averageCell.style.fontWeight = 'bold';
             averageCell.style.backgroundColor = '#e0e0e0';
     
-            if (averagePercentages[worker] === 100) {
+            if (workerAveragePercents[worker] == 100) {
                 averageCell.classList.add('blue');
-            } else if (averagePercentages[worker] === 0) {
+            } else if (workerAveragePercents[worker] == 0) {
                 averageCell.classList.add('red');
             }
     
@@ -432,12 +447,10 @@ saveAggregatedDataToServer(taskCounts);
     
         // 각 작업 항목에 대한 데이터를 세로로 나열
         taskCategories.forEach((category) => {
-            // 대분류 표시
             category.subcategories.forEach((taskItem, taskIndex) => {
                 const row = document.createElement('tr');
     
                 if (taskIndex === 0) {
-                    // 이관항목(중분류)을 출력하고 병합
                     const categoryCell = document.createElement('td');
                     categoryCell.rowSpan = category.subcategories.length;
                     categoryCell.textContent = category.category;
@@ -454,7 +467,6 @@ saveAggregatedDataToServer(taskCounts);
                 row.appendChild(기준작업수Cell);
     
                 sortedWorkers.forEach(worker => {
-                    // 수정된 부분: taskCounts와 해당 작업 항목이 정의되어 있는지 확인
                     if (taskCounts[worker] && taskCounts[worker][taskItem.name]) {
                         const countData = taskCounts[worker][taskItem.name];
                         const count = countData.count;
@@ -472,7 +484,6 @@ saveAggregatedDataToServer(taskCounts);
     
                         row.appendChild(countCell);
                     } else {
-                        // 작업 항목이 없을 경우 빈 셀을 추가
                         const emptyCell = document.createElement('td');
                         emptyCell.textContent = 'N/A';  // 작업이 없음을 표시
                         row.appendChild(emptyCell);
@@ -499,6 +510,31 @@ saveAggregatedDataToServer(taskCounts);
         document.getElementById('search-name').value = '';
         displayTaskCounts(taskCounts);
     });
+
+    function calculateWorkerAveragePercent(averagePercentages) {
+        const workerAverages = {};
+        
+        Object.keys(averagePercentages).forEach(worker => {
+            let totalPercentage = 0;
+            let taskCount = 0;
+    
+            // 작업자별로 모든 작업 항목의 퍼센트를 합산
+            Object.keys(averagePercentages[worker]).forEach(task => {
+                const percentage = averagePercentages[worker][task];
+    
+                if (!isNaN(percentage)) {
+                    totalPercentage += percentage;
+                    taskCount++;
+                }
+            });
+    
+            // 작업자가 수행한 작업이 있는 경우 평균 계산
+            workerAverages[worker] = taskCount > 0 ? (totalPercentage / taskCount).toFixed(2) : 0;
+        });
+    
+        return workerAverages;
+    }
+    
 
     
 

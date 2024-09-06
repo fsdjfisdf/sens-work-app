@@ -203,75 +203,74 @@ document.addEventListener('DOMContentLoaded', async () => {
         tableHead.innerHTML = ''; // 기존 테이블 헤더 삭제
         tableBody.innerHTML = ''; // 기존 테이블 바디 삭제
 
-        // 테이블 헤더 생성 (첫 번째 열은 중분류, 두 번째는 작업 항목, 그 이후 열은 각 작업자)
+        const workers = [...new Set(data.map(row => row.name))];
+        const averages = calculateAverages(data, workers);
+
+        // 평균값 기준으로 작업자 정렬 (높은 사람부터 낮은 순으로)
+        const sortedWorkers = workers.sort((a, b) => averages[b] - averages[a]);
+
+        // 테이블 헤더 생성
         const headerRow = document.createElement('tr');
         const categoryHeader = document.createElement('th');
-        categoryHeader.textContent = '중분류';
+        categoryHeader.textContent = '';
         headerRow.appendChild(categoryHeader);
 
         const taskHeader = document.createElement('th');
         taskHeader.textContent = '작업 항목';
         headerRow.appendChild(taskHeader);
 
-        // 작업자 이름 동적으로 추가 (모든 작업자를 가져옴)
-        const workers = [...new Set(data.map(row => row.name))]; // 모든 작업자의 이름을 중복 없이 가져옴
-        console.log("작업자 목록:", workers); // 콘솔에 작업자 이름을 출력
-
-        workers.forEach(worker => {
+        sortedWorkers.forEach(worker => {
             const th = document.createElement('th');
             th.textContent = worker;
             headerRow.appendChild(th);
         });
         tableHead.appendChild(headerRow);
 
-        // 작업자별 평균을 계산하고 표시
-        const averages = calculateAverages(data, workers);
+        // 작업자별 평균을 표시하는 AVERAGE 행 생성
         const averageRow = document.createElement('tr');
         averageRow.appendChild(document.createElement('td')); // 중분류 칸 빈칸
         const avgLabelCell = document.createElement('td');
         avgLabelCell.textContent = 'Average';
         averageRow.appendChild(avgLabelCell);
 
-        workers.forEach(worker => {
+        sortedWorkers.forEach(worker => {
             const avgCell = document.createElement('td');
             avgCell.textContent = `${averages[worker]}%`; // 평균값 추가
             avgCell.style.fontWeight = 'bold'; // 평균값을 굵게 표시
+            avgCell.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
             averageRow.appendChild(avgCell);
         });
         tableBody.appendChild(averageRow);
 
-        // 작업 항목에 대한 데이터 추가 (대분류, 중분류 포함)
+        // 작업 항목에 대한 데이터 추가
         taskCategories.forEach(category => {
             category.subcategories.forEach((subcategory, index) => {
                 const row = document.createElement('tr');
 
-                // 중분류 이름 추가 (첫 번째 항목만 중분류 이름을 표시)
                 if (index === 0) {
                     const categoryCell = document.createElement('td');
                     categoryCell.textContent = category.category;
-                    categoryCell.rowSpan = category.subcategories.length; // 중분류의 항목 수만큼 병합
-                    categoryCell.style.fontWeight = 'bold'; // 중분류 항목은 굵게 표시
+                    categoryCell.rowSpan = category.subcategories.length; 
+                    categoryCell.style.fontWeight = 'bold'; 
                     row.appendChild(categoryCell);
                 }
 
-                // 작업 항목 이름 추가
                 const taskCell = document.createElement('td');
                 taskCell.textContent = subcategory.displayName;
                 row.appendChild(taskCell);
 
-                // 각 작업자의 작업 데이터 추가
-                workers.forEach(workerName => {
+                sortedWorkers.forEach(workerName => {
                     const workerData = data.find(worker => worker.name === workerName);
-                    const taskValue = workerData ? workerData[subcategory.name] : 'N/A'; // 해당 작업자의 작업 데이터가 있으면 표시, 없으면 'N/A'
+                    const taskValue = workerData ? workerData[subcategory.name] : 'N/A'; 
                     
                     const cell = document.createElement('td');
                     cell.textContent = taskValue;
                     if (taskValue === 100) {
-                        cell.style.color = 'blue'; // 100일 때 파란색
+                        cell.style.color = 'blue';
                     } else if (taskValue === 0) {
-                        cell.style.color = 'red'; // 0일 때 빨간색
+                        cell.style.color = 'red';
                     } else {
-                        cell.style.color = 'gray'; // 값이 없을 때 회색
+                        cell.style.color = 'gray';
                     }
                     row.appendChild(cell);
                 });

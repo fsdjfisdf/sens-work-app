@@ -229,7 +229,6 @@ async function loadWorklogData() {
                 'x-access-token': token
             }
         });
-        console.log("Worklog Data:", response.data);
         return response.data;
     } catch (error) {
         console.error('Worklog 데이터를 불러오는 중 오류 발생:', error);
@@ -244,7 +243,6 @@ async function loadSupraMaintenanceData() {
                 'x-access-token': token
             }
         });
-        console.log("Supra Maintenance Data:", response.data);
         return response.data;
     } catch (error) {
         console.error('Supra Maintenance 데이터를 불러오는 중 오류 발생:', error);
@@ -299,7 +297,7 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
 
     // 테이블 헤더 생성
     const headerRow = document.createElement('tr');
-    headerRow.appendChild(document.createElement('th')).textContent = '중분류';
+    headerRow.appendChild(document.createElement('th')).textContent = '';
     headerRow.appendChild(document.createElement('th')).textContent = '작업 항목';
     allWorkers.forEach(worker => {
         const th = document.createElement('th');
@@ -311,6 +309,7 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
     // AVERAGE 행 추가
     const averageRow = document.createElement('tr');
     averageRow.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
+    averageRow.style.fontWeight = 'bold';
     averageRow.appendChild(document.createElement('td')).textContent = ''; // 중분류 열 비워둠
     averageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';
     allWorkers.forEach(worker => {
@@ -351,8 +350,6 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
 
                 const finalPercent = (worklogPercent * 0.8) + (supraPercent * 0.2);
 
-                console.log(`작업자: ${worker}, 작업 항목: ${mappedTaskNameWorklog}, 작업 로그 퍼센트: ${worklogPercent}%, 유지보수 퍼센트: ${supraPercent}%, 최종 퍼센트: ${finalPercent.toFixed(2)}%`);
-
                 const percentCell = document.createElement('td');
                 percentCell.textContent = `${finalPercent.toFixed(2)}%`;
 
@@ -373,9 +370,33 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
     });
 }
 
+function applySearchFilter(searchName, worklogData, supraData, taskCategories) {
+    // 검색어가 포함된 작업자만 필터링
+    const filteredWorklogData = Object.keys(worklogData).filter(worker => worker.includes(searchName));
+    const filteredSupraData = supraData.filter(worker => worker.name.includes(searchName));
+    
+    // 필터링된 데이터를 사용해 테이블을 재생성
+    renderCombinedTable(filteredWorklogData, filteredSupraData, taskCategories);
+}
+
+document.getElementById('search-button').addEventListener('click', () => {
+    const searchName = document.getElementById('search-name').value.trim();
+    if (searchName) {
+        applySearchFilter(searchName, worklogData, supraData, taskCategories); // 검색 실행
+    }
+});
+
+document.getElementById('reset-button').addEventListener('click', () => {
+    document.getElementById('search-name').value = ''; // 검색어 초기화
+    renderCombinedTable(worklogData, supraData, taskCategories); // 전체 데이터 다시 표시
+});
+
+
+
 const worklogData = await loadWorklogData();
 const supraData = await loadSupraMaintenanceData();
 
 renderCombinedTable(worklogData, supraData, taskCategories);
+
 
 });
