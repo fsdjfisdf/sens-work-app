@@ -66,9 +66,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             ]
         },
         {
-            category: "MiCROWAVE",
+            category: "MICROWAVE",
             subcategories: [
-                { name: "MiCROWAVE", 기준작업수: 3 },
+                { name: "MICROWAVE", 기준작업수: 3 },
                 { name: "APPLICATOR", 기준작업수: 2 },
                 { name: "GENERATOR", 기준작업수: 2 }
             ]
@@ -277,21 +277,29 @@ saveAggregatedDataToServer(taskCounts);
     }
 
     function calculateAveragePercentages(taskCounts) {
-        const averagePercentages = {};
-
+        const percentages = {};
+    
         Object.keys(taskCounts).forEach(worker => {
-            const totalTasks = Object.keys(taskCounts[worker]).length;
-            let totalPercentage = 0;
-
-            Object.values(taskCounts[worker]).forEach(task => {
-                const percentage = Math.min((task.count / task.기준작업수) * 100, 100);
-                totalPercentage += percentage;
+            if (!percentages[worker]) {
+                percentages[worker] = {};
+            }
+    
+            Object.keys(taskCounts[worker]).forEach(task => {
+                const count = taskCounts[worker][task].count;
+                const 기준작업수 = taskCounts[worker][task].기준작업수;
+                const percentage = Math.min((count / 기준작업수) * 100, 100);
+    
+                percentages[worker][task] = percentage;
+    
+                // 각 작업자의 작업 항목별 퍼센트 값을 콘솔에 출력
+                console.log(`작업자: ${worker}, 작업 항목: ${task}, 작업 수: ${count}, 기준 작업 수: ${기준작업수}, 퍼센트: ${percentage}%`);
             });
-
-            averagePercentages[worker] = totalPercentage / totalTasks;
         });
-
-        return averagePercentages;
+    
+        // 로컬 스토리지에 퍼센트 값 저장
+        localStorage.setItem('worklogPercentages', JSON.stringify(percentages));
+    
+        return percentages;
     }
 
     function calculateOverallAverage(averagePercentages) {
@@ -491,6 +499,8 @@ saveAggregatedDataToServer(taskCounts);
         document.getElementById('search-name').value = '';
         displayTaskCounts(taskCounts);
     });
+
+    
 
     loadWorkLogs();
 });

@@ -126,8 +126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             category: "EPD",
             subcategories: [
-                { name: "SINGLE", displayName: "SINGLE EPD" },
-                { name: "DUAL", displayName: "DUAL EPD" }
+                { name: "SINGLE_EPD", displayName: "SINGLE EPD" },
+                { name: "DUAL_EPD", displayName: "DUAL EPD" }
             ]
         },
         {
