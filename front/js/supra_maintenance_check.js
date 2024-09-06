@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const tableHead = document.getElementById('supra-maintenance-table-head');
     const tableBody = document.getElementById('supra-maintenance-table-body');
+    let allData = []; // 전역 변수로 선언
 
     // 서버로부터 모든 작업자의 데이터를 불러오는 함수
     async function loadAllSupraMaintenanceData() {
@@ -15,16 +16,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            const data = response.data; // 서버로부터 받아온 모든 작업자의 데이터
+            allData = response.data; // 서버로부터 받아온 모든 작업자의 데이터를 전역 변수에 저장
+            console.log("전체 작업자 데이터를 확인:", allData); // 서버에서 받은 전체 데이터를 확인
 
-            console.log("전체 작업자 데이터를 확인:", data); // 서버에서 받은 전체 데이터를 확인
-
-            if (!Array.isArray(data)) {
-                console.error('Received data is not an array:', data);
+            if (!Array.isArray(allData)) {
+                console.error('Received data is not an array:', allData);
                 return;
             }
 
-            generateTable(data); // 데이터를 테이블로 생성
+            generateTable(allData); // 데이터를 테이블로 생성
         } catch (error) {
             console.error('데이터를 불러오는 중 오류 발생:', error);
             if (error.response && error.response.status === 403) {
@@ -34,10 +34,181 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 표를 생성하는 함수
+    // 대분류 및 중분류와 작업 항목 리스트 정의
+    const taskCategories = [
+        {
+            category: "Escort",
+            subcategories: [
+                { name: "LP_ESCORT", displayName: "LP ESCORT" },
+                { name: "ROBOT_ESCORT", displayName: "Robot Escort" }
+            ]
+        },
+        {
+            category: "EFEM Robot",
+            subcategories: [
+                { name: "EFEM_ROBOT_TEACHING", displayName: "EFEM ROBOT TEACHING" },
+                { name: "EFEM_ROBOT_REP", displayName: "EFEM ROBOT REP" },
+                { name: "EFEM_ROBOT_CONTROLLER_REP", displayName: "EFEM ROBOT CONTROLLER REP" }
+            ]
+        },
+        {
+            category: "TM Robot",
+            subcategories: [
+                { name: "TM_ROBOT_TEACHING", displayName: "TM ROBOT TEACHING" },
+                { name: "TM_ROBOT_REP", displayName: "TM ROBOT REP" },
+                { name: "TM_ROBOT_CONTROLLER_REP", displayName: "TM ROBOT CONTROLLER REP" },
+                { name: "PASSIVE_PAD_REP", displayName: "Passive Pad REP" }
+            ]
+        },
+        {
+            category: "BM Module",
+            subcategories: [
+                { name: "PIN_CYLINDER", displayName: "Pin Cylinder" },
+                { name: "PUSHER_CYLINDER", displayName: "Pusher Cylinder" },
+                { name: "IB_FLOW", displayName: "IB Flow" },
+                { name: "DRT", displayName: "DRT" }
+            ]
+        },
+        {
+            category: "FFU (EFEM, TM)",
+            subcategories: [
+                { name: "FFU_CONTROLLER", displayName: "FFU Controller" },
+                { name: "FAN", displayName: "FAN" },
+                { name: "MOTOR_DRIVER", displayName: "Motor Driver" }
+            ]
+        },
+        {
+            category: "FCIP",
+            subcategories: [
+                { name: "FCIP", displayName: "FCIP" },
+                { name: "R1", displayName: "R1" },
+                { name: "R3", displayName: "R3" },
+                { name: "R5", displayName: "R5" },
+                { name: "R3_TO_R5", displayName: "R3 To R5" }
+            ]
+        },
+        {
+            category: "Microwave",
+            subcategories: [
+                { name: "MICROWAVE", displayName: "Microwave" },
+                { name: "APPLICATOR", displayName: "Applicator" },
+                { name: "GENERATOR", displayName: "Generator" }
+            ]
+        },
+        {
+            category: "Chuck",
+            subcategories: [
+                { name: "CHUCK", displayName: "Chuck" }
+            ]
+        },
+        {
+            category: "Process Kit",
+            subcategories: [
+                { name: "PROCESS_KIT", displayName: "Process Kit" }
+            ]
+        },
+        {
+            category: "Leak",
+            subcategories: [
+                { name: "HELIUM_DETECTOR", displayName: "Helium Detector" }
+            ]
+        },
+        {
+            category: "Pin",
+            subcategories: [
+                { name: "HOOK_LIFT_PIN", displayName: "Hook Lift Pin" },
+                { name: "BELLOWS", displayName: "Bellows" },
+                { name: "PIN_SENSOR", displayName: "Pin Sensor" },
+                { name: "LM_GUIDE", displayName: "LM Guide" },
+                { name: "PIN_MOTOR_CONTROLLER", displayName: "Pin Motor Controller" }
+            ]
+        },
+        {
+            category: "EPD",
+            subcategories: [
+                { name: "SINGLE", displayName: "SINGLE EPD" },
+                { name: "DUAL", displayName: "DUAL EPD" }
+            ]
+        },
+        {
+            category: "Board",
+            subcategories: [
+                { name: "GAS_BOX_BOARD", displayName: "Gas Box Board" },
+                { name: "TEMP_CONTROLLER_BOARD", displayName: "Temp Controller Board" },
+                { name: "POWER_DISTRIBUTION_BOARD", displayName: "Power Distribution Board" },
+                { name: "DC_POWER_SUPPLY", displayName: "DC Power Supply" },
+                { name: "BM_SENSOR", displayName: "BM Sensor" },
+                { name: "PIO_SENSOR", displayName: "PIO Sensor" },
+                { name: "SAFETY_MODULE", displayName: "Safety Module" },
+                { name: "D_NET", displayName: "D-NET" }
+            ]
+        },
+        {
+            category: "Valve",
+            subcategories: [
+                { name: "SOLENOID", displayName: "Solenoid" },
+                { name: "FAST_VAC_VALVE", displayName: "Fast Vac Valve" },
+                { name: "SLOW_VAC_VALVE", displayName: "Slow Vac Valve" },
+                { name: "SLIT_DOOR", displayName: "Slit Door" },
+                { name: "APC_VALVE", displayName: "APC Valve" },
+                { name: "SHUTOFF_VALVE", displayName: "Shutoff Valve" }
+            ]
+        },
+        {
+            category: "ETC",
+            subcategories: [
+                { name: "BARATRON_ASSY", displayName: "Baratron Ass'y" },
+                { name: "PIRANI_ASSY", displayName: "Pirani Ass'y" },
+                { name: "VIEW_PORT_QUARTZ", displayName: "View Port Quartz" },
+                { name: "FLOW_SWITCH", displayName: "Flow Switch" },
+                { name: "CERAMIC_PLATE", displayName: "Ceramic Plate" },
+                { name: "MONITOR", displayName: "Monitor" },
+                { name: "KEYBOARD", displayName: "Keyboard" },
+                { name: "MOUSE", displayName: "Mouse" }
+            ]
+        }
+    ];
+
+    // 작업자별 평균 계산 함수
+    function calculateAverages(data, workers) {
+        const averages = {};
+        workers.forEach(workerName => {
+            let totalTasks = 0;
+            let completedTasks = 0;
+
+            data.forEach(row => {
+                if (row.name === workerName) {
+                    taskCategories.forEach(category => {
+                        category.subcategories.forEach(subcategory => {
+                            const value = row[subcategory.name];
+                            if (value !== undefined) {
+                                totalTasks++;
+                                if (value === 100) {
+                                    completedTasks++;
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            const average = (completedTasks / totalTasks) * 100;
+            averages[workerName] = average.toFixed(2); // 소수점 둘째 자리까지 표시
+        });
+        return averages;
+    }
+
+    // 테이블을 생성하는 함수
     function generateTable(data) {
-        // 테이블 헤더 생성 (첫 번째 열은 작업 항목, 그 이후 열은 각 작업자)
+        tableHead.innerHTML = ''; // 기존 테이블 헤더 삭제
+        tableBody.innerHTML = ''; // 기존 테이블 바디 삭제
+
+        // 테이블 헤더 생성 (첫 번째 열은 중분류, 두 번째는 작업 항목, 그 이후 열은 각 작업자)
         const headerRow = document.createElement('tr');
+        const categoryHeader = document.createElement('th');
+        categoryHeader.textContent = '중분류';
+        headerRow.appendChild(categoryHeader);
+
         const taskHeader = document.createElement('th');
         taskHeader.textContent = '작업 항목';
         headerRow.appendChild(taskHeader);
@@ -53,37 +224,84 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         tableHead.appendChild(headerRow);
 
-        // 작업 항목에 대한 데이터 추가 (모든 작업 항목을 추가)
-        const taskKeys = Object.keys(data[0]).filter(key => key !== 'name' && key !== 'id'); // 'name'과 'id'는 제외
-        console.log("작업 항목 목록:", taskKeys); // 콘솔에 작업 항목을 출력
+        // 작업자별 평균을 계산하고 표시
+        const averages = calculateAverages(data, workers);
+        const averageRow = document.createElement('tr');
+        averageRow.appendChild(document.createElement('td')); // 중분류 칸 빈칸
+        const avgLabelCell = document.createElement('td');
+        avgLabelCell.textContent = 'Average';
+        averageRow.appendChild(avgLabelCell);
 
-        taskKeys.forEach(task => {
-            const row = document.createElement('tr');
-            const taskCell = document.createElement('td');
-            taskCell.textContent = task; // 작업 항목 이름
-            row.appendChild(taskCell);
+        workers.forEach(worker => {
+            const avgCell = document.createElement('td');
+            avgCell.textContent = `${averages[worker]}%`; // 평균값 추가
+            avgCell.style.fontWeight = 'bold'; // 평균값을 굵게 표시
+            averageRow.appendChild(avgCell);
+        });
+        tableBody.appendChild(averageRow);
 
-            // 모든 작업자의 작업 데이터 추가 (각 작업자의 데이터를 순서대로 추가)
-            workers.forEach(workerName => {
-                const workerData = data.find(worker => worker.name === workerName); // 이름으로 작업자를 찾음
-                const taskValue = workerData ? workerData[task] : 'N/A'; // 해당 작업자의 작업 데이터가 있으면 표시, 없으면 'N/A'
-                
-                const cell = document.createElement('td');
-                cell.textContent = taskValue;
-                if (taskValue === 100) {
-                    cell.style.color = 'blue'; // 100일 때 파란색
-                } else if (taskValue === 0) {
-                    cell.style.color = 'red'; // 0일 때 빨간색
-                } else {
-                    cell.style.color = 'gray'; // 값이 없을 때 회색
+        // 작업 항목에 대한 데이터 추가 (대분류, 중분류 포함)
+        taskCategories.forEach(category => {
+            category.subcategories.forEach((subcategory, index) => {
+                const row = document.createElement('tr');
+
+                // 중분류 이름 추가 (첫 번째 항목만 중분류 이름을 표시)
+                if (index === 0) {
+                    const categoryCell = document.createElement('td');
+                    categoryCell.textContent = category.category;
+                    categoryCell.rowSpan = category.subcategories.length; // 중분류의 항목 수만큼 병합
+                    categoryCell.style.fontWeight = 'bold'; // 중분류 항목은 굵게 표시
+                    row.appendChild(categoryCell);
                 }
-                row.appendChild(cell);
-            });
 
-            tableBody.appendChild(row);
+                // 작업 항목 이름 추가
+                const taskCell = document.createElement('td');
+                taskCell.textContent = subcategory.displayName;
+                row.appendChild(taskCell);
+
+                // 각 작업자의 작업 데이터 추가
+                workers.forEach(workerName => {
+                    const workerData = data.find(worker => worker.name === workerName);
+                    const taskValue = workerData ? workerData[subcategory.name] : 'N/A'; // 해당 작업자의 작업 데이터가 있으면 표시, 없으면 'N/A'
+                    
+                    const cell = document.createElement('td');
+                    cell.textContent = taskValue;
+                    if (taskValue === 100) {
+                        cell.style.color = 'blue'; // 100일 때 파란색
+                    } else if (taskValue === 0) {
+                        cell.style.color = 'red'; // 0일 때 빨간색
+                    } else {
+                        cell.style.color = 'gray'; // 값이 없을 때 회색
+                    }
+                    row.appendChild(cell);
+                });
+
+                tableBody.appendChild(row);
+            });
         });
     }
 
-    // 데이터 로드
+    // 검색 기능 적용 함수
+    function applySearchFilter(searchName) {
+        console.log('검색어:', searchName); // 검색어 확인
+        const filteredData = allData.filter(worker => worker.name.includes(searchName));
+        console.log('필터링된 데이터:', filteredData); // 필터링된 데이터 확인
+        generateTable(filteredData);
+    }
+
+    // 검색 및 리셋 버튼 이벤트 리스너
+    document.getElementById('search-button').addEventListener('click', () => {
+        const searchName = document.getElementById('search-name').value.trim();
+        if (searchName) {
+            applySearchFilter(searchName);  // 검색 실행
+        }
+    });
+
+    document.getElementById('reset-button').addEventListener('click', () => {
+        document.getElementById('search-name').value = '';
+        generateTable(allData);  // 전체 데이터 다시 표시
+    });
+
+    // 데이터 로드 및 테이블 생성
     loadAllSupraMaintenanceData();
 });

@@ -142,3 +142,80 @@ exports.getAllChecklists = async () => {
     throw new Error(`Error retrieving all checklists: ${err.message}`);
   }
 };
+
+// 작업 항목 데이터를 삽입하는 함수
+exports.insertAggregatedData = async (aggregatedData) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `
+      INSERT INTO AggregatedData (
+        name, LP_ESCORT, ROBOT_ESCORT, EFEM_ROBOT_TEACHING, EFEM_ROBOT_REP, EFEM_ROBOT_CONTROLLER_REP,
+        TM_ROBOT_TEACHING, TM_ROBOT_REP, TM_ROBOT_CONTROLLER_REP, PASSIVE_PAD_REP, PIN_CYLINDER, PUSHER_CYLINDER, 
+        IB_FLOW, DRT, FFU_CONTROLLER, FAN, MOTOR_DRIVER, FCIP, R1, R3, R5, R3_TO_R5
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    
+    const values = [
+      aggregatedData.name, aggregatedData['LP_ESCORT'], aggregatedData['ROBOT_ESCORT'], 
+      aggregatedData['EFEM_ROBOT_TEACHING'], aggregatedData['EFEM_ROBOT_REP'], aggregatedData['EFEM_ROBOT_CONTROLLER_REP'],
+      aggregatedData['TM_ROBOT_TEACHING'], aggregatedData['TM_ROBOT_REP'], aggregatedData['TM_ROBOT_CONTROLLER_REP'],
+      aggregatedData['PASSIVE_PAD_REP'], aggregatedData['PIN_CYLINDER'], aggregatedData['PUSHER_CYLINDER'], 
+      aggregatedData['IB_FLOW'], aggregatedData['DRT'], aggregatedData['FFU_CONTROLLER'], aggregatedData['FAN'],
+      aggregatedData['MOTOR_DRIVER'], aggregatedData['FCIP'], aggregatedData['R1'], aggregatedData['R3'],
+      aggregatedData['R5'], aggregatedData['R3_TO_R5']
+    ];
+
+    await connection.query(query, values);
+  } catch (err) {
+    console.error('Error inserting aggregated data:', err);
+    throw new Error(`Error inserting aggregated data: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};
+
+// 작업 항목 데이터를 업데이트하는 함수
+exports.updateAggregatedData = async (aggregatedData) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `
+      UPDATE AggregatedData SET
+        LP_ESCORT = ?, ROBOT_ESCORT = ?, EFEM_ROBOT_TEACHING = ?, EFEM_ROBOT_REP = ?, EFEM_ROBOT_CONTROLLER_REP = ?, 
+        TM_ROBOT_TEACHING = ?, TM_ROBOT_REP = ?, TM_ROBOT_CONTROLLER_REP = ?, PASSIVE_PAD_REP = ?, PIN_CYLINDER = ?, 
+        PUSHER_CYLINDER = ?, IB_FLOW = ?, DRT = ?, FFU_CONTROLLER = ?, FAN = ?, MOTOR_DRIVER = ?, FCIP = ?, R1 = ?, 
+        R3 = ?, R5 = ?, R3_TO_R5 = ? 
+      WHERE name = ?
+    `;
+    
+    const values = [
+      aggregatedData['LP_ESCORT'], aggregatedData['ROBOT_ESCORT'], aggregatedData['EFEM_ROBOT_TEACHING'],
+      aggregatedData['EFEM_ROBOT_REP'], aggregatedData['EFEM_ROBOT_CONTROLLER_REP'], aggregatedData['TM_ROBOT_TEACHING'], 
+      aggregatedData['TM_ROBOT_REP'], aggregatedData['TM_ROBOT_CONTROLLER_REP'], aggregatedData['PASSIVE_PAD_REP'],
+      aggregatedData['PIN_CYLINDER'], aggregatedData['PUSHER_CYLINDER'], aggregatedData['IB_FLOW'], 
+      aggregatedData['DRT'], aggregatedData['FFU_CONTROLLER'], aggregatedData['FAN'], aggregatedData['MOTOR_DRIVER'],
+      aggregatedData['FCIP'], aggregatedData['R1'], aggregatedData['R3'], aggregatedData['R5'], 
+      aggregatedData['R3_TO_R5'], aggregatedData.name
+    ];
+
+    await connection.query(query, values);
+  } catch (err) {
+    console.error('Error updating aggregated data:', err);
+    throw new Error(`Error updating aggregated data: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};
+
+// 모든 작업 항목 데이터를 가져오는 함수
+exports.getAllAggregatedData = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `SELECT * FROM AggregatedData`;
+    const [rows] = await connection.query(query);
+    connection.release();
+    return rows;
+  } catch (err) {
+    connection.release();
+    throw new Error(`Error retrieving aggregated data: ${err.message}`);
+  }
+};

@@ -10,4 +10,8 @@ module.exports = function (app) {
 
     // 모든 사용자 체크리스트 불러오기 (새로 추가된 엔드포인트)
     app.get("/supra-maintenance/all", jwtMiddleware, supraMaintenanceController.getAllChecklists);
+    
+  // 새로 추가된 작업 항목 데이터 저장 및 조회 엔드포인트
+  app.post("/supra-maintenance/aggregated", jwtMiddleware, supraMaintenanceController.saveAggregatedData);
+  app.get("/supra-maintenance/aggregated", jwtMiddleware, supraMaintenanceController.getAggregatedData);
 };

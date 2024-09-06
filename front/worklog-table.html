@@ -79,7 +79,16 @@
                         </tbody>
                     </table>
                 </div>
-
+                <div class="table-container">
+                    <table>
+                        <thead id="combined-table-head">
+                            <!-- 작업 항목 및 작업자가 여기에 추가됩니다 -->
+                        </thead>
+                        <tbody id="combined-table-body">
+                            <!-- 각 작업자의 작업 항목별 퍼센트가 여기에 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
@@ -92,8 +101,9 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-    <script src="./js/worklog-table.js"></script>
     <script src="./js/supra_maintenance_check.js"></script>
+    <script src="./js/worklog-table.js"></script>
+    <script src="./js/supra_maintenance_total.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");

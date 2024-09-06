@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('x-access-token');
+        const token = localStorage.getItem('x-access-token');
 
     if (!token) {
         alert('로그인이 필요합니다.');
@@ -16,44 +16,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 대분류 및 중분류와 작업 항목 리스트 정의
     const taskCategories = [
         {
-            category: "Escort",
+            category: "ESCORT",
             subcategories: [
                 { name: "LP ESCORT", 기준작업수: 3 },
-                { name: "Robot Escort", 기준작업수: 3 }
+                { name: "ROBOT ESCORT", 기준작업수: 3 }
             ]
         },
         {
-            category: "EFEM Robot",
+            category: "EFEM ROBOT",
             subcategories: [
                 { name: "EFEM ROBOT TEACHING", 기준작업수: 5 },
                 { name: "EFEM ROBOT REP", 기준작업수: 5 },
-                { name: "EFEM Robot Controller REP", 기준작업수: 5 }
+                { name: "EFEM ROBOT CONTROLLER REP", 기준작업수: 5 }
             ]
         },
         {
-            category: "TM Robot",
+            category: "TM ROBOT",
             subcategories: [
                 { name: "TM ROBOT TEACHING", 기준작업수: 5 },
                 { name: "TM ROBOT REP", 기준작업수: 5 },
-                { name: "TM ROBOT Controller REP", 기준작업수: 5 },
-                { name: "Passive Pad REP", 기준작업수: 3 }
+                { name: "TM ROBOT CONTROLLER REP", 기준작업수: 5 },
+                { name: "PASSIVE PAD REP", 기준작업수: 3 }
             ]
         },
         {
-            category: "BM Module",
+            category: "BM MODULE",
             subcategories: [
-                { name: "Pin Cylinder", 기준작업수: 3 },
-                { name: "Pusher Cylinder", 기준작업수: 1 },
-                { name: "IB Flow", 기준작업수: 1 },
+                { name: "PIN CYLINDER", 기준작업수: 3 },
+                { name: "PUSHER CYLINDER", 기준작업수: 1 },
+                { name: "IB FLOW", 기준작업수: 1 },
                 { name: "DRT", 기준작업수: 1 }
             ]
         },
         {
             category: "FFU (EFEM, TM)",
             subcategories: [
-                { name: "FFU Controller", 기준작업수: 3 },
+                { name: "FFU CONTROLLER", 기준작업수: 3 },
                 { name: "FAN", 기준작업수: 3 },
-                { name: "Motor Driver", 기준작업수: 1 }
+                { name: "MOTOR DRIVER", 기준작업수: 1 }
             ]
         },
         {
@@ -62,43 +62,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "R1", 기준작업수: 5 },
                 { name: "R3", 기준작업수: 5 },
                 { name: "R5", 기준작업수: 5 },
-                { name: "R3 To R5", 기준작업수: 5 }
+                { name: "R3 TO R5", 기준작업수: 5 }
             ]
         },
         {
-            category: "Microwave",
+            category: "MiCROWAVE",
             subcategories: [
-                { name: "Microwave", 기준작업수: 3 },
-                { name: "Applicator", 기준작업수: 2 },
-                { name: "Generator", 기준작업수: 2 }
+                { name: "MiCROWAVE", 기준작업수: 3 },
+                { name: "APPLICATOR", 기준작업수: 2 },
+                { name: "GENERATOR", 기준작업수: 2 }
             ]
         },
         {
-            category: "Chuck",
+            category: "CHUCK",
             subcategories: [
-                { name: "Chuck", 기준작업수: 5 }
+                { name: "CHUCK", 기준작업수: 5 }
             ]
         },
         {
-            category: "Process Kit",
+            category: "PROCESS KIT",
             subcategories: [
-                { name: "Process Kit", 기준작업수: 5 }
+                { name: "PROCESS KIT", 기준작업수: 5 }
             ]
         },
         {
-            category: "Leak",
+            category: "LEAK",
             subcategories: [
-                { name: "Helium Detector", 기준작업수: 3 }
+                { name: "HELIUM DETECTOR", 기준작업수: 3 }
             ]
         },
         {
-            category: "Pin",
+            category: "PIN",
             subcategories: [
-                { name: "Hook Lift Pin", 기준작업수: 3 },
-                { name: "Bellows", 기준작업수: 1 },
-                { name: "Pin Sensor", 기준작업수: 1 },
-                { name: "LM Guide", 기준작업수: 1 },
-                { name: "Pin Motor Controller", 기준작업수: 3 }
+                { name: "HOOK LIFT PIN", 기준작업수: 3 },
+                { name: "BELLOWS", 기준작업수: 1 },
+                { name: "PIN SENSOR", 기준작업수: 1 },
+                { name: "LM GUIDE", 기준작업수: 1 },
+                { name: "PIN MOTOR CONTROLLER", 기준작업수: 3 }
             ]
         },
         {
@@ -109,47 +109,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             ]
         },
         {
-            category: "Board",
+            category: "BOARD",
             subcategories: [
-                { name: "Gas Box Board", 기준작업수: 2 },
-                { name: "Temp Controller Board", 기준작업수: 2 },
-                { name: "Power Distribution Board", 기준작업수: 2 },
-                { name: "DC Power Supply", 기준작업수: 2 },
-                { name: "BM Sensor", 기준작업수: 1 },
-                { name: "PIO Sensor", 기준작업수: 1 },
-                { name: "Safety Module", 기준작업수: 1 },
+                { name: "GAS BOX BOARD", 기준작업수: 2 },
+                { name: "TEMP CONTROLLER BOARD", 기준작업수: 2 },
+                { name: "POWER DISTRIBUTION BOARD", 기준작업수: 2 },
+                { name: "DC POWER SUPPLY", 기준작업수: 2 },
+                { name: "BM SENSOR", 기준작업수: 1 },
+                { name: "PIO SENSOR", 기준작업수: 1 },
+                { name: "SAFETY MODULE", 기준작업수: 1 },
                 { name: "D-NET", 기준작업수: 2 }
             ]
         },
         {
-            category: "IGS Block",
+            category: "IGS BLOCK",
             subcategories: [
                 { name: "MFC", 기준작업수: 2 },
-                { name: "Valve", 기준작업수: 2 }
+                { name: "VALVE", 기준작업수: 2 }
             ]
         },
         {
-            category: "Valve",
+            category: "VALVE",
             subcategories: [
-                { name: "Solenoid", 기준작업수: 2 },
-                { name: "Fast Vac Valve", 기준작업수: 2 },
-                { name: "Slow Vac Valve", 기준작업수: 2 },
-                { name: "Slit Door", 기준작업수: 3 },
-                { name: "APC Valve", 기준작업수: 3 },
-                { name: "Shutoff Valve", 기준작업수: 3 }
+                { name: "SOLENOID", 기준작업수: 2 },
+                { name: "FAST VAC VALVE", 기준작업수: 2 },
+                { name: "SLOW VAC VALVE", 기준작업수: 2 },
+                { name: "SLIT DOOR", 기준작업수: 3 },
+                { name: "APC VALVE", 기준작업수: 3 },
+                { name: "SHUTOFF VALVE", 기준작업수: 3 }
             ]
         },
         {
             category: "ETC",
             subcategories: [
-                { name: "Baratron Ass'y", 기준작업수: 1 },
-                { name: "Pirani Ass'y", 기준작업수: 1 },
-                { name: "View Port Quartz", 기준작업수: 1 },
-                { name: "Flow Switch", 기준작업수: 1 },
-                { name: "Ceramic Plate", 기준작업수: 3 },
-                { name: "Monitor", 기준작업수: 1 },
-                { name: "Keyboard", 기준작업수: 1 },
-                { name: "Mouse", 기준작업수: 1 }
+                { name: "BARATRON ASS'Y", 기준작업수: 1 },
+                { name: "PIRANI ASS'Y", 기준작업수: 1 },
+                { name: "VIEW PORT QUARTZ", 기준작업수: 1 },
+                { name: "FLOW SWITCH", 기준작업수: 1 },
+                { name: "CERAMIC PLATE", 기준작업수: 3 },
+                { name: "MONITOR", 기준작업수: 1 },
+                { name: "KEYBOARD", 기준작업수: 1 },
+                { name: "MOUSE", 기준작업수: 1 }
             ]
         },
         {
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "PMC", 기준작업수: 2 },
                 { name: "EDA", 기준작업수: 2 },
                 { name: "EFEM CONTROLLER", 기준작업수: 2 },
-                { name: "S/W Patch", 기준작업수: 2 }
+                { name: "S/W PATCH", 기준작업수: 2 }
             ]
         }
     ];
@@ -197,6 +197,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('DB 작업 카운트를 불러오는 중 오류 발생:', error);
         }
     }
+
+    // 모든 데이터 계산 후 서버로 전송하는 함수 추가
+async function saveAggregatedDataToServer(aggregatedData) {
+    try {
+        const response = await axios.post('http://3.37.165.84:3001/supra-maintenance/aggregated', aggregatedData, {
+            headers: {
+                'x-access-token': localStorage.getItem('x-access-token')
+            }
+        });
+        console.log('Aggregated data saved successfully:', response.data);
+    } catch (error) {
+        console.error('Error saving aggregated data:', error);
+    }
+}
+
+// 작업 완료 후 데이터를 서버로 전송
+calculateTaskCounts(logs);
+saveAggregatedDataToServer(taskCounts);
+
 
     function calculateTaskCounts(logs) {
         taskCounts = {};
@@ -248,12 +267,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function addRelatedTaskCounts() {
         Object.keys(taskCounts).forEach(worker => {
             taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count;
-            taskCounts[worker]["TM ROBOT Controller REP"].count += taskCounts[worker]["TM ROBOT REP"].count;
-            taskCounts[worker]["IB Flow"].count += taskCounts[worker]["Pin Cylinder"].count;
+            taskCounts[worker]["TM ROBOT CONTROLLER REP"].count += taskCounts[worker]["TM ROBOT REP"].count;
+            taskCounts[worker]["IB FLOW"].count += taskCounts[worker]["PIN CYLINDER"].count;
             taskCounts[worker]["EFEM ROBOT TEACHING"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
-            taskCounts[worker]["EFEM Robot Controller REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
-            taskCounts[worker]["R3"].count += taskCounts[worker]["R3 To R5"].count;
-            taskCounts[worker]["R5"].count += taskCounts[worker]["R3 To R5"].count;
+            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
+            taskCounts[worker]["R3"].count += taskCounts[worker]["R3 TO R5"].count;
+            taskCounts[worker]["R5"].count += taskCounts[worker]["R3 TO R5"].count;
         });
     }
 
