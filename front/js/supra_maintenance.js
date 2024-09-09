@@ -1,6 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
 
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
+
     // 체크리스트 불러오기
     if (token) {
         try {
@@ -71,9 +77,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (response.status === 201) {
-                alert('Checklist saved successfully.');
+                alert('체크리스트가 저장되었습니다.');
             } else {
-                alert('Error saving checklist.');
+                alert('저장 중 에러 발생');
             }
         } catch (error) {
             console.error(error);

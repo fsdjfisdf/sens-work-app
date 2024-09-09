@@ -56,7 +56,6 @@ tbody tr:nth-child(even) {
     background-color: #f7f9fc; /* 짝수 행에 연한 파란색 배경 */
 }
 
-
 td strong {
     font-weight: bold;
 }
@@ -119,7 +118,6 @@ td.red {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 10px; /* 버튼 간 간격 추가 */
 }
 
 .search-container button#search-button:hover {
@@ -135,6 +133,7 @@ td.red {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    margin-right: 20px; /* 버튼 간 간격 추가 */
 }
 
 .search-container button#reset-button:hover {
@@ -163,7 +162,6 @@ table {
 tbody tr:hover {
     background-color: #e6f2ff;
 }
-
 
 /* 분석 결과 스타일링 */
 .analysis-container {
@@ -310,41 +308,82 @@ footer {
     margin-top: auto;
 }
 
+/* 테이블 기본 스타일: 숨김 */
 .table {
     display: none; /* 기본적으로 모든 테이블을 숨김 */
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  
-  .table th, .table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
-  
-  .table th {
-    background-color: #f2f2f2;
-  }
-  
-  .button-container {
-    margin-bottom: 20px;
-  }
-  
-  .button-container button {
+}
+
+/* 테이블이 활성화되었을 때 스타일 */
+.table.active {
+    display: table; /* 테이블이 활성화되면 표시 */
+}
+
+/* 버튼 활성화 시 스타일 */
+.active-button {
+    background-color: #2196F3;
+    color: white;
+}
+
+
+/* 버튼 기본 스타일 */
+.button-container button {
     padding: 10px 20px;
+    font-size: 14px;
     margin-right: 10px;
-    background-color: #4CAF50;
+    background-color: #0044cc;
     color: white;
     border: none;
     cursor: pointer;
-  }
-  
-  .button-container button:hover {
+}
+
+.button-container button:hover {
     background-color: #45a049;
-  }
-  
-  .active-button {
-    background-color: #2196F3; /* 현재 활성화된 버튼 색상 */
-  }
-  
+}
+
+/* TOTAL, COUNT, SELF 버튼 스타일 */
+.search-container button#show-total-button {
+    background-color: #000262; /* TOTAL: 초록색 */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.search-container button#show-total-button:hover {
+    background-color: #000142; /* TOTAL: Hover 시 진한 초록색 */
+}
+
+.search-container button#show-count-button {
+    background-color: #300053; /* COUNT: 주황색 */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.search-container button#show-count-button:hover {
+    background-color: #160027; /* COUNT: Hover 시 진한 주황색 */
+}
+
+.search-container button#show-self-button {
+    background-color: #002737; /* SELF: 파란색 */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.search-container button#show-self-button:hover {
+    background-color: #001923; /* SELF: Hover 시 진한 파란색 */
+}
+
+/* 활성화된 버튼 스타일 */
+.active-button {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 활성화된 버튼에 그림자 추가 */
+}

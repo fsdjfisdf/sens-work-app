@@ -46,20 +46,35 @@
             <div class="inner">
                 <h2>PCI</h2>
 
-                <!-- 분석 결과를 보여주는 섹션 -->
-                <div id="analysis-results" class="analysis-container"></div>
 
                 <!-- 검색 기능 -->
                 <div class="search-container">
                     <input type="text" id="search-name" placeholder="이름 검색">
                     <button id="search-button">SEARCH</button>
                     <button id="reset-button">RESET</button>
+                    <button id="show-total-button" class="active-button">TOTAL</button>
+                    <button id="show-count-button">COUNT</button>
+                    <button id="show-self-button">SELF</button>
                 </div>
+
+                <!-- 여기에 전체 평균을 표시할 공간 추가 -->
+                <div id="total-average-container" style="text-align: center; font-weight: bold; margin: 20px 0;"></div>
+
 
 
                 <!-- 테이블 컨테이너 -->
                 <div class="table-container">
-                    <table id="task-count-table">
+                    <table id="combined-table" class="table">
+                        <thead id="combined-table-head">
+                            <!-- 작업 항목 및 작업자가 여기에 추가됩니다 -->
+                        </thead>
+                        <tbody id="combined-table-body">
+                            <!-- 각 작업자의 작업 항목별 퍼센트가 여기에 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-container">
+                    <table id="task-count-table" class="table">
                         <thead id="task-count-table-head">
                             <!-- 작업자가 가로로 나열되는 헤더가 여기에 추가됩니다 -->
                         </thead>
@@ -68,24 +83,13 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div class="table-container">
-                    <table id="supra-maintenance-table">
+                    <table id="supra-maintenance-table" class="table">
                         <thead id="supra-maintenance-table-head">
                             <!-- 작업 항목과 작업자가 동적으로 추가됩니다 -->
                         </thead>
                         <tbody id="supra-maintenance-table-body">
                             <!-- 작업 항목과 각 작업자 데이터가 여기에 동적으로 추가됩니다 -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead id="combined-table-head">
-                            <!-- 작업 항목 및 작업자가 여기에 추가됩니다 -->
-                        </thead>
-                        <tbody id="combined-table-body">
-                            <!-- 각 작업자의 작업 항목별 퍼센트가 여기에 추가됩니다 -->
                         </tbody>
                     </table>
                 </div>
@@ -104,6 +108,7 @@
     <script src="./js/supra_maintenance_check.js"></script>
     <script src="./js/worklog-table.js"></script>
     <script src="./js/supra_maintenance_total.js"></script>
+    <script src="./js/button.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");

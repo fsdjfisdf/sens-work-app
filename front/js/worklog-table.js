@@ -368,29 +368,7 @@ saveAggregatedDataToServer(taskCounts);
         return percentageDeficits.slice(0, limit).map(item => item.task).concat(percentageDeficits.length > limit ? '... 그 외' : []);
     }
 
-    function displayAnalysis(taskCounts, sortedWorkers) {
-        const analysisDiv = document.getElementById('analysis-results');
-        analysisDiv.innerHTML = '';  // 기존 내용을 초기화
-    
-        const filteredTaskCounts = {};
-        sortedWorkers.forEach(worker => {
-            filteredTaskCounts[worker] = taskCounts[worker];
-        });
-    
-        const averagePercentages = calculateAveragePercentages(filteredTaskCounts);
-        console.log(averagePercentages);  // averagePercentages 값 확인
-        const overallAverage = calculateOverallAverage(averagePercentages);
-        const topIncompleteTasks = findTopIncompleteTasks(filteredTaskCounts);
-        const topIncompletePercentages = findTopIncompletePercentages(filteredTaskCounts);
-    
-        analysisDiv.innerHTML = `
-        <h3>ENG'r AVERAGE CAPA: ${overallAverage}%</h3>
-        <h3>작업 수가 부족한 작업:</h3>
-        <ul>${topIncompleteTasks.map(task => `<li>${task}</li>`).join('')}</ul>
-        <h3>CAPA가 부족한 항목:</h3>
-        <ul>${topIncompletePercentages.map(task => `<li>${task}</li>`).join('')}</ul>
-    `;
-    }
+
 
     function displayTaskCounts(taskCounts, filterWorker = null) {
         const tableHead = document.getElementById('task-count-table-head');
@@ -495,7 +473,6 @@ saveAggregatedDataToServer(taskCounts);
         });
     
         // 검색된 작업자 또는 전체에 대한 분석 데이터를 표시
-        displayAnalysis(taskCounts, sortedWorkers);
     }
     
 

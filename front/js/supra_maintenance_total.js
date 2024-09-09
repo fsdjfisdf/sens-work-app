@@ -250,18 +250,23 @@ async function loadSupraMaintenanceData() {
     }
 }
 
-function renderCombinedTable(worklogData, supraData, taskCategories) {
+function renderCombinedTable(worklogData, supraData, taskCategories, filteredWorkers = null) {
     const worklogPercentages = JSON.parse(localStorage.getItem('worklogPercentages')) || {};
 
     const tableHead = document.getElementById('combined-table-head');
     const tableBody = document.getElementById('combined-table-body');
+    const totalAverageContainer = document.getElementById('total-average-container'); // 전체 평균을 출력할 공간
     tableHead.innerHTML = '';
     tableBody.innerHTML = '';
+    totalAverageContainer.innerHTML = ''; // 이전의 전체 평균을 지움
 
-    // AVERAGE 값을 기준으로 작업자를 정렬하기 위한 배열 생성
     let allWorkers = new Set(Object.keys(worklogPercentages));
     supraData.forEach(supra => allWorkers.add(supra.name));
     allWorkers = Array.from(allWorkers);
+
+    if (filteredWorkers) {
+        allWorkers = allWorkers.filter(worker => filteredWorkers.includes(worker));
+    }
 
     const averageScores = allWorkers.map(worker => {
         let totalPercent = 0;
@@ -269,18 +274,13 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
 
         taskCategories.forEach(category => {
             category.subcategories.forEach(subcategory => {
-                // worklogPercentages에서 taskMapping을 적용해 매칭
                 const mappedTaskNameWorklog = taskMapping[subcategory.name] || subcategory.name;
                 const mappedTaskNameSupra = Object.keys(taskMapping).find(key => taskMapping[key] === subcategory.name) || subcategory.name;
 
-                // worklogPercentages 값 가져오기
                 const worklogPercent = worklogPercentages[worker]?.[mappedTaskNameWorklog] || 0;
-
-                // supraData에서 매칭된 항목 값 가져오기
                 const supraItem = supraData.find(supra => supra.name === worker);
                 const supraPercent = supraItem ? supraItem[mappedTaskNameSupra] || 0 : 0;
 
-                // 최종 퍼센트 계산
                 const finalPercent = (worklogPercent * 0.8) + (supraPercent * 0.2);
                 totalPercent += finalPercent;
                 taskCount++;
@@ -291,15 +291,25 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
         return { worker, averagePercent };
     });
 
-    // AVERAGE 값을 기준으로 정렬
+    // 작업자를 평균 퍼센트에 따라 내림차순 정렬
     averageScores.sort((a, b) => b.averagePercent - a.averagePercent);
-    allWorkers = averageScores.map(score => score.worker);
+    const sortedWorkers = averageScores.map(score => score.worker);
+
+    // 전체 평균 계산
+    let totalAveragePercent = 0;
+    averageScores.forEach(score => {
+        totalAveragePercent += score.averagePercent;
+    });
+    totalAveragePercent /= averageScores.length;  // 전체 평균 계산
+
+    // 전체 평균을 HTML에 표시
+    totalAverageContainer.innerHTML = `Total Average : ${totalAveragePercent.toFixed(2)}%`;
 
     // 테이블 헤더 생성
     const headerRow = document.createElement('tr');
     headerRow.appendChild(document.createElement('th')).textContent = '';
     headerRow.appendChild(document.createElement('th')).textContent = '작업 항목';
-    allWorkers.forEach(worker => {
+    sortedWorkers.forEach(worker => {
         const th = document.createElement('th');
         th.textContent = worker;
         headerRow.appendChild(th);
@@ -312,7 +322,7 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
     averageRow.style.fontWeight = 'bold';
     averageRow.appendChild(document.createElement('td')).textContent = ''; // 중분류 열 비워둠
     averageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';
-    allWorkers.forEach(worker => {
+    sortedWorkers.forEach(worker => {
         const averagePercent = averageScores.find(score => score.worker === worker).averagePercent;
         const td = document.createElement('td');
         td.textContent = `${averagePercent.toFixed(2)}%`;
@@ -340,7 +350,7 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
             taskCell.textContent = subcategory.displayName;
             row.appendChild(taskCell);
 
-            allWorkers.forEach(worker => {
+            sortedWorkers.forEach(worker => {
                 const mappedTaskNameWorklog = taskMapping[subcategory.name] || subcategory.name;
                 const mappedTaskNameSupra = Object.keys(taskMapping).find(key => taskMapping[key] === subcategory.name) || subcategory.name;
 
@@ -371,18 +381,29 @@ function renderCombinedTable(worklogData, supraData, taskCategories) {
 }
 
 function applySearchFilter(searchName, worklogData, supraData, taskCategories) {
+    console.log("Applying search filter for:", searchName); // 필터 적용 콘솔 로그
+
     // 검색어가 포함된 작업자만 필터링
-    const filteredWorklogData = Object.keys(worklogData).filter(worker => worker.includes(searchName));
-    const filteredSupraData = supraData.filter(worker => worker.name.includes(searchName));
-    
-    // 필터링된 데이터를 사용해 테이블을 재생성
-    renderCombinedTable(filteredWorklogData, filteredSupraData, taskCategories);
+    const filteredWorkers = worklogData
+        .filter(log => log.task_man.includes(searchName))  // 작업자 필터링
+        .map(log => log.task_man);  // 필터된 작업자의 이름 리스트 생성
+
+    const filteredSupraWorkers = supraData
+        .filter(supra => supra.name.includes(searchName))  // Supra 데이터에서 작업자 필터링
+        .map(supra => supra.name);  // 필터된 작업자의 이름 리스트 생성
+
+    const filteredWorkerNames = [...new Set([...filteredWorkers, ...filteredSupraWorkers])];  // 중복 제거
+
+    console.log("Filtered workers:", filteredWorkerNames);
+
+    // 필터링된 작업자들만 테이블에 표시
+    renderCombinedTable(worklogData, supraData, taskCategories, filteredWorkerNames);
 }
 
 document.getElementById('search-button').addEventListener('click', () => {
     const searchName = document.getElementById('search-name').value.trim();
     if (searchName) {
-        applySearchFilter(searchName, worklogData, supraData, taskCategories); // 검색 실행
+        applySearchFilter(searchName, worklogData, supraData, taskCategories);  // 검색 실행
     }
 });
 
@@ -391,12 +412,10 @@ document.getElementById('reset-button').addEventListener('click', () => {
     renderCombinedTable(worklogData, supraData, taskCategories); // 전체 데이터 다시 표시
 });
 
+// 데이터를 불러오고 전역 변수에 저장
+let worklogData = await loadWorklogData();
+let supraData = await loadSupraMaintenanceData();
 
-
-const worklogData = await loadWorklogData();
-const supraData = await loadSupraMaintenanceData();
-
+// 데이터를 렌더링
 renderCombinedTable(worklogData, supraData, taskCategories);
-
-
 });
