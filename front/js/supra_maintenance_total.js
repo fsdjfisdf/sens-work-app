@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    const equipmentTypeSelector = document.getElementById('equipment-type-selector');
+    const taskTypeSelector = document.getElementById('task-type-selector');
+
     const taskMapping = {
         "LP_ESCORT": "LP ESCORT",
         "ROBOT_ESCORT": "ROBOT ESCORT",

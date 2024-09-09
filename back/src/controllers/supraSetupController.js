@@ -67,3 +67,14 @@ exports.getChecklist = async (req, res) => {
     res.status(500).json({ error: 'Error retrieving checklist' });
   }
 };
+
+
+exports.getAllChecklists = async (req, res) => {
+  try {
+      const checklists = await supraSetupDao.getAllChecklists();  // DAO에서 모든 작업 데이터를 가져오는 함수 호출
+      res.status(200).json(checklists);
+  } catch (err) {
+      console.error('Error retrieving all checklists:', err);
+      res.status(500).json({ error: 'Error retrieving checklists' });
+  }
+};

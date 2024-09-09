@@ -209,3 +209,16 @@ exports.getChecklistByName = async (name) => {
     throw new Error(`Error retrieving checklist: ${err.message}`);
   }
 };
+
+exports.getAllChecklists = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+      const query = `SELECT * FROM SUPRA_N_SETUP`;
+      const [rows] = await connection.query(query);
+      connection.release();
+      return rows;
+  } catch (err) {
+      connection.release();
+      throw new Error(`Error retrieving checklists: ${err.message}`);
+  }
+};
