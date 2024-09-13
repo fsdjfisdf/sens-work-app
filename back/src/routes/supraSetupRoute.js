@@ -9,4 +9,6 @@ module.exports = function (app) {
   app.get("/supra-setup", jwtMiddleware, supraSetupController.getChecklist);
 
   app.get("/supra-setup/all", jwtMiddleware, supraSetupController.getAllChecklists);
+
+  app.get("/supra-setup/data", jwtMiddleware, supraSetupController.getSupraSetupData);
 };

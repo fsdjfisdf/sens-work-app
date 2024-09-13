@@ -78,3 +78,14 @@ exports.getAllChecklists = async (req, res) => {
       res.status(500).json({ error: 'Error retrieving checklists' });
   }
 };
+
+exports.getSupraSetupData = async (req, res) => {
+  try {
+    // SUPRA_SETUP 테이블에서 데이터를 가져오는 함수 호출
+    const data = await supraSetupDao.getAllSupraSetupData(); 
+    res.status(200).json(data);  // 데이터를 클라이언트에 반환
+  } catch (err) {
+    console.error('Error retrieving SUPRA_SETUP data:', err);
+    res.status(500).json({ error: 'Error retrieving SUPRA_SETUP data' });
+  }
+};

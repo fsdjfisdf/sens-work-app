@@ -222,3 +222,17 @@ exports.getAllChecklists = async () => {
       throw new Error(`Error retrieving checklists: ${err.message}`);
   }
 };
+
+exports.getAllSupraSetupData = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+      // SUPRA_SETUP 테이블에서 모든 데이터를 가져오는 쿼리
+      const query = `SELECT * FROM SUPRA_SETUP`;
+      const [rows] = await connection.query(query);  // SUPRA_SETUP 테이블에서 데이터 가져오기
+      connection.release();
+      return rows;
+  } catch (err) {
+      connection.release();
+      throw new Error(`Error retrieving data from SUPRA_SETUP: ${err.message}`);
+  }
+};
