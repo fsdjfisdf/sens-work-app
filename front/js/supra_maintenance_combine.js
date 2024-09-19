@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 작업 로그와 DB에서 작업자별 데이터를 불러오는 함수
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/logs');
+            const response = await axios.get('http://3.37.73.151:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             await loadDbTaskCounts();
             calculateTaskCounts(logs);
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadDbTaskCounts() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/api/task-count');
+            const response = await axios.get('http://3.37.73.151:3001/api/task-count');
             dbTaskCounts = response.data.reduce((acc, row) => {
                 const taskItem = row['작업_항목'];
                 Object.keys(row).forEach(worker => {
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadAllSupraMaintenanceData() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/supra-maintenance/all', {
+            const response = await axios.get('http://3.37.73.151:3001/supra-maintenance/all', {
                 headers: { 'x-access-token': token }
             });
             allData = response.data;

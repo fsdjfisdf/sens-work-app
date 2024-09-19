@@ -37,7 +37,7 @@ async function signup(event) {
   // 3. 회원가입 API 요청
   const signUpReturn = await axios({
     method: "post", // http method
-    url: "http://3.37.165.84:3001/sign-up",
+    url: "http://3.37.73.151:3001/sign-up",
     headers: {}, // packet header
     data: { userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa }, // packet body
   });

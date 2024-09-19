@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    const equipmentTypeSelector = document.getElementById('equipment-type-selector');
-    const taskTypeSelector = document.getElementById('task-type-selector');
-
     const taskMapping = {
         "LP_ESCORT": "LP ESCORT",
         "ROBOT_ESCORT": "ROBOT ESCORT",
@@ -227,7 +224,7 @@ const taskCategories = [
 
 async function loadWorklogData() {
     try {
-        const response = await axios.get('http://3.37.165.84:3001/logs', {
+        const response = await axios.get('http://3.37.73.151:3001/logs', {
             headers: {
                 'x-access-token': token
             }
@@ -241,7 +238,7 @@ async function loadWorklogData() {
 
 async function loadSupraMaintenanceData() {
     try {
-        const response = await axios.get('http://3.37.165.84:3001/supra-maintenance/all', {
+        const response = await axios.get('http://3.37.73.151:3001/supra-maintenance/all', {
             headers: {
                 'x-access-token': token
             }

@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post(`http://3.37.165.84:3001/log`, {
+            const response = await axios.post(`http://3.37.73.151:3001/log`, {
                 task_name,
                 task_result: taskResults,
                 task_cause: taskCauses,
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     try {
                         console.log(`Updating count for: ${engineer}, Task: ${transferItem}`);
 
-                        const response = await axios.post('http://3.37.165.84:3001/api/update-task-count', {
+                        const response = await axios.post('http://3.37.73.151:3001/api/update-task-count', {
                             task_man: engineer.trim(),
                             transfer_item: transferItem
                         });

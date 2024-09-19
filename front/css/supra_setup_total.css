@@ -1,54 +1,120 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f6f9;
+    color: #333;
     margin: 0;
     padding: 0;
 }
 
-nav {
-    background-color: #333;
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #0044cc;
+    font-size: 1.8rem;
+}
+
+.table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 80vh;
+    margin-top: 20px;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background-color: white;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    table-layout: fixed;
+    font-size: 14px;
+}
+
+th, td {
+    border: 1px solid #ddd;
     padding: 10px;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+th {
+    background-color: #0044cc;
     color: white;
+    font-size: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
-nav .inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
+td {
+    font-size: 0.95rem;
 }
 
-nav .nav-title {
-    font-size: 24px;
+tbody tr:nth-child(even) {
+    background-color: #f7f9fc;
 }
 
-.main {
-    padding: 20px;
+td strong {
+    font-weight: bold;
+}
+
+thead th, tbody td {
+    width: 69px;
+    padding: 12px;
+}
+
+td[rowspan] {
+    background-color: #e0e0e0;
+    font-weight: bold;
+    font-size: 1rem;
+    color: #0044cc;
+}
+
+td.blue {
+    color: #007BFF;
+    font-weight: bold;
+}
+
+td.red {
+    color: #FF0000;
+    font-weight: bold;
 }
 
 .search-container {
     display: flex;
-    gap: 10px;
+    justify-content: center;
     margin-bottom: 20px;
 }
 
-.table-container {
-    width: 100%;
-    overflow-x: auto;
+.search-container input {
+    padding: 10px;
+    font-size: 14px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+    width: 200px;
 }
 
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+.search-container button {
+    padding: 10px 20px;
+    font-size: 14px;
+    background-color: #0044cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-.table th, .table td {
-    border: 1px solid #ddd;
-    padding: 8px;
+.search-container button:hover {
+    background-color: #003bb5;
+}
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
     text-align: center;
-}
-
-.table th {
-    background-color: #f2f2f2;
-    font-weight: bold;
+    padding: 20px 0;
+    margin-top: auto;
 }

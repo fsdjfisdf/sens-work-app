@@ -13,7 +13,7 @@ async function signIn(event) {
   try {
     const signInReturn = await axios({
       method: "post",
-      url: "http://3.37.165.84:3001/sign-in",
+      url: "http://3.37.73.151:3001/sign-in",
       headers: {},
       data: { userID: userID, password: password },
     });
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const hireDate = document.getElementById("find-id-hire-date").value;
 
       try {
-          const response = await axios.post("http://3.37.165.84:3001/find-id", {
+          const response = await axios.post("http://3.37.73.151:3001/find-id", {
               name,
               group,
               site,
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       try {
-          const response = await axios.post("http://3.37.165.84:3001/find-password", {
+          const response = await axios.post("http://3.37.73.151:3001/find-password", {
               userID,
               name,
               group,

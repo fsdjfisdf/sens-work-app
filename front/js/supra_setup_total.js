@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // SUPRA SETUP 데이터를 불러오는 함수
     async function loadSetupData() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/supra-setup/all', {
+            const response = await axios.get('http://3.37.73.151:3001/supra-setup/all', {
                 headers: {
                     'x-access-token': token
                 }
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 체크리스트 데이터를 불러오는 함수
     async function loadChecklistData() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/supra-setup/data', {
+            const response = await axios.get('http://3.37.73.151:3001/supra-setup/data', {
                 headers: {
                     'x-access-token': token
                 }
@@ -44,22 +44,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         tableHead.innerHTML = '';
         tableBody.innerHTML = '';
 
-        // 작업 항목 목록 (열 -> 행으로 변경)
         const columns = [
             { name: 'INSTALLATION PREPARATION', 기준작업수: 5 },
             { name: 'FAB IN', 기준작업수: 3 },
             { name: 'DOCKING', 기준작업수: 3 },
-            { name: 'CABLE HOOK UP', 기준작업수: 4 },
-            // ... 여기에 추가 작업 항목들
+            { name: 'CABLE HOOK UP', 기준작업수: 4 }
         ];
 
-        // 작업자 목록 (열 헤더)
         const workerNames = setupData.map(worker => worker.name);
 
-        // 테이블 헤더 생성 (작업자 이름이 열로 나열)
         const headerRow = document.createElement('tr');
         headerRow.appendChild(document.createElement('th')).textContent = '작업 항목';
-        headerRow.appendChild(document.createElement('th')).textContent = '기준 작업 수'; // 기준 작업 수 열 추가
+        headerRow.appendChild(document.createElement('th')).textContent = '기준 작업 수';
         workerNames.forEach(name => {
             const th = document.createElement('th');
             th.textContent = name;
@@ -67,23 +63,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         tableHead.appendChild(headerRow);
 
-        // 테이블 바디 생성 (작업 항목별로 작업자 데이터를 나열)
         columns.forEach(col => {
             const row = document.createElement('tr');
-            row.appendChild(document.createElement('td')).textContent = col.name;  // 작업 항목명
-            row.appendChild(document.createElement('td')).textContent = col.기준작업수;  // 기준 작업 수 표시
+            row.appendChild(document.createElement('td')).textContent = col.name;
+            row.appendChild(document.createElement('td')).textContent = col.기준작업수;
 
             workerNames.forEach(workerName => {
                 const workerData = setupData.find(worker => worker.name === workerName);
                 const taskCount = workerData ? workerData[col.name.toUpperCase()] || 0 : 0;
                 let percentage = (taskCount / col.기준작업수) * 100;
-                percentage = Math.min(percentage, 100); // 100% 넘지 않도록 제한
+                percentage = Math.min(percentage, 100);
 
                 const td = document.createElement('td');
                 td.textContent = `${taskCount} (${Math.round(percentage)}%)`;
                 row.appendChild(td);
             });
-
             tableBody.appendChild(row);
         });
     }
@@ -95,38 +89,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         checklistTableHead.innerHTML = '';
         checklistTableBody.innerHTML = '';
 
-        const columns = Object.keys(checklistData[0] || {}).filter(key => key !== 'name');
+        const categories = {
+            'INSTALLATION PREPARATION': ['DRAWING_TEMPLATE_SETUP', 'DRAWING_TEMPLATE_MARKING', 'CUSTOMER_OHT_LINE_CHECK', 'UTILITY_SPEC_UNDERSTANDING'],
+            'FAB IN': ['EQUIPMENT_IMPORT_CAUTION', 'EQUIPMENT_IMPORT_ORDER', 'EQUIPMENT_SPACING_CHECK', 'PACKING_LIST_CHECK']
+        };
 
-        // 테이블 헤더 생성
+        const workerNames = checklistData.map(worker => worker.name);
+
         const headerRow = document.createElement('tr');
-        headerRow.appendChild(document.createElement('th')).textContent = '작업자';
-        columns.forEach(col => {
+        headerRow.appendChild(document.createElement('th')).textContent = '체크리스트 항목';
+        workerNames.forEach(name => {
             const th = document.createElement('th');
-            th.textContent = col.replace(/_/g, ' '); // 체크리스트 항목 이름 표시
+            th.textContent = name;
             headerRow.appendChild(th);
         });
         checklistTableHead.appendChild(headerRow);
 
-        // 테이블 바디 생성
-        checklistData.forEach(worker => {
-            const row = document.createElement('tr');
-            row.appendChild(document.createElement('td')).textContent = worker.name;
+        for (const [category, items] of Object.entries(categories)) {
+            const categoryRow = document.createElement('tr');
+            const categoryCell = document.createElement('td');
+            categoryCell.colSpan = workerNames.length + 1;
+            categoryCell.textContent = category;
+            categoryRow.appendChild(categoryCell);
+            checklistTableBody.appendChild(categoryRow);
 
-            columns.forEach(col => {
-                const td = document.createElement('td');
-                td.textContent = worker[col] !== undefined ? worker[col] : 'N/A';  // 값 그대로 출력
-                row.appendChild(td);
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.appendChild(document.createElement('td')).textContent = item.replace(/_/g, ' ');
+
+                workerNames.forEach(workerName => {
+                    const workerData = checklistData.find(worker => worker.name === workerName);
+                    const taskValue = workerData ? workerData[item] : 'N/A';
+
+                    const td = document.createElement('td');
+                    td.textContent = taskValue !== undefined ? taskValue : 'N/A';
+                    row.appendChild(td);
+                });
+
+                checklistTableBody.appendChild(row);
             });
-
-            checklistTableBody.appendChild(row);
-        });
+        }
     }
 
-    // 첫 번째 테이블 (SUPRA SETUP 데이터) 불러오기
     const setupData = await loadSetupData();
     renderSetupTable(setupData);
 
-    // 두 번째 테이블 (체크리스트 데이터) 불러오기
     const checklistData = await loadChecklistData();
     renderChecklistTable(checklistData);
 });

@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadEngineers() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/users', {
+            const response = await axios.get('http://3.37.73.151:3001/users', {
                 headers: {
                     'x-access-token': localStorage.getItem('x-access-token')
                 }
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/logs', {
+            const response = await axios.get('http://3.37.73.151:3001/logs', {
                 headers: {
                     'x-access-token': localStorage.getItem('x-access-token')
                 }

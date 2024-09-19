@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 체크리스트 불러오기
     if (token) {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/supra-maintenance', {
+            const response = await axios.get('http://3.37.73.151:3001/supra-maintenance', {
                 headers: {
                     'x-access-token': token
                 }
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.165.84:3001/supra-maintenance', data, {
+            const response = await axios.post('http://3.37.73.151:3001/supra-maintenance', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token // JWT 토큰 추가

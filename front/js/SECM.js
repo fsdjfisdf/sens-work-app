@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     async function fetchData() {
         try {
-            const response = await fetch('http://3.37.165.84:3001/api/secm');
+            const response = await fetch('http://3.37.73.151:3001/api/secm');
             const data = await response.json();
             originalData = data;
             return data;
@@ -1067,7 +1067,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/logs');
+            const response = await axios.get('http://3.37.73.151:3001/logs');
             workLogs = response.data; // 작업 이력 데이터를 저장
             return workLogs;
         } catch (error) {
@@ -1656,7 +1656,7 @@ renderWorkCharts(workLogs); // 작업 이력 데이터 렌더링
 });
 
 document.getElementById('exportButton').addEventListener('click', () => {
-    window.location.href = 'http://3.37.165.84:3001/api/export-to-excel';
+    window.location.href = 'http://3.37.73.151:3001/api/export-to-excel';
 });
 
   

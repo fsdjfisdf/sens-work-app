@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/logs');
+            const response = await axios.get('http://3.37.73.151:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             await loadDbTaskCounts();  
             calculateTaskCounts(logs);
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadDbTaskCounts() {
         try {
-            const response = await axios.get('http://3.37.165.84:3001/api/task-count');
+            const response = await axios.get('http://3.37.73.151:3001/api/task-count');
             dbTaskCounts = response.data.reduce((acc, row) => {
                 const taskItem = row['작업_항목'];
                 Object.keys(row).forEach(worker => {
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 모든 데이터 계산 후 서버로 전송하는 함수 추가
 async function saveAggregatedDataToServer(aggregatedData) {
     try {
-        const response = await axios.post('http://3.37.165.84:3001/supra-maintenance/aggregated', aggregatedData, {
+        const response = await axios.post('http://3.37.73.151:3001/supra-maintenance/aggregated', aggregatedData, {
             headers: {
                 'x-access-token': localStorage.getItem('x-access-token')
             }

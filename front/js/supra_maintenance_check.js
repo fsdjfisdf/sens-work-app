@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem("x-access-token");
 
             // 서버에서 모든 작업자의 데이터를 가져옴
-            const response = await axios.get('http://3.37.165.84:3001/supra-maintenance/all', {
+            const response = await axios.get('http://3.37.73.151:3001/supra-maintenance/all', {
                 headers: {
                     'x-access-token': token // 필요한 경우 토큰을 전달
                 }

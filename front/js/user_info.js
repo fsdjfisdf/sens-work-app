@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   
     try {
-      const response = await fetch('http://3.37.165.84:3001/user-info', {
+      const response = await fetch('http://3.37.73.151:3001/user-info', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

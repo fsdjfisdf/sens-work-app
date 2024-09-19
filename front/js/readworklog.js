@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 현재 로그인한 사용자 정보를 받아오는 함수
 async function getCurrentUser() {
     try {
-        const response = await axios.get('http://3.37.165.84:3001/user-info', {
+        const response = await axios.get('http://3.37.73.151:3001/user-info', {
             headers: {
                 'x-access-token': localStorage.getItem('x-access-token')
             }
@@ -48,7 +48,7 @@ async function getCurrentUser() {
             await getCurrentUser(); // 현재 사용자 정보 불러오기
             updateLoadingPercentage(62); // 로딩 퍼센티지 업데이트
 
-            const response = await axios.get('http://3.37.165.84:3001/logs');
+            const response = await axios.get('http://3.37.73.151:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
             displayLogs(logs);
             calculateWorkerStats(logs); // 작업자 통계 계산 함수 호출
@@ -293,7 +293,7 @@ async function getCurrentUser() {
 
     async function deleteLog(id) {
         try {
-            await axios.delete(`http://3.37.165.84:3001/logs/${id}`);
+            await axios.delete(`http://3.37.73.151:3001/logs/${id}`);
         } catch (error) {
             console.error('작업 로그 삭제 중 오류 발생:', error);
         }

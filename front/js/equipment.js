@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadEquipment(filters = {}) {
         try {
             console.log('Loading equipment data...');
-            const response = await axios.get('http://3.37.165.84:3001/api/equipment');
+            const response = await axios.get('http://3.37.73.151:3001/api/equipment');
             console.log('Equipment data loaded:', response.data);
             equipments = response.data.sort((a, b) => new Date(a.START_DATE) - new Date(b.START_DATE));
             filterAndDisplayEquipments(filters);
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 특정 장비의 작업 로그를 조회하는 함수
 async function loadWorkLogsForEquipment(eqName) {
     try {
-        const response = await axios.get('http://3.37.165.84:3001/logs');
+        const response = await axios.get('http://3.37.73.151:3001/logs');
         console.log('Work logs API response:', response);
         const workLogs = response.data.filter(log => log.equipment_name === eqName);
 
