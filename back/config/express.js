@@ -195,6 +195,7 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
       logger.info('작업 로그가 성공적으로 추가되었습니다.');
       res.status(201).send('작업 로그가 성공적으로 추가되었습니다.');
     } catch (err) {
+      console.error('작업 로그 추가 중 오류 발생:', err);  // 구체적인 오류 메시지 출력
       logger.error('작업 로그 추가 중 오류 발생:', err.message);
       res.status(500).send('작업 로그 추가 중 오류가 발생했습니다.');
     }
