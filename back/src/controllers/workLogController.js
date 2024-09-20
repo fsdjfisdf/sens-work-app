@@ -23,6 +23,7 @@ exports.addWorkLog = async (req, res) => {
         );
         res.status(201).json({ message: "Work log added" });
     } catch (err) {
+        console.error('Error adding work log:', err.message);  // 구체적인 에러 메시지 출력
         res.status(500).json({ error: err.message });
     }
 };
