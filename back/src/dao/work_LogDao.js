@@ -34,8 +34,13 @@ exports.addWorkLog = async (task_name, task_result, task_cause, task_man, task_d
       task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
       group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, task_maint, status
     ];
+
+    console.log('Executing query:', query);
+    console.log('With values:', values);
+
     await connection.query(query, values);
   } catch (err) {
+    console.error('Error executing query:', err.message);
     throw new Error(`Error adding work log: ${err.message}`);
   } finally {
     connection.release();
