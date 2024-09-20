@@ -94,6 +94,7 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
   app.post('/log', async (req, res) => {
     logger.info('POST /log 요청 수신됨');
     logger.info('요청 바디:', req.body);
+    console.log('작업 로그 요청 데이터:', req.body);  // 작업 로그 요청 데이터 로깅
     const { task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, workType, setupItem, maintItem, transferItem, task_maint, status } = req.body;
 
     logger.info('maint_item 값:', maintItem);
