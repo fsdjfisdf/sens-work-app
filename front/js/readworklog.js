@@ -465,7 +465,7 @@ function showEditForm(log) {
         try {
             console.log(`Updating log with ID: ${log.id}`);
             console.log('Updated log data:', updatedLog);
-            const response = await axios.put(`http://3.37.165.84:3001/work-logs/${log.id}`, updatedLog);
+            const response = await axios.put(`http://3.37.73.151:3001/work-logs/${log.id}`, updatedLog);
             console.log('Response from server:', response);
             editModal.style.display = 'none';
             loadWorkLogs(); // 작업 로그 다시 불러오기
