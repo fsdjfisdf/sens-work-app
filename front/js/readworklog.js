@@ -1,3 +1,13 @@
+let currentPage = 1;   // 현재 페이지 번호
+const pageSize = 50;   // 페이지 당 보여줄 로그 수
+let totalLogs = 0;     // 전체 로그의 개수
+
+// 페이지네이션 버튼 및 페이지 정보 DOM 요소
+const prevPageButton = document.getElementById('prevPageButton');
+const nextPageButton = document.getElementById('nextPageButton');
+const currentPageDisplay = document.getElementById('currentPageDisplay');
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     let logs = [];
     let currentUserNickname = null; // 현재 로그인한 사용자의 닉네임을 저장할 변수
@@ -43,27 +53,30 @@ async function getCurrentUser() {
 }
 
 
-    async function loadWorkLogs() {
-        try {
-            await getCurrentUser(); // 현재 사용자 정보 불러오기
-            updateLoadingPercentage(62); // 로딩 퍼센티지 업데이트
+async function loadWorkLogs() {
+    try {
+        await getCurrentUser(); // 현재 사용자 정보 불러오기
+        updateLoadingPercentage(62); // 로딩 퍼센티지 업데이트
 
-            const response = await axios.get('http://3.37.73.151:3001/logs');
-            logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
-            displayLogs(logs);
-            calculateWorkerStats(logs); // 작업자 통계 계산 함수 호출
+        // 데이터를 불러오기 전에 인위적으로 3초 대기
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
-            updateLoadingPercentage(90); // 로딩 퍼센티지 업데이트
+        const response = await axios.get('http://3.37.73.151:3001/logs');
+        logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
+        displayLogs(logs);
+        calculateWorkerStats(logs); // 작업자 통계 계산 함수 호출
 
-            // 로딩 애니메이션 종료
-            completeLoading();
-        } catch (error) {
-            console.error('작업 로그를 불러오는 중 오류 발생:', error);
+        updateLoadingPercentage(90); // 로딩 퍼센티지 업데이트
 
-            // 로딩 애니메이션 종료
-            completeLoading();
-        }
+        // 로딩 애니메이션 종료
+        completeLoading();
+    } catch (error) {
+        console.error('작업 로그를 불러오는 중 오류 발생:', error);
+
+        // 로딩 애니메이션 종료
+        completeLoading();
     }
+}
 
         // Excel export function
         function exportToExcel() {
