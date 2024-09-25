@@ -658,4 +658,19 @@ footer {
     color: #fff;
 }
 
+#top5-engineers {
+    display: flex;
+    justify-content: space-between; /* 좌우로 공간 배분 */
+    align-items: flex-start; /* 상단에 정렬 */
+    width: 100%; /* 전체 너비 사용 */
+    margin-bottom: 20px; /* 아래에 간격 추가 */
+}
 
+.worker-stats {
+    width: 48%; /* 좌우로 배치될 때 각각 50% 미만으로 설정 */
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}

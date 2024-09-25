@@ -52,6 +52,19 @@ async function getCurrentUser() {
     }
 }
 
+    // admin 역할에 따라 화면 요소를 표시하는 함수
+    function displayAdminOnlyElements() {
+        if (userRole === 'admin') {
+            // admin에게만 보일 HTML 요소들
+            document.getElementById('total-work').style.display = 'block';
+            document.getElementById('top5-engineers').style.display = 'block';
+        } else {
+            // admin이 아닌 경우 해당 요소들을 숨김
+            document.getElementById('total-work').style.display = 'none';
+            document.getElementById('top5-engineers').style.display = 'none';
+        }
+    }
+
 
 async function loadWorkLogs() {
     try {
@@ -418,6 +431,7 @@ async function loadWorkLogs() {
 
     // 로그인 상태를 확인하고, 로그인되어 있지 않으면 로그인 페이지로 리디렉션
     if (checkLogin()) {
+        displayAdminOnlyElements(); // 역할에 따라 요소 표시/숨김
         loadWorkLogs();
     }
 
