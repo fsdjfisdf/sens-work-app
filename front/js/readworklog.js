@@ -58,12 +58,16 @@ async function getCurrentUser() {
             // admin에게만 보일 HTML 요소들
             document.getElementById('total-work').style.display = 'block';
             document.getElementById('top5-engineers').style.display = 'block';
+            document.getElementById('summary').style.display = 'block'; // summary 전체를 보이게 설정
+
         } else {
             // admin이 아닌 경우 해당 요소들을 숨김
             document.getElementById('total-work').style.display = 'none';
             document.getElementById('top5-engineers').style.display = 'none';
+            document.getElementById('summary').style.display = 'none'; 
         }
     }
+
 
 
 async function loadWorkLogs() {
