@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S-WORKS</title>
     <link rel="stylesheet" href="./css/report.css" />
+        <!-- Axios 라이브러리 추가 -->
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <!-- XLSX 라이브러리 추가 -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx-style/0.8.13/xlsx-style.min.js"></script>
+
+    
 </head>
 <body>
     <nav>
@@ -51,6 +58,7 @@
                             <input type="month" id="month" name="month" required>
                         </div>
                         <button type="button" id="generate-report" class="btn-generate">보고서 생성</button>
+                        <button id="exportExcelButton">엑셀 파일로 내보내기</button>
                     </div>
                     <div class="calendar-container" id="calendar">
                         <!-- 달력이 여기에 동적으로 생성됩니다. -->
@@ -116,5 +124,6 @@
         });
     </script>
     <script src="./js/report.js"></script>
+    <script src="./js/report2.js"></script>
 </body>
 </html>
