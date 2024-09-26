@@ -330,11 +330,6 @@ h2 {
     border: 1px solid #ddd;
 }
 
-.calendar-day {
-    cursor: pointer;
-    transition: background-color 0.3s;
-    position: relative;
-}
 
 .calendar-day.lack {
     background-color: #ffcccc;
@@ -774,4 +769,114 @@ footer {
     background-color: #003bb5;
     color: #fff;
 }
+/* Calendar container styling */
+#calendarContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: #f4f4f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
 
+/* Calendar title styling */
+.calendar-title {
+    font-size: 26px; /* 달력 타이틀 글씨 크기를 더 키움 */
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Navigation buttons styling */
+.calendar-nav-button {
+    background-color: #0044cc;
+    color: white;
+    border: none;
+    padding: 12px 18px; /* 버튼 크기 키움 */
+    border-radius: 5px;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.calendar-nav-button:hover {
+    background-color: #0044cc;
+}
+
+/* Calendar header styling (days of the week) */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding-bottom: 10px;
+}
+.calendar-header-day {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+    font-size: 18px; /* 요일 글씨 크기 키움 */
+    padding: 8px;
+}
+
+/* Calendar day cells */
+.calendar-row {
+    display: flex;
+    width: 100%;
+}
+.calendar-day {
+    flex: 1;
+    height: 140px; /* 세로 길이를 더 넉넉하게 설정 */
+    text-align: center;
+    border: 1px solid #ddd;
+    padding: 15px; /* 내부 패딩 키움 */
+    box-sizing: border-box;
+    position: relative;
+    background-color: white;
+    transition: background-color 0.3s ease;
+    font-size: 14px; /* 글씨 크기 키움 */
+}
+.calendar-day.empty {
+    background-color: #f9f9f9;
+}
+.calendar-day:hover {
+    background-color: #e7f1ff;
+}
+
+/* Task details in the day cell */
+.calendar-day p {
+    margin: 5px 0;
+    font-size: 13px; /* 텍스트 크기 키움 */
+}
+.calendar-day p:first-child {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Calendar legend */
+.calendar-legend {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    font-size: 13px; /* 레전드 글씨 크기 키움 */
+    border-radius: 5px;
+    background-color: #ddd;
+    color: #333;
+}
+.legend-item.lack {
+    background-color: #f44336;
+    color: white;
+}
+.legend-item.optimal {
+    background-color: #4caf50;
+    color: white;
+}
+.legend-item.surplus {
+    background-color: #ffc107;
+    color: white;
+}
