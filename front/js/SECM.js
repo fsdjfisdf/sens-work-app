@@ -721,61 +721,77 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Monthly CAPA Graph 데이터 처리
-        const currentMonth = new Date().getMonth();
-        const monthlyCapaLabels = ['24YJAN', '24YFEB', '24YMAR', '24YAPR', '24YMAY', '24YJUN', '24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC'].slice(0, currentMonth);
-        const monthlyCapaData = monthlyCapaLabels.map(label => {
-            const capaValues = data.map(row => row[label]).filter(value => value !== null);
-            return capaValues.reduce((sum, value) => sum + value, 0) / capaValues.length;
-        });
+// Monthly CAPA Graph 데이터 처리
+const currentMonth = new Date().getMonth();
+const monthlyCapaLabels = ['24YJAN', '24YFEB', '24YMAR', '24YAPR', '24YMAY', '24YJUN', '24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC'].slice(0, currentMonth);
+const monthlyCapaData = monthlyCapaLabels.map(label => {
+    const capaValues = data.map(row => row[label]).filter(value => value !== null);
+    return capaValues.reduce((sum, value) => sum + value, 0) / capaValues.length;
+});
 
-        createChart(monthlyCapaChartCtx, {
-            type: 'line',
-            data: {
-                labels: monthlyCapaLabels.map(label => label.replace('24Y', '')),
-                datasets: [{
-                    label: 'Monthly CAPA',
-                    data: monthlyCapaData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
+// CAPA Goal 데이터 추가
+const capaGoal = data.length > 0 ? data[0]['24Y CAPA GOAL'] : 0; // '24Y CAPA GOAL' 데이터는 모든 월에 동일한 값을 가집니다.
+const monthlyCapaGoal = Array(monthlyCapaLabels.length).fill(capaGoal); // 모든 월에 동일한 값
+
+createChart(monthlyCapaChartCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyCapaLabels.map(label => label.replace('24Y', '')),
+        datasets: [
+            {
+                label: 'Monthly CAPA',
+                data: monthlyCapaData,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
             },
-            plugins: [ChartDataLabels],
-            options: {
-                plugins: {
-                    datalabels: {
-                        formatter: value => `${(value * 100).toFixed(2)}%`,
-                        color: 'white', // 데이터 레이블 색상
-                        font: {
-                            size: 12
-                        },
-                        anchor: 'end',
-                        align: 'end'
-                    },
-                    legend: {
-                        display: false // 범례 숨김
+            {
+                label: 'CAPA GOAL',
+                data: monthlyCapaGoal, // 모든 월에 동일한 CAPA GOAL 값을 추가합니다.
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                borderDash: [10, 5], // 대시선 스타일로 변경
+                fill: false // 채우지 않음
+            }
+        ]
+    },
+    plugins: [ChartDataLabels],
+    options: {
+        plugins: {
+            datalabels: {
+                formatter: value => `${(value * 100).toFixed(2)}%`,
+                color: 'white', // 데이터 레이블 색상
+                font: {
+                    size: 12
+                },
+                anchor: 'end',
+                align: 'end'
+            },
+            legend: {
+                display: true, // 범례 표시
+                position: 'bottom'
+            }
+        },
+        scales: {
+            x: {
+                ticks: {
+                    color: 'silver' // x축 레이블 색상
+                }
+            },
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: 'silver', // y축 레이블 색상
+                    callback: function (value) {
+                        return `${(value * 100).toFixed(2)}%`;
                     }
                 },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: 'silver' // x축 레이블 색상
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: 'silver', // y축 레이블 색상
-                            callback: function (value) {
-                                return `${(value * 100).toFixed(2)}%`;
-                            }
-                        },
-                        suggestedMax: Math.max(...monthlyCapaData) * 1.2,
-                    }
-                }
+                suggestedMax: Math.max(...monthlyCapaData, capaGoal) * 1.7,
             }
-        });
+        }
+    }
+});
+
 
         // SET UP CAPA Graph 데이터 처리
         const setupCapaLabels = ['SUPRA N SET UP', 'SUPRA XP SET UP', 'INTEGER SET UP', 'PRECIA SET UP', 'ECOLITE SET UP', 'GENEVA SET UP'];

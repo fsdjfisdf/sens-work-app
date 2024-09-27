@@ -184,13 +184,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const totalEngineers = Object.values(engineerCount[month]).reduce((acc, count) => {
                 return acc + (isHolidayOrWeekend ? count.weekend : count.weekday) * availabilityRate;
             }, 0);
-            console.log(`Total Engineers for Month ${month}: ${totalEngineers}, Availability Rate: ${availabilityRate}`);
             return totalEngineers;
         }
         return 0;
     }
     function calculateOperationRate(totalMinutes, uniqueDates, totalEngineers) {
-        console.log(`Total Minutes: ${totalMinutes}, Unique Dates: ${uniqueDates}, Total Engineers: ${totalEngineers}`);
     
         if (totalEngineers === 0 || uniqueDates === 0) {
             console.log('Total Engineers or Unique Dates is zero, returning 0 for operation rate');
@@ -202,7 +200,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const requiredEngineers = averageDailyHours / ENGINEER_WORK_HOURS_PER_DAY;
     
         const operationRate = (requiredEngineers / totalEngineers) * 100;
-        console.log(`Calculated Operation Rate: ${operationRate}%`);
         return operationRate;
     }
 
@@ -241,7 +238,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6 || isHolidayFlag);
         const useWeekend = isHolidayFilter || isWeekend;
     
-        console.log(`Checking monthly engineer count for Group: ${group}, Site: ${site}, Month: ${month}`);
     
         let totalCount = 0;
     
@@ -249,7 +245,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // SITE가 선택된 경우
             if (engineerCount[month] && engineerCount[month][`${group}-${site}`]) {
                 const count = useWeekend ? engineerCount[month][`${group}-${site}`].weekend : engineerCount[month][`${group}-${site}`].weekday;
-                console.log(`Group: ${group}, Site: ${site}, Count: ${count}, Availability Rate: ${availabilityRate}, Result: ${Math.round(count * availabilityRate)}`);
                 return Math.round(count * availabilityRate);
             } else {
                 console.warn(`No engineer data found for Group: ${group}, Site: ${site}, Month: ${month}`);
@@ -261,11 +256,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (key.startsWith(`${group}-`)) {
                         const count = useWeekend ? engineerCount[month][key].weekend : engineerCount[month][key].weekday;
                         totalCount += count;
-                        console.log(`Group: ${group}, Site: ${key.split('-')[1]}, Count: ${count}`);
                     }
                 });
             }
-            console.log(`Total Count for Group ${group}: ${totalCount}, Availability Rate: ${availabilityRate}, Result: ${Math.round(totalCount * availabilityRate)}`);
             return Math.round(totalCount * availabilityRate);
         }
     
@@ -273,124 +266,188 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 0;
     }
 
-    function countWorkDays(startDate, endDate) {
-        const holidays = [
-            '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
-            '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
-            '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-            '2024-10-09', '2024-12-25'
-        ];
+    function countAllDays(startDate, endDate) {
         let count = 0;
         let currentDate = new Date(startDate);
     
         while (currentDate <= endDate) {
-            const dayOfWeek = currentDate.getDay();
-            const dateString = currentDate.toISOString().slice(0, 10);
-            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-            const isHoliday = holidays.includes(dateString);
-    
-            if (!isWeekend && !isHoliday) {
-                count++; // 주말 및 공휴일이 아닌 경우에만 카운트 증가
-            }
-            currentDate.setDate(currentDate.getDate() + 1);
+            count++;
+            currentDate.setDate(currentDate.getDate() + 1); // 하루씩 더함
         }
     
         return count;
     }
     
+
+function countWorkDays(startDate, endDate) {
+    const holidays = [
+        '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
+        '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
+        '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
+        '2024-10-09', '2024-12-25'
+    ];
     
-    function displayOverallStats(filteredLogs, filteredEngineers) {
-        let totalMinutes = 0;
-        const dates = new Set();
+    let count = 0;
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        const dateString = currentDate.toISOString().slice(0, 10);
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isHoliday = holidays.includes(dateString);
+
+        if (!isWeekend && !isHoliday) {
+            count++; // 주말이나 공휴일이 아니면 카운트
+        }
+        currentDate.setDate(currentDate.getDate() + 1); // 하루씩 더함
+    }
+
+    return count;
+}
+
+// 공휴일 및 주말을 계산하는 함수
+function countHolidaysAndWeekends(startDate, endDate) {
+    const holidays = [
+        '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
+        '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
+        '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
+        '2024-10-09', '2024-12-25'
+    ];
+
+    let count = 0;
+    let currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        const dateString = currentDate.toISOString().slice(0, 10);
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+        const isHoliday = holidays.includes(dateString);
+
+        if (isWeekend || isHoliday) {
+            count++; // 주말이나 공휴일이면 카운트
+        }
+        currentDate.setDate(currentDate.getDate() + 1); // 하루씩 더함
+    }
+
+    return count;
+}
+
+// 전체 일수를 기준으로 WORKDAY, HOLIDAY를 계산
+function calculateTotalDaysByFilter(startDate, endDate, filter) {
+    if (filter === 'ALL') {
+        return countAllDays(startDate, endDate); // 모든 날짜
+    } else if (filter === 'Workday') {
+        return countWorkDays(startDate, endDate); // 평일만
+    } else if (filter === 'Holiday') {
+        return countHolidaysAndWeekends(startDate, endDate); // 주말 및 공휴일
+    }
+    return 0;
+}
+
+// 전체 작업 통계 업데이트
+function displayOverallStats(filteredLogs, filteredEngineers) {
+    let totalMinutes = 0;
+    const dates = new Set();
+
+    filteredLogs.forEach(log => {
+        const durationParts = log.task_duration.split(':');
+        const hours = parseInt(durationParts[0], 10);
+        const minutes = parseInt(durationParts[1], 10);
+        const taskDurationMinutes = (hours * 60) + minutes;
+        const numWorkers = log.task_man.split(',').length;
+        totalMinutes += taskDurationMinutes * numWorkers;
+        dates.add(log.task_date);
+    });
+
+    const searchStartDate = document.getElementById('searchStartDate').value;
+    const searchEndDate = document.getElementById('searchEndDate').value;
     
-        filteredLogs.forEach(log => {
-            const durationParts = log.task_duration.split(':');
-            const hours = parseInt(durationParts[0], 10);
-            const minutes = parseInt(durationParts[1], 10);
-            const taskDurationMinutes = (hours * 60) + minutes;
-            const numWorkers = log.task_man.split(',').length;
-            totalMinutes += taskDurationMinutes * numWorkers;
-            dates.add(log.task_date);
-        });
+    const startDate = searchStartDate ? new Date(searchStartDate) : new Date(filteredLogs[0]?.task_date);
+    const endDate = searchEndDate ? new Date(searchEndDate) : new Date();
     
-        const searchStartDate = document.getElementById('searchStartDate').value;
-        const searchEndDate = document.getElementById('searchEndDate').value;
-        
-        const startDate = searchStartDate ? new Date(searchStartDate) : new Date(filteredLogs[0]?.task_date);
-        const endDate = searchEndDate ? new Date(searchEndDate) : new Date();
-        
-        // 주말과 공휴일을 제외한 Work Days 계산
-        const totalWorkDays = countWorkDays(startDate, endDate);
-        
-        const searchGroup = document.getElementById('searchGroup').value;
-        const searchSite = document.getElementById('searchSite').value;
-        const availabilityRate = document.getElementById('engineerAvailability').value === '90%' ? 0.9 : 1;
-    
-        let totalEngineers = 0;
-        const currentMonth = new Date().toISOString().slice(0, 7);
-    
-        if (searchGroup && !searchSite) {
-            totalEngineers = Object.keys(engineerCount[currentMonth]).reduce((sum, key) => {
-                if (key.startsWith(`${searchGroup}-`)) {
-                    const count = engineerCount[currentMonth][key].weekday;
-                    return sum + (count * availabilityRate);
-                }
-                return sum;
-            }, 0);
-        } else if (searchGroup && searchSite) {
-            totalEngineers = getMonthlyEngineerCount(searchGroup, searchSite, new Date(), availabilityRate);
-        } else {
-            totalEngineers = Object.keys(engineerCount[currentMonth]).reduce((sum, key) => {
+    const searchWorkType = document.getElementById('searchWorkType').value;
+    const totalWorkDays = calculateTotalDaysByFilter(startDate, endDate, searchWorkType);
+
+    const searchGroup = document.getElementById('searchGroup').value;
+    const searchSite = document.getElementById('searchSite').value;
+    const availabilityRate = document.getElementById('engineerAvailability').value === '90%' ? 0.9 : 1;
+
+    let totalEngineers = 0;
+    const currentMonth = new Date().toISOString().slice(0, 7);
+
+    if (searchGroup && !searchSite) {
+        totalEngineers = Object.keys(engineerCount[currentMonth]).reduce((sum, key) => {
+            if (key.startsWith(`${searchGroup}-`)) {
                 const count = engineerCount[currentMonth][key].weekday;
                 return sum + (count * availabilityRate);
-            }, 0);
-        }
-    
-        if (totalEngineers > 0) {
-            const operationRate = calculateOperationRate(totalMinutes, totalWorkDays, totalEngineers);
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-            const requiredEngineers = (totalMinutes / totalWorkDays) / (ENGINEER_WORK_HOURS_PER_DAY * 60);
-            const avgWorkTimePerEngineer = totalMinutes / (totalWorkDays * totalEngineers);
-            const avgWorkHours = Math.floor(avgWorkTimePerEngineer / 60);
-            const avgWorkMinutes = Math.round(avgWorkTimePerEngineer % 60);
-    
-            const overallStatsContent = document.getElementById('overall-stats-content');
-            overallStatsContent.innerHTML = `
-                <div class="donut-chart-container">
-                    <canvas id="operationRateDonutChart"></canvas>
-                    <div class="donut-chart-text">
-                        ${operationRate.toFixed(2)}%
-                    </div>
-                </div>
-                <div class="stat-items-container">
-                    <div class="stat-item">
-                        <h3>Total Worktime:</h3>
-                        <p>${hours}시간 ${minutes}분</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3>Work Days:</h3>
-                        <p>${totalWorkDays}일</p> <!-- 주말과 공휴일 제외한 Work Days -->
-                    </div>
-                    <div class="stat-item">
-                        <h3>Required Engineers:</h3>
-                        <p>${requiredEngineers.toFixed(2)}명</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3>Total Engineers:</h3>
-                        <p>${totalEngineers.toFixed(0)}명</p>
-                    </div>
-                    <div class="stat-item blue-text">
-                        <h3>Average Worktime per Eng'r:</h3>
-                        <p>${avgWorkHours}시간 ${avgWorkMinutes}분</p>
-                    </div>
-                </div>
-            `;
-            renderOperationRateDonutChart(operationRate);
-        } else {
-            console.log('Total Engineers is zero, returning 0 for operation rate');
-        }
+            }
+            return sum;
+        }, 0);
+    } else if (searchGroup && searchSite) {
+        totalEngineers = getMonthlyEngineerCount(searchGroup, searchSite, new Date(), availabilityRate);
+    } else {
+        totalEngineers = Object.keys(engineerCount[currentMonth]).reduce((sum, key) => {
+            const count = engineerCount[currentMonth][key].weekday;
+            return sum + (count * availabilityRate);
+        }, 0);
     }
+
+    if (totalEngineers > 0) {
+        const operationRate = calculateOperationRate(totalMinutes, totalWorkDays, totalEngineers);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        const requiredEngineers = (totalMinutes / totalWorkDays) / (ENGINEER_WORK_HOURS_PER_DAY * 60);
+        
+        const avgWorkTimePerEngineer = totalMinutes / (totalWorkDays * totalEngineers);
+        
+        // 추가할 5.5시간을 분으로 변환
+        const additionalTime = 5.5 * 60; // 5.5시간 = 330분
+        const adjustedAvgWorkTime = avgWorkTimePerEngineer + additionalTime; // 평균 작업시간에 5.5시간 추가
+
+        // 추가된 시간으로 시/분 계산
+        const adjustedAvgWorkHours = Math.floor(adjustedAvgWorkTime / 60);
+        const adjustedAvgWorkMinutes = Math.round(adjustedAvgWorkTime % 60);
+
+        const overallStatsContent = document.getElementById('overall-stats-content');
+        overallStatsContent.innerHTML = `
+            <div class="donut-chart-container">
+                <canvas id="operationRateDonutChart"></canvas>
+                <div class="donut-chart-text">
+                    ${operationRate.toFixed(2)}%
+                </div>
+            </div>
+            <div class="stat-items-container">
+                <div class="stat-item">
+                    <h3>Total Worktime:</h3>
+                    <p>${hours}시간 ${minutes}분</p>
+                </div>
+                <div class="stat-item">
+                    <h3>Work Days:</h3>
+                    <p>${totalWorkDays}일</p>
+                </div>
+                <div class="stat-item">
+                    <h3>Required Engineers:</h3>
+                    <p>${requiredEngineers.toFixed(2)}명</p>
+                </div>
+                <div class="stat-item">
+                    <h3>Total Engineers:</h3>
+                    <p>${totalEngineers.toFixed(0)}명</p>
+                </div>
+                <div class="stat-item blue-text">
+                    <h3>Average Worktime per Eng'r:       </h3>
+                    <p>${adjustedAvgWorkHours}시간 ${adjustedAvgWorkMinutes}분</p> <!-- 5.5시간 추가된 값 -->
+                </div>
+            </div>
+        `;
+        renderOperationRateDonutChart(operationRate);
+    } else {
+        console.log('Total Engineers is zero, returning 0 for operation rate');
+    }
+}
+
+
+
+    
     
     
     
@@ -507,9 +564,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                         beginAtZero: true
                     }
+                },
+                plugins: {
+                    datalabels: {
+                        display: true, // 데이터라벨 항상 보이도록 설정
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: Math.round,
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
                 }
             }
         });
+        
     }
 
     function renderOperationRateChart(logs, engineers) {
@@ -550,13 +619,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const endDateInput = document.getElementById('searchEndDate').value;
         const endDate = endDateInput ? new Date(endDateInput) : new Date(); // end date가 없으면 오늘 날짜 사용
     
-        const isHolidayFilter = document.getElementById('searchWorkType').value === 'Holiday';
+        const searchWorkType = document.getElementById('searchWorkType').value;
+        const isHolidayFilter = searchWorkType === 'Holiday';
+        const isWorkdayFilter = searchWorkType === 'Workday';
     
         Object.keys(groupSiteWorktime).forEach(key => {
             let totalMinutes = groupSiteWorktime[key];
             const firstDate = new Date(groupSiteFirstDates[key]);
             let uniqueDates = 0;
-    
     
             let date = new Date(firstDate);
             while (date <= endDate) {
@@ -565,22 +635,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
                 const isHoliday = holidays.includes(formattedDate);
     
-                if (isHolidayFilter) {
+                // WORKDAY 필터가 선택된 경우 주말과 공휴일을 제외한 평일만 포함
+                if (isWorkdayFilter) {
+                    if (!isWeekend && !isHoliday) {
+                        uniqueDates++; // 주말이나 공휴일이 아닌 경우만 카운트
+                    }
+                } else if (isHolidayFilter) {
                     if (isWeekend || isHoliday) {
                         uniqueDates++;
                     }
                 } else {
-                    uniqueDates++;
+                    uniqueDates++; // ALL 옵션인 경우 모든 날짜를 카운트
                 }
+    
                 date.setDate(date.getDate() + 1);
             }
     
-    
             const totalEngineers = getMonthlyEngineerCount(key.split('-')[0], key.split('-')[1], endDate, 1, isHolidayFilter);
-    
     
             const operationRate = calculateOperationRate(totalMinutes, uniqueDates, totalEngineers);
     
+            // 가동율 계산을 콘솔로 출력
+            console.log(`Group-Site: ${key}, Total Minutes: ${totalMinutes}, Unique Dates: ${uniqueDates}, Total Engineers: ${totalEngineers}, Operation Rate: ${operationRate}%`);
     
             labels.push(key);
             data.push(operationRate);
@@ -623,6 +699,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    
     
     function applyFilters(logs, engineers) {
         const searchGroup = document.getElementById('searchGroup').value;
@@ -1648,7 +1725,8 @@ document.getElementById('resetButton').addEventListener('click', () => {
                 <span style="color: black;">** Eng'r 수 산정 근거 : 1인당 하루 평균 FAB IN TIME = 3.5Hrs</span><br>
                 <span style="color: black;">** Required Engineers = Total Worktime / Work Days / 3.5Hrs</span><br>
                 <span style="color: black;">** Operating Rate(%) = Required Engineers / Total Engineers * 100</span><br>
-                <span style="color: black;">** Average Worktime per Eng'r = Total Worktime / Total Engineers</span>
+                <span style="color: black;">** Average Worktime per Eng'r = Total Worktime / Total Engineers + 5.5 시간</span><br>
+                <span style="color: red;">** 5.5 시간 근거 = 오전 TBM 30분, 작업 분배 1시간, Moving time 1.5시간, 식사시간 1.5시간, 기타 서류 업무 1시간</span>
             `);
         });
         
