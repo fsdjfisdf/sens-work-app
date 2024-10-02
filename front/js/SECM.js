@@ -729,9 +729,11 @@ const monthlyCapaData = monthlyCapaLabels.map(label => {
     return capaValues.reduce((sum, value) => sum + value, 0) / capaValues.length;
 });
 
-// CAPA Goal 데이터 추가
-const capaGoal = data.length > 0 ? data[0]['24Y CAPA GOAL'] : 0; // '24Y CAPA GOAL' 데이터는 모든 월에 동일한 값을 가집니다.
-const monthlyCapaGoal = Array(monthlyCapaLabels.length).fill(capaGoal); // 모든 월에 동일한 값
+// CAPA Goal 데이터 추가 (여러 명일 경우 평균 계산)
+const capaGoals = data.map(row => row['24Y CAPA GOAL']).filter(goal => goal !== null);
+const capaGoal = capaGoals.length > 0 ? capaGoals.reduce((sum, goal) => sum + goal, 0) / capaGoals.length : 0; // 평균 계산
+const monthlyCapaGoal = Array(monthlyCapaLabels.length).fill(capaGoal); // 모든 월에 동일한 평균 CAPA GOAL 값
+
 
 createChart(monthlyCapaChartCtx, {
     type: 'line',
