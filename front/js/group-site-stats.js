@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
         '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
         '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-        '2024-10-09', '2024-12-25'
+        '2024-10-09', '2024-12-25', '2024-10-01'
     ];
 
     const engineerCount = {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE1-PT': { weekday: 15, weekend: 3 }, // 손석현, 김범진, 조지훈, 정현우 8월 서류업무로 라인대응 거의 못함
             'PEE1-HS': { weekday: 17, weekend: 4 }, // 이성열, 송다운
             'PEE1-IC': { weekday: 4, weekend: 1 },
-            'PEE1-CJ': { weekday: 4, weekend: 1 },
+            'PEE1-CJ': { weekday: 3, weekend: 1 }, // 강문호
             'PEE2-PT': { weekday: 8, weekend: 2 },
             'PEE2-HS': { weekday: 6, weekend: 2 },
             'PEE3-PSKH': { weekday: 0, weekend: 0 }
@@ -64,9 +64,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE1-PT': { weekday: 15, weekend: 3 }, // 손석현, 김범진, 조지훈, 정현우 8월 서류업무로 라인대응 거의 못함
             'PEE1-HS': { weekday: 17, weekend: 4 }, // 이성열, 송다운
             'PEE1-IC': { weekday: 4, weekend: 1 },
-            'PEE1-CJ': { weekday: 4, weekend: 1 },
+            'PEE1-CJ': { weekday: 3, weekend: 1 }, //강문호
             'PEE2-PT': { weekday: 8, weekend: 2 },
             'PEE2-HS': { weekday: 6, weekend: 2 },
+            'PSKH-PSKH': { weekday: 7, weekend: 1 }
+        },
+        '2024-10': {
+            'PEE1-PT': { weekday: 15, weekend: 3 }, // 손석현 대리 복귀 // 황이환 주임 최용수 주임 출장 //
+            'PEE1-HS': { weekday: 19, weekend: 4 }, // 송다운 복귀 // 신입 2명 추가 // 강민호 출장 시작
+            'PEE1-IC': { weekday: 4, weekend: 1 },
+            'PEE1-CJ': { weekday: 4, weekend: 1 },  // 강문호 대리 복귀
+            'PEE2-PT': { weekday: 8, weekend: 1 },
+            'PEE2-HS': { weekday: 6, weekend: 1 },
             'PSKH-PSKH': { weekday: 7, weekend: 1 }
         },
         // 각 월별로 데이터를 추가
@@ -284,7 +293,7 @@ function countWorkDays(startDate, endDate) {
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
         '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
         '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-        '2024-10-09', '2024-12-25'
+        '2024-10-09', '2024-12-25', '2024-10-01'
     ];
     
     let count = 0;
@@ -311,7 +320,7 @@ function countHolidaysAndWeekends(startDate, endDate) {
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
         '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
         '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-        '2024-10-09', '2024-12-25'
+        '2024-10-09', '2024-12-25', '2024-10-01'
     ];
 
     let count = 0;
@@ -462,7 +471,7 @@ function displayOverallStats(filteredLogs, filteredEngineers) {
             '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
             '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
             '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-            '2024-10-09', '2024-12-25'
+            '2024-10-09', '2024-12-25', '2024-10-01'
         ];
     
         let count = 0;
@@ -751,7 +760,7 @@ function displayOverallStats(filteredLogs, filteredEngineers) {
             '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
             '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
             '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-            '2024-10-09', '2024-12-25'
+            '2024-10-09', '2024-12-25', '2024-10-01'
         ];
         return holidays.includes(dateString);
     }
