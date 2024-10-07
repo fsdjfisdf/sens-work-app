@@ -549,30 +549,44 @@ function renderSetupTable(setupData, worklogData) {
         });
         checklistTableHead.appendChild(headerRow);
     
-        // 전체 평균 행 추가
-        const totalAverageRow = document.createElement('tr');
-        totalAverageRow.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
-        totalAverageRow.style.fontWeight = 'bold';
-        totalAverageRow.classList.add('total-average-row');
-        totalAverageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';
-    
-        workerNames.forEach(workerName => {
-            const totalAverage = calculateTotalAverage(checklistData, workerName, categories);  // 전체 평균 계산
-            const td = document.createElement('td');
-            td.textContent = `${totalAverage.toFixed(1)}%`;
-    
-            // 퍼센트에 따른 색상 적용
-            if (totalAverage === 100) {
-                td.style.color = 'blue';
-            } else if (totalAverage === 0) {
-                td.style.color = 'red';
-            } else {
-                td.style.color = 'black';
-            }
-    
-            totalAverageRow.appendChild(td);
-        });
-        checklistTableBody.appendChild(totalAverageRow);
+// 전체 평균 행 추가
+const totalAverageRow = document.createElement('tr');
+totalAverageRow.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
+totalAverageRow.style.fontWeight = 'bold';
+totalAverageRow.classList.add('total-average-row');
+totalAverageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';
+
+// 중분류별 평균을 계산하여 AVERAGE 행에 출력
+workerNames.forEach(workerName => {
+    let totalAverage = 0;
+    let totalCategories = 0;
+
+    for (const [category, items] of Object.entries(categories)) {
+        // 각 중분류에 대한 소분류 평균값 계산
+        const categoryAverage = calculateCategoryAverage(items, checklistData, workerName);
+        totalAverage += categoryAverage;
+        totalCategories++;
+    }
+
+    // 중분류의 평균값을 합산하여 전체 평균 계산
+    const overallAverage = totalCategories > 0 ? (totalAverage / totalCategories) : 0;
+
+    const td = document.createElement('td');
+    td.textContent = `${overallAverage.toFixed(1)}%`;
+
+    // 퍼센트에 따른 색상 적용
+    if (overallAverage === 100) {
+        td.style.color = 'blue';
+    } else if (overallAverage === 0) {
+        td.style.color = 'red';
+    } else {
+        td.style.color = 'black';
+    }
+
+    totalAverageRow.appendChild(td);
+});
+
+checklistTableBody.appendChild(totalAverageRow);
     
         // 중분류에 대한 평균값을 열로 추가
         for (const [category, items] of Object.entries(categories)) {
