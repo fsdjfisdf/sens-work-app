@@ -120,3 +120,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+document.querySelectorAll('.all-check-btn').forEach(button => {
+    button.addEventListener('click', function () {
+      const category = button.closest('.category');
+      category.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = true;
+      });
+    });
+  });
