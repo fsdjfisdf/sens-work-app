@@ -1008,6 +1008,15 @@ function renderCombinedTable(setupData, checklistData) {
     const totalAverage = workerAverages.reduce((acc, curr) => acc + curr, 0) / workerAverages.length;
     totalAverageContainer.innerHTML = `Total Average: ${totalAverage.toFixed(1)}%`;
 
+    document.querySelectorAll('.all-check-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const category = button.closest('.category');
+            category.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        });
+    });
+
     
         
 }
@@ -1034,3 +1043,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
