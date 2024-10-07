@@ -1,3 +1,4 @@
+/* 기본 스타일 */
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #f4f6f9;
@@ -25,14 +26,15 @@ h2 {
 }
 
 table {
+    table-layout: fixed;
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
-    table-layout: fixed;
     font-size: 14px;
 }
 
 th, td {
+    width: 100px; /* 모든 열의 너비를 동일하게 설정 */
     border: 1px solid #ddd;
     padding: 10px;
     text-align: center;
@@ -111,10 +113,98 @@ td.red {
     background-color: #003bb5;
 }
 
-footer {
-    background-color: #0044cc;
-    color: #fff;
+/* 숨겨진 소분류 행 스타일 */
+.subcategory-row {
+    display: none;
+}
+
+/* 카테고리 클릭할 때 손 모양 커서 */
+.category-row {
+    cursor: pointer;
+}
+
+/* 전체 평균 행 스타일 */
+.total-average-row {
+    background-color: #e0f7fa; /* 연한 파란색 배경 */
+    font-weight: bold;
+    color: #007BFF; /* 파란색 텍스트 */
+}
+
+/* 중분류 행 스타일 */
+.category-row {
+    background-color: #f0f0f0 !important; /* 회색 배경 */
+    font-weight: bold !important;
+    color: #333 !important; /* 텍스트 색상 */
+}
+
+/* 숨겨진 소분류 행 스타일 */
+.subcategory-row {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+}
+
+/* 소분류 항목 가운데 정렬 */
+.subcategory-row td {
     text-align: center;
-    padding: 20px 0;
-    margin-top: auto;
+    vertical-align: middle;
+}
+
+/* 소분류 행이 나타날 때의 스타일 */
+.subcategory-row.visible {
+    max-height: 500px; /* 충분히 큰 값으로 설정 */
+    transition: max-height 0.5s ease-in;
+}
+
+/* 소분류 항목 가운데 정렬 */
+.subcategory-row td {
+    text-align: center;
+    vertical-align: middle;
+    position: relative; /* 툴팁 위치 기준 */
+}
+
+/* Tooltip 스타일 */
+.subcategory-row td::after {
+    content: attr(title); /* title 속성의 값을 툴팁으로 표시 */
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    top: 50%;
+    left: 100%; /* 오른쪽에 표시 */
+    transform: translateX(10px); /* 간격을 두고 오른쪽으로 이동 */
+    z-index: 1000;
+    pointer-events: none; /* 툴팁이 클릭되지 않도록 */
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* 툴팁이 보일 때 */
+.subcategory-row td:hover::after {
+    opacity: 1;
+}
+
+/* 합산 테이블 스타일 */
+#combined-data h2 {
+    color: #0044cc;
+}
+
+#combined-table th, #combined-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+#combined-table .total-average-row {
+    background-color: #e0f7fa;
+    font-weight: bold;
+    color: #007BFF;
+}
+
+#combined-table .category-row {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    color: #333;
 }

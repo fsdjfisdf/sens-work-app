@@ -517,3 +517,26 @@ saveAggregatedDataToServer(taskCounts);
 
     loadWorkLogs();
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const mainButton = document.getElementById('main-button');
+    const equipmentButtons = document.getElementById('equipment-buttons');
+    
+    // "다른 설비로 넘어가기" 버튼을 클릭하면 항목 리스트가 자연스럽게 보이도록 설정
+    mainButton.addEventListener('click', () => {
+        if (equipmentButtons.classList.contains('open')) {
+            equipmentButtons.classList.remove('open'); // 닫히기
+        } else {
+            equipmentButtons.classList.add('open'); // 열리기
+        }
+    });
+
+    // 각 설비 버튼을 눌렀을 때 해당 페이지로 이동
+    const equipmentBtnElements = document.querySelectorAll('.equipment-btn');
+    equipmentBtnElements.forEach(button => {
+        button.addEventListener('click', () => {
+            const url = button.getAttribute('data-url');
+            window.location.href = url;
+        });
+    });
+});

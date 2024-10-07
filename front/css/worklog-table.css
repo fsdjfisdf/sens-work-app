@@ -300,13 +300,6 @@ nav {
     display: inline-block;
 }
 
-footer {
-    background-color: #0044cc;
-    color: #fff;
-    text-align: center;
-    padding: 20px 0;
-    margin-top: auto;
-}
 
 /* 테이블 기본 스타일: 숨김 */
 .table {
@@ -386,4 +379,137 @@ footer {
 /* 활성화된 버튼 스타일 */
 .active-button {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 활성화된 버튼에 그림자 추가 */
+}/* 중분류 항목 스타일 */
+.category-row {
+    background-color: #f0f0f0; /* 연한 회색 배경 */
+    font-weight: bold; /* 굵은 글씨 */
+    cursor: pointer; /* 클릭 가능한 포인터 */
+    transition: background-color 0.3s ease; /* 배경색 변화에 부드러운 전환 */
+}
+
+.category-row:hover {
+    background-color: #e3f3fd; /* 마우스 오버 시 조금 더 진한 회색 */
+}
+
+/* 소분류 항목 스타일 */
+.subcategory-row {
+    background-color: #ffffff; /* 하얀 배경 */
+    font-weight: normal; /* 일반 글씨 */
+    padding-left: 20px; /* 중분류 대비 약간의 들여쓰기 */
+    transition: max-height 0.3s ease; /* 애니메이션으로 슬라이드 업/다운 */
+    max-height: 0;
+    overflow: hidden;
+}
+
+.subcategory-row.visible {
+    max-height: 1000px; /* 충분히 큰 값으로 설정 */
+}
+
+.subcategory-row td {
+    position: relative; /* 툴팁의 위치 기준을 셀에 맞추기 위해 추가 */
+    padding: 8px; /* 셀 패딩 */
+    border-bottom: 1px solid #ddd; /* 아래 경계선 */
+}
+
+
+/* 중분류, 소분류 공통으로 적용될 애니메이션 */
+@keyframes slideDown {
+    from {
+        max-height: 0;
+    }
+    to {
+        max-height: 1000px;
+    }
+}
+
+/* Tooltip 스타일 */
+.subcategory-row td::after {
+    content: attr(title); /* title 속성의 값을 툴팁으로 표시 */
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    white-space: nowrap;
+    top: 50%;
+    left: 100%; /* 셀의 오른쪽에 표시 */
+    transform: translateX(10px) translateY(-50%); /* 위치 조정 */
+    z-index: 1000;
+    pointer-events: none; /* 툴팁이 클릭되지 않도록 */
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* 툴팁이 보일 때 */
+.subcategory-row td:hover::after {
+    opacity: 1;
+}
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    width: 100%;
+    position: relative; /* 콘텐츠 아래에 자연스럽게 위치 */
+    bottom: 0;
+    left: 0;
+}
+
+/* "다른 설비로 넘어가기" 버튼 스타일 */
+#main-button {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-230%);
+    padding: 15px 25px;
+    background-color: #0044cc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+#main-button:hover {
+    background-color: #0033aa; /* 호버 시 어두운 색으로 변경 */
+}
+
+/* 항목 리스트(버튼들) 숨김 처리, 초기 상태 */
+#equipment-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: fixed;
+    right: 20px;
+    top: 60%;
+    transform: translateY(-50%);
+    max-height: 0; /* 숨김 상태에서 높이를 0으로 */
+    opacity: 0; /* 숨김 상태에서 투명도 0 */
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.5s ease; /* 자연스럽게 열리고 닫히도록 애니메이션 추가 */
+}
+
+/* 열렸을 때 높이와 투명도 설정 */
+#equipment-buttons.open {
+    max-height: 300px; /* 충분히 큰 값으로 설정 */
+    opacity: 1; /* 표시되면서 투명도 1 */
+}
+
+/* 각 설비 버튼 스타일 */
+.equipment-btn {
+    background-color: #0044cc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+/* 버튼 호버 시 어두운 색으로 */
+.equipment-btn:hover {
+    background-color: #0033aa;
 }

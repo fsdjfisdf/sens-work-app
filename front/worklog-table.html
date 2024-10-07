@@ -44,30 +44,27 @@
     <main>
         <section id="worklog">
             <div class="inner">
-                <h2>PCI</h2>
+                <h2>PCI ( SUPRA N MAINT )</h2>
+                <div class="button-container">
+                    <button id="main-button">Others</button>
+                    <div id="equipment-buttons">
+                        <button class="equipment-btn" data-url="supra_setup_total.html">SUPRA N SETUP</button>
+                        <button class="equipment-btn" data-url="supra_xp_setup_total.html">SUPRA XP SETUP</button>
+                        <button class="equipment-btn" data-url="supra_xp_maint_total.html">SUPRA XP MAINT</button>
+                        <button class="equipment-btn" data-url="integer_setup_total.html">INTEGER SET UP</button>
+                        <button class="equipment-btn" data-url="integer_maint_total.html">INTEGER MAINT</button>
+                        <button class="equipment-btn" data-url="precia_setup_total.html">PRECIA SETUP</button>
+                        <button class="equipment-btn" data-url="precia_maint_total.html">PRECIA MAINT</button>
+                        <button class="equipment-btn" data-url="ecolite_setup_total.html">ECOLITE SET UP</button>
+                        <button class="equipment-btn" data-url="ecolite_maint_total.html">ECOLITE MAINT</button>
+                        <button class="equipment-btn" data-url="geneva_setup_total.html">GENEVA SETUP</button>
+                        <button class="equipment-btn" data-url="geneva_maint_total.html">GENEVA MAINT</button>
+                    </div>
+                </div>
 
 
                 <!-- 검색 기능 -->
                 <div class="search-container">
-
-                    <select id="equipment-type-selector">
-                        <option value="">설비 종류 선택</option>
-                        <option value="SUPRA N">SUPRA N</option>
-                        <option value="SUPRA XP">SUPRA XP</option>
-                        <option value="INTEGER">INTEGER</option>
-                        <option value="PRECIA">PRECIA</option>
-                        <option value="ECOLITE">ECOLITE</option>
-                        <option value="GENEVA">GENEVA</option>
-                    </select>
-                
-                    <!-- 작업 종류 선택 -->
-                    <select id="task-type-selector">
-                        <option value="">작업 종류 선택</option>
-                        <option value="SET UP">SET UP</option>
-                        <option value="MAINTENANCE">MAINTENANCE</option>
-                    </select>
-
-
                     <input type="text" id="search-name" placeholder="이름 검색">
                     <button id="search-button">SEARCH</button>
                     <button id="reset-button">RESET</button>

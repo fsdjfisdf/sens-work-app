@@ -166,6 +166,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "KEYBOARD", displayName: "Keyboard" },
                 { name: "MOUSE", displayName: "Mouse" }
             ]
+        },
+        {
+            category: "24Y 신규",
+            subcategories: [
+                { name: "CTC", displayName: "CTC" },
+                { name: "PMC", displayName: "PMC" },
+                { name: "EDA", displayName: "EDA" },
+                { name: "EFEM_CONTROLLER", displayName: "EFEM CONTROLLER" },
+                { name: "SW_PATCH", displayName: "S/W PATCH" }
+            ]
         }
     ];
 
