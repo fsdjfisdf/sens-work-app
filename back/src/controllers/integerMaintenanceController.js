@@ -1,4 +1,4 @@
-const integerMaintenanceDao = require('../../../dao/integerMaintenanceDao');
+const integerMaintenanceDao = require('../../dao/integerMaintenanceDao');
 const jwt = require('jsonwebtoken');
 const secret = require('../../config/secret');
 
