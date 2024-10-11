@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INTEGER Maintenance Checklist</title>
+  <link rel="stylesheet" href="./css/supra_maintenance.css" />
+  <link rel="stylesheet" href="./css/readworklog.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/integer_maintenance.js" defer></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+        <div class="nav-container">
+            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+            <div class="sign-container unsigned">
+                <a href="./signin.html" class="sign-link">Login</a>
+            </div>
+            <div class="sign-container signed hidden">
+                <button class="menu-btn">
+                    <div class="menu-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="menu-bar">
+        <div class="menu-bar-content">
+            <a href="./user_info.html" class="menu-item">SECM</a>
+            <a href="./worklog.html" class="menu-item">Create Worklog</a>
+            <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+            <a href="./equipment.html" class="menu-item">Equipment</a>
+            <a href="./worklog-table.html" class="menu-item">PCI</a>
+            <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+            <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+            <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+            <button id="sign-out" class="menu-item">Logout</button>
+        </div>
+    </div>
+</nav>
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
+          <div id="checklist-container">
+            <div class="category">
+                <h2>Swap Kit</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>SWAP KIT</label>
+                  <input type="checkbox" name="SWAP_KIT" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>GAS LINE & GAS FILTER</label>
+                  <input type="checkbox" name="GAS_LINE_&_GAS_FILTER" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>CERAMIC PARTS</label>
+                  <input type="checkbox" name="CERAMIC_PARTS" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>MATCHER</label>
+                  <input type="checkbox" name="MATCHER" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM BAFFLE</label>
+                  <input type="checkbox" name="PM_BAFFLE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>AM BAFFLE</label>
+                  <input type="checkbox" name="AM_BAFFLE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>FLANGE ADAPTOR</label>
+                  <input type="checkbox" name="FLANGE_ADAPTOR" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Slot Valve</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>SLOT VALVE ASSY(HOUSING)</label>
+                  <input type="checkbox" name="SLOT_VALVE_ASSY(HOUSING)" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>SLOT VALVE</label>
+                  <input type="checkbox" name="SLOT_VALVE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>DOOR VALVE</label>
+                  <input type="checkbox" name="DOOR_VALVE" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Pendulum Valve</h2>
+                <div class="item" title="REP 후 Auto Tune 및 설비 정상화">
+                  <label>PENDULUM VALVE</label>
+                  <input type="checkbox" name="PENDULUM_VALVE" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Pin Motor & CTR</h2>
+                <div class="item" title="REP 후 Pin 높이 Teaching 및 설비 정상화">
+                  <label>PIN ASSY MODIFY</label>
+                  <input type="checkbox" name="PIN_ASSY_MODIFY" value="O">
+                </div>
+                <div class="item" title="REP 후 Pin 높이 Teaching 및 설비 정상화">
+                  <label>MOTOR & CONTROLLER</label>
+                  <input type="checkbox" name="MOTOR_&_CONTROLLER" value="O">
+                </div>
+                <div class="item" title="REP 후 Pin 높이 Teaching 및 설비 정상화">
+                  <label>PIN 구동부 ASSY</label>
+                  <input type="checkbox" name="PIN_구동부_ASSY" value="O">
+                </div>
+                <div class="item" title="REP 후 Pin 높이 Teaching 및 설비 정상화">
+                  <label>PIN BELLOWS</label>
+                  <input type="checkbox" name="PIN_BELLOWS" value="O">
+                </div>
+                <div class="item" title="REP 후 Pin 높이 Teaching 및 설비 정상화">
+                  <label>SENSOR</label>
+                  <input type="checkbox" name="SENSOR" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Step Motor & CTR</h2>
+                <div class="item" title="REP 후 LL Teaching 및 TM, EFEM Robot Teaching">
+                  <label>STEP MOTOR & CONTROLLER</label>
+                  <input type="checkbox" name="STEP_MOTOR_&_CONTROLLER" value="O">
+                </div>
+                <div class="item" title="REP 후 LL Teaching 및 TM, EFEM Robot Teaching">
+                  <label>CASSETTE & HOLDER PAD</label>
+                  <input type="checkbox" name="CASSETTE_&_HOLDER_PAD" value="O">
+                </div>
+                <div class="item" title="REP 후 LL Teaching 및 TM, EFEM Robot Teaching">
+                  <label>BALL SCREW ASSY</label>
+                  <input type="checkbox" name="BALL_SCREW_ASSY" value="O">
+                </div>
+                <div class="item" title="REP 후 LL Teaching 및 TM, EFEM Robot Teaching">
+                  <label>BUSH</label>
+                  <input type="checkbox" name="BUSH" value="O">
+                </div>
+                <div class="item" title="REP 후 LL Teaching 및 TM, EFEM Robot Teaching">
+                  <label>MAIN SHAFT</label>
+                  <input type="checkbox" name="MAIN_SHAFT" value="O">
+                </div>
+                <div class="item" title="REP 후 LL Teaching 및 TM, EFEM Robot Teaching">
+                  <label>BELLOWS</label>
+                  <input type="checkbox" name="BELLOWS" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Robot</h2>
+                <div class="item" title="REP 후 Origin, Data Back-Up 및 설비 정상화">
+                  <label>EFEM ROBOT REP</label>
+                  <input type="checkbox" name="EFEM_ROBOT_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 Origin, Data Back-Up 및 설비 정상화">
+                  <label>TM ROBOT REP</label>
+                  <input type="checkbox" name="TM_ROBOT_REP" value="O">
+                </div>
+                <div class="item" title="Teaching 후 설비 정상화">
+                  <label>EFEM ROBOT TEACHING</label>
+                  <input type="checkbox" name="EFEM_ROBOT_TEACHING" value="O">
+                </div>
+                <div class="item" title="Teaching 후 설비 정상화">
+                  <label>TM ROBOT TEACHING</label>
+                  <input type="checkbox" name="TM_ROBOT_TEACHING" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Vac. Line</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>UNDER COVER</label>
+                  <input type="checkbox" name="UNDER_COVER" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>VAC. LINE</label>
+                  <input type="checkbox" name="VAC._LINE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>BARATRON GAUGE</label>
+                  <input type="checkbox" name="BARATRON_GAUGE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PIRANI GAUGE</label>
+                  <input type="checkbox" name="PIRANI_GAUGE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>CONVACTRON GAUGE</label>
+                  <input type="checkbox" name="CONVACTRON_GAUGE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>MANUAL VALVE</label>
+                  <input type="checkbox" name="MANUAL_VALVE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PNEUMATIC VALVE</label>
+                  <input type="checkbox" name="PNEUMATIC_VALVE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>ISOLATION VALVE</label>
+                  <input type="checkbox" name="ISOLATION_VALVE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>VACUUM BLOCK</label>
+                  <input type="checkbox" name="VACUUM_BLOCK" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>CHECK VALVE</label>
+                  <input type="checkbox" name="CHECK_VALVE" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>EPC</label>
+                  <input type="checkbox" name="EPC" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Chuck</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>COOLING CHUCK</label>
+                  <input type="checkbox" name="COOLING_CHUCK" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>HEATER CHUCK</label>
+                  <input type="checkbox" name="HEATER_CHUCK" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Rack</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>GENERATOR</label>
+                  <input type="checkbox" name="GENERATOR" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Board</h2>
+                <div class="item" title="AIO Calibration 진행 후 설비 정상화">
+                  <label>AIO CALIBRATION[PSK BOARD]</label>
+                  <input type="checkbox" name="AIO_CALIBRATION[PSK_BOARD]" value="O">
+                </div>
+                <div class="item" title="AIO Calibration 진행 후 설비 정상화">
+                  <label>AIO CALIBRATION[TOS BOARD]</label>
+                  <input type="checkbox" name="AIO_CALIBRATION[TOS_BOARD]" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>Sensor</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>CODED SENSOR</label>
+                  <input type="checkbox" name="CODED_SENSOR" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>GAS BOX DOOR SENSOR</label>
+                  <input type="checkbox" name="GAS_BOX_DOOR_SENSOR" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>LASER SENSOR AMP</label>
+                  <input type="checkbox" name="LASER_SENSOR_AMP" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>ETC</h2>
+                <div class="item" title="작업 후 설비 정상화">
+                  <label>HE LEAK CHECK</label>
+                  <input type="checkbox" name="HE_LEAK_CHECK" value="O">
+                </div>
+                <div class="item" title="작업 후 설비 정상화">
+                  <label>DIFFUSER</label>
+                  <input type="checkbox" name="DIFFUSER" value="O">
+                </div>
+                <div class="item" title="작업 후 설비 정상화">
+                  <label>LOT 조사</label>
+                  <input type="checkbox" name="LOT_조사" value="O">
+                </div>
+              </div>              
+          </div>
+          <button type="submit">SAVE</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+          document.querySelector(".unsigned").classList.remove("hidden");
+          document.querySelector(".signed").classList.add("hidden");
+      } else {
+          document.querySelector(".unsigned").classList.add("hidden");
+          document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+          document.querySelectorAll('.admin-only').forEach(element => {
+              element.style.display = 'none';
+          });
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+
+      if (signOutButton) {
+          signOutButton.addEventListener("click", function() {
+              localStorage.removeItem("x-access-token");
+              localStorage.removeItem("user-role");
+              alert("로그아웃 되었습니다.");
+              window.location.replace("./signin.html");
+          });
+      }
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      menuBtn.addEventListener('click', function() {
+          menuBar.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function(event) {
+          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+              menuBar.classList.remove('open');
+          }
+      });
+  });
+</script>
+</html>
