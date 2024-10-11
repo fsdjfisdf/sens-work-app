@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/integer-maintenance', {
+            const response = await axios.post('http://3.37.73.151:3001/integer-maintenance', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token // JWT 토큰 추가

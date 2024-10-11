@@ -27,20 +27,20 @@ exports.findByName = async (name) => {
 };
 
 exports.insertChecklist = async (checklistData) => {
-  const connection = await pool.getConnection(async conn => conn);
-  try {
-    const query = `
-      INSERT INTO INTEGER_MAINT_SELF (
-        name, SWAP_KIT, GAS_LINE_&_GAS_FILTER, CERAMIC_PARTS, MATCHER, PM_BAFFLE, AM_BAFFLE, FLANGE_ADAPTOR,
-        SLOT_VALVE_ASSY(HOUSING), SLOT_VALVE, DOOR_VALVE, PENDULUM_VALVE, PIN_ASSY_MODIFY, MOTOR_&_CONTROLLER,
-        PIN_구동부_ASSY, PIN_BELLOWS, SENSOR, STEP_MOTOR_&_CONTROLLER, CASSETTE_&_HOLDER_PAD, BALL_SCREW_ASSY,
-        BUSH, MAIN_SHAFT, BELLOWS, EFEM_ROBOT_REP, TM_ROBOT_REP, EFEM_ROBOT_TEACHING, TM_ROBOT_TEACHING, UNDER_COVER,
-        VAC._LINE, BARATRON_GAUGE, PIRANI_GAUGE, CONVACTRON_GAUGE, MANUAL_VALVE, PNEUMATIC_VALVE, ISOLATION_VALVE,
-        VACUUM_BLOCK, CHECK_VALVE, EPC, COOLING_CHUCK, HEATER_CHUCK, GENERATOR, AIO_CALIBRATION[PSK_BOARD],
-        AIO_CALIBRATION[TOS_BOARD], CODED_SENSOR, GAS_BOX_DOOR_SENSOR, LASER_SENSOR_AMP, HE_LEAK_CHECK,
-        DIFFUSER, LOT_조사
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+      const query = `
+        INSERT INTO INTEGER_MAINT_SELF (
+          name, SWAP_KIT, GAS_LINE_&_GAS_FILTER, CERAMIC_PARTS, MATCHER, PM_BAFFLE, AM_BAFFLE, FLANGE_ADAPTOR,
+          SLOT_VALVE_ASSY(HOUSING), SLOT_VALVE, DOOR_VALVE, PENDULUM_VALVE, PIN_ASSY_MODIFY, MOTOR_&_CONTROLLER,
+          PIN_구동부_ASSY, PIN_BELLOWS, SENSOR, STEP_MOTOR_&_CONTROLLER, CASSETTE_&_HOLDER_PAD, BALL_SCREW_ASSY,
+          BUSH, MAIN_SHAFT, BELLOWS, EFEM_ROBOT_REP, TM_ROBOT_REP, EFEM_ROBOT_TEACHING, TM_ROBOT_TEACHING, UNDER_COVER,
+          VAC._LINE, BARATRON_GAUGE, PIRANI_GAUGE, CONVACTRON_GAUGE, MANUAL_VALVE, PNEUMATIC_VALVE, ISOLATION_VALVE,
+          VACUUM_BLOCK, CHECK_VALVE, EPC, COOLING_CHUCK, HEATER_CHUCK, GENERATOR, AIO_CALIBRATION[PSK_BOARD],
+          AIO_CALIBRATION[TOS_BOARD], CODED_SENSOR, GAS_BOX_DOOR_SENSOR, LASER_SENSOR_AMP, HE_LEAK_CHECK,
+          DIFFUSER, LOT_조사
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
 
     const values = [
       checklistData.name, checklistData['SWAP_KIT'], checklistData['GAS_LINE_&_GAS_FILTER'], checklistData['CERAMIC_PARTS'],
