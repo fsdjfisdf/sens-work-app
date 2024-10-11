@@ -73,7 +73,7 @@ exports.updateChecklist = async (checklistData) => {
         UPDATE INTEGER_MAINT_SELF SET
           SWAP_KIT = ?, \`GAS_LINE_&_GAS_FILTER\` = ?, CERAMIC_PARTS = ?, MATCHER = ?, PM_BAFFLE = ?, AM_BAFFLE = ?, FLANGE_ADAPTOR = ?,
           \`SLOT_VALVE_ASSY(HOUSING)\` = ?, SLOT_VALVE = ?, DOOR_VALVE = ?, PENDULUM_VALVE = ?, PIN_ASSY_MODIFY = ?, \`MOTOR_&_CONTROLLER\` = ?,
-          PIN_구동부_ASSY = ?, PIN_BELLOWS = ?, SENSOR = ?, STEP_MOTOR_&_CONTROLLER = ?, CASSETTE_&_HOLDER_PAD = ?, BALL_SCREW_ASSY = ?,
+          PIN_구동부_ASSY = ?, PIN_BELLOWS = ?, SENSOR = ?, \`STEP_MOTOR_&_CONTROLLER\` = ?, \`CASSETTE_&_HOLDER_PAD\` = ?, BALL_SCREW_ASSY = ?,
           BUSH = ?, MAIN_SHAFT = ?, BELLOWS = ?, EFEM_ROBOT_REP = ?, TM_ROBOT_REP = ?, EFEM_ROBOT_TEACHING = ?, TM_ROBOT_TEACHING = ?,
           UNDER_COVER = ?, \`VAC._LINE\` = ?, BARATRON_GAUGE = ?, PIRANI_GAUGE = ?, CONVACTRON_GAUGE = ?, MANUAL_VALVE = ?, PNEUMATIC_VALVE = ?,
           ISOLATION_VALVE = ?, VACUUM_BLOCK = ?, CHECK_VALVE = ?, EPC = ?, COOLING_CHUCK = ?, HEATER_CHUCK = ?, GENERATOR = ?,
@@ -105,6 +105,7 @@ exports.updateChecklist = async (checklistData) => {
       connection.release();
     }
   };
+  
 
 exports.getChecklistByName = async (name) => {
   const connection = await pool.getConnection(async conn => conn);
