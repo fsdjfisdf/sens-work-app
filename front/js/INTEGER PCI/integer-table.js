@@ -142,7 +142,7 @@ async function loadWorkLogs() {
 
 async function loadDbTaskCounts() {
     try {
-        const response = await axios.get('http://3.37.73.151:3001/api/task-count');
+        const response = await axios.get('http://3.37.73.151:3001/api/integer-task-count');
         dbTaskCounts = response.data.reduce((acc, row) => {
             const taskItem = row['작업_항목'];
             Object.keys(row).forEach(worker => {
