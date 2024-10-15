@@ -28,6 +28,7 @@ exports.findByName = async (name) => {
 
 exports.saveChecklist = async (checklistData) => {
     console.log('checklistData:', checklistData);  // checklistData가 제대로 전달되는지 확인
+    console.log('checklistData for Save:', checklistData); // 여기에 콘솔 로그 추가
   const connection = await pool.getConnection(async conn => conn);
   try {
     // 1. 먼저 이름으로 기존 데이터가 있는지 확인
