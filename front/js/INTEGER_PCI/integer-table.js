@@ -133,12 +133,14 @@ async function loadWorkLogs() {
     try {
         const response = await axios.get('http://3.37.73.151:3001/logs');
         logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
-        await loadDbTaskCounts();  
-        calculateTaskCounts(logs);
+        await loadDbTaskCounts();
+        calculateTaskCounts(logs);  // 로그가 로드된 후에 호출
+        saveAggregatedDataToServer(taskCounts);  // 작업 완료 후 데이터 전송
     } catch (error) {
         console.error('작업 로그를 불러오는 중 오류 발생:', error);
     }
 }
+
 
 async function loadDbTaskCounts() {
     try {
@@ -153,10 +155,16 @@ async function loadDbTaskCounts() {
             });
             return acc;
         }, {});
+        
+        // DB에서 가져온 작업 카운트를 확인하기 위한 콘솔 로그
+        console.log('DB 작업 카운트 데이터:', dbTaskCounts);
+        
     } catch (error) {
         console.error('DB 작업 카운트를 불러오는 중 오류 발생:', error);
     }
 }
+
+
 
 // 모든 데이터 계산 후 서버로 전송하는 함수 추가
 async function saveAggregatedDataToServer(aggregatedData) {
@@ -180,13 +188,18 @@ saveAggregatedDataToServer(taskCounts);
 function calculateTaskCounts(logs) {
     taskCounts = {};
 
+    // 작업 로그 데이터를 먼저 처리
     logs.forEach(log => {
         if (!validEquipmentTypes.includes(log.equipment_type)) return;
-
-        let workers = log.task_man.split(/[\s,]+/).map(worker => worker.replace(/\(main\)|\(support\)/g, '').trim());
+    
+        // (main)을 제거하고 (support)는 제외
+        let workers = log.task_man.split(/[\s,]+/).map(worker => worker.replace(/\(main\)/g, '').trim());
+    
         workers.forEach(worker => {
-            if (!worker || excludedWorkers.includes(worker)) return;
-
+            // (support) 작업자는 카운트하지 않음
+            if (!worker || excludedWorkers.includes(worker) || log.task_man.includes('(support)')) return;
+    
+            // worker가 처음 등장할 때 taskCounts에 해당 worker의 항목을 초기화
             if (!taskCounts[worker]) {
                 taskCounts[worker] = {};
                 taskCategories.forEach(category => {
@@ -195,16 +208,19 @@ function calculateTaskCounts(logs) {
                     });
                 });
             }
-
+    
             const taskType = log.transfer_item;
             if (taskType && taskType !== "SELECT" && taskCounts[worker][taskType]) {
                 taskCounts[worker][taskType].count++;
             }
         });
     });
+    
 
+    // DB에서 가져온 데이터 합산 처리
     Object.keys(dbTaskCounts).forEach(worker => {
         if (!taskCounts[worker]) {
+            // 만약 로그에서 찾지 못한 작업자라면 새로운 작업자 항목을 초기화
             taskCounts[worker] = {};
             taskCategories.forEach(category => {
                 category.subcategories.forEach(item => {
@@ -212,11 +228,17 @@ function calculateTaskCounts(logs) {
                 });
             });
         }
+
+        // DB에서 작업 항목 처리
         Object.keys(dbTaskCounts[worker]).forEach(taskType => {
             if (!taskCounts[worker][taskType]) {
-                taskCounts[worker][taskType] = { count: 0, 기준작업수: taskCategories.find(category => category.subcategories.some(item => item.name === taskType))?.subcategories.find(item => item.name === taskType)?.기준작업수 || 1 };
+                const taskCategory = taskCategories.find(category => category.subcategories.some(item => item.name === taskType));
+                const 기준작업수 = taskCategory?.subcategories.find(item => item.name === taskType)?.기준작업수 || 1;
+                taskCounts[worker][taskType] = { count: 0, 기준작업수: 기준작업수 };
             }
-            taskCounts[worker][taskType].count += dbTaskCounts[worker][taskType];  
+
+            // DB에서 가져온 작업 수를 로그와 합산
+            taskCounts[worker][taskType].count += dbTaskCounts[worker][taskType];
         });
     });
 
@@ -224,16 +246,23 @@ function calculateTaskCounts(logs) {
     displayTaskCounts(taskCounts);
 }
 
+
+
+
+
+
 function addRelatedTaskCounts() {
     Object.keys(taskCounts).forEach(worker => {
         if (taskCounts[worker]["TM ROBOT TEACHING"] && taskCounts[worker]["TM ROBOT REP"]) {
-            taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count;
+            taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count || 0;
         }
         if (taskCounts[worker]["EFEM ROBOT CONTROLLER REP"] && taskCounts[worker]["EFEM ROBOT REP"]) {
-            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
+            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count || 0;
         }
     });
+
 }
+
 
 
 function calculateAveragePercentages(taskCounts) {
@@ -338,7 +367,9 @@ function displayTaskCounts(taskCounts, filterWorker = null) {
     tableBody.innerHTML = '';
 
     const averagePercentages = calculateAveragePercentages(taskCounts);
-    const workerAveragePercents = calculateWorkerAveragePercent(averagePercentages);  // 작업자별 평균 퍼센트 계산
+    const workerAveragePercents = calculateWorkerAveragePercent(averagePercentages);
+
+    console.log('최종 taskCounts:', taskCounts);  // 최종 출력 전 로그 확인
 
     // 검색된 작업자가 있을 경우 해당 작업자만 정렬
     const sortedWorkers = filterWorker 
@@ -501,3 +532,4 @@ equipmentBtnElements.forEach(button => {
     });
 });
 });
+

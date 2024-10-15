@@ -221,11 +221,14 @@ saveAggregatedDataToServer(taskCounts);
 
         logs.forEach(log => {
             if (!validEquipmentTypes.includes(log.equipment_type)) return;
-
-            let workers = log.task_man.split(/[\s,]+/).map(worker => worker.replace(/\(main\)|\(support\)/g, '').trim());
+        
+            // (main)을 제거하고 (support)는 제외
+            let workers = log.task_man.split(/[\s,]+/).map(worker => worker.replace(/\(main\)/g, '').trim());
+        
             workers.forEach(worker => {
-                if (!worker || excludedWorkers.includes(worker)) return;
-
+                // (support) 작업자는 카운트하지 않음
+                if (!worker || excludedWorkers.includes(worker) || worker.includes('(support)')) return;
+        
                 if (!taskCounts[worker]) {
                     taskCounts[worker] = {};
                     taskCategories.forEach(category => {
@@ -234,13 +237,15 @@ saveAggregatedDataToServer(taskCounts);
                         });
                     });
                 }
-
+        
                 const taskType = log.transfer_item;
                 if (taskType && taskType !== "SELECT" && taskCounts[worker][taskType]) {
                     taskCounts[worker][taskType].count++;
                 }
             });
         });
+        
+        
 
         Object.keys(dbTaskCounts).forEach(worker => {
             if (!taskCounts[worker]) {
