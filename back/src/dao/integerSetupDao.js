@@ -79,12 +79,12 @@ exports.insertChecklist = async (checklistData) => {
         GAS_BOX_WINDOW_INSTALLATION, GAS_BOX_DAMPER_INSTALLATION, LINE_MANUAL_LEAK_CHECK, MANUAL_LEAK_CHECK_HISTORY, 
         HE_DETECTOR_USE, HE_BOTTLE_ORDER, HE_DETECTOR_HOUSING_LEAK_CHECK, SLOT_VALVE_HE_LEAK_CHECK, VAC_CDA_SPEC_ADJUST, 
         TEMP_PROFILE, PUMP_VENT_TIME_ADJUST, EPD_PEAK_OFFSET_ADJUST, PM_BAFFLE_TEMP_AUTOTUNE, DOOR_VALVE_CONTROL, 
-        APC_AUTOLEARN, PIN_HEIGHT_ADJUST, GAS_SUPPLY_PRESSURE_CHECK, GAS_EXHAUST_MONAMETER_CONTROL, 
+        APC_AUTOLEARN, GAS_SUPPLY_PRESSURE_CHECK, GAS_EXHAUST_MONAMETER_CONTROL, 
         MFC_HUNTING_CHECK, LP_FLOW_CONTROL, AICP_POWER_CAL, PRODUCT_REPORT_COMPLETION, TTTM_SHEET_COMPLETION, 
         LP_CERTIFICATION, FULL_PUMPING, MID_OPERATION_CERTIFICATION_PREP, LABEL_PLACEMENT, I_MARKING_PROCEDURE, 
         I_MARKING_LOCATION, GAS_BOX_BOARD_LEVELING, ENVIRONMENTAL_QUAL_TEST, OHT_AUTO_TRANSFER_CERTIFICATION, 
         PARTICLE_TEST, EA_TEST
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
       const values = [
@@ -118,7 +118,7 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.LINE_MANUAL_LEAK_CHECK, checklistData.MANUAL_LEAK_CHECK_HISTORY, checklistData.HE_DETECTOR_USE, checklistData.HE_BOTTLE_ORDER, 
         checklistData.HE_DETECTOR_HOUSING_LEAK_CHECK, checklistData.SLOT_VALVE_HE_LEAK_CHECK, checklistData.VAC_CDA_SPEC_ADJUST, checklistData.TEMP_PROFILE, 
         checklistData.PUMP_VENT_TIME_ADJUST, checklistData.EPD_PEAK_OFFSET_ADJUST, checklistData.PM_BAFFLE_TEMP_AUTOTUNE, checklistData.DOOR_VALVE_CONTROL, 
-        checklistData.APC_AUTOLEARN, checklistData.PIN_HEIGHT_ADJUST, checklistData.GAS_SUPPLY_PRESSURE_CHECK, checklistData.GAS_EXHAUST_MONAMETER_CONTROL, 
+        checklistData.APC_AUTOLEARN, checklistData.GAS_SUPPLY_PRESSURE_CHECK, checklistData.GAS_EXHAUST_MONAMETER_CONTROL, 
         checklistData.MFC_HUNTING_CHECK, checklistData.LP_FLOW_CONTROL, checklistData.AICP_POWER_CAL, checklistData.PRODUCT_REPORT_COMPLETION, checklistData.TTTM_SHEET_COMPLETION, 
         checklistData.LP_CERTIFICATION, checklistData.FULL_PUMPING, checklistData.MID_OPERATION_CERTIFICATION_PREP, checklistData.LABEL_PLACEMENT, 
         checklistData.I_MARKING_PROCEDURE, checklistData.I_MARKING_LOCATION, checklistData.GAS_BOX_BOARD_LEVELING, checklistData.ENVIRONMENTAL_QUAL_TEST, 
@@ -167,7 +167,7 @@ exports.insertChecklist = async (checklistData) => {
           GAS_BOX_DAMPER_INSTALLATION = ?, LINE_MANUAL_LEAK_CHECK = ?, MANUAL_LEAK_CHECK_HISTORY = ?, HE_DETECTOR_USE = ?,
           HE_BOTTLE_ORDER = ?, HE_DETECTOR_HOUSING_LEAK_CHECK = ?, SLOT_VALVE_HE_LEAK_CHECK = ?, VAC_CDA_SPEC_ADJUST = ?,
           TEMP_PROFILE = ?, PUMP_VENT_TIME_ADJUST = ?, EPD_PEAK_OFFSET_ADJUST = ?, PM_BAFFLE_TEMP_AUTOTUNE = ?,
-          DOOR_VALVE_CONTROL = ?, APC_AUTOLEARN = ?, PIN_HEIGHT_ADJUST = ?, GAS_SUPPLY_PRESSURE_CHECK = ?,
+          DOOR_VALVE_CONTROL = ?, APC_AUTOLEARN = ?, GAS_SUPPLY_PRESSURE_CHECK = ?,
           GAS_EXHAUST_MONAMETER_CONTROL = ?, MFC_HUNTING_CHECK = ?, LP_FLOW_CONTROL = ?, AICP_POWER_CAL = ?,
           PRODUCT_REPORT_COMPLETION = ?, TTTM_SHEET_COMPLETION = ?, LP_CERTIFICATION = ?, FULL_PUMPING = ?,
           MID_OPERATION_CERTIFICATION_PREP = ?, LABEL_PLACEMENT = ?, I_MARKING_PROCEDURE = ?, I_MARKING_LOCATION = ?,
@@ -210,7 +210,7 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.LINE_MANUAL_LEAK_CHECK, checklistData.MANUAL_LEAK_CHECK_HISTORY, checklistData.HE_DETECTOR_USE, checklistData.HE_BOTTLE_ORDER, 
         checklistData.HE_DETECTOR_HOUSING_LEAK_CHECK, checklistData.SLOT_VALVE_HE_LEAK_CHECK, checklistData.VAC_CDA_SPEC_ADJUST, checklistData.TEMP_PROFILE, 
         checklistData.PUMP_VENT_TIME_ADJUST, checklistData.EPD_PEAK_OFFSET_ADJUST, checklistData.PM_BAFFLE_TEMP_AUTOTUNE, checklistData.DOOR_VALVE_CONTROL, 
-        checklistData.APC_AUTOLEARN, checklistData.PIN_HEIGHT_ADJUST, checklistData.GAS_SUPPLY_PRESSURE_CHECK, checklistData.GAS_EXHAUST_MONAMETER_CONTROL, 
+        checklistData.APC_AUTOLEARN, checklistData.GAS_SUPPLY_PRESSURE_CHECK, checklistData.GAS_EXHAUST_MONAMETER_CONTROL, 
         checklistData.MFC_HUNTING_CHECK, checklistData.LP_FLOW_CONTROL, checklistData.AICP_POWER_CAL, checklistData.PRODUCT_REPORT_COMPLETION, checklistData.TTTM_SHEET_COMPLETION, 
         checklistData.LP_CERTIFICATION, checklistData.FULL_PUMPING, checklistData.MID_OPERATION_CERTIFICATION_PREP, checklistData.LABEL_PLACEMENT, 
         checklistData.I_MARKING_PROCEDURE, checklistData.I_MARKING_LOCATION, checklistData.GAS_BOX_BOARD_LEVELING, checklistData.ENVIRONMENTAL_QUAL_TEST, 
