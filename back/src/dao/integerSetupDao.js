@@ -86,8 +86,7 @@ exports.insertChecklist = async (checklistData) => {
         PARTICLE_TEST, EA_TEST
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      console.log('checklistData for Insert:', checklistData);
-  
+      
       const values = [
         checklistData.name, checklistData.CUSTOMER_OHT_LINE_CHECK, checklistData.EQUIPMENT_CLEARANCE_CHECK, 
         checklistData.DRAWING_TEMPLATE_SETUP, checklistData.DRAWING_TEMPLATE_MARKING, checklistData.UTILITY_SPEC_UNDERSTANDING, 
@@ -108,32 +107,26 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.RELIEF_VALVE_LOCATION, checklistData.MANUAL_VALVE_LOCATION, checklistData.PUMP_TURN_ON, 
         checklistData.PURGE_N2_TURN_ON, checklistData.DILLUTION_SIGNAL_CHECK, checklistData.CHILLER_HEAT_EXCHANGER_TURN_ON, 
         checklistData.CHILLER_HEAT_EXCHANGER_CHECK, checklistData.MANOMETER_LIMIT_ADJUST, checklistData.GAS_TURN_ON_PRECHECK, 
-        checklistData.NF3_LINE_LEAK_CHECK, checklistData.H2_LINE_LEAK_CHECK,
-        checklistData.NF3_TURN_ON, checklistData.H2_TURN_ON, checklistData.GAS_TURN_ON_CONFIRM, checklistData.GAS_TURN_ON_CAUTION, 
-        checklistData.PM_DILLUTION_TEST, checklistData.EFEM_ROBOT_PENDANT_CONTROL, checklistData.EFEM_ROBOT_XYZ_VALUES, 
-        checklistData.EFEM_ROBOT_PARAMETER_EDIT, checklistData.EFEM_TEACHING_DATA_SAVE, checklistData.TM_ROBOT_PENDANT_CONTROL, 
-        checklistData.TM_ROBOT_LEVELING, checklistData.TM_ROBOT_XYZ_VALUES, checklistData.TM_ROBOT_PM_TEACHING, 
-        checklistData.TM_ROBOT_AM_TEACHING, checklistData.TM_TEACHING_DATA_SAVE, checklistData.WAFER_JIG_USE, 
-        checklistData.LASER_JIG_USE, checklistData.MARGIN_CHECK, checklistData.SEMI_AUTO_TRANSFER, checklistData.AGING_TEST, 
-        checklistData.CERAMIC_PLATE_PIN_INSTALLATION, checklistData.PIN_HEIGHT_ADJUST, checklistData.PIO_SENSOR_INSTALLATION, 
-        checklistData.VIEW_PORT_COVER_INSTALLATION, checklistData.LOAD_LOCK_LEVELING, checklistData.TM_ROBOT_PICK_INSTALLATION, 
-        checklistData.TM_ROBOT_PICK_LEVELING, checklistData.GAS_BOX_WINDOW_INSTALLATION, checklistData.GAS_BOX_DAMPER_INSTALLATION, 
-        checklistData.LINE_MANUAL_LEAK_CHECK, checklistData.MANUAL_LEAK_CHECK_HISTORY, checklistData.HE_DETECTOR_USE, 
-        checklistData.HE_BOTTLE_ORDER, checklistData.HE_DETECTOR_HOUSING_LEAK_CHECK, checklistData.SLOT_VALVE_HE_LEAK_CHECK, 
-        checklistData.VAC_CDA_SPEC_ADJUST, checklistData.TEMP_PROFILE, checklistData.PUMP_VENT_TIME_ADJUST, 
-        checklistData.EPD_PEAK_OFFSET_ADJUST, checklistData.PM_BAFFLE_TEMP_AUTOTUNE, checklistData.DOOR_VALVE_CONTROL, 
-        checklistData.APC_AUTOLEARN, checklistData.PIN_HEIGHT_ADJUST, checklistData.GAS_SUPPLY_PRESSURE_CHECK, 
-        checklistData.GAS_EXHAUST_MONAMETER_CONTROL, checklistData.MFC_HUNTING_CHECK, checklistData.LP_FLOW_CONTROL, 
-        checklistData.AICP_POWER_CAL, checklistData.PRODUCT_REPORT_COMPLETION, checklistData.TTTM_SHEET_COMPLETION, 
-        checklistData.LP_CERTIFICATION, checklistData.FULL_PUMPING, checklistData.MID_OPERATION_CERTIFICATION_PREP, 
-        checklistData.LABEL_PLACEMENT, checklistData.I_MARKING_PROCEDURE, checklistData.I_MARKING_LOCATION, 
-        checklistData.GAS_BOX_BOARD_LEVELING, checklistData.ENVIRONMENTAL_QUAL_TEST, checklistData.OHT_AUTO_TRANSFER_CERTIFICATION, 
-        checklistData.PARTICLE_TEST, checklistData.EA_TEST
+        checklistData.NF3_LINE_LEAK_CHECK, checklistData.H2_LINE_LEAK_CHECK, checklistData.NF3_TURN_ON, checklistData.H2_TURN_ON, 
+        checklistData.GAS_TURN_ON_CONFIRM, checklistData.GAS_TURN_ON_CAUTION, checklistData.PM_DILLUTION_TEST, checklistData.EFEM_ROBOT_PENDANT_CONTROL, 
+        checklistData.EFEM_ROBOT_XYZ_VALUES, checklistData.EFEM_ROBOT_PARAMETER_EDIT, checklistData.EFEM_TEACHING_DATA_SAVE, 
+        checklistData.TM_ROBOT_PENDANT_CONTROL, checklistData.TM_ROBOT_LEVELING, checklistData.TM_ROBOT_XYZ_VALUES, checklistData.TM_ROBOT_PM_TEACHING, 
+        checklistData.TM_ROBOT_AM_TEACHING, checklistData.TM_TEACHING_DATA_SAVE, checklistData.WAFER_JIG_USE, checklistData.LASER_JIG_USE, 
+        checklistData.MARGIN_CHECK, checklistData.SEMI_AUTO_TRANSFER, checklistData.AGING_TEST, checklistData.CERAMIC_PLATE_PIN_INSTALLATION, 
+        checklistData.PIN_HEIGHT_ADJUST, checklistData.PIO_SENSOR_INSTALLATION, checklistData.VIEW_PORT_COVER_INSTALLATION, checklistData.LOAD_LOCK_LEVELING, 
+        checklistData.TM_ROBOT_PICK_INSTALLATION, checklistData.TM_ROBOT_PICK_LEVELING, checklistData.GAS_BOX_WINDOW_INSTALLATION, checklistData.GAS_BOX_DAMPER_INSTALLATION, 
+        checklistData.LINE_MANUAL_LEAK_CHECK, checklistData.MANUAL_LEAK_CHECK_HISTORY, checklistData.HE_DETECTOR_USE, checklistData.HE_BOTTLE_ORDER, 
+        checklistData.HE_DETECTOR_HOUSING_LEAK_CHECK, checklistData.SLOT_VALVE_HE_LEAK_CHECK, checklistData.VAC_CDA_SPEC_ADJUST, checklistData.TEMP_PROFILE, 
+        checklistData.PUMP_VENT_TIME_ADJUST, checklistData.EPD_PEAK_OFFSET_ADJUST, checklistData.PM_BAFFLE_TEMP_AUTOTUNE, checklistData.DOOR_VALVE_CONTROL, 
+        checklistData.APC_AUTOLEARN, checklistData.PIN_HEIGHT_ADJUST, checklistData.GAS_SUPPLY_PRESSURE_CHECK, checklistData.GAS_EXHAUST_MONAMETER_CONTROL, 
+        checklistData.MFC_HUNTING_CHECK, checklistData.LP_FLOW_CONTROL, checklistData.AICP_POWER_CAL, checklistData.PRODUCT_REPORT_COMPLETION, checklistData.TTTM_SHEET_COMPLETION, 
+        checklistData.LP_CERTIFICATION, checklistData.FULL_PUMPING, checklistData.MID_OPERATION_CERTIFICATION_PREP, checklistData.LABEL_PLACEMENT, 
+        checklistData.I_MARKING_PROCEDURE, checklistData.I_MARKING_LOCATION, checklistData.GAS_BOX_BOARD_LEVELING, checklistData.ENVIRONMENTAL_QUAL_TEST, 
+        checklistData.OHT_AUTO_TRANSFER_CERTIFICATION, checklistData.PARTICLE_TEST, checklistData.EA_TEST
       ];
-
-          // SQL 쿼리 및 값 확인 로그 추가
-    console.log('SQL Query for Insert:', query);
-    console.log('SQL Values for Insert:', values);
+  
+      console.log('SQL Query for Insert:', query);
+      console.log('SQL Values for Insert:', values);
   
       await connection.query(query, values);
     } finally {
