@@ -171,8 +171,9 @@ exports.insertChecklist = async (checklistData) => {
             GAS_EXHAUST_MONAMETER_CONTROL = ?, MFC_HUNTING_CHECK = ?, LP_FLOW_CONTROL = ?, AICP_POWER_CAL = ?, 
             PRODUCT_REPORT_COMPLETION = ?, TTTM_SHEET_COMPLETION = ?, LP_CERTIFICATION = ?, FULL_PUMPING = ?, 
             MID_OPERATION_CERTIFICATION_PREP = ?, LABEL_PLACEMENT = ?, I_MARKING_PROCEDURE = ?, I_MARKING_LOCATION = ?, 
-            GAS_BOX_BOARD_LEVELING = ?, ENVIRONMENTAL_QUAL_TEST = ?, OHT_AUTO_TRANSFER_CERTIFICATION = ?, PARTICLE_TEST = ?, EA_TEST = ?
-          WHERE name = ?`;
+            GAS_BOX_BOARD_LEVELING = ?, ENVIRONMENTAL_QUAL_TEST = ?, OHT_AUTO_TRANSFER_CERTIFICATION = ?, PARTICLE_TEST = ?, EA_TEST = ?,
+          WHERE name = ?
+          `;
   
       // checklistData 및 쿼리 값 확인
       console.log('checklistData for Update:', checklistData);
