@@ -225,10 +225,15 @@ function calculateTaskCounts(logs) {
 
 function addRelatedTaskCounts() {
     Object.keys(taskCounts).forEach(worker => {
-        taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count;
-        taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
+        if (taskCounts[worker]["TM ROBOT TEACHING"] && taskCounts[worker]["TM ROBOT REP"]) {
+            taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count;
+        }
+        if (taskCounts[worker]["EFEM ROBOT CONTROLLER REP"] && taskCounts[worker]["EFEM ROBOT REP"]) {
+            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
+        }
     });
 }
+
 
 function calculateAveragePercentages(taskCounts) {
     const percentages = {};

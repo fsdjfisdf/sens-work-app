@@ -4,6 +4,8 @@ const integerMaintCountController = require('../controllers/integerMaintCountCon
 
 // 작업 카운트 데이터 가져오는 API
 router.get('/integer-task-count', integerMaintCountController.getTaskCount);
+router.post('/integer-maintenance/aggregated', integerMaintCountController.saveAggregatedData);
+
 
 module.exports = (app) => {
   app.use('/api', router);
