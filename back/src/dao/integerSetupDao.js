@@ -228,6 +228,7 @@ exports.insertChecklist = async (checklistData) => {
   };
   
   
+  
 
 exports.getChecklistByName = async (name) => {
   const connection = await pool.getConnection(async conn => conn);
