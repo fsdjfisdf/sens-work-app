@@ -67,7 +67,7 @@ exports.insertChecklist = async (checklistData) => {
         POWER_TURN_ON_ALARM_TROUBLESHOOTING, CHECKLIST_COMPLETION, IP_ADDRESS_CHANGE, UTILITY_TURN_ON_SEQUENCE, 
         VACUUM_TURN_ON, CDA_TURN_ON, PCW_TURN_ON, SOLANOID_VALVE_LOCATION, RELIEF_VALVE_LOCATION, 
         MANUAL_VALVE_LOCATION, PUMP_TURN_ON, PURGE_N2_TURN_ON, DILLUTION_SIGNAL_CHECK, CHILLER_HEAT_EXCHANGER_TURN_ON, 
-        CHILLER_HEAT_EXCHANGER_CHECK, MANOMETER_LIMIT_ADJUST, GAS_TURN_ON_PRECHECK, NF3_TURN_ON, H2_TURN_ON, 
+        CHILLER_HEAT_EXCHANGER_CHECK, MANOMETER_LIMIT_ADJUST, GAS_TURN_ON_PRECHECK, NF3_LINE_LEAK_CHECK, H2_LINE_LEAK_CHECK, NF3_TURN_ON, H2_TURN_ON, 
         GAS_TURN_ON_CONFIRM, GAS_TURN_ON_CAUTION, PM_DILLUTION_TEST, EFEM_ROBOT_PENDANT_CONTROL, EFEM_ROBOT_XYZ_VALUES, 
         EFEM_ROBOT_PARAMETER_EDIT, EFEM_TEACHING_DATA_SAVE, TM_ROBOT_PENDANT_CONTROL, TM_ROBOT_LEVELING, TM_ROBOT_XYZ_VALUES, 
         TM_ROBOT_PM_TEACHING, TM_ROBOT_AM_TEACHING, TM_TEACHING_DATA_SAVE, WAFER_JIG_USE, LASER_JIG_USE, MARGIN_CHECK, 
@@ -81,7 +81,7 @@ exports.insertChecklist = async (checklistData) => {
         LP_CERTIFICATION, FULL_PUMPING, MID_OPERATION_CERTIFICATION_PREP, LABEL_PLACEMENT, I_MARKING_PROCEDURE, 
         I_MARKING_LOCATION, GAS_BOX_BOARD_LEVELING, ENVIRONMENTAL_QUAL_TEST, OHT_AUTO_TRANSFER_CERTIFICATION, 
         PARTICLE_TEST, EA_TEST
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
   
       const values = [
@@ -104,6 +104,7 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.RELIEF_VALVE_LOCATION, checklistData.MANUAL_VALVE_LOCATION, checklistData.PUMP_TURN_ON, 
         checklistData.PURGE_N2_TURN_ON, checklistData.DILLUTION_SIGNAL_CHECK, checklistData.CHILLER_HEAT_EXCHANGER_TURN_ON, 
         checklistData.CHILLER_HEAT_EXCHANGER_CHECK, checklistData.MANOMETER_LIMIT_ADJUST, checklistData.GAS_TURN_ON_PRECHECK, 
+        checklistData.NF3_LINE_LEACK_CHECK, checklistData.H2_LINE_LEAK_CHECK,
         checklistData.NF3_TURN_ON, checklistData.H2_TURN_ON, checklistData.GAS_TURN_ON_CONFIRM, checklistData.GAS_TURN_ON_CAUTION, 
         checklistData.PM_DILLUTION_TEST, checklistData.EFEM_ROBOT_PENDANT_CONTROL, checklistData.EFEM_ROBOT_XYZ_VALUES, 
         checklistData.EFEM_ROBOT_PARAMETER_EDIT, checklistData.EFEM_TEACHING_DATA_SAVE, checklistData.TM_ROBOT_PENDANT_CONTROL, 
@@ -157,7 +158,7 @@ exports.insertChecklist = async (checklistData) => {
           UTILITY_TURN_ON_SEQUENCE = ?, VACUUM_TURN_ON = ?, CDA_TURN_ON = ?, PCW_TURN_ON = ?, SOLANOID_VALVE_LOCATION = ?, 
           RELIEF_VALVE_LOCATION = ?, MANUAL_VALVE_LOCATION = ?, PUMP_TURN_ON = ?, PURGE_N2_TURN_ON = ?, 
           DILLUTION_SIGNAL_CHECK = ?, CHILLER_HEAT_EXCHANGER_TURN_ON = ?, CHILLER_HEAT_EXCHANGER_CHECK = ?, 
-          MANOMETER_LIMIT_ADJUST = ?, GAS_TURN_ON_PRECHECK = ?, NF3_TURN_ON = ?, H2_TURN_ON = ?, 
+          MANOMETER_LIMIT_ADJUST = ?, GAS_TURN_ON_PRECHECK = ?, NF3_LINE_LEAK_CHECK = ?, H2_LINE_LEAK_CHECK = ?, NF3_TURN_ON = ?, H2_TURN_ON = ?, 
           GAS_TURN_ON_CONFIRM = ?, GAS_TURN_ON_CAUTION = ?, PM_DILLUTION_TEST = ?, EFEM_ROBOT_PENDANT_CONTROL = ?, 
           EFEM_ROBOT_XYZ_VALUES = ?, EFEM_ROBOT_PARAMETER_EDIT = ?, EFEM_TEACHING_DATA_SAVE = ?, 
           TM_ROBOT_PENDANT_CONTROL = ?, TM_ROBOT_LEVELING = ?, TM_ROBOT_XYZ_VALUES = ?, TM_ROBOT_PM_TEACHING = ?, 
@@ -197,6 +198,7 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.RELIEF_VALVE_LOCATION, checklistData.MANUAL_VALVE_LOCATION, checklistData.PUMP_TURN_ON, 
         checklistData.PURGE_N2_TURN_ON, checklistData.DILLUTION_SIGNAL_CHECK, checklistData.CHILLER_HEAT_EXCHANGER_TURN_ON, 
         checklistData.CHILLER_HEAT_EXCHANGER_CHECK, checklistData.MANOMETER_LIMIT_ADJUST, checklistData.GAS_TURN_ON_PRECHECK, 
+        checklistData.NF3_LINE_LEACK_CHECK, checklistData.H2_LINE_LEAK_CHECK,
         checklistData.NF3_TURN_ON, checklistData.H2_TURN_ON, checklistData.GAS_TURN_ON_CONFIRM, checklistData.GAS_TURN_ON_CAUTION, 
         checklistData.PM_DILLUTION_TEST, checklistData.EFEM_ROBOT_PENDANT_CONTROL, checklistData.EFEM_ROBOT_XYZ_VALUES, 
         checklistData.EFEM_ROBOT_PARAMETER_EDIT, checklistData.EFEM_TEACHING_DATA_SAVE, checklistData.TM_ROBOT_PENDANT_CONTROL, 
