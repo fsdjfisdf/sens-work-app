@@ -133,7 +133,7 @@ async function loadWorkLogs() {
     try {
         const response = await axios.get('http://3.37.73.151:3001/logs');
         logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
-        await loadDbTaskCounts();  
+        await loadDbTaskCounts();  // 반드시 완료 후 calculateTaskCounts 실행
         calculateTaskCounts(logs);
     } catch (error) {
         console.error('작업 로그를 불러오는 중 오류 발생:', error);
@@ -143,25 +143,32 @@ async function loadWorkLogs() {
 async function loadDbTaskCounts() {
     try {
         const response = await axios.get('http://3.37.73.151:3001/api/integer-task-count');
+        console.log('Received DB task counts:', response.data);
         dbTaskCounts = response.data.reduce((acc, row) => {
             const taskItem = row['작업_항목'];
             Object.keys(row).forEach(worker => {
                 if (worker !== '작업_항목' && !excludedWorkers.includes(worker)) {
-                    if (!acc[worker]) acc[worker] = {};
-                    acc[worker][taskItem] = row[worker] || 0;  
+                    // 작업자 이름에서 (main) 또는 (support)를 제거하여 동일 작업자로 처리
+                    const normalizedWorker = worker.replace(/\(main\)|\(support\)/g, '').trim();
+                    if (!acc[normalizedWorker]) acc[normalizedWorker] = {};
+                    acc[normalizedWorker][taskItem] = row[worker] || 0;  
                 }
             });
             return acc;
         }, {});
+
+        console.log('Processed dbTaskCounts:', dbTaskCounts);
+
     } catch (error) {
         console.error('DB 작업 카운트를 불러오는 중 오류 발생:', error);
     }
 }
 
+
 // 모든 데이터 계산 후 서버로 전송하는 함수 추가
 async function saveAggregatedDataToServer(aggregatedData) {
 try {
-    const response = await axios.post('http://3.37.73.151:3001/integer-maintenance/aggregated', aggregatedData, {
+    const response = await axios.post('http://3.37.73.151:3001/api/integer-maintenance/aggregated', aggregatedData, {
         headers: {
             'x-access-token': localStorage.getItem('x-access-token')
         }
@@ -179,13 +186,16 @@ saveAggregatedDataToServer(taskCounts);
 function calculateTaskCounts(logs) {
     taskCounts = {};
 
+    // 1. 로그 데이터에서 taskCounts를 채우는 부분
     logs.forEach(log => {
         if (!validEquipmentTypes.includes(log.equipment_type)) return;
 
+        // 작업자 이름에서 (main) 또는 (support)를 제거하여 정규화
         let workers = log.task_man.split(/[\s,]+/).map(worker => worker.replace(/\(main\)|\(support\)/g, '').trim());
         workers.forEach(worker => {
             if (!worker || excludedWorkers.includes(worker)) return;
 
+            // 작업자별로 작업 건수를 초기화
             if (!taskCounts[worker]) {
                 taskCounts[worker] = {};
                 taskCategories.forEach(category => {
@@ -195,6 +205,7 @@ function calculateTaskCounts(logs) {
                 });
             }
 
+            // 로그에서 작업 항목을 찾아 카운트 증가
             const taskType = log.transfer_item;
             if (taskType && taskType !== "SELECT" && taskCounts[worker][taskType]) {
                 taskCounts[worker][taskType].count++;
@@ -202,31 +213,44 @@ function calculateTaskCounts(logs) {
         });
     });
 
+    // 2. DB에서 가져온 taskCounts를 합산하는 부분
     Object.keys(dbTaskCounts).forEach(worker => {
-        if (!taskCounts[worker]) {
-            taskCounts[worker] = {};
+        // DB에서 가져온 작업자 이름도 정규화하여 매칭
+        const normalizedWorker = worker.replace(/\(main\)|\(support\)/g, '').trim();
+
+        // 작업자별로 카운트가 없으면 초기화
+        if (!taskCounts[normalizedWorker]) {
+            taskCounts[normalizedWorker] = {};
             taskCategories.forEach(category => {
                 category.subcategories.forEach(item => {
-                    taskCounts[worker][item.name] = { count: 0, 기준작업수: item.기준작업수 };
+                    taskCounts[normalizedWorker][item.name] = { count: 0, 기준작업수: item.기준작업수 };
                 });
             });
         }
+
+        // DB에서 가져온 작업 항목을 taskCounts에 합산
         Object.keys(dbTaskCounts[worker]).forEach(taskType => {
-            if (!taskCounts[worker][taskType]) {
-                taskCounts[worker][taskType] = { count: 0, 기준작업수: taskCategories.find(category => category.subcategories.some(item => item.name === taskType))?.subcategories.find(item => item.name === taskType)?.기준작업수 || 1 };
+            if (!taskCounts[normalizedWorker][taskType]) {
+                taskCounts[normalizedWorker][taskType] = { count: 0, 기준작업수: taskCategories.find(category => category.subcategories.some(item => item.name === taskType))?.subcategories.find(item => item.name === taskType)?.기준작업수 || 1 };
             }
-            taskCounts[worker][taskType].count += dbTaskCounts[worker][taskType];  
+
+            // 로그에서 이미 처리된 작업 건수와 DB에서 가져온 작업 건수를 합산
+            taskCounts[normalizedWorker][taskType].count += dbTaskCounts[worker][taskType];
         });
     });
+
+    // DB에서 가져온 데이터가 잘 합산되었는지 확인
+    console.log('After processing dbTaskCounts:', taskCounts);
 
     addRelatedTaskCounts();
     displayTaskCounts(taskCounts);
 }
 
+
 function addRelatedTaskCounts() {
     Object.keys(taskCounts).forEach(worker => {
         taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count;
-        taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
+        taskCounts[worker]["EFEM ROBOT TEACHING"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
     });
 }
 
