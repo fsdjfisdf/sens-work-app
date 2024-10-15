@@ -27,6 +27,7 @@ exports.findByName = async (name) => {
 };
 
 exports.saveChecklist = async (checklistData) => {
+    console.log('checklistData:', checklistData);  // checklistData가 제대로 전달되는지 확인
   const connection = await pool.getConnection(async conn => conn);
   try {
     // 1. 먼저 이름으로 기존 데이터가 있는지 확인
@@ -84,6 +85,7 @@ exports.insertChecklist = async (checklistData) => {
         PARTICLE_TEST, EA_TEST
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
+      console.log('checklistData for Insert:', checklistData);
   
       const values = [
         checklistData.name, checklistData.CUSTOMER_OHT_LINE_CHECK, checklistData.EQUIPMENT_CLEARANCE_CHECK, 
@@ -127,6 +129,10 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.GAS_BOX_BOARD_LEVELING, checklistData.ENVIRONMENTAL_QUAL_TEST, checklistData.OHT_AUTO_TRANSFER_CERTIFICATION, 
         checklistData.PARTICLE_TEST, checklistData.EA_TEST
       ];
+
+          // SQL 쿼리 및 값 확인 로그 추가
+    console.log('SQL Query for Insert:', query);
+    console.log('SQL Values for Insert:', values);
   
       await connection.query(query, values);
     } finally {
@@ -174,6 +180,9 @@ exports.insertChecklist = async (checklistData) => {
           GAS_BOX_BOARD_LEVELING = ?, ENVIRONMENTAL_QUAL_TEST = ?, OHT_AUTO_TRANSFER_CERTIFICATION = ?, PARTICLE_TEST = ?, EA_TEST = ?
         WHERE name = ?
       `;
+
+          // checklistData에 대한 로그 추가
+    console.log('checklistData for Update:', checklistData);
       
       const values = [
         checklistData.CUSTOMER_OHT_LINE_CHECK, checklistData.EQUIPMENT_CLEARANCE_CHECK, checklistData.DRAWING_TEMPLATE_SETUP, 
@@ -217,6 +226,10 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.GAS_BOX_BOARD_LEVELING, checklistData.ENVIRONMENTAL_QUAL_TEST, checklistData.OHT_AUTO_TRANSFER_CERTIFICATION, 
         checklistData.PARTICLE_TEST, checklistData.EA_TEST, checklistData.name
       ];
+
+          // SQL 쿼리 및 값 확인 로그 추가
+    console.log('SQL Query for Update:', query);
+    console.log('SQL Values for Update:', values);
   
       await connection.query(query, values);
     } catch (err) {
