@@ -16,11 +16,57 @@ document.addEventListener('DOMContentLoaded', function() {
         "SLIT DOOR", "APC VALVE", "SHUTOFF VALVE", "BARATRON ASS'Y", "PIRANI ASS'Y", "VIEW PORT QUARTZ", "FLOW SWITCH", "CERAMIC PLATE", "MONITOR",
         "KEYBOARD","MOUSE","CTC","PMC","EDA","EFEM CONTROLLER","S/W PATCH"],
         "SUPRA XP": ["이관항목 없음"],
-        "INTEGER plus": ["SELECT", "SWAP KIT", "GAS LINE & GAS FILTER","FLANGE ADAPTOR","SLOT VALVE ASSY(HOUSING)","SLOT VALVE","DOOR VALVE",
-            "PENDULUM VALVE","PIN ASSY MODIFY","MOTOR & CONTROLLER","PIN 구동부 ASSY","SENSOR","STEP MOTOR & CONTROLLER","LL 구동부 ASSY",
-            "EFEM ROBOT REP","TM ROBOT REP", "EFEM ROBOT TEACHING", "TM ROBOT TEACHING","UNDER COVER","VAC LINE","BARATRON GAUGE",
-            "PIRANI GAUGE","CONVACTION GAUGE","MANUAL VALVE","PNEUMATIC VALVE","ISOLATION VALVE","VACUUM BLOCK","CHECK VALVE","EPC","CHUCK","GENERATOR",
-            "AIO CALIBRATION(PSK BOARD)","AIO CALIBRATION(TOS BOARD)","CODED SENSOR","GAS BOX DOOR SENSOR","LASER SENSOR AMP", "HE LEAK CHECK", "DIFFUSER", "LOT조사"],
+    "INTEGER plus": [
+        "SELECT",
+        "SWAP KIT",
+        "GAS LINE & GAS FILTER",
+        "CERAMIC PARTS",
+        "MATCHER",
+        "PM BAFFLE",
+        "AM BAFFLE",
+        "FLANGE ADAPTOR",
+        "SLOT VALVE ASSY(HOUSING)",
+        "SLOT VALVE",
+        "DOOR VALVE",
+        "PENDULUM VALVE",
+        "PIN ASSY MODIFY",
+        "MOTOR & CONTROLLER",
+        "PIN 구동부 ASSY",
+        "PIN BELLOWS",  // Added from the table
+        "SENSOR",
+        "STEP MOTOR & CONTROLLER",
+        "CASSETTE & HOLDER PAD",  // Added from the table
+        "BALL SCREW ASSY",  // Added from the table
+        "BUSH",  // Added from the table
+        "MAIN SHAFT",  // Added from the table
+        "BELLOWS",  // Added from the table
+        "EFEM ROBOT REP",
+        "TM ROBOT REP",
+        "EFEM ROBOT TEACHING",
+        "TM ROBOT TEACHING",
+        "UNDER COVER",
+        "VAC LINE",
+        "BARATRON GAUGE",
+        "PIRANI GAUGE",
+        "CONVACTION GAUGE",
+        "MANUAL VALVE",
+        "PNEUMATIC VALVE",
+        "ISOLATION VALVE",
+        "VACUUM BLOCK",
+        "CHECK VALVE",
+        "EPC",
+        "COOLING CHUCK",  // Changed from "CHUCK" to match the table
+        "HEATER CHUCK",  // Added from the table
+        "GENERATOR",
+        "AIO CALIBRATION(PSK BOARD)",
+        "AIO CALIBRATION(TOS BOARD)",
+        "CODED SENSOR",
+        "GAS BOX DOOR SENSOR",
+        "LASER SENSOR AMP",
+        "HE LEAK CHECK",
+        "DIFFUSER",
+        "LOT 조사"
+    ],
         "PRECIA": ["이관항목 없음"],
         "ECOLITE": ["이관항목 없음"],
         "JENEVA": ["이관항목 없음"]
