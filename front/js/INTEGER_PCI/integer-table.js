@@ -161,7 +161,8 @@ async function loadDbTaskCounts() {
 // 모든 데이터 계산 후 서버로 전송하는 함수 추가
 async function saveAggregatedDataToServer(aggregatedData) {
 try {
-    const response = await axios.post('http://3.37.73.151:3001/integer-maintenance/aggregated', aggregatedData, {
+    const response = await axios.post('http://3.37.73.151:3001/api/integer-maintenance/aggregated', aggregatedData, {
+
         headers: {
             'x-access-token': localStorage.getItem('x-access-token')
         }
