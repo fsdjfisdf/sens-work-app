@@ -249,7 +249,7 @@ exports.getChecklistByName = async (name) => {
 exports.getAllChecklists = async () => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-      const query = `SELECT * FROM INTEGER_SETUP`;
+      const query = `SELECT * FROM INTEGER_PLUS_SETUP`;
       const [rows] = await connection.query(query);
       connection.release();
       return rows;
