@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PSKH-PSKH': { weekday: 7, weekend: 1 }
         },
         '2024-10': {
-            'PEE1-PT': { weekday: 15, weekend: 3 }, // 손석현 대리 복귀 // 황이환 주임 최용수 주임 출장 //
+            'PEE1-PT': { weekday: 14, weekend: 3 }, // 손석현 대리 복귀 // 황이환 주임 최용수 주임 출장 // 정현우 라인 대응 불가
             'PEE1-HS': { weekday: 19, weekend: 4 }, // 송다운 복귀 // 신입 2명 추가 // 강민호 출장 시작
             'PEE1-IC': { weekday: 4, weekend: 1 },
             'PEE1-CJ': { weekday: 4, weekend: 1 },  // 강문호 대리 복귀
