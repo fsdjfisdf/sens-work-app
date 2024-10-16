@@ -834,16 +834,19 @@ function renderCombinedTable(setupData, checklistData) {
 
     const categories = {
         'INSTALLATION_PREPARATION': [
+            'CUSTOMER_OHT_LINE_CHECK', 
+            'EQUIPMENT_CLEARANCE_CHECK', 
             'DRAWING_TEMPLATE_SETUP', 
             'DRAWING_TEMPLATE_MARKING', 
-            'CUSTOMER_OHT_LINE_CHECK', 
             'UTILITY_SPEC_UNDERSTANDING'
         ],
         'FAB_IN': [
-            'EQUIPMENT_IMPORT_CAUTION', 
             'EQUIPMENT_IMPORT_ORDER', 
-            'EQUIPMENT_SPACING_CHECK', 
-            'PACKING_LIST_CHECK'
+            'IMPORT_COMPANY_CAUTION', 
+            'IMPORT_INSPECTION_POINTS', 
+            'PROHIBITED_ITEMS_IMPORT', 
+            'GRATING_OPENING_CHECK', 
+            'PACKING_LIST_VERIFICATION'
         ],
         'DOCKING': [
             'TOOL_SIZE_UNDERSTANDING', 
@@ -854,6 +857,7 @@ function renderCombinedTable(setupData, checklistData) {
             'DOCKING_REALIGNMENT', 
             'LEVELER_POSITION_UNDERSTANDING', 
             'MODULE_LEVELING', 
+            'DOCKING_PIN_POSITION', 
             'HOOK_UP'
         ],
         'CABLE_HOOK_UP': [
@@ -865,6 +869,7 @@ function renderCombinedTable(setupData, checklistData) {
             'CABLE_CONNECTION', 
             'CABLE_TRAY_ARRANGEMENT', 
             'CABLE_CUTTING', 
+            'CABLE_RACK_CONNECTION', 
             'PUMP_CABLE_TRAY', 
             'PUMP_CABLE_ARRANGEMENT', 
             'CABLE_PM_PUMP_CONNECTION'
@@ -872,89 +877,114 @@ function renderCombinedTable(setupData, checklistData) {
         'POWER_TURN_ON': [
             'GPS_UPS_SPS_UNDERSTANDING', 
             'POWER_TURN_ON_SEQUENCE', 
-            'RACK_CB_UNDERSTANDING', 
-            'SYCON_NUMBER_UNDERSTANDING', 
-            'MODULE_CB_TURN_ON', 
+            'RACK_ELCB_MCB_UNDERSTANDING', 
             'SAFETY_MODULE_UNDERSTANDING', 
             'EMO_CHECK', 
-            'POWER_TURN_ON_ALARM_TROUBLESHOOTING'
+            'MODULE_MCB_TURN_ON', 
+            'SYCON_NUMBER_UNDERSTANDING', 
+            'SYCON_TROUBLESHOOTING', 
+            'POWER_TURN_ON_ALARM_TROUBLESHOOTING', 
+            'CHECKLIST_COMPLETION', 
+            'IP_ADDRESS_CHANGE'
         ],
         'UTILITY_TURN_ON': [
+            'UTILITY_TURN_ON_PRECHECK', 
+            'SETUP_INI_MODIFICATION', 
             'UTILITY_TURN_ON_SEQUENCE', 
             'VACUUM_TURN_ON', 
             'CDA_TURN_ON', 
-            'PCW_TURN_ON'
+            'PCW_TURN_ON', 
+            'SOLANOID_VALVE_LOCATION', 
+            'RELIEF_VALVE_LOCATION', 
+            'MANUAL_VALVE_LOCATION', 
+            'PUMP_TURN_ON', 
+            'PURGE_N2_TURN_ON', 
+            'DILLUTION_SIGNAL_CHECK', 
+            'CHILLER_HEAT_EXCHANGER_TURN_ON', 
+            'CHILLER_HEAT_EXCHANGER_CHECK', 
+            'MANOMETER_LIMIT_ADJUST'
         ],
         'GAS_TURN_ON': [
-            'GAS_TURN_ON', 
+            'GAS_TURN_ON_PRECHECK', 
+            'NF3_LINE_LEAK_CHECK', 
+            'H2_LINE_LEAK_CHECK', 
+            'NF3_TURN_ON', 
+            'H2_TURN_ON', 
             'GAS_TURN_ON_CHECK', 
-            'OX_NX_GAS_TURN_ON', 
-            'MANOMETER_LIMIT_ADJUST'
+            'GAS_TURN_ON_CAUTION', 
+            'PM_DILLUTION_TEST', 
+            'GAS_TURN_ON_CONFIRM'
         ],
         'TEACHING': [
             'EFEM_ROBOT_PENDANT_CONTROL', 
-            'EFEM_ROBOT_LEVELING', 
-            'EFEM_ROBOT_ARM_LEVELING', 
+            'EFEM_ROBOT_XYZ_VALUES', 
+            'EFEM_ROBOT_PARAMETER_EDIT', 
             'EFEM_TEACHING_DATA_SAVE', 
             'TM_ROBOT_PENDANT_CONTROL', 
-            'TM_ROBOT_PICK_ADJUST', 
-            'TM_ROBOT_BM_TEACHING', 
+            'TM_ROBOT_LEVELING', 
+            'TM_ROBOT_XYZ_VALUES', 
             'TM_ROBOT_PM_TEACHING', 
+            'TM_ROBOT_AM_TEACHING', 
             'TM_TEACHING_DATA_SAVE', 
             'WAFER_JIG_USE', 
             'LASER_JIG_USE', 
-            'FINE_TEACHING', 
             'MARGIN_CHECK', 
             'SEMI_AUTO_TRANSFER', 
             'AGING_TEST'
         ],
         'PART_INSTALLATION': [
-            'BARATRON_PIRANI_GAUGE_INSTALLATION', 
-            'EPD_INSTALLATION', 
-            'PIO_SENSOR_CABLE_INSTALLATION', 
-            'RACK_SIGNAL_TOWER_INSTALLATION', 
-            'CTC_INSTALLATION', 
-            'PORTABLE_RACK_INSTALLATION', 
-            'PM_SAFETY_COVER_INSTALLATION', 
-            'PROCESS_KIT_INSTALLATION'
+            'CERAMIC_PLATE_PIN_INSTALLATION', 
+            'PIN_HEIGHT_ADJUST', 
+            'PIO_SENSOR_INSTALLATION', 
+            'VIEW_PORT_COVER_INSTALLATION', 
+            'LOAD_LOCK_LEVELING', 
+            'TM_ROBOT_PICK_INSTALLATION', 
+            'TM_ROBOT_PICK_LEVELING', 
+            'GAS_BOX_WINDOW_INSTALLATION', 
+            'GAS_BOX_DAMPER_INSTALLATION'
         ],
         'LEAK_CHECK': [
-            'PUMP_TURN_ON', 
-            'PM_LEAK_CHECK', 
-            'GAS_LINE_LEAK_CHECK', 
-            'HELIUM_DETECTOR_USE'
+            'LINE_MANUAL_LEAK_CHECK', 
+            'MANUAL_LEAK_CHECK_HISTORY', 
+            'HE_DETECTOR_USE', 
+            'HE_BOTTLE_ORDER', 
+            'HE_DETECTOR_HOUSING_LEAK_CHECK', 
+            'SLOT_VALVE_HE_LEAK_CHECK'
         ],
         'TTTM': [
-            'ECID_MATCHING', 
-            'COOLING_STAGE_PIN_CONTROL', 
+            'VAC_CDA_SPEC_ADJUST', 
+            'TEMP_PROFILE', 
             'PUMP_VENT_TIME_ADJUST', 
             'EPD_PEAK_OFFSET_ADJUST', 
-            'TEMP_AUTOTUNE', 
+            'PM_BAFFLE_TEMP_AUTOTUNE', 
             'DOOR_VALVE_CONTROL', 
             'APC_AUTOLEARN', 
-            'PIN_SPEED_HEIGHT_ADJUST', 
+            'PIN_HEIGHT_ADJUST_B', 
             'GAS_SUPPLY_PRESSURE_CHECK', 
+            'GAS_EXHAUST_MONAMETER_CONTROL', 
             'MFC_HUNTING_CHECK', 
-            'FCIP_CAL', 
+            'LP_FLOW_CONTROL', 
+            'AICP_POWER_CAL', 
+            'PRODUCT_REPORT_COMPLETION', 
             'TTTM_SHEET_COMPLETION'
         ],
         'CUSTOMER_CERTIFICATION': [
-            'OHT_LAY_OUT_CERTIFICATION', 
-            'OHT_CERTIFICATION', 
-            'TOOL_PREP_CERTIFICATION', 
-            'EFEM_CERTIFICATION_PREP', 
-            'TM_CERTIFICATION_PREP', 
-            'PM_CERTIFICATION_PREP', 
-            'SUB_UNIT_CERTIFICATION_PREP', 
-            'RACK_CERTIFICATION_PREP', 
-            'CERTIFICATION_RESPONSE', 
-            'ENVIRONMENTAL_QUAL_RESPONSE'
+            'LP_CERTIFICATION', 
+            'FULL_PUMPING', 
+            'MID_OPERATION_CERTIFICATION_PREP', 
+            'LABEL_PLACEMENT', 
+            'I_MARKING_PROCEDURE', 
+            'I_MARKING_LOCATION', 
+            'GAS_BOX_BOARD_LEVELING', 
+            'ENVIRONMENTAL_QUAL_TEST', 
+            'OHT_AUTO_TRANSFER_CERTIFICATION'
         ],
         'PROCESS_CONFIRM': [
-            'AGING_TEST_PROCESS_CONFIRM', 
-            'EES_REPORT_PROCEDURE'
+            'PARTICLE_TEST', 
+            'EA_TEST'
         ]
     };
+    
 
     const workerNames = setupData.map(worker => worker.name);
 
