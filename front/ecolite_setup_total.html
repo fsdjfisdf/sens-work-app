@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCI</title>
+    <link rel="stylesheet" href="./css/worklog-table.css" />
+    <link rel="stylesheet" href="./css/readworklog.css" />
+    <style>
+        /* 기본적으로 테이블 숨기기 */
+        #setup-table, #checklist-table {
+            display: none;
+        }
+
+        /* 기본적으로 합산된 테이블만 표시 */
+        #combined-table {
+            display: table;
+        }
+
+        /* 선택된 버튼에 active 스타일을 추가 */
+        .active-button {
+            background-color: #0044cc;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./worklog-table.html" class="menu-item">PCI</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+    <main>
+
+        <main>
+            <section id="combined-data">
+                <div class="inner">
+                    <h2>PCI ( ECOLITE SET UP )</h2>
+
+                    <div class="button-container">
+                        <button id="main-button">Others</button>
+                        <div id="equipment-buttons">
+                            <button class="equipment-btn" data-url="supra_setup_total.html">SUPRA N SETUP</button>
+                            <button class="equipment-btn" data-url="worklog-table.html">SUPRA N MAINT</button>
+                            <button class="equipment-btn" data-url="supra_xp_setup_total.html">SUPRA XP SETUP</button>
+                            <button class="equipment-btn" data-url="supra_xp_maint_total.html">SUPRA XP MAINT</button>
+                            <button class="equipment-btn" data-url="integer_setup_total.html">INTEGER SET UP</button>
+                            <button class="equipment-btn" data-url="integer-table.html">INTEGER MAINT</button>
+                            <button class="equipment-btn" data-url="precia_setup_total.html">PRECIA SETUP</button>
+                            <button class="equipment-btn" data-url="precia_maint_total.html">PRECIA MAINT</button>
+                            <button class="equipment-btn" data-url="ecolite_maint_total.html">ECOLITE MAINT</button>
+                            <button class="equipment-btn" data-url="geneva_setup_total.html">GENEVA SETUP</button>
+                            <button class="equipment-btn" data-url="geneva_maint_total.html">GENEVA MAINT</button>
+                        </div>
+                    </div>
+        
+                    <!-- 검색 기능 -->
+                    <div class="search-container">
+                        <input type="text" id="search-name" placeholder="이름 검색">
+                        <button id="search-button">SEARCH</button>
+                        <button id="reset-button">RESET</button>
+                        <button id="show-total-button" class="active-button">TOTAL</button>
+                        <button id="show-count-button">COUNT</button>
+                        <button id="show-self-button">SELF</button>
+                    </div>
+        
+                    <!-- 여기에 전체 평균을 표시할 공간 추가 -->
+                    <div id="total-average-container" style="text-align: center; font-weight: bold; margin: 20px 0;"></div>
+        
+                    <!-- 테이블 컨테이너 -->
+                    <div class="table-container">
+                        <table id="combined-table" class="table">
+                            <thead id="combined-table-head">
+                                <!-- 작업 항목과 작업자가 동적으로 추가됩니다 -->
+                            </thead>
+                            <tbody id="combined-table-body">
+                                <!-- 작업 항목과 각 작업자 데이터가 여기에 동적으로 추가됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="setup-table" class="table">
+                            <thead id="setup-table-head">
+                                <!-- 작업 항목 및 작업자가 여기에 추가됩니다 -->
+                            </thead>
+                            <tbody id="setup-table-body">
+                                <!-- 각 작업자의 작업 항목별 퍼센트가 여기에 추가됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+        
+                    <div class="table-container">
+                        <table id="checklist-table" class="table">
+                            <thead id="checklist-table-head">
+                                <!-- 작업자가 가로로 나열되는 헤더가 여기에 추가됩니다 -->
+                            </thead>
+                            <tbody id="checklist-table-body">
+                                <!-- 작업 항목과 작업자별 카운트, 퍼센티지, 기준 작업 수가 여기에 추가됩니다 -->
+                            </tbody>
+                        </table>
+                    </div>
+        
+                </div>
+            </section>
+        </main>
+        
+
+    <footer>
+        <div class="inner">
+            <p>제공되는 모든 정보는 S-WORKS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지합니다.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="./js/ECOLITE_PCI/ecolite_setup_total.js"></script>
+    <script src="./js/ECOLITE_PCI/ecolite_total, self, count button"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('x-access-token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.replace('./signin.html');
+                return;
+            }
+
+            // 테이블 초기화
+            const combinedTable = document.getElementById('combined-table');
+            const setupTable = document.getElementById('setup-table');
+            const checklistTable = document.getElementById('checklist-table');
+
+            // 테이블과 버튼 설정
+            const totalButton = document.getElementById('show-total-button');
+            const countButton = document.getElementById('show-count-button');
+            const selfButton = document.getElementById('show-self-button');
+
+            function hideAllTables() {
+                combinedTable.style.display = 'none';
+                setupTable.style.display = 'none';
+                checklistTable.style.display = 'none';
+            }
+
+            function removeActiveClassFromButtons() {
+                totalButton.classList.remove('active-button');
+                countButton.classList.remove('active-button');
+                selfButton.classList.remove('active-button');
+            }
+
+            // 기본적으로 TOTAL 버튼을 눌렀을 때 합산된 표 표시
+            totalButton.addEventListener('click', () => {
+                hideAllTables();
+                removeActiveClassFromButtons();
+                combinedTable.style.display = 'table';
+                totalButton.classList.add('active-button');
+            });
+
+            // COUNT 버튼을 눌렀을 때 작업 카운트 표 표시
+            countButton.addEventListener('click', () => {
+                hideAllTables();
+                removeActiveClassFromButtons();
+                setupTable.style.display = 'table';
+                countButton.classList.add('active-button');
+            });
+
+            // SELF 버튼을 눌렀을 때 체크리스트 표 표시
+            selfButton.addEventListener('click', () => {
+                hideAllTables();
+                removeActiveClassFromButtons();
+                checklistTable.style.display = 'table';
+                selfButton.classList.add('active-button');
+            });
+
+            // 데이터를 로드하고 테이블을 렌더링하는 함수 호출
+            await initializeTables();
+        });
+    </script>
+</body>
+</html>

@@ -242,7 +242,7 @@ exports.getChecklistByName = async (name) => {
 exports.getAllChecklists = async () => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-      const query = `SELECT * FROM ECOLITE_PLUS_SETUP`; // 나중에 수정해야 되는 부분 !!!!!!!!!
+      const query = `SELECT * FROM ECOLITE_SETUP_COUNT`; // 나중에 수정해야 되는 부분 !!!!!!!!!
       const [rows] = await connection.query(query);
       connection.release();
       return rows;
