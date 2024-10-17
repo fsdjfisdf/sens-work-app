@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const holidays = [
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
         '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
-        '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
+        '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', 
+        '2024-10-01', '2024-10-03',
         '2024-10-09', '2024-12-25'
     ];
 
@@ -69,15 +70,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 right: { style: 'thin' }
             };
         });
-
-            // 전체 열 너비 조절 (모든 열의 너비를 일괄적으로 20으로 설정)
-    for (let i = 1; i <= 6; i++) {
-        worksheet.getColumn(i).width = 12;  // 각 열의 너비를 20으로 설정
-    }
     
-        let weekdaysCount = 0;
-        let onsiteCount = 0;
-        let holidayWorkCount = 0;
+        // 전체 열 너비 조절 (모든 열의 너비를 일괄적으로 12으로 설정)
+        for (let i = 1; i <= 6; i++) {
+            worksheet.getColumn(i).width = 12;  
+        }
+    
+        let weekdaysCount = 0;  // 쉬는 날과 주말을 제외한 평일 수
+        let weekdaysWorkCount = 0;  // 실제 작업이 있는 평일 근무일수
+        let holidayWorkCount = 0;  // 휴일 근무일수
     
         // 데이터 추가 (A4부터 시작)
         datesArray.forEach((date, index) => {
@@ -85,9 +86,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             const isHoliday = holidays.includes(date);
             const isWeekendFlag = isWeekend(date);
     
-            if (!isHoliday && !isWeekendFlag) weekdaysCount++; // 평일 계산
-            if (dayLogs.length > 0) onsiteCount++; // 현장 대응일 계산
-            if (dayLogs.length > 0 && (isHoliday || isWeekendFlag)) holidayWorkCount++; // 휴일 근무일 계산
+            // 쉬는 날과 주말을 제외한 평일 수 카운트
+            if (!isHoliday && !isWeekendFlag) {
+                weekdaysCount++;  // 평일 수 계산
+            }
+    
+            // 평일이고 실제로 작업이 있었던 날만 카운트
+            if (!isHoliday && !isWeekendFlag && dayLogs.length > 0) {
+                weekdaysWorkCount++;  // 평일 근무일수
+            }
+    
+            // 휴일 근무일수 카운트
+            if (dayLogs.length > 0 && (isHoliday || isWeekendFlag)) {
+                holidayWorkCount++;
+            }
     
             worksheet.getRow(4 + index).values = [
                 date.split('-').slice(1).join('-'),  // 날짜 형식: MM-DD
@@ -123,11 +135,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     
         // 요약 데이터 추가
+        const totalWorkCount = weekdaysWorkCount + holidayWorkCount;  // 총 근무일수 = 평일 근무일수 + 휴일 근무일수
         const summaryStartRow = worksheet.lastRow.number + 2; // 마지막 데이터 행 아래 2칸 띄우고 요약 시작
-        worksheet.getRow(summaryStartRow).values = ['평일 수', weekdaysCount + '일'];
-        worksheet.getRow(summaryStartRow + 1).values = ['평일 근무일수', onsiteCount + '일'];
-        worksheet.getRow(summaryStartRow + 2).values = ['휴일 근무일수', holidayWorkCount + '일'];
-        worksheet.getRow(summaryStartRow + 3).values = ['총 근무일수', onsiteCount + holidayWorkCount + '일'];
+        worksheet.getRow(summaryStartRow).values = ['평일 수', weekdaysCount + '일'];  // 쉬는 날과 주말을 제외한 평일 수
+        worksheet.getRow(summaryStartRow + 1).values = ['평일 근무일수', weekdaysWorkCount + '일'];  // 실제 작업이 있는 평일 근무일수
+        worksheet.getRow(summaryStartRow + 2).values = ['휴일 근무일수', holidayWorkCount + '일'];  // 주말 및 공휴일 근무일수
+        worksheet.getRow(summaryStartRow + 3).values = ['총 근무일수', totalWorkCount + '일'];  // 총 근무일수 (평일 근무일수 + 휴일 근무일수)
     
         // 요약 테두리 및 스타일 적용
         for (let i = summaryStartRow; i <= summaryStartRow + 3; i++) {
@@ -148,12 +161,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `${currentYear}${String(currentMonth).padStart(2, '0')}-${currentUserNickname}-Worklog.xlsx`;
+            link.download = `${currentYear}${String(currentMonth).padStart(2, '0')}-${currentUserNickname}-국내출장보고서 근거자료.xlsx`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         });
     }
+    
+    
     
     
     // 엑셀 내보내기 버튼에 클릭 이벤트 추가
