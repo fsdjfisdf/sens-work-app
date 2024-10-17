@@ -460,7 +460,7 @@ footer {
 #main-button {
     position: fixed;
     right: 20px;
-    top: 50%;
+    top: 40%;
     transform: translateY(-230%);
     padding: 15px 25px;
     background-color: #0044cc;
@@ -483,8 +483,8 @@ footer {
     gap: 10px;
     position: fixed;
     right: 20px;
-    top: 60%;
-    transform: translateY(-50%);
+    top: 50%;
+    transform: translateY(-30%);
     max-height: 0; /* 숨김 상태에서 높이를 0으로 */
     opacity: 0; /* 숨김 상태에서 투명도 0 */
     overflow: hidden;
@@ -493,7 +493,7 @@ footer {
 
 /* 열렸을 때 높이와 투명도 설정 */
 #equipment-buttons.open {
-    max-height: 300px; /* 충분히 큰 값으로 설정 */
+    max-height: 500px; /* 충분히 큰 값으로 설정 */
     opacity: 1; /* 표시되면서 투명도 1 */
 }
 
@@ -501,7 +501,7 @@ footer {
 .equipment-btn {
     background-color: #0044cc;
     color: white;
-    border: none;
+    border: none;                                                                                                    
     border-radius: 5px;
     padding: 10px 20px;
     cursor: pointer;
