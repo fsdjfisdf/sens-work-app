@@ -134,9 +134,9 @@ exports.updateTaskCount = async (req, res) => {
     }
 };
 
-exports.getSUPRAXPWorkLogs = async (req, res) => {
+exports.getSupraXPWorkLogs = async (req, res) => {
     try {
-        const logs = await workLogDao.getSUPRAXPWorkLogs();
+        const logs = await workLogDao.getWorkLogsByEquipmentType('SUPRA XP');  // DAO 메서드 사용
         res.status(200).json(logs);
     } catch (err) {
         res.status(500).json({ error: err.message });

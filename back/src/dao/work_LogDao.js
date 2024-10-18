@@ -157,15 +157,15 @@ try {
 };
 
 
-exports.getSUPRAXPWorkLogs = async () => {
+exports.getWorkLogsByEquipmentType = async (equipment_type) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-      const query = 'SELECT * FROM work_log WHERE equipment_type = "SUPRA XP" ORDER BY task_date DESC, id DESC';
-      const [rows] = await connection.query(query);
+      const query = 'SELECT * FROM work_log WHERE equipment_type = ? ORDER BY task_date DESC, id DESC';
+      const [rows] = await connection.query(query, [equipment_type]);
       connection.release();
       return rows;
   } catch (err) {
       connection.release();
-      throw new Error(`Error retrieving SUPRA XP work logs: ${err.message}`);
+      throw new Error(`Error retrieving work logs: ${err.message}`);
   }
 };

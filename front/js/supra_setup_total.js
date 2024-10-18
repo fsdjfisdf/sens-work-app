@@ -17,9 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             let worklogData = await loadWorkLogs(); // First load the logs
             const checklistData = await loadChecklistData();
     
-            // 작업 로그에서 SUPRA XP 장비만 필터링
-            worklogData = worklogData.filter(log => log.equipment_type === "SUPRA XP");
-    
             // 로드된 데이터를 로그로 확인
             console.log('Setup Data:', setupData);
             console.log('Filtered Work Log Data:', worklogData); // 필터링된 작업 로그
@@ -75,16 +72,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 작업 이력 데이터를 불러오는 함수
-    async function loadWorkLogs() {
-        try {
-            const response = await axios.get('http://3.37.73.151:3001/logs');
-            return response.data;
-        } catch (error) {
-            console.error('작업 로그를 불러오는 중 오류 발생:', error);
-            return [];
-        }
+// SUPRA XP 작업 이력만 불러오는 함수
+async function loadWorkLogs() {
+    try {
+        const response = await axios.get('http://3.37.73.151:3001/work-logs/supra-xp'); // SUPRA XP 작업 로그만 가져오는 경로
+        return response.data;
+    } catch (error) {
+        console.error('SUPRA XP 작업 로그를 불러오는 중 오류 발생:', error);
+        return [];
     }
+}
 
     // 중분류 클릭 시 소분류를 토글하는 함수
 

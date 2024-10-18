@@ -17,7 +17,7 @@ router.put('/work-logs/:id', workLogController.updateWorkLog);
 router.post('/api/update-task-count', workLogController.updateTaskCount);
 
 // SUPRA XP 작업 이력 조회
-router.get('/work-logs/supra-xp', workLogController.getSUPRAXPWorkLogs);
+router.get('/work-logs/supra-xp', workLogController.getSupraXPWorkLogs);
 
 
 
