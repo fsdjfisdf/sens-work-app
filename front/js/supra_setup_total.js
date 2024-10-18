@@ -10,28 +10,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 데이터를 로드하고 테이블을 렌더링하는 함수
     async function initializeTables() {
         console.log("Initializing tables...");  // 로그 추가
-    
+
         try {
             // 데이터를 로드하는 함수
             const setupData = await loadSetupData();
-            let worklogData = await loadWorkLogs(); // First load the logs
+            const worklogData = await loadWorkLogs();
             const checklistData = await loadChecklistData();
-    
+
             // 로드된 데이터를 로그로 확인
             console.log('Setup Data:', setupData);
-            console.log('Filtered Work Log Data:', worklogData); // 필터링된 작업 로그
+            console.log('Work Log Data:', worklogData);
             console.log('Checklist Data:', checklistData);
-    
+
             // 데이터가 제대로 로드되었는지 확인
             if (setupData.length === 0 || checklistData.length === 0 || worklogData.length === 0) {
                 console.error('Data is missing or not loaded correctly.');
                 return; // 데이터가 비어 있으면 중단
             }
-    
-            // 필터링된 작업 로그를 각 테이블에 반영
-            renderSetupTable(setupData, worklogData);  // Pass filtered logs
+
+            // 테이블을 렌더링하는 함수 호출
+            renderSetupTable(setupData, worklogData);
             renderChecklistTable(checklistData);
-            renderCombinedTable(setupData, checklistData, worklogData);  // 합산된 표를 렌더링
+            renderCombinedTable(setupData, checklistData);  // 합산된 표를 렌더링
         } catch (error) {
             console.error('Error during table initialization:', error);
         }
@@ -72,16 +72,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-// SUPRA XP 작업 이력만 불러오는 함수
-async function loadWorkLogs() {
-    try {
-        const response = await axios.get('http://3.37.73.151:3001/work-logs/supra-xp'); // SUPRA XP 작업 로그만 가져오는 경로
-        return response.data;
-    } catch (error) {
-        console.error('SUPRA XP 작업 로그를 불러오는 중 오류 발생:', error);
-        return [];
+    // 작업 이력 데이터를 불러오는 함수
+    async function loadWorkLogs() {
+        try {
+            const response = await axios.get('http://3.37.73.151:3001/logs');
+            return response.data;
+        } catch (error) {
+            console.error('작업 로그를 불러오는 중 오류 발생:', error);
+            return [];
+        }
     }
-}
 
     // 중분류 클릭 시 소분류를 토글하는 함수
 
@@ -198,9 +198,12 @@ function renderSetupTable(setupData, worklogData) {
 
     let workerNames = setupData.map(worker => worker.name);
 
+    // 필터링된 작업 로그만 사용
+    const filteredWorklogData = worklogData.filter(log => log.equipment_type === "SUPRA XP");
+
     // 작업 이력에서 setup_item을 columns 항목과 매칭하여 카운트를 증가시킴
     workerNames.forEach(workerName => {
-        const workerLogs = worklogData.filter(log => log.task_man.includes(workerName));  // 필터링된 작업 로그만 사용
+        const workerLogs = filteredWorklogData.filter(log => log.task_man.includes(workerName));  // 작업자가 포함된 작업 이력을 필터링
         const workerData = setupData.find(worker => worker.name === workerName);
 
         columns.forEach(col => {
@@ -226,7 +229,7 @@ function renderSetupTable(setupData, worklogData) {
     const averageRow = document.createElement('tr');
     averageRow.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
     averageRow.style.fontWeight = 'bold';
-    averageRow.classList.add('total-average-row');
+    averageRow.classList.add('total-average-row'); // total-average-row 클래스를 추가하여 디자인 적용
     averageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';
     averageRow.appendChild(document.createElement('td')).textContent = '';
 
@@ -242,7 +245,7 @@ function renderSetupTable(setupData, worklogData) {
     // 각 작업 항목에 대한 데이터를 세로로 나열
     columns.forEach(col => {
         const row = document.createElement('tr');
-        row.classList.add('category-row');
+        row.classList.add('category-row'); // 각 항목에 category-row 클래스를 추가하여 디자인 적용
         row.appendChild(document.createElement('td')).textContent = col.name;
         row.appendChild(document.createElement('td')).textContent = col.기준작업수;
 
@@ -730,7 +733,7 @@ function calculateCategoryAverage(items, checklistData, workerName) {
 
 
 
-function renderCombinedTable(setupData, checklistData, worklogData) {
+function renderCombinedTable(setupData, checklistData) {
     const tableHead = document.getElementById('combined-table-head');
     const tableBody = document.getElementById('combined-table-body');
     const totalAverageContainer = document.getElementById('total-average-container');
@@ -900,7 +903,7 @@ function renderCombinedTable(setupData, checklistData, worklogData) {
     const workerNames = setupData.map(worker => worker.name);
 
     // 작업 로그에서 equipment_type이 "SUPRA XP"인 항목만 필터링
-    const filteredWorkLogs = worklogData.filter(log => log.equipment_type === "SUPRA XP");
+    const filteredWorkLogs = setupData.filter(log => log.equipment_type === "SUPRA XP");
 
     if (workerNames.length === 0) {
         console.error('No worker names found.');
@@ -1005,12 +1008,17 @@ function renderCombinedTable(setupData, checklistData, worklogData) {
         averageRow.appendChild(td);
     });
 
-    // 평균값 행을 테이블 본문 상단에 추가
-    tableBody.insertBefore(averageRow, tableBody.firstChild);
+        // 평균값 행을 테이블 본문 상단에 추가
+        tableBody.insertBefore(averageRow, tableBody.firstChild);
 
-    // 작업자들의 평균을 구해 화면 상단에 표시
+            // 작업자들의 평균을 구해 화면 상단에 표시
     const totalAverage = workerAverages.reduce((acc, curr) => acc + curr, 0) / workerAverages.length;
     totalAverageContainer.innerHTML = `Total Average: ${totalAverage.toFixed(1)}%`;
+
+    
+
+    
+        
 }
 
 document.addEventListener('DOMContentLoaded', function () {

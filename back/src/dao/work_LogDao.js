@@ -157,11 +157,11 @@ try {
 };
 
 
-exports.getWorkLogsByEquipmentType = async (equipment_type) => {
+exports.getWorkLogs = async (equipment_type) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-      const query = 'SELECT * FROM work_log WHERE equipment_type = ? ORDER BY task_date DESC, id DESC';
-      const [rows] = await connection.query(query, [equipment_type]);
+      let query = 'SELECT * FROM work_log WHERE equipment_type = ? ORDER BY task_date DESC, id DESC';
+      const [rows] = await connection.query(query, [equipment_type]);  // equipment_type 값을 전달하여 필터링
       connection.release();
       return rows;
   } catch (err) {
