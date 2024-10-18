@@ -234,6 +234,7 @@ function renderSetupTable(setupData, worklogData) {
     averageRow.appendChild(document.createElement('td')).textContent = '';
 
     workerNames.forEach(workerName => {
+        const workerLogs = worklogData.filter(log => log.task_man.includes(workerName) && log.equipment_type.toLowerCase().includes('supra n'));
         const workerData = setupData.find(worker => worker.name === workerName);
         const weightedAverage = calculateWeightedAverageForWorker(workerData, columns); // 개별 가중 평균 계산
         const td = document.createElement('td');

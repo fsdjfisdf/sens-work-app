@@ -200,7 +200,9 @@ function renderSetupTable(setupData, worklogData) {
 
     // 작업 이력에서 setup_item을 columns 항목과 매칭하여 카운트를 증가시킴
     workerNames.forEach(workerName => {
-        const workerLogs = worklogData.filter(log => log.task_man.includes(workerName));  // 작업자가 포함된 작업 이력을 필터링
+        const workerLogs = worklogData.filter(log => log.task_man.includes(workerName) && log.equipment_type.toLowerCase().includes('ecolite'));
+
+
         const workerData = setupData.find(worker => worker.name === workerName);
 
         columns.forEach(col => {
