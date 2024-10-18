@@ -156,3 +156,16 @@ try {
 }
 };
 
+
+exports.getSUPRAXPWorkLogs = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+      const query = 'SELECT * FROM work_log WHERE equipment_type = "SUPRA XP" ORDER BY task_date DESC, id DESC';
+      const [rows] = await connection.query(query);
+      connection.release();
+      return rows;
+  } catch (err) {
+      connection.release();
+      throw new Error(`Error retrieving SUPRA XP work logs: ${err.message}`);
+  }
+};

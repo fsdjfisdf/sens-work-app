@@ -10,28 +10,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 데이터를 로드하고 테이블을 렌더링하는 함수
     async function initializeTables() {
         console.log("Initializing tables...");  // 로그 추가
-
+    
         try {
             // 데이터를 로드하는 함수
             const setupData = await loadSetupData();
-            const worklogData = await loadWorkLogs();
+            let worklogData = await loadWorkLogs(); // First load the logs
             const checklistData = await loadChecklistData();
-
+    
+            // 작업 로그에서 SUPRA XP 장비만 필터링
+            worklogData = worklogData.filter(log => log.equipment_type === "SUPRA XP");
+    
             // 로드된 데이터를 로그로 확인
             console.log('Setup Data:', setupData);
-            console.log('Work Log Data:', worklogData);
+            console.log('Filtered Work Log Data:', worklogData); // 필터링된 작업 로그
             console.log('Checklist Data:', checklistData);
-
+    
             // 데이터가 제대로 로드되었는지 확인
             if (setupData.length === 0 || checklistData.length === 0 || worklogData.length === 0) {
                 console.error('Data is missing or not loaded correctly.');
                 return; // 데이터가 비어 있으면 중단
             }
-
-            // 테이블을 렌더링하는 함수 호출
-            renderSetupTable(setupData, worklogData);
+    
+            // 필터링된 작업 로그를 각 테이블에 반영
+            renderSetupTable(setupData, worklogData);  // Pass filtered logs
             renderChecklistTable(checklistData);
-            renderCombinedTable(setupData, checklistData);  // 합산된 표를 렌더링
+            renderCombinedTable(setupData, checklistData, worklogData);  // 합산된 표를 렌더링
         } catch (error) {
             console.error('Error during table initialization:', error);
         }
@@ -200,11 +203,11 @@ function renderSetupTable(setupData, worklogData) {
 
     // 작업 이력에서 setup_item을 columns 항목과 매칭하여 카운트를 증가시킴
     workerNames.forEach(workerName => {
-        const workerLogs = worklogData.filter(log => log.task_man.includes(workerName));  // 작업자가 포함된 작업 이력을 필터링
+        const workerLogs = worklogData.filter(log => log.task_man.includes(workerName));  // 필터링된 작업 로그만 사용
         const workerData = setupData.find(worker => worker.name === workerName);
 
         columns.forEach(col => {
-            const matchingLogs = workerLogs.filter(log => log.setup_item.replace(/ /g, "_").toUpperCase() === col.name);  
+            const matchingLogs = workerLogs.filter(log => log.setup_item.replace(/ /g, "_").toUpperCase() === col.name);
             if (workerData) {
                 workerData[col.name] = (workerData[col.name] || 0) + matchingLogs.length;  // 작업 카운트 증가
             }
@@ -226,7 +229,7 @@ function renderSetupTable(setupData, worklogData) {
     const averageRow = document.createElement('tr');
     averageRow.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
     averageRow.style.fontWeight = 'bold';
-    averageRow.classList.add('total-average-row'); // total-average-row 클래스를 추가하여 디자인 적용
+    averageRow.classList.add('total-average-row');
     averageRow.appendChild(document.createElement('td')).textContent = 'AVERAGE';
     averageRow.appendChild(document.createElement('td')).textContent = '';
 
@@ -242,7 +245,7 @@ function renderSetupTable(setupData, worklogData) {
     // 각 작업 항목에 대한 데이터를 세로로 나열
     columns.forEach(col => {
         const row = document.createElement('tr');
-        row.classList.add('category-row'); // 각 항목에 category-row 클래스를 추가하여 디자인 적용
+        row.classList.add('category-row');
         row.appendChild(document.createElement('td')).textContent = col.name;
         row.appendChild(document.createElement('td')).textContent = col.기준작업수;
 
@@ -251,10 +254,10 @@ function renderSetupTable(setupData, worklogData) {
             const taskCount = workerData ? workerData[col.name] || 0 : 0;
             let percentage = (taskCount / col.기준작업수) * 100;
             percentage = Math.min(percentage, 100);
-    
+
             const td = document.createElement('td');
             td.textContent = `${taskCount} (${Math.round(percentage)}%)`;
-    
+
             // 퍼센트에 따른 색상 적용
             if (percentage === 100) {
                 td.style.color = 'blue';
@@ -263,12 +266,13 @@ function renderSetupTable(setupData, worklogData) {
             } else {
                 td.style.color = 'black';
             }
-    
+
             row.appendChild(td);
         });
         tableBody.appendChild(row);
     });
 }
+
 
 
 
@@ -729,7 +733,7 @@ function calculateCategoryAverage(items, checklistData, workerName) {
 
 
 
-function renderCombinedTable(setupData, checklistData) {
+function renderCombinedTable(setupData, checklistData, worklogData) {
     const tableHead = document.getElementById('combined-table-head');
     const tableBody = document.getElementById('combined-table-body');
     const totalAverageContainer = document.getElementById('total-average-container');
@@ -898,6 +902,9 @@ function renderCombinedTable(setupData, checklistData) {
 
     const workerNames = setupData.map(worker => worker.name);
 
+    // 작업 로그에서 equipment_type이 "SUPRA XP"인 항목만 필터링
+    const filteredWorkLogs = worklogData.filter(log => log.equipment_type === "SUPRA XP");
+
     if (workerNames.length === 0) {
         console.error('No worker names found.');
         return;
@@ -915,7 +922,7 @@ function renderCombinedTable(setupData, checklistData) {
     });
     tableHead.appendChild(headerRow);
 
-    // 평균값 행 추가 (맨 위로 올릴 예정)
+    // 평균값 행 추가
     const averageRow = document.createElement('tr');
     averageRow.style.backgroundColor = '#e0e0e0'; // AVERAGE 행의 색을 회색으로 설정
     averageRow.style.fontWeight = 'bold';
@@ -935,23 +942,23 @@ function renderCombinedTable(setupData, checklistData) {
         workerNames.forEach(workerName => {
             const workerData = setupData.find(worker => worker.name === workerName);
             const checklistWorkerData = checklistData.find(worker => worker.name === workerName);
-    
+
             // Setup 비율 계산 (최대 80%)
             const setupCount = workerData ? (workerData[col.name] || 0) : 0;
             const setupPercentage = Math.min((setupCount / col.기준작업수) * 80, 80);
-    
+
             // Checklist 비율 계산 (최대 20%)
-            const checklistItems = categories[col.name];  // 중분류 항목에 해당하는 소분류 항목 리스트
+            const checklistItems = categories[col.name];
             const checklistAverage = checklistWorkerData ? calculateCategoryAverage(checklistItems, checklistData, workerName) : 0;
             const checklistPercentage = (checklistAverage / 100) * 20;
-    
+
             // 두 값을 합산 (최대 100%)
             const combinedPercentage = Math.min(setupPercentage + checklistPercentage, 100);
-    
+
             // 셀에 최종 합산 값을 추가
             const td = document.createElement('td');
             td.textContent = `${combinedPercentage.toFixed(1)}%`;
-    
+
             // 퍼센트에 따른 색상 적용
             if (combinedPercentage === 100) {
                 td.style.color = 'blue';
@@ -960,10 +967,10 @@ function renderCombinedTable(setupData, checklistData) {
             } else {
                 td.style.color = 'black';
             }
-    
+
             row.appendChild(td);
         });
-    
+
         tableBody.appendChild(row);  // 테이블 본문에 행 추가
     });
 
@@ -1001,24 +1008,12 @@ function renderCombinedTable(setupData, checklistData) {
         averageRow.appendChild(td);
     });
 
-        // 평균값 행을 테이블 본문 상단에 추가
-        tableBody.insertBefore(averageRow, tableBody.firstChild);
+    // 평균값 행을 테이블 본문 상단에 추가
+    tableBody.insertBefore(averageRow, tableBody.firstChild);
 
-            // 작업자들의 평균을 구해 화면 상단에 표시
+    // 작업자들의 평균을 구해 화면 상단에 표시
     const totalAverage = workerAverages.reduce((acc, curr) => acc + curr, 0) / workerAverages.length;
     totalAverageContainer.innerHTML = `Total Average: ${totalAverage.toFixed(1)}%`;
-
-    document.querySelectorAll('.all-check-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const category = button.closest('.category');
-            category.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = true;
-            });
-        });
-    });
-
-    
-        
 }
 
 document.addEventListener('DOMContentLoaded', function () {
