@@ -57,10 +57,12 @@ module.exports = function () {
   /* 라우트 설정 */
   require("../src/routes/indexRoute")(app);
   require("../src/routes/supraMaintenanceRoute")(app);
+  require("../src/routes/supraxpMaintenanceRoute")(app);
   require("../src/routes/supraSetupRoute")(app);  // 추가된 라우트
   require("../src/routes/integerSetupRoute")(app);  // 추가된 라우트
   require("../src/routes/ecoliteSetupRoute")(app);  // 추가된 라우트
   require("../src/routes/supraxpSetupRoute")(app);  // 추가된 라우트
+
   require("../src/routes/integerMaintenanceRoute")(app);  // 추가된 라우트
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
