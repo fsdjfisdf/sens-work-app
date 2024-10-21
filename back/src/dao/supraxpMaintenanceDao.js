@@ -58,7 +58,7 @@ exports.insertChecklist = async (checklistData) => {
         checklistData['PENDULUM_VALVE'], checklistData['SLOT_VALVE_DOOR_VALVE'], checklistData['SHUTOFF_VALVE'],
         checklistData['RF_GENERATOR'], checklistData['BARATRON_ASSY'], checklistData['PIRANI_ASSY'],
         checklistData['VIEW_PORT_QUARTZ'], checklistData['FLOW_SWITCH'], checklistData['CERAMIC_PLATE'],
-        checklistData['MONITOR'], checklistData['KEYBOARD'], checklistData['SIDE_STORAGE'], checklistData['32_MULTI_PORT'],
+        checklistData['MONITOR'], checklistData['KEYBOARD'], checklistData['SIDE_STORAGE'], checklistData['MULTI_PORT_32'],
         checklistData['MINI8'], checklistData['TM_EPC_MFC'], checklistData['CTC'], checklistData['EFEM_CONTROLLER'],
         checklistData['SW_PATCH']
       ];
@@ -102,7 +102,7 @@ exports.updateChecklist = async (checklistData) => {
         checklistData['SLOT_VALVE_DOOR_VALVE'], checklistData['SHUTOFF_VALVE'], checklistData['RF_GENERATOR'],
         checklistData['BARATRON_ASSY'], checklistData['PIRANI_ASSY'], checklistData['VIEW_PORT_QUARTZ'], checklistData['FLOW_SWITCH'],
         checklistData['CERAMIC_PLATE'], checklistData['MONITOR'], checklistData['KEYBOARD'], checklistData['SIDE_STORAGE'],
-        checklistData['32_MULTI_PORT'], checklistData['MINI8'], checklistData['TM_EPC_MFC'], checklistData['CTC'],
+        checklistData['MULTI_PORT_32'], checklistData['MINI8'], checklistData['TM_EPC_MFC'], checklistData['CTC'],
         checklistData['EFEM_CONTROLLER'], checklistData['SW_PATCH'], checklistData.name
       ];
   
