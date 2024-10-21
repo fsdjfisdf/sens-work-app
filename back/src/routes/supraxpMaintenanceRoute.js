@@ -1,4 +1,4 @@
-const supraMaintenanceController = require("../controllers/supraMaintenanceController");
+const supraxpMaintenanceController = require('../controllers/supraxpMaintenanceController');
 const jwtMiddleware = require("../../config/jwtMiddleware");
 
 module.exports = function (app) {
