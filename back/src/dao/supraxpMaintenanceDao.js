@@ -46,8 +46,8 @@ exports.insertChecklist = async (checklistData) => {
       const values = [
         checklistData.name, checklistData['LP_ESCORT'], checklistData['ROBOT_ESCORT'], checklistData['SR8241_TEACHING'],
         checklistData['ROBOT_REP'], checklistData['ROBOT_CONTROLLER_REP'], checklistData['END_EFFECTOR_REP'],
-        checklistData['PERSIMMON_TEACHING'], checklistData['END_EFFECTOR_PAD_REP'], checklistData['L/L_PIN'],
-        checklistData['L/L_SENSOR'], checklistData['L/L_DSA'], checklistData['GAS_LINE'], checklistData['L/L_ISOLATION_V/V'],
+        checklistData['PERSIMMON_TEACHING'], checklistData['END_EFFECTOR_PAD_REP'], checklistData['L_L_PIN'],
+        checklistData['L_L_SENSOR'], checklistData['L_L_DSA'], checklistData['GAS_LINE'], checklistData['L_L_ISOLATION_V/V'],
         checklistData['FFU_CONTROLLER'], checklistData['FAN'], checklistData['MOTOR_DRIVER'], checklistData['MATCHER'],
         checklistData['3000QC'], checklistData['3100QC'], checklistData['CHUCK'], checklistData['PROCESS_KIT'],
         checklistData['SLOT_VALVE_BLADE'], checklistData['TEFLON_ALIGN_PIN'], checklistData['O-RING_류'],
@@ -91,8 +91,8 @@ exports.updateChecklist = async (checklistData) => {
       const values = [
         checklistData['LP_ESCORT'], checklistData['ROBOT_ESCORT'], checklistData['SR8241_TEACHING'], checklistData['ROBOT_REP'],
         checklistData['ROBOT_CONTROLLER_REP'], checklistData['END_EFFECTOR_REP'], checklistData['PERSIMMON_TEACHING'],
-        checklistData['END_EFFECTOR_PAD_REP'], checklistData['L/L_PIN'], checklistData['L/L_SENSOR'], checklistData['L/L_DSA'],
-        checklistData['GAS_LINE'], checklistData['L/L_ISOLATION_V/V'], checklistData['FFU_CONTROLLER'], checklistData['FAN'],
+        checklistData['END_EFFECTOR_PAD_REP'], checklistData['L_L_PIN'], checklistData['L_L_SENSOR'], checklistData['L_L_DSA'],
+        checklistData['GAS_LINE'], checklistData['L_L_ISOLATION_V/V'], checklistData['FFU_CONTROLLER'], checklistData['FAN'],
         checklistData['MOTOR_DRIVER'], checklistData['MATCHER'], checklistData['3000QC'], checklistData['3100QC'], checklistData['CHUCK'],
         checklistData['PROCESS_KIT'], checklistData['SLOT_VALVE_BLADE'], checklistData['TEFLON_ALIGN_PIN'], checklistData['O-RING_류'],
         checklistData['HELIUM_DETECTOR'], checklistData['HOOK_LIFT_PIN'], checklistData['BELLOWS'], checklistData['PIN_BOARD'],
