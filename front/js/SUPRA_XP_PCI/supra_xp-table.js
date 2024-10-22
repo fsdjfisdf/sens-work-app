@@ -18,42 +18,42 @@ const taskCategories = [
     {
         category: "Escort",
         subcategories: [
-            { name: "LP ESCORT", 기준작업수: 3 },
-            { name: "ROBOT ESCORT", 기준작업수: 3 }
+            { name: "LP_ESCORT", 기준작업수: 3 },
+            { name: "ROBOT_ESCORT", 기준작업수: 3 }
         ]
     },
     {
         category: "EFEM Robot",
         subcategories: [
-            { name: "SR8241 TEACHING", 기준작업수: 15 },
-            { name: "ROBOT REP", 기준작업수: 15 },
-            { name: "ROBOT CONTROLLER REP", 기준작업수: 15 },
-            { name: "END EFFECTOR REP", 기준작업수: 10 }
+            { name: "SR8241_TEACHING", 기준작업수: 15 },
+            { name: "ROBOT_REP", 기준작업수: 15 },
+            { name: "ROBOT_CONTROLLER_REP", 기준작업수: 15 },
+            { name: "END_EFFECTOR_REP", 기준작업수: 10 }
         ]
     },
     {
         category: "TM Robot",
         subcategories: [
-            { name: "PERSIMMON TEACHING", 기준작업수: 15 },
-            { name: "END EFFECTORPAD REP", 기준작업수: 10 }
+            { name: "PERSIMMON_TEACHING", 기준작업수: 15 },
+            { name: "END_EFFECTOR_PAD_REP", 기준작업수: 10 }
         ]
     },
     {
         category: "L/L",
         subcategories: [
-            { name: "LL PIN", 기준작업수: 5 },
-            { name: "LL SENSOR", 기준작업수: 5 },
-            { name: "LL DSA", 기준작업수: 5 },
-            { name: "GAS LINE", 기준작업수: 5 },
-            { name: "LL ISOLATION VV", 기준작업수: 5 }
+            { name: "L_L_PIN", 기준작업수: 5 },
+            { name: "L_L_SENSOR", 기준작업수: 5 },
+            { name: "L_L_DSA", 기준작업수: 5 },
+            { name: "GAS_LINE", 기준작업수: 5 },
+            { name: "L_L_ISOLATION_VV", 기준작업수: 5 }
         ]
     },
     {
         category: "EFEM FFU",
         subcategories: [
-            { name: "FFU CONTROLLER", 기준작업수: 3 },
+            { name: "FFU_CONTROLLER", 기준작업수: 3 },
             { name: "FAN", 기준작업수: 3 },
-            { name: "MOTOR DRIVER", 기준작업수: 1 }
+            { name: "MOTOR_DRIVER", 기준작업수: 1 }
         ]
     },
     {
@@ -73,27 +73,27 @@ const taskCategories = [
     {
         category: "Preventive Maintenance",
         subcategories: [
-            { name: "PROCESS KIT", 기준작업수: 5 },
-            { name: "SLOT VALVE BLADE", 기준작업수: 3 },
-            { name: "TEFLON ALIGN PIN", 기준작업수: 3 },
-            { name: "O-RING", 기준작업수: 3 }
+            { name: "PROCESS_KIT", 기준작업수: 5 },
+            { name: "SLOT_VALVE_BLADE", 기준작업수: 3 },
+            { name: "TEFLON_ALIGN_PIN", 기준작업수: 3 },
+            { name: "O_RING", 기준작업수: 3 }
         ]
     },
     {
         category: "Leak",
         subcategories: [
-            { name: "HELIUM DETECTOR", 기준작업수: 3 }
+            { name: "HELIUM_DETECTOR", 기준작업수: 3 }
         ]
     },
     {
         category: "Pin",
         subcategories: [
-            { name: "HOOK LIFT PIN", 기준작업수: 3 },
+            { name: "HOOK_LIFT_PIN", 기준작업수: 3 },
             { name: "BELLOWS", 기준작업수: 1 },
-            { name: "PIN BOARD", 기준작업수: 1 },
-            { name: "LM GUIDE", 기준작업수: 1 },
-            { name: "PIN MOTOR CONTROLLER", 기준작업수: 3 },
-            { name: "LASER PIN SENSOR", 기준작업수: 1 }
+            { name: "PIN_BOARD", 기준작업수: 1 },
+            { name: "LM_GUIDE", 기준작업수: 1 },
+            { name: "PIN_MOTOR_CONTROLLER", 기준작업수: 3 },
+            { name: "LASER_PIN_SENSOR", 기준작업수: 1 }
         ]
     },
     {
@@ -105,10 +105,10 @@ const taskCategories = [
     {
         category: "Board",
         subcategories: [
-            { name: "DC POWER SUPPLY", 기준작업수: 2 },
-            { name: "PIO SENSOR", 기준작업수: 1 },
-            { name: "D-NET", 기준작업수: 2 },
-            { name: "SIM BOARD", 기준작업수: 2 }
+            { name: "DC_POWER_SUPPLY", 기준작업수: 2 },
+            { name: "PIO_SENSOR", 기준작업수: 1 },
+            { name: "D_NET", 기준작업수: 2 },
+            { name: "SIM_BOARD", 기준작업수: 2 }
         ]
     },
     {
@@ -122,44 +122,44 @@ const taskCategories = [
         category: "Valve",
         subcategories: [
             { name: "SOLENOID", 기준작업수: 2 },
-            { name: "PENDULUM VALVE", 기준작업수: 2 },
-            { name: "SLOT VALVE DOOR VALVE", 기준작업수: 3 },
-            { name: "SHUTOFF VALVE", 기준작업수: 3 }
+            { name: "PENDULUM_VALVE", 기준작업수: 2 },
+            { name: "SLOT_VALVE_DOOR_VALVE", 기준작업수: 3 },
+            { name: "SHUTOFF_VALVE", 기준작업수: 3 }
         ]
     },
     {
         category: "Rack",
         subcategories: [
-            { name: "RF GENERATOR", 기준작업수: 3 }
+            { name: "RF_GENERATOR", 기준작업수: 3 }
         ]
     },
     {
         category: "ETC",
         subcategories: [
-            { name: "BARATRON ASSY", 기준작업수: 1 },
-            { name: "PIRANI ASSY", 기준작업수: 1 },
-            { name: "VIEW PORT QUARTZ", 기준작업수: 1 },
-            { name: "FLOW SWITCH", 기준작업수: 1 },
-            { name: "CERAMIC PLATE", 기준작업수: 3 },
+            { name: "BARATRON_ASSY", 기준작업수: 1 },
+            { name: "PIRANI_ASSY", 기준작업수: 1 },
+            { name: "VIEW_PORT_QUARTZ", 기준작업수: 1 },
+            { name: "FLOW_SWITCH", 기준작업수: 1 },
+            { name: "CERAMIC_PLATE", 기준작업수: 3 },
             { name: "MONITOR", 기준작업수: 1 },
             { name: "KEYBOARD", 기준작업수: 1 },
-            { name: "SIDE STORAGE", 기준작업수: 5 },
-            { name: "32 MULTI PORT", 기준작업수: 3 },
+            { name: "SIDE_STORAGE", 기준작업수: 5 },
+            { name: "MULTI_PORT_32", 기준작업수: 3 },
             { name: "MINI8", 기준작업수: 3 },
-            { name: "TM EPC (MFC)", 기준작업수: 3 }
+            { name: "TM_EPC_MFC", 기준작업수: 3 }
         ]
     },
     {
         category: "CTR",
         subcategories: [
             { name: "CTC", 기준작업수: 2 },
-            { name: "EFEM CONTROLLER", 기준작업수: 2 }
+            { name: "EFEM_CONTROLLER", 기준작업수: 2 }
         ]
     },
     {
         category: "S/W",
         subcategories: [
-            { name: "SW PATCH", 기준작업수: 2 }
+            { name: "SW_PATCH", 기준작업수: 2 }
         ]
     }
 ];
@@ -292,7 +292,7 @@ function calculateTaskCounts(logs) {
 
 function addRelatedTaskCounts() {
     Object.keys(taskCounts).forEach(worker => {
-        if (taskCounts[worker]["ROBOT CONTROLLER REP"] && taskCounts[worker]["ROBOT REP"]) {
+        if (taskCounts[worker]["ROBOT CONTROLLER REP"] && taskCounts[worker]["ROBOT REP"]) { // EFEM 로교하면 로봇이랑 컨트롤러 둘다 교체하는 거로 인식
             taskCounts[worker]["ROBOT CONTROLLER REP"].count += taskCounts[worker]["ROBOT REP"].count || 0;
         }
     });
