@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const ENGINEER_WORK_HOURS_PER_DAY = 3.5; // 1인당 하루 일하는 라인 업무 시간 설정하는 곳
+    const ENGINEER_WORK_HOURS_PER_DAY = 4; // 1인당 하루 일하는 라인 업무 시간 설정하는 곳
     let logs = [];
     let engineers = [];
     let monthlyWorktimeChartInstance;
