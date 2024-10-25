@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist</title>
+    <link rel="stylesheet" href="./css/worklog.css">
+    <script defer src="./js/checklist.js"></script>
+    <style>
+        /* 비활성화된 버튼 스타일 */
+        .btn-primary:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        /* 경고 메시지 스타일 */
+        .warning-message {
+            color: red;
+            font-size: 14px;
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="checklist-form-container">
+            <div class="inner">
+                <h2>Checklist</h2>
+                <div class="form">
+                    <div class="form-row">
+                        <label for="groupSelect">Group</label>
+                        <select id="groupSelect">
+                            <option value="">Select Group</option>
+                            <option value="PEE1">PEE1</option>
+                            <option value="PEE2">PEE2</option>
+                            <option value="PSKH">PSKH</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="equipmentSelect">Equipment</label>
+                        <select id="equipmentSelect">
+                            <option value="">Select Equipment</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="taskTypeSelect">Task Type</label>
+                        <select id="taskTypeSelect">
+                            <option value="">Select Task Type</option>
+                            <option value="SET UP">SET UP</option>
+                            <option value="MAINTENANCE">MAINTENANCE</option>
+                        </select>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button id="moveButton" class="btn-primary" disabled>SEARCH</button>
+                        <button id="resetButton" class="btn-secondary">Reset</button>
+                    </div>
+
+                    <!-- 경고 메시지 -->
+                    <p id="warningMessage" class="warning-message">3가지 필드를 모두 선택해야 SEARCH 버튼을 사용할 수 있습니다.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="inner">
+            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const groupSelect = document.getElementById("groupSelect");
+            const equipmentSelect = document.getElementById("equipmentSelect");
+            const taskTypeSelect = document.getElementById("taskTypeSelect");
+            const moveButton = document.getElementById("moveButton");
+            const resetButton = document.getElementById("resetButton");
+            const warningMessage = document.getElementById("warningMessage");
+
+            // 이동 대상 페이지 맵
+            const pageMap = {
+                "SUPRA N": { "SET UP": "supra_setup.html", "MAINTENANCE": "supra_maintenance.html" },
+                "SUPRA XP": { "SET UP": "supra_xp_setup.html", "MAINTENANCE": "supra_xp_maintenance.html" },
+                "INTEGER": { "SET UP": "integer_setup.html", "MAINTENANCE": "integer_maintenance.html" },
+                "PRECIA": { "SET UP": "precia_setup.html", "MAINTENANCE": "precia_maintenance.html" },
+                "ECOLITE": { "SET UP": "ecolite_setup.html", "MAINTENANCE": "ecolite_maintenance.html" },
+                "GENEVA": { "SET UP": "geneva_setup.html", "MAINTENANCE": "geneva_maintenance.html" }
+            };
+
+            // 그룹 선택에 따른 설비 옵션
+            const equipmentOptions = {
+                "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA"],
+                "PEE1": ["SUPRA N", "SUPRA XP"],
+                "PEE2": ["INTEGER", "PRECIA"],
+                "PSKH": ["ECOLITE", "GENEVA"]
+            };
+
+            function updateMoveButtonState() {
+                const allFieldsSelected = groupSelect.value && equipmentSelect.value && taskTypeSelect.value;
+                moveButton.disabled = !allFieldsSelected;
+                warningMessage.style.display = 'none'; // 선택 상태가 변경되면 경고 메시지 숨김
+            }
+
+            groupSelect.addEventListener("change", function() {
+                equipmentSelect.innerHTML = '<option value="">Select Equipment</option>';
+                equipmentOptions[groupSelect.value].forEach(optionText => {
+                    const option = document.createElement("option");
+                    option.value = optionText;
+                    option.textContent = optionText;
+                    equipmentSelect.appendChild(option);
+                });
+                updateMoveButtonState();
+            });
+
+            equipmentSelect.addEventListener("change", updateMoveButtonState);
+            taskTypeSelect.addEventListener("change", updateMoveButtonState);
+
+            resetButton.addEventListener("click", function() {
+                groupSelect.value = "";
+                equipmentSelect.innerHTML = '<option value="">Select Equipment</option>';
+                taskTypeSelect.value = "";
+                moveButton.disabled = true;
+                warningMessage.style.display = 'none';
+            });
+
+            moveButton.addEventListener("click", function(event) {
+                if (moveButton.disabled) {
+                    warningMessage.style.display = 'block'; // 경고 메시지 표시
+                    event.preventDefault();
+                } else {
+                    const selectedEquipment = equipmentSelect.value;
+                    const selectedTaskType = taskTypeSelect.value;
+                    const targetPage = pageMap[selectedEquipment]?.[selectedTaskType];
+                    if (targetPage) {
+                        window.location.href = targetPage; // 이동
+                    }
+                }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('x-access-token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.replace('./signin.html');
+                return;
+            }
+    })
+    </script>
+</body>
+</html>
