@@ -1,16 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('x-access-token');
     const groupSelect = document.getElementById('groupSelect');
     const equipmentSelect = document.getElementById('equipmentSelect');
     const taskTypeSelect = document.getElementById('taskTypeSelect');
     const moveButton = document.getElementById('moveButton');
     const resetButton = document.getElementById('resetButton');
 
-        // 토큰이 없는 경우 로그인 페이지로 리다이렉트
-        if (!token) {
-            alert("로그인이 필요합니다.");
-            window.location.replace("./signin.html");
-            return;
-        }
+    // 토큰이 없는 경우 로그인 페이지로 리다이렉트
+    if (!token) {
+        alert("로그인이 필요합니다.");
+        window.location.replace("./signin.html");
+        return;
+    }
 
     // 그룹 선택에 따른 설비 필드 업데이트 옵션
     const equipmentOptions = {
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 이동 버튼 활성화 상태 업데이트
     function updateMoveButtonState() {
-        moveButton.disabled = !(equipmentSelect.value && taskTypeSelect.value);
+        moveButton.disabled = !(groupSelect.value && equipmentSelect.value && taskTypeSelect.value);
     }
 
     // 이동 버튼 클릭 시 URL로 이동
@@ -66,11 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
         taskTypeSelect.value = "";
         updateMoveButtonState();
     });
-
-                // 선택된 값에 따라 SEARCH 버튼 활성화
-                function updateMoveButtonState() {
-                    moveButton.disabled = !(groupSelect.value && equipmentSelect.value && taskTypeSelect.value);
-                }
 
     // 필드 변경 이벤트 설정
     groupSelect.addEventListener('change', () => {
