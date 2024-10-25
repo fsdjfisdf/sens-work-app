@@ -1,4 +1,4 @@
-const ecoliteSetupController = require("../controllers/genevaSetupController");
+const genevaSetupController = require("../controllers/genevaSetupController");
 
 const jwtMiddleware = require("../../config/jwtMiddleware");
 
