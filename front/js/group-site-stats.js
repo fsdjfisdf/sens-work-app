@@ -989,6 +989,13 @@ document.getElementById('resetButton').addEventListener('click', () => {
     
                     const calendarDay = document.createElement('div');
                     calendarDay.className = 'calendar-day';
+
+                    const uniqueEngineers = new Set();
+dailyLogs.forEach(log => {
+    log.task_man.split(',').forEach(engineer => {
+        uniqueEngineers.add(engineer.trim());
+    });
+});
     
                     if (operationRate === 0) {
                         calendarDay.style.backgroundColor = 'white'; // 가동율이 0%인 경우 흰색 배경 적용
@@ -1011,6 +1018,7 @@ document.getElementById('resetButton').addEventListener('click', () => {
                         <p>${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min</p>
                         <p>건 수: ${taskCount}건</p>
                         <p>필요 Eng'r: ${requiredEngineers.toFixed(2)}명</p>
+                        <p>투입 Eng'r: ${uniqueEngineers.size}명</p> <!-- 실제 투입 엔지니어 수 추가 -->
                         <p style="color: blue;">가동율: ${operationRate.toFixed(2)}%</p>
                     `;
                     calendarDay.addEventListener('click', () => showDetailedStats(dateString, dailyLogs));
