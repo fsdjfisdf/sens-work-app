@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayDiv.appendChild(dateElement);
     
             const dailyLogs = logsByDate[dateString] || [];
-            
+    
             // 작업 건 수 계산
             const taskCount = dailyLogs.length;
     
@@ -117,10 +117,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return acc + (workerTaskCount === 1 ? 4 : 4.5);
             }, 0);
             const totalWorkHours = totalMinutes / 60 + additionalTime;
-            
+    
             // 필요 Eng'r 수 계산
             const requiredEngineers = (totalWorkHours / 8).toFixed(1);
-            
+    
             // 주차별 전체 엔지니어 수 가져오기
             const weekKey = getWeekKey(dateString);
             const totalEngineers = weeklyEngineerCount[weekKey] || 0;
@@ -129,6 +129,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const operatingRate = totalEngineers
                 ? ((requiredEngineers / totalEngineers) * 100).toFixed(1)
                 : 0;
+    
+            // 가동율에 따른 배경색 클래스 설정
+            if (operatingRate >= 100) {
+                dayDiv.classList.add('lack'); // 엔지니어 부족
+            } else if (operatingRate >= 70 && operatingRate < 100) {
+                dayDiv.classList.add('optimal'); // 최적의 가동
+            } else {
+                dayDiv.classList.add('surplus'); // 잉여 엔지니어 발생
+            }
     
             // 필요한 요소들만 표시
             const taskCountElement = document.createElement('p');
@@ -205,13 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 각 작업 횟수별 인원 수 계산
         const oneTaskCount = Object.values(workerTasks).filter(count => count === 1).length;
         const multiTaskCount = Object.values(workerTasks).filter(count => count >= 2).length;
-    
-        // 모달 내 정보 설정
-        document.getElementById('modal-date').innerText = `날짜: ${dateString}`;
-        document.getElementById('modal-task-count').innerText = `건 수: ${dailyLogs.length}`;
-        document.getElementById('modal-required-engineers').innerText = `필요 Eng'r 수: ${requiredEngineers}`;
-        document.getElementById('modal-operating-rate').innerText = `가동율: ${operatingRate}%`;
-    
+
         // 가독성을 위한 계산 정보 표시 개선
         document.getElementById('modal-console-info').innerHTML = `
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
@@ -241,9 +244,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
             <div style="margin-top: 20px; font-size: 14px; line-height: 1.5; color: #555;">
                 <strong>IT TIME ( 4시간, 4.5시간 ) 에 대한 근거</strong><br>
-                -. IT TIME : FAB 내에서 작업하는 시간을 제외한 시간<br>
-                -. 1건 IT TIME(4시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2시간)<br>
-                -. 2건 IT TIME(4.5시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2.5시간)<br>
+                -. IT TIME : FAB 내에서 작업하는 시간 및 식사시간을 제외한 시간<br>
+                -. 1건 작업 시 IT TIME(4시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2시간)<br>
+                -. 2건 작업 시 IT TIME(4.5시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2.5시간)<br>
                 -. 이동시간에는 Site 이동 및 방진복 착용, Air Shower 등의 시간이 포함됨
             </div>
         `;
