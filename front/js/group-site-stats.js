@@ -239,6 +239,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+
+
+    
+
+
     function getMonthlyEngineerCount(group, site, date, availabilityRate = 1, isHolidayFilter = false) {
         let month = date.toISOString().slice(0, 7); // 'YYYY-MM' 형식으로 월을 가져옴
         const dayOfWeek = date.getDay();

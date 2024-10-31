@@ -1,0 +1,56 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.calendar {
+    max-width: 1200px; /* 달력 너비 늘리는 곳 */
+    margin: 0 auto;
+}
+
+.days-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
+    gap: 5px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.day-header {
+    text-align: center;
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+.calendar-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
+    gap: 5px;
+    font-size: 10pt;
+}
+
+.calendar-day {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #eaeaea;
+    box-sizing: border-box;
+}
+
+.calendar-day h2 {
+    margin: 0;
+    font-size: 12px;
+}
+
+.calendar-day.holiday h2 {
+    color: red;
+}
+
+.empty {
+    background-color: #f4f4f4;
+}
+
+.current-month {
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}

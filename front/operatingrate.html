@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 시간 달력</title>
+    <link rel="stylesheet" href="operatingrate.css">
+</head>
+<body>
+    <h1>작업 시간 달력</h1>
+    <div id="current-month" class="current-month"></div> <!-- Month display here -->
+    <div class="calendar">
+        <div id="days-row" class="days-row">
+            <!-- 요일이 여기 가로로 표시됩니다 -->
+        </div>
+        <div id="calendar-container" class="calendar-container">
+            <!-- 달력 날짜들이 여기 표시됩니다 -->
+        </div>
+    </div>
+    <button id="prev-month">이전 달</button>
+    <button id="next-month">다음 달</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="operatingrate.js"></script>
+</body>
+</html>
