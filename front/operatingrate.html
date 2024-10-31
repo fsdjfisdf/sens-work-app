@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 시간 달력</title>
+    <title>Operating Rate</title>
     <link rel="stylesheet" href="css/operatingrate.css">
 
 </head>
 <body>
-    <h1>작업 시간 달력</h1>
+    <h1>operating rate</h1>
     <div id="current-month" class="current-month"></div> <!-- Month display here -->
     <div class="calendar">
         <div id="days-row" class="days-row">
@@ -18,14 +18,14 @@
             <!-- 달력 날짜들이 여기 표시됩니다 -->
         </div>
     </div>
-    <button id="prev-month">이전 달</button>
-    <button id="next-month">다음 달</button>
+    <button id="prev-month">Last Month</button>
+    <button id="next-month">Next Month</button>
 
     <!-- 모달 창 -->
     <div id="modal" class="modal" style="display:none;">
         <div class="modal-content">
             <span id="close-modal" class="close-button">&times;</span>
-            <h2>작업 상세 정보</h2>
+            <h2>Detail</h2>
             <p id="modal-date"></p>
             <p id="modal-total-hours"></p>
             <p id="modal-worker-count"></p>
