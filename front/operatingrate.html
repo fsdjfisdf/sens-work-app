@@ -4,41 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operating Rate</title>
-    <link rel="stylesheet" href="css/operatingrate.css">
-
+    <link rel="stylesheet" href="/css/operatingrate.css">
 </head>
 <body>
-    <h1>operating rate</h1>
-    <div id="current-month" class="current-month"></div> <!-- Month display here -->
-    <div class="calendar">
-        <div id="days-row" class="days-row">
-            <!-- 요일이 여기 가로로 표시됩니다 -->
-        </div>
-        <div id="calendar-container" class="calendar-container">
-            <!-- 달력 날짜들이 여기 표시됩니다 -->
-        </div>
+    <h1>Operating Rate</h1>
+
+    <!-- 검색 필터 UI -->
+    <div class="filter-section">
+        <label>시작 날짜: <input type="date" id="start-date"></label>
+        <label>종료 날짜: <input type="date" id="end-date"></label>
+        
+        <label>GROUP:
+            <select id="group-select">
+                <option value="">전체</option>
+                <option value="PEE1">PEE1</option>
+                <option value="PEE2">PEE2</option>
+                <option value="PSKH">PSKH</option>
+            </select>
+        </label>
+
+        <label>SITE:
+            <select id="site-select">
+                <option value="">전체</option>
+                <option value="PT">PT</option>
+                <option value="HS">HS</option>
+                <option value="IC">IC</option>
+                <option value="CJ">CJ</option>
+                <option value="PSKH">PSKH</option>
+            </select>
+        </label>
+
+        <button id="filter-btn">검색</button>
     </div>
+
+    <div id="current-month" class="current-month"></div>
+    <div class="calendar">
+        <div id="days-row" class="days-row"></div>
+        <div id="calendar-container" class="calendar-container"></div>
+    </div>
+
     <button id="prev-month">Last Month</button>
     <button id="next-month">Next Month</button>
+
+    <div style="width: 100%; max-width: 600px; margin: 20px auto;">
+        <canvas id="weeklyOperatingRateChart"></canvas>
+    </div>
+    
 
     <!-- 모달 창 -->
     <div id="modal" class="modal" style="display:none;">
         <div class="modal-content">
             <span id="close-modal" class="close-button">&times;</span>
             <h2>Detail</h2>
-            <p id="modal-date"></p>
-            <p id="modal-total-hours"></p>
-            <p id="modal-worker-count"></p>
-            <p id="modal-task-count"></p>
-            <p id="modal-total-work-hours"></p>
-            <p id="modal-required-engineers"></p>
-            <p id="modal-operating-rate"></p>
-            <!-- 콘솔 데이터용 가독성 있는 테이블 -->
-            <div id="modal-console-info"></div>
+            
+            <!-- 탭 버튼 -->
+            <div class="tab-menu">
+                <button id="info-tab" class="tab-button">INFO</button>
+                <button id="worker-tab" class="tab-button">WORKER</button>
+            </div>
+            
+            <!-- 탭 콘텐츠 -->
+            <div id="modal-info" class="tab-content">
+                <!-- INFO 탭의 콘텐츠는 JavaScript에서 동적으로 추가됩니다 -->
+            </div>
+            <div id="modal-worker" class="tab-content" style="display: none;">
+                <!-- WORKER 탭의 콘텐츠는 JavaScript에서 동적으로 추가됩니다 -->
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="operatingrate.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/operatingrate.js"></script>
 </body>
 </html>

@@ -78,6 +78,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PEE2-HS': { weekday: 6, weekend: 1 },
             'PSKH-PSKH': { weekday: 7, weekend: 1 }
         },
+        '2024-11': {
+            'PEE1-PT': { weekday: 14, weekend: 3 }, // 손석현 대리 복귀 // 황이환 주임 최용수 주임 출장 // 정현우 라인 대응 불가
+            'PEE1-HS': { weekday: 19, weekend: 4 }, // 송다운 복귀 // 신입 2명 추가 // 강민호 출장 시작
+            'PEE1-IC': { weekday: 4, weekend: 1 },
+            'PEE1-CJ': { weekday: 4, weekend: 1 },  // 강문호 대리 복귀
+            'PEE2-PT': { weekday: 7, weekend: 1 }, // 정재윤 퇴사
+            'PEE2-HS': { weekday: 6, weekend: 1 },
+            'PSKH-PSKH': { weekday: 7, weekend: 1 }
+        },
         // 각 월별로 데이터를 추가
     };
 
@@ -130,52 +139,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function getMonthlyEngineerCount(group, site, date, availabilityRate = 1, isHolidayFilter = false) {
-        let month = date.toISOString().slice(0, 7); // 'YYYY-MM' 형식으로 월을 가져옴
+    function getWeeklyEngineerCount(group, site, date, availabilityRate = 1, isHolidayFilter = false) {
+        const week = `${date.getFullYear()}-W${String(getWeekOfYear(date)).padStart(2, '0')}`;
         const dayOfWeek = date.getDay();
         const dateString = formatDate(date.toISOString());
         const isHolidayFlag = isHoliday(dateString);
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6 || isHolidayFlag);
         const useWeekend = isHolidayFilter || isWeekend;
     
-        let totalCount = 0;
-    
-        // 그룹과 사이트가 모두 선택된 경우
         if (site) {
-            if (engineerCount[month] && engineerCount[month][`${group}-${site}`]) {
-                const count = useWeekend ? engineerCount[month][`${group}-${site}`].weekend : engineerCount[month][`${group}-${site}`].weekday;
+            if (engineerCount[week] && engineerCount[week][`${group}-${site}`]) {
+                const count = useWeekend ? engineerCount[week][`${group}-${site}`].weekend : engineerCount[week][`${group}-${site}`].weekday;
                 return Math.round(count * availabilityRate);
             } else {
-                console.warn(`No data found for site: ${site} in group: ${group} for month: ${month}`);
+                console.warn(`No data for site ${site} in group ${group} for week ${week}`);
                 return 0;
             }
         }
     
-        // 그룹만 선택된 경우
         if (!site && group) {
-            if (engineerCount[month]) {
-                Object.keys(engineerCount[month]).forEach(key => {
+            let totalCount = 0;
+            if (engineerCount[week]) {
+                Object.keys(engineerCount[week]).forEach(key => {
                     if (key.startsWith(`${group}-`)) {
-                        const count = useWeekend ? engineerCount[month][key].weekend : engineerCount[month][key].weekday;
+                        const count = useWeekend ? engineerCount[week][key].weekend : engineerCount[week][key].weekday;
                         totalCount += count;
                     }
                 });
-    
-                if (totalCount > 0) {
-                    return Math.round(totalCount * availabilityRate);
-                } else {
-                    console.warn(`No engineers found for group ${group} in month ${month}`);
-                    return 0;
-                }
-            } else {
-                console.warn(`No data found for month ${month}`);
-                return 0;
             }
+            return Math.round(totalCount * availabilityRate);
         }
-    
-        console.warn(`No valid group or site provided`);
         return 0;
     }
+    
     
     
     

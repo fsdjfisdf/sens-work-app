@@ -1,21 +1,23 @@
+/* 기본 body 스타일 */
 body {
     font-family: Arial, sans-serif;
 }
 
 .calendar {
-    max-width: 1200px; /* 달력 너비 늘리는 곳 */
+    max-width: 1200px;
     margin: 0 auto;
 }
 
 .days-row {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
+    grid-template-columns: 1fr repeat(7, 1fr); /* 1열 추가 후 7일 배치 */
     gap: 5px;
     font-weight: bold;
     margin-bottom: 10px;
 }
 
-.day-header {
+.day-header,
+.week-label {
     text-align: center;
     padding: 5px;
     border-bottom: 1px solid #ccc;
@@ -23,9 +25,25 @@ body {
 
 .calendar-container {
     display: grid;
-    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
+    grid-template-columns: 1fr repeat(7, 1fr); /* 1열 추가 후 7일 배치 */
     gap: 5px;
     font-size: 10pt;
+}
+
+.calendar-week {
+    display: contents; /* 주차별로 같은 행에 표시 */
+}
+
+.week-label {
+    grid-row: span 1; /* 한 행 전체를 차지 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #555;
+    background-color: #f7f7f7;
+    border: 1px solid #eaeaea;
+    padding: 10px;
 }
 
 .calendar-day {
@@ -56,7 +74,7 @@ body {
 }
 
 .modal {
-    display: none; /* 모달은 기본적으로 숨겨짐 */
+    display: none;
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -73,8 +91,8 @@ body {
     background-color: #fefefe;
     padding: 20px;
     border: 1px solid #888;
-    width: 100%; /* 너비를 늘림 */
-    max-width: 750px; /* 최대 너비를 늘림 */
+    width: 100%;
+    max-width: 750px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     position: relative;
@@ -97,15 +115,14 @@ body {
     cursor: pointer;
 }
 
-
 .calendar-day.lack {
-    background-color: #ffcccc; /* 빨간색: 엔지니어 부족 */
+    background-color: #ffcccc;
 }
 
 .calendar-day.optimal {
-    background-color: #ccffcc; /* 초록색: 최적의 가동 */
+    background-color: #ccffcc;
 }
 
 .calendar-day.surplus {
-    background-color: #ffffcc; /* 노란색: 잉여 엔지니어 발생 */
+    background-color: #ffffcc;
 }
