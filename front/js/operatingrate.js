@@ -504,10 +504,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                         color: '#000',
                         anchor: 'end',
-                        align: 'top'
+                        align: 'top',
+                        font: {
+                            size: 14 // 데이터 레이블의 폰트 크기 조정
+                        }
+                        
                     }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 14 // x축 폰트 크기 조정
+                            }
+                        }
+                    },
                     y: {
                         beginAtZero: true,
                         max: maxRateValue, // 가동율 최대값 설정
@@ -526,8 +537,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         title: {
                             display: true,
                             text: '근무 시간 (시간)'
+                            
                         },
                         ticks: {
+                            font: {
+                                size: 14 // y1축 폰트 크기 조정
+                            },
                             display: false, // 주축 값 숨김 처리
                             callback: function(value) {
                                 const hours = Math.floor(value);
