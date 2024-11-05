@@ -11,12 +11,12 @@
 
     <!-- 검색 필터 UI -->
     <div class="filter-section">
-        <label>시작 날짜: <input type="date" id="start-date"></label>
-        <label>종료 날짜: <input type="date" id="end-date"></label>
+        <label>START DATE: <input type="date" id="start-date"></label>
+        <label>END DATE: <input type="date" id="end-date"></label>
         
         <label>GROUP:
             <select id="group-select">
-                <option value="">전체</option>
+                <option value="">ALL GROUP</option>
                 <option value="PEE1">PEE1</option>
                 <option value="PEE2">PEE2</option>
                 <option value="PSKH">PSKH</option>
@@ -25,7 +25,7 @@
 
         <label>SITE:
             <select id="site-select">
-                <option value="">전체</option>
+                <option value="">ALL SITE</option>
                 <option value="PT">PT</option>
                 <option value="HS">HS</option>
                 <option value="IC">IC</option>
@@ -34,7 +34,16 @@
             </select>
         </label>
 
-        <button id="filter-btn">검색</button>
+        <label>WORKDAY & HOLIDAY
+            <select id="day-type-select">
+                <option value="all">ALL</option>
+                <option value="workday">Workday</option>
+                <option value="holiday">Holiday</option>
+            </select>
+        </label>
+
+        <button id="filter-btn">SEARCH</button>
+        <button id="reset-btn">RESET</button>
     </div>
 
     <div id="current-month" class="current-month"></div>
@@ -59,8 +68,8 @@
             
             <!-- 탭 버튼 -->
             <div class="tab-menu">
-                <button id="info-tab" class="tab-button">INFO</button>
-                <button id="worker-tab" class="tab-button">WORKER</button>
+                <button id="info-tab" class="tab-button">EXPLAIN</button>
+                <button id="worker-tab" class="tab-button">WORK TYPE</button>
             </div>
             
             <!-- 탭 콘텐츠 -->

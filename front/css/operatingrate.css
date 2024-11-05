@@ -10,7 +10,7 @@ body {
 
 .days-row {
     display: grid;
-    grid-template-columns: 1fr repeat(7, 1fr); /* 1열 추가 후 7일 배치 */
+    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
     gap: 5px;
     font-weight: bold;
     margin-bottom: 10px;
@@ -25,7 +25,7 @@ body {
 
 .calendar-container {
     display: grid;
-    grid-template-columns: 1fr repeat(7, 1fr); /* 1열 추가 후 7일 배치 */
+    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
     gap: 5px;
     font-size: 10pt;
 }
@@ -59,6 +59,10 @@ body {
 }
 
 .calendar-day.holiday h2 {
+    color: red;
+}
+
+.calendar-day.weekend h2 {
     color: red;
 }
 
