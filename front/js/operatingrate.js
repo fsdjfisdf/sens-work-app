@@ -454,34 +454,96 @@ document.addEventListener('DOMContentLoaded', async () => {
         const ctx = document.getElementById('weeklyOperatingRateChart').getContext('2d');
         const labels = weeklyAverageRates.map(item => item.week);
         const data = weeklyAverageRates.map(item => item.averageRate);
-
+        
+        // 가동률을 시간으로 변환한 값을 보조 축 데이터로 사용합니다 (8시간 기준 가동률)
+        const timeData = data.map(rate => (rate / 100) * 8); // 근무 시간 계산 (가동률의 8시간 기준)
+        const maxTimeValue = Math.max(...timeData) * 1.2;
+        const maxRateValue = Math.max(...data) * 1.6;
+    
         if (weeklyOperatingRateChart) {
             weeklyOperatingRateChart.destroy();
         }
-
+    
         weeklyOperatingRateChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels,
-                datasets: [{
-                    label: '주차별 평균 가동율 (%)',
-                    data,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
+                datasets: [
+                    {
+                        label: '주차별 평균 가동율 (%)',
+                        data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: '근무 시간 (시간)',
+                        data: timeData,
+                        type: 'line',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y1',
+                        fill: false // 음영 제거
+                    }
+                ]
             },
             options: {
                 responsive: true,
+                plugins: {
+                    datalabels: {
+                        display: true,
+                        formatter: (value, context) => {
+                            const datasetLabel = context.dataset.label;
+                            if (datasetLabel === '근무 시간 (시간)') {
+                                const hours = Math.floor(value);
+                                const minutes = Math.round((value - hours) * 60);
+                                return `${hours}시간 ${minutes}분`;
+                            }
+                            return `${value}%`;
+                        },
+                        color: '#000',
+                        anchor: 'end',
+                        align: 'top'
+                    }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 100
+                        max: maxRateValue, // 가동율 최대값 설정
+                        title: {
+                            display: true,
+                            text: '가동율 (%)'
+                        },
+                        ticks: {
+                            display: false // 주축 값 숨김 처리
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        max: maxTimeValue, // 동적 최대값 설정
+                        position: 'right', // 보조 축을 오른쪽에 표시
+                        title: {
+                            display: true,
+                            text: '근무 시간 (시간)'
+                        },
+                        ticks: {
+                            display: false, // 주축 값 숨김 처리
+                            callback: function(value) {
+                                const hours = Math.floor(value);
+                                const minutes = Math.round((value - hours) * 60);
+                                return `${hours}시간 ${minutes}분`;
+                                
+                            }
+                        }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels] // dataLabels 플러그인 활성화
         });
     }
+    
+    
 
 
     function renderDaysRow() {
