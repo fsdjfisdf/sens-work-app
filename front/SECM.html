@@ -52,13 +52,13 @@
                 <h2 class="section-title">SECM</h2>
                 <div class="search-container">
                     <select id="searchGroup">
-                        <option value="">Select Group</option>
+                        <option value="">Group</option>
                         <option value="PEE1">PEE1</option>
                         <option value="PEE2">PEE2</option>
                         <option value="PSKH">PSKH</option>
                     </select>
                     <select id="searchSite">
-                        <option value="">Select Site</option>
+                        <option value="">Site</option>
                         <option value="PT">PT</option>
                         <option value="HS">HS</option>
                         <option value="IC">IC</option>
@@ -66,7 +66,7 @@
                         <option value="PSKH">PSKH</option>
                     </select>
                     <select id="searchLevel">
-                        <option value="">Select Level</option>
+                        <option value="">Level</option>
                         <option value="0">0</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
@@ -79,16 +79,21 @@
                         <option value="X">X</option>
                     </select>
                     <select id="searchMultiLevel">
-                        <option value="">Select Multi Level</option>
+                        <option value="">Multi Level</option>
                         <option value="0">4</option>
                         <option value="1">4-1(B)</option>
                         <option value="2">4-1(A)</option>
+                    </select>
+                    <select id="searchHireDate">
+                        <option value="">Hire date</option>
+                        <option value="before2024">Before 2024</option>
+                        <option value="from2024">After 2024</option>
                     </select>
                     <input list="names" id="searchName" placeholder="Enter Name">
                     <datalist id="names"></datalist>
                     <button id="searchButton">SEARCH</button>
                     <button id="resetButton">RESET</button>
-                    <button id="exportButton">Export to Excel(SECM DATA)</button>
+                    <button id="exportButton">Export to Excel</button>
                 </div>
                 <div class="button-container">
                     <button id="showEngineerGroup" class="active">INFO</button>

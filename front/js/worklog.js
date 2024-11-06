@@ -1,5 +1,11 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
+    document.getElementById('worklogForm').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
+
     function checkLogin() {
         const token = localStorage.getItem('x-access-token');
         if (!token) {

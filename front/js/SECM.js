@@ -72,19 +72,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         const multiLevel = searchMultiLevel.value;
         const name = searchName.value.toLowerCase();
         const multiEngr = searchMultiEngr.value;
+        const hireDate = searchHireDate.value;
     
         return data.filter(row => {
             const isMultiEngr = multiEngr === 'O' ? row.MPI >= 2 : multiEngr === 'X' ? row.MPI < 2 : true;
+            const hireDateCondition = 
+                !hireDate || 
+                (hireDate === 'before2024' && new Date(row.HIRE).getFullYear() < 2024) || 
+                (hireDate === 'from2024' && new Date(row.HIRE).getFullYear() >= 2024);
+    
             return (
                 (!group || row.GROUP === group) &&
                 (!site || row.SITE === site) &&
                 (!level || row.LEVEL == level) &&
                 (!multiLevel || row['MULTI LEVEL'] == multiLevel) &&
                 (!name || row.NAME.toLowerCase().includes(name)) &&
-                isMultiEngr
+                isMultiEngr &&
+                hireDateCondition
             );
         });
     }
+    
 
     function createChart(ctx, config) {
         if (charts[ctx.canvas.id]) {
@@ -147,39 +155,100 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { quarters, levelDistribution };
     }
 
-    function calculateMonthlyEngineerCount(data) {
-        const startYear = 2023;
-        const endYear = new Date().getFullYear();
-        const endMonth = new Date().getMonth();
-        const months = [];
+
+// 추가 엔지니어 데이터
+const additionalEngineers = [
+    { NAME: '장우석', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-02-27', resignation_date: '2023-07-14' },
+    { NAME: '전병국', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-07-04', resignation_date: '2023-10-20' },
+    { NAME: '김민규', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-02-27', resignation_date: '2023-12-27' },
+    { NAME: '배주찬', GROUP: 'PEE1', SITE: 'IC', HIRE: '2019-10-21', resignation_date: '2024-01-11' },
+    { NAME: '남동우', GROUP: 'PEE1', SITE: 'CJ', HIRE: '2022-12-01', resignation_date: '2024-02-16' },
+    { NAME: '이선학', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-06-26', resignation_date: '2024-05-27' },
+    { NAME: '김지웅', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-03-07', resignation_date: '2024-06-21' },
+    { NAME: '전산해', GROUP: 'PEE2', SITE: 'PT', HIRE: '2019-07-01', resignation_date: '2023-02-24' },
+    { NAME: '엄준용', GROUP: 'PEE2', SITE: 'PT', HIRE: '2022-02-07', resignation_date: '2023-07-27' },
+    { NAME: '김승기', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-05-02', resignation_date: '2023-12-27' },
+    { NAME: '조현민', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-07-26', resignation_date: '2024-03-27' },
+    { NAME: '정재윤', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-11-06', resignation_date: '2024-09-27' }
+];
+
+// 엔지니어 수 계산 함수 업데이트
+// 엔지니어 수 계산 함수 업데이트
+// 엔지니어 수 계산 함수 업데이트
+// 엔지니어 수 계산 함수 업데이트
+function calculateMonthlyEngineerCount(data) {
+    const startYear = 2023;
+    const endYear = new Date().getFullYear();
+    const endMonth = new Date().getMonth();
+    const months = [];
     
-        for (let year = startYear; year <= endYear; year++) {
-            for (let month = 0; month < 12; month++) {
-                if (year === endYear && month > endMonth) break;
-                months.push(`${year}-${String(month + 1).padStart(2, '0')}`);
-            }
+    // 월별 라벨 생성
+    for (let year = startYear; year <= endYear; year++) {
+        for (let month = 0; month < 12; month++) {
+            if (year === endYear && month > endMonth) break;
+            months.push(`${year}-${String(month + 1).padStart(2, '0')}`);
         }
+    }
     
-        const engineerCount = months.map(() => 0);
-    
-        data.forEach(row => {
+    const engineerCount = [];
+    const hiredEngineers = months.map(() => 0);
+    const resignedEngineers = months.map(() => 0);
+    const engineersPerMonth = months.map(() => ({ hired: [], resigned: [] })); // 월별 입사 및 퇴사자 이름 저장
+
+    const allEngineers = [...data, ...additionalEngineers].filter(row => {
+        // 그룹과 사이트 필터를 적용
+        return (!searchGroup.value || row.GROUP === searchGroup.value) &&
+               (!searchSite.value || row.SITE === searchSite.value);
+    });
+
+    // 초기 인원 계산 (2023년 1월 이전에 입사한 엔지니어 수)
+    let totalEngineers = allEngineers.filter(row => {
+        const hireDate = new Date(row.HIRE);
+        return hireDate < new Date(startYear, 0, 1); // 2023년 1월 이전 입사자
+    }).length;
+
+    months.forEach((monthLabel, index) => {
+        const [year, month] = monthLabel.split('-').map(Number);
+        const monthStart = new Date(year, month - 1, 1);
+        const monthEnd = new Date(year, month, 0);
+
+        let hiresThisMonth = 0;
+        let resignsThisMonth = 0;
+
+        allEngineers.forEach(row => {
             const hireDate = new Date(row.HIRE);
-            const hireYear = hireDate.getFullYear();
-            const hireMonth = hireDate.getMonth();
-            
-            for (let year = hireYear; year <= endYear; year++) {
-                for (let month = year === hireYear ? hireMonth : 0; month < 12; month++) {
-                    if (year === endYear && month > endMonth) break;
-                    const index = (year - startYear) * 12 + month;
-                    if (index >= 0) {
-                        engineerCount[index]++;
-                    }
-                }
+            const resignationDate = row.resignation_date ? new Date(row.resignation_date) : null;
+
+            if (hireDate >= monthStart && hireDate <= monthEnd) {
+                hiresThisMonth++;
+                engineersPerMonth[index].hired.push(row.NAME); // 입사자 이름 저장
+            }
+
+            if (resignationDate && resignationDate >= monthStart && resignationDate <= monthEnd) {
+                resignsThisMonth++;
+                engineersPerMonth[index].resigned.push(row.NAME); // 퇴사자 이름 저장
             }
         });
+
+        // 이전 인원 수에 입사자와 퇴사자를 반영하여 누적 계산
+        totalEngineers = totalEngineers + hiresThisMonth - resignsThisMonth;
+
+        // 각 월별 입사자와 퇴사자 정보 저장
+        hiredEngineers[index] = hiresThisMonth;
+        resignedEngineers[index] = resignsThisMonth;
+        engineerCount[index] = totalEngineers;
+
+        // 계산 과정 출력
+        console.log(`Month: ${monthLabel}, Total Engineers: ${engineerCount[index]}, Hired: ${hiredEngineers[index]}, Resigned: ${resignedEngineers[index]}`);
+    });
+
+    return { months, engineerCount, hiredEngineers, resignedEngineers, engineersPerMonth };
+}
+
+
+
+
     
-        return { months, engineerCount };
-    }
 
     const weekendEngineerCountsBySite = {
         "PEE1 Group PT Site": 4,
@@ -263,7 +332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     function renderCharts(data) {
         const totalEngineers = data.length;
-
+    
         if (totalEngineers === 1) {
             const person = data[0];
             personName.textContent = person.NAME;
@@ -274,54 +343,116 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             personInfo.classList.add('hidden');
         }
-
-        // Monthly Engineer Count
-        const { months, engineerCount } = calculateMonthlyEngineerCount(data);
+    
+        // Monthly Engineer Count with Hired and Resigned details
+        const { months, engineerCount, hiredEngineers, resignedEngineers, engineersPerMonth } = calculateMonthlyEngineerCount(data);
+    
+        // 꺾은선 그래프와 막대 그래프 생성
         createChart(engineerCountChartCtx, {
-            type: 'line',
             data: {
                 labels: months,
-                datasets: [{
-                    label: 'Number of Engineers',
-                    data: engineerCount,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    fill: true
-                }]
+                datasets: [
+                    {
+                        label: 'Total Engineers',
+                        data: engineerCount,
+                        type: 'line',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'center',
+                            color: 'silver',
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    {
+                        label: 'Hired Engineers',
+                        data: hiredEngineers,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        type: 'bar',
+                        datalabels: {
+                            align: 'end',
+                            anchor: 'end',
+                            color: 'white',
+                            font: {
+                                size: 12
+                            },
+                            formatter: (value) => value > 0 ? value : ''
+                        }
+                    },
+                    {
+                        label: 'Resigned Engineers',
+                        data: resignedEngineers,
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        type: 'bar',
+                        datalabels: {
+                            align: 'end',
+                            anchor: 'end',
+                            color: 'white',
+                            font: {
+                                size: 12
+                            },
+                            formatter: (value) => value > 0 ? value : ''
+                        }
+                    }
+                ]
             },
-            plugins: [ChartDataLabels],
             options: {
+                responsive: true,
                 plugins: {
-                    datalabels: {
-                        formatter: value => value,
-                        color: 'white',
-                        font: {
-                            size: 12
-                        },
-                        anchor: 'end',
-                        align: 'end'
+                    tooltip: {
+                        callbacks: {
+                            title: (context) => `Month: ${context[0].label}`,
+                            label: (context) => {
+                                const type = context.dataset.label;
+                                const monthIndex = context.dataIndex;
+    
+                                // 입사자 및 퇴사자 이름 목록 가져오기
+                                let names = "";
+                                if (type === 'Hired Engineers') {
+                                    names = engineersPerMonth[monthIndex].hired.join(', ');
+                                } else if (type === 'Resigned Engineers') {
+                                    names = engineersPerMonth[monthIndex].resigned.join(', ');
+                                }
+                                
+                                return `${type}: ${context.raw} ${names ? `- ${names}` : ''}`;
+                            }
+                        }
                     },
                     legend: {
-                        display: false // 범례 숨김
+                        display: true,
+                        position: 'bottom'
                     }
                 },
                 scales: {
-                    x: {
-                        ticks: {
-                            color: 'silver' // x축 레이블 색상
-                        }
-                    },
                     y: {
                         beginAtZero: true,
-                        suggestedMax: Math.max(...engineerCount) * 1.2,
+                        suggestedMax: Math.max(...engineerCount) * 1.1,
                         ticks: {
-                            color: 'silver' // y축 레이블 색상
+                            color: 'silver'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'silver'
                         }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         });
+    
+    
+        
+    
 
         // Level Distribution 데이터 처리
         const levels = data.map(row => row.LEVEL);
@@ -1098,15 +1229,21 @@ createChart(monthlyCapaChartCtx, {
         const group = searchGroup.value;
         const site = searchSite.value;
         const taskMan = searchName.value.toLowerCase();
+        const hireDate = searchHireDate.value;
     
         return data.filter(log => {
             const matchesGroup = !group || log.group === group;
             const matchesSite = !site || log.site === site;
             const matchesTaskMan = !taskMan || log.task_man.toLowerCase().includes(taskMan);
-            
-            return matchesGroup && matchesSite && matchesTaskMan;
+            const matchesHireDate = 
+                !hireDate || 
+                (hireDate === 'before2024' && new Date(log.hire).getFullYear() < 2024) || 
+                (hireDate === 'from2024' && new Date(log.hire).getFullYear() >= 2024);
+                
+            return matchesGroup && matchesSite && matchesTaskMan && matchesHireDate;
         });
     }
+    
     
 
     function renderWorkCharts(data) {
@@ -1656,6 +1793,7 @@ createChart(monthlyCapaChartCtx, {
         searchMultiLevel.value = '';
         searchMultiEngr.value = ''; // 추가된 필터 초기화
         searchName.value = '';
+        searchHireDate.value = '';
         updateAllCharts();
     });
 
@@ -1664,6 +1802,9 @@ createChart(monthlyCapaChartCtx, {
     searchLevel.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
     searchMultiLevel.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
     searchMultiEngr.addEventListener('change', () => updateDatalistOptions(filterData(originalData))); // Multi Eng'r 필터 추가
+    searchHireDate.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
+    searchHireDate.addEventListener('change', updateAllCharts);
+
 
 // 데이터 로딩 및 차트 렌더링
 const data = await fetchData();
