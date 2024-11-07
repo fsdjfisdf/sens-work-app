@@ -3,6 +3,15 @@ let cumulativeTotalWorkHours = 0; // 전체 날짜의 총 작업 시간 누적 �
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+
+    const userRole = localStorage.getItem('user-role');
+    console.log("User role:", userRole); // role 정보를 콘솔에 출력
+    if (userRole !== 'admin') {
+        alert("접근 권한이 없습니다.");
+        window.location.replace("./index.html");
+        return;
+    }
+    
     // 공휴일 리스트를 전역으로 선언하여 모든 함수에서 접근 가능하게 합니다.
     const holidays = [
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
