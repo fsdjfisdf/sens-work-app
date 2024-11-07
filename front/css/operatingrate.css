@@ -130,3 +130,41 @@ body {
 .calendar-day.surplus {
     background-color: #ffffcc;
 }
+
+/* 도넛 그래프 및 오른쪽 정보 섹션 스타일 */
+.chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.donut-chart-wrapper {
+    width: 50%;
+    max-width: 300px;
+}
+
+.info-section {
+    width: 50%;
+    padding-left: 20px;
+}
+
+.info-section p {
+    font-size: 14px;
+    margin: 8px 0;
+}
+
+.info-section p strong {
+    font-weight: bold;
+}
+
+.donut-center-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+#average-operating-rate p {
+    display: none;
+}
+

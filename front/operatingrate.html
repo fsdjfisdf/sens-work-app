@@ -5,9 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operating Rate</title>
     <link rel="stylesheet" href="./css/operatingrate.css">
+    <link rel="stylesheet" href="./css/readworklog.css">
 </head>
 <body>
-    <h1>Operating Rate</h1>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+    <main>
 
     <!-- 검색 필터 UI -->
     <div class="filter-section">
@@ -45,6 +79,22 @@
         <button id="filter-btn">SEARCH</button>
         <button id="reset-btn">RESET</button>
     </div>
+    <div class="chart-container">
+        <div class="donut-chart-wrapper">
+            <div id="average-operating-rate" class="average-operating-rate">
+                <p>전체 평균 가동율: <span id="average-operating-rate-value">0%</span></p>
+                <canvas id="donutChart"></canvas>
+            </div>
+            </div>
+        <div class="info-section">
+            <p><strong>Total Worktime:</strong> <span id="totalWorktime">0시간 0분</span></p>
+            <p><strong>Work Days:</strong> <span id="workDays">0</span> days</p>
+            <p><strong>Total Engineers:</strong> <span id="totalEngineers">0</span></p>
+            <p><strong>Required Engineers:</strong> <span id="requiredEngineers">0</span></p>
+            <p><strong>Average Worktime per Eng'r:</strong> <span id="avgWorktimePerEngineer">0시간</span></p>
+        </div>
+    </div>
+
 
     <div id="current-month" class="current-month"></div>
     <div class="calendar">
@@ -58,7 +108,7 @@
     <div style="width: 100%; max-width: 600px; margin: 20px auto;">
         <canvas id="weeklyOperatingRateChart"></canvas>
     </div>
-    
+
 
     <!-- 모달 창 -->
     <div id="modal" class="modal" style="display:none;">
@@ -81,6 +131,12 @@
             </div>
         </div>
     </div>
+</main>
+<footer>
+    <div class="inner">
+        <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+    </div>
+</footer>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <!-- 먼저 Chart.js 로드 -->
@@ -89,5 +145,58 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
     <script src="./js/operatingrate.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+    
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+    
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+    
+            const signOutButton = document.querySelector("#sign-out");
+    
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+    
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+    
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+        document.addEventListener('DOMContentLoaded', async () => {
+                const token = localStorage.getItem('x-access-token');
+                if (!token) {
+                    alert('로그인이 필요합니다.');
+                    window.location.replace('./signin.html');
+                    return;
+                }
+        }
+    )
+        
+    </script>
 </body>
 </html>

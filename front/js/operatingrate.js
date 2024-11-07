@@ -1,3 +1,7 @@
+let donutChart; // 도넛 차트를 전역 변수로 선언
+let cumulativeTotalWorkHours = 0; // 전체 날짜의 총 작업 시간 누적 변수
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 공휴일 리스트를 전역으로 선언하여 모든 함수에서 접근 가능하게 합니다.
     const holidays = [
@@ -169,9 +173,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return [];
         }
     }
-    
-
-
 
     async function applyFilters() {
         const startDate = document.getElementById('start-date').value;
@@ -180,18 +181,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         const site = document.getElementById('site-select').value;
         const dayType = document.getElementById('day-type-select').value;
     
+        // 이전 달의 시작 날짜 설정 (한 주 전)
+        const firstLogDate = logs.reduce((earliest, log) => {
+            const logDate = new Date(log.task_date);
+            return (!earliest || logDate < earliest) ? logDate : earliest;
+        }, null);
+        const currentMonthStart = new Date(currentYear, currentMonth, 1);
+        const previousMonthStart = new Date(currentMonthStart);
+        previousMonthStart.setDate(previousMonthStart.getDate() - 7);
+    
+        // 선택된 범위와 관계없이 이전 달 주간부터 현재 달의 끝까지의 데이터를 필터링
         const filteredLogs = logs.filter(log => {
-            const logDate = log.task_date;
-            const dateMatch = (!startDate || logDate >= startDate) && (!endDate || logDate <= endDate);
+            const logDate = new Date(log.task_date);
+            const dateMatch = (!startDate || logDate >= new Date(startDate)) &&
+                              (!endDate || logDate <= new Date(endDate)) &&
+                              (logDate >= previousMonthStart);
             const groupMatch = !group || log.group === group;
             const siteMatch = !site || log.site === site;
     
-            const logDateStr = new Date(logDate).toISOString().split('T')[0];
-            const dayOfWeek = new Date(logDate).getDay();
+            const logDateStr = logDate.toISOString().split('T')[0];
+            const dayOfWeek = logDate.getUTCDay();
             const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
             const isHoliday = holidays.includes(logDateStr);
     
-            // "전체"가 선택된 경우 모든 날짜를 포함
             let dayTypeMatch = true;
             if (dayType === 'workday') {
                 dayTypeMatch = !isWeekend && !isHoliday;
@@ -199,14 +211,175 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dayTypeMatch = isWeekend || isHoliday;
             }
     
-            const isFutureDate = new Date(logDate) > today;
-    
-            return dateMatch && groupMatch && siteMatch && dayTypeMatch && !isFutureDate;
+            return dateMatch && groupMatch && siteMatch && dayTypeMatch;
         });
     
-        renderCalendar(filteredLogs, currentYear, currentMonth, dayType);
+        // 필터링된 로그로 평균 가동율을 계산하여 도넛 차트 업데이트
+        const weeklyRates = renderCalendar(filteredLogs, currentYear, currentMonth, dayType);
+        calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate);
+
+        const groupSiteAverages = calculateGroupSiteAverages(filteredLogs);
+        renderGroupSiteAverageChart(groupSiteAverages);
     }
     
+
+    
+
+async function calculateAverageTotalEngineersForDisplayedMonth(weeklyEngineerCount, group, site) {
+    let totalEngineers = 0;
+    let dayCount = 0;
+
+    // 현재 표시된 달의 주차 데이터만 필터링
+    Object.keys(weeklyEngineerCount).forEach(weekKey => {
+        const weekDate = new Date(weekKey);
+        if (weekDate.getFullYear() === currentYear && weekDate.getMonth() === currentMonth) {
+            const isWeekend = false; // 평일만 계산
+            const dailyEngineers = getTotalEngineersByFilter(weekKey, isWeekend, group, site);
+
+            // 유효한 값만 합산
+            if (dailyEngineers > 0) {
+                totalEngineers += dailyEngineers;
+                dayCount++;
+            }
+            console.log(`Week: ${weekKey}, Daily Engineers (평일): ${dailyEngineers}`);
+        }
+    });
+
+    // 현재 표시된 달의 평일 평균 엔지니어 수 계산
+    const averageTotalEngineers = dayCount > 0 ? (totalEngineers / dayCount).toFixed(2) : 0;
+    console.log("평일 엔지니어 수 합계 (현재 달):", totalEngineers);
+    console.log("평일 엔지니어 수 일수 (현재 달):", dayCount);
+    console.log("평일 엔지니어 수 평균 (Total Engineers - 현재 달):", averageTotalEngineers);
+
+    return averageTotalEngineers;
+}
+
+    
+async function calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate) {
+    if (!weeklyRates) {
+        console.error("weeklyRates is undefined or null.");
+        document.getElementById('average-operating-rate-value').innerText = `0%`;
+        return;
+    }
+
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    const start = startDate ? new Date(startDate) : firstLogDate;
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const filteredRates = Object.entries(weeklyRates)
+        .filter(([date]) => {
+            const currentDate = new Date(date);
+            return (!start || currentDate >= start) && (!end || currentDate <= end);
+        })
+        .flatMap(([date, rates]) => rates);
+
+    const totalOperatingRates = filteredRates.reduce((sum, rate) => sum + rate, 0);
+    const count = filteredRates.length;
+    const averageOperatingRate = count > 0 ? (totalOperatingRates / count).toFixed(1) : 0;
+
+    document.getElementById('average-operating-rate-value').innerText = `${averageOperatingRate}%`;
+    updateDonutChart(averageOperatingRate);
+
+    const totalWorktimeMinutes = cumulativeTotalWorkHours * 60;
+    const totalWorktimeHours = Math.floor(totalWorktimeMinutes / 60);
+    const totalWorktimeRemainderMinutes = Math.round(totalWorktimeMinutes % 60);
+    const workDays = filteredRates.length;
+
+    const group = document.getElementById('group-select').value;
+    const site = document.getElementById('site-select').value;
+    const averageTotalEngineers = await calculateAverageTotalEngineersForDisplayedMonth(weeklyEngineerCount, group, site);
+
+    const requiredEngineers = (averageTotalEngineers * averageOperatingRate / 100).toFixed(1);
+    const avgWorktimePerEngineer = ((8 * averageOperatingRate) / 100).toFixed(1);
+
+    console.log("Filtered Rates:", filteredRates);
+    console.log("Total Operating Rates Sum:", totalOperatingRates);
+    console.log("Count of Rates:", count);
+    console.log("Average Operating Rate:", `${averageOperatingRate}%`);
+    console.log("cumulativeTotalWorkHours:", cumulativeTotalWorkHours);
+    console.log("Total Worktime Minutes (sum of all totalWorkHours):", totalWorktimeMinutes);
+    console.log("Total Worktime (Hours):", `${totalWorktimeHours}시간 ${totalWorktimeRemainderMinutes}분`);
+    console.log("Work Days:", workDays);
+    console.log("Total Engineers (평일 평균):", averageTotalEngineers);
+    console.log("Required Engineers:", requiredEngineers);
+    console.log("Average Worktime per Engineer:", `${avgWorktimePerEngineer}시간`);
+
+    document.getElementById('totalWorktime').innerText = `${totalWorktimeHours}시간 ${totalWorktimeRemainderMinutes}분`;
+    document.getElementById('workDays').innerText = workDays;
+    document.getElementById('totalEngineers').innerText = averageTotalEngineers;
+    document.getElementById('requiredEngineers').innerText = requiredEngineers;
+    document.getElementById('avgWorktimePerEngineer').innerText = `${avgWorktimePerEngineer}시간`;
+}
+
+
+
+
+
+
+function updateDonutChart(averageRate) {
+    const ctx = document.getElementById('donutChart').getContext('2d');
+
+    if (!donutChart) {
+        donutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [averageRate, 100 - averageRate],
+                    backgroundColor: ['#36A2EB', '#E0E0E0']
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        enabled: true
+                    },
+                    doughnutCenterText: {
+                        text: `${averageRate}%`  // 초기값 설정
+                    }
+                }
+            },
+            plugins: [{
+                id: 'doughnutCenterText',
+                beforeDraw(chart) {
+                    const { width, height, ctx } = chart;
+                    ctx.restore();
+                    const fontSize = (height / 7).toFixed(2);
+                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#333';
+
+                    // 중앙 텍스트 업데이트
+                    const text = chart.config.options.plugins.doughnutCenterText.text || `${averageRate}%`;  // 기본값 설정
+                    const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                    const textY = height / 2;
+
+                    // 이전 텍스트 지우기 및 새 텍스트 설정
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.fillText(text, textX, textY);
+                    ctx.save();
+                }
+            }]
+        });
+    } else {
+        // 도넛 차트 데이터 및 텍스트 업데이트
+        donutChart.data.datasets[0].data = [averageRate, 100 - averageRate];
+        donutChart.options.plugins.doughnutCenterText.text = `${averageRate}%`;
+
+        // 차트 업데이트
+        donutChart.update();
+    }
+}
+
+
+
+
     
     
     
@@ -257,11 +430,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             return total;
         }, 0);
     }
-    
 
     function renderCalendar(filteredLogs, year, month, dayType) {
         const calendarContainer = document.getElementById('calendar-container');
         calendarContainer.innerHTML = '';
+
+        cumulativeTotalWorkHours = 0; // 새로운 달이 시작될 때 초기화
     
         const monthDisplay = document.getElementById('current-month');
         monthDisplay.innerText = `${year}년 ${month + 1}월`;
@@ -292,14 +466,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             const dateString = `${prevMonthYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayDiv = createDayDiv(dateString, logsByDate[dateString], weeklyRates, dayType);
             calendarContainer.appendChild(dayDiv);
+
+            const dailyLogs = logsByDate[dateString] || [];
+            const totalMinutes = calculateTotalMinutes(dailyLogs);
+            const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
+                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
+                return acc + (workerTaskCount === 1 ? 4 : 4.5);
+            }, 0);
+            const totalWorkHours = totalMinutes / 60 + additionalTime;
+            
+            console.log(`Date: ${dateString}, Daily Total Work Hours: ${totalWorkHours.toFixed(2)}시간`);    
+            cumulativeTotalWorkHours += totalWorkHours; // 전체 작업 시간 누적
         }
+        
     
         // 현재 달 날짜 채우기
         for (let day = 1; day <= totalDays; day++) {
             const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayDiv = createDayDiv(dateString, logsByDate[dateString], weeklyRates, dayType);
+            const dailyLogs = logsByDate[dateString] || [];
+    
+            const totalMinutes = calculateTotalMinutes(dailyLogs);
+            const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
+                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
+                return acc + (workerTaskCount === 1 ? 4 : 4.5);
+            }, 0);
+            const totalWorkHours = totalMinutes / 60 + additionalTime;
+    
+            // 날짜별 totalWorkHours 및 누적 합산 출력
+            console.log(`Date: ${dateString}, Daily Total Work Hours: ${totalWorkHours.toFixed(2)}시간`);
+            cumulativeTotalWorkHours += totalWorkHours;
+    
+            const dayDiv = createDayDiv(dateString, dailyLogs, weeklyRates, dayType);
             calendarContainer.appendChild(dayDiv);
         }
+
+        console.log(`Cumulative Total Work Hours for the Month: ${cumulativeTotalWorkHours.toFixed(2)}시간`);
     
         // 마지막 주 일요일까지 날짜 채우기
         const nextMonthYear = month === 11 ? year + 1 : year;
@@ -322,19 +523,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     
         // 주차별 평균 가동율 계산
         const weeklyAverageRates = Object.keys(weeklyRates)
-            .sort((a, b) => new Date(a) - new Date(b))
-            .map(weekKey => {
-                const rates = weeklyRates[weekKey];
-                if (rates && rates.length > 0) {
-                    const averageRate = rates.reduce((a, b) => a + b, 0) / rates.length;
-                    return { week: formatWeekLabel(weekKey), averageRate: Number(averageRate.toFixed(3)) };
-                } else {
-                    return { week: formatWeekLabel(weekKey), averageRate: 0 };
-                }
-            });
-    
-        renderWeeklyOperatingRateChart(weeklyAverageRates);
-    }
+        .sort((a, b) => new Date(a) - new Date(b))
+        .map(weekKey => {
+            const rates = weeklyRates[weekKey];
+            if (rates && rates.length > 0) {
+                const averageRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+                return { week: formatWeekLabel(weekKey), averageRate: Number(averageRate.toFixed(3)) };
+            } else {
+                return { week: formatWeekLabel(weekKey), averageRate: 0 };
+            }
+        });
+
+    renderWeeklyOperatingRateChart(weeklyAverageRates);
+    return weeklyRates;
+}
     
     function createDayDiv(dateString, dailyLogs = [], weeklyRates, dayType, isEmpty = false) {
         const dayDiv = document.createElement('div');
