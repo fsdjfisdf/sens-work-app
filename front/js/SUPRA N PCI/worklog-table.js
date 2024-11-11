@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const excludedWorkers = ["김지웅", "퇴사자 여기에 추가"];  // 제외할 작업자들의 이름
 
     // 대분류 및 중분류와 작업 항목 리스트 정의
-    const taskCategories = [
+    window.taskCategories = [
         {
             category: "ESCORT",
             subcategories: [

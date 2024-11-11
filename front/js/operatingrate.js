@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.replace("./index.html");
         return;
     }
-    
+
     // 공휴일 리스트를 전역으로 선언하여 모든 함수에서 접근 가능하게 합니다.
     const holidays = [
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
@@ -122,7 +122,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         //11월
         '2024-11-04': {
-            weekday: { 'PEE1 PT': 11.1, 'PEE1 HS': 17.7, 'PEE1 IC': 2.5, 'PEE1 CJ': 2.6, 'PEE2 PT': 5.3, 'PEE2 HS': 4.3, 'PSKH PSKH': 7.2 },
+            weekday: { 'PEE1 PT': 9.9, 'PEE1 HS': 17.8, 'PEE1 IC': 2.8, 'PEE1 CJ': 3.7, 'PEE2 PT': 5.7, 'PEE2 HS': 4.8, 'PSKH PSKH': 7.2 },
+            weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
+        },
+        '2024-11-11': {
+            weekday: { 'PEE1 PT': 9.9, 'PEE1 HS': 17.8, 'PEE1 IC': 2.8, 'PEE1 CJ': 3.7, 'PEE2 PT': 5.7, 'PEE2 HS': 4.8, 'PSKH PSKH': 7.2 },
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
     };
