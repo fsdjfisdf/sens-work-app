@@ -101,8 +101,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         charts[ctx.canvas.id] = new Chart(ctx, config);
     }
 
-    function calculateQuarterDistribution(data) {
-        const startYear = 2022;
+    function calculateLevelDistributionAndAverage(data) {
+        const startYear = 2020;
         const endYear = 2024;
     
         const quarters = [];
@@ -112,13 +112,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     
-        const levelDistribution = quarters.map(() => ({
+        const levelCountsByQuarter = quarters.map(() => ({
             level0: 0,
             level1: 0,
             level2: 0,
             level3: 0,
             level4: 0,
         }));
+        const levelSumsByQuarter = quarters.map(() => 0);
+        const countByQuarter = quarters.map(() => 0);
     
         const getQuarterIndex = (date) => {
             const year = date.getFullYear();
@@ -141,18 +143,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             quarters.forEach((quarter, index) => {
                 const quarterEnd = new Date(startYear + Math.floor(index / 4), (index % 4 + 1) * 3, 0);
     
+                // 레벨 변경 조건이 충족될 때마다 currentLevel 업데이트
                 while (levelIndex < levelDates.length && levelDates[levelIndex] && levelDates[levelIndex] <= quarterEnd) {
                     currentLevel = levelIndex;
                     levelIndex++;
                 }
     
                 if (hireDate <= quarterEnd) {
-                    levelDistribution[index][`level${currentLevel}`]++;
+                    levelCountsByQuarter[index][`level${currentLevel}`]++;
+                    levelSumsByQuarter[index] += currentLevel;
+                    countByQuarter[index]++;
                 }
             });
         });
     
-        return { quarters, levelDistribution };
+        // 분기별 평균 레벨 계산
+        const averageLevels = levelSumsByQuarter.map((sum, index) => (countByQuarter[index] > 0 ? (sum / countByQuarter[index]).toFixed(2) : 0));
+    
+        // 디버깅: 분기별 데이터 출력
+        console.log("Level Counts by Quarter:", levelCountsByQuarter);
+        console.log("Average Levels by Quarter:", averageLevels);
+    
+        return { quarters, levelCountsByQuarter, averageLevels };
     }
 
 
@@ -588,72 +600,144 @@ function calculateMonthlyEngineerCount(data) {
         });
 
         // Level Changes Over Time
-        const { quarters, levelDistribution } = calculateQuarterDistribution(data);
-        const levelDistributionData = {
-            labels: quarters,
-            datasets: [
-                {
-                    label: 'Level 0',
-                    data: levelDistribution.map(l => l.level0),
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1,
-                    fill: false,
-                },
-                {
-                    label: 'Level 1',
-                    data: levelDistribution.map(l => l.level1),
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    fill: false,
-                },
-                {
-                    label: 'Level 2',
-                    data: levelDistribution.map(l => l.level2),
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    fill: false,
-                },
-                {
-                    label: 'Level 3',
-                    data: levelDistribution.map(l => l.level3),
-                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                    borderColor: 'rgba(153, 102, 255, 1)',
-                    borderWidth: 1,
-                    fill: false,
-                },
-                {
-                    label: 'Level 4',
-                    data: levelDistribution.map(l => l.level4),
-                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1,
-                    fill: false,
-                },
-            ],
-        };
+        Chart.register(ChartDataLabels); // ChartDataLabels 플러그인 등록
 
+        const { quarters, levelCountsByQuarter, averageLevels } = calculateLevelDistributionAndAverage(data);
+        
         createChart(levelChangesChartCtx, {
-            type: 'line',
-            data: levelDistributionData,
+            type: 'bar',
+            data: {
+                labels: quarters,
+                datasets: [
+                    {
+                        label: 'Level 0',
+                        data: levelCountsByQuarter.map(l => l.level0),
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                        stack: 'levelCounts',
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'white', // 데이터 라벨 색상
+                            font: { size: 13 }
+                        }
+                    },
+                    {
+                        label: 'Level 1',
+                        data: levelCountsByQuarter.map(l => l.level1),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        stack: 'levelCounts',
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'white',
+                            font: { size: 13 }
+                        }
+                    },
+                    {
+                        label: 'Level 2',
+                        data: levelCountsByQuarter.map(l => l.level2),
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        stack: 'levelCounts',
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'white',
+                            font: { size: 13 }
+                        }
+                    },
+                    {
+                        label: 'Level 3',
+                        data: levelCountsByQuarter.map(l => l.level3),
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1,
+                        stack: 'levelCounts',
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'white',
+                            font: { size: 13 }
+                        }
+                    },
+                    {
+                        label: 'Level 4',
+                        data: levelCountsByQuarter.map(l => l.level4),
+                        backgroundColor: 'rgba(255, 205, 86, 0.2)',
+                        borderColor: 'rgba(255, 205, 86, 1)',
+                        borderWidth: 1,
+                        stack: 'levelCounts',
+                        datalabels: {
+                            anchor: 'center',
+                            align: 'center',
+                            color: 'white',
+                            font: { size: 13 }
+                        }
+                    },
+                    {
+                        label: 'Average Level',
+                        data: averageLevels,
+                        type: 'line',
+                        backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                        borderColor: 'rgba(0, 255, 255, 1)',
+                        borderWidth: 2,
+                        fill: false,
+                        yAxisID: 'y-averageLevel',
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: 'white', // Average Level의 데이터 라벨 색상
+                            font: { size: 13 }
+                        }
+                    }
+                ]
+            },
             options: {
+                plugins: {
+                    datalabels: {
+                        display: true, // 데이터 라벨 항상 표시
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        enabled: true // 호버 시 툴팁 활성화
+                    }
+                },
                 scales: {
                     x: {
-                        ticks: {
-                            color: 'silver',
-                        },
+                        stacked: true,
+                        ticks: { color: 'silver' }
                     },
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            color: 'silver',
-                        },
+                        stacked: true,
+                        title: { display: true, text: 'Number of Engineers' },
+                        ticks: { color: 'silver' },
+                        max: Math.max(...averageLevels.map(Number)) * 40 // 막대그래프의 정확한 최대값 설정
                     },
-                },
-            },
+                    'y-averageLevel': {
+                        beginAtZero: true,
+                        position: 'right',
+                        title: { display: true, text: 'Average Level' },
+                        ticks: { color: 'silver' },
+                        max: Math.max(...averageLevels.map(Number)) * 1.3
+                    }
+                }
+            }
         });
+        
+        
+        
+    
+        
+        
 
         // Years of Service 데이터 처리
         const currentDate = new Date();
