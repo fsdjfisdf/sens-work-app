@@ -107,6 +107,7 @@
                     <p><strong>Hire Date:</strong> <span id="personHireDate"></span></p>
                     <p><strong>Group:</strong> <span id="personGroup"></span></p>
                     <p><strong>Site:</strong> <span id="personSite"></span></p>
+                    <p><strong>ID:</strong> <span id="personID"></span></p>
                 </div>
                 
                 <div class="graph-container">
@@ -123,7 +124,16 @@
                             </div>
                         </div>
                         <div class="graph-row">
-                            <div class="graph-item medium">
+                            <div class="graph-item small same-size">
+                                <div class="graph-header">
+                                    <h3>Company Distribution</h3>
+                                    <button class="info-button" data-modal="companyDistributionInfo">?</button>
+                                </div>
+                                <div class="canvas-container">
+                                    <canvas id="companyDistributionChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="graph-item small same-size">
                                 <div class="graph-header">
                                     <h3>Years of Service</h3>
                                     <button class="info-button" data-modal="yearsOfServiceInfo">?</button>
@@ -132,7 +142,7 @@
                                     <canvas id="yearsOfServiceChart"></canvas>
                                 </div>
                             </div>
-                            <div class="graph-item medium">
+                            <div class="graph-item small same-size">
                                 <div class="graph-header">
                                     <h3>Group & Site</h3>
                                     <button class="info-button" data-modal="groupSiteDistributionInfo">?</button>
@@ -357,6 +367,12 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <p>Head Count 그래프는 엔지니어 수를 월별로 표시합니다.<br>단, 퇴사자는 포함하지 않습니다.</p>
+        </div>
+    </div>
+    <div id="companyDistributionInfo" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Company Distribution 그래프는 각 회사별 엔지니어 비율을 도넛 차트로 표시합니다.</p>
         </div>
     </div>
     <div id="yearsOfServiceInfo" class="modal">

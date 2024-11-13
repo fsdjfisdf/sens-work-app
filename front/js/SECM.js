@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Chart context 초기화
     const levelDistributionChartCtx = document.getElementById('levelDistributionChart').getContext('2d');
     const multiLevelDistributionChartCtx = document.getElementById('multiLevelDistributionChart').getContext('2d');
+    const companyDistributionChartCtx = document.getElementById('companyDistributionChart').getContext('2d'); // 추가된 부분
     const yearsOfServiceChartCtx = document.getElementById('yearsOfServiceChart').getContext('2d');
     const groupSiteDistributionChartCtx = document.getElementById('groupSiteDistributionChart').getContext('2d');
     const averageTimeToAchieveChartCtx = document.getElementById('averageTimeToAchieveChart').getContext('2d');
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const personHireDate = document.getElementById('personHireDate');
     const personGroup = document.getElementById('personGroup');
     const personSite = document.getElementById('personSite');
+    const personID = document.getElementById('personID')
 
     let originalData = [];
     let charts = {};
@@ -341,6 +343,77 @@ function calculateMonthlyEngineerCount(data) {
     
         return { avgWeekdayTasks, avgWeekendTasks };
     }
+
+    function calculateCompanyDistribution(data) {
+        const companyCounts = data.reduce((acc, row) => {
+            acc[row.COMPANY] = (acc[row.COMPANY] || 0) + 1;
+            return acc;
+        }, {});
+    
+        const totalEmployees = data.length;
+        const companyLabels = Object.keys(companyCounts);
+        const companyPercentages = companyLabels.map(label => 
+            ((companyCounts[label] / totalEmployees) * 100).toFixed(2)
+        );
+        const companyCountsArray = companyLabels.map(label => companyCounts[label]);
+    
+        return { labels: companyLabels, percentages: companyPercentages, counts: companyCountsArray };
+    }
+    
+    let companyDistributionChart;
+
+    function renderCompanyDistributionChart(filteredData) {
+        const { labels, percentages, counts } = calculateCompanyDistribution(filteredData); // 필터링된 데이터를 전달
+        
+        if (companyDistributionChart) {
+            companyDistributionChart.destroy();
+        }
+        
+        const ctx = document.getElementById('companyDistributionChart').getContext('2d');
+        companyDistributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Company Distribution (%)',
+                    data: percentages,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        formatter: (value, context) => `${counts[context.dataIndex]}명 (${value}%)`,
+                        color: 'white',
+                        font: { size: 12 }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { color: 'silver' } },
+                    y: { ticks: { color: 'silver' } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+    
+    
     
     function renderCharts(data) {
         const totalEngineers = data.length;
@@ -351,6 +424,7 @@ function calculateMonthlyEngineerCount(data) {
             personHireDate.textContent = formatDate(person.HIRE);
             personGroup.textContent = person.GROUP;
             personSite.textContent = person.SITE;
+            personID.textContent = person.EMPLOYEE_ID; // EMPLOYEE ID 출력
             personInfo.classList.remove('hidden');
         } else {
             personInfo.classList.add('hidden');
@@ -733,8 +807,7 @@ function calculateMonthlyEngineerCount(data) {
             }
         });
         
-        
-        
+    
     
         
         
@@ -1851,16 +1924,21 @@ createChart(monthlyCapaChartCtx, {
 
 
     function updateAllCharts() {
-        const filteredEngineerData = filterData(originalData); // 기존 엔지니어 데이터 필터링
+        const filteredEngineerData = filterData(originalData); // 필터링된 엔지니어 데이터
+    
+        // 필터링된 데이터를 사용하여 모든 차트를 업데이트합니다.
         renderCharts(filteredEngineerData);
     
-        // 작업 로그 데이터 필터링
+        // 작업 로그 데이터 필터링 및 차트 업데이트
         const filteredWorkLogs = filterWorkLogData(workLogs);
         renderWorkCharts(filteredWorkLogs);
         renderOvertimeRegularChart(filteredWorkLogs);
         renderTimeRangeChart(filteredWorkLogs);
         renderSetupTaskChart(filteredWorkLogs);
         renderMaintTaskChart(filteredWorkLogs);
+    
+        // 필터링된 엔지니어 데이터를 사용하여 회사별 엔지니어 수 그래프 업데이트
+        renderCompanyDistributionChart(filteredEngineerData); // 필터링된 데이터를 전달
     }
 
     function updateDatalistOptions(data) {
@@ -1894,6 +1972,9 @@ createChart(monthlyCapaChartCtx, {
 const data = await fetchData();
 await fetchWorkLogs(); // 작업 이력 데이터 로드
 updateDatalistOptions(data);
+renderCompanyDistributionChart(data);
+const filteredEngineerData = filterData(originalData); // Assign filtered data before using it
+renderCompanyDistributionChart(filteredEngineerData);
 renderCharts(data);
 renderWorkCharts(workLogs); // 작업 이력 데이터 렌더링
 });
@@ -1902,4 +1983,4 @@ document.getElementById('exportButton').addEventListener('click', () => {
     window.location.href = 'http://3.37.73.151:3001/api/export-to-excel';
 });
 
-  
+
