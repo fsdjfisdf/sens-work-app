@@ -131,18 +131,7 @@ body {
     background-color: #ffffcc;
 }
 
-/* 도넛 그래프 및 오른쪽 정보 섹션 스타일 */
-.chart-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-}
 
-.donut-chart-wrapper {
-    width: 50%;
-    max-width: 300px;
-}
 
 .info-section {
     width: 50%;
@@ -158,6 +147,7 @@ body {
     font-weight: bold;
 }
 
+
 .donut-center-text {
     font-size: 24px;
     font-weight: bold;
@@ -168,3 +158,38 @@ body {
     display: none;
 }
 
+
+.donut-chart-wrapper {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    margin: 0 auto;
+}
+
+.donut-chart-wrapper canvas {
+    width: 100%;
+    height: auto;
+}
+
+.chart-container {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.chart-container h2 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.chart-container canvas {
+    width: 100%;
+    max-width: 500px;
+    height: auto; /* 높이 자동 조절 */
+}

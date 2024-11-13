@@ -1,5 +1,14 @@
 let donutChart; // 도넛 차트를 전역 변수로 선언
 let cumulativeTotalWorkHours = 0; // 전체 날짜의 총 작업 시간 누적 변수
+let monthlyWorktimeChartInstance;
+let lineWorkStatsChartInstance;
+let workTypeStatsChartInstance;
+let equipmentTypeStatsChartInstance;
+let amPmStatsChartInstance;
+let overtimeChartInstance;
+let timeRangeChartInstance;
+let warrantyChartInstance;
+let groupSiteOperatingRateChartInstance;
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -138,6 +147,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let logs = await loadWorkLogs();
     renderCalendar(logs, currentYear, currentMonth);
+    renderMonthlyWorktimeChart(logs); // 여기서 함수 호출
+    renderLineWorkStatsChart(logs);
+    renderWorkTypeStatsChart(logs); // 새로운 그래프 호출
+    renderEquipmentTypeStatsChart(logs); // 새로운 그래프 호출
+    renderAmPmStatsChart(logs); // 새로운 그래프 호출
+    renderOvertimeChart(logs);
+    renderTimeRangeChart(logs);
+    renderWarrantyChart(logs);
+    renderGroupSiteAverageChart(logs);
+    
 
     document.getElementById('day-type-select').value = 'all';
     applyFilters('all');
@@ -186,7 +205,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             return [];
         }
     }
-
     async function applyFilters() {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
@@ -194,21 +212,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const site = document.getElementById('site-select').value;
         const dayType = document.getElementById('day-type-select').value;
     
-        // 이전 달의 시작 날짜 설정 (한 주 전)
+        // 전체 작업 로그에서 가장 오래된 작업 날짜를 firstLogDate로 계산
         const firstLogDate = logs.reduce((earliest, log) => {
             const logDate = new Date(log.task_date);
             return (!earliest || logDate < earliest) ? logDate : earliest;
         }, null);
-        const currentMonthStart = new Date(currentYear, currentMonth, 1);
-        const previousMonthStart = new Date(currentMonthStart);
-        previousMonthStart.setDate(previousMonthStart.getDate() - 7);
     
-        // 선택된 범위와 관계없이 이전 달 주간부터 현재 달의 끝까지의 데이터를 필터링
+        // 필터링된 로그만을 사용하여 그래프와 달력을 업데이트
         const filteredLogs = logs.filter(log => {
             const logDate = new Date(log.task_date);
             const dateMatch = (!startDate || logDate >= new Date(startDate)) &&
-                              (!endDate || logDate <= new Date(endDate)) &&
-                              (logDate >= previousMonthStart);
+                              (!endDate || logDate <= new Date(endDate));
             const groupMatch = !group || log.group === group;
             const siteMatch = !site || log.site === site;
     
@@ -227,14 +241,54 @@ document.addEventListener('DOMContentLoaded', async () => {
             return dateMatch && groupMatch && siteMatch && dayTypeMatch;
         });
     
-        // 필터링된 로그로 평균 가동율을 계산하여 도넛 차트 업데이트
+        // weeklyRates를 renderCalendar로부터 가져와 calculateAndDisplayAverageOperatingRate에 전달
         const weeklyRates = renderCalendar(filteredLogs, currentYear, currentMonth, dayType);
+        
+        // 주차별 가동률과 전체 데이터를 활용해 평균 가동율 계산
         calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate);
-
-        const groupSiteAverages = calculateGroupSiteAverages(filteredLogs);
-        renderGroupSiteAverageChart(groupSiteAverages);
+    
+        // 필터링된 로그 데이터로 그래프 생성
+        renderMonthlyWorktimeChart(filteredLogs);
+        renderLineWorkStatsChart(filteredLogs);
+        renderWorkTypeStatsChart(filteredLogs);
+        renderEquipmentTypeStatsChart(filteredLogs);
+        renderAmPmStatsChart(filteredLogs);
+        renderOvertimeChart(filteredLogs);
+        renderTimeRangeChart(filteredLogs);
+        renderWarrantyChart(filteredLogs);
+        renderGroupSiteAverageChart(filteredLogs);
     }
     
+    
+    
+    
+// 그룹 및 사이트별 평균 가동율을 계산하는 함수
+function calculateGroupSiteAverages(filteredLogs) {
+    const groupSiteRates = {};
+
+    filteredLogs.forEach(log => {
+        const groupSiteKey = `${log.group} - ${log.site}`;
+        const { task_duration, task_man } = log;
+        const [hours, minutes] = task_duration.split(':').map(Number);
+        const taskDurationMinutes = (hours * 60) + minutes;
+        const numWorkers = log.task_man.split(',').length;
+        const workHours = (taskDurationMinutes * numWorkers) / 60;
+
+        if (!groupSiteRates[groupSiteKey]) {
+            groupSiteRates[groupSiteKey] = { totalWorkHours: 0, totalEngineers: 0 };
+        }
+        groupSiteRates[groupSiteKey].totalWorkHours += workHours;
+        groupSiteRates[groupSiteKey].totalEngineers += numWorkers;
+    });
+
+    const groupSiteAverages = Object.keys(groupSiteRates).map(key => {
+        const { totalWorkHours, totalEngineers } = groupSiteRates[key];
+        const operatingRate = totalEngineers > 0 ? ((totalWorkHours / (totalEngineers * 8)) * 100).toFixed(1) : 0;
+        return { groupSite: key, operatingRate: parseFloat(operatingRate) };
+    });
+
+    return groupSiteAverages;
+}
 
     
 
@@ -254,23 +308,18 @@ async function calculateAverageTotalEngineersForDisplayedMonth(weeklyEngineerCou
                 totalEngineers += dailyEngineers;
                 dayCount++;
             }
-            console.log(`Week: ${weekKey}, Daily Engineers (평일): ${dailyEngineers}`);
         }
     });
 
     // 현재 표시된 달의 평일 평균 엔지니어 수 계산
     const averageTotalEngineers = dayCount > 0 ? (totalEngineers / dayCount).toFixed(2) : 0;
-    console.log("평일 엔지니어 수 합계 (현재 달):", totalEngineers);
-    console.log("평일 엔지니어 수 일수 (현재 달):", dayCount);
-    console.log("평일 엔지니어 수 평균 (Total Engineers - 현재 달):", averageTotalEngineers);
 
     return averageTotalEngineers;
 }
 
-    
 async function calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate) {
-    if (!weeklyRates) {
-        console.error("weeklyRates is undefined or null.");
+    if (!weeklyRates || typeof weeklyRates !== 'object') {
+        console.error("weeklyRates가 정의되지 않았거나 올바른 객체가 아닙니다.");
         document.getElementById('average-operating-rate-value').innerText = `0%`;
         return;
     }
@@ -280,12 +329,8 @@ async function calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate
     const start = startDate ? new Date(startDate) : firstLogDate;
     const end = endDate ? new Date(endDate) : new Date();
 
-    const filteredRates = Object.entries(weeklyRates)
-        .filter(([date]) => {
-            const currentDate = new Date(date);
-            return (!start || currentDate >= start) && (!end || currentDate <= end);
-        })
-        .flatMap(([date, rates]) => rates);
+    // weeklyRates 객체의 모든 주차 데이터를 사용하여 평균 계산
+    const filteredRates = Object.values(weeklyRates).flat();
 
     const totalOperatingRates = filteredRates.reduce((sum, rate) => sum + rate, 0);
     const count = filteredRates.length;
@@ -306,24 +351,14 @@ async function calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate
     const requiredEngineers = (averageTotalEngineers * averageOperatingRate / 100).toFixed(1);
     const avgWorktimePerEngineer = ((8 * averageOperatingRate) / 100).toFixed(1);
 
-    console.log("Filtered Rates:", filteredRates);
-    console.log("Total Operating Rates Sum:", totalOperatingRates);
-    console.log("Count of Rates:", count);
-    console.log("Average Operating Rate:", `${averageOperatingRate}%`);
-    console.log("cumulativeTotalWorkHours:", cumulativeTotalWorkHours);
-    console.log("Total Worktime Minutes (sum of all totalWorkHours):", totalWorktimeMinutes);
-    console.log("Total Worktime (Hours):", `${totalWorktimeHours}시간 ${totalWorktimeRemainderMinutes}분`);
-    console.log("Work Days:", workDays);
-    console.log("Total Engineers (평일 평균):", averageTotalEngineers);
-    console.log("Required Engineers:", requiredEngineers);
-    console.log("Average Worktime per Engineer:", `${avgWorktimePerEngineer}시간`);
-
     document.getElementById('totalWorktime').innerText = `${totalWorktimeHours}시간 ${totalWorktimeRemainderMinutes}분`;
     document.getElementById('workDays').innerText = workDays;
     document.getElementById('totalEngineers').innerText = averageTotalEngineers;
     document.getElementById('requiredEngineers').innerText = requiredEngineers;
     document.getElementById('avgWorktimePerEngineer').innerText = `${avgWorktimePerEngineer}시간`;
 }
+
+
 
 
 
@@ -344,6 +379,8 @@ function updateDonutChart(averageRate) {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1, // 정사각형 비율 유지
                 cutout: '68%',
                 plugins: {
                     legend: {
@@ -444,12 +481,12 @@ function updateDonutChart(averageRate) {
         }, 0);
     }
 
-    function renderCalendar(filteredLogs, year, month, dayType) {
+    function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = false) {
         const calendarContainer = document.getElementById('calendar-container');
         calendarContainer.innerHTML = '';
-
-        cumulativeTotalWorkHours = 0; // 새로운 달이 시작될 때 초기화
     
+        cumulativeTotalWorkHours = 0; // 각 월이 시작될 때 초기화
+        
         const monthDisplay = document.getElementById('current-month');
         monthDisplay.innerText = `${year}년 ${month + 1}월`;
     
@@ -487,8 +524,7 @@ function updateDonutChart(averageRate) {
                 return acc + (workerTaskCount === 1 ? 4 : 4.5);
             }, 0);
             const totalWorkHours = totalMinutes / 60 + additionalTime;
-            
-            console.log(`Date: ${dateString}, Daily Total Work Hours: ${totalWorkHours.toFixed(2)}시간`);    
+             
             cumulativeTotalWorkHours += totalWorkHours; // 전체 작업 시간 누적
         }
         
@@ -497,7 +533,6 @@ function updateDonutChart(averageRate) {
         for (let day = 1; day <= totalDays; day++) {
             const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dailyLogs = logsByDate[dateString] || [];
-    
             const totalMinutes = calculateTotalMinutes(dailyLogs);
             const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
                 const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
@@ -506,21 +541,18 @@ function updateDonutChart(averageRate) {
             const totalWorkHours = totalMinutes / 60 + additionalTime;
     
             // 날짜별 totalWorkHours 및 누적 합산 출력
-            console.log(`Date: ${dateString}, Daily Total Work Hours: ${totalWorkHours.toFixed(2)}시간`);
             cumulativeTotalWorkHours += totalWorkHours;
     
             const dayDiv = createDayDiv(dateString, dailyLogs, weeklyRates, dayType);
             calendarContainer.appendChild(dayDiv);
         }
 
-        console.log(`Cumulative Total Work Hours for the Month: ${cumulativeTotalWorkHours.toFixed(2)}시간`);
     
         // 마지막 주 일요일까지 날짜 채우기
         const nextMonthYear = month === 11 ? year + 1 : year;
         const nextMonth = month === 11 ? 0 : month + 1;
         let daysToAdd = 6 - lastDayOfMonth;
         if (daysToAdd < 0) daysToAdd += 7;
-    
         for (let i = 1; i <= daysToAdd; i++) {
             const day = i;
             const dateString = `${nextMonthYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -972,3 +1004,688 @@ function updateDonutChart(averageRate) {
     }
     
 });
+function renderMonthlyWorktimeChart(logs) {
+    if (monthlyWorktimeChartInstance) {
+        monthlyWorktimeChartInstance.destroy();
+    }
+    const monthlyWorktime = {};
+
+    logs.forEach(log => {
+        const date = new Date(log.task_date);
+        const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const [hours, minutes] = log.task_duration.split(':').map(Number);
+        const taskDurationMinutes = (hours * 60) + minutes;
+        const numWorkers = log.task_man.split(',').length;
+        
+        if (!monthlyWorktime[month]) {
+            monthlyWorktime[month] = 0;
+        }
+        monthlyWorktime[month] += taskDurationMinutes * numWorkers;
+    });
+
+    const labels = Object.keys(monthlyWorktime).sort();
+    const data = labels.map(month => monthlyWorktime[month] / 60);
+
+    const ctx = document.getElementById('monthlyWorktimeChart').getContext('2d');
+    monthlyWorktimeChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Monthly Worktime (hours)',
+                data: data,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Worktime (hours)'
+                    },
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                datalabels: {
+                    display: true,
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: Math.round,
+                    font: {
+                        weight: 'bold'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderLineWorkStatsChart(logs) {
+    if (lineWorkStatsChartInstance) {
+        lineWorkStatsChartInstance.destroy();
+    }
+
+    const siteOrder = {
+        "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
+        "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
+        "IC": ["M14", "M16"],
+        "CJ": ["M11", "M12", "M15"],
+        "PSKH": ["PSKH"]
+    };
+
+    const siteColors = {
+        "PT": 'rgba(153, 102, 255, 0.2)',
+        "HS": 'rgba(255, 99, 132, 0.2)',
+        "IC": 'rgba(54, 162, 235, 0.2)',
+        "CJ": 'rgba(255, 206, 86, 0.2)',
+        "PSKH": 'rgba(153, 102, 255, 0.2)'
+    };
+
+    const siteBorderColors = {
+        "PT": 'rgba(153, 102, 255, 1)',
+        "HS": 'rgba(255, 99, 132, 1)',
+        "IC": 'rgba(54, 162, 235, 1)',
+        "CJ": 'rgba(255, 206, 86, 1)',
+        "PSKH": 'rgba(153, 102, 255, 1)'
+    };
+
+    const siteLineWorkData = {};
+
+    logs.forEach(log => {
+        const { site, line, task_duration } = log;
+        const durationParts = task_duration.split(':');
+        const hours = parseInt(durationParts[0], 10);
+        const minutes = parseInt(durationParts[1], 10);
+        const taskDurationMinutes = (hours * 60) + minutes;
+        const numWorkers = log.task_man.split(',').length;
+        const totalDuration = taskDurationMinutes * numWorkers;
+
+        if (!siteLineWorkData[site]) {
+            siteLineWorkData[site] = {};
+        }
+
+        if (!siteLineWorkData[site][line]) {
+            siteLineWorkData[site][line] = {
+                worktime: 0,
+                taskCount: 0
+            };
+        }
+
+        siteLineWorkData[site][line].worktime += totalDuration;
+        siteLineWorkData[site][line].taskCount += 1;
+    });
+
+    const labels = [];
+    const worktimeValues = [];
+    const taskCountValues = [];
+    const backgroundColors = [];
+    const borderColors = [];
+
+    for (const [site, lines] of Object.entries(siteLineWorkData)) {
+        const sortedLines = Object.entries(lines).sort((a, b) => b[1].worktime - a[1].worktime);
+
+        sortedLines.forEach(([line, data]) => {
+            labels.push(`${site}-${line}`);
+            worktimeValues.push(data.worktime / 60); // hours
+            taskCountValues.push(data.taskCount);
+            backgroundColors.push(siteColors[site]);
+            borderColors.push(siteBorderColors[site]);
+        });
+    }
+
+    const ctx = document.getElementById('lineWorkStatsChart').getContext('2d');
+    lineWorkStatsChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Total Worktime (hours)',
+                    data: worktimeValues,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                },
+                {
+                    label: 'Task Count',
+                    data: taskCountValues,
+                    type: 'line',
+                    borderColor: 'rgba(75, 192, 193, 10)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 2,
+                    yAxisID: 'y-axis-taskCount'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Line'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Total Worktime (hours)'
+                    },
+                    beginAtZero: true
+                },
+                'y-axis-taskCount': {
+                    title: {
+                        display: true,
+                        text: 'Task Count'
+                    },
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderWorkTypeStatsChart(logs) {
+    if (workTypeStatsChartInstance) {
+        workTypeStatsChartInstance.destroy();
+    }
+
+    const workTypeData = {
+        'SET UP': 0,
+        'MAINT': 0,
+        'RELOCATION': 0
+    };
+
+    logs.forEach(log => {
+        const { work_type } = log;
+        if (workTypeData[work_type] !== undefined) {
+            workTypeData[work_type] += 1; // 작업 건수만 증가
+        }
+    });
+
+    const labels = Object.keys(workTypeData);
+    const workCountValues = labels.map(type => workTypeData[type]);
+    const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
+
+    const ctx = document.getElementById('workTypeStatsChart').getContext('2d');
+    workTypeStatsChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: workCountValues,
+                backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(91, 223, 105, 0.61)', 'rgba(255, 206, 86, 0.6)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(91, 223, 105, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5, // 정사각형 비율 유지
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#333',
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = ((value / totalTasks) * 100).toFixed(2);
+                            return `${label}: ${value} tasks (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+function renderEquipmentTypeStatsChart(logs) {
+    if (equipmentTypeStatsChartInstance) {
+        equipmentTypeStatsChartInstance.destroy();
+    }
+
+    const equipmentTypeData = {};
+
+    logs.forEach(log => {
+        const { equipment_type } = log;
+
+        if (!equipmentTypeData[equipment_type]) {
+            equipmentTypeData[equipment_type] = 0;
+        }
+
+        equipmentTypeData[equipment_type] += 1; // 작업 건수만 증가
+    });
+
+    const labels = Object.keys(equipmentTypeData);
+    const workCountValues = labels.map(type => equipmentTypeData[type]);
+    const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
+
+    const ctx = document.getElementById('equipmentTypeStatsChart').getContext('2d');
+    equipmentTypeStatsChartInstance = new Chart(ctx, {
+        type: 'bar', // 그래프 유형을 막대형(bar)으로 변경
+        data: {
+            labels: labels,
+            datasets: [{
+                data: workCountValues,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,
+            plugins: {
+                legend: {
+                    display: false // 범례 비활성화
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = ((value / totalTasks) * 100).toFixed(2);
+                            return `${label}: ${value} tasks (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Equipment Type'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Number of Tasks'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+
+
+
+function renderAmPmStatsChart(logs) {
+    if (amPmStatsChartInstance) {
+        amPmStatsChartInstance.destroy();
+    }
+
+    const amPmData = {
+        'AM': 0,
+        'PM': 0
+    };
+
+    logs.forEach(log => {
+        const { start_time } = log;
+        const startTimeParts = start_time.split(':');
+        const startHour = parseInt(startTimeParts[0], 10);
+
+        const period = startHour < 12 ? 'AM' : 'PM';
+
+        amPmData[period] += 1; // 작업 건수만 증가
+    });
+
+    const labels = Object.keys(amPmData);
+    const workCountValues = labels.map(period => amPmData[period]);
+    const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
+
+    const ctx = document.getElementById('amPmStatsChart').getContext('2d');
+    amPmStatsChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: workCountValues,
+                backgroundColor: ['rgba(255, 166, 197, 0.61)', 'rgba(3, 14, 33, 0.2)'],
+                borderColor: ['rgba(255, 166, 197, 1)', 'rgba(3, 14, 33, 0.3)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5, // 정사각형 비율 유지
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#333',
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = ((value / totalTasks) * 100).toFixed(2);
+                            return `${label}: ${value} tasks (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
+
+function renderOvertimeChart(logs) {
+    if (overtimeChartInstance) {
+        overtimeChartInstance.destroy();
+    }
+
+    const overtimeData = {
+        'Overtime': 0,
+        'Regular': 0
+    };
+
+    logs.forEach(log => {
+        const { end_time } = log;
+        const endTimeParts = end_time.split(':');
+        const endHour = parseInt(endTimeParts[0], 10);
+        const endMinutes = parseInt(endTimeParts[1], 10);
+
+        if ((endHour >= 18 || endHour < 8) || (endHour === 8 && endMinutes <= 30)) {
+            overtimeData['Overtime'] += 1; // 작업 건수만 증가
+        } else {
+            overtimeData['Regular'] += 1;
+        }
+    });
+
+    const labels = Object.keys(overtimeData);
+    const workCountValues = labels.map(type => overtimeData[type]);
+    const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
+
+    const ctx = document.getElementById('overtimeChart').getContext('2d');
+    overtimeChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: workCountValues,
+                backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y', // 수평 막대 그래프
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = ((value / totalTasks) * 100).toFixed(2);
+                            return `${label}: ${value} tasks (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+function renderTimeRangeChart(logs) {
+    if (timeRangeChartInstance) {
+        timeRangeChartInstance.destroy();
+    }
+
+    const timeRangeData = {
+        '0-1 hours': 0,
+        '1-2 hours': 0,
+        '2-3 hours': 0,
+        '3-4 hours': 0,
+        '4+ hours': 0
+    };
+
+    logs.forEach(log => {
+        const { task_duration } = log;
+        const durationParts = task_duration.split(':');
+        const hours = parseInt(durationParts[0], 10);
+        const minutes = parseInt(durationParts[1], 10);
+        const taskDurationMinutes = (hours * 60) + minutes;
+
+        if (taskDurationMinutes <= 60) {
+            timeRangeData['0-1 hours'] += 1; // 작업 건수 증가
+        } else if (taskDurationMinutes <= 120) {
+            timeRangeData['1-2 hours'] += 1;
+        } else if (taskDurationMinutes <= 180) {
+            timeRangeData['2-3 hours'] += 1;
+        } else if (taskDurationMinutes <= 240) {
+            timeRangeData['3-4 hours'] += 1;
+        } else {
+            timeRangeData['4+ hours'] += 1;
+        }
+    });
+
+    const labels = Object.keys(timeRangeData);
+    const worktimeValues = labels.map(type => timeRangeData[type]); // 작업 건수
+    const totalWorktime = worktimeValues.reduce((a, b) => a + b, 0);
+    const percentages = worktimeValues.map(value => (value / totalWorktime * 100).toFixed(2));
+
+    const ctx = document.getElementById('timeRangeChart').getContext('2d');
+    timeRangeChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: worktimeValues,
+                backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)', 'rgba(153, 102, 255, 0.6)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y', // 수평 막대 그래프
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = percentages[context.dataIndex];
+                            return `${label}: ${value} tasks (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
+
+function renderWarrantyChart(logs) {
+    if (warrantyChartInstance) {
+        warrantyChartInstance.destroy();
+    }
+
+    const warrantyData = {
+        'WI': 0,
+        'WO': 0
+    };
+
+    logs.forEach(log => {
+        const { warranty } = log;
+
+        if (warranty === 'WI' || warranty === 'WO') {
+            warrantyData[warranty] += 1; // 작업 건수만 증가
+        }
+    });
+
+    const labels = Object.keys(warrantyData);
+    const workCountValues = labels.map(type => warrantyData[type]);
+    const totalTasks = workCountValues.reduce((a, b) => a + b, 0);
+
+    const ctx = document.getElementById('warrantyChart').getContext('2d');
+    warrantyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: workCountValues,
+                backgroundColor: ['rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)'],
+                borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y', // 수평 막대 그래프
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1.5,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const percentage = ((value / totalTasks) * 100).toFixed(2);
+                            return `${label}: ${value} tasks (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderGroupSiteAverageChart(logs) {
+    const ctx = document.getElementById('groupSiteOperatingRateChart').getContext('2d');
+
+    const groupSiteRates = {};
+
+    logs.forEach(log => {
+        const groupSiteKey = `${log.group} - ${log.site}`;
+        const { task_duration, task_man } = log;
+        const [hours, minutes] = task_duration.split(':').map(Number);
+        const taskDurationMinutes = (hours * 60) + minutes;
+        const numWorkers = task_man.split(',').length;
+        const workHours = (taskDurationMinutes * numWorkers) / 60;
+
+        if (!groupSiteRates[groupSiteKey]) {
+            groupSiteRates[groupSiteKey] = { totalWorkHours: 0, totalEngineers: 0 };
+        }
+        groupSiteRates[groupSiteKey].totalWorkHours += workHours;
+        groupSiteRates[groupSiteKey].totalEngineers += numWorkers;
+    });
+
+    console.log("Group-Site Operating Rate Calculation:");
+    Object.keys(groupSiteRates).forEach(label => {
+        const { totalWorkHours, totalEngineers } = groupSiteRates[label];
+        const operatingRate = totalEngineers > 0 ? ((totalWorkHours / (totalEngineers * 8)) * 100).toFixed(1) : 0;
+        console.log(`Group-Site: ${label}, Total Work Hours: ${totalWorkHours.toFixed(2)}, Total Engineers: ${totalEngineers}, Operating Rate: ${operatingRate}%`);
+    });
+
+    const labels = Object.keys(groupSiteRates);
+    const data = labels.map(label => {
+        const { totalWorkHours, totalEngineers } = groupSiteRates[label];
+        return totalEngineers > 0 ? ((totalWorkHours / (totalEngineers * 8)) * 100).toFixed(1) : 0;
+    });
+
+    if (groupSiteOperatingRateChartInstance) {
+        groupSiteOperatingRateChartInstance.destroy();
+    }
+
+    groupSiteOperatingRateChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Operating Rate (%)',
+                data: data,
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Operating Rate (%)'
+                    },
+                    beginAtZero: true,
+                    max: 100
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Group - Site'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.raw}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}

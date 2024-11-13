@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Operating Rate</title>
     <link rel="stylesheet" href="./css/operatingrate.css">
-    <link rel="stylesheet" href="./css/readworklog.css">
 </head>
 <body>
     <nav>
@@ -109,6 +108,50 @@
         <canvas id="weeklyOperatingRateChart"></canvas>
     </div>
 
+    <div class="chart-container">
+        <h2>Monthly Worktime</h2>
+        <canvas id="monthlyWorktimeChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>LINE</h2>
+        <canvas id="lineWorkStatsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Work Type</h2>
+        <canvas id="workTypeStatsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>EQ TYPE</h2>
+        <canvas id="equipmentTypeStatsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>AM vs PM</h2>
+        <canvas id="amPmStatsChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Regular vs Overtime</h2>
+        <canvas id="overtimeChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Time Range</h2>
+        <canvas id="timeRangeChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Warranty</h2>
+        <canvas id="warrantyChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h2>Group and Site Operating Rates</h2>
+        <canvas id="groupSiteOperatingRateChart"></canvas>
+    </div>
 
     <!-- 모달 창 -->
     <div id="modal" class="modal" style="display:none;">
@@ -132,11 +175,11 @@
         </div>
     </div>
 </main>
-<footer>
-    <div class="inner">
-        <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
-    </div>
-</footer>
+    <footer>
+        <div class="inner">
+            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <!-- 먼저 Chart.js 로드 -->
