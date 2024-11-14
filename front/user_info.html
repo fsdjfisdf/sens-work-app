@@ -44,44 +44,49 @@
     </nav>
 
     <main>
-        <button id="view-average-info">SECM</button><br>
+        <button id="view-average-info" class="admin-only">SECM</button>
+
         <section id="info">
             <div class="inner">
                 <h2>Eng'r Information</h2>
                 <div id="data-display" class="data-display">
                     <div class="data-row">
-                        <span class="data-title">Name:</span>
-                        <span class="data-content" id="userName"></span>
+                        <span class="data-title">Name</span>
+                        <span class="data-content" id="userName">Jane Doe</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Group:</span>
-                        <span class="data-content" id="userGroup"></span>
+                        <span class="data-title">Group</span>
+                        <span class="data-content" id="userGroup">Engineering</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Site:</span>
-                        <span class="data-content" id="userSite"></span>
+                        <span class="data-title">Site</span>
+                        <span class="data-content" id="userSite">San Francisco</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Hire Date:</span>
-                        <span class="data-content" id="userHireDate"></span>
+                        <span class="data-title">Hire Date</span>
+                        <span class="data-content" id="userHireDate">01/01/2020</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Level:</span>
-                        <span class="data-content" id="userLevel"></span>
+                        <span class="data-title">Level</span>
+                        <span class="data-content" id="userLevel">Senior</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Multi Level:</span>
-                        <span class="data-content" id="userMultiLevel"></span>
+                        <span class="data-title">Multi Level</span>
+                        <span class="data-content" id="userMultiLevel">3</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Main EQ:</span>
-                        <span class="data-content" id="userMainEq"></span>
+                        <span class="data-title">Main EQ</span>
+                        <span class="data-content" id="userMainEq">EQ-100</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-title">Multi EQ:</span>
-                        <span class="data-content" id="userMultiEq"></span>
+                        <span class="data-title">Multi EQ</span>
+                        <span class="data-content" id="userMultiEq">EQ-200</span>
                     </div>
                 </div>
+            </section>
+
+            <section id="charts">
+                <div class="inner">
                 <div class="chart-container">
                     <div class="chart-wrapper">
                         <h3>Level Achievement</h3>
@@ -95,6 +100,34 @@
                         <h3>Monthly CAPA</h3>
                         <canvas id="monthlyCapaChart"></canvas>
                     </div>
+                    <div class="chart-wrapper">
+                        <h3>Monthly Working time</h3>
+                        <canvas id="monthlyWorkHoursChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Rank</h3>
+                        <div class="highlight-section">
+                            <span class="data-title">This month working time:</span>
+                            <span class="data-content highlight" id="userMonthlyHours">0 Hrs</span>
+                            <span class="data-content highlight" id="userRankingPercent">Top 0%</span>
+                        </div>
+                        <canvas id="userRankingChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>Work Type</h3>
+                        <canvas id="workTypeChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>EQ Type</h3>
+                        <canvas id="equipmentTypeChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>weekday vs holiday</h3>
+                        <canvas id="averageWorkingHoursChart"></canvas>
+                    </div>
+                    
+                
+                                 
                 </div>
             </div>
         </section>

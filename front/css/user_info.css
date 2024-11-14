@@ -6,7 +6,6 @@ body, h1, h2, p, a, input, select, label, textarea, button {
     color: inherit;
     box-sizing: border-box;
 }
-
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
@@ -14,6 +13,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 /* Navigation styles */
@@ -29,79 +30,24 @@ nav {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1600px; /* 확장된 화면 너비 */
     padding: 0 20px;
-}
-
-.nav-title {
-    flex-grow: 1;
-    text-align: center;
 }
 
 .nav-title a {
     color: #fff;
     font-size: 24px;
     font-weight: bold;
-    display: inline-block;
 }
 
-.sign-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.signed .dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropbtn {
-    background-color: #0044cc;
-    color: #fff;
-    padding: 8px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
-
-.dropbtn:hover {
-    background-color: #003bb5;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #fff;
-    min-width: 160px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    right: 0;
-}
-
-.dropdown-content .dropdown-item {
-    color: #333;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
-
-.dropdown-content .dropdown-item:hover {
-    background-color: #f1f1f1;
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* Utility classes */
 .hidden {
     display: none;
 }
 
+/* 전체 컨테이너 너비 확장 */
 .inner {
-    max-width: 1200px;
+    max-width: 1600px; /* 전체 화면 너비 */
+    width: 100%;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -114,13 +60,12 @@ main {
     justify-content: center;
     padding: 20px;
     flex-direction: column;
-    margin-top: 80px;
+    margin-top: 20px;
 }
 
 button#view-average-info {
     background-color: #4600bf;
     color: #fff;
-    border: none;
     padding: 12px 24px;
     border-radius: 4px;
     cursor: pointer;
@@ -157,69 +102,153 @@ h2 {
 
 h3 {
     font-size: 24px;
-    margin-top: 20px;
     color: #333;
+    margin-bottom: 16px;
 }
 
+/* Data Display Container */
 #data-display {
-    text-align: left;
-    font-size: 16px;
-    line-height: 1.5;
-    margin-bottom: 20px;
+    background-color: #ffffff;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    align-items: center;
-}
-
-#data-display .data-row {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 0;
     width: 100%;
-    max-width: 400px;
+    max-width: 460px;
+    margin: 20px auto;
 }
 
-#data-display .data-title {
-    font-weight: bold;
-    color: #0044cc;
-    margin-right: 10px;
-    flex-basis: 150px;
+/* Data Row */
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e8e8e8;
+    transition: background-color 0.15s ease;
+    cursor: default;
+}
+
+.data-row:hover {
+    background-color: #f5f5f7;
+}
+
+.data-row:last-child {
+    border-bottom: none;
+}
+
+/* Data Title */
+.data-title {
+    font-size: 13px;
+    color: #6e6e73;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1.6;
+}
+
+/* Data Content */
+.data-content {
+    font-size: 15px;
+    color: #1c1c1e;
+    font-weight: 400;
     text-align: right;
 }
 
-#data-display .data-content {
-    color: #333;
-    flex-grow: 1;
-    padding-left: 10px;
-    text-align: left;
-}
-
-/* Chart container styles */
-.chart-container {
+/* 강조된 섹션 스타일 */
+.highlight-section {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.chart-wrapper {
-    flex: 1;
-    padding: 10px;
-    background-color: #fff;
+    gap: 15px; /* 요소 간격 조정 */
+    margin-top: 10px;
+    padding: 8px 12px;
+    background-color: #e8f4ff; /* 배경색 추가 */
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    min-width: 220px;
-    max-width: 600px;
-    width: 100%;
 }
 
+/* 강조된 데이터 */
+.highlight {
+    color: #0044cc;
+    font-size: 15px;
+}
+
+/* 데이터 제목 스타일 */
+.data-title {
+    font-size: 15px;
+    color: #555;
+}
+
+/* Data Display Styles for Mobile */
+@media (max-width: 600px) {
+    #data-display {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .data-row {
+        padding: 8px 12px;
+    }
+
+    .data-title {
+        font-size: 12px;
+    }
+
+    .data-content {
+        font-size: 14px;
+    }
+}
+
+
+
+/* 그래프 컨테이너 */
+.chart-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3열로 배치 */
+    row-gap: 20px; /* 행 간격을 좁게 설정 */
+    column-gap: 80px; /* 열 간격도 동일하게 설정 */
+    padding: 40px 20px; /* 상하 padding 추가로 더 넉넉하게 */
+    max-width: 1600px; /* 더 넓은 화면 너비 설정 */
+    margin: 0 auto;
+    justify-items: center;
+}
+
+/* 그래프 개별 래퍼 */
+.chart-wrapper {
+    padding: 30px; /* 내부 여백을 더 키워서 그래프가 여유롭게 보이도록 */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%; /* 그래프 넓이 조정 */
+    min-height: 350px; /* 그래프 높이 조정 */
+}
+
+/* 그래프 제목 스타일 */
+.chart-wrapper h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+/* Canvas 스타일 */
 canvas {
     width: 100% !important;
     height: 300px !important;
+}
+
+/* 반응형 조정 */
+@media (max-width: 1400px) {
+    .chart-container {
+        grid-template-columns: repeat(2, 1fr); /* 1400px 이하에서는 2열 */
+    }
+}
+
+@media (max-width: 900px) {
+    .chart-container {
+        grid-template-columns: 1fr; /* 모바일에서는 1열 */
+    }
 }
 
 footer {
@@ -236,7 +265,6 @@ footer {
     border: none;
     color: #fff;
     cursor: pointer;
-    padding: 8px;
     position: fixed;
     top: 3%;
     right: 20px;
@@ -253,25 +281,21 @@ footer {
 }
 
 .menu-icon span {
-    display: block;
     height: 5px;
     background-color: #fff;
     border-radius: 2px;
     transition: all 0.3s ease-in-out;
 }
 
-
 /* Menu bar styles */
 .menu-bar {
     position: fixed;
     top: 0;
-    right: -350px; /* 메뉴 바가 초기 화면에서 완전히 숨겨짐 */
+    right: -350px;
     width: 300px;
     height: 100%;
     background-color: #fff;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
     padding: 20px;
     transition: right 0.3s ease;
     z-index: 1001;
@@ -301,50 +325,4 @@ footer {
 
 .menu-item:last-child {
     border-bottom: none;
-}
-
-/* Hidden and utility classes */
-.hidden {
-    display: none;
-}
-
-/* Main content and footer styles */
-.inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.hero {
-    background-color: #0044cc;
-    color: #fff;
-    padding: 60px 0;
-    text-align: center;
-}
-
-.hero p {
-    font-size: 18px;
-    margin-bottom: 40px;
-}
-
-.button-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.button {
-    background-color: #fff;
-    color: #0044cc;
-    padding: 12px 24px;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: background-color 0.3s, color 0.3s;
-    text-align: center;
-}
-
-.button:hover {
-    background-color: #003bb5;
-    color: #fff;
 }
