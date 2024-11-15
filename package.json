@@ -1,0 +1,12 @@
+{
+  "name": "food-map-dist-example-main",
+  "version": "1.0.0",
+  "description": "코드 구조",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
