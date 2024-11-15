@@ -41,10 +41,23 @@
     <div id="find-id-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>아이디 찾기</h2>
+            <h2>FIND ID</h2>
             <input type="text" id="find-id-name" placeholder="이름">
-            <input type="text" id="find-id-group" placeholder="그룹">
-            <input type="text" id="find-id-site" placeholder="사이트">
+            <select id="find-id-group">
+                <option value="" disabled selected>SELECT GROUP</option>
+                <option value="PEE1">PEE1</option>
+                <option value="PEE2">PEE2</option>
+                <option value="PSKH">PSKH</option>
+              </select>
+              
+              <select id="find-id-site">
+                <option value="" disabled selected>SELECT SITE</option>
+                <option value="PT">PT</option>
+                <option value="HS">HS</option>
+                <option value="IC">IC</option>
+                <option value="CJ">CJ</option>
+                <option value="PSKH">PSKH</option>
+              </select>
             <input type="date" id="find-id-hire-date" placeholder="입사일">
             <input type="button" value="아이디 찾기" id="find-id-btn">
             <p id="find-id-result"></p>
@@ -55,11 +68,24 @@
     <div id="find-password-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>비밀번호 찾기</h2>
+            <h2>FIND PASSWORD</h2>
             <input type="text" id="find-password-id" placeholder="아이디">
             <input type="text" id="find-password-name" placeholder="이름">
-            <input type="text" id="find-password-group" placeholder="그룹">
-            <input type="text" id="find-password-site" placeholder="사이트">
+            <select id="find-password-group">
+                <option value="" disabled selected>SELECT GROUP</option>
+                <option value="PEE1">PEE1</option>
+                <option value="PEE2">PEE2</option>
+                <option value="PSKH">PSKH</option>
+              </select>
+              
+              <select id="find-password-site">
+                <option value="" disabled selected>SELECT SITE</option>
+                <option value="PT">PT</option>
+                <option value="HS">HS</option>
+                <option value="IC">IC</option>
+                <option value="CJ">CJ</option>
+                <option value="PSKH">PSKH</option>
+              </select>
             <input type="date" id="find-password-hire-date" placeholder="입사일">
             <!-- 새로운 비밀번호 입력 섹션 -->
             <div id="new-password-section" style="display: none;">

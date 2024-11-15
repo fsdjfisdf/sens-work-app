@@ -61,22 +61,17 @@ nav {
 }
 
 .sign-link {
-    background-color: #0044cc;
     color: #fff;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    border: 2px solid transparent;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    text-align: center;
+    padding: 8px 16px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+    margin: 0 5px;
 }
-
 
 .sign-link:hover {
     background-color: #fff;
     color: #0044cc;
-    border-color: #0044cc;
 }
 
 /* Main content styles */
@@ -302,4 +297,47 @@ footer {
     margin-top: 20px;
     font-size: 14px;
     color: #333;
+}
+
+/* Select input styles */
+select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    appearance: none; /* 기본 드롭다운 화살표 제거 */
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+    font-family: Arial, sans-serif;
+}
+
+select:focus {
+    border-color: #0044cc;
+    background-color: #fff;
+    outline: none;
+}
+
+select option {
+    padding: 10px;
+    font-size: 16px;
+}
+
+/* Hover effect for select input */
+select:hover {
+    background-color: #f1f1f1;
+}
+
+/* Adjust styles for small screens */
+@media screen and (max-width: 768px) {
+    select {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    select option {
+        font-size: 14px;
+    }
 }
