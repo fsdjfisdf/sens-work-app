@@ -4,11 +4,10 @@
   "description": "Node.js API Server",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --mode production",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "NODE_ENV=development node index.js",
     "prod": "NODE_ENV=production node index.js",
-    "start": "nodemon dist/bundle.js"  // 수정된 부분
+    "start": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
