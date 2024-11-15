@@ -1,8 +1,27 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  
   await loadUserInfo();
   const workLogs = await loadWorkLogs(); // 작업 이력을 가져오고 변수에 저장
   const monthlyHours = calculateMonthlyWorkHoursByMonth(workLogs); // 월별 작업 시간을 계산
   renderMonthlyWorkHoursChart(monthlyHours); // 그래프 렌더링
+
+  // 작업 시작 시간별 AM/PM 계산
+  const { amCount, pmCount } = calculateTaskStartTime(workLogs);
+  
+  // AM/PM 작업 수로 차트 렌더링
+  renderTaskStartTimeChart(amCount, pmCount);
+
+    // Regular vs Overtime 계산
+    const { regularCount, overtimeCount } = calculateRegularVsOvertime(workLogs);
+  
+    // Regular vs Overtime 차트 렌더링
+    renderRegularVsOvertimeChart(regularCount, overtimeCount);
+
+      // 작업 시간 범위 계산
+  const timeRanges = calculateTaskDurationRanges(workLogs); 
+  
+  // 작업 시간 범위 차트 렌더링
+  renderTimeRangeChart(timeRanges);
 
   // 이번 달의 작업 시간만 계산하여 화면에 표시
   const currentMonthIndex = new Date().getMonth(); // 현재 달의 인덱스 (0: 1월, ..., 11: 12월)
@@ -21,6 +40,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 공휴일을 주말에 포함하도록 holidays 배열을 전달
   const averageHours = calculateAverageWorkingHoursByDayType(workLogs, holidays);
   renderAverageWorkingHoursChart(averageHours);
+
+  // 사용자 작업 건수 계산 및 랭킹 생성
+  const userTaskCount = calculateUserTaskCount(workLogs);
+  await calculateAndRenderUserTaskRanking(userTaskCount);
 });
 
 let loggedInUserName = ''; // 로그인한 사용자의 이름을 저장할 변수
@@ -302,7 +325,6 @@ async function loadUserInfo() {
         });
 
         const userLogs = response.data.filter(log => log.task_man.includes(loggedInUserName));
-        console.log("로그인한 사용자의 모든 작업 이력:", userLogs);
 
         return userLogs;
     } catch (error) {
@@ -401,7 +423,6 @@ async function calculateAndRenderUserRanking(currentUserHours) {
                   }
                   allUserMonthlyHours[userName] += durationInHours;
 
-                  console.log(`사용자: ${userName}, 작업 날짜: ${log.task_date}, 작업 시간: ${log.task_duration}, 계산된 시간(시간 단위): ${durationInHours.toFixed(2)}`);
               });
           }
       });
@@ -445,7 +466,6 @@ function renderUserRankingChart(sortedHours, currentUserHours, userRank, percent
       }
   });
 
-  console.log(`사용자 랭킹: ${userRank}, Top ${percentageRank}%`);
 }
 
 
@@ -461,7 +481,6 @@ function calculateWorkTypeCounts(workLogs) {
     }
   });
 
-  console.log("작업 유형별 건수:", workTypeCounts);
   return workTypeCounts;
 }
 
@@ -526,7 +545,6 @@ function calculateEquipmentTypeCounts(workLogs) {
     }
   });
 
-  console.log("설비 유형별 건수:", equipmentTypeCounts);
   return equipmentTypeCounts;
 }
 
@@ -613,7 +631,6 @@ function calculateAverageWorkingHoursByDayType(workLogs, holidays) {
   const weekendAverageHours = weekendCount > 0 ? (weekendTotalHours / weekendCount).toFixed(2) : 0;
   const weekdayAverageHours = weekdayCount > 0 ? (weekdayTotalHours / weekdayCount).toFixed(2) : 0;
 
-  console.log(`주말 평균 근무 시간: ${weekendAverageHours} 시간, 평일 평균 근무 시간: ${weekdayAverageHours} 시간`);
   return { weekendAverageHours, weekdayAverageHours };
 }
 
@@ -665,5 +682,396 @@ function renderAverageWorkingHoursChart(averageHours) {
         }
       },
       plugins: [ChartDataLabels]
+  });
+}
+
+// 작업 건수 계산 함수
+function calculateUserTaskCount(workLogs) {
+  let taskCount = 0;
+
+  workLogs.forEach(log => {
+    const logMonth = new Date(log.task_date).getMonth();
+    if (logMonth === new Date().getMonth()) {
+      const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
+      if (userNames.includes(loggedInUserName)) {
+        taskCount += 1;
+      }
+    }
+  });
+
+  return taskCount;
+}
+// 작업 건수 랭킹을 계산하고 화면에 표시
+async function calculateAndRenderUserTaskRanking(userTaskCount) {
+  const token = localStorage.getItem('x-access-token');
+  if (!token) return;
+
+  try {
+      const response = await axios.get('http://3.37.73.151:3001/logs', {
+          headers: { 'x-access-token': token }
+      });
+
+      const currentMonth = new Date().getMonth(); // 이번 달의 인덱스
+      const allUserTaskCounts = {};
+
+      // 이번 달의 작업 건수만 계산
+      response.data.forEach(log => {
+          const logMonth = new Date(log.task_date).getMonth();
+          
+          // 이번 달의 작업만 필터링
+          if (logMonth === currentMonth) {
+              const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
+
+              userNames.forEach(userName => {
+                  if (!allUserTaskCounts[userName]) {
+                      allUserTaskCounts[userName] = 0;
+                  }
+                  allUserTaskCounts[userName] += 1; // 작업 건수 증가
+              });
+          }
+      });
+
+      // 모든 사용자 작업 건수 정렬 (내림차순)
+      const sortedTaskCounts = Object.values(allUserTaskCounts).sort((a, b) => b - a);
+
+      // 사용자 작업 건수의 랭킹과 퍼센트 계산
+      const userRank = sortedTaskCounts.indexOf(userTaskCount) + 1;
+      const percentageRank = userRank ? ((userRank / sortedTaskCounts.length) * 100).toFixed(1) : 0;
+
+      // 화면에 작업 건수, 랭킹, 퍼센트 출력
+      document.getElementById('userMonthlyTasks').textContent = `${userTaskCount} 건`;
+      document.getElementById('userTaskRankingPercent').textContent = `Top ${percentageRank}%`;
+
+      renderUserTaskRankingChart(sortedTaskCounts, userTaskCount, userRank, percentageRank);
+
+  } catch (error) {
+      console.error('작업 건수 랭킹을 불러오는 중 오류 발생:', error);
+  }
+}
+
+
+// 작업 건수 랭킹 차트 생성 함수
+function renderUserTaskRankingChart(sortedTaskCounts, userTaskCount, userRank, percentageRank) {
+  const ctx = document.getElementById('userTaskRankingChart').getContext('2d');
+  const backgroundColors = sortedTaskCounts.map(count => count === userTaskCount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 0.4)');
+
+  new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: Array.from({ length: sortedTaskCounts.length }, (_, i) => i + 1),
+          datasets: [{
+              label: 'Task Count',
+              data: sortedTaskCounts,
+              backgroundColor: backgroundColors,
+              borderWidth: 1
+          }]
+      },
+      options: {
+          plugins: {
+              tooltip: {
+                  callbacks: {
+                      label: (context) => `${context.raw} 건`
+                  }
+              }
+          }
+      }
+  });
+
+  console.log(`사용자 작업 건수 랭킹: ${userRank}, Top ${percentageRank}%`);
+}
+
+// 작업 시작 시간 AM/PM 계산 함수
+function calculateTaskStartTime(workLogs) {
+  let amCount = 0;
+  let pmCount = 0;
+
+  workLogs.forEach(log => {
+    const startTime = new Date(`1970-01-01T${log.start_time}Z`);  // start_time을 시간으로 처리
+    const hours = startTime.getUTCHours();  // getUTCHours()로 시간을 가져옴
+
+    // AM: 12시 이전
+    if (hours < 12) {
+      amCount += 1;
+    }
+    // PM: 12시 이후
+    else {
+      pmCount += 1;
+    }
+  });
+
+  return { amCount, pmCount };
+}
+
+function renderTaskStartTimeChart(amCount, pmCount) {
+  const maxCount = Math.max(amCount, pmCount) * 1.2; // 최대값을 1.5배로 설정하여 여유 공간 확보
+
+  const ctx = document.getElementById('taskStartTimeChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['AM', 'PM'],
+      datasets: [{
+        label: 'Task Start Time',
+        data: [amCount, pmCount],
+        backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y', // 가로 막대형 그래프
+      
+      scales: {
+        x: {
+          max: maxCount, // 최대값을 max로 강제 설정
+          title: {
+            display: true,
+            text: 'Task Count'
+          },
+          ticks: {
+            color: 'grey',
+            beginAtZero: true,
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'AM/PM'
+          },
+          ticks: {
+            color: 'grey'
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const percentage = ((context.raw / (amCount + pmCount)) * 100).toFixed(1); // 비율 계산
+              return `${context.raw} tasks (${percentage}%)`; // 비율 추가
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value, context) => {
+            const percentage = ((value / (amCount + pmCount)) * 100).toFixed(1); // 비율 계산
+            return `${value} (${percentage}%)`; // 데이터 라벨에 비율 추가
+          },
+          color: 'black',
+          font: {
+            size: 12
+          },
+          anchor: 'end',
+          align: 'end'
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // 플러그인 등록
+  });
+}
+
+
+// 작업 시간 기준으로 Regular vs Overtime 계산 함수
+function calculateRegularVsOvertime(workLogs) {
+  let regularCount = 0;
+  let overtimeCount = 0;
+
+  workLogs.forEach(log => {
+    const endTime = new Date(`1970-01-01T${log.end_time}Z`); // end_time을 시간으로 처리
+    const hours = endTime.getUTCHours();  // getUTCHours()로 시간을 가져옴
+
+    // 18시 이전이면 Regular
+    if (hours < 18) {
+      regularCount += 1;
+    } 
+    // 18시 이후면 Overtime
+    else {
+      overtimeCount += 1;
+    }
+  });
+
+  return { regularCount, overtimeCount };
+}
+
+// Regular vs Overtime 그래프 렌더링 함수
+function renderRegularVsOvertimeChart(regularCount, overtimeCount) {
+  const maxCount = Math.max(regularCount, overtimeCount) * 1.2; // 최대값을 1.5배로 설정하여 여유 공간 확보
+
+  const ctx = document.getElementById('regularVsOvertimeChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Regular', 'Overtime'],
+      datasets: [{
+        label: 'Task Count',
+        data: [regularCount, overtimeCount],
+        backgroundColor: ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'],
+        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y', // 가로 막대형 그래프
+      scales: {
+        x: {
+          suggestedMax: maxCount, // 최대값을 suggestedMax로 설정
+          title: {
+            display: true,
+            text: 'Task Count'
+          },
+          ticks: {
+            color: 'grey',
+            beginAtZero: true,
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Regular / Overtime'
+          },
+          ticks: {
+            color: 'grey'
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const percentage = ((context.raw / (regularCount + overtimeCount)) * 100).toFixed(1); // 비율 계산
+              return `${context.raw} tasks (${percentage}%)`; // 비율 추가
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value, context) => {
+            const percentage = ((value / (regularCount + overtimeCount)) * 100).toFixed(1); // 비율 계산
+            return `${value} (${percentage}%)`; // 데이터 라벨에 비율 추가
+          },
+          color: 'black',
+          font: {
+            size: 12
+          },
+          anchor: 'end',
+          align: 'end'
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // 플러그인 등록
+  });
+}
+
+// 작업 시간을 범위별로 계산하는 함수
+function calculateTaskDurationRanges(workLogs) {
+  const ranges = {
+    '0-1 hour': 0,
+    '1-2 hours': 0,
+    '2-3 hours': 0,
+    '3-4 hours': 0,
+    '4+ hours': 0
+  };
+
+  workLogs.forEach(log => {
+    if (log.task_duration) {
+      const [hours, minutes, seconds] = log.task_duration.split(':').map(Number);
+      const totalHours = hours + minutes / 60 + seconds / 3600;
+
+      if (totalHours < 1) {
+        ranges['0-1 hour']++;
+      } else if (totalHours >= 1 && totalHours < 2) {
+        ranges['1-2 hours']++;
+      } else if (totalHours >= 2 && totalHours < 3) {
+        ranges['2-3 hours']++;
+      } else if (totalHours >= 3 && totalHours < 4) {
+        ranges['3-4 hours']++;
+      } else {
+        ranges['4+ hours']++;
+      }
+    }
+  });
+
+  return ranges;
+}
+
+function renderTimeRangeChart(ranges) {
+  const maxCount = Math.max(...Object.values(ranges)) * 1.2; // 최대값을 1.2배로 설정하여 여유 공간 확보
+
+  const ctx = document.getElementById('timeRangeChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(ranges),  // 범위별 레이블
+      datasets: [{
+        label: 'Task Duration Distribution',
+        data: Object.values(ranges),  // 각 범위별 작업 수
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+          'rgba(255, 159, 64, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 99, 132, 0.2)'
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 99, 132, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y', // 가로 막대형 그래프
+      responsive: true,
+      scales: {
+        x: {
+          max: maxCount, // 최대값을 max로 설정
+          title: {
+            display: true,
+            text: 'Task Duration Range'
+          },
+          ticks: {
+            color: 'grey',
+            beginAtZero: true,
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Task Count'
+          },
+          ticks: {
+            color: 'grey',
+            beginAtZero: true
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const percentage = ((context.raw / Object.values(ranges).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+              return `${context.raw} tasks (${percentage}%)`;
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value, context) => {
+            const percentage = ((value / Object.values(ranges).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+            return `${value} (${percentage}%)`;  // 각 막대에 비율 표시
+          },
+          color: 'black',
+          font: {
+            size: 12
+          },
+          anchor: 'end',
+          align: 'end'
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // 플러그인 등록
   });
 }
