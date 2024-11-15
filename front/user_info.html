@@ -93,24 +93,39 @@
             <section id="charts">
                 <div class="inner">
                 <div class="chart-container">
+
                     <div class="chart-wrapper">
-                        <h3>LEVEL ACHIEVEMENT</h3>
-                        <canvas id="achievementChart"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <h3>CAPA</h3>
+                        <h3>CAPA<button class="info-btn" data-info="capa">?</button></h3>
                         <canvas id="capaChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>MONTHLY CAPA</h3>
+                        <h3>MONTHLY CAPA<button class="info-btn" data-info="monthlyCapa">?</button></h3>
                         <canvas id="monthlyCapaChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>MONTHLY WORKING TIME</h3>
+                        <h3>MONTHLY WORKING TIME<button class="info-btn" data-info="monthlyWorkHours">?</button></h3>
                         <canvas id="monthlyWorkHoursChart"></canvas>
                     </div>
+
+
                     <div class="chart-wrapper">
-                        <h3>TIME RANK</h3>
+                        <h3>LEVEL CHANGE<button class="info-btn" data-info="levelChange">?</button></h3>
+                        <canvas id="levelChangeChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>LEVEL ACHIEVEMENT<button class="info-btn" data-info="achievement">?</button></h3>
+                        <canvas id="achievementChart"></canvas>
+                      </div>
+                      <div class="chart-wrapper">
+                        <h3>WORK TYPE<button class="info-btn" data-info="workType">?</button></h3>
+                        <canvas id="workTypeChart"></canvas>
+                    </div>
+
+
+
+
+                    <div class="chart-wrapper">
+                        <h3>TIME RANK<button class="info-btn" data-info="userRanking">?</button></h3>
                         <div class="highlight-section">
                             <span class="data-title">This month working time:</span>
                             <span class="data-content highlight" id="userMonthlyHours">0 Hrs</span>
@@ -119,7 +134,7 @@
                         <canvas id="userRankingChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>TASK RANK</h3>
+                        <h3>TASK RANK<button class="info-btn" data-info="userTaskRanking">?</button></h3>
                         <div class="highlight-section">
                             <span class="data-title">This month task count:</span>
                             <span class="data-content highlight" id="userMonthlyTasks">0 건</span>
@@ -128,27 +143,51 @@
                         <canvas id="userTaskRankingChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>WORK TYPE</h3>
-                        <canvas id="workTypeChart"></canvas>
+                        <h3>TASK COUNT PER DAY<button class="info-btn" data-info="dailyWorkCount">?</button></h3>
+                        <canvas id="dailyWorkCountChart"></canvas>
+                    </div>
+
+
+                    <div class="chart-wrapper">
+                        <h3>GROUP<button class="info-btn" data-info="groupWorkCount">?</button></h3>
+                        <canvas id="groupWorkCountChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>EQ TYPE</h3>
-                        <canvas id="equipmentTypeChart"></canvas>
+                        <h3>SITE<button class="info-btn" data-info="siteWorkCount">?</button></h3>
+                        <canvas id="siteWorkCountChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>WEEKDAY vs HOLIDAY</h3>
+                        <h3>LINE<button class="info-btn" data-info="lineWorkCount">?</button></h3>
+                        <canvas id="lineWorkCountChart"></canvas>
+                    </div>
+
+
+                    <div class="chart-wrapper">
+                        <h3>WEEKDAY vs HOLIDAY<button class="info-btn" data-info="averageWorkingHours">?</button></h3>
                         <canvas id="averageWorkingHoursChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>AM vs PM</h3>
+                        <h3>AM vs PM<button class="info-btn" data-info="taskStartTime">?</button></h3>
                         <canvas id="taskStartTimeChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                        <h3>REGULAR vs OVERTIME</h3>
+                        <h3>REGULAR vs OVERTIME<button class="info-btn" data-info="regularVsOvertime">?</button></h3>
                         <canvas id="regularVsOvertimeChart"></canvas> <!-- Regular vs Overtime 차트 추가 -->
                     </div>
+
+
+
                     <div class="chart-wrapper">
-                        <h3>TIME RANGE</h3>
+                        <h3>EQ TYPE<button class="info-btn" data-info="EquipmentType">?</button></h3>
+                        <canvas id="equipmentTypeChart"></canvas>
+                    </div>
+
+                    <div class="chart-wrapper">
+                        <h3>WI vs WO<button class="info-btn" data-info="warrantyWorkCount">?</button></h3>
+                        <canvas id="warrantyWorkCountChart"></canvas>
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>TIME RANGE<button class="info-btn" data-info="timeRange">?</button></h3>
                         <canvas id="timeRangeChart"></canvas> <!-- 작업 시간 범위 그래프 -->
                     </div>
                     
@@ -157,6 +196,12 @@
                 </div>
             </div>
         </section>
+        <div id="infoModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <p id="modalText"></p>
+            </div>
+          </div>
     </main>
 
     <script>

@@ -1,8 +1,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  
-  await loadUserInfo();
+  const userInfo = await loadUserInfo();  // loadUserInfo 함수에서 반환된 userInfo를 기다림
   const workLogs = await loadWorkLogs(); // 작업 이력을 가져오고 변수에 저장
   const monthlyHours = calculateMonthlyWorkHoursByMonth(workLogs); // 월별 작업 시간을 계산
+
+  const today = new Date();
+  const todayString = today.toISOString().split('T')[0];
+  
+  // 최초 작업 날짜 구하기
+  const firstLogDate = new Date(Math.min(...workLogs.map(log => new Date(log.task_date))));
+  const firstLogDateString = firstLogDate.toISOString().split('T')[0]; // 최초 작업 날짜
+
   renderMonthlyWorkHoursChart(monthlyHours); // 그래프 렌더링
 
   // 작업 시작 시간별 AM/PM 계산
@@ -11,17 +18,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   // AM/PM 작업 수로 차트 렌더링
   renderTaskStartTimeChart(amCount, pmCount);
 
-    // Regular vs Overtime 계산
-    const { regularCount, overtimeCount } = calculateRegularVsOvertime(workLogs);
+  // Regular vs Overtime 계산
+  const { regularCount, overtimeCount } = calculateRegularVsOvertime(workLogs);
   
-    // Regular vs Overtime 차트 렌더링
-    renderRegularVsOvertimeChart(regularCount, overtimeCount);
+  // Regular vs Overtime 차트 렌더링
+  renderRegularVsOvertimeChart(regularCount, overtimeCount);
 
-      // 작업 시간 범위 계산
-  const timeRanges = calculateTaskDurationRanges(workLogs); 
+  // 작업 시간 범위 계산
+  const timeRanges = calculateTaskDurationRanges(workLogs);
   
   // 작업 시간 범위 차트 렌더링
   renderTimeRangeChart(timeRanges);
+
+  // 0건, 1건, 2건, 3건 이상 작업한 날짜 수 계산
+  const dailyWorkCount = calculateDailyWorkCount(workLogs, holidays, firstLogDateString, todayString);
+  renderDailyWorkCountChart(dailyWorkCount); // 그래프 렌더링
 
   // 이번 달의 작업 시간만 계산하여 화면에 표시
   const currentMonthIndex = new Date().getMonth(); // 현재 달의 인덱스 (0: 1월, ..., 11: 12월)
@@ -44,6 +55,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 사용자 작업 건수 계산 및 랭킹 생성
   const userTaskCount = calculateUserTaskCount(workLogs);
   await calculateAndRenderUserTaskRanking(userTaskCount);
+
+  const lineWorkCount = calculateLineWorkCount(workLogs);  // LINE별 작업 건수 계산
+  renderLineWorkCountChart(lineWorkCount);  // LINE별 작업 건수 그래프 렌더링
+
+  const groupWorkCount = calculateGroupWorkCount(workLogs);  // GROUP별 작업 건수 계산
+  renderGroupWorkCountChart(groupWorkCount);  // GROUP별 작업 건수 그래프 렌더링
+
+  const siteWorkCount = calculateSiteWorkCount(workLogs);  // SITE별 작업 건수 계산
+  renderSiteWorkCountChart(siteWorkCount);  // SITE별 작업 건수 그래프 렌더링
+
+  // WARRANTY별 작업 건수 계산
+  const warrantyWorkCount = calculateWarrantyWorkCount(workLogs);
+
+  // WARRANTY별 작업 건수 그래프 렌더링
+  renderWarrantyWorkCountChart(warrantyWorkCount);
+
+// 레벨 변화 데이터 계산
+const { levelChanges, allQuarters } = await calculateLevelChange(userInfo);
+
+// 레벨 변화 그래프 렌더링
+renderLevelChangeChart(levelChanges, allQuarters);
 });
 
 let loggedInUserName = ''; // 로그인한 사용자의 이름을 저장할 변수
@@ -293,6 +325,9 @@ async function loadUserInfo() {
           },
           plugins: [ChartDataLabels]
         });
+
+        
+        return userInfo;  // userInfo 반환
   
       } else {
         alert('사용자 정보를 가져오는데 실패했습니다.');
@@ -311,6 +346,171 @@ async function loadUserInfo() {
     }
   }
 
+
+
+
+// 입사일을 기준으로 분기 계산하는 함수
+function getQuarter(date) {
+  const month = date.getMonth() + 1; // 월(0-based index)
+  if (month <= 3) return `Y${date.getFullYear()}-1Q`;
+  if (month <= 6) return `Y${date.getFullYear()}-2Q`;
+  if (month <= 9) return `Y${date.getFullYear()}-3Q`;
+  return `Y${date.getFullYear()}-4Q`;
+}
+
+// 레벨 변화 계산 함수
+async function calculateLevelChange(userInfo) {
+  const hireDate = new Date(userInfo.HIRE);
+  const levelDates = [
+    { level: 1, date: userInfo['Level1 Achieve'] },
+    { level: 2, date: userInfo['Level2 Achieve'] },
+    { level: 3, date: userInfo['Level3 Achieve'] },
+    { level: 4, date: userInfo['Level4 Achieve'] }
+  ].filter(entry => entry.date !== null);
+
+  const levelChanges = [];
+  let currentLevel = 0;
+  let currentDate = new Date(hireDate);
+
+  // 입사일 이후 분기부터 시작
+  levelChanges.push({
+    level: currentLevel,
+    quarter: getQuarter(currentDate),
+    date: currentDate.toLocaleDateString()
+  });
+
+  let level4Quarter = null;
+
+  // 각 레벨 달성 날짜에 따라 분기별 최대 레벨 추출
+  levelDates.forEach(({ level, date }) => {
+    const quarter = getQuarter(new Date(date));
+    const existingEntry = levelChanges.find(entry => entry.quarter === quarter);
+
+    if (existingEntry) {
+      if (existingEntry.level < level) {
+        existingEntry.level = level;
+        existingEntry.date = new Date(date).toLocaleDateString();
+      }
+    } else {
+      levelChanges.push({
+        level: level,
+        quarter: quarter,
+        date: new Date(date).toLocaleDateString()
+      });
+    }
+
+    // 레벨 4 달성 시 분기 기록
+    if (level === 4) {
+      level4Quarter = quarter;
+    }
+  });
+
+  // 전체 분기 목록 생성 (레벨 4 달성 분기까지만 포함)
+  const allQuarters = [];
+  let startQuarter = getQuarter(hireDate);
+  let endQuarter = level4Quarter || getQuarter(new Date());
+  let startYear = parseInt(startQuarter.slice(1, 5));
+  let endYear = parseInt(endQuarter.slice(1, 5));
+  let startQuarterIndex = parseInt(startQuarter.slice(6, 7));
+  let endQuarterIndex = parseInt(endQuarter.slice(6, 7));
+
+  for (let year = startYear; year <= endYear; year++) {
+    for (let quarter = startQuarterIndex; quarter <= 4; quarter++) {
+      if (year === endYear && quarter > endQuarterIndex) break;
+      allQuarters.push(`Y${year}-${quarter}Q`);
+    }
+    startQuarterIndex = 1;
+  }
+
+  return { levelChanges, allQuarters };
+}
+
+
+
+// 레벨 변화 그래프 렌더링 함수
+async function renderLevelChangeChart(levelChangeData, allQuarters) {
+  if (!levelChangeData || !allQuarters || allQuarters.length === 0) {
+    console.error('Invalid data: levelChangeData or allQuarters is missing.');
+    return;
+  }
+
+  console.log('Level Changes:', levelChangeData);
+  console.log('All Quarters:', allQuarters);
+
+  const labels = allQuarters;
+  let currentLevel = 0;
+
+  // 각 분기별로 레벨을 설정하면서 이전 레벨을 유지
+  const levelData = allQuarters.map(quarter => {
+    const matchingData = levelChangeData.find(item => item.quarter === quarter);
+    if (matchingData) {
+      currentLevel = matchingData.level; // 레벨 변경이 있는 경우 업데이트
+    }
+    return currentLevel; // 현재 레벨을 반환
+  });
+
+  const ctx = document.getElementById('levelChangeChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Level Progression',
+        data: levelData,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        fill: true,
+        borderWidth: 2,
+        pointRadius: 5,
+        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 5,  // 레벨은 최대 4까지
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const level = context.raw;
+              const date = levelChangeData.find(item => item.level === level)?.date || 'N/A';
+              return `Level ${level} - Achieved on: ${date}`;
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value, context) => {
+            // 레벨이 달성된 분기인지 확인
+            const quarter = context.chart.data.labels[context.dataIndex];
+            const achievedData = levelChangeData.find(item => item.quarter === quarter);
+            if (achievedData) {
+              const level = achievedData.level;
+              const date = achievedData.date;
+              return `Level ${level} (${date})`;
+            }
+            return ''; // 달성한 분기만 표시
+          },
+          color: 'black',
+          font: {
+            size: 12
+          },
+          anchor: 'end',
+          align: 'end'
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+
+
+
+
   async function loadWorkLogs() {
     const token = localStorage.getItem('x-access-token');
     if (!token) {
@@ -325,6 +525,9 @@ async function loadUserInfo() {
         });
 
         const userLogs = response.data.filter(log => log.task_man.includes(loggedInUserName));
+        const firstLogDate = new Date(Math.min(...userLogs.map(log => new Date(log.task_date))));
+        const firstLogDateString = firstLogDate.toISOString().split('T')[0];  // 최초 작업 날짜
+    
 
         return userLogs;
     } catch (error) {
@@ -1036,3 +1239,493 @@ function renderTimeRangeChart(ranges) {
     plugins: [ChartDataLabels] // 플러그인 등록
   });
 }
+
+
+// 공휴일을 제외한 날짜 계산 함수
+function calculateWorkingDays(startDate, endDate, holidays) {
+  const workingDays = [];
+  let currentDate = new Date(startDate);
+  endDate = new Date(endDate);
+  
+  while (currentDate <= endDate) {
+      const dayOfWeek = currentDate.getDay(); // 0: 일요일, 6: 토요일
+      const logDateString = currentDate.toISOString().split('T')[0]; // 날짜 형식 YYYY-MM-DD
+
+      // 주말(토, 일) 및 공휴일을 제외한 평일만 workingDays에 추가
+      if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.includes(logDateString)) {
+          workingDays.push(logDateString);
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1); // 하루씩 증가
+  }
+
+  return workingDays;
+}
+
+// 공휴일을 제외한 평일에 하루 작업 건수를 카운트하는 함수
+function calculateDailyWorkCount(workLogs, holidays, startDate, endDate) {
+  const dailyWorkCount = { 0: 0, 1: 0, 2: 0, 3: 0, '3+': 0 };  // 작업 건수별 날짜 수
+  const workingDays = calculateWorkingDays(startDate, endDate, holidays);  // 평일 작업 날짜 배열
+
+  workLogs.forEach(log => {
+      if (log.task_duration) {
+          const logDateString = new Date(log.task_date).toISOString().split('T')[0]; // 날짜 형식 YYYY-MM-DD
+
+          // 공휴일과 주말을 제외한 날짜에 대해서만 카운트
+          if (workingDays.includes(logDateString)) {
+              // 하루에 작업 건수 계산 (task_man 필드를 쉼표로 분리하여 각 작업 건수 계산)
+              const taskCount = log.task_man.split(',').length;
+
+              // 작업 건수별로 날짜 수 카운트
+              if (taskCount === 1) {
+                  dailyWorkCount[1]++; // 1건 작업을 진행한 날짜 수 증가
+              } else if (taskCount === 2) {
+                  dailyWorkCount[2]++; // 2건 작업을 진행한 날짜 수 증가
+              } else if (taskCount === 3) {
+                  dailyWorkCount[3]++; // 3건 작업을 진행한 날짜 수 증가
+              } else if (taskCount > 3) {
+                  dailyWorkCount['3+']++; // 3건 이상 작업을 진행한 날짜 수 증가
+              } 
+          }
+      }
+  });
+
+  // 콘솔에 각 작업 건수를 진행한 날짜 수 출력
+  console.log("1건 작업한 날:", dailyWorkCount[1]);
+  console.log("2건 작업한 날:", dailyWorkCount[2]);
+  console.log("3건 이상 작업한 날:", dailyWorkCount[3] + dailyWorkCount['3+']);  // 3건 이상 합산
+
+  return dailyWorkCount;
+}
+
+// 하루 작업 건수 비교 그래프를 생성하는 함수
+function renderDailyWorkCountChart(dailyWorkCount) {
+  const ctx = document.getElementById('dailyWorkCountChart').getContext('2d');
+  const totalDays = dailyWorkCount[1] + dailyWorkCount[2] + dailyWorkCount[3] + dailyWorkCount['3+'];  // 전체 작업 건수
+  const maxCount = Math.max(dailyWorkCount[1], dailyWorkCount[2], dailyWorkCount[3] + dailyWorkCount['3+']) * 1.2; // x축 최대값을 1.2배로 설정
+
+  new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: ['1', '2', '3+'], // 그래프에 표시될 레이블
+          datasets: [{
+              label: 'Task count per day',
+              data: [
+                  dailyWorkCount[1],        // 1건 작업한 날
+                  dailyWorkCount[2],        // 2건 작업한 날
+                  dailyWorkCount[3] + dailyWorkCount['3+'] // 3건 이상 작업한 날 (합쳐서 표시)
+              ],
+              backgroundColor: [
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(153, 102, 255, 0.2)',
+                  'rgba(255, 159, 64, 0.2)'
+              ],
+              borderColor: [
+                  'rgba(75, 192, 192, 1)',
+                  'rgba(153, 102, 255, 1)',
+                  'rgba(255, 159, 64, 1)'
+              ],
+              borderWidth: 1
+          }]
+      },
+      options: {
+        indexAxis: 'y', // 가로 막대형 그래프
+        scales: {
+            x: {
+                max: maxCount, // 최대값을 1.2배로 설정
+                ticks: {
+                    color: 'grey',
+                    beginAtZero: true,
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Task Count'
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: (context) => {
+                        const percentage = ((context.raw / totalDays) * 100).toFixed(1); // 비율 계산
+                        return `${context.raw} days (${percentage}%)`; // 툴팁에 작업 건수와 비율 추가
+                    }
+                }
+            },
+            datalabels: {
+                formatter: (value) => {
+                    const percentage = ((value / totalDays) * 100).toFixed(1); // 비율 계산
+                    return `${value} days\n(${percentage}%)`; // 데이터 라벨에 작업 건수와 비율 추가
+                },
+                color: 'black',
+                anchor: 'end',
+                align: 'end',
+                font: {
+                    size: 12
+                }
+            }
+        }
+      },
+      plugins: [ChartDataLabels] // 데이터 라벨 플러그인 추가
+  });
+}
+// LINE별 작업 건수 및 비율 계산 함수
+function calculateLineWorkCount(workLogs) {
+  const lineWorkCount = {}; // LINE별 작업 건수
+
+  // 각 작업 로그를 순회하면서 LINE별 작업 건수를 세기
+  workLogs.forEach(log => {
+    const line = log.line; // line 필드를 기준으로 작업 건수 세기
+    if (line) {
+      if (!lineWorkCount[line]) {
+        lineWorkCount[line] = 0;
+      }
+      lineWorkCount[line]++;
+    }
+  });
+
+  return lineWorkCount;
+}
+
+// LINE별 작업 건수 그래프를 생성하는 함수
+function renderLineWorkCountChart(lineWorkCount) {
+  const totalTasks = Object.values(lineWorkCount).reduce((acc, count) => acc + count, 0);  // 전체 작업 건수
+  
+  // LINE별 작업 건수를 내림차순으로 정렬
+  const sortedLineWorkCount = Object.entries(lineWorkCount).sort((a, b) => b[1] - a[1]);
+
+  // 정렬된 데이터를 다시 객체로 변환
+  const sortedLabels = sortedLineWorkCount.map(item => item[0]);
+  const sortedData = sortedLineWorkCount.map(item => item[1]);
+
+  const maxCount = Math.max(...sortedData) * 1.4;  // x축 최대값을 1.4배로 설정
+
+  const ctx = document.getElementById('lineWorkCountChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sortedLabels, // 작업 건수 내림차순으로 정렬된 LINE
+      datasets: [{
+        label: 'Work Count',
+        data: sortedData, // 작업 건수 내림차순으로 정렬된 작업 건수
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        x: {
+          ticks: {
+            color: 'grey',
+            beginAtZero: true,
+          }
+        },
+        y: {
+          max: maxCount // 최대값을 1.4배로 설정
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const percentage = ((context.raw / totalTasks) * 100).toFixed(1); // 비율 계산
+              return `${context.raw} tasks (${percentage}%)`; // 툴팁에 작업 건수와 비율 추가
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value) => {
+            const percentage = ((value / totalTasks) * 100).toFixed(1); // 비율 계산
+            return `${value} tasks\n(${percentage}%)`; // 데이터 라벨에 작업 건수와 비율 추가
+          },
+          color: 'black',
+          anchor: 'end',
+          align: 'end',
+          font: {
+            size: 12
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // 데이터 라벨 플러그인 추가
+  });
+}
+
+// GROUP별 작업 건수 계산 함수
+function calculateGroupWorkCount(workLogs) {
+  const groupWorkCount = {}; // GROUP별 작업 건수
+
+  // 각 작업 로그를 순회하면서 group별 작업 건수를 세기
+  workLogs.forEach(log => {
+    const group = log.group; // group 필드를 기준으로 작업 건수 세기
+    if (group) {
+      if (!groupWorkCount[group]) {
+        groupWorkCount[group] = 0;
+      }
+      groupWorkCount[group]++;
+    }
+  });
+
+  return groupWorkCount;
+}
+
+// GROUP별 작업 건수 그래프를 생성하는 함수
+function renderGroupWorkCountChart(groupWorkCount) {
+  const totalTasks = Object.values(groupWorkCount).reduce((acc, count) => acc + count, 0);  // 전체 작업 건수
+  const maxCount = Math.max(...Object.values(groupWorkCount)) * 1.2;  // x축 최대값을 1.2배로 설정
+
+  const ctx = document.getElementById('groupWorkCountChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(groupWorkCount), // 각 group별 레이블
+      datasets: [{
+        label: 'Work Count per Group',
+        data: Object.values(groupWorkCount), // 각 group별 작업 건수
+        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+        borderColor: 'rgba(153, 102, 255, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y', // 가로 막대형 그래프
+      scales: {
+        x: {
+          max: maxCount, // 최대값을 1.2배로 설정
+          ticks: {
+            color: 'grey',
+            beginAtZero: true,
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const percentage = ((context.raw / totalTasks) * 100).toFixed(1); // 비율 계산
+              return `${context.raw} tasks (${percentage}%)`; // 툴팁에 작업 건수와 비율 추가
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value) => {
+            const percentage = ((value / totalTasks) * 100).toFixed(1); // 비율 계산
+            return `${value} tasks\n(${percentage}%)`; // 데이터 라벨에 작업 건수와 비율 추가
+          },
+          color: 'black',
+          anchor: 'end',
+          align: 'end',
+          font: {
+            size: 12
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // 데이터 라벨 플러그인 추가
+  });
+}
+
+// SITE별 작업 건수 계산 함수
+function calculateSiteWorkCount(workLogs) {
+  const siteWorkCount = {}; // SITE별 작업 건수
+
+  // 각 작업 로그를 순회하면서 site별 작업 건수를 세기
+  workLogs.forEach(log => {
+    const site = log.site; // site 필드를 기준으로 작업 건수 세기
+    if (site) {
+      if (!siteWorkCount[site]) {
+        siteWorkCount[site] = 0;
+      }
+      siteWorkCount[site]++;
+    }
+  });
+
+  return siteWorkCount;
+}
+
+// SITE별 작업 건수 그래프를 생성하는 함수
+function renderSiteWorkCountChart(siteWorkCount) {
+  const totalTasks = Object.values(siteWorkCount).reduce((acc, count) => acc + count, 0);  // 전체 작업 건수
+  const maxCount = Math.max(...Object.values(siteWorkCount)) * 1.2;  // x축 최대값을 1.2배로 설정
+
+  const ctx = document.getElementById('siteWorkCountChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(siteWorkCount), // 각 site별 레이블
+      datasets: [{
+        label: 'Work Count per Site',
+        data: Object.values(siteWorkCount), // 각 site별 작업 건수
+        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+        borderColor: 'rgba(255, 159, 64, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y', // 가로 막대형 그래프
+      scales: {
+        x: {
+          max: maxCount, // 최대값을 1.2배로 설정
+          ticks: {
+            color: 'grey',
+            beginAtZero: true,
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const percentage = ((context.raw / totalTasks) * 100).toFixed(1); // 비율 계산
+              return `${context.raw} tasks (${percentage}%)`; // 툴팁에 작업 건수와 비율 추가
+            }
+          }
+        },
+        datalabels: {
+          formatter: (value) => {
+            const percentage = ((value / totalTasks) * 100).toFixed(1); // 비율 계산
+            return `${value} tasks\n(${percentage}%)`; // 데이터 라벨에 작업 건수와 비율 추가
+          },
+          color: 'black',
+          anchor: 'end',
+          align: 'end',
+          font: {
+            size: 12
+          }
+        }
+      }
+    },
+    plugins: [ChartDataLabels] // 데이터 라벨 플러그인 추가
+  });
+}
+
+
+// WARRANTY별 작업 건수 계산 함수
+function calculateWarrantyWorkCount(workLogs) {
+  const warrantyWorkCount = {}; // WARRANTY별 작업 건수
+
+  // 각 작업 로그를 순회하면서 WARRANTY별 작업 건수를 세기
+  workLogs.forEach(log => {
+      const warranty = log.warranty; // warranty 필드를 기준으로 작업 건수 세기
+      if (warranty) {
+          if (!warrantyWorkCount[warranty]) {
+              warrantyWorkCount[warranty] = 0;
+          }
+          warrantyWorkCount[warranty]++;
+      }
+  });
+
+  return warrantyWorkCount;
+}
+
+// WARRANTY별 작업 건수 그래프를 생성하는 함수
+function renderWarrantyWorkCountChart(warrantyWorkCount) {
+  const totalTasks = Object.values(warrantyWorkCount).reduce((acc, count) => acc + count, 0);  // 전체 작업 건수
+  const maxCount = Math.max(...Object.values(warrantyWorkCount)) * 1.4;  // x축 최대값을 1.4배로 설정
+
+  const ctx = document.getElementById('warrantyWorkCountChart').getContext('2d');
+  new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: Object.keys(warrantyWorkCount), // 각 WARRANTY별 레이블
+          datasets: [{
+              label: 'Work Count per WARRANTY',
+              data: Object.values(warrantyWorkCount), // 각 WARRANTY별 작업 건수
+              backgroundColor: 'rgba(153, 102, 255, 0.2)',
+              borderColor: 'rgba(153, 102, 255, 1)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+        indexAxis: 'y', // 가로 막대형 그래프
+          scales: {
+              x: {
+                max: maxCount, // 최대값을 1.4배로 설정
+                  ticks: {
+                      color: 'grey',
+                      beginAtZero: true,
+                  }
+              }
+          },
+          plugins: {
+              tooltip: {
+                  callbacks: {
+                      label: (context) => {
+                          const percentage = ((context.raw / totalTasks) * 100).toFixed(1); // 비율 계산
+                          return `${context.raw} tasks (${percentage}%)`; // 툴팁에 작업 건수와 비율 추가
+                      }
+                  }
+              },
+              datalabels: {
+                  formatter: (value) => {
+                      const percentage = ((value / totalTasks) * 100).toFixed(1); // 비율 계산
+                      return `${value} tasks\n(${percentage}%)`; // 데이터 라벨에 작업 건수와 비율 추가
+                  },
+                  color: 'black',
+                  anchor: 'end',
+                  align: 'end',
+                  font: {
+                      size: 12
+                  }
+              }
+          }
+      },
+      plugins: [ChartDataLabels] // 데이터 라벨 플러그인 추가
+  });
+}
+
+
+// 각 차트 설명
+const chartDescriptions = {
+  achievement: "레벨별로 취득까지 걸린 기간을 나타냅니다.",
+  capa: "CAPA(역량)을 출력합니다. 본인의 그룹에 맞게 설비가 출력됩니다.",
+  monthlyCapa: "월별 CAPA TREND 를 보여줍니다.",
+  monthlyWorkHours: "월별 WORKING TIME TREND 를 나타냅니다.",
+  userRanking: "이번 달의 WORKING TIME을 기준으로 상위% 를 보여줍니다.",
+  userTaskRanking: "이번 달의 TASK COUNT을 기준으로 상위% 를 보여줍니다.",
+  workType: "작업 유형별 작업 건 수를 비교합니다.",
+  equipmentType: "장비 유형별 작업 건 수를 비교합니다.",
+  averageWorkingHours: "평일과 휴일의 하루 평균 WORKING TIME을 비교합니다.",
+  taskStartTime: "작업 시작 시간을 12시를 기준으로 오전과 오후로 나누어 비교합니다.",
+  regularVsOvertime: "작업이 끝나는 시간을 18시를 기준으로 정규 근무와 초과 근무로 나누어 비교합니다.",
+  timeRange: "작업에 소요된 시간을 범위로 나타내어 비교합니다.",
+  dailyWorkCount: "1건, 2건, 3건 이상 작업한 날짜의 수를 세어 비교합니다.",
+  lineWorkCount: "라인별 작업 건 수를 비교합니다.",
+  groupWorkCount: "그룹별 작업 건 수를 비교합니다.",
+  siteWorkCount: "사이트별 작업 건 수를 비교합니다.",
+  warrantyWorkCount: "워런티별 작업 건 수를 비교합니다.",
+  levelChange: "레벨을 취득해온 과정을 출력합니다.",
+  EquipmentType: "설비별 작업 건 수를 비교합니다."
+};
+
+// 모달 기능 구현
+document.addEventListener('DOMContentLoaded', () => {
+  const infoButtons = document.querySelectorAll('.info-btn');
+  const modal = document.getElementById('infoModal');
+  const modalText = document.getElementById('modalText');
+  const closeModal = document.querySelector('.modal .close');
+
+  // "?" 버튼 클릭 시 설명 모달 열기
+  infoButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      const infoKey = e.target.getAttribute('data-info');
+      modalText.textContent = chartDescriptions[infoKey];
+      modal.style.display = 'block';
+    });
+  });
+
+  // 모달 닫기 버튼 클릭 시 모달 닫기
+  closeModal.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  // 모달 외부 클릭 시 모달 닫기
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  });
+});
