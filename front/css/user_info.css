@@ -72,6 +72,7 @@ button#view-average-info {
     font-size: 18px;
     transition: background-color 0.3s, transform 0.3s;
     margin-top: 20px;
+    margin-bottom: 30px;
 }
 
 button#view-average-info:hover {
@@ -90,7 +91,7 @@ button#view-average-info:focus {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 800px;
+    max-width: 1600px;
     text-align: center;
 }
 
@@ -105,19 +106,30 @@ h3 {
     color: #333;
     margin-bottom: 16px;
 }
-
 /* Data Display Container */
 #data-display {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
     background-color: #ffffff;
     border-radius: 14px;
     padding: 16px;
     margin-bottom: 24px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
     width: 100%;
-    max-width: 460px;
+    max-width: 1400px;
     margin: 20px auto;
+}
+
+/* 왼쪽과 오른쪽 레이아웃 */
+.data-left, .data-right {
+    width: 48%;
+}
+
+/* 구분선 추가 */
+.data-left {
+    border-right: 2px solid #eee; /* 오른쪽에 구분선 추가 */
+    padding-right: 20px;
 }
 
 /* Data Row */
@@ -139,7 +151,13 @@ h3 {
     border-bottom: none;
 }
 
-/* Data Title */
+/* 중요한 항목 강조 */
+.data-row.important {
+    background-color: #f0f8ff;  /* 밝은 블루 배경 */
+    font-weight: 600;
+    border-left: 4px solid #0044cc;  /* 왼쪽에 파란색 선 추가 */
+}
+
 .data-title {
     font-size: 13px;
     color: #6e6e73;
@@ -147,15 +165,18 @@ h3 {
     letter-spacing: 0.05em;
     text-transform: uppercase;
     line-height: 1.6;
+    opacity: 0.8;
 }
 
 /* Data Content */
 .data-content {
-    font-size: 15px;
+    font-size: 20px;
     color: #1c1c1e;
     font-weight: 400;
     text-align: right;
 }
+
+
 
 /* 강조된 섹션 스타일 */
 .highlight-section {

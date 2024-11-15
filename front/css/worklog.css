@@ -14,6 +14,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;  /* 배경색과 텍스트 색상 부드럽게 전환 */
 }
 
 /* Navigation styles */
@@ -321,11 +322,11 @@ h3 {
 }
 
 .btn-remove:hover:enabled {
-    background-color: #c9302c;
+    background-color: #0044cc;
 }
 
 .btn-add {
-    background-color: #28a745;
+    background-color: #0044cc;
     color: #fff;
     border: none;
     padding: 10px 0; /* Adjust padding to make it thinner */
@@ -339,7 +340,7 @@ h3 {
 }
 
 .btn-add:hover {
-    background-color: #218838;
+    background-color: #0044ccd7;
 }
 
 .form-row-wide select {
@@ -418,8 +419,8 @@ h3 {
 }
 
 .btn-paste {
-    background-color: #ffc107;
-    color: #333;
+    background-color: #0044cc;
+    color: #fff;
     border: none;
     padding: 10px 20px;
     border-radius: 4px;
@@ -430,7 +431,7 @@ h3 {
 }
 
 .btn-paste:hover {
-    background-color: #e0a800;
+    background-color: #0039aa;
 }
 
 #popup {
@@ -558,7 +559,7 @@ footer {
 
 /* Important label for modal preview */
 .important {
-    color: #d9534f;
+    color: #0044cc;
     font-weight: bold;
 }
 
@@ -739,8 +740,10 @@ footer {
 
         /* 경고 메시지 스타일 */
         .warning-message {
-            color: red;
+            color: #0044cc;
             font-size: 14px;
             display: none;
             margin-top: 10px;
         }
+
+        
