@@ -825,22 +825,9 @@ function renderTaskStartTimeChart(amCount, pmCount) {
       scales: {
         x: {
           max: maxCount, // 최대값을 max로 강제 설정
-          title: {
-            display: true,
-            text: 'Task Count'
-          },
           ticks: {
             color: 'grey',
             beginAtZero: true,
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'AM/PM'
-          },
-          ticks: {
-            color: 'grey'
           }
         }
       },
@@ -917,22 +904,9 @@ function renderRegularVsOvertimeChart(regularCount, overtimeCount) {
       scales: {
         x: {
           suggestedMax: maxCount, // 최대값을 suggestedMax로 설정
-          title: {
-            display: true,
-            text: 'Task Count'
-          },
           ticks: {
             color: 'grey',
             beginAtZero: true,
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Regular / Overtime'
-          },
-          ticks: {
-            color: 'grey'
           }
         }
       },
@@ -1004,7 +978,7 @@ function renderTimeRangeChart(ranges) {
     data: {
       labels: Object.keys(ranges),  // 범위별 레이블
       datasets: [{
-        label: 'Task Duration Distribution',
+        label: 'Working time',
         data: Object.values(ranges),  // 각 범위별 작업 수
         backgroundColor: [
           'rgba(75, 192, 192, 0.2)',
@@ -1029,25 +1003,12 @@ function renderTimeRangeChart(ranges) {
       scales: {
         x: {
           max: maxCount, // 최대값을 max로 설정
-          title: {
-            display: true,
-            text: 'Task Duration Range'
-          },
           ticks: {
             color: 'grey',
             beginAtZero: true,
           }
         },
-        y: {
-          title: {
-            display: true,
-            text: 'Task Count'
-          },
-          ticks: {
-            color: 'grey',
-            beginAtZero: true
-          }
-        }
+
       },
       plugins: {
         tooltip: {
