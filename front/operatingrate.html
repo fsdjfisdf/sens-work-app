@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./css/operatingrate.css">
 </head>
 <body>
+
     <nav>
         <div class="inner">
             <div class="nav-container">
@@ -40,13 +41,11 @@
             </div>
         </div>
     </nav>
-    <main>
 
-    <!-- 검색 필터 UI -->
+<div class="filter-section-fixed">
     <div class="filter-section">
         <label>START DATE: <input type="date" id="start-date"></label>
         <label>END DATE: <input type="date" id="end-date"></label>
-        
         <label>GROUP:
             <select id="group-select">
                 <option value="">ALL GROUP</option>
@@ -78,31 +77,47 @@
         <button id="filter-btn">SEARCH</button>
         <button id="reset-btn">RESET</button>
     </div>
-    <div class="chart-container">
-        <div class="donut-chart-wrapper">
-            <div id="average-operating-rate" class="average-operating-rate">
-                <p>전체 평균 가동율: <span id="average-operating-rate-value">0%</span></p>
-                <canvas id="donutChart"></canvas>
+</div>
+
+<main class="main-content">
+    <section id="operating-rate-section" class="section">
+        <div class="inner">
+            <h2 class="section-title">Operating Rate</h2>
+                <div class="chart-container">
+                    <div class="donut-chart-wrapper">
+                        <div id="average-operating-rate" class="average-operating-rate">
+                            <p>전체 평균 가동율: <span id="average-operating-rate-value">0%</span></p>
+                            <canvas id="donutChart"></canvas>
+                        </div>
+                    </div>
+                <div class="info-section">
+                    <p><strong>Total Worktime:</strong> <span id="totalWorktime">0시간 0분</span></p>
+                    <p><strong>Work Days:</strong> <span id="workDays">0</span> days</p>
+                    <p><strong>Total Engineers:</strong> <span id="totalEngineers">0</span></p>
+                    <p><strong>Required Engineers:</strong> <span id="requiredEngineers">0</span></p>
+                    <p><strong>Average Worktime per Eng'r:</strong> <span id="avgWorktimePerEngineer">0시간</span></p>
+                </div>
             </div>
-            </div>
-        <div class="info-section">
-            <p><strong>Total Worktime:</strong> <span id="totalWorktime">0시간 0분</span></p>
-            <p><strong>Work Days:</strong> <span id="workDays">0</span> days</p>
-            <p><strong>Total Engineers:</strong> <span id="totalEngineers">0</span></p>
-            <p><strong>Required Engineers:</strong> <span id="requiredEngineers">0</span></p>
-            <p><strong>Average Worktime per Eng'r:</strong> <span id="avgWorktimePerEngineer">0시간</span></p>
         </div>
-    </div>
+    </section> 
 
 
-    <div id="current-month" class="current-month"></div>
-    <div class="calendar">
-        <div id="days-row" class="days-row"></div>
-        <div id="calendar-container" class="calendar-container"></div>
-    </div>
+    <section id="calendar-section" class="section">
+        <div class="inner">
+            <h2 class="section-title">Calendar for Operating Rate</h2>
+                <button id="prev-month">Last Month</button>
+                <button id="next-month">Next Month</button>
+                <div id="current-month" class="current-month"></div>
+                <div class="calendar">
+                    <div id="days-row" class="days-row"></div>
+                    <div id="calendar-container" class="calendar-container"></div>
+                </div>
+        </div>
+    </section>
 
-    <button id="prev-month">Last Month</button>
-    <button id="next-month">Next Month</button>
+
+
+
 
     <div style="width: 100%; max-width: 600px; margin: 20px auto;">
         <canvas id="weeklyOperatingRateChart"></canvas>

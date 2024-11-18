@@ -1,7 +1,10 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('worklogForm').addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
+        const activeElement = document.activeElement;
+
+        // 현재 입력 중인 요소가 textarea가 아닌 경우에만 Enter 키를 방지
+        if (event.key === 'Enter' && activeElement.tagName.toLowerCase() !== 'textarea') {
             event.preventDefault();
         }
     });

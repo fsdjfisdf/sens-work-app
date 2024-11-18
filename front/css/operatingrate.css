@@ -1,19 +1,303 @@
-/* 기본 body 스타일 */
+body, h1, h2, p, a, input, select, label, textarea, button {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    color: inherit;
+    box-sizing: border-box;
+}
 body {
     font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-.calendar {
-    max-width: 1200px;
-    margin: 0 auto;
+
+/* Navigation styles */
+nav {
+    background-color: #0044cc;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
 }
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 130%;
+    max-width: 1800px; /* 확장된 화면 너비 */
+    padding: 0 20px;
+}
+
+.nav-title a {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none;
+}
+
+/* 전체 컨테이너 너비 확장 */
+.inner {
+    max-width: 1600px; /* 전체 화면 너비 */
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Main content styles */
+main {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+
+#info {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1600px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #0044cc;
+}
+
+h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: auto;
+}
+
+/* Menu button styles */
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    position: fixed;
+    top: 3%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1100;
+}
+
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25px;
+    height: 18px;
+}
+
+.menu-icon span {
+    height: 5px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Menu bar styles */
+.menu-bar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1001;
+}
+
+.menu-bar.open {
+    right: 0;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-item {
+    color: #0044cc;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #f4f4f9;
+    color: #003bb5;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* search container */
+
+.filter-section-fixed {
+    position: fixed;
+    top: 50px; /* Adjust based on nav height */
+    width: 100%;
+    background-color: #f4f4f9;
+    padding: 10px 0;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
+.main-content {
+    margin-top: 90px; /* Adjust based on combined height of nav and search container */
+    width: 100%; /* Ensure it takes the full width */
+}
+
+.filter-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    background-color: #fff;
+    padding: 5px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-section {
+    margin-top: 120px; /* 네비게이션 바와 검색 컨테이너의 높이 만큼 마진 추가 */
+    width: 100%;
+}
+
+.filter-section .date-filter,
+.filter-section .group-site-filter,
+.filter-section .worktype-availability-filter,
+.filter-section .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-section input,
+.filter-section select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.filter-section input[type="date"] {
+    max-width: 160px;
+}
+
+.filter-section input::placeholder,
+.filter-section select {
+    color: #999;
+}
+
+.filter-section button {
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.filter-section button:hover {
+    background-color: #003bb5;
+}
+
+#reset-btn {
+    background-color: #777;
+}
+
+#reset-btn:hover {
+    background-color: #555;
+}
+
+
+
+/* 섹션 구분을 위한 기본 스타일 추가 */
+.section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*CALENDAR*/
+
 
 .days-row {
     display: grid;
     grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
     gap: 5px;
     font-weight: bold;
-    margin-bottom: 10px;
 }
 
 .day-header,
@@ -27,7 +311,7 @@ body {
     display: grid;
     grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
     gap: 5px;
-    font-size: 10pt;
+    font-size: 12pt;
 }
 
 .calendar-week {
@@ -51,11 +335,12 @@ body {
     text-align: center;
     border: 1px solid #eaeaea;
     box-sizing: border-box;
+    height: auto;
 }
 
 .calendar-day h2 {
     margin: 0;
-    font-size: 12px;
+    font-size: 13pt;
 }
 
 .calendar-day.holiday h2 {
@@ -67,6 +352,7 @@ body {
 }
 
 .empty {
+    display:none;
     background-color: #f4f4f4;
 }
 
@@ -76,6 +362,8 @@ body {
     font-weight: bold;
     margin-bottom: 10px;
 }
+
+
 
 .modal {
     display: none;
