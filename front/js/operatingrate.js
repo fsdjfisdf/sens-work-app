@@ -212,6 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function applyFilters() {
         const startDate = document.getElementById('start-date').value;
         const endDate = document.getElementById('end-date').value;
+        console.log('Start Date:', startDate, 'End Date:', endDate);
         const group = document.getElementById('group-select').value;
         const site = document.getElementById('site-select').value;
         const dayType = document.getElementById('day-type-select').value;
@@ -266,33 +267,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     
     
-// 그룹 및 사이트별 평균 가동율을 계산하는 함수
-function calculateGroupSiteAverages(filteredLogs) {
-    const groupSiteRates = {};
-
-    filteredLogs.forEach(log => {
-        const groupSiteKey = `${log.group} - ${log.site}`;
-        const { task_duration, task_man } = log;
-        const [hours, minutes] = task_duration.split(':').map(Number);
-        const taskDurationMinutes = (hours * 60) + minutes;
-        const numWorkers = log.task_man.split(',').length;
-        const workHours = (taskDurationMinutes * numWorkers) / 60;
-
-        if (!groupSiteRates[groupSiteKey]) {
-            groupSiteRates[groupSiteKey] = { totalWorkHours: 0, totalEngineers: 0 };
-        }
-        groupSiteRates[groupSiteKey].totalWorkHours += workHours;
-        groupSiteRates[groupSiteKey].totalEngineers += numWorkers;
-    });
-
-    const groupSiteAverages = Object.keys(groupSiteRates).map(key => {
-        const { totalWorkHours, totalEngineers } = groupSiteRates[key];
-        const operatingRate = totalEngineers > 0 ? ((totalWorkHours / (totalEngineers * 8)) * 100).toFixed(1) : 0;
-        return { groupSite: key, operatingRate: parseFloat(operatingRate) };
-    });
-
-    return groupSiteAverages;
-}
 
     
 
@@ -332,14 +306,19 @@ async function calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate
     const endDate = document.getElementById('end-date').value;
     const start = startDate ? new Date(startDate) : firstLogDate;
     const end = endDate ? new Date(endDate) : new Date();
+    
+    const filteredRates = Object.keys(weeklyRates)
+        .filter(weekKey => {
+            const weekDate = new Date(weekKey);
+            return weekDate >= start && weekDate <= end; // 날짜 범위 필터링
+        })
+        .flatMap(weekKey => weeklyRates[weekKey]); // 범위 내 데이터만 평탄화
 
-    // weeklyRates 객체의 모든 주차 데이터를 사용하여 평균 계산
-    const filteredRates = Object.values(weeklyRates).flat();
+        const totalOperatingRates = filteredRates.reduce((sum, rate) => sum + rate, 0);
+        const count = filteredRates.length;
+        const averageOperatingRate = count > 0 ? (totalOperatingRates / count).toFixed(1) : 0;
 
-    const totalOperatingRates = filteredRates.reduce((sum, rate) => sum + rate, 0);
-    const count = filteredRates.length;
-    const averageOperatingRate = count > 0 ? (totalOperatingRates / count).toFixed(1) : 0;
-
+        console.log('Filtered Rates:', filteredRates); // 디버깅용
     document.getElementById('average-operating-rate-value').innerText = `${averageOperatingRate}%`;
     updateDonutChart(averageOperatingRate);
 
@@ -489,20 +468,20 @@ function updateDonutChart(averageRate) {
         const calendarContainer = document.getElementById('calendar-container');
         calendarContainer.innerHTML = '';
     
-        cumulativeTotalWorkHours = 0; // 각 월이 시작될 때 초기화
-        
+        cumulativeTotalWorkHours = 0; // 초기화
+    
         const monthDisplay = document.getElementById('current-month');
-        monthDisplay.innerText = `${year}년 ${month + 1}월`;
+        monthDisplay.innerText = `작업 내역 달력`;
     
         renderDaysRow();
     
-        const firstDayOfMonth = new Date(Date.UTC(year, month, 1)).getUTCDay();
-        const adjustedFirstDay = (firstDayOfMonth + 6) % 7;
-        const totalDays = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-        const lastDayOfMonth = new Date(Date.UTC(year, month, totalDays)).getUTCDay();
+        // 작업 시작 날짜와 종료 날짜 계산
+        const firstLogDate = new Date(Math.min(...filteredLogs.map(log => new Date(log.task_date))));
+        const lastLogDate = new Date(Math.max(...filteredLogs.map(log => new Date(log.task_date))));
     
+        // 시작 날짜부터 종료 날짜까지 반복하여 달력 채우기
         const logsByDate = {};
-        const weeklyRates = {}; // 주차별 가동율을 저장할 객체
+        const weeklyRates = {}; // 주차별 가동률 저장
     
         filteredLogs.forEach(log => {
             const logDate = new Date(new Date(log.task_date).getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -510,82 +489,42 @@ function updateDonutChart(averageRate) {
             logsByDate[logDate].push(log);
         });
     
-        // 이전 달 날짜 채우기
-        const prevMonthLastDate = new Date(Date.UTC(year, month, 0)).getUTCDate();
-        const prevMonthYear = month === 0 ? year - 1 : year;
-        const prevMonth = month === 0 ? 11 : month - 1;
-    
-        for (let i = adjustedFirstDay; i > 0; i--) {
-            const day = prevMonthLastDate - i + 1;
-            const dateString = `${prevMonthYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayDiv = createDayDiv(dateString, logsByDate[dateString], weeklyRates, dayType);
-            calendarContainer.appendChild(dayDiv);
-
+        let currentDate = new Date(firstLogDate);
+        while (currentDate <= lastLogDate) {
+            const dateString = currentDate.toISOString().split('T')[0];
             const dailyLogs = logsByDate[dateString] || [];
-            const totalMinutes = calculateTotalMinutes(dailyLogs);
-            const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
-                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
-                return acc + (workerTaskCount === 1 ? 4 : 4.5);
-            }, 0);
-            const totalWorkHours = totalMinutes / 60 + additionalTime;
-             
-            cumulativeTotalWorkHours += totalWorkHours; // 전체 작업 시간 누적
-        }
-        
-    
-        // 현재 달 날짜 채우기
-        for (let day = 1; day <= totalDays; day++) {
-            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dailyLogs = logsByDate[dateString] || [];
-            const totalMinutes = calculateTotalMinutes(dailyLogs);
-            const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
-                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
-                return acc + (workerTaskCount === 1 ? 4 : 4.5);
-            }, 0);
-            const totalWorkHours = totalMinutes / 60 + additionalTime;
-    
-            // 날짜별 totalWorkHours 및 누적 합산 출력
-            cumulativeTotalWorkHours += totalWorkHours;
-    
             const dayDiv = createDayDiv(dateString, dailyLogs, weeklyRates, dayType);
             calendarContainer.appendChild(dayDiv);
-        }
-
     
-        // 마지막 주 일요일까지 날짜 채우기
-        const nextMonthYear = month === 11 ? year + 1 : year;
-        const nextMonth = month === 11 ? 0 : month + 1;
-        let daysToAdd = 6 - lastDayOfMonth;
-        if (daysToAdd < 0) daysToAdd += 7;
-        for (let i = 1; i <= daysToAdd; i++) {
-            const day = i;
-            const dateString = `${nextMonthYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayDiv = createDayDiv(dateString, logsByDate[dateString], weeklyRates, dayType);
-            calendarContainer.appendChild(dayDiv);
-        }
+            // 작업 시간 및 가동률 계산
+            const totalMinutes = calculateTotalMinutes(dailyLogs);
+            const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
+                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
+                return acc + (workerTaskCount === 1 ? 4 : 4.5);
+            }, 0);
+            const totalWorkHours = totalMinutes / 60 + additionalTime;
     
-        // 마지막으로 하루 더 출력
-        const extraDay = daysToAdd + 1;
-        const extraDateString = `${nextMonthYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(extraDay).padStart(2, '0')}`;
-        const extraDayDiv = createDayDiv(extraDateString, logsByDate[extraDateString], weeklyRates, dayType);
-        calendarContainer.appendChild(extraDayDiv);
+            cumulativeTotalWorkHours += totalWorkHours; // 전체 작업 시간 누적
+    
+            currentDate.setDate(currentDate.getDate() + 1); // 하루 증가
+        }
     
         // 주차별 평균 가동율 계산
         const weeklyAverageRates = Object.keys(weeklyRates)
-        .sort((a, b) => new Date(a) - new Date(b))
-        .map(weekKey => {
-            const rates = weeklyRates[weekKey];
-            if (rates && rates.length > 0) {
-                const averageRate = rates.reduce((a, b) => a + b, 0) / rates.length;
-                return { week: formatWeekLabel(weekKey), averageRate: Number(averageRate.toFixed(3)) };
-            } else {
-                return { week: formatWeekLabel(weekKey), averageRate: 0 };
-            }
-        });
-
-    renderWeeklyOperatingRateChart(weeklyAverageRates);
-    return weeklyRates;
-}
+            .sort((a, b) => new Date(a) - new Date(b))
+            .map(weekKey => {
+                const rates = weeklyRates[weekKey];
+                if (rates && rates.length > 0) {
+                    const averageRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+                    return { week: formatWeekLabel(weekKey), averageRate: Number(averageRate.toFixed(3)) };
+                } else {
+                    return { week: formatWeekLabel(weekKey), averageRate: 0 };
+                }
+            });
+    
+        renderWeeklyOperatingRateChart(weeklyAverageRates);
+        return weeklyRates;
+    }
     
     function createDayDiv(dateString, dailyLogs = [], weeklyRates, dayType, isEmpty = false) {
         const dayDiv = document.createElement('div');
@@ -727,15 +666,15 @@ function updateDonutChart(averageRate) {
                 labels,
                 datasets: [
                     {
-                        label: '주차별 평균 가동율 (%)',
+                        label: 'Weekly Operating rate(%)',
                         data,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
                         borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1,
                         yAxisID: 'y',
                     },
                     {
-                        label: '근무 시간 (시간)',
+                        label: 'working time',
                         data: timeData,
                         type: 'line',
                         borderColor: 'rgba(255, 99, 132, 1)',
@@ -747,6 +686,8 @@ function updateDonutChart(averageRate) {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // 비율 유지 해제
+                aspectRatio: 2, // 가로:세로 비율 (가로가 더 길게 보이도록 설정)
                 plugins: {
                     datalabels: {
                         display: true,
@@ -757,13 +698,13 @@ function updateDonutChart(averageRate) {
                                 const minutes = Math.round((value - hours) * 60);
                                 return `${hours}시간 ${minutes}분`;
                             }
-                            return `${value}%`;
+                            return `${value.toFixed(1)}%`; // 소수점 첫째 자리로 표시
                         },
                         color: '#000',
                         anchor: 'end',
                         align: 'top',
                         font: {
-                            size: 14 // 데이터 레이블의 폰트 크기 조정
+                            size: 15 // 데이터 레이블의 폰트 크기 조정
                         }
                         
                     }
@@ -772,17 +713,13 @@ function updateDonutChart(averageRate) {
                     x: {
                         ticks: {
                             font: {
-                                size: 14 // x축 폰트 크기 조정
+                                size: 15 // x축 폰트 크기 조정
                             }
                         }
                     },
                     y: {
                         beginAtZero: true,
                         max: maxRateValue, // 가동율 최대값 설정
-                        title: {
-                            display: true,
-                            text: '가동율 (%)'
-                        },
                         ticks: {
                             display: false // 주축 값 숨김 처리
                         }
@@ -791,20 +728,15 @@ function updateDonutChart(averageRate) {
                         beginAtZero: true,
                         max: maxTimeValue, // 동적 최대값 설정
                         position: 'right', // 보조 축을 오른쪽에 표시
-                        title: {
-                            display: true,
-                            text: '근무 시간 (시간)'
-                            
-                        },
                         ticks: {
                             font: {
-                                size: 14 // y1축 폰트 크기 조정
+                                size: 15 // y1축 폰트 크기 조정
                             },
                             display: false, // 주축 값 숨김 처리
                             callback: function(value) {
                                 const hours = Math.floor(value);
                                 const minutes = Math.round((value - hours) * 60);
-                                return `${hours}시간 ${minutes}분`;
+                                return `${hours}h ${minutes}min`;
                                 
                             }
                         }

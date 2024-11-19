@@ -308,10 +308,11 @@ footer {
 }
 
 .calendar-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr); /* 7일 배치 */
-    gap: 5px;
-    font-size: 12pt;
+    max-height: 500px; /* 원하는 높이 설정 */
+    overflow-y: auto; /* 세로 스크롤 추가 */
+    border: 1px solid #ddd; /* 테두리 추가 (선택 사항) */
+    padding: 10px; /* 여백 추가 */
+    background-color: #f9f9f9; /* 배경색 추가 (선택 사항) */
 }
 
 .calendar-week {
@@ -331,11 +332,15 @@ footer {
 }
 
 .calendar-day {
-    padding: 10px;
+    display: inline-block; /* 날짜 칸을 가로로 나열 */
+    width: calc(100% / 7 - 2px); /* 7일 기준으로 나눔, 여백 고려 */
+    margin: 1px;
+    padding: 5px;
     text-align: center;
-    border: 1px solid #eaeaea;
     box-sizing: border-box;
-    height: auto;
+    border: 1px solid #ccc; /* 각 날짜 칸의 테두리 */
+    background-color: #fff; /* 날짜 배경색 */
+    border-radius: 4px;
 }
 
 .calendar-day h2 {
@@ -361,6 +366,54 @@ footer {
     font-size: 1.5em;
     font-weight: bold;
     margin-bottom: 10px;
+}
+
+.chart-pakage1 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3열로 배치 */
+    row-gap: 20px; /* 행 간격을 좁게 설정 */
+    column-gap: 80px; /* 열 간격도 동일하게 설정 */
+    padding: 40px 20px; /* 상하 padding 추가로 더 넉넉하게 */
+    max-width: 1600px; /* 더 넓은 화면 너비 설정 */
+    margin: 0 auto;
+    justify-items: center;
+}
+
+
+/* 그래프 개별 래퍼 */
+.chart-pakage2 {
+    padding: 30px; /* 내부 여백을 더 키워서 그래프가 여유롭게 보이도록 */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%; /* 그래프 넓이 조정 */
+    min-height: 350px; /* 그래프 높이 조정 */
+}
+
+.chart-pakage3 {
+    padding: 20px; /* 여백 줄이기 */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%; /* 너비를 화면의 80%로 설정 */
+    max-width: 1900px; /* 최대 너비 제한 */
+    margin: 0 auto; /* 중앙 정렬 */
+    min-height: 400px; /* 최소 높이를 줄여서 공간 낭비 줄임 */
+}
+
+/* 그래프 제목 스타일 */
+.chart-pakage h3 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+/* Canvas 스타일 */
+canvas {
+    width: 100% !important;
+    height: 300px !important;
 }
 
 
@@ -418,6 +471,7 @@ footer {
 .calendar-day.surplus {
     background-color: #ffffcc;
 }
+
 
 
 
