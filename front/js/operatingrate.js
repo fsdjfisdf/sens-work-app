@@ -471,7 +471,6 @@ function updateDonutChart(averageRate) {
         cumulativeTotalWorkHours = 0; // 초기화
     
         const monthDisplay = document.getElementById('current-month');
-        monthDisplay.innerText = `작업 내역 달력`;
     
         renderDaysRow();
     
