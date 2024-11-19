@@ -23,6 +23,12 @@ nav {
     padding: 10px 0;
     display: flex;
     justify-content: center;
+    position: fixed; /* 고정 위치 설정 */
+    top: 0; /* 화면 상단에 위치 */
+    left: 0;
+    width: 100%; /* 전체 화면 너비 */
+    z-index: 1000; /* 다른 요소 위에 배치 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
 }
 
 .nav-container {

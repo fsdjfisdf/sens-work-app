@@ -165,26 +165,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('day-type-select').value = 'all';
     applyFilters('all');
 
-    document.getElementById('prev-month').addEventListener('click', () => {
-        if (currentMonth === 0) {
-            currentMonth = 11;
-            currentYear--;
-        } else {
-            currentMonth--;
-        }
-        applyFilters();
-    });
-
-    document.getElementById('next-month').addEventListener('click', () => {
-        if (currentMonth === 11) {
-            currentMonth = 0;
-            currentYear++;
-        } else {
-            currentMonth++;
-        }
-        applyFilters();
-    });
-
     document.getElementById('filter-btn').addEventListener('click', applyFilters);
 
     document.getElementById('reset-btn').addEventListener('click', () => {
@@ -652,8 +632,8 @@ function updateDonutChart(averageRate) {
         
         // 가동률을 시간으로 변환한 값을 보조 축 데이터로 사용합니다 (8시간 기준 가동률)
         const timeData = data.map(rate => (rate / 100) * 8); // 근무 시간 계산 (가동률의 8시간 기준)
-        const maxTimeValue = Math.max(...timeData) * 1.2;
-        const maxRateValue = Math.max(...data) * 1.6;
+        const maxTimeValue = Math.max(...timeData) * 1.1;
+        const maxRateValue = Math.max(...data) * 1.6; // 여유 공간 포함
     
         if (weeklyOperatingRateChart) {
             weeklyOperatingRateChart.destroy();
@@ -665,7 +645,7 @@ function updateDonutChart(averageRate) {
                 labels,
                 datasets: [
                     {
-                        label: 'Weekly Operating rate(%)',
+                        label: 'Weekly Operating Rate (%)',
                         data,
                         backgroundColor: 'rgba(54, 162, 235, 0.2)',
                         borderColor: 'rgba(54, 162, 235, 1)',
@@ -673,7 +653,7 @@ function updateDonutChart(averageRate) {
                         yAxisID: 'y',
                     },
                     {
-                        label: 'working time',
+                        label: 'Working Time (hours)',
                         data: timeData,
                         type: 'line',
                         borderColor: 'rgba(255, 99, 132, 1)',
@@ -685,34 +665,47 @@ function updateDonutChart(averageRate) {
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // 비율 유지 해제
-                aspectRatio: 2, // 가로:세로 비율 (가로가 더 길게 보이도록 설정)
+                maintainAspectRatio: false,
                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                if (context.dataset.label === 'Weekly Operating Rate (%)') {
+                                    return `${context.raw.toFixed(2)}%`; // 소수점 둘째 자리까지 표시
+                                } else if (context.dataset.label === 'Working Time (hours)') {
+                                    const hours = Math.floor(context.raw);
+                                    const minutes = Math.round((context.raw - hours) * 60);
+                                    return `${hours}h ${minutes}m`; // 시간과 분 형식으로 표시
+                                }
+                                return context.raw;
+                            }
+                        }
+                    },
                     datalabels: {
                         display: true,
                         formatter: (value, context) => {
-                            const datasetLabel = context.dataset.label;
-                            if (datasetLabel === '근무 시간 (시간)') {
+                            if (context.dataset.label === 'Weekly Operating Rate (%)') {
+                                return `${value.toFixed(2)}%`; // 소수점 둘째 자리까지 표시
+                            } else if (context.dataset.label === 'Working Time (hours)') {
                                 const hours = Math.floor(value);
                                 const minutes = Math.round((value - hours) * 60);
-                                return `${hours}시간 ${minutes}분`;
+                                return `${hours}h ${minutes}m`; // 시간과 분 형식으로 표시
                             }
-                            return `${value.toFixed(1)}%`; // 소수점 첫째 자리로 표시
+                            return value;
                         },
                         color: '#000',
                         anchor: 'end',
                         align: 'top',
                         font: {
-                            size: 15 // 데이터 레이블의 폰트 크기 조정
+                            size: 13 // 데이터 레이블 폰트 크기 조정
                         }
-                        
                     }
                 },
                 scales: {
                     x: {
                         ticks: {
                             font: {
-                                size: 15 // x축 폰트 크기 조정
+                                size: 13 // x축 폰트 크기 조정
                             }
                         }
                     },
@@ -720,23 +713,18 @@ function updateDonutChart(averageRate) {
                         beginAtZero: true,
                         max: maxRateValue, // 가동율 최대값 설정
                         ticks: {
-                            display: false // 주축 값 숨김 처리
+                            callback: (value) => `${value.toFixed(2)}%` // y축 레이블 소수점 둘째 자리까지 표시
                         }
                     },
                     y1: {
                         beginAtZero: true,
                         max: maxTimeValue, // 동적 최대값 설정
-                        position: 'right', // 보조 축을 오른쪽에 표시
+                        position: 'right',
                         ticks: {
-                            font: {
-                                size: 15 // y1축 폰트 크기 조정
-                            },
-                            display: false, // 주축 값 숨김 처리
-                            callback: function(value) {
+                            callback: (value) => {
                                 const hours = Math.floor(value);
                                 const minutes = Math.round((value - hours) * 60);
-                                return `${hours}h ${minutes}min`;
-                                
+                                return `${hours}h ${minutes}m`; // y1축 레이블을 시간 형식으로 표시
                             }
                         }
                     }
@@ -745,6 +733,7 @@ function updateDonutChart(averageRate) {
             plugins: [ChartDataLabels] // dataLabels 플러그인 활성화
         });
     }
+    
     
     
 
