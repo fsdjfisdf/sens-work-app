@@ -450,42 +450,68 @@ function updateDonutChart(averageRate) {
     
         cumulativeTotalWorkHours = 0; // 초기화
     
-        const monthDisplay = document.getElementById('current-month');
-    
-        renderDaysRow();
+        renderDaysRow(); // 요일 헤더 렌더링 (월, 화, 수, 목, 금, 토, 일)
     
         // 작업 시작 날짜와 종료 날짜 계산
-        const firstLogDate = new Date(Math.min(...filteredLogs.map(log => new Date(log.task_date))));
-        const lastLogDate = new Date(Math.max(...filteredLogs.map(log => new Date(log.task_date))));
+        const firstLogDate = filteredLogs.length > 0
+            ? new Date(Math.min(...filteredLogs.map(log => new Date(log.task_date))))
+            : new Date(year, month - 1, 1); // 작업이 없을 경우 해당 월의 첫 날
+        const lastLogDate = filteredLogs.length > 0
+            ? new Date(Math.max(...filteredLogs.map(log => new Date(log.task_date))))
+            : new Date(year, month, 0); // 작업이 없을 경우 해당 월의 마지막 날
     
-        // 시작 날짜부터 종료 날짜까지 반복하여 달력 채우기
         const logsByDate = {};
         const weeklyRates = {}; // 주차별 가동률 저장
     
         filteredLogs.forEach(log => {
-            const logDate = new Date(new Date(log.task_date).getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const logDate = new Date(log.task_date).toISOString().split('T')[0];
             if (!logsByDate[logDate]) logsByDate[logDate] = [];
             logsByDate[logDate].push(log);
         });
     
-        let currentDate = new Date(firstLogDate);
-        while (currentDate <= lastLogDate) {
+        // 달력의 시작 날짜 계산 (모든 주의 첫 월요일로 조정)
+        const calendarStartDate = new Date(firstLogDate);
+        const startDayOfWeek = calendarStartDate.getDay(); // 0(일)~6(토)
+        if (startDayOfWeek !== 1) {
+            calendarStartDate.setDate(calendarStartDate.getDate() - (startDayOfWeek === 0 ? 6 : startDayOfWeek - 1));
+        }
+    
+        // 달력의 종료 날짜 계산 (마지막 주 일요일로 조정)
+        const calendarEndDate = new Date(lastLogDate);
+        const endDayOfWeek = calendarEndDate.getDay();
+        if (endDayOfWeek !== 0) {
+            calendarEndDate.setDate(calendarEndDate.getDate() + (7 - endDayOfWeek));
+        }
+    
+        // 모든 날짜 출력 (요일에 맞게 배치)
+        let currentDate = new Date(calendarStartDate);
+        while (currentDate <= calendarEndDate) {
             const dateString = currentDate.toISOString().split('T')[0];
             const dailyLogs = logsByDate[dateString] || [];
-            const dayDiv = createDayDiv(dateString, dailyLogs, weeklyRates, dayType);
+    
+            // 작업이 없는 날 여부 확인
+            const isEmptyDay = dailyLogs.length === 0;
+    
+            // 날짜 Div 생성
+            const dayDiv = createDayDiv(dateString, dailyLogs, weeklyRates, dayType, isEmptyDay);
             calendarContainer.appendChild(dayDiv);
     
-            // 작업 시간 및 가동률 계산
-            const totalMinutes = calculateTotalMinutes(dailyLogs);
-            const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
-                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
-                return acc + (workerTaskCount === 1 ? 4 : 4.5);
-            }, 0);
-            const totalWorkHours = totalMinutes / 60 + additionalTime;
-    
-            cumulativeTotalWorkHours += totalWorkHours; // 전체 작업 시간 누적
-    
             currentDate.setDate(currentDate.getDate() + 1); // 하루 증가
+    
+            // 주가 끝나는 일요일 이후 줄바꿈 처리
+            if (currentDate.getDay() === 1 && currentDate <= calendarEndDate) {
+                const lineBreak = document.createElement('div');
+                lineBreak.classList.add('week-separator');
+                calendarContainer.appendChild(lineBreak);
+            }
+        }
+    
+        // 마지막 주의 빈 셀 추가 (해당 주가 끝나지 않을 경우)
+        const lastDayOfWeek = calendarEndDate.getDay(); // 0(일)~6(토)
+        for (let i = lastDayOfWeek + 1; i <= 6; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.classList.add('calendar-day', 'empty');
+            calendarContainer.appendChild(emptyDiv);
         }
     
         // 주차별 평균 가동율 계산
@@ -505,19 +531,36 @@ function updateDonutChart(averageRate) {
         return weeklyRates;
     }
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     function createDayDiv(dateString, dailyLogs = [], weeklyRates, dayType, isEmpty = false) {
         const dayDiv = document.createElement('div');
         dayDiv.classList.add('calendar-day');
     
-        const date = new Date(new Date(dateString).getTime() + 9 * 60 * 60 * 1000);
+        const date = new Date(dateString);
         const dayOfWeek = date.getUTCDay();
-        const isWeekend = (dayOfWeek === 6 || dayOfWeek === 0);
+        const isWeekend = dayOfWeek === 6 || dayOfWeek === 0;
         const isHoliday = holidays.includes(dateString);
     
-        // 오늘 이후 날짜는 빈공간으로 설정
-        if (date > today) {
+        // 날짜 항상 표시
+        const dateElement = document.createElement('h2');
+        dateElement.innerText = date.toISOString().split('T')[0];
+        dayDiv.appendChild(dateElement);
+    
+        if (isEmpty) {
+            // 빈 날 처리
             dayDiv.classList.add('empty');
-            return dayDiv;
+            return dayDiv; // 빈 공간으로 표시
         }
     
         if (isHoliday) {
@@ -527,11 +570,6 @@ function updateDonutChart(averageRate) {
             dayDiv.classList.add('weekend');
         }
     
-        if (isEmpty) {
-            dayDiv.classList.add('empty');
-            return dayDiv;
-        }
-    
         const taskCount = dailyLogs.length;
         const totalMinutes = dailyLogs.reduce((acc, log) => {
             const workerCount = log.task_man.split(',').length;
@@ -539,10 +577,11 @@ function updateDonutChart(averageRate) {
             return acc + (hours * 60 + minutes) * workerCount;
         }, 0);
     
-        const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim())))).reduce((acc, worker) => {
-            const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
-            return acc + (workerTaskCount === 1 ? 4 : 4.5);
-        }, 0);
+        const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim()))))
+            .reduce((acc, worker) => {
+                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
+                return acc + (workerTaskCount === 1 ? 4 : 4.5);
+            }, 0);
     
         const totalWorkHours = totalMinutes / 60 + additionalTime;
         const requiredEngineers = (totalWorkHours / 8).toFixed(1);
@@ -555,18 +594,14 @@ function updateDonutChart(averageRate) {
     
         if (!weeklyRates[weekKey]) weeklyRates[weekKey] = [];
     
-        // 주차별 평균에 포함할 날짜의 조건을 설정합니다.
+        // 주차별 평균 계산 조건
         if (dayType === 'all' || 
             (dayType === 'workday' && !isWeekend && !isHoliday) || 
             (dayType === 'holiday' && (isWeekend || isHoliday))) {
              weeklyRates[weekKey].push(parseFloat(operatingRate));
-         }
-    
-        if (operatingRate === "0.0") {
-            dayDiv.classList.add('empty');
-            return dayDiv;
         }
     
+        // 스타일 적용 (가동율에 따른 색상)
         if (operatingRate >= 100) {
             dayDiv.classList.add('lack');
         } else if (operatingRate >= 70 && operatingRate < 100) {
@@ -575,10 +610,7 @@ function updateDonutChart(averageRate) {
             dayDiv.classList.add('surplus');
         }
     
-        const dateElement = document.createElement('h2');
-        dateElement.innerText = date.toISOString().split('T')[0];
-        dayDiv.appendChild(dateElement);
-    
+        // 작업 건수, 엔지니어 요구 수, 가동율 추가
         const taskCountElement = document.createElement('p');
         taskCountElement.classList.add('task-count');
         taskCountElement.innerText = `건 수: ${taskCount}`;
@@ -597,6 +629,7 @@ function updateDonutChart(averageRate) {
         dayDiv.addEventListener('click', () => openModal(dateString, dailyLogs));
         return dayDiv;
     }
+    
     
     
     
