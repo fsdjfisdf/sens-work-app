@@ -63,7 +63,7 @@ main {
     margin-top: 20px;
 }
 
-a#view-average-info {
+button#view-average-info {
     background-color: #4600bf;
     color: #fff;
     padding: 12px 24px;
@@ -73,20 +73,18 @@ a#view-average-info {
     transition: background-color 0.3s, transform 0.3s;
     margin-top: 20px;
     margin-bottom: 30px;
-    text-align: center; /* 버튼 텍스트 중앙 정렬 */
-    text-decoration: none; /* 링크의 기본 밑줄 제거 */
-    display: inline-block; /* 버튼처럼 보이게 설정 */
 }
 
-a#view-average-info:hover {
+button#view-average-info:hover {
     background-color: #003bb5;
     transform: scale(1.05);
 }
 
-a#view-average-info:focus {
+button#view-average-info:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 0, 255, 0.3);
 }
+
 #info {
     background-color: #fff;
     padding: 20px;
