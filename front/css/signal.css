@@ -125,7 +125,7 @@ nav {
 .signal-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 50px; /* 간격 줄임 */
+    gap: 85px; /* 간격 줄임 */
     justify-content: center;
     margin-bottom: 20px;
     transition: opacity 0.3s ease;
