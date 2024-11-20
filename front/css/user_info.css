@@ -347,6 +347,7 @@ footer {
 .menu-item:last-child {
     border-bottom: none;
 }
+
 .info-btn {
     position: absolute;
     top: 50px;
