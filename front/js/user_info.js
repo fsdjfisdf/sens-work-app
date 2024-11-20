@@ -1731,5 +1731,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById('view-average-info').addEventListener('click', function() {
-  window.location.href = './secm.html';
+  window.location.href = './SECM.html';
 });
