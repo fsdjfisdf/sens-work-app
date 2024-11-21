@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
             "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
             "IC": ["M10", "M14", "M16", "R3"],
-            "CJ": ["M11", "M12", "M15"]
+            "CJ": ["M11", "M12", "M15"],
+            "PSKH": ["PSKH", "C1", "C2", "C3", "C5"]
         };
     
         // LINE 선택 항목 업데이트
