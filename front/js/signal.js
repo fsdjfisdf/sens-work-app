@@ -198,9 +198,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${new Date(log.task_date).toLocaleDateString()}</td>
                     <td>${log.work_type}</td>
                     <td>${log.task_name}</td>
-                    <td>${log.task_man}</td>
                     <td>${log.task_cause || 'N/A'}</td>
                     <td>${log.task_result || 'N/A'}</td>
+                    <td>${log.task_man}</td>
                     <td>${log.task_duration}</td>
                 `;
                 row.addEventListener('click', () => openTaskModal(log)); // 클릭 이벤트 추가
