@@ -3,6 +3,7 @@ const { logger } = require("../../config/winston");
 const jwt = require("jsonwebtoken");
 const secret = require("../../config/secret");
 const indexDao = require("../dao/indexDao");
+const { logger } = require('../config/winston');
 
 // 로그인 유지, 토큰 검증
 exports.readJwt = async function (req, res) {
@@ -47,7 +48,7 @@ exports.createJwt = async function (req, res) {
       );
 
             // 로그인 성공 시 nickname을 콘솔에 출력
-            console.log(`User logged in: ${nickname}`);
+            logger.info(`User logged in: ${nickname}`);
 
       return res.send({
         result: { jwt: token },
