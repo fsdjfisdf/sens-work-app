@@ -1,19 +1,20 @@
-const socket = new WebSocket('ws://3.37.73.151:3001');
+const ws = new WebSocket('ws://3.37.73.151:3001');
 
-socket.onmessage = (event) => {
+ws.onmessage = (event) => {
+    const log = JSON.parse(event.data);
     const logContainer = document.getElementById('logContainer');
-    logContainer.innerHTML += `<pre>${event.data}</pre>`;
-    logContainer.scrollTop = logContainer.scrollHeight; // 스크롤 맨 아래로
+    const logEntry = document.createElement('div');
+    logEntry.textContent = `${log.timestamp} [${log.level}]: ${log.message}`;
+    logContainer.appendChild(logEntry);
+
+    // 스크롤 자동으로 하단으로 이동
+    logContainer.scrollTop = logContainer.scrollHeight;
 };
 
-socket.onopen = () => {
-    console.log('Connected to WebSocket server');
+ws.onopen = () => {
+    console.log('WebSocket 연결 성공');
 };
 
-socket.onclose = () => {
-    console.log('Disconnected from WebSocket server');
-};
-
-socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
+ws.onclose = () => {
+    console.log('WebSocket 연결 종료');
 };
