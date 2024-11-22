@@ -1337,7 +1337,7 @@ createChart(monthlyCapaChartCtx, {
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
-                        color: 'black',
+                        color: 'white',
                         font: {
                             size: 12
                         }

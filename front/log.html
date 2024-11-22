@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Logs</title>
+    <style>
+        #logContainer {
+            overflow-y: scroll;
+            height: 500px;
+            border: 1px solid black;
+            padding: 10px;
+            font-family: monospace;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Server Logs</h1>
+    <div id="logContainer"></div>
+    <script>
+        const socket = new WebSocket('ws://3.37.73.151:3001');
+
+        socket.onmessage = (event) => {
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML += `<pre>${event.data}</pre>`;
+            logContainer.scrollTop = logContainer.scrollHeight; // 스크롤 맨 아래로
+        };
+
+        socket.onopen = () => {
+            console.log('WebSocket 연결 성공');
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket 연결이 종료되었습니다.');
+        };
+
+        socket.onerror = (error) => {
+            console.error('WebSocket 에러:', error);
+        };
+    </script>
+</body>
+</html>
