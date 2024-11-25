@@ -15,8 +15,11 @@ exports.getSignalData = async () => {
 exports.updateSignalData = async (eqName, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        const query = 'UPDATE Equipment SET INFO = ? WHERE LOWER(EQNAME) = LOWER(?)'; // 소문자 비교
+        const query = 'UPDATE Equipment SET INFO = ? WHERE LOWER(EQNAME) = LOWER(?)';
+        console.log('Executing query:', query, [info, eqName]);
+
         const [result] = await connection.query(query, [info, eqName]);
+        console.log('Query result:', result);
 
         if (result.affectedRows === 0) {
             throw new Error(`No matching EQNAME found for ${eqName}`);
@@ -24,6 +27,7 @@ exports.updateSignalData = async (eqName, info) => {
 
         connection.release();
     } catch (err) {
+        console.error('Database error:', err.message);
         connection.release();
         throw new Error(`Error updating signal data: ${err.message}`);
     }
