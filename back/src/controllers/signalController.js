@@ -15,19 +15,19 @@ exports.getSignalData = async (req, res) => {
 };
 
 exports.updateSignalData = async (req, res) => {
-    const eqName = req.params.eqName.trim().toLowerCase(); // 소문자로 통일
+    const eqName = req.params.eqName.trim().toLowerCase(); // 소문자 변환
     const { info } = req.body;
 
-    console.log('eqName received:', eqName);
+    console.log('Received eqName:', eqName);
     console.log('Payload info:', info);
 
     try {
         const result = await signalDao.updateSignalData(eqName, info);
-        console.log('Update result:', result);
+        console.log('Update successful:', result);
         res.status(200).send('Signal data updated');
     } catch (err) {
         if (err.message.includes('No matching EQNAME')) {
-            console.error(`404 Not Found: ${eqName}`);
+            console.error(`404 Not Found for eqName: ${eqName}`);
             res.status(404).json({ error: `Equipment with EQNAME '${eqName}' not found.` });
         } else {
             console.error('Error updating signal data:', err.message);
@@ -35,3 +35,4 @@ exports.updateSignalData = async (req, res) => {
         }
     }
 };
+

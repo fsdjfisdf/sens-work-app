@@ -22,13 +22,16 @@ exports.updateSignalData = async (eqName, info) => {
         console.log('Query result:', result);
 
         if (result.affectedRows === 0) {
+            console.error(`No matching EQNAME found for ${eqName}`);
             throw new Error(`No matching EQNAME found for ${eqName}`);
         }
 
         connection.release();
+        return result;
     } catch (err) {
         console.error('Database error:', err.message);
         connection.release();
         throw new Error(`Error updating signal data: ${err.message}`);
     }
 };
+
