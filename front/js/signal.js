@@ -409,7 +409,7 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
-    const eqName = selectedEqName.textContent.trim(); // EQNAME 가져오기
+    const eqName = selectedEqName.textContent.trim(); // 필요 시 .toLowerCase() 추가
     const updatedInfo = infoText.value.trim();
 
     console.log('PUT Request to:', `http://3.37.73.151:3001/api/Equipment/${encodeURIComponent(eqName)}`);
