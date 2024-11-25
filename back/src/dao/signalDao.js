@@ -12,14 +12,14 @@ exports.getSignalData = async () => {
     }
 };
 
-exports.updateSignalData = async (eqname, info) => {
+exports.updateSignalData = async (eqName, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        await connection.query('UPDATE work_log_db.equipment SET INFO = ? WHERE EQNAME = ?', [info, eqname]);
+        const query = 'UPDATE equipment SET INFO = ? WHERE EQNAME = ?';
+        await connection.query(query, [info, eqName]); // EQNAME과 매칭
         connection.release();
     } catch (err) {
         connection.release();
         throw new Error(`Error updating signal data: ${err.message}`);
     }
 };
-

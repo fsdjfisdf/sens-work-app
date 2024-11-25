@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function displayEquipmentDetails(eq, logs, color) {
+        console.log('Selected EQNAME:', eq.EQNAME);
         const allCards = document.querySelectorAll('.equipment-card');
         allCards.forEach(card => {
             card.style.transform = 'scale(0)';
@@ -386,60 +387,6 @@ document.getElementById('close-task-modal-bottom').addEventListener('click', () 
     modal.classList.add('hidden'); // 모달 숨기기
 });
 
-function displayEquipmentDetails(eq, logs, color) {
-    const allCards = document.querySelectorAll('.equipment-card');
-    allCards.forEach(card => {
-        card.style.transform = 'scale(0)';
-        card.style.opacity = '0';
-    });
-
-    setTimeout(() => {
-        signalContainer.classList.add('hidden');
-        equipmentDetails.classList.remove('hidden');
-
-        selectedPoint.style.backgroundColor = color;
-        selectedPoint.style.transform = 'scale(3)';
-        selectedEqName.textContent = eq.EQNAME;
-
-        // Display Equipment Information
-        eqInfo.innerHTML = `
-            <p>Group: ${eq.GROUP}</p>
-            <p>Site: ${eq.SITE}</p>
-            <p>Line: ${eq.LINE}</p>
-            <p>Type: ${eq.TYPE}</p>
-            <p>Floor: ${eq.FLOOR}</p>
-            <p>Bay: ${eq.BAY}</p>
-            <p>Warranty End Date: ${eq.END_DATE}</p>
-            <p>Warranty: ${eq.WARRANTY_STATUS}</p>
-        `;
-
-        // Populate INFO field
-        const infoText = document.getElementById('info-text');
-        infoText.value = eq.INFO || 'No additional info available';
-
-        // Reset buttons state
-        document.getElementById('edit-info').classList.remove('hidden');
-        document.getElementById('save-info').classList.add('hidden');
-        document.getElementById('cancel-edit').classList.add('hidden');
-        infoText.disabled = true;
-
-        // Display Work Logs
-        workLogBody.innerHTML = '';
-        logs.forEach(log => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${new Date(log.task_date).toLocaleDateString()}</td>
-                <td>${log.work_type}</td>
-                <td>${log.task_name}</td>
-                <td>${log.task_cause || 'N/A'}</td>
-                <td>${log.task_result || 'N/A'}</td>
-                <td>${log.task_man}</td>
-                <td>${log.task_duration}</td>
-            `;
-            workLogBody.appendChild(row);
-        });
-    }, 300);
-}
 
 // Enable editing of INFO field
 document.getElementById('edit-info').addEventListener('click', () => {
@@ -462,53 +409,32 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
-    const selectedEqNameElement = document.getElementById('selected-eq-name');
+    const eqName = selectedEqName.textContent.trim(); // 저장된 EQNAME 가져오기
+    const updatedInfo = infoText.value.trim();
 
-    if (!selectedEqNameElement) {
-        console.error('selectedEqName not found in DOM.');
-        alert('Selected equipment is not available.');
-        return;
-    }
-
-    const eqName = selectedEqNameElement.textContent.trim(); // EQNAME 가져오기
-    const updatedInfo = infoText.value.trim() || 'No additional info available';
-
+    console.log('EQNAME to Update:', eqName);
     console.log('Updated INFO:', updatedInfo);
 
-    if (!equipmentData || equipmentData.length === 0) {
-        alert('장비 데이터가 없습니다.');
-        return;
-    }
-    if (!workLogData || workLogData.length === 0) {
-        alert('작업 로그 데이터가 없습니다.');
+    if (!eqName) {
+        alert('EQNAME이 설정되지 않았습니다.');
         return;
     }
 
     try {
         const response = await axios.put(
-            `http://3.37.73.151:3001/api/equipment/${encodeURIComponent(eqName)}`, // EQNAME 기반 URL
-            { info: updatedInfo }, // info 전달
+            `http://3.37.73.151:3001/api/equipment/${encodeURIComponent(eqName)}`,
+            { info: updatedInfo },
             { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (response.status === 200) {
-            console.log('INFO update response:', response.data);
-
-            const eq = equipmentData.find(eq => eq.EQNAME === eqName);
-            if (eq) eq.INFO = updatedInfo; // 로컬 데이터 업데이트
-
             alert('INFO updated successfully!');
-            infoText.disabled = true;
-            document.getElementById('edit-info').classList.remove('hidden');
-            document.getElementById('save-info').classList.add('hidden');
-            document.getElementById('cancel-edit').classList.add('hidden');
         } else {
-            throw new Error(`Unexpected response status: ${response.status}`);
+            console.error('Unexpected response status:', response.status);
+            alert('INFO 업데이트 실패: 서버 응답 에러.');
         }
     } catch (error) {
-        console.error('Error updating INFO:', error);
-        alert('INFO 업데이트에 실패했습니다.');
-        const eq = equipmentData.find(eq => eq.EQNAME === eqName);
-        infoText.value = eq ? eq.INFO : 'No additional info available';
+        console.error('Error updating INFO:', error.message);
+        alert('INFO 업데이트 실패: 네트워크 또는 서버 문제.');
     }
 });

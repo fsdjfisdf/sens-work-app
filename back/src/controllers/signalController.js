@@ -15,12 +15,14 @@ exports.getSignalData = async (req, res) => {
 };
 
 exports.updateSignalData = async (req, res) => {
-    const { eqname } = req.params; // id 대신 eqname으로 받음
+    const eqName = req.params.eqName; // URL에서 EQNAME 가져오기
     const { info } = req.body;
+
     try {
-        await signalDao.updateSignalData(eqname, info); // eqname을 전달
+        await signalDao.updateSignalData(eqName, info); // EQNAME 기반 수정
         res.status(200).send('Signal data updated');
     } catch (err) {
+        console.error('Error updating signal data:', err.message);
         res.status(500).json({ error: err.message });
     }
 };
