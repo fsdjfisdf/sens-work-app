@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const signalController = require('./signalController');
+const signalController = require('../controllers/signalController');
 
 // GET: 특정 장비의 INFO 가져오기
 router.get('/equipment/:eqName', signalController.getEquipmentInfo);
