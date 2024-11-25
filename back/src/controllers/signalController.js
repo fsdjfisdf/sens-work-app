@@ -1,4 +1,5 @@
-const signalDao = require('./signalDao');
+const signalDao = require('../dao/signalDao');
+
 
 // 특정 장비의 INFO 가져오기
 exports.getEquipmentInfo = async (req, res) => {
