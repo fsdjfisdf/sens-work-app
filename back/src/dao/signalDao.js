@@ -15,12 +15,17 @@ exports.getSignalData = async () => {
 exports.updateSignalData = async (eqName, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        const query = 'UPDATE equipment SET INFO = ? WHERE LOWER(EQNAME) = ?';
-        const [result] = await connection.query(query, [info, eqName]); // EQNAME 매칭
+        const query = 'UPDATE equipment SET INFO = ? WHERE EQNAME = ?';
+        const [result] = await connection.query(query, [info, eqName]);
+
+        if (result.affectedRows === 0) {
+            throw new Error(`No matching EQNAME found for ${eqName}`);
+        }
+
         connection.release();
-        return result; // affectedRows 포함
     } catch (err) {
         connection.release();
         throw new Error(`Error updating signal data: ${err.message}`);
     }
 };
+

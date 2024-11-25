@@ -409,17 +409,11 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
-    if (!selectedEqName || !selectedEqName.textContent) {
-        alert('EQNAME이 설정되지 않았습니다.');
-        console.error('Error: selectedEqName is undefined or empty.');
-        return;
-    }
-
     const eqName = selectedEqName.textContent.trim(); // EQNAME 가져오기
     const updatedInfo = infoText.value.trim();
 
-    console.log('EQNAME to Update:', eqName);
-    console.log('Updated INFO:', updatedInfo);
+    console.log('PUT Request to:', `http://3.37.73.151:3001/api/Equipment/${encodeURIComponent(eqName)}`);
+    console.log('Payload:', { info: updatedInfo });
 
     if (!eqName) {
         alert('EQNAME이 설정되지 않았습니다.');
@@ -428,7 +422,7 @@ document.getElementById('save-info').addEventListener('click', async () => {
 
     try {
         const response = await axios.put(
-            `http://3.37.73.151:3001/api/equipment/${encodeURIComponent(eqName)}`,
+            `http://3.37.73.151:3001/api/Equipment/${encodeURIComponent(eqName)}`,
             { info: updatedInfo },
             { headers: { Authorization: `Bearer ${token}` } }
         );
