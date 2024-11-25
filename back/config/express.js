@@ -66,7 +66,7 @@ module.exports = function () {
   require("../src/routes/genevaSetupRoute")(app);  // 추가된 라우트
   require("../src/routes/supraxpSetupRoute")(app);  // 추가된 라우트
   const signalRoute = require('../src/routes/signalRoute');
-  app.use('/api/signal', signalRoute); // '/api/signal'로 접근 가능
+  app.use('/api/Equipment', signalRoute);
 
   require("../src/routes/integerMaintenanceRoute")(app);  // 추가된 라우트
   console.log("Setting up equipmentRoute...");

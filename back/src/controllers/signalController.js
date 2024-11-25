@@ -15,7 +15,7 @@ exports.getSignalData = async (req, res) => {
 };
 
 exports.updateSignalData = async (req, res) => {
-    const eqName = req.params.eqName.trim().toLowerCase(); // 소문자 변환
+    const eqName = req.params.eqName.trim().toLowerCase();
     const { info } = req.body;
 
     console.log('Received eqName:', eqName);
