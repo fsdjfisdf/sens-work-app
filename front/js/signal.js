@@ -141,10 +141,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="equipment-point" style="background-color: ${color};"></div>
                 <div class="equipment-label">${eq.EQNAME}</div>
             `;
+    
+            // 툴팁 생성
+            equipmentCard.addEventListener('mouseenter', (e) => showTooltip(e, eq, logCount));
+            equipmentCard.addEventListener('mouseleave', hideTooltip);
+    
             equipmentCard.addEventListener('click', () => displayEquipmentDetails(eq, recentLogs, color));
             signalContainer.appendChild(equipmentCard);
         });
     }
+    
+    // 툴팁 생성 함수
+    function showTooltip(event, eq, logCount) {
+        const tooltip = document.createElement('div');
+        tooltip.id = 'equipment-tooltip';
+        tooltip.className = 'tooltip';
+        tooltip.innerHTML = `
+            <p>작업 이력: ${logCount}</p>
+            <p>특이사항: ${eq.INFO || '없음'}</p>
+        `;
+    
+        document.body.appendChild(tooltip);
+    
+        // 툴팁 위치 조정
+        const rect = event.target.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + window.scrollX + 20}px`;
+        tooltip.style.top = `${rect.top + window.scrollY}px`;
+    }
+    
+    // 툴팁 제거 함수
+    function hideTooltip() {
+        const tooltip = document.getElementById('equipment-tooltip');
+        if (tooltip) {
+            tooltip.remove();
+        }
+    }
+    
     
     function applyFilter() {
         const selectedColor = document.getElementById('filter-color').value;
@@ -234,7 +266,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
             // Set the INFO field value
             const infoText = document.getElementById('info-text');
-            infoText.value = eq.INFO || 'No additional info available';
+            infoText.value = eq.INFO || '설비 특이사항이 아직 없습니다. 추가해주세요.';
             infoText.disabled = true;
     
             // Reset buttons state
@@ -401,7 +433,7 @@ document.getElementById('edit-info').addEventListener('click', () => {
 document.getElementById('cancel-edit').addEventListener('click', () => {
     const infoText = document.getElementById('info-text');
     infoText.disabled = true;
-    infoText.value = equipmentData.find(eq => eq.EQNAME === selectedEqName.textContent).INFO || 'No additional info available';
+    infoText.value = equipmentData.find(eq => eq.EQNAME === selectedEqName.textContent).INFO || '설비 특이사항이 아직 없습니다. 작성해주세요.';
     document.getElementById('edit-info').classList.remove('hidden');
     document.getElementById('save-info').classList.add('hidden');
     document.getElementById('cancel-edit').classList.add('hidden');
@@ -428,7 +460,13 @@ document.getElementById('save-info').addEventListener('click', async () => {
         );
 
         if (response.status === 200) {
-            alert('INFO updated successfully!');
+            alert('특이사항이 수정되었습니다. 감사합니다.');
+            
+            // 저장 성공 후 버튼 상태 변경
+            infoText.disabled = true; // 다시 수정 불가 상태로 변경
+            document.getElementById('save-info').classList.add('hidden'); // SAVE 버튼 숨김
+            document.getElementById('cancel-edit').classList.add('hidden'); // CANCEL 버튼 숨김
+            document.getElementById('edit-info').classList.remove('hidden'); // EDIT 버튼 표시
         } else {
             console.error('Unexpected response status:', response.status);
             alert('INFO 업데이트 실패: 서버 응답 에러.');
@@ -436,5 +474,26 @@ document.getElementById('save-info').addEventListener('click', async () => {
     } catch (error) {
         console.error('Error updating INFO:', error.message);
         alert('INFO 업데이트 실패: 네트워크 또는 서버 문제.');
+    }
+});
+
+
+// Textarea 자동 높이 조절 함수
+function adjustTextareaHeight(textarea) {
+    textarea.style.height = "auto"; // 높이 초기화
+    textarea.style.height = textarea.scrollHeight + "px"; // 내용에 맞게 높이 설정
+}
+
+// 텍스트 입력 시 높이 자동 조절
+const infoText = document.getElementById('info-text');
+
+// 내용 변경 시 높이 자동 조정
+infoText.addEventListener('input', () => adjustTextareaHeight(infoText));
+
+// 페이지 로드 시 높이 자동 조정
+document.addEventListener('DOMContentLoaded', () => {
+    adjustTextareaHeight(infoText);
+    if (!infoText.value.trim()) {
+        infoText.placeholder = "특이사항이 없습니다. 추가해주세요."; // 내용이 없을 때 기본 텍스트
     }
 });

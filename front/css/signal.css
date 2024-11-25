@@ -476,26 +476,28 @@ footer {
 }
 
 
-#info-container {
-    margin: 15px 0;
-}
-
 .info-text {
     width: 100%;
-    height: 60px;
-    resize: none;
+    min-height: 200px; /* 최소 높이 설정 */
+    resize: none; /* 사용자가 크기 조정 못 하게 설정 */
     padding: 10px;
     font-size: 14px;
     border: 1px solid #444;
     background-color: #2c2c2c;
     color: #f4f4f9;
     border-radius: 5px;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease, color 0.3s ease;
+    overflow: hidden; /* 스크롤 숨김 */
+    white-space: pre-wrap; /* 줄 바꿈 유지 */
 }
 
 .info-text:disabled {
     background-color: #1e1e1e;
     color: #999;
+}
+
+.info-text:placeholder-shown {
+    color: #aaa; /* 내용이 없을 때 연한 색상 */
 }
 
 .info-buttons {
@@ -535,4 +537,16 @@ footer {
 
 .hidden {
     display: none;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    pointer-events: none;
 }
