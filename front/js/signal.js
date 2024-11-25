@@ -150,6 +150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     
         displayEquipmentSignals(filteredData);
+        document.getElementById('info-text').value = 'No equipment selected';
+        document.getElementById('info-text').disabled = true;
     }
     
     
@@ -180,6 +182,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedPoint.style.backgroundColor = color;
             selectedPoint.style.transform = 'scale(3)';
             selectedEqName.textContent = eq.EQNAME;
+    
+            // Display Equipment Information
             eqInfo.innerHTML = `
                 <p>Group: ${eq.GROUP}</p>
                 <p>Site: ${eq.SITE}</p>
@@ -189,9 +193,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p>Bay: ${eq.BAY}</p>
                 <p>Warranty End Date: ${eq.END_DATE}</p>
                 <p>Warranty: ${eq.WARRANTY_STATUS}</p>
-
             `;
     
+            // Set the INFO field value
+            const infoText = document.getElementById('info-text');
+            infoText.value = eq.INFO || 'No additional info available';
+            infoText.disabled = true;
+    
+            // Reset buttons state
+            document.getElementById('edit-info').classList.remove('hidden');
+            document.getElementById('save-info').classList.add('hidden');
+            document.getElementById('cancel-edit').classList.add('hidden');
+    
+            // Display Work Logs
             workLogBody.innerHTML = '';
             logs.forEach(log => {
                 const row = document.createElement('tr');
@@ -204,11 +218,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${log.task_man}</td>
                     <td>${log.task_duration}</td>
                 `;
-                row.addEventListener('click', () => openTaskModal(log)); // 클릭 이벤트 추가
                 workLogBody.appendChild(row);
             });
         }, 300);
     }
+    
     
 
     function calculateColorStats(data) {
@@ -334,4 +348,115 @@ function openTaskModal(log) {
 document.getElementById('close-task-modal-bottom').addEventListener('click', () => {
     const modal = document.getElementById('task-details-modal'); // 올바른 ID 참조
     modal.classList.add('hidden'); // 모달 숨기기
+});
+
+function displayEquipmentDetails(eq, logs, color) {
+    const allCards = document.querySelectorAll('.equipment-card');
+    allCards.forEach(card => {
+        card.style.transform = 'scale(0)';
+        card.style.opacity = '0';
+    });
+
+    setTimeout(() => {
+        signalContainer.classList.add('hidden');
+        equipmentDetails.classList.remove('hidden');
+
+        selectedPoint.style.backgroundColor = color;
+        selectedPoint.style.transform = 'scale(3)';
+        selectedEqName.textContent = eq.EQNAME;
+
+        // Display Equipment Information
+        eqInfo.innerHTML = `
+            <p>Group: ${eq.GROUP}</p>
+            <p>Site: ${eq.SITE}</p>
+            <p>Line: ${eq.LINE}</p>
+            <p>Type: ${eq.TYPE}</p>
+            <p>Floor: ${eq.FLOOR}</p>
+            <p>Bay: ${eq.BAY}</p>
+            <p>Warranty End Date: ${eq.END_DATE}</p>
+            <p>Warranty: ${eq.WARRANTY_STATUS}</p>
+        `;
+
+        // Populate INFO field
+        const infoText = document.getElementById('info-text');
+        infoText.value = eq.INFO || 'No additional info available';
+
+        // Reset buttons state
+        document.getElementById('edit-info').classList.remove('hidden');
+        document.getElementById('save-info').classList.add('hidden');
+        document.getElementById('cancel-edit').classList.add('hidden');
+        infoText.disabled = true;
+
+        // Display Work Logs
+        workLogBody.innerHTML = '';
+        logs.forEach(log => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${new Date(log.task_date).toLocaleDateString()}</td>
+                <td>${log.work_type}</td>
+                <td>${log.task_name}</td>
+                <td>${log.task_cause || 'N/A'}</td>
+                <td>${log.task_result || 'N/A'}</td>
+                <td>${log.task_man}</td>
+                <td>${log.task_duration}</td>
+            `;
+            workLogBody.appendChild(row);
+        });
+    }, 300);
+}
+
+// Enable editing of INFO field
+document.getElementById('edit-info').addEventListener('click', () => {
+    const infoText = document.getElementById('info-text');
+    infoText.disabled = false;
+    document.getElementById('edit-info').classList.add('hidden');
+    document.getElementById('save-info').classList.remove('hidden');
+    document.getElementById('cancel-edit').classList.remove('hidden');
+});
+
+// Cancel editing of INFO field
+document.getElementById('cancel-edit').addEventListener('click', () => {
+    const infoText = document.getElementById('info-text');
+    infoText.disabled = true;
+    infoText.value = equipmentData.find(eq => eq.EQNAME === selectedEqName.textContent).INFO || 'No additional info available';
+    document.getElementById('edit-info').classList.remove('hidden');
+    document.getElementById('save-info').classList.add('hidden');
+    document.getElementById('cancel-edit').classList.add('hidden');
+});
+
+// Save updated INFO field
+document.getElementById('save-info').addEventListener('click', async () => {
+    const infoText = document.getElementById('info-text');
+    const updatedInfo = infoText.value.trim();
+    const eqName = selectedEqName.textContent;
+
+    try {
+        const response = await axios.put(
+            `http://3.37.73.151:3001/api/equipment/${eqName}`,
+            { INFO: updatedInfo },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        // Update local data
+        const eq = equipmentData.find(eq => eq.EQNAME === eqName);
+        if (eq) eq.INFO = updatedInfo;
+
+        infoText.disabled = true;
+        document.getElementById('edit-info').classList.remove('hidden');
+        document.getElementById('save-info').classList.add('hidden');
+        document.getElementById('cancel-edit').classList.add('hidden');
+
+        alert('INFO updated successfully!');
+    } catch (error) {
+        console.error('Error updating INFO:', error);
+        alert('Failed to update INFO. Restoring previous value.');
+
+        // Restore previous value
+        const eq = equipmentData.find(eq => eq.EQNAME === eqName);
+        infoText.value = eq.INFO || 'No additional info available';
+    }
 });

@@ -94,9 +94,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // 작업자, 작업 시간, None 시간 및 Move 시간 추출
             const workerMatch = line.match(/작업자\s*[:：]?\s*(.*)/);
             const timeMatch = line.match(/작업\s*시간\s*[:：]?\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/);
-            const emsTimeMatch = line.match(/ems\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/i);
+            const emsTimeMatch = line.match(/ems :\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/i);
             const noneMatch = line.match(/(?:Non|None|none|논)\s*(\d+)/i);
-            const moveMatch = line.match(/(?:move|mov|무브)\s*(\d+)/i);
+            const moveMatch = line.match(/(?:move|mov|무브|무)\s*(\d+)/i);
             
             // 새로운 양식에서 None 시간 및 Move 시간 추출
             const noneTimeMatch = line.match(/Non\s*Working\s*Time\s*[:：]?\s*([\d\-]+)/i);
