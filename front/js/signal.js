@@ -1,12 +1,14 @@
-let token; // 전역 변수로 선언
-let equipmentData = []; // 전역 변수로 선언
-let workLogData = []; // workLogData도 전역으로 선언
+// 전역 변수 정의
+let selectedEqName; // 설비 이름을 저장할 변수
+let token; 
+let equipmentData = []; 
+let workLogData = []; 
 
 
 document.addEventListener('DOMContentLoaded', async () => {
     const signalContainer = document.getElementById('signal-container');
     const equipmentDetails = document.getElementById('equipment-details');
-    const selectedEqName = document.getElementById('selected-eq-name');
+    selectedEqName = document.getElementById('selected-eq-name');
     const eqInfo = document.getElementById('eq-info');
     const workLogBody = document.getElementById('work-log-body');
     const backToListButton = document.getElementById('back-to-list');
@@ -21,8 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const filterEqType = document.getElementById('filter-eq-type');
     const filterWarranty = document.getElementById('filter-warranty');
 
-    let equipmentData = [];
-    let workLogData = [];
 
     const token = localStorage.getItem('x-access-token');
     if (!token || token.trim() === '') {
@@ -409,7 +409,7 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
-    const eqName = selectedEqName.textContent.trim(); // 저장된 EQNAME 가져오기
+    const eqName = selectedEqName.textContent.trim(); // 전역 변수 selectedEqName 사용
     const updatedInfo = infoText.value.trim();
 
     console.log('EQNAME to Update:', eqName);
