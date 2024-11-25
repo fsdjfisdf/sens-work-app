@@ -15,8 +15,7 @@ exports.getSignalData = async () => {
 exports.updateSignalData = async (eqName, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        const query = 'UPDATE Equipment SET INFO = ? WHERE LOWER(EQNAME) = LOWER(?)';
-        console.log(`Executing query: ${query} with EQNAME: ${eqName}, INFO: ${info}`);
+        const query = 'UPDATE Equipment SET INFO = ? WHERE LOWER(EQNAME) = LOWER(?)'; // 소문자 비교
         const [result] = await connection.query(query, [info, eqName]);
 
         if (result.affectedRows === 0) {
@@ -29,4 +28,3 @@ exports.updateSignalData = async (eqName, info) => {
         throw new Error(`Error updating signal data: ${err.message}`);
     }
 };
-

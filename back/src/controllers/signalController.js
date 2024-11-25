@@ -15,7 +15,7 @@ exports.getSignalData = async (req, res) => {
 };
 
 exports.updateSignalData = async (req, res) => {
-    const eqName = req.params.eqName;
+    const eqName = req.params.eqName.trim().toLowerCase(); // 소문자로 통일
     const { info } = req.body;
 
     try {
