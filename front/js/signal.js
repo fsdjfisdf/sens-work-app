@@ -59,15 +59,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             signalContainer.innerHTML = '<p style="text-align: center; color: #fff;">Loading...</p>';
     
-            const equipmentResponse = await axios.get('http://3.37.73.151:3001/api/equipment');
+            const equipmentResponse = await axios.get('http://3.37.73.151:3001/api/equipment',{
+                headers: { Authorization: `Bearer ${token}` },
+            });
             const workLogResponse = await axios.get('http://3.37.73.151:3001/logs');
-    
+            
+            
             equipmentData = equipmentResponse.data;
+            console.log('Equipment data loaded:', equipmentData);
             workLogData = workLogResponse.data;
     
             displayEquipmentSignals(equipmentData); // 초기 로드 시 전체 데이터를 표시
         } catch (error) {
             console.error('Error loading data:', error);
+            alert('장비 데이터를 불러오는 데 실패했습니다.');
             signalContainer.innerHTML = '<p style="text-align: center; color: red;">Failed to load data.</p>';
         }
     }
@@ -427,23 +432,30 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 // Save updated INFO field
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
+    const selectedEqName = document.getElementById('selected-eq-name'); // DOM에서 다시 가져옴
+
+    if (!selectedEqName) {
+        console.error('selectedEqName not found in DOM.');
+        alert('Selected equipment is not available.');
+        return;
+    }
+
     const updatedInfo = infoText.value.trim();
     const eqName = selectedEqName.textContent;
 
     try {
         const response = await axios.put(
             `http://3.37.73.151:3001/api/equipment/${eqName}`,
-            { INFO: updatedInfo },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
+            { INFO: infoText },
+            { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        console.log('INFO update response:', response.data);
 
         // Update local data
         const eq = equipmentData.find(eq => eq.EQNAME === eqName);
-        if (eq) eq.INFO = updatedInfo;
+        if (eq) eq.INFO = infoText;
+        alert('INFO updated successfully!');
 
         infoText.disabled = true;
         document.getElementById('edit-info').classList.remove('hidden');
@@ -453,7 +465,7 @@ document.getElementById('save-info').addEventListener('click', async () => {
         alert('INFO updated successfully!');
     } catch (error) {
         console.error('Error updating INFO:', error);
-        alert('Failed to update INFO. Restoring previous value.');
+        alert('INFO 업데이트에 실패했습니다.');
 
         // Restore previous value
         const eq = equipmentData.find(eq => eq.EQNAME === eqName);
