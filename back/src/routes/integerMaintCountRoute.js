@@ -6,7 +6,5 @@ const integerMaintCountController = require('../controllers/integerMaintCountCon
 router.get('/integer-task-count', integerMaintCountController.getTaskCount);
 router.post('/integer-maintenance/aggregated', integerMaintCountController.saveAggregatedData);
 
-
-module.exports = (app) => {
-  app.use('/api', router);
-};
+// 올바르게 라우터 객체를 반환
+module.exports = router;
