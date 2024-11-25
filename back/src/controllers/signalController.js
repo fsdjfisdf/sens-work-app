@@ -10,10 +10,10 @@ exports.getSignalData = async (req, res) => {
 };
 
 exports.updateSignalData = async (req, res) => {
-    const { id } = req.params;
+    const { eqname } = req.params; // id 대신 eqname으로 받음
     const { info } = req.body;
     try {
-        await signalDao.updateSignalData(id, info);
+        await signalDao.updateSignalData(eqname, info); // eqname을 전달
         res.status(200).send('Signal data updated');
     } catch (err) {
         res.status(500).json({ error: err.message });

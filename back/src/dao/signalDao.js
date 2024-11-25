@@ -12,7 +12,7 @@ exports.getSignalData = async () => {
     }
 };
 
-exports.updateSignalData = async (id, info) => {
+exports.updateSignalData = async (eqname, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
         await connection.query('UPDATE equipment SET INFO = ? WHERE EQNAME = ?', [info, eqname]);
@@ -22,3 +22,4 @@ exports.updateSignalData = async (id, info) => {
         throw new Error(`Error updating signal data: ${err.message}`);
     }
 };
+

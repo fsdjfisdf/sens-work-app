@@ -452,11 +452,10 @@ document.getElementById('save-info').addEventListener('click', async () => {
         return;
     }
 
-    const eqName = selectedEqNameElement.textContent;
+    const eqName = selectedEqNameElement.textContent.trim(); // EQNAME 가져오기
     const updatedInfo = infoText.value.trim() || 'No additional info available';
 
     console.log('Updated INFO:', updatedInfo);
-
 
     if (!equipmentData || equipmentData.length === 0) {
         alert('장비 데이터를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
@@ -465,16 +464,16 @@ document.getElementById('save-info').addEventListener('click', async () => {
 
     try {
         const response = await axios.put(
-            `http://3.37.73.151:3001/api/equipment/${eqName}`,
-            { INFO: updatedInfo },
+            `http://3.37.73.151:3001/api/equipment/${encodeURIComponent(eqName)}`, // EQNAME 기반 URL
+            { info: updatedInfo }, // info 전달
             { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (response.status === 200) {
             console.log('INFO update response:', response.data);
 
-            const eq = equipmentData.find(eq => eq.EQNAME === eqName); // 전역 equipmentData에서 검색
-            if (eq) eq.INFO = updatedInfo; // 데이터 업데이트
+            const eq = equipmentData.find(eq => eq.EQNAME === eqName);
+            if (eq) eq.INFO = updatedInfo; // 로컬 데이터 업데이트
 
             alert('INFO updated successfully!');
             infoText.disabled = true;
@@ -487,7 +486,7 @@ document.getElementById('save-info').addEventListener('click', async () => {
     } catch (error) {
         console.error('Error updating INFO:', error);
         alert('INFO 업데이트에 실패했습니다.');
-        const eq = equipmentData.find(eq => eq.EQNAME === eqName); // 실패 시 원래 데이터 복원
+        const eq = equipmentData.find(eq => eq.EQNAME === eqName);
         infoText.value = eq ? eq.INFO : 'No additional info available';
     }
 });
