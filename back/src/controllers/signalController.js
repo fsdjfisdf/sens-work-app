@@ -3,8 +3,13 @@ const signalDao = require('../dao/signalDao');
 exports.getSignalData = async (req, res) => {
     try {
         const data = await signalDao.getSignalData();
-        res.status(200).json(data);
+        const normalizedData = data.map(item => ({
+            ...item,
+            EQNAME: item.EQNAME.trim().toLowerCase(), // EQNAME 정리
+        }));
+        res.status(200).json(normalizedData);
     } catch (err) {
+        console.error("Error retrieving equipment data:", err.message);
         res.status(500).json({ error: err.message });
     }
 };

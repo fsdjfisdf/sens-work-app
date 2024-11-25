@@ -64,23 +64,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         async function loadData() {
             try {
-                console.log("Loading data..."); // 디버깅용 메시지
+                console.log("Loading equipment data...");
                 const equipmentResponse = await axios.get('http://3.37.73.151:3001/api/equipment', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                const workLogResponse = await axios.get('http://3.37.73.151:3001/logs');
+                console.log("Equipment Data:", equipmentResponse.data);
         
-                equipmentData = equipmentResponse.data; // 전역 변수에 저장
+                const workLogResponse = await axios.get('http://3.37.73.151:3001/logs', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                console.log("WorkLog Data:", workLogResponse.data);
+        
+                equipmentData = equipmentResponse.data;
                 workLogData = workLogResponse.data;
         
-                console.log("Equipment Data Loaded:", equipmentData); // 디버깅 메시지
-                console.log("Work Log Data Loaded:", workLogData); // 디버깅 메시지
-                displayEquipmentSignals(equipmentData); // 데이터를 화면에 표시
+                displayEquipmentSignals(equipmentData);
             } catch (error) {
-                console.error("Error loading data:", error); // 에러 메시지
+                console.error("Error loading data:", error.message);
                 alert('장비 데이터를 불러오는 데 실패했습니다.');
-                equipmentData = [];
-                workLogData = [];
             }
         }
         
@@ -102,7 +103,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
 
     function displayEquipmentSignals(data) {
+        console.log("Data to Display:", data); // 데이터를 확인
         if (!data || data.length === 0) {
+            console.log("Filtered data is empty.");
             document.getElementById('signal-container').innerHTML = '<p>No equipment matches the filter criteria.</p>';
             return;
         }
@@ -124,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         data.forEach(eq => {
             // 선택된 기간의 작업 이력 필터링
             const recentLogs = workLogData.filter(log =>
-                log.equipment_name === eq.EQNAME &&
+                log.equipment_name.trim().toLowerCase() === eq.EQNAME.trim().toLowerCase() &&
                 new Date(log.task_date) >= new Date(Date.now() - selectedPeriod * 24 * 60 * 60 * 1000)
             );
     
@@ -145,11 +148,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     function applyFilter() {
         const selectedColor = document.getElementById('filter-color').value;
-        const selectedPeriod = parseInt(document.getElementById('filter-period').value, 10); // 선택된 기간(일)
+        const selectedPeriod = parseInt(document.getElementById('filter-period').value, 10);
+    
+        if (
+            !filterEqName.value &&
+            !filterGroup.value &&
+            !filterSite.value &&
+            !filterLine.value &&
+            !filterEqType.value &&
+            !filterWarranty.value &&
+            !selectedColor
+        ) {
+            console.log("No filters applied. Displaying all equipment.");
+            displayEquipmentSignals(equipmentData);
+            return;
+        }
     
         const filteredData = equipmentData.filter(eq => {
             const recentLogs = workLogData.filter(log =>
-                log.equipment_name === eq.EQNAME &&
+                log.equipment_name.trim().toLowerCase() === eq.EQNAME.trim().toLowerCase() &&
                 new Date(log.task_date) >= new Date(Date.now() - selectedPeriod * 24 * 60 * 60 * 1000)
             );
     
@@ -157,19 +174,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             const color = getEquipmentColor(logCount);
     
             return (
-                (!filterEqName.value || eq.EQNAME.toLowerCase().includes(filterEqName.value.toLowerCase())) && // 이름 필터
-                (!filterGroup.value || eq.GROUP === filterGroup.value) && // 그룹 필터
-                (!filterSite.value || eq.SITE === filterSite.value) && // 사이트 필터
-                (!filterLine.value || eq.LINE === filterLine.value) && // 라인 필터
-                (!filterEqType.value || eq.TYPE === filterEqType.value) && // 장비 타입 필터
-                (!filterWarranty.value || eq.WARRANTY_STATUS === filterWarranty.value) && // 보증 상태 필터
-                (!selectedColor || color === selectedColor) // 색상 필터
+                (!filterEqName.value || eq.EQNAME.toLowerCase().includes(filterEqName.value.toLowerCase())) &&
+                (!filterGroup.value || eq.GROUP === filterGroup.value) &&
+                (!filterSite.value || eq.SITE === filterSite.value) &&
+                (!filterLine.value || eq.LINE === filterLine.value) &&
+                (!filterEqType.value || eq.TYPE === filterEqType.value) &&
+                (!filterWarranty.value || eq.WARRANTY_STATUS === filterWarranty.value) &&
+                (!selectedColor || color === selectedColor)
             );
         });
     
+        console.log("Filtered Data Count:", filteredData.length);
+        console.log("Filtered Data:", filteredData);
+    
         displayEquipmentSignals(filteredData);
-        document.getElementById('info-text').value = 'No equipment selected';
-        document.getElementById('info-text').disabled = true;
     }
     
     
@@ -458,7 +476,11 @@ document.getElementById('save-info').addEventListener('click', async () => {
     console.log('Updated INFO:', updatedInfo);
 
     if (!equipmentData || equipmentData.length === 0) {
-        alert('장비 데이터를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+        alert('장비 데이터가 없습니다.');
+        return;
+    }
+    if (!workLogData || workLogData.length === 0) {
+        alert('작업 로그 데이터가 없습니다.');
         return;
     }
 
