@@ -75,8 +75,6 @@ module.exports = function () {
   require('../src/routes/taskCountRoute')(app);  // 추가
   require('../src/routes/integerMaintCountRoute')(app);  // 추가
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
-  const integerMaintCountRoute = require('../src/routes/integerMaintCountRoute');
-  app.use('/api', integerMaintCountRoute);
   
 
   
