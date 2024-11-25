@@ -67,6 +67,8 @@ module.exports = function () {
   const signalRoute = require('../src/routes/signalRoute');
   app.use('/api/signal', signalRoute); // '/api/signal'로 접근 가능
 
+  require("../src/routes/integerMaintenanceRoute")(app);  // 추가된 라우트
+  app.use('/api/integer-maint', integerMaintCountRoute);
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
   require('../src/routes/SECMRoute')(app);
