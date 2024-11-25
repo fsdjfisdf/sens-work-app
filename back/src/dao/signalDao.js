@@ -15,9 +15,10 @@ exports.getSignalData = async () => {
 exports.updateSignalData = async (eqName, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        const query = 'UPDATE equipment SET INFO = ? WHERE EQNAME = ?';
-        await connection.query(query, [info, eqName]); // EQNAME과 매칭
+        const query = 'UPDATE equipment SET INFO = ? WHERE LOWER(EQNAME) = ?';
+        const [result] = await connection.query(query, [info, eqName]); // EQNAME 매칭
         connection.release();
+        return result; // affectedRows 포함
     } catch (err) {
         connection.release();
         throw new Error(`Error updating signal data: ${err.message}`);

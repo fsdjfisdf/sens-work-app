@@ -409,7 +409,13 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
-    const eqName = selectedEqName.textContent.trim(); // 전역 변수 selectedEqName 사용
+    if (!selectedEqName || !selectedEqName.textContent) {
+        alert('EQNAME이 설정되지 않았습니다.');
+        console.error('Error: selectedEqName is undefined or empty.');
+        return;
+    }
+
+    const eqName = selectedEqName.textContent.trim(); // EQNAME 가져오기
     const updatedInfo = infoText.value.trim();
 
     console.log('EQNAME to Update:', eqName);
