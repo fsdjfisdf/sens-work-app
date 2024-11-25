@@ -183,7 +183,8 @@ const additionalEngineers = [
     { NAME: '엄준용', GROUP: 'PEE2', SITE: 'PT', HIRE: '2022-02-07', resignation_date: '2023-07-27' },
     { NAME: '김승기', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-05-02', resignation_date: '2023-12-27' },
     { NAME: '조현민', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-07-26', resignation_date: '2024-03-27' },
-    { NAME: '정재윤', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-11-06', resignation_date: '2024-09-27' }
+    { NAME: '정재윤', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-11-06', resignation_date: '2024-09-27' },
+    { NAME: '김태형', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-10-11', resignation_date: '2024-11-22' }
 ];
 
 // 엔지니어 수 계산 함수 업데이트
