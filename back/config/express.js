@@ -1,5 +1,6 @@
 const express = require("express");
 const compression = require("compression");
+const integerMaintCountRoute = require('../src/routes/integerMaintCountRoute'); // 올바른 라우트 가져오기
 const methodOverride = require("method-override");
 const cors = require("cors");
 const path = require("path");
@@ -73,7 +74,8 @@ module.exports = function () {
   require('../src/routes/SECMRoute')(app);
   require('../src/routes/TitleRoute')(app);
   require('../src/routes/taskCountRoute')(app);  // 추가
-  require('../src/routes/integerMaintCountRoute')(app);  // 추가
+  app.use('/api/integer-maint', integerMaintCountRoute); // 라우트 연결
+  
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
   
 
