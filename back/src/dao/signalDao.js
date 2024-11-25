@@ -15,7 +15,7 @@ exports.getSignalData = async () => {
 exports.updateSignalData = async (id, info) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        await connection.query('UPDATE equipment SET INFO = ? WHERE id = ?', [info, id]);
+        await connection.query('UPDATE equipment SET INFO = ? WHERE EQNAME = ?', [info, eqname]);
         connection.release();
     } catch (err) {
         connection.release();

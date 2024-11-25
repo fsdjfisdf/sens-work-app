@@ -1,3 +1,8 @@
+let token; // 전역 변수로 선언
+let equipmentData = []; // 전역 변수로 선언
+let workLogData = []; // workLogData도 전역으로 선언
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     const signalContainer = document.getElementById('signal-container');
     const equipmentDetails = document.getElementById('equipment-details');
@@ -25,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.replace('./signin.html');
         return;
     }
+    console.log('Token:', token); // 디버깅용
 
         // SITE와 LINE 데이터 정의
         const siteLineOrder = {
@@ -55,25 +61,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         // SITE 변경 시 LINE 목록 업데이트
         filterSite.addEventListener('change', updateLineOptions);
 
+        
         async function loadData() {
             try {
-                signalContainer.innerHTML = '<p style="text-align: center; color: #fff;">Loading...</p>';
+                console.log("Loading data..."); // 디버깅용 메시지
                 const equipmentResponse = await axios.get('http://3.37.73.151:3001/api/equipment', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const workLogResponse = await axios.get('http://3.37.73.151:3001/logs');
-                equipmentData = equipmentResponse.data;
+        
+                equipmentData = equipmentResponse.data; // 전역 변수에 저장
                 workLogData = workLogResponse.data;
         
-                displayEquipmentSignals(equipmentData); // 초기 로드 시 전체 데이터를 표시
+                console.log("Equipment Data Loaded:", equipmentData); // 디버깅 메시지
+                console.log("Work Log Data Loaded:", workLogData); // 디버깅 메시지
+                displayEquipmentSignals(equipmentData); // 데이터를 화면에 표시
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error("Error loading data:", error); // 에러 메시지
                 alert('장비 데이터를 불러오는 데 실패했습니다.');
-                signalContainer.innerHTML = '<p style="text-align: center; color: red;">Failed to load data.</p>';
                 equipmentData = [];
                 workLogData = [];
             }
         }
+        
         
 
     function getEquipmentColor(logCount) {
@@ -92,6 +102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
 
     function displayEquipmentSignals(data) {
+        if (!data || data.length === 0) {
+            document.getElementById('signal-container').innerHTML = '<p>No equipment matches the filter criteria.</p>';
+            return;
+        }
         const selectedPeriod = parseInt(document.getElementById('filter-period').value, 10); // 선택된 기간(일)
         
         signalContainer.innerHTML = ''; // 기존 신호등 초기화
@@ -428,7 +442,6 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
     document.getElementById('cancel-edit').classList.add('hidden');
 });
 
-// Save updated INFO field
 document.getElementById('save-info').addEventListener('click', async () => {
     const infoText = document.getElementById('info-text');
     const selectedEqNameElement = document.getElementById('selected-eq-name');
@@ -444,11 +457,6 @@ document.getElementById('save-info').addEventListener('click', async () => {
 
     console.log('Updated INFO:', updatedInfo);
 
-    if (!token || token.trim() === '') {
-        alert('로그인이 필요합니다.');
-        window.location.replace('./signin.html');
-        return;
-    }
 
     if (!equipmentData || equipmentData.length === 0) {
         alert('장비 데이터를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
@@ -465,8 +473,8 @@ document.getElementById('save-info').addEventListener('click', async () => {
         if (response.status === 200) {
             console.log('INFO update response:', response.data);
 
-            const eq = equipmentData.find(eq => eq.EQNAME === eqName);
-            if (eq) eq.INFO = updatedInfo;
+            const eq = equipmentData.find(eq => eq.EQNAME === eqName); // 전역 equipmentData에서 검색
+            if (eq) eq.INFO = updatedInfo; // 데이터 업데이트
 
             alert('INFO updated successfully!');
             infoText.disabled = true;
@@ -479,7 +487,7 @@ document.getElementById('save-info').addEventListener('click', async () => {
     } catch (error) {
         console.error('Error updating INFO:', error);
         alert('INFO 업데이트에 실패했습니다.');
-        const eq = equipmentData.find(eq => eq.EQNAME === eqName);
+        const eq = equipmentData.find(eq => eq.EQNAME === eqName); // 실패 시 원래 데이터 복원
         infoText.value = eq ? eq.INFO : 'No additional info available';
     }
 });
