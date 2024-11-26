@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const checkWarrantyButton = document.getElementById('check-warranty');
     const equipmentNameInput = document.getElementById('equipment_name');
     const groupSelect = document.getElementById('group');
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const equipmentTypeSelect = document.getElementById('equipment_type');
     const warrantySelect = document.getElementById('warranty');
 
-    checkWarrantyButton.addEventListener('click', function() {
+    checkWarrantyButton.addEventListener('click', function () {
         const equipmentName = equipmentNameInput.value.trim();
 
         if (!equipmentName) {
@@ -15,9 +15,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        console.log(`Fetching data for equipmentName: ${equipmentName}`);
         fetch(`http://3.37.73.151:3001/api/equipment?eqname=${equipmentName}`)
             .then(response => {
                 console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
                 return response.json();
             })
             .then(data => {
@@ -28,26 +32,43 @@ document.addEventListener('DOMContentLoaded', function() {
                     resetFields();
                 } else {
                     const equipmentData = data[0];
+                    console.log('Mapped equipmentData:', equipmentData);
+
+                    // 매칭 과정에서 데이터를 출력
                     groupSelect.value = equipmentData.GROUP || 'SELECT';
+                    console.log(`Group matched: ${groupSelect.value}`);
+
                     siteSelect.value = equipmentData.SITE || 'SELECT';
+                    console.log(`Site matched: ${siteSelect.value}`);
+
                     updateLineOptions(equipmentData.SITE);
                     lineSelect.value = equipmentData.LINE || 'SELECT';
+                    console.log(`Line matched: ${lineSelect.value}`);
+
                     equipmentTypeSelect.value = equipmentData.TYPE || 'SELECT';
+                    console.log(`Equipment Type matched: ${equipmentTypeSelect.value}`);
+
                     warrantySelect.value = equipmentData.WARRANTY_STATUS || 'SELECT';
+                    console.log(`Warranty matched: ${warrantySelect.value}`);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error fetching data:', error);
                 alert('정보를 가져오는 데 오류가 발생했습니다. 다시 시도하세요.');
             });
     });
 
     function resetFields() {
         groupSelect.value = 'SELECT';
+        console.log('Group reset to SELECT');
         siteSelect.value = 'SELECT';
+        console.log('Site reset to SELECT');
         lineSelect.value = 'SELECT';
+        console.log('Line reset to SELECT');
         equipmentTypeSelect.value = 'SELECT';
+        console.log('Equipment Type reset to SELECT');
         warrantySelect.value = 'SELECT';
+        console.log('Warranty reset to SELECT');
     }
 
     function updateLineOptions(siteSelection) {
@@ -59,13 +80,17 @@ document.addEventListener('DOMContentLoaded', function() {
             "PSKH": ["PSKH", "C1", "C2", "C3", "C5"]
         };
 
+        console.log(`Updating line options for site: ${siteSelection}`);
         lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';
         if (lineOptions[siteSelection]) {
-            lineOptions[siteSelection].forEach(function(line) {
+            lineOptions[siteSelection].forEach(function (line) {
                 const option = document.createElement('option');
                 option.value = option.textContent = line;
                 lineSelect.appendChild(option);
+                console.log(`Added line option: ${line}`);
             });
+        } else {
+            console.log('No line options found for this site.');
         }
     }
 });
