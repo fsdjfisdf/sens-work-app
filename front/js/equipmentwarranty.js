@@ -31,25 +31,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     alert('정보가 없습니다. 직접 선택하세요.');
                     resetFields();
                 } else {
-                    const equipmentData = data[0];
-                    console.log('Mapped equipmentData:', equipmentData);
+                    const equipmentData = mapEquipmentData(data, equipmentName);
 
-                    // 매칭 과정에서 데이터를 출력
-                    groupSelect.value = equipmentData.GROUP || 'SELECT';
-                    console.log(`Group matched: ${groupSelect.value}`);
-
-                    siteSelect.value = equipmentData.SITE || 'SELECT';
-                    console.log(`Site matched: ${siteSelect.value}`);
-
-                    updateLineOptions(equipmentData.SITE);
-                    lineSelect.value = equipmentData.LINE || 'SELECT';
-                    console.log(`Line matched: ${lineSelect.value}`);
-
-                    equipmentTypeSelect.value = equipmentData.TYPE || 'SELECT';
-                    console.log(`Equipment Type matched: ${equipmentTypeSelect.value}`);
-
-                    warrantySelect.value = equipmentData.WARRANTY_STATUS || 'SELECT';
-                    console.log(`Warranty matched: ${warrantySelect.value}`);
+                    if (equipmentData) {
+                        updateFields(equipmentData);
+                    } else {
+                        alert('일치하는 설비 정보를 찾을 수 없습니다.');
+                        resetFields();
+                    }
                 }
             })
             .catch(error => {
@@ -60,37 +49,62 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function resetFields() {
         groupSelect.value = 'SELECT';
-        console.log('Group reset to SELECT');
         siteSelect.value = 'SELECT';
-        console.log('Site reset to SELECT');
         lineSelect.value = 'SELECT';
-        console.log('Line reset to SELECT');
         equipmentTypeSelect.value = 'SELECT';
-        console.log('Equipment Type reset to SELECT');
         warrantySelect.value = 'SELECT';
-        console.log('Warranty reset to SELECT');
+    }
+
+    function updateFields(equipmentData) {
+        groupSelect.value = equipmentData.GROUP || 'SELECT';
+        siteSelect.value = equipmentData.SITE || 'SELECT';
+
+        updateLineOptions(equipmentData.SITE);
+        lineSelect.value = equipmentData.LINE || 'SELECT';
+
+        equipmentTypeSelect.value = equipmentData.TYPE || 'SELECT';
+        warrantySelect.value = equipmentData.WARRANTY_STATUS || 'SELECT';
+
+        console.log('Updated fields:', {
+            GROUP: groupSelect.value,
+            SITE: siteSelect.value,
+            LINE: lineSelect.value,
+            TYPE: equipmentTypeSelect.value,
+            WARRANTY: warrantySelect.value,
+        });
     }
 
     function updateLineOptions(siteSelection) {
         const lineOptions = {
-            "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
-            "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
-            "IC": ["M10", "M14", "M16", "R3"],
-            "CJ": ["M11", "M12", "M15"],
-            "PSKH": ["PSKH", "C1", "C2", "C3", "C5"]
+            PT: ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
+            HS: ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
+            IC: ["M10", "M14", "M16", "R3"],
+            CJ: ["M11", "M12", "M15"],
+            PSKH: ["PSKH", "C1", "C2", "C3", "C5"]
         };
 
         console.log(`Updating line options for site: ${siteSelection}`);
         lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';
         if (lineOptions[siteSelection]) {
-            lineOptions[siteSelection].forEach(function (line) {
+            lineOptions[siteSelection].forEach(line => {
                 const option = document.createElement('option');
-                option.value = option.textContent = line;
+                option.value = line;
+                option.textContent = line;
                 lineSelect.appendChild(option);
-                console.log(`Added line option: ${line}`);
             });
+        }
+    }
+
+    function mapEquipmentData(equipmentData, equipmentName) {
+        const normalizedEquipmentName = equipmentName.toLowerCase();
+        const matchedEquipment = equipmentData.find(eq => eq.EQNAME.toLowerCase() === normalizedEquipmentName);
+
+        if (matchedEquipment) {
+            console.log("Mapped equipmentData:", matchedEquipment);
+            return matchedEquipment;
         } else {
-            console.log('No line options found for this site.');
+            console.warn(`No equipment matched for name: ${equipmentName}`);
+            return null;
         }
     }
 });
