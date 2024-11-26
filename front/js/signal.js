@@ -109,30 +109,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('signal-container').innerHTML = '<p>No equipment matches the filter criteria.</p>';
             return;
         }
+    
+        const stats = calculateColorStats(data); // 색상별 통계 계산
+        displayColorStats(stats); // 통계 및 색상 의미 표시
+    
         const selectedPeriod = parseInt(document.getElementById('filter-period').value, 10); // 선택된 기간(일)
-        
         signalContainer.innerHTML = ''; // 기존 신호등 초기화
         equipmentDetails.classList.add('hidden');
         signalContainer.classList.remove('hidden');
     
-        // 색상별 개수와 비율 계산
-        const colorCounts = calculateColorStats(data);
-        displayColorStats(colorCounts, data.length);
-    
-        if (data.length === 0) {
-            signalContainer.innerHTML = '<p>No equipment matches the filter criteria.</p>';
-            return;
-        }
-    
         data.forEach(eq => {
-            // 선택된 기간의 작업 이력 필터링
+            // 작업 이력 필터링
             const recentLogs = workLogData.filter(log =>
                 log.equipment_name.trim().toLowerCase() === eq.EQNAME.trim().toLowerCase() &&
                 new Date(log.task_date) >= new Date(Date.now() - selectedPeriod * 24 * 60 * 60 * 1000)
             );
     
             const logCount = recentLogs.length;
-            const color = getEquipmentColor(logCount); // 색상 계산
+            const color = getEquipmentColor(logCount);
     
             // 장비 카드 생성
             const equipmentCard = document.createElement('div');
@@ -150,6 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             signalContainer.appendChild(equipmentCard);
         });
     }
+    
     
     // 툴팁 생성 함수
     function showTooltip(event, eq, logCount) {
@@ -287,6 +282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${log.task_man}</td>
                     <td>${log.task_duration}</td>
                 `;
+                row.addEventListener('click', () => openTaskModal(log));
                 workLogBody.appendChild(row);
             });
         }, 300);
@@ -295,43 +291,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     
 
     function calculateColorStats(data) {
-        const selectedPeriod = parseInt(document.getElementById('filter-period').value, 10); // 선택된 기간(일)
         const colorCounts = {
             darkred: 0,
             red: 0,
             yellow: 0,
             green: 0,
-            gray: 0
+            gray: 0,
         };
     
         data.forEach(eq => {
+            // 최근 작업 이력 확인
             const recentLogs = workLogData.filter(log =>
-                log.equipment_name === eq.EQNAME &&
-                new Date(log.task_date) >= new Date(Date.now() - selectedPeriod * 24 * 60 * 60 * 1000)
+                log.equipment_name.trim().toLowerCase() === eq.EQNAME.trim().toLowerCase()
             );
     
             const logCount = recentLogs.length;
+            const color = getEquipmentColor(logCount); // 색상 계산
     
-            if (logCount >= 10) {
-                colorCounts.darkred++;
-            } else if (logCount >= 5) {
-                colorCounts.red++;
-            } else if (logCount >= 3) {
-                colorCounts.yellow++;
-            } else if (logCount > 0) {
-                colorCounts.green++;
-            } else {
-                colorCounts.gray++;
+            if (color in colorCounts) {
+                colorCounts[color]++;
             }
         });
     
-        return colorCounts;
+        const totalCount = data.length; // 총 설비 대수
+        return { colorCounts, totalCount };
     }
     
 
-    function displayColorStats(colorCounts, totalCount) {
+    function displayColorStats({ colorCounts, totalCount }) {
         const statsContainer = document.getElementById('stats-container');
         statsContainer.innerHTML = ''; // 기존 내용 초기화
+    
+        // 색상별 의미 정의
+        const colorMeanings = {
+            darkred: '10↑ work logs',
+            red: '5-9 work logs',
+            yellow: '3-4 work logs',
+            green: '1-2 work logs',
+            gray: '0 work log',
+        };
+    
+        // 총 설비 대수 표시
+        const totalElement = document.createElement('div');
+        totalElement.className = 'total-equipment';
+        totalElement.innerHTML = `<strong>Total Equipment:</strong> ${totalCount}`;
+        statsContainer.appendChild(totalElement);
     
         // 색상별 데이터를 HTML로 추가
         Object.keys(colorCounts).forEach(color => {
@@ -342,11 +346,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             statElement.className = 'stat-item';
             statElement.innerHTML = `
                 <span style="display: inline-block; width: 15px; height: 15px; background-color: ${color}; margin-right: 5px;"></span>
-                <strong>${color.toUpperCase()}</strong>: ${count} (${percentage}%)
+                <strong>${color.toUpperCase()}</strong>: ${count} (${percentage}%) - ${colorMeanings[color]}
             `;
             statsContainer.appendChild(statElement);
         });
     }
+    
     
 
     backToListButton.addEventListener('click', () => {

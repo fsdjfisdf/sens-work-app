@@ -541,12 +541,29 @@ footer {
 
 .tooltip {
     position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.85);
     color: #fff;
     padding: 10px;
     border-radius: 5px;
     font-size: 14px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    pointer-events: none;
+    white-space: nowrap;
+    pointer-events: none; /* 마우스 이벤트 차단 */
 }
+
+#heatmap-container {
+    margin: 20px auto;
+    text-align: center;
+  }
+  
+  #heatmap rect {
+    stroke: #ddd;
+    stroke-width: 1px;
+  }
+  
+  .tooltip {
+    font-size: 14px;
+    border-radius: 5px;
+    z-index: 1000;
+  }
