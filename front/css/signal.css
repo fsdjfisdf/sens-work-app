@@ -441,6 +441,16 @@ footer {
     text-align: center;
 }
 
+.modal.hidden {
+    display: none;
+}
+
+.modal-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
 .modal-content table {
     flex-grow: 1;
     overflow-y: auto; /* 테이블에 스크롤 추가 */

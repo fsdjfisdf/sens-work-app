@@ -117,6 +117,7 @@
                     </select>
                     <button id="apply-filter">SEARCH</button>
                     <button id="reset-filter">RESET</button>
+                    <button id="add-equipment-btn" class="add-equipment-btn">Add Equipment</button>
                 </div>
 
                 <!-- 신호등 컨테이너 -->
@@ -174,6 +175,53 @@
             <button id="close-task-modal-bottom">Close</button>
         </div>
     </div>
+    <div id="add-equipment-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Add New Equipment</h3>
+            <form id="add-equipment-form">
+                <label for="eq-name">Equipment Name:</label>
+                <input type="text" id="eq-name" name="eqname" required>
+    
+                <label for="group">Group:</label>
+                <input type="text" id="group" name="group" required>
+    
+                <label for="site">Site:</label>
+                <input type="text" id="site" name="site" required>
+    
+                <label for="type">Type:</label>
+                <input type="text" id="type" name="type" required>
+    
+                <label for="line">Line:</label>
+                <input type="text" id="line" name="line">
+    
+                <label for="floor">Floor:</label>
+                <input type="text" id="floor" name="floor">
+    
+                <label for="bay">Bay:</label>
+                <input type="text" id="bay" name="bay">
+    
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" name="start_date">
+    
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" name="end_date">
+    
+                <label for="warranty-status">Warranty Status:</label>
+                <select id="warranty-status" name="warranty_status">
+                    <option value="WI">WI</option>
+                    <option value="WO">WO</option>
+                </select>
+    
+                <label for="info">Info:</label>
+                <textarea id="info" name="info"></textarea>
+    
+                <div class="modal-buttons">
+                    <button type="submit" id="save-equipment-btn">Save</button>
+                    <button type="button" id="cancel-add-equipment-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
 
     <!-- 푸터 -->
@@ -184,6 +232,7 @@
     <!-- JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="./js/signal.js"></script>
+    <script src="./js/equipmentAdd.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");

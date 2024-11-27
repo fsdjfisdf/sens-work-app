@@ -8,3 +8,10 @@ router.get('/equipment', equipmentController.getEquipments);
 module.exports = (app) => {
   app.use('/api', router);
 };
+
+// 장비 추가 라우트
+router.post('/equipment', equipmentController.addEquipment);
+
+module.exports = (app) => {
+    app.use('/api', router);
+};
