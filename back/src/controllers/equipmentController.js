@@ -25,27 +25,37 @@ exports.getEquipments = async (req, res) => {
 
 exports.addEquipment = async (req, res) => {
   const {
-      eqname, group, site, type, line, floor, bay,
-      start_date, end_date, warranty_status, info
+      eqname,
+      group,
+      site,
+      type,
+      line,
+      floor,
+      bay,
+      start_date,
+      end_date,
+      warranty_status,
+      info,
   } = req.body;
+
+  if (!eqname || !group || !site || !type) {
+      return res.status(400).json({ error: 'Required fields are missing.' });
+  }
 
   try {
       const query = `
-          INSERT INTO Equipment 
-          (EQNAME, GROUP, SITE, TYPE, LINE, FLOOR, BAY, START_DATE, END_DATE, WARRANTY_STATUS, INFO)
+          INSERT INTO Equipment (\`EQNAME\`, \`GROUP\`, \`SITE\`, \`TYPE\`, \`LINE\`, \`FLOOR\`, \`BAY\`, \`START_DATE\`, \`END_DATE\`, \`WARRANTY_STATUS\`, \`INFO\`)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
-      const values = [
-          eqname, group, site, type, line, floor, bay,
-          start_date, end_date, warranty_status, info
-      ];
+      const params = [eqname, group, site, type, line, floor, bay, start_date, end_date, warranty_status, info];
 
-      const [result] = await pool.query(query, values);
-      console.log('Equipment added:', result);
+      const [result] = await pool.query(query, params);
 
-      res.status(201).json({ message: 'Equipment added successfully' });
+      console.log('Inserted Equipment:', result);
+
+      res.status(201).json({ message: 'Equipment added successfully!' });
   } catch (err) {
       console.error('Error adding equipment:', err.message);
-      res.status(500).json({ error: 'Failed to add equipment' });
+      res.status(500).json({ error: 'Error adding equipment.' });
   }
 };

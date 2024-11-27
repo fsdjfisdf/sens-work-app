@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addEquipmentModal = document.getElementById('add-equipment-modal');
     const cancelAddEquipmentBtn = document.getElementById('cancel-add-equipment-btn');
     const addEquipmentForm = document.getElementById('add-equipment-form');
+    const token = localStorage.getItem('x-access-token');
 
     // 모달 열기
     addEquipmentBtn.addEventListener('click', () => {
@@ -25,13 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/api/equipment', payload);
+            const response = await axios.post('http://3.37.73.151:3001/api/equipment', payload, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
             if (response.status === 201) {
                 alert('Equipment added successfully!');
                 addEquipmentModal.classList.add('hidden');
                 addEquipmentForm.reset();
-                // 필요하면 새 데이터를 다시 불러오기
-                location.reload();
+                location.reload(); // 필요 시 데이터 새로고침
             } else {
                 alert('Failed to add equipment.');
             }
