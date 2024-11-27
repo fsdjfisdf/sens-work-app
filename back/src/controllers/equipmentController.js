@@ -38,8 +38,17 @@ exports.addEquipment = async (req, res) => {
       info,
   } = req.body;
 
-  if (!eqname || !group || !site || !type) {
-      return res.status(400).json({ error: 'Required fields are missing.' });
+  // 필수 필드 검증
+  if (!eqname || !group || !site || !type || !start_date || !end_date || !warranty_status) {
+      const missingFields = [];
+      if (!eqname) missingFields.push('eqname');
+      if (!group) missingFields.push('group');
+      if (!site) missingFields.push('site');
+      if (!type) missingFields.push('type');
+      if (!start_date) missingFields.push('start_date');
+      if (!end_date) missingFields.push('end_date');
+      if (!warranty_status) missingFields.push('warranty_status');
+      return res.status(400).json({ error: 'Required fields are missing.', missingFields });
   }
 
   try {
@@ -51,11 +60,12 @@ exports.addEquipment = async (req, res) => {
 
       const [result] = await pool.query(query, params);
 
+      console.log('Query Executed:', query, params);
       console.log('Inserted Equipment:', result);
 
       res.status(201).json({ message: 'Equipment added successfully!' });
   } catch (err) {
-      console.error('Error adding equipment:', err.message);
-      res.status(500).json({ error: 'Error adding equipment.' });
+      console.error('Database Error:', err.message);
+      res.status(500).json({ error: 'Error adding equipment.', details: err.message });
   }
 };

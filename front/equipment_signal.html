@@ -32,7 +32,7 @@
                 <a href="./user_info.html" class="menu-item">SECM</a>
                 <a href="./worklog.html" class="menu-item">Create Worklog</a>
                 <a href="./readworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment.html" class="menu-item">Equipment</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
                 <a href="./PCI.html" class="menu-item">PCI</a>
                 <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
                 <a href="./report.html" class="menu-item">국내 출장 보고서</a>
@@ -180,40 +180,75 @@
     <div class="modal-content">
         <h3>Add New Equipment</h3>
         <form id="add-equipment-form">
-            <label for="eq-name">Equipment Name:</label>
+            <label for="eq-name">EQ NAME</label>
             <input type="text" id="eq-name" name="eqname" required>
 
-            <label for="group">Group:</label>
-            <input type="text" id="group" name="group" required>
+            <label for="group">GROUP</label>
+            <select id="group" name="group" required>
+                <option value="">GROUP</option>
+                <option value="PEE1">PEE1</option>
+                <option value="PEE2">PEE2</option>
+                <option value="PSKH">PSKH</option>
+            </select>
 
-            <label for="site">Site:</label>
-            <input type="text" id="site" name="site" required>
+            <label for="site">SITE</label>
+            <select id="site-select" name="site" required>
+                <option value="">SITE</option>
+                <option value="PT">PT</option>
+                <option value="HS">HS</option>
+                <option value="IC">IC</option>
+                <option value="CJ">CJ</option>
+                <option value="PSKH">PSKH</option>
+            </select>
 
-            <label for="type">Type:</label>
-            <input type="text" id="type" name="type" required>
+            <label for="line">Line</label>
+            <select id="line-select" name="line" disabled>
+                <option value="">SELECT LINE</option>
+            </select>
 
-            <label for="line">Line:</label>
-            <input type="text" id="line" name="line">
+            <label for="type">EQ TYPE</label>
+            <select id="type" name="type" required>
+                <option value="">EQ TYPE</option>
+                <option value="SUPRA N">SUPRA N</option>
+                <option value="SUPRA Np">SUPRA Np</option>
+                <option value="SUPRA NM">SUPRA NM</option>
+                <option value="SUPRA III">SUPRA III</option>
+                <option value="SUPRA IV">SUPRA IV</option>
+                <option value="SUPRA V">SUPRA V</option>
+                <option value="SUPRA Vplus">SUPRA Vplus</option>
+                <option value="SUPRA VM">SUPRA VM</option>
+                <option value="SUPRA XP">SUPRA XP</option>
+                <option value="TERA21">TERA21</option>
+                <option value="INTEGER IVr">INTEGER IVr</option>
+                <option value="INTEGER Plus">INTEGER Plus</option>
+                <option value="INTEGER XP">INTEGER XP</option>
+                <option value="PRECIA">PRECIA</option>
+                <option value="ECOLITE 300">ECOLITE 300</option>
+                <option value="ECOLITE 400">ECOLITE 400</option>
+                <option value="ECOLITE XP">ECOLITE XP</option>
+                <option value="JENEVA">JENEVA</option>
+            </select>
 
-            <label for="floor">Floor:</label>
+            <label for="floor">FLOOR</label>
             <input type="text" id="floor" name="floor">
 
-            <label for="bay">Bay:</label>
+            <label for="bay">BAY</label>
             <input type="text" id="bay" name="bay">
 
-            <label for="start-date">Start Date:</label>
+            <label for="start-date">WARRANTY START DATE</label>
             <input type="date" id="start-date" name="start_date">
 
-            <label for="end-date">End Date:</label>
+            <label for="end-date">WARRANTY END DATE</label>
             <input type="date" id="end-date" name="end_date">
 
-            <label for="warranty-status">Warranty Status:</label>
+            <label for="warranty-status">WARRANTY STATUS</label>
             <select id="warranty-status" name="warranty_status">
+                <option value="">WARRANTY STATUS</option>
                 <option value="WI">WI</option>
                 <option value="WO">WO</option>
             </select>
 
-            <label for="info">Info:</label>
+            <label for="info">설비 특이사항</label>
             <textarea id="info" name="info"></textarea>
 
             <div class="modal-buttons">

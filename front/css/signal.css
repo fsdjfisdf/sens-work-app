@@ -574,44 +574,121 @@ footer {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #000; /* 검정 배경 */
-    color: #fff; /* 흰색 글씨 */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(145deg, #1e1e1e, #2a2a2a); /* 세련된 어두운 배경 */
+    color: #eaeaea;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh; /* 세로 길이 고정 */
+    overflow-y: auto;
     z-index: 1000;
+    transition: all 0.3s ease-in-out;
+    animation: fadeInModal 0.4s ease-out;
+}
+
+.add-equipment-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* 항목 간 간격 */
+}
+
+.add-equipment-modal label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #f5f5f7;
+    margin-bottom: 5px;
+}
+
+.add-equipment-modal input,
+.add-equipment-modal textarea,
+.add-equipment-modal select {
+    background: #1c1c1e;
+    color: #f5f5f7;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 14px;
+    font-family: 'SF Pro Text', 'Roboto', sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.add-equipment-modal input::placeholder,
+.add-equipment-modal textarea::placeholder {
+    color: #7d7d7d;
+}
+
+.add-equipment-modal input:focus,
+.add-equipment-modal textarea:focus,
+.add-equipment-modal select:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 5px rgba(0, 122, 255, 0.8);
+    outline: none;
+}
+
+.add-equipment-modal textarea {
+    resize: none; /* 크기 조정 불가능 */
+    height: 80px; /* 기본 높이 */
+}
+
+.add-equipment-modal button {
+    background: linear-gradient(145deg, #333, #444);
+    color: #f5f5f7;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'SF Pro Text', 'Roboto', sans-serif;
+}
+
+.add-equipment-modal button:hover {
+    background: #555;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.add-equipment-modal button:active {
+    background: #444;
+    transform: scale(0.98);
+}
+
+.add-equipment-modal .modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .hidden {
     display: none;
 }
 
-.add-equipment-modal input,
-.add-equipment-modal textarea,
-.add-equipment-modal select {
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -55%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Date input 기본 스타일 */
+input[type="date"] {
     background-color: #222; /* 어두운 배경 */
     color: #fff; /* 흰색 텍스트 */
-    border: 1px solid #444; /* 테두리 색상 */
-    border-radius: 4px;
-    padding: 5px;
-    margin-bottom: 10px;
-    width: 100%;
-}
-
-.add-equipment-modal input::placeholder,
-.add-equipment-modal textarea::placeholder {
-    color: #aaa; /* 플레이스홀더는 회색 */
-}
-
-.add-equipment-modal button {
-    background-color: #444; /* 버튼 배경 */
-    color: #fff; /* 버튼 텍스트 */
-    border: 1px solid #555;
-    border-radius: 4px;
-    padding: 10px 20px;
+    border: 1px solid #444; /* 테두리 */
+    border-radius: 4px; /* 모서리 둥글게 */
+    padding: 8px; /* 내부 간격 */
+    font-size: 14px;
     cursor: pointer;
 }
 
-.add-equipment-modal button:hover {
-    background-color: #666; /* 호버 효과 */
+/* Date input의 달력 아이콘 색상 */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* 색상을 반전시켜 밝게 보이게 함 */
+    cursor: pointer;
 }
