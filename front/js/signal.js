@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p>Type: ${eq.TYPE}</p>
                 <p>Floor: ${eq.FLOOR}</p>
                 <p>Bay: ${eq.BAY}</p>
-                <p>Warranty End Date: ${eq.END_DATE}</p>
+                <p>Warranty End Date: ${new Date(eq.END_DATE).toISOString().split('T')[0]}</p>
                 <p>Warranty: ${eq.WARRANTY_STATUS}</p>
             `;
     
