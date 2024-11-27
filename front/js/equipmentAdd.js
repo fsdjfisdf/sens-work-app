@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let isValid = true;
         requiredFields.forEach((fieldId) => {
             const field = document.getElementById(fieldId);
-            if (!field.value.trim()) {
-                field.style.borderColor = 'DARKRED'; // 필수 입력 실패 시 빨간 테두리
+            if (!field || !field.value.trim()) {
+                field.style.borderColor = 'darkred'; // 필수 입력 실패 시 빨간 테두리
                 isValid = false;
             } else {
                 field.style.borderColor = ''; // 정상 입력 시 초기화
@@ -84,13 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 폼 제출
     addEquipmentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const { isValid, missingFields } = validateForm();
+
+        // 필수 필드 검증
+        const isValid = validateForm();
         if (!isValid) {
-            alert('다음 필드를 입력하세요:\n' + missingFields.map(fieldId => {
-                const field = document.getElementById(fieldId);
-                const label = field.previousElementSibling.textContent;
-                return `- ${label}`;
-            }).join('\n'));
+            alert('모든 필수 항목을 작성해주세요!');
             return;
         }
 
