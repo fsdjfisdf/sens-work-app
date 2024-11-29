@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             "VALVE", "SOLENOID", "PENDULUM VALVE", "SLOT VALVE DOOR VALVE", "SHUTOFF VALVE", "RF GENERATOR", "BARATRON ASSY", "PIRANI ASSY", "VIEW PORT QUARTZ",
             "FLOW SWITCH", "CERAMIC PLATE", "MONITOR", "KEYBOARD", "SIDE STORAGE", "32 MULTI PORT", "MINI8", "TM EPC (MFC)", "CTC", "EFEM CONTROLLER", "SW PATCH"
         ],
-        "INTEGER plus": [
+        "INTEGER Plus": [
         "SELECT",
         "SWAP KIT",
         "GAS LINE & GAS FILTER",
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM"];
-    const integerModels = ["INTEGER IVr", "INTEGER plus", "INTEGER XP"];
+    const integerModels = ["INTEGER IVr", "INTEGER Plus", "INTEGER XP"];
 
     // Assign the same options for SUPRA N to other SUPRA models
     supraModels.forEach(model => {
