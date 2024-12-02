@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         data.approvalStatus = 'Pending';
     
         try {
-            const response = await axios.post('http://3.37.73.151:3001/supra-setup/save', data, {
+            const response = await axios.post('http://3.37.73.151:3001/supra-setup', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
