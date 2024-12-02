@@ -1,0 +1,68 @@
+@import url('./style.css'); /* 기존 스타일 가져오기 */
+
+/* 추가 스타일 */
+.approval-section {
+    padding: 20px;
+    margin: 60px auto;
+    max-width: 800px;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+}
+
+.approval-section h2 {
+    text-align: center;
+    font-size: 24px;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.approval-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.approval-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #2c2c2c;
+    border-radius: 8px;
+    border: 1px solid #444;
+    color: #f4f4f9;
+    transition: background-color 0.3s ease;
+}
+
+.approval-list li:hover {
+    background-color: #333;
+}
+
+.approval-list button {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #fff;
+    transition: background-color 0.3s ease;
+}
+
+.approval-list button.approve {
+    background-color: #28a745;
+}
+
+.approval-list button.approve:hover {
+    background-color: #218838;
+}
+
+.approval-list button.reject {
+    background-color: #dc3545;
+}
+
+.approval-list button.reject:hover {
+    background-color: #c82333;
+}

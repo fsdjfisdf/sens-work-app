@@ -11,4 +11,10 @@ module.exports = function (app) {
   app.get("/supra-setup/all", jwtMiddleware, supraSetupController.getAllChecklists);
 
   app.get("/supra-setup/data", jwtMiddleware, supraSetupController.getSupraSetupData);
+
+  app.post('/supra-setup/approve/:id', jwtMiddleware, supraSetupController.approveChecklist);
+
+  // 결재 대기 항목 조회
+  app.get('/supra-setup/approvals/pending', jwtMiddleware, supraSetupController.getPendingApprovals);
+
 };

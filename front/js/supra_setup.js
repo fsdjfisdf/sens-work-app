@@ -92,6 +92,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        data.name = username;
+        data.approvalStatus = 'Pending'; // 결재 대기 상태 추가
+
         try {
             const response = await axios.post('http://3.37.73.151:3001/supra-setup', data, {
                 headers: {
@@ -128,3 +131,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       });
 });
+

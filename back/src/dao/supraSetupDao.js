@@ -49,6 +49,39 @@ exports.saveChecklist = async (checklistData) => {
   }
 };
 
+exports.updateApprovalStatus = async (id, status, approver, approvalDate) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `
+      UPDATE SUPRA_SETUP
+      SET approvalStatus = ?, approver = ?, approvalDate = ?
+      WHERE id = ?
+    `;
+    const values = [status, approver, approvalDate, id];
+    await connection.query(query, values);
+  } catch (err) {
+    console.error('Error updating approval status:', err);
+    throw new Error(`Error updating approval status: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};
+
+
+exports.getPendingChecklists = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `SELECT * FROM SUPRA_SETUP WHERE approvalStatus = 'Pending'`;
+    const [rows] = await connection.query(query);
+    return rows;
+  } catch (err) {
+    console.error('Error retrieving pending checklists:', err);
+    throw new Error(`Error retrieving pending checklists: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};
+
 
 exports.insertChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async conn => conn);
