@@ -16,5 +16,6 @@ module.exports = function (app) {
 
   // 결재 대기 항목 조회
   app.get('/supra-setup/approvals/pending', jwtMiddleware, supraSetupController.getPendingApprovals);
+  console.log('Controller:', supraSetupController);
 
 };
