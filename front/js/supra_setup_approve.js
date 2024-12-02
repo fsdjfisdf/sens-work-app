@@ -67,6 +67,8 @@ async function handleApproval(name, status) {
             alert(`결재가 ${status === 'Approved' ? '승인' : '반려'}되었습니다.`);
             console.log('Updated Data:', response.data.updatedData); // 업데이트된 데이터 확인
             window.location.reload();
+            console.log('Approval Name:', name); // name 로그 출력
+            console.log('Approval Status:', status); // status 로그 출력
         } else {
             alert('결재 처리 중 오류가 발생했습니다.');
         }

@@ -52,6 +52,15 @@ exports.saveChecklist = async (checklistData) => {
 exports.updateApprovalStatusByName = async (name, status, approver, approvalDate) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
+      // 먼저 해당 name이 존재하는지 확인
+      const checkQuery = `SELECT * FROM SUPRA_SETUP WHERE name = ?`;
+      const [rows] = await connection.query(checkQuery, [name]);
+
+      if (rows.length === 0) {
+          throw new Error(`No entry found for name: ${name}`); // 에러 발생
+      }
+
+      // 존재하면 업데이트 수행
       const query = `
           UPDATE SUPRA_SETUP
           SET approvalStatus = ?, approver = ?, approvalDate = ?
@@ -60,11 +69,8 @@ exports.updateApprovalStatusByName = async (name, status, approver, approvalDate
       const values = [status, approver, approvalDate, name];
       const [result] = await connection.query(query, values);
 
-      if (result.affectedRows === 0) {
-          throw new Error('No rows updated. Name might not exist.');
-      }
-
-      console.log(`Updated approvalStatus for ${name} to ${status}. Approver: ${approver}, Date: ${approvalDate}`);
+      console.log(`Updated Rows: ${result.affectedRows}`); // 업데이트된 행 수 출력
+      return result;
   } catch (err) {
       console.error('Error updating approval status:', err);
       throw new Error(`Error updating approval status: ${err.message}`);
@@ -72,6 +78,7 @@ exports.updateApprovalStatusByName = async (name, status, approver, approvalDate
       connection.release();
   }
 };
+
 
 
 

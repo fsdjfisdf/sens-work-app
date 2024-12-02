@@ -43,6 +43,9 @@ exports.approveChecklist = async (req, res) => {
   const { status } = req.body; // Approved 또는 Rejected
   const token = req.headers['x-access-token'];
 
+  console.log('Received Name:', name); // 로그 추가
+  console.log('Approval Status:', status); // 로그 추가
+
   if (!['Approved', 'Rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
   }
@@ -57,22 +60,21 @@ exports.approveChecklist = async (req, res) => {
 
       // 결재자 정보 확인
       const approver = await supraSetupDao.getUserById(approverId);
+      console.log('Approver Info:', approver); // 로그 추가
+
       if (!approver) {
           return res.status(403).json({ message: 'Approver not found' });
       }
 
       // 결재 상태 업데이트
       const approvalDate = new Date();
-      await supraSetupDao.updateApprovalStatusByName(name, status, approver.nickname, approvalDate);
+      const result = await supraSetupDao.updateApprovalStatusByName(name, status, approver.nickname, approvalDate);
+
+      console.log('Update Result:', result); // 업데이트 결과 로그 추가
 
       res.status(200).json({
           message: `Checklist ${status.toLowerCase()} successfully.`,
-          updatedData: {
-              name,
-              status,
-              approver: approver.nickname,
-              approvalDate,
-          },
+          updatedData: { name, status, approver: approver.nickname, approvalDate },
       });
   } catch (err) {
       console.error('Error approving checklist:', err);
