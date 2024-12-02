@@ -62,12 +62,17 @@ exports.updateApprovalStatusByName = async (name, status, approver, approvalDate
 
       // 존재하면 업데이트 수행
       const query = `
-          UPDATE SUPRA_SETUP
-          SET approvalStatus = ?, approver = ?, approvalDate = ?
-          WHERE name = ?
-      `;
-      const values = [status, approver, approvalDate, name];
-      const [result] = await connection.query(query, values);
+      UPDATE SUPRA_SETUP
+      SET approvalStatus = ?, approver = ?, approvalDate = ?
+      WHERE name = ?
+  `;
+  const values = [status, approver, approvalDate, name]; // name 대신 id로 매칭 필요 시 수정
+  const [result] = await connection.query(query, values);
+  
+  if (result.affectedRows === 0) {
+      console.error(`No entry found for name: ${name}`); // 디버깅 로그 추가
+      throw new Error(`No entry found for name: ${name}`);
+  }
 
       console.log(`Updated Rows: ${result.affectedRows}`); // 업데이트된 행 수 출력
       return result;
