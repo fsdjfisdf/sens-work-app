@@ -48,25 +48,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // 결재 승인/반려 처리
-async function handleApproval(id, status) {
-    console.log('Approval ID:', id); // 디버깅용 로그 추가
-    if (!id) {
-        alert('유효하지 않은 항목입니다. ID가 존재하지 않습니다.');
-        return;
-    }
-
+async function handleApproval(name, status) {
     const token = localStorage.getItem('x-access-token');
 
     try {
-        const response = await axios.post(`http://3.37.73.151:3001/supra-setup/approve/${id}`, { status }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+        const response = await axios.post(
+            `http://3.37.73.151:3001/supra-setup/approve/${name}`, // name 사용
+            { status },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token,
+                },
             }
-        });
+        );
 
         if (response.status === 200) {
             alert(`결재가 ${status === 'Approved' ? '승인' : '반려'}되었습니다.`);
+            console.log('Updated Data:', response.data.updatedData); // 업데이트된 데이터 확인
             window.location.reload();
         } else {
             alert('결재 처리 중 오류가 발생했습니다.');
@@ -76,6 +75,7 @@ async function handleApproval(id, status) {
         alert('결재 처리 중 오류가 발생했습니다.');
     }
 }
+
 
 // 로그아웃 처리
 document.getElementById('sign-out').addEventListener('click', () => {

@@ -57,15 +57,23 @@ exports.approveChecklist = async (req, res) => {
 
       // 결재자 정보 확인
       const approver = await supraSetupDao.getUserById(approverId);
-      if (!approver || approver.nickname !== '손석현') {
-          return res.status(403).json({ message: 'You are not authorized to approve this checklist' });
+      if (!approver) {
+          return res.status(403).json({ message: 'Approver not found' });
       }
 
       // 결재 상태 업데이트
       const approvalDate = new Date();
       await supraSetupDao.updateApprovalStatusByName(name, status, approver.nickname, approvalDate);
 
-      res.status(200).json({ message: `Checklist ${status.toLowerCase()} successfully.` });
+      res.status(200).json({
+          message: `Checklist ${status.toLowerCase()} successfully.`,
+          updatedData: {
+              name,
+              status,
+              approver: approver.nickname,
+              approvalDate,
+          },
+      });
   } catch (err) {
       console.error('Error approving checklist:', err);
       res.status(500).json({ error: 'Error approving checklist' });

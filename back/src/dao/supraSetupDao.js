@@ -58,7 +58,13 @@ exports.updateApprovalStatusByName = async (name, status, approver, approvalDate
           WHERE name = ?
       `;
       const values = [status, approver, approvalDate, name];
-      await connection.query(query, values);
+      const [result] = await connection.query(query, values);
+
+      if (result.affectedRows === 0) {
+          throw new Error('No rows updated. Name might not exist.');
+      }
+
+      console.log(`Updated approvalStatus for ${name} to ${status}. Approver: ${approver}, Date: ${approvalDate}`);
   } catch (err) {
       console.error('Error updating approval status:', err);
       throw new Error(`Error updating approval status: ${err.message}`);
@@ -66,6 +72,7 @@ exports.updateApprovalStatusByName = async (name, status, approver, approvalDate
       connection.release();
   }
 };
+
 
 
 
