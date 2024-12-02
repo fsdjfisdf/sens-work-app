@@ -92,6 +92,19 @@ exports.getPendingApprovals = async (req, res) => {
   }
 };
 
+exports.saveChecklistAsPending = async (req, res) => {
+  const data = req.body;
+
+  try {
+      const result = await supraSetupDao.saveChecklist(data);
+      res.status(201).json({ message: 'Checklist saved as pending' });
+  } catch (error) {
+      console.error('Error saving checklist:', error);
+      res.status(500).json({ message: 'Error saving checklist' });
+  }
+};
+
+
 
 
 
