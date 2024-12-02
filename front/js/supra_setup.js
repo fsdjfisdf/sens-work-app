@@ -42,12 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const form = document.getElementById('checklistForm');
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-
+    
         const formData = new FormData(form);
         const data = {};
-
-        const username = localStorage.getItem('username') || 'Default Name'; // 사용자 이름이 없을 때 기본값 설정
-
+        const username = localStorage.getItem('username') || 'Default Name';
+        const token = localStorage.getItem('x-access-token');
+    
         // 모든 체크리스트 항목을 0으로 초기화
         const checklistFields = [
             'DRAWING_TEMPLATE_SETUP', 'DRAWING_TEMPLATE_MARKING', 'CUSTOMER_OHT_LINE_CHECK', 'UTILITY_SPEC_UNDERSTANDING',
@@ -74,45 +74,64 @@ document.addEventListener('DOMContentLoaded', async () => {
             'RACK_CERTIFICATION_PREP', 'CERTIFICATION_RESPONSE', 'ENVIRONMENTAL_QUAL_RESPONSE',
             'AGING_TEST_PROCESS_CONFIRM', 'EES_REPORT_PROCEDURE'
         ];
-
-        // 사용자 이름 추가 (name 필드)
-        if (username) {
-            data.name = username;  // 사용자 이름 추가
-        }
-
+    
+        // 사용자 이름 추가
+        data.name = username;
+    
         // 모든 필드를 0으로 초기화
         checklistFields.forEach(field => {
             data[field] = 0;
         });
-
+    
         // 체크된 항목을 100으로 설정
         formData.forEach((value, key) => {
             if (value === 'O') {
                 data[key] = 100;
             }
         });
-
-        data.name = username;
-        data.approvalStatus = 'Pending'; // 결재 대기 상태 추가
-
+    
         try {
-            const response = await axios.post('http://3.37.73.151:3001/supra-setup', data, {
+            // 서버에서 결재 상태 확인
+            const approvalStatusResponse = await axios.get(`http://3.37.73.151:3001/supra-setup`, {
                 headers: {
-                    'Content-Type': 'application/json',
                     'x-access-token': token
                 }
             });
-
-            if (response.status === 201) {
-                alert('체크리스트가 성공적으로 저장되었습니다.');
+    
+            if (approvalStatusResponse.status === 200) {
+                const approvalStatus = approvalStatusResponse.data.approvalStatus;
+    
+                // 결재 상태가 Pending 또는 Rejected인 경우 알림
+                if (approvalStatus === 'Pending') {
+                    alert('현재 체크리스트는 결재 대기 상태입니다. 저장할 수 없습니다.');
+                    return;
+                } else if (approvalStatus === 'Rejected') {
+                    alert('체크리스트가 반려되었습니다. 수정 후 다시 제출해 주세요.');
+                    return;
+                }
+    
+                // 결재 상태가 Approved인 경우 저장 진행
+                const saveResponse = await axios.post('http://3.37.73.151:3001/supra-setup', data, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+    
+                if (saveResponse.status === 201) {
+                    alert('체크리스트가 성공적으로 저장되었습니다.');
+                } else {
+                    alert('체크리스트 저장 중 오류가 발생했습니다.');
+                }
             } else {
-                alert('체크리스트 저장 중 오류가 발생했습니다.');
+                console.error('결재 상태를 확인하는 중 오류 발생.');
             }
         } catch (error) {
-            console.error(error);
+            console.error('오류 발생:', error);
             alert('체크리스트 저장 중 오류가 발생했습니다.');
         }
     });
+    
 
     const signOutButton = document.querySelector("#sign-out");
     if (signOutButton) {

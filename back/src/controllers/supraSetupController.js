@@ -38,37 +38,37 @@ exports.saveChecklist = async (req, res) => {
   }
 };
 
-exports.approveChecklist = async (req, res) => { // 새로 추가됨
-  const { id } = req.params; // SUPRA_SETUP의 ID
+exports.approveChecklist = async (req, res) => {
+  const { name } = req.params; // SUPRA_SETUP의 name
   const { status } = req.body; // Approved 또는 Rejected
   const token = req.headers['x-access-token'];
 
   if (!['Approved', 'Rejected'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status' });
+      return res.status(400).json({ message: 'Invalid status' });
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'Token is missing' });
+      return res.status(401).json({ message: 'Token is missing' });
   }
 
   try {
-    const decoded = jwt.verify(token, secret.jwtsecret);
-    const approverId = decoded.userIdx;
+      const decoded = jwt.verify(token, secret.jwtsecret);
+      const approverId = decoded.userIdx;
 
-    // 결재자 정보 확인
-    const approver = await supraSetupDao.getUserById(approverId);
-    if (!approver || approver.nickname !== '손석현') {
-      return res.status(403).json({ message: 'You are not authorized to approve this checklist' });
-    }
+      // 결재자 정보 확인
+      const approver = await supraSetupDao.getUserById(approverId);
+      if (!approver || approver.nickname !== '손석현') {
+          return res.status(403).json({ message: 'You are not authorized to approve this checklist' });
+      }
 
-    // 결재 상태 업데이트
-    const approvalDate = new Date();
-    await supraSetupDao.updateApprovalStatus(id, status, approver.nickname, approvalDate);
+      // 결재 상태 업데이트
+      const approvalDate = new Date();
+      await supraSetupDao.updateApprovalStatusByName(name, status, approver.nickname, approvalDate);
 
-    res.status(200).json({ message: `Checklist ${status.toLowerCase()} successfully.` });
+      res.status(200).json({ message: `Checklist ${status.toLowerCase()} successfully.` });
   } catch (err) {
-    console.error('Error approving checklist:', err);
-    res.status(500).json({ error: 'Error approving checklist' });
+      console.error('Error approving checklist:', err);
+      res.status(500).json({ error: 'Error approving checklist' });
   }
 };
 

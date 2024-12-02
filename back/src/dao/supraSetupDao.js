@@ -49,38 +49,40 @@ exports.saveChecklist = async (checklistData) => {
   }
 };
 
-exports.updateApprovalStatus = async (id, status, approver, approvalDate) => { // 새로 추가됨
+exports.updateApprovalStatusByName = async (name, status, approver, approvalDate) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const query = `
-      UPDATE SUPRA_SETUP
-      SET approvalStatus = ?, approver = ?, approvalDate = ?
-      WHERE id = ?
-    `;
-    const values = [status, approver, approvalDate, id];
-    await connection.query(query, values);
+      const query = `
+          UPDATE SUPRA_SETUP
+          SET approvalStatus = ?, approver = ?, approvalDate = ?
+          WHERE name = ?
+      `;
+      const values = [status, approver, approvalDate, name];
+      await connection.query(query, values);
   } catch (err) {
-    console.error('Error updating approval status:', err);
-    throw new Error(`Error updating approval status: ${err.message}`);
+      console.error('Error updating approval status:', err);
+      throw new Error(`Error updating approval status: ${err.message}`);
   } finally {
-    connection.release();
+      connection.release();
   }
 };
+
 
 
 exports.getPendingChecklists = async () => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const query = `SELECT * FROM SUPRA_SETUP WHERE approvalStatus = 'Pending'`;
-    const [rows] = await connection.query(query);
-    return rows;
+      const query = `SELECT name, approvalStatus, approvalDate, updated_at FROM SUPRA_SETUP WHERE approvalStatus = 'Pending'`;
+      const [rows] = await connection.query(query);
+      return rows; // name을 반환
   } catch (err) {
-    console.error('Error retrieving pending checklists:', err);
-    throw new Error(`Error retrieving pending checklists: ${err.message}`);
+      console.error('Error retrieving pending checklists:', err);
+      throw new Error(`Error retrieving pending checklists: ${err.message}`);
   } finally {
-    connection.release();
+      connection.release();
   }
 };
+
 
 
 exports.insertChecklist = async (checklistData) => {

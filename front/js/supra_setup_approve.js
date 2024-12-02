@@ -20,23 +20,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // 결재 대기 목록 추가
             pendingApprovals.forEach(item => {
+                console.log('Pending Approval Item:', item); // 확인용 로그
                 const listItem = document.createElement('li');
-                listItem.textContent = `${item.name}님이 요청 - ${new Date(item.createdAt).toLocaleString()}`;
-
+                listItem.textContent = `${item.name}님이 요청 - ${new Date(item.updated_at).toLocaleString()}`;
+            
                 const approveButton = document.createElement('button');
                 approveButton.textContent = '승인';
                 approveButton.classList.add('approve');
-                approveButton.addEventListener('click', () => handleApproval(item.id, 'Approved'));
-
+                approveButton.addEventListener('click', () => handleApproval(item.name, 'Approved')); // name 사용
+            
                 const rejectButton = document.createElement('button');
                 rejectButton.textContent = '반려';
                 rejectButton.classList.add('reject');
-                rejectButton.addEventListener('click', () => handleApproval(item.id, 'Rejected'));
-
+                rejectButton.addEventListener('click', () => handleApproval(item.name, 'Rejected')); // name 사용
+            
                 listItem.appendChild(approveButton);
                 listItem.appendChild(rejectButton);
                 approvalList.appendChild(listItem);
-            });
+            });            
         } else {
             console.error('결재 대기 항목을 불러오는 중 오류 발생.');
         }
@@ -48,6 +49,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 결재 승인/반려 처리
 async function handleApproval(id, status) {
+    console.log('Approval ID:', id); // 디버깅용 로그 추가
+    if (!id) {
+        alert('유효하지 않은 항목입니다. ID가 존재하지 않습니다.');
+        return;
+    }
+
     const token = localStorage.getItem('x-access-token');
 
     try {
