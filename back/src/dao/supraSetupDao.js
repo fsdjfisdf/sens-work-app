@@ -49,7 +49,7 @@ exports.saveChecklist = async (checklistData) => {
   }
 };
 
-exports.updateApprovalStatus = async (id, status, approver, approvalDate) => {
+exports.updateApprovalStatus = async (id, status, approver, approvalDate) => { // 새로 추가됨
   const connection = await pool.getConnection(async conn => conn);
   try {
     const query = `

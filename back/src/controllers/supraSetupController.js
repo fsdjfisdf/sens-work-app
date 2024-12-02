@@ -72,6 +72,17 @@ exports.approveChecklist = async (req, res) => { // 새로 추가됨
   }
 };
 
+exports.getPendingApprovals = async (req, res) => {
+  try {
+    const pendingApprovals = await supraSetupDao.getPendingChecklists();
+    res.status(200).json(pendingApprovals);
+  } catch (err) {
+    console.error('Error retrieving pending approvals:', err);
+    res.status(500).json({ error: 'Error retrieving pending approvals' });
+  }
+};
+
+
 
 
 exports.getChecklist = async (req, res) => {
