@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const form = document.getElementById('checklistForm');
+
+    
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
     
@@ -90,47 +92,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     
+        // 승인 대기 상태로 저장
+        data.approvalStatus = 'Pending';
+    
         try {
-            // 서버에서 결재 상태 확인
-            const approvalStatusResponse = await axios.get(`http://3.37.73.151:3001/supra-setup`, {
+            const response = await axios.post('http://3.37.73.151:3001/supra-setup/save', data, {
                 headers: {
+                    'Content-Type': 'application/json',
                     'x-access-token': token
                 }
             });
     
-            if (approvalStatusResponse.status === 200) {
-                const approvalStatus = approvalStatusResponse.data.approvalStatus;
-    
-                // 결재 상태가 Pending 또는 Rejected인 경우 알림
-                if (approvalStatus === 'Pending') {
-                    alert('현재 체크리스트는 결재 대기 상태입니다. 저장할 수 없습니다.');
-                    return;
-                } else if (approvalStatus === 'Rejected') {
-                    alert('체크리스트가 반려되었습니다. 수정 후 다시 제출해 주세요.');
-                    return;
-                }
-    
-                // 결재 상태가 Approved인 경우 저장 진행
-                const saveResponse = await axios.post('http://3.37.73.151:3001/supra-setup', data, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-    
-                if (saveResponse.status === 201) {
-                    alert('체크리스트가 성공적으로 저장되었습니다.');
-                } else {
-                    alert('체크리스트 저장 중 오류가 발생했습니다.');
-                }
+            if (response.status === 201) {
+                alert('체크리스트가 결재 대기 상태로 저장되었습니다.');
             } else {
-                console.error('결재 상태를 확인하는 중 오류 발생.');
+                alert('체크리스트 저장 중 오류가 발생했습니다.');
             }
         } catch (error) {
-            console.error('오류 발생:', error);
+            console.error('체크리스트 저장 중 오류 발생:', error);
             alert('체크리스트 저장 중 오류가 발생했습니다.');
         }
     });
+    
     
 
     const signOutButton = document.querySelector("#sign-out");

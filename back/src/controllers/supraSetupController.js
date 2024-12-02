@@ -22,14 +22,10 @@ exports.saveChecklist = async (req, res) => {
     checklistData.name = user.nickname;
 
     // 결재 상태를 Pending으로 설정
-    checklistData.approvalStatus = 'Pending'; // 새로 추가됨
+    checklistData.approvalStatus = 'Pending';
 
-    const existingEntry = await supraSetupDao.findByName(checklistData.name);
-    if (existingEntry) {
-      await supraSetupDao.updateChecklist(checklistData);
-    } else {
-      await supraSetupDao.insertChecklist(checklistData);
-    }
+    // 기존 데이터를 업데이트하지 않고 새로운 데이터로 저장
+    await supraSetupDao.insertChecklist(checklistData);
 
     res.status(201).json({ message: 'Checklist saved successfully and pending approval.' });
   } catch (err) {
@@ -37,6 +33,7 @@ exports.saveChecklist = async (req, res) => {
     res.status(500).json({ error: 'Error saving checklist' });
   }
 };
+
 
 exports.approveChecklist = async (req, res) => {
   const { name } = req.params; // SUPRA_SETUP의 name
