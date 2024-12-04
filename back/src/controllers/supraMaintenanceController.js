@@ -87,7 +87,7 @@ exports.getAllChecklists = async (req, res) => {
 };
 
 exports.requestApproval = async (req, res) => {
-  const { checklistData, approverName } = req.body; // 요청 본문에서 approverName을 받아옴
+  const checklistData = req.body;
   const token = req.headers["x-access-token"];
 
   if (!token) {
@@ -103,11 +103,10 @@ exports.requestApproval = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 결재 데이터에 요청자와 선택된 승인자 추가
+    // 결재 데이터에 승인자 추가
     checklistData.name = user.nickname;
-    checklistData.approver_name = approverName; // 선택된 승인자 이름
+    checklistData.approver_name = "손석현"; // 지정된 승인자 설정
 
-    // 결재 요청 저장
     await supraMaintenanceDao.insertApprovalRequest(checklistData);
 
     res.status(201).json({ message: "Approval request submitted successfully" });
