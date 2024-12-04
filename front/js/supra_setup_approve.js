@@ -9,9 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         const response = await axios.get('http://3.37.73.151:3001/supra-setup/approvals/pending', {
-            headers: {
-                'x-access-token': token
-            }
+            headers: { 'x-access-token': token }
         });
 
         if (response.status === 200) {
@@ -20,19 +18,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // 결재 대기 목록 추가
             pendingApprovals.forEach(item => {
-                console.log('Pending Approval Item:', item); // 확인용 로그
                 const listItem = document.createElement('li');
                 listItem.textContent = `${item.name}님이 요청 - ${new Date(item.updated_at).toLocaleString()}`;
+                listItem.setAttribute('data-name', item.name); // 데이터 속성 추가
             
                 const approveButton = document.createElement('button');
                 approveButton.textContent = '승인';
                 approveButton.classList.add('approve');
-                approveButton.addEventListener('click', () => handleApproval(item.name, 'Approved')); // name 사용
+                approveButton.addEventListener('click', (event) => {
+                    const name = event.target.closest('li').getAttribute('data-name');
+                    handleApproval(name, 'Approved');
+                });
             
                 const rejectButton = document.createElement('button');
                 rejectButton.textContent = '반려';
                 rejectButton.classList.add('reject');
-                rejectButton.addEventListener('click', () => handleApproval(item.name, 'Rejected')); // name 사용
+                rejectButton.addEventListener('click', (event) => {
+                    const name = event.target.closest('li').getAttribute('data-name');
+                    handleApproval(name, 'Rejected');
+                });
             
                 listItem.appendChild(approveButton);
                 listItem.appendChild(rejectButton);
@@ -53,8 +57,8 @@ async function handleApproval(name, status) {
 
     try {
         const response = await axios.post(
-            `http://3.37.73.151:3001/supra-setup/approve/${name}`, // name 사용
-            { status },
+            `http://3.37.73.151:3001/supra-setup/approve`, // name을 본문에 포함
+            { name, status },
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -65,10 +69,10 @@ async function handleApproval(name, status) {
 
         if (response.status === 200) {
             alert(`결재가 ${status === 'Approved' ? '승인' : '반려'}되었습니다.`);
-            console.log('Updated Data:', response.data.updatedData); // 업데이트된 데이터 확인
-            window.location.reload();
-            console.log('Approval Name:', name); // name 로그 출력
-            console.log('Approval Status:', status); // status 로그 출력
+            
+            // UI 업데이트
+            const listItem = document.querySelector(`li[data-name="${name}"]`);
+            if (listItem) listItem.remove();
         } else {
             alert('결재 처리 중 오류가 발생했습니다.');
         }
@@ -77,11 +81,3 @@ async function handleApproval(name, status) {
         alert('결재 처리 중 오류가 발생했습니다.');
     }
 }
-
-
-// 로그아웃 처리
-document.getElementById('sign-out').addEventListener('click', () => {
-    localStorage.removeItem('x-access-token');
-    alert('로그아웃되었습니다.');
-    window.location.replace('./signin.html');
-});

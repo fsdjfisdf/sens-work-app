@@ -88,10 +88,10 @@ exports.getAllChecklists = async (req, res) => {
 
 exports.requestApproval = async (req, res) => {
   const checklistData = req.body;
-  const token = req.headers['x-access-token'];
+  const token = req.headers["x-access-token"];
 
   if (!token) {
-    return res.status(401).json({ message: 'Token is missing' });
+    return res.status(401).json({ message: "Token is missing" });
   }
 
   try {
@@ -100,19 +100,22 @@ exports.requestApproval = async (req, res) => {
 
     const user = await supraMaintenanceDao.getUserById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
+    // 결재 데이터에 승인자 추가
     checklistData.name = user.nickname;
+    checklistData.approver_name = "손석현"; // 지정된 승인자 설정
 
     await supraMaintenanceDao.insertApprovalRequest(checklistData);
 
-    res.status(201).json({ message: 'Approval request submitted successfully' });
+    res.status(201).json({ message: "Approval request submitted successfully" });
   } catch (err) {
-    console.error('Error submitting approval request:', err);
-    res.status(500).json({ error: 'Error submitting approval request' });
+    console.error("Error submitting approval request:", err);
+    res.status(500).json({ error: "Error submitting approval request" });
   }
 };
+
 
 exports.approveChecklist = async (req, res) => {
   const { id, status } = req.body;
@@ -203,5 +206,31 @@ exports.getApprovalDetails = async (req, res) => {
 };
 
 
+exports.getApprovalRequestsByUser = async (req, res) => {
+  const token = req.headers["x-access-token"];
+  if (!token) {
+    return res.status(401).json({ message: "Token is missing" });
+  }
 
+  try {
+    const decoded = jwt.verify(token, secret.jwtsecret);
+    const userNickname = decoded.nickname;
 
+    // 권한 확인
+    const isAuthorized = await supraMaintenanceDao.isAuthorizedUser(userNickname);
+    if (!isAuthorized) {
+      return res.status(403).json({ message: "You do not have access to this data" });
+    }
+
+    // 승인 요청 데이터 가져오기
+    const approvalRequests = await supraMaintenanceDao.getApprovalRequestsByNickname(userNickname);
+    if (!approvalRequests || approvalRequests.length === 0) {
+      return res.status(404).json({ message: "No approval requests found" });
+    }
+
+    res.status(200).json(approvalRequests);
+  } catch (err) {
+    console.error("Error retrieving approval requests for user:", err);
+    res.status(500).json({ error: "Error retrieving approval requests" });
+  }
+};

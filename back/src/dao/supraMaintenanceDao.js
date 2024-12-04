@@ -387,3 +387,39 @@ exports.getAllApprovalRequests = async () => {
     connection.release();
   }
 };
+
+exports.isAuthorizedUser = async (nickname) => {
+  const connection = await pool.getConnection(async (conn) => conn);
+  try {
+    const query = `
+      SELECT nickname 
+      FROM Users 
+      WHERE nickname = ? AND role = 'admin' AND status = 'A'
+    `;
+    const [rows] = await connection.query(query, [nickname]);
+    return rows.length > 0; // 해당 사용자가 존재하면 true 반환
+  } catch (err) {
+    console.error("Error checking user authorization:", err);
+    throw new Error("Error checking user authorization");
+  } finally {
+    connection.release();
+  }
+};
+
+exports.getApprovalRequestsByNickname = async (nickname) => {
+  const connection = await pool.getConnection(async (conn) => conn);
+  try {
+    const query = `
+      SELECT * 
+      FROM SUPRA_N_MAINT_APPROVAL 
+      WHERE approver_name = ? AND approval_status = 'pending'
+    `;
+    const [rows] = await connection.query(query, [nickname]);
+    return rows; // 닉네임에 해당하는 승인 요청 데이터 반환
+  } catch (err) {
+    console.error("Error retrieving approval requests by nickname:", err);
+    throw new Error("Error retrieving approval requests by nickname");
+  } finally {
+    connection.release();
+  }
+};
