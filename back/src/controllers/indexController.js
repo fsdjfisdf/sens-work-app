@@ -171,7 +171,6 @@ exports.getUserInfo = async function (req, res) {
     const connection = await pool.getConnection(async (conn) => conn);
     try {
       const userInfo = await indexDao.getUserInfoByNickname(connection, userNickname);
-
       if (userInfo.length < 1) {
         return res.status(404).json({
           isSuccess: false,
@@ -179,15 +178,11 @@ exports.getUserInfo = async function (req, res) {
           message: "사용자 정보를 찾을 수 없습니다.",
         });
       }
-
-      // 닉네임과 역할을 반환
-      const { NAME: nickname, role } = userInfo[0]; // `NAME`은 userDB 컬럼명
-
       return res.status(200).json({
         isSuccess: true,
         code: 200,
         message: "사용자 정보 조회 성공",
-        result: { nickname, role },
+        result: userInfo[0],
       });
     } catch (err) {
       logger.error(`getUserInfo Query error\n: ${JSON.stringify(err)}`);
@@ -203,12 +198,11 @@ exports.getUserInfo = async function (req, res) {
     logger.error(`getUserInfo DB Connection error\n: ${JSON.stringify(err)}`);
     return res.status(500).json({
       isSuccess: false,
-      code: 500,
-      message: "서버 오류입니다.",
+        code: 500,
+        message: "서버 오류입니다.",
     });
   }
 };
-
 
 // 예시 코드
 exports.example = async function (req, res) {
