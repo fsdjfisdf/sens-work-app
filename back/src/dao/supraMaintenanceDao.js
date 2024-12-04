@@ -240,52 +240,48 @@ exports.updateApprovalStatus = async (id, status) => {
 exports.saveChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
-    const parsedChecklistData = JSON.parse(checklistData.checklist_data);
-
-    const values = [
-      checklistData.name,
-      parsedChecklistData.LP_ESCORT, parsedChecklistData.ROBOT_ESCORT, parsedChecklistData.EFEM_ROBOT_TEACHING,
-      parsedChecklistData.EFEM_ROBOT_REP, parsedChecklistData.EFEM_ROBOT_CONTROLLER_REP, parsedChecklistData.TM_ROBOT_TEACHING,
-      parsedChecklistData.TM_ROBOT_REP, parsedChecklistData.TM_ROBOT_CONTROLLER_REP, parsedChecklistData.PASSIVE_PAD_REP,
-      parsedChecklistData.PIN_CYLINDER, parsedChecklistData.PUSHER_CYLINDER, parsedChecklistData.IB_FLOW, parsedChecklistData.DRT,
-      parsedChecklistData.FFU_CONTROLLER, parsedChecklistData.FAN, parsedChecklistData.MOTOR_DRIVER, parsedChecklistData.FCIP,
-      parsedChecklistData.R1, parsedChecklistData.R3, parsedChecklistData.R5, parsedChecklistData.R3_TO_R5,
-      parsedChecklistData.MICROWAVE, parsedChecklistData.APPLICATOR, parsedChecklistData.GENERATOR, parsedChecklistData.CHUCK,
-      parsedChecklistData.PROCESS_KIT, parsedChecklistData.HELIUM_DETECTOR, parsedChecklistData.HOOK_LIFT_PIN,
-      parsedChecklistData.BELLOWS, parsedChecklistData.PIN_SENSOR, parsedChecklistData.LM_GUIDE,
-      parsedChecklistData.PIN_MOTOR_CONTROLLER, parsedChecklistData.SINGLE_EPD, parsedChecklistData.DUAL_EPD,
-      parsedChecklistData.GAS_BOX_BOARD, parsedChecklistData.TEMP_CONTROLLER_BOARD, parsedChecklistData.POWER_DISTRIBUTION_BOARD,
-      parsedChecklistData.DC_POWER_SUPPLY, parsedChecklistData.BM_SENSOR, parsedChecklistData.PIO_SENSOR,
-      parsedChecklistData.SAFETY_MODULE, parsedChecklistData.D_NET, parsedChecklistData.MFC, parsedChecklistData.VALVE,
-      parsedChecklistData.SOLENOID, parsedChecklistData.FAST_VAC_VALVE, parsedChecklistData.SLOW_VAC_VALVE,
-      parsedChecklistData.SLIT_DOOR, parsedChecklistData.APC_VALVE, parsedChecklistData.SHUTOFF_VALVE,
-      parsedChecklistData.BARATRON_ASSY, parsedChecklistData.PIRANI_ASSY, parsedChecklistData.VIEW_PORT_QUARTZ,
-      parsedChecklistData.FLOW_SWITCH, parsedChecklistData.CERAMIC_PLATE, parsedChecklistData.MONITOR,
-      parsedChecklistData.KEYBOARD, parsedChecklistData.MOUSE, parsedChecklistData.CTC, parsedChecklistData.PMC,
-      parsedChecklistData.EDA, parsedChecklistData.EFEM_CONTROLLER, parsedChecklistData.SW_PATCH,
-      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved',
-      new Date().toISOString().slice(0, 19).replace('T', ' ')
-    ];
+    // approval_date를 MySQL DATETIME 형식으로 변환
+    const approvalDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
-        name, LP_ESCORT, ROBOT_ESCORT, EFEM_ROBOT_TEACHING, EFEM_ROBOT_REP, EFEM_ROBOT_CONTROLLER_REP,
-        TM_ROBOT_TEACHING, TM_ROBOT_REP, TM_ROBOT_CONTROLLER_REP, PASSIVE_PAD_REP, PIN_CYLINDER, PUSHER_CYLINDER,
-        IB_FLOW, DRT, FFU_CONTROLLER, FAN, MOTOR_DRIVER, FCIP, R1, R3, R5, R3_TO_R5, MICROWAVE, APPLICATOR,
-        GENERATOR, CHUCK, PROCESS_KIT, HELIUM_DETECTOR, HOOK_LIFT_PIN, BELLOWS, PIN_SENSOR, LM_GUIDE,
-        PIN_MOTOR_CONTROLLER, SINGLE_EPD, DUAL_EPD, GAS_BOX_BOARD, TEMP_CONTROLLER_BOARD, POWER_DISTRIBUTION_BOARD,
-        DC_POWER_SUPPLY, BM_SENSOR, PIO_SENSOR, SAFETY_MODULE, D_NET, MFC, VALVE, SOLENOID, FAST_VAC_VALVE,
-        SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, VIEW_PORT_QUARTZ,
-        FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, EFEM_CONTROLLER, SW_PATCH,
-        approver_name, approval_status, approval_date, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        \`name\`, \`LP_ESCORT\`, \`ROBOT_ESCORT\`, \`EFEM_ROBOT_TEACHING\`, \`EFEM_ROBOT_REP\`, \`EFEM_ROBOT_CONTROLLER_REP\`,
+        \`TM_ROBOT_TEACHING\`, \`TM_ROBOT_REP\`, \`TM_ROBOT_CONTROLLER_REP\`, \`PASSIVE_PAD_REP\`, \`PIN_CYLINDER\`, \`PUSHER_CYLINDER\`,
+        \`IB_FLOW\`, \`DRT\`, \`FFU_CONTROLLER\`, \`FAN\`, \`MOTOR_DRIVER\`, \`FCIP\`, \`R1\`, \`R3\`, \`R5\`, \`R3_TO_R5\`, \`MICROWAVE\`, \`APPLICATOR\`,
+        \`GENERATOR\`, \`CHUCK\`, \`PROCESS_KIT\`, \`HELIUM_DETECTOR\`, \`HOOK_LIFT_PIN\`, \`BELLOWS\`, \`PIN_SENSOR\`, \`LM_GUIDE\`,
+        \`PIN_MOTOR_CONTROLLER\`, \`SINGLE_EPD\`, \`DUAL_EPD\`, \`GAS_BOX_BOARD\`, \`TEMP_CONTROLLER_BOARD\`, \`POWER_DISTRIBUTION_BOARD\`,
+        \`DC_POWER_SUPPLY\`, \`BM_SENSOR\`, \`PIO_SENSOR\`, \`SAFETY_MODULE\`, \`D_NET\`, \`MFC\`, \`VALVE\`, \`SOLENOID\`, \`FAST_VAC_VALVE\`,
+        \`SLOW_VAC_VALVE\`, \`SLIT_DOOR\`, \`APC_VALVE\`, \`SHUTOFF_VALVE\`, \`BARATRON_ASSY\`, \`PIRANI_ASSY\`, \`VIEW_PORT_QUARTZ\`,
+        \`FLOW_SWITCH\`, \`CERAMIC_PLATE\`, \`MONITOR\`, \`KEYBOARD\`, \`MOUSE\`, \`CTC\`, \`PMC\`, \`EDA\`, \`EFEM_CONTROLLER\`, \`SW_PATCH\`,
+        \`approver_name\`, \`approval_status\`, \`approval_date\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
+    const values = [
+      checklistData.name, checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT, checklistData.EFEM_ROBOT_TEACHING,
+      checklistData.EFEM_ROBOT_REP, checklistData.EFEM_ROBOT_CONTROLLER_REP, checklistData.TM_ROBOT_TEACHING,
+      checklistData.TM_ROBOT_REP, checklistData.TM_ROBOT_CONTROLLER_REP, checklistData.PASSIVE_PAD_REP,
+      checklistData.PIN_CYLINDER, checklistData.PUSHER_CYLINDER, checklistData.IB_FLOW, checklistData.DRT,
+      checklistData.FFU_CONTROLLER, checklistData.FAN, checklistData.MOTOR_DRIVER, checklistData.FCIP,
+      checklistData.R1, checklistData.R3, checklistData.R5, checklistData.R3_TO_R5, checklistData.MICROWAVE,
+      checklistData.APPLICATOR, checklistData.GENERATOR, checklistData.CHUCK, checklistData.PROCESS_KIT,
+      checklistData.HELIUM_DETECTOR, checklistData.HOOK_LIFT_PIN, checklistData.BELLOWS, checklistData.PIN_SENSOR,
+      checklistData.LM_GUIDE, checklistData.PIN_MOTOR_CONTROLLER, checklistData.SINGLE_EPD, checklistData.DUAL_EPD,
+      checklistData.GAS_BOX_BOARD, checklistData.TEMP_CONTROLLER_BOARD, checklistData.POWER_DISTRIBUTION_BOARD,
+      checklistData.DC_POWER_SUPPLY, checklistData.BM_SENSOR, checklistData.PIO_SENSOR, checklistData.SAFETY_MODULE,
+      checklistData.D_NET, checklistData.MFC, checklistData.VALVE, checklistData.SOLENOID, checklistData.FAST_VAC_VALVE,
+      checklistData.SLOW_VAC_VALVE, checklistData.SLIT_DOOR, checklistData.APC_VALVE, checklistData.SHUTOFF_VALVE,
+      checklistData.BARATRON_ASSY, checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH,
+      checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD, checklistData.MOUSE,
+      checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.SW_PATCH,
+      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', approvalDate
+    ];
+
     console.log("Query Columns:", query.match(/`\w+`/g));
     console.log("Values Provided:", values);
     console.log("Number of Columns:", query.match(/`\w+`/g).length);
     console.log("Number of Values Provided:", values.length);
-    
-    
+
     await connection.query(query, values);
   } catch (err) {
     console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
@@ -296,6 +292,11 @@ exports.saveChecklist = async (checklistData) => {
 };
 
 
+
+console.log("Query Columns:", query.match(/`\w+`/g));
+console.log("Values Provided:", values);
+console.log("Number of Columns:", query.match(/`\w+`/g).length);
+console.log("Number of Values Provided:", values.length);
 
 
 

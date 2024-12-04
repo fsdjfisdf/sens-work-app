@@ -116,32 +116,37 @@ exports.approveChecklist = async (req, res) => {
   const { id, status } = req.body;
 
   try {
-    // 승인 요청 데이터 가져오기
+    // 1. 승인 요청 데이터 가져오기
     const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
     if (!approvalRequest) {
       return res.status(404).json({ message: 'Approval request not found' });
     }
 
     if (status === 'approved') {
-      const checklistData = approvalRequest.checklist_data;
-    
-      // 누락된 값 설정
+      let checklistData = approvalRequest.checklist_data;
+
+      // 2. JSON 데이터 파싱 (필요 시)
+      if (typeof checklistData === 'string') {
+        checklistData = JSON.parse(checklistData);
+      }
+
+      // 3. 누락된 값 설정
       checklistData.approver_name = checklistData.approver_name || '관리자'; // 관리자 이름
       checklistData.approval_status = 'approved';
       checklistData.approval_date = new Date();
-    
+
+      // 4. 데이터 저장
       try {
         await supraMaintenanceDao.saveChecklist(checklistData);
-        await supraMaintenanceDao.deleteApprovalRequest(id);
-    
+        await supraMaintenanceDao.deleteApprovalRequest(id); // 승인 완료 후 삭제
+
         res.status(200).json({ message: 'Checklist approved and saved' });
       } catch (err) {
         console.error('Error saving checklist:', err);
         res.status(500).json({ message: 'Error saving checklist data' });
       }
-        
     } else if (status === 'rejected') {
-      // 반려 처리
+      // 5. 반려 처리
       await supraMaintenanceDao.updateApprovalStatus(id, 'rejected');
       res.status(200).json({ message: 'Checklist rejected' });
     } else {
@@ -152,6 +157,7 @@ exports.approveChecklist = async (req, res) => {
     res.status(500).json({ error: 'Error approving/rejecting checklist' });
   }
 };
+
 
 
 exports.getApprovalRequests = async (req, res) => {
