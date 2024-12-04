@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
 
     if (!token) {
-        redirectToSignin('로그인이 필요합니다.');
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
         return;
     }
 
@@ -15,11 +16,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // 전역 변수 선언
+    let selectedRequestId = null;
+
     // 결재 요청 데이터 로드
     async function loadApprovalRequests() {
         try {
             const response = await axios.get(`${API_URL}/supra-maintenance/approvals`, {
-                headers: { 'x-access-token': token },
+                headers: { 'x-access-token': token }
             });
 
             if (response.status === 200) {
@@ -57,8 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function attachViewDetailsHandlers() {
         document.querySelectorAll('.view-details').forEach(button => {
             button.addEventListener('click', async (event) => {
-                const requestId = event.target.dataset.id;
-                await loadApprovalDetails(requestId);
+                selectedRequestId = event.target.dataset.id; // 클릭한 요청 ID 저장
+                console.log('Selected Request ID:', selectedRequestId);
+
+                await loadApprovalDetails(selectedRequestId);
             });
         });
     }
@@ -67,13 +73,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadApprovalDetails(requestId) {
         try {
             const response = await axios.get(`${API_URL}/supra-maintenance/approvals/${requestId}`, {
-                headers: { 'x-access-token': token },
+                headers: { 'x-access-token': token }
             });
 
             if (response.status === 200) {
                 const { currentData, requestedData } = response.data;
-                populateTable('#current-data-table', currentData);
-                populateTable('#requested-data-table', requestedData);
+
+                populateComparisonTable(currentData, requestedData);
                 document.getElementById('comparison-section').classList.remove('hidden');
             } else {
                 throw new Error('상세 데이터를 가져오는 중 오류 발생.');
@@ -83,27 +89,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 테이블 채우기
-    function populateTable(selector, data) {
-        const table = document.querySelector(selector);
-        table.querySelector('tbody').innerHTML = '';
-        for (const [key, value] of Object.entries(data)) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${key}</td><td>${value}</td>`;
-            table.querySelector('tbody').appendChild(row);
+    // 비교 테이블 채우기
+    function populateComparisonTable(currentData, requestedData) {
+        const currentTable = document.querySelector('#current-data-table tbody');
+        const requestedTable = document.querySelector('#requested-data-table tbody');
+        currentTable.innerHTML = '';
+        requestedTable.innerHTML = '';
+
+        for (const [key, value] of Object.entries(currentData)) {
+            const currentRow = document.createElement('tr');
+            const requestedRow = document.createElement('tr');
+
+            currentRow.innerHTML = `<td>${key}</td><td>${value}</td>`;
+            requestedRow.innerHTML = `<td>${key}</td><td>${requestedData[key] || 0}</td>`;
+
+            // 변경된 값 강조
+            if (value !== requestedData[key]) {
+                currentRow.style.backgroundColor = 'darkred';
+                requestedRow.style.backgroundColor = 'darkgreen';
+            }
+
+            currentTable.appendChild(currentRow);
+            requestedTable.appendChild(requestedRow);
         }
     }
 
     // 결재 처리
     async function handleApproval(action) {
-        if (!selectedRequestId) return;
+        if (!selectedRequestId) {
+            alert('승인할 요청을 선택하세요.');
+            return;
+        }
 
         try {
             const response = await axios.post(`${API_URL}/supra-maintenance/approve`, {
                 id: selectedRequestId,
-                status: action,
+                status: action
             }, {
-                headers: { 'x-access-token': token },
+                headers: { 'x-access-token': token }
             });
 
             if (response.status === 200) {
