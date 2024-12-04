@@ -1,3 +1,4 @@
+// scripts.js
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
   
@@ -77,11 +78,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   
     // 테이블 데이터 채우기
     function populateTable(table, data) {
-      table.innerHTML = '';
+      table.querySelector('tbody').innerHTML = '';
       for (const [key, value] of Object.entries(data)) {
         const row = document.createElement('tr');
         row.innerHTML = `<td>${key}</td><td>${value}</td>`;
-        table.appendChild(row);
+        table.querySelector('tbody').appendChild(row);
       }
     }
   

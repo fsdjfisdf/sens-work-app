@@ -234,3 +234,29 @@ exports.getApprovalRequestsByUser = async (req, res) => {
     res.status(500).json({ error: "Error retrieving approval requests" });
   }
 };
+
+exports.getPendingApprovals = async (req, res) => {
+  const token = req.headers['x-access-token'];
+  if (!token) {
+      return res.status(401).json({ message: 'Token is missing' });
+  }
+
+  try {
+      const decoded = jwt.verify(token, secret.jwtsecret);
+      const nickname = decoded.nickname;
+      const role = decoded.role;
+
+      // 조건: nickname이 특정 목록에 포함되거나 role이 admin인 경우만 허용
+      const allowedNicknames = ['손석현', '한정훈', '강문호'];
+      if (!allowedNicknames.includes(nickname) && role !== 'admin') {
+          return res.status(403).json({ message: 'You do not have permission to view this data.' });
+      }
+
+      // 결재 요청 데이터 가져오기
+      const pendingApprovals = await supraMaintenanceDao.getPendingApprovals();
+      res.status(200).json(pendingApprovals);
+  } catch (err) {
+      console.error('Error retrieving pending approvals:', err);
+      res.status(500).json({ error: 'Error retrieving pending approvals' });
+  }
+};
