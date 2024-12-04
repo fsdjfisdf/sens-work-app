@@ -204,7 +204,6 @@ exports.getApprovalRequestById = async (id) => {
       checklistData = JSON.parse(rows[0].checklist_data); // JSON 파싱
     } catch (err) {
       console.error(`Invalid JSON format for checklist_data in ID ${id}:`, rows[0].checklist_data);
-      // JSON이 유효하지 않을 경우 명확히 처리
       throw new Error("Invalid checklist data format. Please ensure checklist_data is valid JSON.");
     }
 
