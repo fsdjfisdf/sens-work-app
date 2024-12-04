@@ -405,21 +405,3 @@ exports.isAuthorizedUser = async (nickname) => {
     connection.release();
   }
 };
-
-exports.getApprovalRequestsByNickname = async (nickname) => {
-  const connection = await pool.getConnection(async (conn) => conn);
-  try {
-    const query = `
-      SELECT * 
-      FROM SUPRA_N_MAINT_APPROVAL 
-      WHERE approver_name = ? AND approval_status = 'pending'
-    `;
-    const [rows] = await connection.query(query, [nickname]);
-    return rows; // 닉네임에 해당하는 승인 요청 데이터 반환
-  } catch (err) {
-    console.error("Error retrieving approval requests by nickname:", err);
-    throw new Error("Error retrieving approval requests by nickname");
-  } finally {
-    connection.release();
-  }
-};
