@@ -300,6 +300,10 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
     ];
 
+    // 값 개수 디버깅 출력
+    console.log('Query Fields Count:', 67);
+    console.log('Values Length:', values.length);
+
     await connection.query(query, values);
   } catch (err) {
     console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
@@ -308,6 +312,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
