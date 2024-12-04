@@ -181,15 +181,16 @@ exports.getApprovalDetails = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // 승인 요청 데이터 가져오기
     const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
-
     if (!approvalRequest) {
       return res.status(404).json({ message: "Approval request not found" });
     }
 
     const requestedData = approvalRequest.checklist_data;
 
-    const currentData = await supraMaintenanceDao.getChecklistByName(approvalRequest.name);
+    // 최신 데이터를 가져오도록 함수명 수정
+    const currentData = await supraMaintenanceDao.getLatestChecklistByName(approvalRequest.name);
 
     res.status(200).json({
       currentData: currentData || {}, // 현재 데이터가 없으면 빈 객체 반환
@@ -200,6 +201,7 @@ exports.getApprovalDetails = async (req, res) => {
     res.status(500).json({ error: "Error retrieving approval details" });
   }
 };
+
 
 
 

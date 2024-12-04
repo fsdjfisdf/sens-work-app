@@ -116,6 +116,21 @@ exports.updateChecklist = async (checklistData) => {
   }
 };
 
+exports.getChecklistByName = async (name) => {
+  const connection = await pool.getConnection(async (conn) => conn);
+  try {
+    const query = `SELECT * FROM SUPRA_N_MAINT_SELF WHERE name = ?`;
+    const [rows] = await connection.query(query, [name]);
+    return rows[0]; // 이름에 해당하는 첫 번째 데이터 반환
+  } catch (err) {
+    console.error("Error retrieving checklist by name:", err);
+    throw new Error(err.message);
+  } finally {
+    connection.release();
+  }
+};
+
+
 exports.getLatestChecklistByName = async (name) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
