@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let selectedRequestId = null;
   
     // 결재 요청 리스트 불러오기
-    async function loadApprovalDetails(approvalId) {
-        try {
-            const response = await axios.get(`/supra-maintenance/approvals/${approvalId}`, {
+    async function loadApprovalRequests() {
+      try {
+        const response = await axios.get('http://3.37.73.151:3001/supra-maintenance/approvals', {
           headers: { 'x-access-token': token }
         });
   
