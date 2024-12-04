@@ -11,14 +11,4 @@ module.exports = function (app) {
   app.get("/supra-setup/all", jwtMiddleware, supraSetupController.getAllChecklists);
 
   app.get("/supra-setup/data", jwtMiddleware, supraSetupController.getSupraSetupData);
-
-  app.post('/supra-setup/approve/:name', jwtMiddleware, supraSetupController.approveChecklist);
-
-  app.post("/supra-setup", jwtMiddleware, supraSetupController.saveChecklist);
-
-  // 결재 대기 항목 조회
-  app.get('/supra-setup/approvals/pending', jwtMiddleware, supraSetupController.getPendingApprovals);
-  console.log('Controller Functions:', supraSetupController);
-  console.log('getPendingApprovals:', supraSetupController.getPendingApprovals);
-
 };

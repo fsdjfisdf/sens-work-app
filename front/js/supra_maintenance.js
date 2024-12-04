@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/supra-maintenance', data, {
+            const response = await axios.post('http://3.37.73.151:3001/supra-maintenance/request-approval', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token // JWT 토큰 추가
@@ -77,13 +77,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             if (response.status === 201) {
-                alert('체크리스트가 저장되었습니다.');
+                alert('결재 요청이 제출되었습니다.');
             } else {
-                alert('저장 중 에러 발생');
+                alert('결재 요청 중 에러 발생');
             }
         } catch (error) {
             console.error(error);
-            alert('Error saving checklist.');
+            alert('Error submitting approval request.');
         }
     });
 

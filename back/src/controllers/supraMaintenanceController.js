@@ -84,11 +84,10 @@ exports.getAllChecklists = async (req, res) => {
   }
 };
 
-// 새롭게 추가된 작업 항목 데이터를 저장하는 API
-exports.saveAggregatedData = async (req, res) => {
-  const aggregatedData = req.body; // 클라이언트에서 받은 작업 항목 데이터
-
+exports.requestApproval = async (req, res) => {
+  const checklistData = req.body;
   const token = req.headers['x-access-token'];
+
   if (!token) {
     return res.status(401).json({ message: 'Token is missing' });
   }
@@ -96,37 +95,44 @@ exports.saveAggregatedData = async (req, res) => {
   try {
     const decoded = jwt.verify(token, secret.jwtsecret);
     const userId = decoded.userIdx;
-    
+
     const user = await supraMaintenanceDao.getUserById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // 작업자 이름을 데이터를 기반으로 저장
-    aggregatedData.name = user.nickname;
+    checklistData.name = user.nickname;
 
-    // 작업 항목 데이터를 데이터베이스에 저장
-    const existingEntry = await supraMaintenanceDao.findByName(aggregatedData.name);
-    if (existingEntry) {
-      await supraMaintenanceDao.updateAggregatedData(aggregatedData);
-    } else {
-      await supraMaintenanceDao.insertAggregatedData(aggregatedData);
-    }
+    await supraMaintenanceDao.insertApprovalRequest(checklistData);
 
-    res.status(201).json({ message: 'Aggregated data saved successfully' });
+    res.status(201).json({ message: 'Approval request submitted successfully' });
   } catch (err) {
-    console.error('Error saving aggregated data:', err);
-    res.status(500).json({ error: 'Error saving aggregated data' });
+    console.error('Error submitting approval request:', err);
+    res.status(500).json({ error: 'Error submitting approval request' });
   }
 };
 
-// 작업 항목 데이터를 가져오는 새로운 API
-exports.getAggregatedData = async (req, res) => {
+exports.approveChecklist = async (req, res) => {
+  const { id, status } = req.body;
+
   try {
-    const data = await supraMaintenanceDao.getAllAggregatedData();
-    res.status(200).json(data);
+    const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
+    if (!approvalRequest) {
+      return res.status(404).json({ message: 'Approval request not found' });
+    }
+
+    if (status === 'approved') {
+      await supraMaintenanceDao.saveChecklist(JSON.parse(approvalRequest.checklist_data));
+      await supraMaintenanceDao.deleteApprovalRequest(id);
+      res.status(200).json({ message: 'Checklist approved and saved' });
+    } else if (status === 'rejected') {
+      await supraMaintenanceDao.updateApprovalStatus(id, 'rejected');
+      res.status(200).json({ message: 'Checklist rejected' });
+    } else {
+      res.status(400).json({ message: 'Invalid status' });
+    }
   } catch (err) {
-    console.error('Error retrieving aggregated data:', err);
-    res.status(500).json({ error: 'Error retrieving aggregated data' });
+    console.error('Error approving/rejecting checklist:', err);
+    res.status(500).json({ error: 'Error approving/rejecting checklist' });
   }
 };

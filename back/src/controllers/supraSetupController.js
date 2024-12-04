@@ -5,6 +5,7 @@ const secret = require('../../config/secret');
 exports.saveChecklist = async (req, res) => {
   const checklistData = req.body;
 
+  // JWT 토큰에서 사용자 정보 추출
   const token = req.headers['x-access-token'];
   if (!token) {
     return res.status(401).json({ message: 'Token is missing' });
@@ -14,96 +15,29 @@ exports.saveChecklist = async (req, res) => {
     const decoded = jwt.verify(token, secret.jwtsecret);
     const userId = decoded.userIdx;
 
+    // 사용자 정보 가져오기
     const user = await supraSetupDao.getUserById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // 사용자 nickname을 checklistData에 추가
     checklistData.name = user.nickname;
 
-    // 결재 상태를 Pending으로 설정
-    checklistData.approvalStatus = 'Pending';
+    // 체크리스트 저장 또는 업데이트
+    const existingEntry = await supraSetupDao.findByName(checklistData.name);
+    if (existingEntry) {
+      await supraSetupDao.updateChecklist(checklistData);
+    } else {
+      await supraSetupDao.insertChecklist(checklistData);
+    }
 
-    // 기존 데이터를 업데이트하지 않고 새로운 데이터로 저장
-    await supraSetupDao.insertChecklist(checklistData);
-
-    res.status(201).json({ message: 'Checklist saved successfully and pending approval.' });
+    res.status(201).json({ message: 'Checklist saved successfully' });
   } catch (err) {
     console.error('Error saving checklist:', err);
     res.status(500).json({ error: 'Error saving checklist' });
   }
 };
-
-
-exports.approveChecklist = async (req, res) => {
-  const { name } = req.params; // SUPRA_SETUP의 name
-  const { status } = req.body; // Approved 또는 Rejected
-  const token = req.headers['x-access-token'];
-
-  console.log('Received Name:', name); // 로그 추가
-  console.log('Approval Status:', status); // 로그 추가
-
-  if (!['Approved', 'Rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-  }
-
-  if (!token) {
-      return res.status(401).json({ message: 'Token is missing' });
-  }
-
-  try {
-      const decoded = jwt.verify(token, secret.jwtsecret);
-      const approverId = decoded.userIdx;
-
-      // 결재자 정보 확인
-      const approver = await supraSetupDao.getUserById(approverId);
-      console.log('Approver Info:', approver); // 로그 추가
-
-      if (!approver) {
-          return res.status(403).json({ message: 'Approver not found' });
-      }
-
-      // 결재 상태 업데이트
-      const approvalDate = new Date();
-      const result = await supraSetupDao.updateApprovalStatusByName(name, status, approver.nickname, approvalDate);
-
-      console.log('Update Result:', result); // 업데이트 결과 로그 추가
-
-      res.status(200).json({
-          message: `Checklist ${status.toLowerCase()} successfully.`,
-          updatedData: { name, status, approver: approver.nickname, approvalDate },
-      });
-  } catch (err) {
-      console.error('Error approving checklist:', err);
-      res.status(500).json({ error: 'Error approving checklist' });
-  }
-};
-
-exports.getPendingApprovals = async (req, res) => {
-  try {
-    const pendingApprovals = await supraSetupDao.getPendingChecklists();
-    res.status(200).json(pendingApprovals);
-  } catch (err) {
-    console.error('Error retrieving pending approvals:', err);
-    res.status(500).json({ error: 'Error retrieving pending approvals' });
-  }
-};
-
-exports.saveChecklistAsPending = async (req, res) => {
-  const data = req.body;
-
-  try {
-      const result = await supraSetupDao.saveChecklist(data);
-      res.status(201).json({ message: 'Checklist saved as pending' });
-  } catch (error) {
-      console.error('Error saving checklist:', error);
-      res.status(500).json({ message: 'Error saving checklist' });
-  }
-};
-
-
-
-
 
 exports.getChecklist = async (req, res) => {
   // JWT 토큰에서 사용자 정보 추출
@@ -153,5 +87,59 @@ exports.getSupraSetupData = async (req, res) => {
   } catch (err) {
     console.error('Error retrieving SUPRA_SETUP data:', err);
     res.status(500).json({ error: 'Error retrieving SUPRA_SETUP data' });
+  }
+};
+
+
+exports.requestApproval = async (req, res) => {
+  const checklistData = req.body;
+  const token = req.headers['x-access-token'];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Token is missing' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, secret.jwtsecret);
+    const userId = decoded.userIdx;
+
+    const user = await supraMaintenanceDao.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    checklistData.name = user.nickname;
+
+    await supraMaintenanceDao.insertApprovalRequest(checklistData);
+
+    res.status(201).json({ message: 'Approval request submitted successfully' });
+  } catch (err) {
+    console.error('Error submitting approval request:', err);
+    res.status(500).json({ error: 'Error submitting approval request' });
+  }
+};
+
+exports.approveChecklist = async (req, res) => {
+  const { id, status } = req.body;
+
+  try {
+    const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
+    if (!approvalRequest) {
+      return res.status(404).json({ message: 'Approval request not found' });
+    }
+
+    if (status === 'approved') {
+      await supraMaintenanceDao.saveChecklist(JSON.parse(approvalRequest.checklist_data));
+      await supraMaintenanceDao.deleteApprovalRequest(id);
+      res.status(200).json({ message: 'Checklist approved and saved' });
+    } else if (status === 'rejected') {
+      await supraMaintenanceDao.updateApprovalStatus(id, 'rejected');
+      res.status(200).json({ message: 'Checklist rejected' });
+    } else {
+      res.status(400).json({ message: 'Invalid status' });
+    }
+  } catch (err) {
+    console.error('Error approving/rejecting checklist:', err);
+    res.status(500).json({ error: 'Error approving/rejecting checklist' });
   }
 };
