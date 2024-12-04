@@ -199,12 +199,14 @@ exports.getApprovalRequestById = async (id) => {
       return null; // 요청이 없을 경우 null 반환
     }
 
-    let checklistData;
-    try {
-      checklistData = JSON.parse(rows[0].checklist_data); // JSON 파싱
-    } catch (err) {
-      console.error(`Invalid JSON format for checklist_data in ID ${id}:`, rows[0].checklist_data);
-      throw new Error("Invalid checklist data format. Please ensure checklist_data is valid JSON.");
+    let checklistData = rows[0].checklist_data;
+    if (typeof checklistData === "string") {
+      try {
+        checklistData = JSON.parse(checklistData); // 문자열인 경우 JSON 파싱
+      } catch (err) {
+        console.error(`Error parsing JSON for ID ${id}:`, rows[0].checklist_data);
+        throw new Error("Invalid checklist data format.");
+      }
     }
 
     return {
@@ -215,6 +217,7 @@ exports.getApprovalRequestById = async (id) => {
     connection.release();
   }
 };
+
 
 
 
