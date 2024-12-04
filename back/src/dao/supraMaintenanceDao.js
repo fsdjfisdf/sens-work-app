@@ -251,8 +251,8 @@ exports.saveChecklist = async (checklistData) => {
         DC_POWER_SUPPLY, BM_SENSOR, PIO_SENSOR, SAFETY_MODULE, D_NET, MFC, VALVE, SOLENOID, FAST_VAC_VALVE,
         SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, VIEW_PORT_QUARTZ,
         FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, EFEM_CONTROLLER, SW_PATCH,
-        approver_name, approval_status, approval_date, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        updated_at, approver_name, approval_status, approval_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)
     `;
 
     const values = [
@@ -275,7 +275,6 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
     ];
 
-    // 확인용 로그
     console.log('Values Length:', values.length);
     console.log('Query Fields Count:', query.match(/\?/g)?.length);
 
@@ -287,6 +286,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
