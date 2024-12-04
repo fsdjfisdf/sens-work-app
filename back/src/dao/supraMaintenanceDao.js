@@ -240,6 +240,7 @@ exports.updateApprovalStatus = async (id, status) => {
 exports.saveChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
+    // 쿼리 정의
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
         name, LP_ESCORT, ROBOT_ESCORT, EFEM_ROBOT_TEACHING, EFEM_ROBOT_REP, EFEM_ROBOT_CONTROLLER_REP,
@@ -251,7 +252,7 @@ exports.saveChecklist = async (checklistData) => {
         SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, VIEW_PORT_QUARTZ,
         FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, EFEM_CONTROLLER, SW_PATCH,
         approver_name, approval_status, approval_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         LP_ESCORT = VALUES(LP_ESCORT), ROBOT_ESCORT = VALUES(ROBOT_ESCORT),
         EFEM_ROBOT_TEACHING = VALUES(EFEM_ROBOT_TEACHING), EFEM_ROBOT_REP = VALUES(EFEM_ROBOT_REP),
@@ -279,6 +280,7 @@ exports.saveChecklist = async (checklistData) => {
         approval_date = VALUES(approval_date)
     `;
 
+    // 값 생성
     const values = [
       checklistData.name, checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT, checklistData.EFEM_ROBOT_TEACHING,
       checklistData.EFEM_ROBOT_REP, checklistData.EFEM_ROBOT_CONTROLLER_REP, checklistData.TM_ROBOT_TEACHING,
@@ -296,10 +298,16 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.BARATRON_ASSY, checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH,
       checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD, checklistData.MOUSE,
       checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.SW_PATCH,
-      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved',
-      checklistData.approval_date || new Date()
+      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
     ];
 
+    // 디버깅 로그 출력
+    console.log("Generated Query:\n", query);
+    console.log("Generated Values:\n", values);
+    console.log("Number of Columns in Query:", query.split(',').length);
+    console.log("Number of Values Provided:", values.length);
+
+    // 쿼리 실행
     await connection.query(query, values);
   } catch (err) {
     console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
