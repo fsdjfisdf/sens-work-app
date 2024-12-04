@@ -17,4 +17,6 @@ module.exports = function (app) {
   // 결재 승인 또는 반려 처리
   app.post("/supra-maintenance/approve", jwtMiddleware, supraMaintenanceController.approveChecklist);
 
+  app.get("/supra-maintenance/approvals", jwtMiddleware, supraMaintenanceController.getApprovalRequests);
+
 };

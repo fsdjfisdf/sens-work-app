@@ -136,3 +136,18 @@ exports.approveChecklist = async (req, res) => {
     res.status(500).json({ error: 'Error approving/rejecting checklist' });
   }
 };
+
+exports.getApprovalRequests = async (req, res) => {
+  try {
+    const approvalRequests = await supraMaintenanceDao.getAllApprovalRequests();
+
+    if (!approvalRequests || approvalRequests.length === 0) {
+      return res.status(404).json({ message: "No approval requests found" });
+    }
+
+    res.status(200).json(approvalRequests);
+  } catch (err) {
+    console.error("Error retrieving approval requests:", err);
+    res.status(500).json({ error: "Error retrieving approval requests" });
+  }
+};
