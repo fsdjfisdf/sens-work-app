@@ -240,6 +240,9 @@ exports.updateApprovalStatus = async (id, status) => {
 exports.saveChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
+    // approval_date를 MySQL DATETIME 형식으로 변환
+    const approvalDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
         \`name\`, \`LP_ESCORT\`, \`ROBOT_ESCORT\`, \`EFEM_ROBOT_TEACHING\`, \`EFEM_ROBOT_REP\`, \`EFEM_ROBOT_CONTROLLER_REP\`,
@@ -251,7 +254,7 @@ exports.saveChecklist = async (checklistData) => {
         \`SLOW_VAC_VALVE\`, \`SLIT_DOOR\`, \`APC_VALVE\`, \`SHUTOFF_VALVE\`, \`BARATRON_ASSY\`, \`PIRANI_ASSY\`, \`VIEW_PORT_QUARTZ\`,
         \`FLOW_SWITCH\`, \`CERAMIC_PLATE\`, \`MONITOR\`, \`KEYBOARD\`, \`MOUSE\`, \`CTC\`, \`PMC\`, \`EDA\`, \`EFEM_CONTROLLER\`, \`SW_PATCH\`,
         \`approver_name\`, \`approval_status\`, \`approval_date\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -271,13 +274,12 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.BARATRON_ASSY, checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH,
       checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD, checklistData.MOUSE,
       checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.SW_PATCH,
-      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
+      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', approvalDate
     ];
 
-    // 디버깅
-    console.log("Query Columns:", query.match(/`\w+`/g)); // 컬럼 이름 확인
-    console.log("Values Provided:", values); // 제공된 값 확인
-    console.log("Number of Columns:", 67);
+    console.log("Query Columns:", query.match(/`\w+`/g));
+    console.log("Values Provided:", values);
+    console.log("Number of Columns:", query.match(/`\w+`/g).length);
     console.log("Number of Values Provided:", values.length);
 
     await connection.query(query, values);
@@ -288,6 +290,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
