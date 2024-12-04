@@ -116,16 +116,30 @@ exports.approveChecklist = async (req, res) => {
   const { id, status } = req.body;
 
   try {
+    // 승인 요청 데이터 가져오기
     const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
     if (!approvalRequest) {
       return res.status(404).json({ message: 'Approval request not found' });
     }
 
     if (status === 'approved') {
-      await supraMaintenanceDao.saveChecklist(JSON.parse(approvalRequest.checklist_data));
-      await supraMaintenanceDao.deleteApprovalRequest(id);
-      res.status(200).json({ message: 'Checklist approved and saved' });
+      // 승인 처리
+      try {
+        const checklistData = approvalRequest.checklist_data;
+
+        // 체크리스트 저장
+        await supraMaintenanceDao.saveChecklist(checklistData);
+
+        // 승인 요청 삭제
+        await supraMaintenanceDao.deleteApprovalRequest(id);
+
+        res.status(200).json({ message: 'Checklist approved and saved' });
+      } catch (error) {
+        console.error('Error saving checklist:', error);
+        return res.status(500).json({ message: 'Error saving checklist data' });
+      }
     } else if (status === 'rejected') {
+      // 반려 처리
       await supraMaintenanceDao.updateApprovalStatus(id, 'rejected');
       res.status(200).json({ message: 'Checklist rejected' });
     } else {
@@ -136,6 +150,7 @@ exports.approveChecklist = async (req, res) => {
     res.status(500).json({ error: 'Error approving/rejecting checklist' });
   }
 };
+
 
 exports.getApprovalRequests = async (req, res) => {
   try {

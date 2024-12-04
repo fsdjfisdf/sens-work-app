@@ -276,7 +276,8 @@ exports.saveChecklist = async (checklistData) => {
 
     await connection.query(query, values);
   } catch (err) {
-    throw new Error(`Error saving checklist: ${err.message}`);
+    console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
+    throw new Error("Error inserting checklist.");
   } finally {
     connection.release();
   }
