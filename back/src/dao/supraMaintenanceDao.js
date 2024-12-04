@@ -190,7 +190,7 @@ exports.insertApprovalRequest = async (checklistData) => {
 
 
 exports.getApprovalRequestById = async (id) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `SELECT * FROM SUPRA_N_MAINT_APPROVAL WHERE id = ?`;
     const [rows] = await connection.query(query, [id]);
