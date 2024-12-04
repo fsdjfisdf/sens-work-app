@@ -1,4 +1,3 @@
-// scripts.js
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
   
@@ -13,6 +12,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentDataTable = document.getElementById('current-data-table');
     const requestedDataTable = document.getElementById('requested-data-table');
     let selectedRequestId = null;
+    let userNickname = null;
+    let userRole = null;
+  
+    // 로그인한 사용자 정보 가져오기
+    async function fetchUserInfo() {
+      try {
+        const response = await axios.get('http://3.37.73.151:3001/user-info', {
+          headers: { 'x-access-token': token }
+        });
+  
+        if (response.status === 200) {
+          userNickname = response.data.nickname;
+          userRole = response.data.role;
+  
+          // 권한 확인
+          if (
+            !['손석현', '한정훈', '강문호'].includes(userNickname) &&
+            userRole !== 'admin'
+          ) {
+            alert('결재 권한이 없습니다.');
+            window.location.replace('./unauthorized.html'); // 권한 없음 페이지로 이동
+            return;
+          }
+        } else {
+          throw new Error('Failed to fetch user info.');
+        }
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+        alert('사용자 정보를 확인하는 중 오류가 발생했습니다.');
+        window.location.replace('./signin.html');
+      }
+    }
   
     // 결재 요청 리스트 불러오기
     async function loadApprovalRequests() {
@@ -142,6 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   
     // 초기 로딩
+    await fetchUserInfo();
     loadApprovalRequests();
   });
   
