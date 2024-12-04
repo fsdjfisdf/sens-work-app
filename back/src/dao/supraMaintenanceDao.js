@@ -158,8 +158,8 @@ exports.insertApprovalRequest = async (checklistData) => {
         POWER_DISTRIBUTION_BOARD, DC_POWER_SUPPLY, BM_SENSOR, PIO_SENSOR, SAFETY_MODULE, D_NET, MFC, VALVE, 
         SOLENOID, FAST_VAC_VALVE, SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, 
         PIRANI_ASSY, VIEW_PORT_QUARTZ, FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, 
-        EFEM_CONTROLLER, SW_PATCH, request_date
-      ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        EFEM_CONTROLLER, SW_PATCH
+      ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const values = [
       checklistData.name, JSON.stringify(checklistData), checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT,
@@ -189,7 +189,6 @@ exports.insertApprovalRequest = async (checklistData) => {
 
 
 
-
 exports.getApprovalRequestById = async (id) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
@@ -200,14 +199,12 @@ exports.getApprovalRequestById = async (id) => {
       return null; // 요청이 없을 경우 null 반환
     }
 
-    let checklistData = rows[0].checklist_data;
-    if (typeof checklistData === "string") {
-      try {
-        checklistData = JSON.parse(checklistData); // 문자열인 경우 JSON 파싱
-      } catch (err) {
-        console.error(`Error parsing JSON for ID ${id}:`, rows[0].checklist_data);
-        throw new Error("Invalid checklist data format.");
-      }
+    let checklistData;
+    try {
+      checklistData = JSON.parse(rows[0].checklist_data); // JSON 파싱
+    } catch (err) {
+      console.error(`Invalid JSON format for checklist_data in ID ${id}:`, rows[0].checklist_data);
+      throw new Error("Invalid checklist data format. Please ensure checklist_data is valid JSON.");
     }
 
     return {
@@ -218,7 +215,6 @@ exports.getApprovalRequestById = async (id) => {
     connection.release();
   }
 };
-
 
 
 
@@ -239,7 +235,7 @@ exports.updateApprovalStatus = async (id, status) => {
 };
 
 exports.saveChecklist = async (checklistData) => {
-  const connection = await pool.getConnection(async (conn) => conn);
+  const connection = await pool.getConnection(async conn => conn);
   try {
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
@@ -252,34 +248,7 @@ exports.saveChecklist = async (checklistData) => {
         SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, VIEW_PORT_QUARTZ,
         FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, EFEM_CONTROLLER, SW_PATCH,
         approver_name, approval_status, approval_date
-      ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-      )
-      ON DUPLICATE KEY UPDATE
-        LP_ESCORT = VALUES(LP_ESCORT), ROBOT_ESCORT = VALUES(ROBOT_ESCORT),
-        EFEM_ROBOT_TEACHING = VALUES(EFEM_ROBOT_TEACHING), EFEM_ROBOT_REP = VALUES(EFEM_ROBOT_REP),
-        EFEM_ROBOT_CONTROLLER_REP = VALUES(EFEM_ROBOT_CONTROLLER_REP), TM_ROBOT_TEACHING = VALUES(TM_ROBOT_TEACHING),
-        TM_ROBOT_REP = VALUES(TM_ROBOT_REP), TM_ROBOT_CONTROLLER_REP = VALUES(TM_ROBOT_CONTROLLER_REP),
-        PASSIVE_PAD_REP = VALUES(PASSIVE_PAD_REP), PIN_CYLINDER = VALUES(PIN_CYLINDER),
-        PUSHER_CYLINDER = VALUES(PUSHER_CYLINDER), IB_FLOW = VALUES(IB_FLOW), DRT = VALUES(DRT),
-        FFU_CONTROLLER = VALUES(FFU_CONTROLLER), FAN = VALUES(FAN), MOTOR_DRIVER = VALUES(MOTOR_DRIVER),
-        FCIP = VALUES(FCIP), R1 = VALUES(R1), R3 = VALUES(R3), R5 = VALUES(R5), R3_TO_R5 = VALUES(R3_TO_R5),
-        MICROWAVE = VALUES(MICROWAVE), APPLICATOR = VALUES(APPLICATOR), GENERATOR = VALUES(GENERATOR),
-        CHUCK = VALUES(CHUCK), PROCESS_KIT = VALUES(PROCESS_KIT), HELIUM_DETECTOR = VALUES(HELIUM_DETECTOR),
-        HOOK_LIFT_PIN = VALUES(HOOK_LIFT_PIN), BELLOWS = VALUES(BELLOWS), PIN_SENSOR = VALUES(PIN_SENSOR),
-        LM_GUIDE = VALUES(LM_GUIDE), PIN_MOTOR_CONTROLLER = VALUES(PIN_MOTOR_CONTROLLER),
-        SINGLE_EPD = VALUES(SINGLE_EPD), DUAL_EPD = VALUES(DUAL_EPD), GAS_BOX_BOARD = VALUES(GAS_BOX_BOARD),
-        TEMP_CONTROLLER_BOARD = VALUES(TEMP_CONTROLLER_BOARD), POWER_DISTRIBUTION_BOARD = VALUES(POWER_DISTRIBUTION_BOARD),
-        DC_POWER_SUPPLY = VALUES(DC_POWER_SUPPLY), BM_SENSOR = VALUES(BM_SENSOR), PIO_SENSOR = VALUES(PIO_SENSOR),
-        SAFETY_MODULE = VALUES(SAFETY_MODULE), D_NET = VALUES(D_NET), MFC = VALUES(MFC), VALVE = VALUES(VALVE),
-        SOLENOID = VALUES(SOLENOID), FAST_VAC_VALVE = VALUES(FAST_VAC_VALVE), SLOW_VAC_VALVE = VALUES(SLOW_VAC_VALVE),
-        SLIT_DOOR = VALUES(SLIT_DOOR), APC_VALVE = VALUES(APC_VALVE), SHUTOFF_VALVE = VALUES(SHUTOFF_VALVE),
-        BARATRON_ASSY = VALUES(BARATRON_ASSY), PIRANI_ASSY = VALUES(PIRANI_ASSY), VIEW_PORT_QUARTZ = VALUES(VIEW_PORT_QUARTZ),
-        FLOW_SWITCH = VALUES(FLOW_SWITCH), CERAMIC_PLATE = VALUES(CERAMIC_PLATE), MONITOR = VALUES(MONITOR),
-        KEYBOARD = VALUES(KEYBOARD), MOUSE = VALUES(MOUSE), CTC = VALUES(CTC), PMC = VALUES(PMC),
-        EDA = VALUES(EDA), EFEM_CONTROLLER = VALUES(EFEM_CONTROLLER), SW_PATCH = VALUES(SW_PATCH),
-        approver_name = VALUES(approver_name), approval_status = VALUES(approval_status),
-        approval_date = VALUES(approval_date)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -299,28 +268,16 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.BARATRON_ASSY, checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH,
       checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD, checklistData.MOUSE,
       checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.SW_PATCH,
-      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', 
-      new Date(checklistData.approval_date).toISOString().slice(0, 19).replace('T', ' ')
+      checklistData.approver_name, checklistData.approval_status, checklistData.approval_date
     ];
 
     await connection.query(query, values);
   } catch (err) {
-    console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
-    throw new Error("Error inserting checklist.");
+    throw new Error(`Error saving checklist: ${err.message}`);
   } finally {
     connection.release();
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 exports.deleteApprovalRequest = async (id) => {
   const connection = await pool.getConnection(async conn => conn);
