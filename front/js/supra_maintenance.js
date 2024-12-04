@@ -68,8 +68,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        // 결재자 이름 가져오기
+        const approverSelect = document.getElementById('approver-select');
+        const approverName = approverSelect.value;
+
+        if (!approverName) {
+            alert('결재자를 선택하세요.');
+            return;
+        }
+
         try {
-            const response = await axios.post('http://3.37.73.151:3001/supra-maintenance/request-approval', data, {
+            // 서버로 데이터 전송
+            const response = await axios.post('http://3.37.73.151:3001/supra-maintenance/request-approval', {
+                checklistData: data, // 체크리스트 데이터
+                approverName      // 결재자 이름
+            }, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token // JWT 토큰 추가
@@ -79,10 +92,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.status === 201) {
                 alert('결재 요청이 제출되었습니다.');
             } else {
+                console.error('Error submitting approval request:', response.data);
                 alert('결재 요청 중 에러 발생');
             }
         } catch (error) {
-            console.error(error);
+            console.error('Error submitting approval request:', error);
             alert('Error submitting approval request.');
         }
     });

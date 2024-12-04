@@ -87,16 +87,17 @@ exports.getAllChecklists = async (req, res) => {
 };
 
 exports.requestApproval = async (req, res) => {
-  const { checklistData, approverName } = req.body; // 요청 데이터 구조 분해
+  const checklistData = req.body.checklistData;
+  const approverName = req.body.approverName;
 
-  // 데이터 검증
-  if (!checklistData || !approverName) {
-    return res.status(400).json({ message: "Checklist data or approver name is missing" });
+  console.log("Received checklistData:", checklistData);
+  console.log("Received approverName:", approverName);
+
+  if (!checklistData || Object.keys(checklistData).length === 0) {
+      return res.status(400).json({ message: "Checklist data is missing" });
   }
-
-  const token = req.headers["x-access-token"];
-  if (!token) {
-    return res.status(401).json({ message: "Token is missing" });
+  if (!approverName) {
+      return res.status(400).json({ message: "Approver name is missing" });
   }
 
   try {
