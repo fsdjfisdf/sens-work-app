@@ -301,8 +301,9 @@ exports.saveChecklist = async (checklistData) => {
     ];
 
     // 값 개수 디버깅 출력
-    console.log('Query Fields Count:', 67);
-    console.log('Values Length:', values.length);
+    console.log('Query Fields:', 67); // 테이블 필드 수
+    console.log('Values Provided:', values.length); // 제공된 값의 개수
+    console.log('Values:', values); // 실제 값 출력
 
     await connection.query(query, values);
   } catch (err) {
