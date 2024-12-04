@@ -123,24 +123,21 @@ exports.approveChecklist = async (req, res) => {
     }
 
     if (status === 'approved') {
+      const checklistData = approvalRequest.checklist_data;
+    
+      // 누락된 값 설정
+      checklistData.approver_name = checklistData.approver_name || '관리자'; // 관리자 이름
+      checklistData.approval_status = 'approved';
+      checklistData.approval_date = new Date();
+    
       try {
-        const checklistData = approvalRequest.checklist_data;
-    
-        // 추가 필드 설정
-        checklistData.approver_name = '관리자'; // 예: 관리자 이름
-        checklistData.approval_status = 'approved';
-        checklistData.approval_date = new Date();
-    
-        // 체크리스트 저장
         await supraMaintenanceDao.saveChecklist(checklistData);
-    
-        // 승인 요청 삭제
         await supraMaintenanceDao.deleteApprovalRequest(id);
     
         res.status(200).json({ message: 'Checklist approved and saved' });
-      } catch (error) {
-        console.error('Error saving checklist:', error);
-        return res.status(500).json({ message: 'Error saving checklist data' });
+      } catch (err) {
+        console.error('Error saving checklist:', err);
+        res.status(500).json({ message: 'Error saving checklist data' });
       }
         
     } else if (status === 'rejected') {
