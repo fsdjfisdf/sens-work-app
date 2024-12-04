@@ -151,3 +151,26 @@ exports.getApprovalRequests = async (req, res) => {
     res.status(500).json({ error: "Error retrieving approval requests" });
   }
 };
+
+exports.getApprovalDetails = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
+
+    if (!approvalRequest) {
+      return res.status(404).json({ message: "Approval request not found" });
+    }
+
+    const currentData = await supraMaintenanceDao.getChecklistByName(approvalRequest.name);
+
+    res.status(200).json({
+      currentData: currentData || {}, // 현재 데이터가 없으면 빈 객체 반환
+      requestedData: JSON.parse(approvalRequest.checklist_data),
+    });
+  } catch (err) {
+    console.error("Error retrieving approval details:", err);
+    res.status(500).json({ error: "Error retrieving approval details" });
+  }
+};
+

@@ -117,17 +117,19 @@ exports.updateChecklist = async (checklistData) => {
 };
 
 exports.getChecklistByName = async (name) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `SELECT * FROM SUPRA_N_MAINT_SELF WHERE name = ?`;
     const [rows] = await connection.query(query, [name]);
-    connection.release();
     return rows[0];
   } catch (err) {
+    console.error("Error retrieving checklist:", err);
+    throw new Error(err.message);
+  } finally {
     connection.release();
-    throw new Error(`Error retrieving checklist: ${err.message}`);
   }
 };
+
 
 exports.getAllChecklists = async () => {
   const connection = await pool.getConnection(async conn => conn);
@@ -187,7 +189,7 @@ exports.insertApprovalRequest = async (checklistData) => {
 
 
 exports.getApprovalRequestById = async (id) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `SELECT * FROM SUPRA_N_MAINT_APPROVAL WHERE id = ?`;
     const [rows] = await connection.query(query, [id]);
@@ -196,6 +198,7 @@ exports.getApprovalRequestById = async (id) => {
     connection.release();
   }
 };
+
 
 exports.updateApprovalStatus = async (id, status) => {
   const connection = await pool.getConnection(async conn => conn);

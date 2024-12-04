@@ -19,4 +19,6 @@ module.exports = function (app) {
 
   app.get("/supra-maintenance/approvals", jwtMiddleware, supraMaintenanceController.getApprovalRequests);
 
+  app.get("/supra-maintenance/approvals/:id", jwtMiddleware, supraMaintenanceController.getApprovalDetails);
+
 };
