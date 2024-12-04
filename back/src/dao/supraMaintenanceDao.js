@@ -250,8 +250,8 @@ exports.saveChecklist = async (checklistData) => {
         \`DC_POWER_SUPPLY\`, \`BM_SENSOR\`, \`PIO_SENSOR\`, \`SAFETY_MODULE\`, \`D_NET\`, \`MFC\`, \`VALVE\`, \`SOLENOID\`, \`FAST_VAC_VALVE\`,
         \`SLOW_VAC_VALVE\`, \`SLIT_DOOR\`, \`APC_VALVE\`, \`SHUTOFF_VALVE\`, \`BARATRON_ASSY\`, \`PIRANI_ASSY\`, \`VIEW_PORT_QUARTZ\`,
         \`FLOW_SWITCH\`, \`CERAMIC_PLATE\`, \`MONITOR\`, \`KEYBOARD\`, \`MOUSE\`, \`CTC\`, \`PMC\`, \`EDA\`, \`EFEM_CONTROLLER\`, \`SW_PATCH\`,
-        \`approver_name\`, \`approval_status\`, \`approval_date\`, \`updated_at\`
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        \`approver_name\`, \`approval_status\`, \`approval_date\`
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -274,10 +274,10 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
     ];
 
-    // 디버깅 로그 추가
-    console.log("Generated Query:\n", query);
-    console.log("Generated Values:\n", values);
-    console.log("Number of Columns Expected:", 67);
+    // 디버깅
+    console.log("Query Columns:", query.match(/`\w+`/g)); // 컬럼 이름 확인
+    console.log("Values Provided:", values); // 제공된 값 확인
+    console.log("Number of Columns:", 67);
     console.log("Number of Values Provided:", values.length);
 
     await connection.query(query, values);
@@ -288,6 +288,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
