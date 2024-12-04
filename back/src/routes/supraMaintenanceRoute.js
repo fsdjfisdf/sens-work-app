@@ -17,6 +17,17 @@ module.exports = function (app) {
   // 결재 승인 또는 반려 처리
   app.post("/supra-maintenance/approve", jwtMiddleware, supraMaintenanceController.approveChecklist);
 
-  app.get("/supra-maintenance/approvals", jwtMiddleware, supraMaintenanceController.getApprovalRequests);
+  app.get('/supra-maintenance/approvals/:id', async (req, res) => {
+    const { id } = req.params;
+    const query = 'SELECT * FROM approvals WHERE id = ?'; // 테이블 이름과 쿼리를 검토하세요.
+    const [result] = await db.execute(query, [id]);
+
+    if (result.length === 0) {
+        return res.status(404).send({ message: 'Approval not found.' });
+    }
+
+    res.send(result[0]); // 요청된 데이터를 반환
+});
+
 
 };
