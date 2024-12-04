@@ -199,12 +199,14 @@ exports.getApprovalRequestById = async (id) => {
       return null; // 요청이 없을 경우 null 반환
     }
 
-    let checklistData;
-    try {
-      checklistData = JSON.parse(rows[0].checklist_data); // JSON 파싱
-    } catch (err) {
-      console.error(`Invalid JSON format for checklist_data in ID ${id}:`, rows[0].checklist_data);
-      throw new Error("Invalid checklist data format. Please ensure checklist_data is valid JSON.");
+    let checklistData = rows[0].checklist_data;
+    if (typeof checklistData === "string") {
+      try {
+        checklistData = JSON.parse(checklistData); // 문자열인 경우 JSON 파싱
+      } catch (err) {
+        console.error(`Error parsing JSON for ID ${id}:`, rows[0].checklist_data);
+        throw new Error("Invalid checklist data format.");
+      }
     }
 
     return {
@@ -215,6 +217,7 @@ exports.getApprovalRequestById = async (id) => {
     connection.release();
   }
 };
+
 
 
 
@@ -235,7 +238,7 @@ exports.updateApprovalStatus = async (id, status) => {
 };
 
 exports.saveChecklist = async (checklistData) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
@@ -247,8 +250,8 @@ exports.saveChecklist = async (checklistData) => {
         DC_POWER_SUPPLY, BM_SENSOR, PIO_SENSOR, SAFETY_MODULE, D_NET, MFC, VALVE, SOLENOID, FAST_VAC_VALVE,
         SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, VIEW_PORT_QUARTZ,
         FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, EFEM_CONTROLLER, SW_PATCH,
-        approver_name, approval_status, approval_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        approver_name, approval_status, approval_date, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
     const values = [
@@ -268,16 +271,21 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.BARATRON_ASSY, checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH,
       checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD, checklistData.MOUSE,
       checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.SW_PATCH,
-      checklistData.approver_name, checklistData.approval_status, checklistData.approval_date
+      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
     ];
 
     await connection.query(query, values);
   } catch (err) {
-    throw new Error(`Error saving checklist: ${err.message}`);
+    console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
+    throw new Error("Error inserting checklist.");
   } finally {
     connection.release();
   }
 };
+
+
+
+
 
 exports.deleteApprovalRequest = async (id) => {
   const connection = await pool.getConnection(async conn => conn);
