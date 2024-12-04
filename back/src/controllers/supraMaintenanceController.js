@@ -156,17 +156,29 @@ exports.getApprovalDetails = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // 1. 요청된 결재 데이터를 가져옴
     const approvalRequest = await supraMaintenanceDao.getApprovalRequestById(id);
 
     if (!approvalRequest) {
       return res.status(404).json({ message: "Approval request not found" });
     }
 
+    // 2. 현재 데이터를 가져옴
     const currentData = await supraMaintenanceDao.getChecklistByName(approvalRequest.name);
 
+    // 3. 요청된 데이터가 JSON 형식인지 확인
+    let requestedData;
+    try {
+      requestedData = JSON.parse(approvalRequest.checklist_data);
+    } catch (parseError) {
+      console.error("Error parsing checklist data:", parseError);
+      return res.status(500).json({ message: "Error parsing checklist data" });
+    }
+
+    // 4. 응답 데이터 구성
     res.status(200).json({
       currentData: currentData || {}, // 현재 데이터가 없으면 빈 객체 반환
-      requestedData: JSON.parse(approvalRequest.checklist_data),
+      requestedData,
     });
   } catch (err) {
     console.error("Error retrieving approval details:", err);
