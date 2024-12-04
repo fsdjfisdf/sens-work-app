@@ -293,16 +293,6 @@ exports.saveChecklist = async (checklistData) => {
 
 
 
-console.log("Query Columns:", query.match(/`\w+`/g));
-console.log("Values Provided:", values);
-console.log("Number of Columns:", query.match(/`\w+`/g).length);
-console.log("Number of Values Provided:", values.length);
-
-
-
-
-
-
 
 exports.deleteApprovalRequest = async (id) => {
   const connection = await pool.getConnection(async conn => conn);
