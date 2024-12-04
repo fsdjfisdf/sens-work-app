@@ -251,8 +251,10 @@ exports.saveChecklist = async (checklistData) => {
         DC_POWER_SUPPLY, BM_SENSOR, PIO_SENSOR, SAFETY_MODULE, D_NET, MFC, VALVE, SOLENOID, FAST_VAC_VALVE,
         SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, VIEW_PORT_QUARTZ,
         FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, CTC, PMC, EDA, EFEM_CONTROLLER, SW_PATCH,
-        updated_at, approver_name, approval_status, approval_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)
+        approver_name, approval_status, approval_date
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )
       ON DUPLICATE KEY UPDATE
         LP_ESCORT = VALUES(LP_ESCORT), ROBOT_ESCORT = VALUES(ROBOT_ESCORT),
         EFEM_ROBOT_TEACHING = VALUES(EFEM_ROBOT_TEACHING), EFEM_ROBOT_REP = VALUES(EFEM_ROBOT_REP),
@@ -276,7 +278,7 @@ exports.saveChecklist = async (checklistData) => {
         FLOW_SWITCH = VALUES(FLOW_SWITCH), CERAMIC_PLATE = VALUES(CERAMIC_PLATE), MONITOR = VALUES(MONITOR),
         KEYBOARD = VALUES(KEYBOARD), MOUSE = VALUES(MOUSE), CTC = VALUES(CTC), PMC = VALUES(PMC),
         EDA = VALUES(EDA), EFEM_CONTROLLER = VALUES(EFEM_CONTROLLER), SW_PATCH = VALUES(SW_PATCH),
-        updated_at = NOW(), approver_name = VALUES(approver_name), approval_status = VALUES(approval_status),
+        approver_name = VALUES(approver_name), approval_status = VALUES(approval_status),
         approval_date = VALUES(approval_date)
     `;
 
@@ -297,13 +299,9 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.BARATRON_ASSY, checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH,
       checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD, checklistData.MOUSE,
       checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.SW_PATCH,
-      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
+      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', 
+      new Date(checklistData.approval_date).toISOString().slice(0, 19).replace('T', ' ')
     ];
-
-    // 값 개수 디버깅 출력
-    console.log('Query Fields:', 67); // 테이블 필드 수
-    console.log('Values Provided:', values.length); // 제공된 값의 개수
-    console.log('Values:', values); // 실제 값 출력
 
     await connection.query(query, values);
   } catch (err) {
@@ -313,6 +311,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
