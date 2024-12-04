@@ -188,16 +188,35 @@ exports.insertApprovalRequest = async (checklistData) => {
 };
 
 
+
 exports.getApprovalRequestById = async (id) => {
-  const connection = await pool.getConnection(async (conn) => conn);
+  const connection = await pool.getConnection(async conn => conn);
   try {
     const query = `SELECT * FROM SUPRA_N_MAINT_APPROVAL WHERE id = ?`;
     const [rows] = await connection.query(query, [id]);
-    return rows[0];
+
+    if (!rows[0]) {
+      return null; // 요청이 없을 경우 null 반환
+    }
+
+    // checklist_data를 JSON으로 변환
+    let checklistData;
+    try {
+      checklistData = JSON.parse(rows[0].checklist_data);
+    } catch (err) {
+      console.error(`Invalid JSON format for checklist_data in ID ${id}:`, rows[0].checklist_data);
+      throw new Error("Invalid checklist data format");
+    }
+
+    return {
+      ...rows[0],
+      checklist_data: checklistData, // 변환된 JSON 데이터 포함
+    };
   } finally {
     connection.release();
   }
 };
+
 
 
 exports.updateApprovalStatus = async (id, status) => {
