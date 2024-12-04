@@ -199,10 +199,9 @@ exports.getApprovalRequestById = async (id) => {
       return null; // 요청이 없을 경우 null 반환
     }
 
-    // checklist_data를 JSON으로 변환
     let checklistData;
     try {
-      checklistData = JSON.parse(rows[0].checklist_data);
+      checklistData = JSON.parse(rows[0].checklist_data); // JSON 파싱
     } catch (err) {
       console.error(`Invalid JSON format for checklist_data in ID ${id}:`, rows[0].checklist_data);
       throw new Error("Invalid checklist data format");
@@ -210,12 +209,13 @@ exports.getApprovalRequestById = async (id) => {
 
     return {
       ...rows[0],
-      checklist_data: checklistData, // 변환된 JSON 데이터 포함
+      checklist_data: checklistData, // JSON 데이터 반환
     };
   } finally {
     connection.release();
   }
 };
+
 
 
 
