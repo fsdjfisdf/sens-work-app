@@ -116,14 +116,20 @@ exports.updateChecklist = async (checklistData) => {
   }
 };
 
-exports.getChecklistByName = async (name) => {
+exports.getLatestChecklistByName = async (name) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
-    const query = `SELECT * FROM SUPRA_N_MAINT_SELF WHERE name = ?`;
+    const query = `
+      SELECT *
+      FROM SUPRA_N_MAINT_SELF
+      WHERE name = ?
+      ORDER BY approval_date DESC
+      LIMIT 1
+    `;
     const [rows] = await connection.query(query, [name]);
-    return rows[0];
+    return rows[0]; // 가장 최신 데이터를 반환
   } catch (err) {
-    console.error("Error retrieving checklist:", err);
+    console.error("Error retrieving latest checklist:", err);
     throw new Error(err.message);
   } finally {
     connection.release();

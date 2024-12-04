@@ -56,17 +56,19 @@ exports.getChecklist = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const checklist = await supraMaintenanceDao.getChecklistByName(user.nickname);
-    if (!checklist) {
+    // 가장 최신 데이터를 가져옴
+    const latestChecklist = await supraMaintenanceDao.getLatestChecklistByName(user.nickname);
+    if (!latestChecklist) {
       return res.status(404).json({ message: 'Checklist not found' });
     }
 
-    res.status(200).json(checklist);
+    res.status(200).json(latestChecklist); // 최신 데이터를 반환
   } catch (err) {
     console.error('Error retrieving checklist:', err);
     res.status(500).json({ error: 'Error retrieving checklist' });
   }
 };
+
 
 // 모든 사용자 체크리스트 불러오기 (새로운 기능 추가)
 exports.getAllChecklists = async (req, res) => {
