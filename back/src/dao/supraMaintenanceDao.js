@@ -274,13 +274,12 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.approver_name || '관리자', checklistData.approval_status || 'approved', checklistData.approval_date || new Date()
     ];
 
-    // 디버깅용 로그 추가
+    // 디버깅 로그 추가
     console.log("Generated Query:\n", query);
     console.log("Generated Values:\n", values);
     console.log("Number of Columns Expected:", 67);
     console.log("Number of Values Provided:", values.length);
 
-    // SQL 실행
     await connection.query(query, values);
   } catch (err) {
     console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
@@ -289,6 +288,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
