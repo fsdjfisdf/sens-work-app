@@ -12,7 +12,7 @@ module.exports = (app) => {
 // 장비 추가 라우트
 router.post('/equipment', equipmentController.addEquipment);
 
-router.post('/equipment', equipmentController.updateEquipmentInfo);
+router.post('/equipment/update-info', equipmentController.updateEquipmentInfo);
 
 
 module.exports = (app) => {

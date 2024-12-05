@@ -468,5 +468,12 @@
         setupDynamicFields('task-mans-container', 'task-man', taskManTemplate);
         setupDynamicFields('task-descriptions-container', 'task-description', taskDescriptionTemplate);
     </script>
+    <script>document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[required], textarea[required]').forEach(field => {
+        if (field.offsetParent === null) {
+            field.removeAttribute('required');
+        }
+    });
+});</script>
 </body>
 </html>
