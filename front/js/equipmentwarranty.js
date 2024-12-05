@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const lineSelect = document.getElementById('line');
     const equipmentTypeSelect = document.getElementById('equipment_type');
     const warrantySelect = document.getElementById('warranty');
+    const infoTextarea = document.getElementById('info');
 
     checkWarrantyButton.addEventListener('click', function () {
         const equipmentName = equipmentNameInput.value.trim();
@@ -107,4 +108,59 @@ document.addEventListener('DOMContentLoaded', function () {
             return null;
         }
     }
+
+    // RESET 버튼과 INFO 필드 초기화
+function resetFields() {
+    groupSelect.value = 'SELECT';
+    siteSelect.value = 'SELECT';
+    lineSelect.value = 'SELECT';
+    equipmentTypeSelect.value = 'SELECT';
+    warrantySelect.value = 'SELECT';
+    infoTextarea.value = '';
+}
+
+// INFO 필드 업데이트
+function updateFields(equipmentData) {
+    groupSelect.value = equipmentData.GROUP || 'SELECT';
+    siteSelect.value = equipmentData.SITE || 'SELECT';
+    updateLineOptions(equipmentData.SITE);
+    lineSelect.value = equipmentData.LINE || 'SELECT';
+    equipmentTypeSelect.value = equipmentData.TYPE || 'SELECT';
+    warrantySelect.value = equipmentData.WARRANTY_STATUS || 'SELECT';
+    infoTextarea.value = equipmentData.INFO || '';
+}
+});
+
+document.getElementById('check-warranty').addEventListener('click', function () {
+    // Fetch INFO와 같은 데이터를 가져오는 기존 로직...
+});
+
+document.getElementById('save-info').addEventListener('click', function () {
+    const equipmentName = equipmentNameInput.value.trim();
+    const updatedInfo = infoTextarea.value.trim();
+
+    if (!equipmentName) {
+        alert('설비명을 입력하세요.');
+        return;
+    }
+
+    fetch(`http://3.37.73.151:3001/api/equipment`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ eqname: equipmentName, info: updatedInfo }),
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert('특이사항이 성공적으로 저장되었습니다.');
+            } else {
+                alert('저장에 실패했습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating info:', error);
+            alert('정보 저장 중 오류가 발생했습니다.');
+        });
 });

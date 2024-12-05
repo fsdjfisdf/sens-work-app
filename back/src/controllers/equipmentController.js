@@ -69,3 +69,29 @@ exports.addEquipment = async (req, res) => {
       res.status(500).json({ error: 'Error adding equipment.', details: err.message });
   }
 };
+
+exports.updateEquipmentInfo = async (req, res) => {
+  const { eqname, info } = req.body;
+
+  if (!eqname || info === undefined) {
+      return res.status(400).json({ error: '필수 필드가 누락되었습니다.' });
+  }
+
+  try {
+      const query = `
+          UPDATE Equipment
+          SET INFO = ?
+          WHERE EQNAME = ?
+      `;
+      const [result] = await pool.query(query, [info, eqname]);
+
+      if (result.affectedRows === 0) {
+          return res.status(404).json({ error: '설비를 찾을 수 없습니다.' });
+      }
+
+      res.status(200).json({ message: '특이사항이 성공적으로 업데이트되었습니다.' });
+  } catch (err) {
+      console.error('Error updating INFO:', err);
+      res.status(500).json({ error: '정보 업데이트 중 오류가 발생했습니다.' });
+  }
+};
