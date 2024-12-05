@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     const checkWarrantyButton = document.getElementById('check-warranty');
+    const editInfoButton = document.getElementById('edit-info');
     const saveInfoButton = document.getElementById('save-info');
     const equipmentNameInput = document.getElementById('equipment_name');
     const groupSelect = document.getElementById('group');
@@ -45,8 +46,14 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     });
 
+    editInfoButton.addEventListener('click', () => {
+        infoTextarea.disabled = false; // textarea 활성화
+        saveInfoButton.style.display = 'inline-block'; // 저장 버튼 표시
+        infoTextarea.focus(); // 포커스 설정
+    });
+
     // SAVE 버튼 클릭: 특이사항 업데이트
-    saveInfoButton.addEventListener('click', function () {
+    saveInfoButton.addEventListener('click', async () => {
         const equipmentName = equipmentNameInput.value.trim();
         const updatedInfo = infoTextarea.value.trim();
 
@@ -55,19 +62,23 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`http://3.37.73.151:3001/api/equipment/update-info`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eqname: equipmentName, info: updatedInfo }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                alert('특이사항이 성공적으로 업데이트되었습니다.');
-            })
-            .catch(error => {
-                console.error('Error updating equipment info:', error);
-                alert('특이사항 업데이트 중 오류가 발생했습니다.');
+        try {
+            const response = await axios.post('http://3.37.73.151:3001/api/equipment/update-info', {
+                eqname: equipmentName,
+                info: updatedInfo,
             });
+
+            if (response.status === 200) {
+                alert('특이사항이 성공적으로 저장되었습니다.');
+                infoTextarea.disabled = true; // textarea 비활성화
+                saveInfoButton.style.display = 'none'; // 저장 버튼 숨기기
+            } else {
+                alert('특이사항 저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('특이사항 저장 실패:', error);
+            alert('특이사항 저장 중 오류가 발생했습니다.');
+        }
     });
 
     function resetFields() {

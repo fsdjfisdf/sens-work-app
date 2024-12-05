@@ -747,3 +747,67 @@ footer {
         }
 
         
+/* INFO 필드와 연필 아이콘 스타일 */
+.info-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.info-container textarea {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 150px; /* 크기 조정 */
+    background-color: #f8f8f8; /* 비활성화 상태 배경색 */
+    color: #666;
+    cursor: not-allowed;
+}
+
+.info-container textarea:focus {
+    outline: 2px solid #007bff; /* 활성화 시 강조 */
+    background-color: #fff;
+    color: #000;
+    cursor: text;
+}
+
+.info-container textarea:disabled {
+    cursor: not-allowed;
+}
+
+.info-container button {
+    background: none;
+    border: none;
+    margin-left: 8px;
+    cursor: pointer;
+}
+
+.info-container button i {
+    color: #007bff; /* 연필 아이콘 기본 색상 */
+    font-size: 1.0rem;
+    transition: color 0.2s;
+}
+
+.info-container button:hover i {
+    color: #0056b3; /* 호버 시 색상 변경 */
+}
+
+/* 저장 버튼 */
+#save-info {
+    display: none;
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#save-info:hover {
+    background-color: #0056b3;
+}

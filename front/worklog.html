@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./css/worklog.css" />
 </head>
 <body>
@@ -116,13 +117,19 @@
                                 <option value="WO">WO</option>
                             </select>
                         </div>
-                        <div class="form-row">
-                            <label for="info">INFO</label>
-                            <textarea id="info" name="info" rows="3" placeholder="설비 특이사항 입력 또는 확인" required></textarea>
+
+
+                        <div class="form-row info-container">
+                            <textarea id="info" name="info" placeholder="설비의 특이사항이 있는 경우 날짜와 함께 작성해주세요." disabled></textarea>
+                            <button id="edit-info" type="button">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
                         </div>
                         <div class="form-row">
-                            <button id="save-info" class="btn-primary">특이사항 저장</button>
+                            <button id="save-info" type="button">저장</button>
                         </div>
+
+
                         <p class="form-description">설비 정보를 입력한 후 CHECK 버튼을 누르면 자동으로 항목들이 채워집니다.</p><br>
                         <div class="form-buttons">
                             <button type="button" class="btn-primary next-step">다음</button>
@@ -468,12 +475,5 @@
         setupDynamicFields('task-mans-container', 'task-man', taskManTemplate);
         setupDynamicFields('task-descriptions-container', 'task-description', taskDescriptionTemplate);
     </script>
-    <script>document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('input[required], textarea[required]').forEach(field => {
-        if (field.offsetParent === null) {
-            field.removeAttribute('required');
-        }
-    });
-});</script>
 </body>
 </html>
