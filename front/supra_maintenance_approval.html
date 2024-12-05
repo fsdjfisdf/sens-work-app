@@ -3,52 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>결재 관리</title>
+  <title>SUPRA N MAINTENANCE CHECKLIST APPROVAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script src="./js/supra_maintenance_approval.js" defer></script>
   <link rel="stylesheet" href="./css/supra_maintenance_approval.css" />
 </head>
 <body>
-  
   <header>
     <nav>
       <div class="inner">
-          <div class="nav-container">
-              <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-              <div class="sign-container unsigned">
+        <div class="nav-container">
+          <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+          <div class="sign-container unsigned"></div>
+          <div class="sign-container signed hidden">
+            <button class="menu-btn">
+              <div class="menu-icon">
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
-              <div class="sign-container signed hidden">
-                  <button class="menu-btn">
-                      <div class="menu-icon">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                      </div>
-                  </button>
-              </div>
+            </button>
           </div>
+        </div>
       </div>
       <div class="menu-bar">
-          <div class="menu-bar-content">
-              <a href="./user_info.html" class="menu-item">SECM</a>
-              <a href="./worklog.html" class="menu-item">Create Worklog</a>
-              <a href="./readworklog.html" class="menu-item">Load Worklog</a>
-              <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-              <a href="./PCI.html" class="menu-item">PCI</a>
-              <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-              <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-              <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
-              <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
-              <button id="logout" class="menu-item">Logout</button>
-          </div>
+        <div class="menu-bar-content">
+          <a href="./user_info.html" class="menu-item">SECM</a>
+          <a href="./worklog.html" class="menu-item">Create Worklog</a>
+          <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+          <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+          <a href="./PCI.html" class="menu-item">PCI</a>
+          <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+          <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+          <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+          <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+          <button id="logout" class="menu-item">Logout</button>
+        </div>
       </div>
-  </nav>
+    </nav>
   </header>
-      <!-- 메인 컨텐츠 -->
-      <main class="main-content">
-  <main>
+  
+  <!-- Main Content -->
+  <main class="main-content">
     <section>
-      <h2>Pending List</h2>
+      <h2>SUPRA N MAINTENANCE CHECKLIST APPROVAL</h2>
       <table id="approval-table">
         <thead>
           <tr>
@@ -63,51 +61,61 @@
         </tbody>
       </table>
     </section>
-    
-    <section id="comparison-section" class="hidden">
-      <h2>Detail</h2>
-      <div class="tables-container">
-        <div>
-          <h3>Before</h3>
-          <table id="current-data-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- 현재 데이터 -->
-            </tbody>
-          </table>
-        </div>
-        
-        <div>
-          <h3>Requested</h3>
-          <table id="requested-data-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- 요청된 데이터 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="actions">
-        <button id="approve-button">Approve</button>
-        <button id="reject-button">Reject</button>
-      </div>
-    </section>
   </main>
+
+  <!-- Approval Modal -->
+<!-- Approval Modal -->
+<!-- Approval Modal -->
+<section id="approval-modal" class="modal hidden">
+  <div class="modal-content">
+    <button class="close-modal-btn" id="close-modal-btn">X</button> <!-- Close 버튼 -->
+    <h2>Approval Details</h2>
+    <div class="tables-container">
+      <div>
+        <h3>Before</h3>
+        <table id="modal-current-data-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 현재 데이터 -->
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Requested</h3>
+        <table id="modal-requested-data-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 요청된 데이터 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="approve-button">Approve</button>
+      <button id="reject-button">Reject</button>
+      <button id="close-modal">Close</button>
+    </div>
+  </div>
+</section>
+
+
+
+  
   <footer>
     <div class="inner">
-        <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+      <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
     </div>
-</footer>
+  </footer>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
