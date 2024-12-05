@@ -757,7 +757,7 @@ footer {
 .info-container textarea {
     flex-grow: 1;
     padding: 10px;
-    font-size: 1rem;
+    font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 4px;
     resize: vertical;
@@ -768,7 +768,7 @@ footer {
 }
 
 .info-container textarea:focus {
-    outline: 2px solid #007bff; /* 활성화 시 강조 */
+    outline: 2px solid #0044cc;
     background-color: #fff;
     color: #000;
     cursor: text;
@@ -786,26 +786,27 @@ footer {
 }
 
 .info-container button i {
-    color: #007bff; /* 연필 아이콘 기본 색상 */
+    color: #0044cc;
     font-size: 1.0rem;
     transition: color 0.2s;
 }
 
 .info-container button:hover i {
-    color: #0056b3; /* 호버 시 색상 변경 */
+    color: #0044ccb6;
 }
 
 /* 저장 버튼 */
 #save-info {
     display: none;
-    margin-top: 10px;
-    padding: 8px 12px;
-    font-size: 1rem;
-    background-color: #007bff;
-    color: white;
     border: none;
+    text-align: center;
+    background-color: #0044cc;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 #save-info:hover {
