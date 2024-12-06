@@ -1,58 +1,267 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const tableBody = document.querySelector('#business-table tbody');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const tripModal = document.getElementById('trip-modal');
-    const tripForm = document.getElementById('trip-form');
-    let editingId = null;
-    const API_BASE_URL = 'http://3.37.73.151:3001/api/business';
+let businessData = []; // 데이터를 전역 변수로 선언
 
-    const fetchTrips = async (filters = {}) => {
+document.addEventListener('DOMContentLoaded', () => {
+    // 로그인 체크
+    const token = localStorage.getItem('x-access-token');
+    if (!token || token.trim() === '') {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
+    
+    const tableBody = document.querySelector('#business-table tbody');
+    const canvas = document.getElementById('trip-chart');
+    const ctx = canvas.getContext('2d'); // ctx 초기화
+    const tooltip = document.createElement('div'); // 툴팁 요소 생성
+    tooltip.classList.add('tooltip');
+    document.body.appendChild(tooltip);
+
+    let zoomFactor = 1.0; // 초기 줌 배율
+    const margin = 50;
+
+    
+
+    
+
+    // Helper Functions
+    const dateToTimestamp = (date) => new Date(date).getTime();
+    const addDaysToDate = (date, days) => {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result.toISOString().split('T')[0];
+    };
+    const dateToX = (date, zoomFactor) => {
+        const timestamp = dateToTimestamp(date);
+        const startTimestamp = dateToTimestamp('2018-01-01');
+        const endTimestamp = dateToTimestamp('2025-12-31');
+        return margin + ((timestamp - startTimestamp) / (endTimestamp - startTimestamp)) * (1600 * zoomFactor - 2 * margin);
+    };
+    // 고유 엔지니어 수 계산 함수
+const calculateUniqueEngineers = (data) => {
+    const uniqueNames = new Set(data.map(trip => trip.NAME));
+    const engineerCount = uniqueNames.size;
+    document.getElementById('unique-engineer-count').textContent = `Total Engineers: ${engineerCount}`;
+};
+
+
+
+    // 데이터 가져오기 함수
+    const fetchTrips = async () => {
         try {
-            const queryParams = new URLSearchParams(filters).toString();
-            const response = await axios.get(`${API_BASE_URL}?${queryParams}`);
-            tableBody.innerHTML = '';
-            response.data.forEach(trip => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${trip.id}</td>
-                    <td>${trip.NAME}</td>
-                    <td>${trip.GROUP}</td>
-                    <td>${trip.SITE}</td>
-                    <td>${trip.COUNTRY}</td>
-                    <td>${trip.CITY}</td>
-                    <td>${trip.CUSTOMER}</td>
-                    <td>${trip.EQUIPMENT}</td>
-                    <td>${trip.START_DATE.split('T')[0]}</td>
-                    <td>${trip.END_DATE.split('T')[0]}</td>
-                    <td>
-                        <button class="edit-btn" data-id="${trip.id}">Edit</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+            const response = await axios.get('http://3.37.73.151:3001/api/business');
+            businessData = response.data;
+            renderTable(businessData); // 데이터를 렌더링
+            drawChart(businessData);  // 그래프 렌더링
+            calculateUniqueEngineers(businessData); // 고유 엔지니어 수 계산
+            renderYearlyTripsChart(businessData);
+            renderGroupSiteChart(businessData);
+            renderCountryCityChart(businessData);
+            renderEquipmentChart(businessData);
+            renderEngineerTripCountChart(businessData);
         } catch (error) {
             console.error('Error fetching trips:', error);
         }
     };
 
-    document.getElementById('search-button').addEventListener('click', () => {
-        const filters = {
-            name: document.getElementById('search-name').value,
-            group: document.getElementById('search-group').value !== 'SELECT' ? document.getElementById('search-group').value : null,
-            site: document.getElementById('search-site').value !== 'SELECT' ? document.getElementById('search-site').value : null,
-            country: document.getElementById('search-country').value !== 'SELECT' ? document.getElementById('search-country').value : null,
-            city: document.getElementById('search-city').value !== 'SELECT' ? document.getElementById('search-city').value : null,
-            customer: document.getElementById('search-customer').value !== 'SELECT' ? document.getElementById('search-customer').value : null,
-            equipment: document.getElementById('search-equipment').value !== 'SELECT' ? document.getElementById('search-equipment').value : null,
-        };
-    
-        fetchTrips(filters);
-    });
+    // 테이블 렌더링 함수
+    const renderTable = (data) => {
+        const sortedData = [...data].sort((a, b) => a.id - b.id);
+        tableBody.innerHTML = '';
+        sortedData.forEach(trip => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${trip.id}</td>
+                <td>${trip.NAME}</td>
+                <td>${trip.GROUP}</td>
+                <td>${trip.SITE}</td>
+                <td>${trip.COUNTRY}</td>
+                <td>${trip.CITY}</td>
+                <td>${trip.CUSTOMER}</td>
+                <td>${trip.EQUIPMENT}</td>
+                <td>${trip.START_DATE.split('T')[0]}</td>
+                <td>${trip.END_DATE.split('T')[0]}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    };
 
+    // 그래프 그리기 함수
+    const drawChart = (data) => {
+        canvas.width = 1580 * zoomFactor;
+        canvas.height = 500;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const years = Array.from({ length: 2025 - 2018 + 1 }, (_, i) => 2018 + i);
+
+        // Draw Background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Axis
+        years.forEach(year => {
+            const x = dateToX(`${year}-01-01`, zoomFactor);
+            ctx.beginPath();
+            ctx.moveTo(x, margin);
+            ctx.lineTo(x, canvas.height - margin);
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(year, x, canvas.height - margin + 20);
+        });
+
+        // Draw Current Date Line
+        const today = new Date().toISOString().split('T')[0];
+        const todayX = dateToX(today, zoomFactor);
+        ctx.beginPath();
+        ctx.moveTo(todayX, margin);
+        ctx.lineTo(todayX, canvas.height - margin);
+        ctx.strokeStyle = '#ff3b30';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]); // 점선
+        ctx.stroke();
+        ctx.setLineDash([]); // 점선 초기화
+
+        // Trips Rendering Logic
+        const colors = ['#007aff', '#ff3b30', '#4cd964', '#ff9500', '#5856d6'];
+        const lineHeight = 30;
+        const rows = [];
+
+        data.forEach(trip => {
+            const xStart = dateToX(trip.START_DATE.split('T')[0], zoomFactor);
+            const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
+
+            const extendedStart = addDaysToDate(trip.START_DATE.split('T')[0], -30);
+            const extendedEnd = addDaysToDate(trip.END_DATE.split('T')[0], 30);
+            const extendedXStart = dateToX(extendedStart, zoomFactor);
+            const extendedXEnd = dateToX(extendedEnd, zoomFactor);
+
+            let rowIndex = rows.findIndex(row =>
+                row.every(existingTrip => {
+                    const existingExtendedStart = addDaysToDate(existingTrip.START_DATE.split('T')[0], -30);
+                    const existingExtendedEnd = addDaysToDate(existingTrip.END_DATE.split('T')[0], 30);
+                    const existingXStart = dateToX(existingExtendedStart, zoomFactor);
+                    const existingXEnd = dateToX(existingExtendedEnd, zoomFactor);
+                    return extendedXEnd < existingXStart || extendedXStart > existingXEnd;
+                })
+            );
+
+            if (rowIndex === -1) {
+                rowIndex = rows.length;
+                rows.push([]);
+            }
+
+            rows[rowIndex].push(trip);
+
+            const y = margin + rowIndex * lineHeight;
+
+            ctx.beginPath();
+            ctx.moveTo(xStart, y);
+            ctx.lineTo(xEnd, y);
+            ctx.strokeStyle = colors[rows.length % colors.length];
+            ctx.lineWidth = 8;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText(`${trip.NAME}`, xStart + 5, y - 5);
+        });
+
+        canvas.onmousemove = (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            const hoveredTrip = data.find(trip => {
+                const xStart = dateToX(trip.START_DATE.split('T')[0], zoomFactor);
+                const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
+                const y = margin + rows.findIndex(row => row.includes(trip)) * lineHeight;
+                return mouseX >= xStart && mouseX <= xEnd && mouseY >= y - 15 && mouseY <= y + 15;
+            });
+
+            if (hoveredTrip) {
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${event.clientX + 15}px`;
+                tooltip.style.top = `${event.clientY + 15}px`;
+                tooltip.innerHTML = `
+                    ${hoveredTrip.NAME} - ${hoveredTrip.START_DATE.split('T')[0]} ~ ${hoveredTrip.END_DATE.split('T')[0]} - ${hoveredTrip.COUNTRY} - ${hoveredTrip.CITY}
+                `;
+            } else {
+                tooltip.style.display = 'none';
+            }
+        };
+
+        canvas.onmouseleave = () => {
+            tooltip.style.display = 'none';
+        };
+
+        canvas.oncontextmenu = (event) => {
+            event.preventDefault();
+        };
+    };
+        
+
+    // 검색 필터링 함수
+    const filterData = () => {
+        const name = document.getElementById('search-name').value.toLowerCase();
+        const group = document.getElementById('search-group').value;
+        const site = document.getElementById('search-site').value;
+        const country = document.getElementById('search-country').value;
+        const city = document.getElementById('search-city').value;
+        const customer = document.getElementById('search-customer').value;
+        const equipment = document.getElementById('search-equipment').value;
+
+        const filteredData = businessData.filter(trip => {
+            return (
+                (name === '' || trip.NAME.toLowerCase().includes(name)) &&
+                (group === 'SELECT' || trip.GROUP === group) &&
+                (site === 'SELECT' || trip.SITE === site) &&
+                (country === 'SELECT' || trip.COUNTRY === country) &&
+                (city === 'SELECT' || trip.CITY === city) &&
+                (customer === 'SELECT' || trip.CUSTOMER === customer) &&
+                (equipment === 'SELECT' || trip.EQUIPMENT === equipment)
+            );
+        });
+
+        renderTable(filteredData);
+        drawChart(filteredData); // 필터링된 데이터로 그래프 업데이트
+        renderYearlyTripsChart(filteredData); // 연도별 그래프 업데이트
+        calculateUniqueEngineers(filteredData);
+        renderGroupSiteChart(filteredData); // 그룹-사이트별 그래프 업데이트
+        renderCountryCityChart(filteredData); // 국가-도시별 그래프 업데이트
+        renderEquipmentChart(filteredData); // 장비별 그래프 업데이트
+        renderEngineerTripCountChart(filteredData); // 엔지니어 출장 횟수 분포 업데이트
+    };
+
+        // Reset 필터 함수
+        const resetFilters = () => {
+            document.getElementById('search-name').value = '';
+            document.getElementById('search-group').value = 'SELECT';
+            document.getElementById('search-site').value = 'SELECT';
+            document.getElementById('search-country').value = 'SELECT';
+            document.getElementById('search-city').innerHTML = '<option value="SELECT">City</option>';
+            document.getElementById('search-customer').value = 'SELECT';
+            document.getElementById('search-equipment').value = 'SELECT';
+    
+            renderTable(businessData); // 원본 데이터 다시 렌더링
+            drawChart(businessData); // 필터링된 데이터로 그래프 업데이트
+            calculateUniqueEngineers(businessData);
+            renderYearlyTripsChart(businessData); // 연도별 그래프 원본 데이터로 업데이트
+            renderGroupSiteChart(businessData); // 그룹-사이트별 그래프 원본 데이터로 업데이트
+            renderCountryCityChart(businessData); // 국가-도시별 그래프 원본 데이터로 업데이트
+            renderEquipmentChart(businessData); // 장비별 그래프 원본 데이터로 업데이트
+            renderEngineerTripCountChart(businessData); // 엔지니어 출장 횟수 분포 업데이트
+        };
+
+    // 도시 필터 옵션 업데이트 함수
     const updateCityOptions = (country) => {
         const citySelect = document.getElementById('search-city');
-        citySelect.innerHTML = '<option value="SELECT">City</option>'; // 초기화
-    
+        citySelect.innerHTML = '<option value="SELECT">City</option>';
+
         const cityOptions = {
             USA: ['Portland', 'Arizona'],
             Ireland: ['Leixlip'],
@@ -61,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Taiwan: ['Taichoung'],
             Singapore: ['Singapore'],
         };
-    
+
         if (cityOptions[country]) {
             cityOptions[country].forEach(city => {
                 const option = document.createElement('option');
@@ -71,90 +280,350 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
+
+    let yearlyTripsChart = null;
+let groupSiteChart = null;
+let countryCityChart = null;
+let equipmentChart = null;
+let engineerTripCountChart = null;
+
+const renderYearlyTripsChart = (data) => {
+    const ctx = document.getElementById('yearly-trips-chart').getContext('2d');
+    const years = Array.from({ length: 2025 - 2018 + 1 }, (_, i) => 2018 + i);
+    const tripsPerYear = years.map(year =>
+        data.filter(trip => new Date(trip.START_DATE).getFullYear() === year).length
+    );
+
+    // 기존 그래프 삭제
+    if (yearlyTripsChart) {
+        yearlyTripsChart.destroy();
+    }
+
+    // 새로운 그래프 생성
+    yearlyTripsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [{
+                label: 'Yearly Business Trips',
+                data: tripsPerYear,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Trips'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Years'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.raw} trips`
+                    }
+                },
+                datalabels: {
+                    color: 'black',
+                    anchor: 'end',
+                    align: 'end',
+                    font: { size: 12 }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+};
     
+const renderGroupSiteChart = (data) => {
+    const ctx = document.getElementById('group-site-chart').getContext('2d');
+    const groupSitePairs = ['PEE1-PT', 'PEE1-HS', 'PEE1-IC', 'PEE1-CJ', 'PEE2-PT', 'PEE2-HS', 'PSKH-PSKH'];
+    const tripsPerGroupSite = groupSitePairs.map(pair => {
+        const [group, site] = pair.split('-');
+        return data.filter(trip => trip.GROUP === group && trip.SITE === site).length;
+    });
+
+    // 기존 그래프 삭제
+    if (groupSiteChart) {
+        groupSiteChart.destroy();
+    }
+
+    // 새로운 그래프 생성
+    groupSiteChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: groupSitePairs,
+            datasets: [{
+                label: 'Trips per Group-Site',
+                data: tripsPerGroupSite,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Trips'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Group-Site'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `${context.raw} trips`
+                    }
+                },
+                datalabels: {
+                    color: 'black',
+                    anchor: 'end',
+                    align: 'end',
+                    font: { size: 12 }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+};
+    
+    const renderCountryCityChart = (data) => {
+        const ctx = document.getElementById('country-city-chart').getContext('2d');
+        const countryCityPairs = [...new Set(data.map(trip => `${trip.COUNTRY}-${trip.CITY}`))];
+        const tripsPerCountryCity = countryCityPairs.map(pair => {
+            const [country, city] = pair.split('-');
+            return data.filter(trip => trip.COUNTRY === country && trip.CITY === city).length;
+        });
+
+        if (countryCityChart) {
+            countryCityChart.destroy();
+        }
+    
+        countryCityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: countryCityPairs,
+                datasets: [{
+                    label: 'Trips per Country-City',
+                    data: tripsPerCountryCity,
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Trips'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Country-City'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.raw} trips`
+                        }
+                    },
+                    datalabels: {
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'end',
+                        font: { size: 12 }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    };
+    
+    const renderEquipmentChart = (data) => {
+        const ctx = document.getElementById('equipment-chart').getContext('2d');
+        const equipmentTypes = [...new Set(data.map(trip => trip.EQUIPMENT))];
+        const tripsPerEquipment = equipmentTypes.map(equipment =>
+            data.filter(trip => trip.EQUIPMENT === equipment).length
+        );
+
+        if (equipmentChart) {
+            equipmentChart.destroy();
+        }
+    
+        equipmentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: equipmentTypes,
+                datasets: [{
+                    label: 'Trips per Equipment',
+                    data: tripsPerEquipment,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Trips'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Equipment'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.raw} trips`
+                        }
+                    },
+                    datalabels: {
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'end',
+                        font: { size: 12 }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    };
+    
+    const renderEngineerTripCountChart = (data) => {
+        const ctx = document.getElementById('engineer-trip-count-chart').getContext('2d');
+        const tripCounts = data.reduce((acc, trip) => {
+            acc[trip.NAME] = (acc[trip.NAME] || 0) + 1;
+            return acc;
+        }, {});
+        const countCategories = [1, 2, 3, 4, '5+'];
+        const counts = countCategories.map(category => {
+            if (category === '5+') {
+                return Object.values(tripCounts).filter(count => count >= 5).length;
+            }
+            return Object.values(tripCounts).filter(count => count === category).length;
+        });
+
+        if (engineerTripCountChart) {
+            engineerTripCountChart.destroy();
+        }
+    
+        engineerTripCountChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: countCategories,
+                datasets: [{
+                    label: 'Engineer Trip Count',
+                    data: counts,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Engineers'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Trip Count Categories'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.raw} engineers`
+                        }
+                    },
+                    datalabels: {
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'end',
+                        font: { size: 12 }
+                    }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    };
+    
+
+    // 이벤트 리스너 추가
+    document.getElementById('search-button').addEventListener('click', filterData);
+    document.getElementById('reset-button').addEventListener('click', resetFilters);
+
     document.getElementById('search-country').addEventListener('change', (event) => {
         const country = event.target.value;
         updateCityOptions(country);
     });
-    
-
-    const openModal = (trip = null) => {
-        if (trip) {
-            editingId = trip.id;
-            tripForm.name.value = trip.NAME;
-            tripForm.country.value = trip.COUNTRY;
-            tripForm.city.value = trip.CITY;
-            tripForm.start_date.value = trip.START_DATE;
-            tripForm.end_date.value = trip.END_DATE;
-        } else {
-            editingId = null;
-            tripForm.reset();
-        }
-        modalOverlay.style.display = 'block';
-        tripModal.style.display = 'block';
-    };
-
-    const closeModal = () => {
-        modalOverlay.style.display = 'none';
-        tripModal.style.display = 'none';
-    };
-
-    const saveTrip = async (event) => {
-        event.preventDefault();
-        const tripData = {
-            name: tripForm.name.value,
-            country: tripForm.country.value,
-            city: tripForm.city.value,
-            startDate: tripForm.start_date.value,
-            endDate: tripForm.end_date.value,
-        };
-
-        try {
-            if (editingId) {
-                await axios.put(`${API_BASE_URL}/${editingId}`, tripData); // 수정된 경로
-            } else {
-                await axios.post(API_BASE_URL, tripData); // 추가 경로
-            }
-            closeModal();
-            fetchTrips();
-        } catch (error) {
-            console.error('Error saving trip:', error);
-        }
-    };
-
-    const deleteTrip = async (id) => {
-        try {
-            await axios.delete(`${API_BASE_URL}/${id}`); // 수정된 경로
-            fetchTrips();
-        } catch (error) {
-            console.error('Error deleting trip:', error);
-        }
-    };
-
-    tripForm.addEventListener('submit', saveTrip);
-
-    document.getElementById('add-trip-btn').addEventListener('click', () => openModal());
-
-    document.getElementById('close-modal').addEventListener('click', closeModal);
-
-    tableBody.addEventListener('click', (event) => {
-        const id = event.target.dataset.id;
-        if (event.target.classList.contains('edit-btn')) {
-            const row = event.target.closest('tr').children;
-            openModal({
-                id,
-                NAME: row[1].textContent,
-                COUNTRY: row[2].textContent,
-                CITY: row[3].textContent,
-                START_DATE: row[4].textContent,
-                END_DATE: row[5].textContent,
-            });
-        } else if (event.target.classList.contains('delete-btn')) {
-            if (confirm('Are you sure you want to delete this trip?')) {
-                deleteTrip(id);
-            }
-        }
-    });
 
     fetchTrips();
+});
+
+
+document.getElementById('export-button').addEventListener('click', () => {
+    if (!businessData || businessData.length === 0) {
+        alert('No data available to export!');
+        return;
+    }
+
+    // 데이터를 워크시트로 변환
+    const worksheetData = businessData.map((trip) => ({
+        ID: trip.id,
+        Name: trip.NAME,
+        Group: trip.GROUP,
+        Site: trip.SITE,
+        Country: trip.COUNTRY,
+        City: trip.CITY,
+        Customer: trip.CUSTOMER,
+        Equipment: trip.EQUIPMENT,
+        'Start Date': trip.START_DATE.split('T')[0],
+        'End Date': trip.END_DATE.split('T')[0],
+    }));
+
+    // 워크시트 및 워크북 생성
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Business Trips');
+
+    // 엑셀 파일 다운로드
+    XLSX.writeFile(workbook, 'Business_Trips.xlsx');
 });

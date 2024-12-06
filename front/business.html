@@ -4,23 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Trip Management</title>
+    <link rel="stylesheet" href="./css/readworklog.css">
+    <link rel="stylesheet" href="./css/worklog-table.css">
     <link rel="stylesheet" href="./css/business.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="path/to/tooltip.css">
 </head>
 <body>
     <nav>
         <div class="inner">
-            <h1><a href="./index.html">S-WORKS</a></h1>
-            <div>
-                <a href="./signin.html" id="logout">Logout</a>
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <button id="sign-out" class="menu-item">Logout</button>
             </div>
         </div>
     </nav>
-    <main>
-        
-        <section id="business-management">
+    <section>
             <div class="inner">
-                <h2>Business Trip Management</h2>
                 <div id="search-container">
                     <input type="text" id="search-name" placeholder="Name">
                     <select id="search-group">
@@ -62,12 +91,82 @@
                         <option value="SUPRA N">SUPRA N</option>
                         <option value="SUPRA XP">SUPRA XP</option>
                         <option value="SUPRA Vplus">SUPRA Vplus</option>
-                        <option value="ZVIVS">ZVIVS</option>
-                        <option value="Omnis">Omnis</option>
+                        <option value="ZIVIS">ZIVIS</option>
+                        <option value="Omnis">OMNIS</option>
                     </select>
                     <button id="search-button">Search</button>
+                    <button id="reset-button">Reset</button>
+                    <button id="export-button">Export to Excel</button>
                 </div>
-                <button id="add-trip-btn" class="btn-primary">Add New Trip</button>
+            </div>
+        </section>
+
+        <section id="engineer-count">
+            <div class="outer">
+                <div class="inner">
+                    <h2>Total Engineers on Business Trips</h2>
+                    <p id="unique-engineer-count">Loading...</p>
+                </div>
+            </div>
+            
+            <style>
+            
+                /* 내부 컨테이너 스타일 */
+                .inner {
+                    text-align: center; /* 텍스트 가운데 정렬 */
+                }
+            </style>
+            <div id="chart-container">
+                <canvas id="trip-chart" width="1200" height="600"></canvas>
+            </div>
+            <style>
+                /* 화면 중앙 정렬을 위한 스타일 */
+                #chart-container {
+                    display: flex;
+                    justify-content: center; /* 가로 중앙 정렬 */
+                    align-items: center;    /* 세로 중앙 정렬 */
+                    background-color: #ffffff; /* 배경색 추가 (선택 사항) */
+                }
+            </style>
+        </section>
+        <!-- 검색 필터 섹션 -->
+
+
+
+        <section id="graphs">
+            <div class="inner">
+                <div class="chart-row">
+                    <div class="chart-container">
+                        <h3>Yearly Business Trips</h3>
+                        <canvas id="yearly-trips-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Trips per Group-Site</h3>
+                        <canvas id="group-site-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Trips per Country-City</h3>
+                        <canvas id="country-city-chart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-row">
+                    <div class="chart-container">
+                        <h3>Trips per Equipment</h3>
+                        <canvas id="equipment-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Engineer Trip Count Distribution</h3>
+                        <canvas id="engineer-trip-count-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+
+        <!-- 데이터 표 섹션 -->
+        <section id="data-table">
+            <div class="inner">
+                <h2>Business Trip Data</h2>
                 <table id="business-table">
                     <thead>
                         <tr>
@@ -81,7 +180,6 @@
                             <th>Equipment</th>
                             <th>Start Date</th>
                             <th>End Date</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -90,27 +188,50 @@
                 </table>
             </div>
         </section>
-        <div id="modal-overlay"></div>
-        <div id="trip-modal">
-            <h3>Add or Edit Trip</h3>
-            <form id="trip-form">
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-                <label for="country">Country:</label>
-                <input type="text" id="country" name="country" required>
-                <label for="city">City:</label>
-                <input type="text" id="city" name="city" required>
-                <label for="start_date">Start Date:</label>
-                <input type="date" id="start_date" name="start_date" required>
-                <label for="end_date">End Date:</label>
-                <input type="date" id="end_date" name="end_date" required>
-                <div class="modal-buttons">
-                    <button type="submit" class="btn-primary">Save</button>
-                    <button type="button" id="close-modal" class="btn-secondary">Cancel</button>
-                </div>
-            </form>
-        </div>
     </main>
     <script src="./js/business.js" defer></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
