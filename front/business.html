@@ -17,17 +17,68 @@
         </div>
     </nav>
     <main>
+        
         <section id="business-management">
             <div class="inner">
                 <h2>Business Trip Management</h2>
+                <div id="search-container">
+                    <input type="text" id="search-name" placeholder="Name">
+                    <select id="search-group">
+                        <option value="SELECT">Group</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <select id="search-site">
+                        <option value="SELECT">Site</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <select id="search-country">
+                        <option value="SELECT">Country</option>
+                        <option value="USA">USA</option>
+                        <option value="Ireland">Ireland</option>
+                        <option value="Japan">Japan</option>
+                        <option value="China">China</option>
+                        <option value="Taiwan">Taiwan</option>
+                        <option value="Singapore">Singapore</option>
+                    </select>
+                    <select id="search-city">
+                        <option value="SELECT">City</option>
+                    </select>
+                    <select id="search-customer">
+                        <option value="SELECT">Customer</option>
+                        <option value="Intel">Intel</option>
+                        <option value="Micron">Micron</option>
+                        <option value="Hynix">Hynix</option>
+                        <option value="CXJD">CXJD</option>
+                        <option value="GTX">GTX</option>
+                    </select>
+                    <select id="search-equipment">
+                        <option value="SELECT">Equipment</option>
+                        <option value="SUPRA N">SUPRA N</option>
+                        <option value="SUPRA XP">SUPRA XP</option>
+                        <option value="SUPRA Vplus">SUPRA Vplus</option>
+                        <option value="ZVIVS">ZVIVS</option>
+                        <option value="Omnis">Omnis</option>
+                    </select>
+                    <button id="search-button">Search</button>
+                </div>
                 <button id="add-trip-btn" class="btn-primary">Add New Trip</button>
                 <table id="business-table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
+                            <th>Group</th>
+                            <th>Site</th>
                             <th>Country</th>
                             <th>City</th>
+                            <th>Customer</th>
+                            <th>Equipment</th>
                             <th>Start Date</th>
                             <th>End Date</th>
                             <th>Actions</th>

@@ -3,7 +3,8 @@ const businessDao = require('../dao/businessDao');
 // 출장 데이터 조회
 exports.getBusinessData = async (req, res) => {
     try {
-        const data = await businessDao.getBusinessData();
+        const filters = req.query; // 검색 필터 받아오기
+        const data = await businessDao.getBusinessData(filters);
         res.status(200).json(data);
     } catch (err) {
         console.error("Error retrieving business data:", err.message);
@@ -26,7 +27,7 @@ exports.addBusinessData = async (req, res) => {
 
 // 출장 데이터 수정
 exports.updateBusinessData = async (req, res) => {
-    const id = req.params.id; // 수정 대상의 ID
+    const id = req.params.id;
     const { name, company, group, site, country, city, customer, equipment, startDate, endDate } = req.body;
 
     try {
