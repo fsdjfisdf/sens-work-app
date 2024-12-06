@@ -4,10 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const tripModal = document.getElementById('trip-modal');
     const tripForm = document.getElementById('trip-form');
     let editingId = null;
+    const API_BASE_URL = 'http://3.37.73.151:3001/api/business';
 
     const fetchTrips = async () => {
         try {
-            const response = await axios.get('/api/business');
+            const response = await axios.get(API_BASE_URL); // 절대 경로 사용
             tableBody.innerHTML = '';
             response.data.forEach(trip => {
                 const row = document.createElement('tr');
@@ -63,9 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             if (editingId) {
-                await axios.put(`/api/business/${editingId}`, tripData);
+                await axios.put(`${API_BASE_URL}/${editingId}`, tripData); // 수정된 경로
             } else {
-                await axios.post('/api/business', tripData);
+                await axios.post(API_BASE_URL, tripData); // 추가 경로
             }
             closeModal();
             fetchTrips();
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const deleteTrip = async (id) => {
         try {
-            await axios.delete(`/api/business/${id}`);
+            await axios.delete(`${API_BASE_URL}/${id}`); // 수정된 경로
             fetchTrips();
         } catch (error) {
             console.error('Error deleting trip:', error);
