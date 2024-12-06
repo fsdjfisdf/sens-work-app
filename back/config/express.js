@@ -78,9 +78,9 @@ module.exports = function () {
   
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
   
-
+  const businessRoute = require('../src/routes/businessRoute'); // 새로 추가된 라우트
+  app.use('/api/business', businessRoute); // "/api/business" 경로와 라우트 연결
   
-
   const workLogController = require('../src/controllers/workLogController'); // 추가
 
 // 작업 카운트 증가 API 라우트 추가

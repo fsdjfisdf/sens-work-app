@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Trip Management</title>
+    <link rel="stylesheet" href="./css/business.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <h1><a href="./index.html">S-WORKS</a></h1>
+            <div>
+                <a href="./signin.html" id="logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <section id="business-management">
+            <div class="inner">
+                <h2>Business Trip Management</h2>
+                <button id="add-trip-btn" class="btn-primary">Add New Trip</button>
+                <table id="business-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Country</th>
+                            <th>City</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data dynamically rendered here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <div id="modal-overlay"></div>
+        <div id="trip-modal">
+            <h3>Add or Edit Trip</h3>
+            <form id="trip-form">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                <label for="country">Country:</label>
+                <input type="text" id="country" name="country" required>
+                <label for="city">City:</label>
+                <input type="text" id="city" name="city" required>
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" required>
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" required>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" id="close-modal" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <script src="./js/business.js"></script>
+</body>
+</html>
