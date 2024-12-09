@@ -106,8 +106,8 @@ const calculateCurrentEngineers = (data) => {
         Ireland: '#28a745', // 초록색
         Japan: '#ffc107', // 노란색
         China: '#dc3545', // 빨간색
-        Taiwan: '#17a2b8', // 청록색
-        Singapore: '#6610f2', // 보라색
+        Taiwan: 'Purple',
+        Singapore: 'gray'
     };
 
 
@@ -244,19 +244,22 @@ const drawChart = (data) => {
             const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
             const y =
                 margin +
+                50 +
                 rows.findIndex((row) => row.includes(trip)) * lineHeight;
             return (
                 mouseX >= xStart &&
                 mouseX <= xEnd &&
-                mouseY >= y - 15 &&
-                mouseY <= y + 15
+                mouseY >= y - 10 && // 약간의 상하 여유를 둠
+                mouseY <= y + 10
             );
         });
 
         if (hoveredTrip) {
+            const rowIndex = rows.findIndex((row) => row.includes(hoveredTrip));
+            const y = margin + 50 + rowIndex * lineHeight; // 정확한 Y 위치 계산
             tooltip.style.display = 'block';
-            tooltip.style.left = `${event.clientX + 15}px`;
-            tooltip.style.top = `${event.clientY + 15}px`;
+            tooltip.style.left = `${rect.left + mouseX + 10}px`; // X 위치는 마우스 기준 오른쪽
+            tooltip.style.top = `${rect.top + y + 150}px`; // 데이터 라인의 Y 위치로 수정
             tooltip.innerHTML = `
                 ${hoveredTrip.NAME} - ${hoveredTrip.START_DATE.split('T')[0]} ~ ${
                 hoveredTrip.END_DATE.split('T')[0]
