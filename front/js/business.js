@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     const tableBody = document.querySelector('#business-table tbody');
+    const currentEngineerCountElement = document.createElement('p'); // 현재 출장 중인 엔지니어 수를 표시할 요소
+    currentEngineerCountElement.id = 'current-engineer-count';
+    document.querySelector('#engineer-count .inner').appendChild(currentEngineerCountElement);
     const canvas = document.getElementById('trip-chart');
     const ctx = canvas.getContext('2d'); // ctx 초기화
     const tooltip = document.createElement('div'); // 툴팁 요소 생성
@@ -43,6 +46,18 @@ const calculateUniqueEngineers = (data) => {
     document.getElementById('unique-engineer-count').textContent = `Total Engineers: ${engineerCount}`;
 };
 
+const calculateCurrentEngineers = (data) => {
+    const today = new Date();
+    const currentTrips = data.filter(trip => {
+        const startDate = new Date(trip.START_DATE);
+        const endDate = new Date(trip.END_DATE);
+        return startDate <= today && today <= endDate;
+    });
+    const uniqueCurrentEngineers = new Set(currentTrips.map(trip => trip.NAME));
+    const currentCount = uniqueCurrentEngineers.size;
+    document.getElementById('current-engineer-count').textContent = `Currently On Business Trips: ${currentCount}`;
+};
+
 
 
     // 데이터 가져오기 함수
@@ -53,6 +68,7 @@ const calculateUniqueEngineers = (data) => {
             renderTable(businessData); // 데이터를 렌더링
             drawChart(businessData);  // 그래프 렌더링
             calculateUniqueEngineers(businessData); // 고유 엔지니어 수 계산
+            calculateCurrentEngineers(businessData);
             renderYearlyTripsChart(businessData);
             renderGroupSiteChart(businessData);
             renderCountryCityChart(businessData);
@@ -235,6 +251,7 @@ const calculateUniqueEngineers = (data) => {
         renderCountryCityChart(filteredData); // 국가-도시별 그래프 업데이트
         renderEquipmentChart(filteredData); // 장비별 그래프 업데이트
         renderEngineerTripCountChart(filteredData); // 엔지니어 출장 횟수 분포 업데이트
+        calculateCurrentEngineers(filteredData);
     };
 
         // Reset 필터 함수
@@ -255,6 +272,7 @@ const calculateUniqueEngineers = (data) => {
             renderCountryCityChart(businessData); // 국가-도시별 그래프 원본 데이터로 업데이트
             renderEquipmentChart(businessData); // 장비별 그래프 원본 데이터로 업데이트
             renderEngineerTripCountChart(businessData); // 엔지니어 출장 횟수 분포 업데이트
+            calculateCurrentEngineers(businessData);
         };
 
     // 도시 필터 옵션 업데이트 함수

@@ -104,18 +104,19 @@
         <section id="engineer-count">
             <div class="outer">
                 <div class="inner">
-                    <h2>Global support in history</h2>
-                    <p id="unique-engineer-count">Loading...</p>
+                    <div class="engineer-summary">
+                        <p id="unique-engineer-count">Loading...</p>
+                    </div>
+                    <div class="engineer-summary">
+                        <p id="current-engineer-count">Loading...</p>
+                    </div>
                 </div>
             </div>
-            
-            <style>
-            
-                /* 내부 컨테이너 스타일 */
-                .inner {
-                    text-align: center; /* 텍스트 가운데 정렬 */
-                }
-            </style>
+        </section>
+        
+        
+            <section>
+                <h2>Global support in history</h2>
             <div id="chart-container">
                 <canvas id="trip-chart" width="1200" height="600"></canvas>
             </div>

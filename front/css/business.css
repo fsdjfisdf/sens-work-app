@@ -209,3 +209,55 @@ section:not(#graphs) {
     padding: 20px;
     border-radius: 8px;
 }
+
+/* 엔지니어 섹션 */
+#engineer-count {
+    background-color: #f5f5f5; /* 심플한 배경 */
+    padding: 20px 15px;
+    border-radius: 10px;
+    margin: 20px auto;
+    min-width: 550px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+}
+
+/* 내부 정렬 */
+#engineer-count .inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 개별 카드 스타일 */
+.engineer-summary {
+    flex: 1;
+    text-align: center;
+}
+
+/* 제목 스타일 */
+.engineer-summary h3 {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* 숫자 스타일 */
+.engineer-summary p {
+    font-size: 1.0rem;
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+    #engineer-count .inner {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .engineer-summary {
+        margin-bottom: 10px;
+    }
+}
