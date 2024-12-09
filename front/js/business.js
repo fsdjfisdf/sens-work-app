@@ -101,124 +101,181 @@ const calculateCurrentEngineers = (data) => {
         });
     };
 
-    // 그래프 그리기 함수
-    const drawChart = (data) => {
-        canvas.width = 1580 * zoomFactor;
-        canvas.height = 500;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const countryColors = { // 나라별 그래프 색깔 !!
+        USA: '#007bff', // 파란색
+        Ireland: '#28a745', // 초록색
+        Japan: '#ffc107', // 노란색
+        China: '#dc3545', // 빨간색
+        Taiwan: '#17a2b8', // 청록색
+        Singapore: '#6610f2', // 보라색
+    };
 
-        const years = Array.from({ length: 2025 - 2018 + 1 }, (_, i) => 2018 + i);
 
-        // Draw Background
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+// 그래프를 그리는 함수
+const drawChart = (data) => {
+    canvas.width = 1580 * zoomFactor;
+    canvas.height = 550; // 높이 증가하여 범례 공간 확보
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Axis
-        years.forEach(year => {
-            const x = dateToX(`${year}-01-01`, zoomFactor);
-            ctx.beginPath();
-            ctx.moveTo(x, margin);
-            ctx.lineTo(x, canvas.height - margin);
-            ctx.strokeStyle = '#ddd';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+    const years = Array.from({ length: 2025 - 2018 + 1 }, (_, i) => 2018 + i);
 
-            ctx.fillStyle = '#333';
-            ctx.font = '14px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(year, x, canvas.height - margin + 20);
-        });
+    // Draw Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Current Date Line
-        const today = new Date().toISOString().split('T')[0];
-        const todayX = dateToX(today, zoomFactor);
-        ctx.beginPath();
-        ctx.moveTo(todayX, margin);
-        ctx.lineTo(todayX, canvas.height - margin);
-        ctx.strokeStyle = '#ff3b30';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]); // 점선
-        ctx.stroke();
-        ctx.setLineDash([]); // 점선 초기화
+        // Draw Country Legend (범례)
+        const legendMargin = 20;
+        const legendBoxSize = 15;
+        const legendPadding = 10; // 아이템 간 간격
+        const legendItems = Object.entries(countryColors);
+        const legendWidth = legendItems.length * (legendBoxSize + legendPadding + 50) - legendPadding; // 범례 전체 폭
+        const legendXStart = (canvas.width - legendWidth) / 2; // 가운데 정렬 시작 좌표
+        let legendX = legendXStart;
+        let legendY = legendMargin;
 
-        // Trips Rendering Logic
-        const colors = ['#007aff', '#ff3b30', '#4cd964', '#ff9500', '#5856d6'];
-        const lineHeight = 30;
-        const rows = [];
-
-        data.forEach(trip => {
-            const xStart = dateToX(trip.START_DATE.split('T')[0], zoomFactor);
-            const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
-
-            const extendedStart = addDaysToDate(trip.START_DATE.split('T')[0], -30);
-            const extendedEnd = addDaysToDate(trip.END_DATE.split('T')[0], 30);
-            const extendedXStart = dateToX(extendedStart, zoomFactor);
-            const extendedXEnd = dateToX(extendedEnd, zoomFactor);
-
-            let rowIndex = rows.findIndex(row =>
-                row.every(existingTrip => {
-                    const existingExtendedStart = addDaysToDate(existingTrip.START_DATE.split('T')[0], -30);
-                    const existingExtendedEnd = addDaysToDate(existingTrip.END_DATE.split('T')[0], 30);
-                    const existingXStart = dateToX(existingExtendedStart, zoomFactor);
-                    const existingXEnd = dateToX(existingExtendedEnd, zoomFactor);
-                    return extendedXEnd < existingXStart || extendedXStart > existingXEnd;
-                })
-            );
-
-            if (rowIndex === -1) {
-                rowIndex = rows.length;
-                rows.push([]);
-            }
-
-            rows[rowIndex].push(trip);
-
-            const y = margin + rowIndex * lineHeight;
-
-            ctx.beginPath();
-            ctx.moveTo(xStart, y);
-            ctx.lineTo(xEnd, y);
-            ctx.strokeStyle = colors[rows.length % colors.length];
-            ctx.lineWidth = 8;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
+        Object.entries(countryColors).forEach(([country, color], index) => {
+            // Draw color box
+            ctx.fillStyle = color;
+            ctx.fillRect(legendX, legendY, legendBoxSize, legendBoxSize);
+    
+            // Draw country name
             ctx.fillStyle = '#333';
             ctx.font = '12px Arial';
-            ctx.fillText(`${trip.NAME}`, xStart + 5, y - 5);
+            ctx.textAlign = 'left';
+            ctx.fillText(country, legendX + legendBoxSize + 5, legendY + legendBoxSize - 2);
+    
+            // Move to next position
+            legendX += 100; // 가로 간격
+            if (legendX + 100 > canvas.width) {
+                legendX = legendXStart;
+                legendY += legendBoxSize + 10; // 세로 간격
+            }
         });
 
-        canvas.onmousemove = (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
+    // Draw Axis
+    years.forEach((year) => {
+        const x = dateToX(`${year}-01-01`, zoomFactor);
+        ctx.beginPath();
+        ctx.moveTo(x, margin + 50); // 범례 아래로 이동
+        ctx.lineTo(x, canvas.height - margin);
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-            const hoveredTrip = data.find(trip => {
-                const xStart = dateToX(trip.START_DATE.split('T')[0], zoomFactor);
-                const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
-                const y = margin + rows.findIndex(row => row.includes(trip)) * lineHeight;
-                return mouseX >= xStart && mouseX <= xEnd && mouseY >= y - 15 && mouseY <= y + 15;
-            });
+        ctx.fillStyle = '#333';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(year, x, canvas.height - margin + 20);
+    });
 
-            if (hoveredTrip) {
-                tooltip.style.display = 'block';
-                tooltip.style.left = `${event.clientX + 15}px`;
-                tooltip.style.top = `${event.clientY + 15}px`;
-                tooltip.innerHTML = `
-                    ${hoveredTrip.NAME} - ${hoveredTrip.START_DATE.split('T')[0]} ~ ${hoveredTrip.END_DATE.split('T')[0]} - ${hoveredTrip.COUNTRY} - ${hoveredTrip.CITY}
-                `;
-            } else {
-                tooltip.style.display = 'none';
-            }
-        };
+    // Draw Current Date Line
+    const today = new Date().toISOString().split('T')[0];
+    const todayX = dateToX(today, zoomFactor);
+    ctx.beginPath();
+    ctx.moveTo(todayX, margin + 50); // 범례 아래로 이동
+    ctx.lineTo(todayX, canvas.height - margin);
+    ctx.strokeStyle = '#ff3b30';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]); // 점선
+    ctx.stroke();
+    ctx.setLineDash([]); // 점선 초기화
 
-        canvas.onmouseleave = () => {
+    // Trips Rendering Logic
+    const lineHeight = 30;
+    const rows = [];
+
+    data.forEach((trip) => {
+        const xStart = dateToX(trip.START_DATE.split('T')[0], zoomFactor);
+        const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
+
+        const extendedStart = addDaysToDate(trip.START_DATE.split('T')[0], -30);
+        const extendedEnd = addDaysToDate(trip.END_DATE.split('T')[0], 30);
+        const extendedXStart = dateToX(extendedStart, zoomFactor);
+        const extendedXEnd = dateToX(extendedEnd, zoomFactor);
+
+        let rowIndex = rows.findIndex((row) =>
+            row.every((existingTrip) => {
+                const existingExtendedStart = addDaysToDate(
+                    existingTrip.START_DATE.split('T')[0],
+                    -30
+                );
+                const existingExtendedEnd = addDaysToDate(
+                    existingTrip.END_DATE.split('T')[0],
+                    30
+                );
+                const existingXStart = dateToX(existingExtendedStart, zoomFactor);
+                const existingXEnd = dateToX(existingExtendedEnd, zoomFactor);
+                return extendedXEnd < existingXStart || extendedXStart > existingXEnd;
+            })
+        );
+
+        if (rowIndex === -1) {
+            rowIndex = rows.length;
+            rows.push([]);
+        }
+
+        rows[rowIndex].push(trip);
+
+        const y = margin + 50 + rowIndex * lineHeight;
+
+        // Apply country color or default color
+        const tripColor = countryColors[trip.COUNTRY] || '#cccccc'; // Default color
+
+        ctx.beginPath();
+        ctx.moveTo(xStart, y);
+        ctx.lineTo(xEnd, y);
+        ctx.strokeStyle = tripColor; // Assign country color
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.fillText(`${trip.NAME}`, xStart + 5, y - 5);
+    });
+
+    canvas.onmousemove = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        const hoveredTrip = data.find((trip) => {
+            const xStart = dateToX(trip.START_DATE.split('T')[0], zoomFactor);
+            const xEnd = dateToX(trip.END_DATE.split('T')[0], zoomFactor);
+            const y =
+                margin +
+                rows.findIndex((row) => row.includes(trip)) * lineHeight;
+            return (
+                mouseX >= xStart &&
+                mouseX <= xEnd &&
+                mouseY >= y - 15 &&
+                mouseY <= y + 15
+            );
+        });
+
+        if (hoveredTrip) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = `${event.clientX + 15}px`;
+            tooltip.style.top = `${event.clientY + 15}px`;
+            tooltip.innerHTML = `
+                ${hoveredTrip.NAME} - ${hoveredTrip.START_DATE.split('T')[0]} ~ ${
+                hoveredTrip.END_DATE.split('T')[0]
+            } - ${hoveredTrip.COUNTRY} - ${hoveredTrip.CITY}
+            `;
+        } else {
             tooltip.style.display = 'none';
-        };
-
-        canvas.oncontextmenu = (event) => {
-            event.preventDefault();
-        };
+        }
     };
+
+    canvas.onmouseleave = () => {
+        tooltip.style.display = 'none';
+    };
+
+    canvas.oncontextmenu = (event) => {
+        event.preventDefault();
+    };
+};
+
         
 
     // 검색 필터링 함수
