@@ -2,7 +2,8 @@
 let selectedEqName; // 설비 이름을 저장할 변수
 let token; 
 let equipmentData = []; 
-let workLogData = []; 
+let workLogData = [];
+let currentUserNickname = null;
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -61,6 +62,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         // SITE 변경 시 LINE 목록 업데이트
         filterSite.addEventListener('change', updateLineOptions);
 
+        async function getCurrentUser() {
+            try {
+                const response = await axios.get('http://3.37.73.151:3001/user-info', {
+                    headers: {
+                        'x-access-token': localStorage.getItem('x-access-token')
+                    }
+                });
+        
+        
+                // 여기서 response.data의 구조에 맞게 NAME을 가져옴
+                // 예시: response.data[0].NAME (만약 첫 번째 요소에 NAME이 있는 경우)
+                currentUserNickname = response.data.result.NAME; // NAME 필드 가져오기
+        
+        
+            } catch (error) {
+                console.error('현재 사용자 정보를 가져오는 중 오류 발생:', error);
+            }
+        }
+
         
         async function loadData() {
             try {
@@ -68,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const equipmentResponse = await axios.get('http://3.37.73.151:3001/api/equipment', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                await getCurrentUser(); // 현재 사용자 정보 불러오기
                 console.log("Equipment Data:", equipmentResponse.data);
         
                 const workLogResponse = await axios.get('http://3.37.73.151:3001/logs', {

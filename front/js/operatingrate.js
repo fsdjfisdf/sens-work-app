@@ -9,6 +9,7 @@ let overtimeChartInstance;
 let timeRangeChartInstance;
 let warrantyChartInstance;
 let groupSiteOperatingRateChartInstance;
+let currentUserNickname = null; // 현재 로그인한 사용자의 닉네임을 저장할 변수
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -157,6 +158,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
     };
 
+    async function getCurrentUser() {
+        try {
+            const response = await axios.get('http://3.37.73.151:3001/user-info', {
+                headers: {
+                    'x-access-token': localStorage.getItem('x-access-token')
+                }
+            });
+    
+            // 전체 response.data 출력하여 구조 확인
+            console.log('response.data:', response.data);
+    
+            // 여기서 response.data의 구조에 맞게 NAME을 가져옴
+            // 예시: response.data[0].NAME (만약 첫 번째 요소에 NAME이 있는 경우)
+            currentUserNickname = response.data.result.NAME; // NAME 필드 가져오기
+    
+            // 콘솔에 저장된 이름 출력
+            console.log('현재 로그인한 사용자 이름:', currentUserNickname);
+    
+        } catch (error) {
+            console.error('현재 사용자 정보를 가져오는 중 오류 발생:', error);
+        }
+    }
+
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
     const today = new Date();
@@ -191,11 +215,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/logs', {
+            const response = await axios.get('http://3.37.73.151:3001/logs',
+                 {
                 headers: {
                     'x-access-token': localStorage.getItem('x-access-token')
                 }
             });
+            await getCurrentUser(); // 현재 사용자 정보 불러오기
             return response.data;
         } catch (error) {
             console.error('작업 일지를 불러오는 중 오류 발생:', error);
