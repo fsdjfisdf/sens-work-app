@@ -16,9 +16,6 @@ exports.readJwt = async function (req, res) {
   });
 };
 
-// 로그인
-const redis = require("../../config/redisClient");
-
 exports.createJwt = async function (req, res) {
   const { userID, password } = req.body;
   const clientIp = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
