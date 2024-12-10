@@ -17,9 +17,11 @@ exports.readJwt = async function (req, res) {
 };
 
 // 로그인
+const redis = require("../../config/redisClient");
+
 exports.createJwt = async function (req, res) {
   const { userID, password } = req.body;
-  const clientIp = req.headers["x-forwarded-for"] || req.connection.remoteAddress; // 클라이언트 IP 추출
+  const clientIp = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
   if (!userID || !password) {
     return res.send({
@@ -31,16 +33,19 @@ exports.createJwt = async function (req, res) {
 
   // 브루트포스 방지 - Redis에 IP 기반 로그인 시도 저장
   const loginAttemptsKey = `login_attempts:${clientIp}`;
+  const blockTimeKey = `block_time:${clientIp}`;
   const maxAttempts = 5; // 최대 시도 횟수
-  const blockTime = 15 * 60; // 차단 시간 (초)
+  const baseBlockTime = 15 * 60; // 기본 차단 시간 (15분)
 
   try {
     const attempts = await redis.get(loginAttemptsKey);
-    if (attempts && parseInt(attempts) >= maxAttempts) {
+    const blockTime = await redis.get(blockTimeKey);
+
+    if (blockTime) {
       return res.status(429).send({
         isSuccess: false,
         code: 429,
-        message: "너무 많은 로그인 시도가 감지되었습니다. 15분 후 다시 시도하세요.",
+        message: `너무 많은 로그인 시도가 감지되었습니다. ${Math.ceil(blockTime / 60)}분 후 다시 시도하세요.`,
       });
     }
 
@@ -50,18 +55,32 @@ exports.createJwt = async function (req, res) {
 
       if (rows.length < 1) {
         // 로그인 실패 시 시도 횟수 증가
-        await redis.incr(loginAttemptsKey);
-        await redis.expire(loginAttemptsKey, blockTime); // 만료 시간 설정
+        const newAttempts = await redis.incr(loginAttemptsKey);
+        if (newAttempts === 1) {
+          await redis.expire(loginAttemptsKey, baseBlockTime); // 만료 시간 설정
+        }
+
+        if (newAttempts >= maxAttempts) {
+          const blockDuration = baseBlockTime * Math.pow(2, newAttempts - maxAttempts); // 점진적 증가
+          await redis.set(blockTimeKey, blockDuration, "EX", blockDuration);
+
+          return res.status(429).send({
+            isSuccess: false,
+            code: 429,
+            message: `너무 많은 실패 시도로 인해 ${Math.ceil(blockDuration / 60)}분 동안 계정이 잠겼습니다.`,
+          });
+        }
 
         return res.send({
           isSuccess: false,
           code: 410,
-          message: "아이디 또는 비밀번호가 올바르지 않습니다.",
+          message: `아이디 또는 비밀번호가 올바르지 않습니다. (${newAttempts}/${maxAttempts}회 실패)`,
         });
       }
 
       // 로그인 성공 시 시도 횟수 초기화
       await redis.del(loginAttemptsKey);
+      await redis.del(blockTimeKey);
 
       const { userIdx, nickname, role } = rows[0];
       const token = jwt.sign(
@@ -88,11 +107,11 @@ exports.createJwt = async function (req, res) {
       connection.release();
     }
   } catch (err) {
-    logger.error(`createJwt DB Connection error\n: ${JSON.stringify(err)}`);
+    logger.error(`createJwt Redis error\n: ${JSON.stringify(err)}`);
     return res.status(500).json({
       isSuccess: false,
       code: 500,
-      message: "로그인 중 서버 오류가 발생했습니다.",
+      message: "서버 오류가 발생했습니다.",
     });
   }
 };
