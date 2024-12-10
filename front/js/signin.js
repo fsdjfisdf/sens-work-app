@@ -161,3 +161,33 @@ document.addEventListener("DOMContentLoaded", function () {
           });
       });
 });
+
+document.querySelector("#requestSmsCode").addEventListener("click", async () => {
+    const phoneNumber = document.querySelector("#phoneNumber").value;
+  
+    try {
+      const response = await axios.post("http://3.37.73.151:3001/request-sms-code", { phoneNumber });
+      alert(response.data.message);
+    } catch (error) {
+      console.error(error);
+      alert("SMS 인증 코드 요청 중 오류가 발생했습니다.");
+    }
+  });
+  
+  document.querySelector("#verifySmsCode").addEventListener("click", async () => {
+    const phoneNumber = document.querySelector("#phoneNumber").value;
+    const verificationCode = document.querySelector("#verificationCode").value;
+  
+    try {
+      const response = await axios.post("http://3.37.73.151:3001/verify-sms-code", { phoneNumber, verificationCode });
+      alert(response.data.message);
+  
+      if (response.data.message === "인증이 완료되었습니다.") {
+        // 인증 성공 시 로그인 진행
+      }
+    } catch (error) {
+      console.error(error);
+      alert("인증 코드 검증 중 오류가 발생했습니다.");
+    }
+  });
+  
