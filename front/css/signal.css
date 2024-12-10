@@ -710,11 +710,3 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #ffffff; /* 글씨는 흰색 유지 */
 }
 
-#signal-container {
-    display: flex;
-    flex-wrap: wrap;
-}
-.equipment-card {
-    margin: 10px;
-    order: 0; /* 기본값 */
-}
