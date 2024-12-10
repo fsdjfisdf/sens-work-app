@@ -428,20 +428,22 @@ exports.resetPassword = async function (req, res) {
 
 // 로그인 후 SMS 인증 요청
 exports.requestSmsCode = async function (req, res) {
-  const { userID, phoneNumber } = req.body;
+  const { phoneNumber } = req.body;
 
-  if (!userID || !phoneNumber) {
-    return res.status(400).json({ message: "유저 ID와 전화번호를 입력해주세요." });
+  if (!phoneNumber) {
+    return res.status(400).json({ message: "전화번호를 입력해주세요." });
   }
 
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6자리 코드 생성
 
   try {
-    // Redis에 인증 코드 저장 (5분간 유효)
-    await redisClient.setEx(phoneNumber, 300, verificationCode);
+    // Redis에 인증 코드 저장 (5분 만료)
+    await redisClient.set(phoneNumber, verificationCode, {
+      EX: 300, // 만료 시간: 300초 (5분)
+    });
 
-    // SMS 전송 (예: Twilio 또는 다른 SMS 서비스 API 사용)
-    // await sendSms(phoneNumber, `Your verification code is ${verificationCode}`);
+    // SMS 서비스 API 호출 (여기에 실제 SMS 전송 로직 추가)
+    // 예: await sendSms(phoneNumber, `Your verification code is ${verificationCode}`);
 
     return res.status(200).json({ message: "인증 코드가 발송되었습니다." });
   } catch (error) {
