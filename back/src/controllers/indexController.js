@@ -3,6 +3,7 @@ const { logger } = require("../../config/winston");
 const jwt = require("jsonwebtoken");
 const secret = require("../../config/secret");
 const indexDao = require("../dao/indexDao");
+const redis = require("../../config/redisClient"); // Redis 클라이언트 불러오기
 
 // 로그인 유지, 토큰 검증
 exports.readJwt = async function (req, res) {
@@ -18,6 +19,7 @@ exports.readJwt = async function (req, res) {
 // 로그인
 exports.createJwt = async function (req, res) {
   const { userID, password } = req.body;
+  const clientIp = req.headers["x-forwarded-for"] || req.connection.remoteAddress; // 클라이언트 IP 추출
 
   if (!userID || !password) {
     return res.send({
@@ -27,27 +29,47 @@ exports.createJwt = async function (req, res) {
     });
   }
 
+  // 브루트포스 방지 - Redis에 IP 기반 로그인 시도 저장
+  const loginAttemptsKey = `login_attempts:${clientIp}`;
+  const maxAttempts = 5; // 최대 시도 횟수
+  const blockTime = 15 * 60; // 차단 시간 (초)
+
   try {
+    const attempts = await redis.get(loginAttemptsKey);
+    if (attempts && parseInt(attempts) >= maxAttempts) {
+      return res.status(429).send({
+        isSuccess: false,
+        code: 429,
+        message: "너무 많은 로그인 시도가 감지되었습니다. 15분 후 다시 시도하세요.",
+      });
+    }
+
     const connection = await pool.getConnection(async (conn) => conn);
     try {
       const [rows] = await indexDao.isValidUsers(connection, userID, password);
 
       if (rows.length < 1) {
+        // 로그인 실패 시 시도 횟수 증가
+        await redis.incr(loginAttemptsKey);
+        await redis.expire(loginAttemptsKey, blockTime); // 만료 시간 설정
+
         return res.send({
           isSuccess: false,
           code: 410,
-          message: "회원정보가 존재하지 않습니다.",
+          message: "아이디 또는 비밀번호가 올바르지 않습니다.",
         });
       }
 
-      const { userIdx, nickname, role } = rows[0]; // 역할(role)을 포함
+      // 로그인 성공 시 시도 횟수 초기화
+      await redis.del(loginAttemptsKey);
+
+      const { userIdx, nickname, role } = rows[0];
       const token = jwt.sign(
-        { userIdx: userIdx, nickname: nickname, role: role }, // 역할(role)을 포함
+        { userIdx: userIdx, nickname: nickname, role: role },
         secret.jwtsecret
       );
 
-            // 로그인 성공 시 nickname을 콘솔에 출력
-            console.log(`User logged in: ${nickname}`);
+      console.log(`User logged in: ${nickname}`);
 
       return res.send({
         result: { jwt: token },
