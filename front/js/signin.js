@@ -169,10 +169,11 @@ document.querySelector("#requestSmsCode").addEventListener("click", async () => 
       const response = await axios.post("http://3.37.73.151:3001/request-sms-code", { phoneNumber });
       alert(response.data.message);
     } catch (error) {
-      console.error(error);
+      console.error("SMS 요청 오류:", error);
       alert("SMS 인증 코드 요청 중 오류가 발생했습니다.");
     }
   });
+  
   
   document.querySelector("#verifySmsCode").addEventListener("click", async () => {
     const phoneNumber = document.querySelector("#phoneNumber").value;
