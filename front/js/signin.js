@@ -21,7 +21,7 @@ async function signIn(event) {
       const isValidSignIn = signInReturn.data.code === 200;
   
       if (!isValidSignIn) {
-        alert(signInReturn.data.message); // 실패 메시지 출력
+        alert(signInReturn.data.message);
         return;
       }
   
@@ -35,13 +35,15 @@ async function signIn(event) {
       window.location.replace("./user_info.html");
     } catch (error) {
       if (error.response && error.response.status === 429) {
-        alert("너무 많은 로그인 시도가 감지되었습니다. 잠시 후 다시 시도하세요."); // 차단 메시지 출력
+        alert(error.response.data.message); // 차단 메시지 출력
+      } else if (error.response && error.response.status === 410) {
+        alert(error.response.data.message); // 실패 횟수 메시지 출력
       } else {
         console.error("로그인 요청 중 오류 발생:", error);
         alert("로그인 요청 중 오류가 발생했습니다.");
       }
     }
-  }  
+  }
   
 
 document.addEventListener("DOMContentLoaded", function () {
