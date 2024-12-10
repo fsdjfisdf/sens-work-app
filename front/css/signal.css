@@ -709,3 +709,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     background-color: #37009cb4; /* 호버 시 조금 더 밝아짐 */
     color: #ffffff; /* 글씨는 흰색 유지 */
 }
+
+#signal-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+.equipment-card {
+    margin: 10px;
+    order: 0; /* 기본값 */
+}

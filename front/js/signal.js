@@ -130,6 +130,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     
             // 장비 카드 생성
             const equipmentCard = document.createElement('div');
+            equipmentCard.setAttribute('data-log-count', logCount); // 작업 이력 개수를 데이터 속성으로 저장
+            equipmentCard.style.order = -logCount; // CSS로 내림차순 정렬
             equipmentCard.className = 'equipment-card';
             equipmentCard.innerHTML = `
                 <div class="equipment-point" style="background-color: ${color};"></div>
@@ -215,6 +217,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("Filtered Data:", filteredData);
     
         displayEquipmentSignals(filteredData);
+
+        const stats = calculateColorStats(filteredData);
+        displayColorStats(stats);     
     }
     
     
@@ -226,9 +231,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         filterLine.value = '';
         filterEqType.value = '';
         filterWarranty.value = '';
-        document.getElementById('filter-period').value = '30'; // 기본값: 최근 1개월
+        document.getElementById('filter-period').value = '365'; // 기본값: 최근 1개월
         document.getElementById('filter-color').value = ''; // 색상 필터 초기화
         displayEquipmentSignals(equipmentData); // 전체 데이터 표시
+
+        const stats = calculateColorStats(equipmentData);
+        displayColorStats(stats);
     }
 
     function displayEquipmentDetails(eq, logs, color) {
