@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Assign the same options for INTEGER to other INTEGER models
     integerModels.forEach(model => {
-        transferOptions[model] = transferOptions["INTEGER plus"];
+        transferOptions[model] = transferOptions["INTEGER Plus"];
     });
 
     function updateTransferOptions() {
