@@ -11,7 +11,7 @@ const AIController = {
     }
 
     try {
-      // OpenAI API 호출
+      // OpenAI API 호출: 질문 -> SQL 쿼리 변환
       const chatResponse = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -20,12 +20,9 @@ const AIController = {
             {
               role: "system",
               content: `
-                You are an AI assistant that interacts with the 'work_log' database. 
-                Answer user questions in a conversational and clear manner, based on the database results.
-                The database table has these columns: id, task_name, task_date, task_man, group, site, 
-                line, equipment_type, warranty, equipment_name, status, task_description, task_cause, 
-                task_result, SOP, tsguide, work_type, setup_item, maint_item, transfer_item, task_duration, 
-                start_time, end_time, none_time, move_time, task_maint.
+                You are a SQL and data analysis expert working with the 'work_log' table in the 'work_log_db' database.
+                Your job is to generate a SQL query based on the user's question and analyze the results to create a conversational response.
+                Provide both the SQL query and a natural language explanation of the results.
               `,
             },
             { role: "user", content: `Convert this question into an SQL query: "${question}"` },
@@ -40,15 +37,16 @@ const AIController = {
       );
 
       let sqlQuery = chatResponse.data.choices[0].message.content.trim();
-      sqlQuery = sqlQuery.replace(/```sql|```/g, "").trim(); // 포맷 제거
 
+      // 순수 SQL만 추출
+      sqlQuery = sqlQuery.replace(/```sql|```/g, "").trim();
       console.log("Generated SQL Query:", sqlQuery);
 
       // SQL 쿼리 실행
       const queryResult = await AIDao.executeSQL(sqlQuery);
 
-      // OpenAI를 이용하여 대화형 응답 생성
-      const responseMessage = await axios.post(
+      // OpenAI API 호출: 결과를 기반으로 대화형 응답 생성
+      const explanationResponse = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
           model: "gpt-3.5-turbo",
@@ -56,11 +54,18 @@ const AIController = {
             {
               role: "system",
               content: `
-                You are an AI assistant. Based on the following database query result, explain it in a conversational format:
-                ${JSON.stringify(queryResult, null, 2)}
+                You are a helpful assistant analyzing SQL query results.
+                Based on the given data, provide a meaningful, conversational response to the user's question.
               `,
             },
-            { role: "user", content: `Explain the result of this query: "${sqlQuery}"` },
+            {
+              role: "user",
+              content: `
+                Question: "${question}"
+                SQL Query: "${sqlQuery}"
+                Query Results: ${JSON.stringify(queryResult)}
+              `,
+            },
           ],
         },
         {
@@ -71,13 +76,13 @@ const AIController = {
         }
       );
 
-      const conversationalResponse = responseMessage.data.choices[0].message.content.trim();
+      const naturalResponse = explanationResponse.data.choices[0].message.content.trim();
 
       res.status(200).json({
         question,
         sqlQuery,
         result: queryResult,
-        explanation: conversationalResponse,
+        naturalResponse,
       });
     } catch (error) {
       console.error("Error processing query:", error.message);
