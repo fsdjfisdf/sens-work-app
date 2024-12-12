@@ -18,56 +18,57 @@ const handleGeneralQuestion = (question) => {
 
 // 작업 데이터를 분석하여 가독성 있는 결과 생성
 const analyzeWorkLogData = (rows, question) => {
-  if (rows.length === 0) {
-    return `죄송합니다. "${question}"에 대한 관련 작업 기록을 찾을 수 없습니다.`;
-  }
-
-  // 총 작업 건수
-  const totalTasks = rows.length;
-
-  // 총 작업 시간 (분 단위로 계산)
-  const totalMinutes = rows.reduce((sum, row) => {
-    const [hours, minutes, seconds] = row.task_duration.split(":").map(Number);
-    return sum + hours * 60 + minutes + seconds / 60;
-  }, 0);
-
-  // 평균 작업 시간 (분 단위)
-  const averageMinutes = (totalMinutes / totalTasks).toFixed(2);
-
-  // 가장 빈번한 작업 유형
-  const workTypeCounts = rows.reduce((acc, row) => {
-    acc[row.work_type] = (acc[row.work_type] || 0) + 1;
-    return acc;
-  }, {});
-  const mostCommonWorkType = Object.keys(workTypeCounts).reduce((a, b) =>
-    workTypeCounts[a] > workTypeCounts[b] ? a : b
-  );
-
-  // 작업 요약 생성
-  const summary = `
-    총 작업 건수: ${totalTasks}건
-    총 작업 시간: ${Math.floor(totalMinutes / 60)}시간 ${Math.round(totalMinutes % 60)}분
-    평균 작업 시간: ${averageMinutes}분
-    가장 빈번한 작업 유형: ${mostCommonWorkType}
-  `;
-
-  // 세부 작업 기록 생성
-  const details = rows.map((row, index) => {
-    return `${index + 1}. 작업 제목: ${row.task_name}
-       - 작업 날짜: ${new Date(row.task_date).toLocaleDateString("ko-KR")}
-       - 작업 내용: ${row.task_description || "설명 없음"}
-       - 원인: ${row.task_cause || "원인 정보 없음"}
-       - 결과: ${row.task_result || "결과 정보 없음"}
-       - 작업 시간: ${row.task_duration || "시간 정보 없음"}`;
-  });
-
-  // 최종 결과
-  return `
-    다음은 "${question}"에 대한 분석 결과입니다:\n
-    ${summary}\n
-    세부 작업 기록:\n${details.join("\n\n")}
-  `;
-};
+    if (rows.length === 0) {
+      return `죄송합니다. "${question}"에 대한 관련 작업 기록을 찾을 수 없습니다.`;
+    }
+  
+    // 총 작업 건수
+    const totalTasks = rows.length;
+  
+    // 총 작업 시간 (분 단위로 계산)
+    const totalMinutes = rows.reduce((sum, row) => {
+      const [hours, minutes, seconds] = row.task_duration.split(":").map(Number);
+      return sum + hours * 60 + minutes + seconds / 60;
+    }, 0);
+  
+    // 평균 작업 시간 (분 단위)
+    const averageMinutes = (totalMinutes / totalTasks).toFixed(2);
+  
+    // 가장 빈번한 작업 유형
+    const workTypeCounts = rows.reduce((acc, row) => {
+      acc[row.work_type] = (acc[row.work_type] || 0) + 1;
+      return acc;
+    }, {});
+    const mostCommonWorkType = Object.keys(workTypeCounts).reduce((a, b) =>
+      workTypeCounts[a] > workTypeCounts[b] ? a : b
+    );
+  
+    // 작업 요약 생성
+    const summary = `
+      총 작업 건수: ${totalTasks}건<br>
+      총 작업 시간: ${Math.floor(totalMinutes / 60)}시간 ${Math.round(totalMinutes % 60)}분<br>
+      평균 작업 시간: ${averageMinutes}분<br>
+      가장 빈번한 작업 유형: ${mostCommonWorkType}<br>
+    `;
+  
+    // 세부 작업 기록 생성
+    const details = rows.map((row, index) => {
+      return `${index + 1}. 작업 제목: ${row.task_name}<br>
+         - 작업 날짜: ${new Date(row.task_date).toLocaleDateString("ko-KR")}<br>
+         - 작업 내용: ${(row.task_description || "설명 없음").replace(/\n/g, "<br>")}<br>
+         - 원인: ${row.task_cause || "원인 정보 없음"}<br>
+         - 결과: ${row.task_result || "결과 정보 없음"}<br>
+         - 작업 시간: ${row.task_duration || "시간 정보 없음"}<br>`;
+    });
+  
+    // 최종 결과
+    return `
+      다음은 "${question}"에 대한 분석 결과입니다:<br><br>
+      ${summary}<br>
+      세부 작업 기록:<br>${details.join("<br><br>")}
+    `;
+  };
+  
 
 const AIController = {
   async processQuery(req, res) {
