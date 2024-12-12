@@ -2,6 +2,23 @@ const axios = require("axios");
 const AIDao = require("../dao/AIDao");
 const secrets = require("../../config/secret");
 
+const createFriendlyResponse = (rows, question) => {
+  if (rows.length === 0) {
+    return `죄송합니다. "${question}"에 대한 관련 작업 기록을 찾을 수 없습니다.`;
+  }
+
+  const response = rows.map((row, index) => {
+    return `${index + 1}. **작업 제목**: ${row.task_name}\n` +
+           `   - **작업 날짜**: ${row.task_date}\n` +
+           `   - **작업 내용**: ${row.task_description || "설명 없음"}\n` +
+           `   - **원인**: ${row.task_cause || "원인 정보 없음"}\n` +
+           `   - **결과**: ${row.task_result || "결과 정보 없음"}\n` +
+           `   - **작업 시간**: ${row.task_duration || "시간 정보 없음"}\n`;
+  }).join("\n");
+
+  return `다음은 "${question}"에 대한 작업 기록입니다:\n\n${response}`;
+};
+
 const AIController = {
   async processQuery(req, res) {
     const { question } = req.body;
@@ -68,11 +85,12 @@ const AIController = {
 
       // SQL 쿼리 실행 및 결과 반환
       const queryResult = await AIDao.executeSQL(sqlQuery);
+      const friendlyResponse = createFriendlyResponse(queryResult, question);
 
       res.status(200).json({
         question,
         sqlQuery,
-        result: queryResult,
+        result: friendlyResponse,
       });
     } catch (error) {
       console.error("Error processing query:", error.message);
