@@ -1,4 +1,4 @@
-const { pool } = require('../database'); // MySQL 연결 설정 가져오기
+const { pool } = require('../../config/database');
 
 const AIDao = {
   async executeSQL(sqlQuery) {
