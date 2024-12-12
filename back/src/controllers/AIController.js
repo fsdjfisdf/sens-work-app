@@ -31,6 +31,12 @@ const AIController = {
 
       const sqlQuery = response.data.choices[0].message.content.trim();
 
+      if (!sqlQuery.toLowerCase().includes("select") || sqlQuery.endsWith(";")) {
+        return res.status(400).json({
+          error: "Generated SQL query is not valid or secure.",
+        });
+      }
+
       console.log("Generated SQL Query:", sqlQuery);
 
       // 검증 로직: SQL이 work_log 테이블과 관련된 쿼리인지 확인

@@ -3,8 +3,11 @@ const { pool } = require("../../config/database");
 const AIDao = {
   async executeSQL(sqlQuery) {
     try {
-      // work_log_db 데이터베이스에 연결하여 쿼리 실행
-      const [rows] = await pool.query(`USE work_log_db; ${sqlQuery}`);
+      // 먼저 데이터베이스를 선택
+      await pool.query(`USE work_log_db;`);
+      
+      // SQL 쿼리 실행
+      const [rows] = await pool.query(sqlQuery);
       return rows;
     } catch (error) {
       console.error("Database query failed:", error.message);
