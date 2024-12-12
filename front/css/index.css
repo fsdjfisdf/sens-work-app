@@ -29,7 +29,6 @@ nav {
 
 .nav-container {
     display: flex;
-    color : #777;
     justify-content: space-between;
     align-items: center;
     width: 100%;
@@ -247,4 +246,45 @@ footer {
     .button {
         flex-basis: 100%;
     }
+}
+
+.ai-container {
+    margin: 20px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.ai-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ai-container input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.ai-container button {
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.ai-container button:hover {
+    background: #0056b3;
+}
+
+.result-container {
+    margin-top: 20px;
+    white-space: pre-wrap;
+    background: #eef;
+    padding: 10px;
+    border-radius: 4px;
 }
