@@ -47,6 +47,7 @@ const AIController = {
       // 생성된 SQL 쿼리
       let sqlQuery = queryResponse.data.choices[0].message.content.trim();
       sqlQuery = sqlQuery.replace(/```sql|```/g, "").trim();
+      sqlQuery = sqlQuery.replace(/.*SELECT/i, "SELECT").replace(/;.*/, ";").trim();
 
       console.log("Generated SQL Query:", sqlQuery);
 
