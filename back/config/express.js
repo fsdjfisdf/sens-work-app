@@ -13,7 +13,6 @@ const jwtMiddleware = require('./jwtMiddleware');
 const { logPageAccess } = require('../src/controllers/indexController'); 
 
 
-
 module.exports = function () {
   const app = express();
 
