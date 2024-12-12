@@ -1,6 +1,6 @@
 const axios = require('axios');
 const AIDao = require('../dao/AIDao');
-const secrets = require('../config/secret.js'); // OpenAI API 키 가져오기
+const secrets = require('../../config/secret');
 
 const AIController = {
   async processQuery(req, res) {
