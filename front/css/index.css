@@ -248,29 +248,37 @@ footer {
     }
 }
 
+/* 숨김 클래스 */
+.hidden {
+    display: none;
+}
+
 /* AI Query Container */
 .ai-container {
-    background-color: #fff; /* 흰색 배경 */
-    color: #0044cc; /* 텍스트는 파란색 */
-    border-radius: 12px; /* 모서리를 둥글게 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 약간의 그림자 */
-    margin: 40px auto; /* 중앙 정렬 */
-    padding: 20px 30px; /* 안쪽 여백 */
-    width: 80%; /* 화면의 80% 차지 */
-    max-width: 800px; /* 최대 너비 제한 */
+    background-color: #c1d6ff;
+    color: #0044cc;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    margin: 40px auto;
+    padding: 20px 30px;
+    width: 80%;
+    max-width: 800px;
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-/* AI Query Input */
-.ai-container label {
-    font-size: 18px;
-    font-weight: 600;
+/* Input Group */
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
+/* AI Query Input */
 .ai-container input[type="text"] {
-    padding: 12px 20px;
+    flex: 1;
+    padding: 12px 15px;
     font-size: 16px;
     border: 2px solid #0044cc;
     border-radius: 8px;
@@ -280,7 +288,7 @@ footer {
 
 .ai-container input[type="text"]:focus {
     border-color: #003bb5;
-    box-shadow: 0 0 8px rgba(0, 0, 255, 0.3);
+    box-shadow: 0 0 8px rgba(0, 0, 255, 0.2);
 }
 
 /* Submit Button */
@@ -301,44 +309,21 @@ footer {
     transform: scale(1.05);
 }
 
-.ai-container button:active {
-    transform: scale(0.95);
+/* AI Query Result */
+.result-container {
+    border-top: 2px solid #e0e0e0;
+    padding-top: 15px;
 }
 
-/* AI Query Result */
-#result {
-    background-color: #f9f9f9;
-    border: 1px solid #e0e0e0;
+.result-output {
+    background-color: #ffffff;
+    border: 1px solid #0044cc;
     border-radius: 8px;
     padding: 15px;
     font-size: 14px;
-    font-family: 'Courier New', monospace; /* 코드 스타일 텍스트 */
-    white-space: pre-wrap; /* 텍스트 줄바꿈 */
-    overflow-x: auto; /* 가로 스크롤 */
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .ai-container {
-        width: 90%; /* 작은 화면에서는 더 넓게 */
-    }
-
-    #result {
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .ai-container {
-        padding: 15px;
-    }
-
-    .ai-container input[type="text"] {
-        font-size: 14px;
-    }
-
-    .ai-container button {
-        font-size: 14px;
-        padding: 10px 16px;
-    }
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    min-height: 100px;
+    color: #333;
 }
