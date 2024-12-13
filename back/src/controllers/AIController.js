@@ -60,6 +60,7 @@ const AIController = {
         throw new Error("SQL 쿼리가 유효하지 않습니다: " + sqlQuery);
       }
       sqlQuery = sqlMatch[0];
+      sqlQuery = sqlQuery.replace(/\s+/g, " ").trim();
 
       // 항상 `work_log_db.work_log`를 사용하도록 강제
       if (!sqlQuery.includes("work_log_db.work_log")) {
