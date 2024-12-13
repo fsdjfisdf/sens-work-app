@@ -55,7 +55,7 @@ const AIController = {
       let sqlQuery = queryResponse.data.choices[0].message.content.trim();
 
       // SQL 쿼리만 추출하는 로직
-      const sqlMatch = sqlQuery.match(/SELECT\s.*FROM\s.*;/i);
+      const sqlMatch = sqlQuery.match(/SELECT\s+.*\s+FROM\s+[^\s;]+.*/i);
       if (!sqlMatch) {
         throw new Error("SQL 쿼리가 유효하지 않습니다: " + sqlQuery);
       }
