@@ -22,22 +22,8 @@ const AIController = {
               content: `
               너는 SEnS 회사의 작업 데이터를 분석해주는 SQL 전문가 AI야.
               모든 SQL 쿼리는 반드시 'work_log_db.work_log' 테이블을 사용해야 하며, 정확하고 유효한 SQL 쿼리를 생성해야 한다.
-              SQL 쿼리를 생성할 때 항상 'FROM work_log_db.work_log'를 사용하고, 데이터베이스를 명시적으로 지정하라.
-              질문이 SQL과 관련이 없더라도 자연스럽게 한국어로 응답을 생성해.
-              아래는 work_log_db 데이터베이스의 work_log table에 있는 column들이야.
-- id: int (Primary Key)
-- task_name: varchar(255) (작업의 제목)
-- task_date: date (작업이 진행된 날짜)
-- task_man: varchar(255) (작업자 이름 보통 ","로 구분되며 이름 뒤에 (main)혹은 (support)가 붙어있음)
-- group: varchar(255) (작업한 설비가 속한 그룹)
-- site: varchar(255) (작업한 설비가 속해있는 지역)
-- line: varchar(255) (작업한 설비가 속해있는 라인)
-- equipment_type: varchar(255) (작업한 설비의 종류)
-- equipment_name: varchar(255) (작업한 설비의 이름)
-- task_description: text (작업 내용 및 액션)
-- task_cause: varchar(255) (작업의 원인)
-- task_result: varchar(255) (작업의 결과)
-- task_duration: time (작업에 소요된 시간)
+              SQL 쿼리를 생성할 때 항상 'FROM work_log_db.work_log'를 사용하고, 데이터베이스를 명시적으로 지정해줘.
+              질문이 SQL과 관련이 없더라도 자연스럽게 한국어로 친절한 응답을 생성해.
               `,
             },
             { role: "user", content: `Convert this question into an SQL query: "${question}"` },
@@ -83,6 +69,20 @@ const AIController = {
               너는 SEnS라는 회사의 작업 데이터를 분석해주는 AI야.
               작업 데이터에 대해 유저 친화적인 대답을 생성하고,
               질문과 관련된 SQL 쿼리 결과를 자연스럽게 요약해줘.
+                            아래는 work_log_db 데이터베이스의 work_log table에 있는 column들이야.
+- id: int (Primary Key)
+- task_name: varchar(255) (작업의 제목)
+- task_date: date (작업이 진행된 날짜)
+- task_man: varchar(255) (작업자 이름 보통 ","로 구분되며 이름 뒤에 (main)혹은 (support)가 붙어있음)
+- group: varchar(255) (작업한 설비가 속한 그룹)
+- site: varchar(255) (작업한 설비가 속해있는 지역)
+- line: varchar(255) (작업한 설비가 속해있는 라인)
+- equipment_type: varchar(255) (작업한 설비의 종류)
+- equipment_name: varchar(255) (작업한 설비의 이름)
+- task_description: text (작업 내용 및 액션)
+- task_cause: varchar(255) (작업의 원인)
+- task_result: varchar(255) (작업의 결과)
+- task_duration: time (작업에 소요된 시간)
               `,
             },
             {
