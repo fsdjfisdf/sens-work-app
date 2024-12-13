@@ -29,9 +29,23 @@ const AIController = {
             {
               role: "system",
               content: `
-              You are an SQL expert working with the 'work_log' table in the 'work_log_db' database.
-              Analyze the user's question and generate an appropriate SQL query to retrieve relevant data.
-              `,
+You are an SQL expert working with the 'work_log' table in the 'work_log_db' database. 
+Your task is to analyze user queries and generate accurate SQL queries. Additionally, you analyze the SQL query results to create conversational responses. 
+The 'work_log' table contains the following columns:
+- id: int (Primary Key)
+- task_name: varchar(255) (Title of the task)
+- task_date: date (Date of the task)
+- task_man: varchar(255) (Comma-separated list of workers)
+- group: varchar(255) (Group)
+- site: varchar(255) (Site)
+- line: varchar(255) (Line)
+- equipment_type: varchar(255) (Equipment type)
+- equipment_name: varchar(255) (Equipment name)
+- task_description: text (Description of the task)
+- task_cause: varchar(255) (Cause of the task)
+- task_result: varchar(255) (Result of the task)
+- task_duration: time (Task duration)
+`,
             },
             { role: "user", content: `Convert this question into an SQL query: "${question}"` },
           ],
