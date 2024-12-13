@@ -66,6 +66,14 @@ The 'work_log' table contains the following columns:
         .replace(/.*SELECT/i, "SELECT") // SELECT 이전 텍스트 제거
         .replace(/;\s*$/, ""); // 끝에 붙은 세미콜론 제거
 
+              // SQL 쿼리에 데이터베이스와 테이블 이름이 포함되었는지 확인
+      if (!sqlQuery.includes("work_log_db.work_log")) {
+        sqlQuery = sqlQuery.replace(
+          "FROM work_log",
+          "FROM work_log_db.work_log"
+        );
+      }
+
       console.log("Generated SQL Query:", sqlQuery);
 
       if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
