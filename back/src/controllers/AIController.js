@@ -58,12 +58,19 @@ The 'work_log' table contains the following columns:
         }
       );
 
-      // 생성된 SQL 쿼리
+      // OpenAI가 반환한 응답에서 SQL 쿼리 추출
       let sqlQuery = queryResponse.data.choices[0].message.content.trim();
-      sqlQuery = sqlQuery.replace(/```sql|```/g, "").trim();
-      sqlQuery = sqlQuery.replace(/.*SELECT/i, "SELECT").replace(/;.*/, ";").trim();
+      sqlQuery = sqlQuery
+        .replace(/```sql/g, "") // SQL 코드 블록 제거
+        .replace(/```/g, "") // 코드 블록 끝 제거
+        .replace(/.*SELECT/i, "SELECT") // SELECT 이전 텍스트 제거
+        .replace(/;\s*$/, ""); // 끝에 붙은 세미콜론 제거
 
       console.log("Generated SQL Query:", sqlQuery);
+
+      if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
+        throw new Error("SQL 쿼리가 유효하지 않습니다: " + sqlQuery);
+      }
 
       // SQL 쿼리 실행
       const queryResult = await AIDao.executeSQL(sqlQuery);
