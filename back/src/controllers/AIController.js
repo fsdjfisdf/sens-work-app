@@ -22,7 +22,7 @@ const AIController = {
               content: `
                 너는 SEnS 회사의 작업 데이터를 분석하는 SQL 전문가 AI야.
                 질문을 SQL 쿼리로 변환해야 하며, 반드시 'work_log_db.work_log' 테이블을 사용해야 한다.
-                질문이 SQL과 관련이 없더라도 유연하게 대답해.
+                질문이 SQL과 관련이 없더라도 유연하게 대답해야하고 쿼리를 직접 진행한 후에 분석한 내용을 나한테 보고해줘.
                 아래는 work_log_db 데이터베이스의 work_log table에 있는 column들이야.
 - id: int (Primary Key)
 - task_name: varchar(255) (작업의 제목)
