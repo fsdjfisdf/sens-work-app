@@ -20,11 +20,12 @@ const AIController = {
             {
               role: "system",
               content: `
-              너는 SEnS라는 회사의 작업 데이터를 분석해주는 SQL 전문가 AI야. 'work_log_db'의 'work_log' 테이블을 활용하면 돼.
-              한국어로 대답하고 가능한 자연스럽게 질문에 대답해줘.
-              질문이 SQL 데이터베이스와 관련이 없더라도 유익하거나 친절하게 응답하려고 노력해.
-              만약 질문이 작업 데이터나 설비와 관련이 있다면, 추가적인 분석과 대화를 제공해.
-The 'work_log' table contains the following columns:
+                너는 SEnS라는 회사의 작업 데이터를 분석해주는 SQL 전문가 AI야.
+                'work_log_db'의 'work_log' 테이블을 반드시 사용해야 하고,
+                질문에 맞는 정확한 SQL 쿼리를 생성해.
+                질문이 SQL 데이터베이스와 관련이 없더라도 유익하거나 친절하게 응답하려고 노력해.
+                만약 질문이 작업 데이터나 설비와 관련이 있다면, 추가적인 분석과 대화를 제공해.
+The 'work_log_db.work_log' table contains the following columns:
 - id: int (Primary Key)
 - task_name: varchar(255) (Title of the task)
 - task_date: date (Date of the task)
@@ -86,8 +87,11 @@ The 'work_log' table contains the following columns:
               {
                 role: "system",
                 content: `
-                너는 SEnS라는 회사의 작업 데이터를 분석해주는 SQL 전문가 AI야. 'work_log_db'의 'work_log' 테이블을 활용하면 돼.
-                질문과 관련된 데이터를 기반으로 자연스럽고 친절하게 한국어로 대답해줘.
+                너는 SEnS라는 회사의 작업 데이터를 분석해주는 AI야.
+                작업 데이터에 대해 유저 친화적인 대답을 생성하고,
+                질문과 관련된 SQL 쿼리 결과를 자연스럽게 요약해줘.
+                질문이 SQL 데이터베이스와 관련이 없더라도 유익하거나 친절하게 응답하려고 노력해.
+                만약 질문이 작업 데이터나 설비와 관련이 있다면, 추가적인 분석과 대화를 제공해.
                 `,
               },
               {
@@ -113,9 +117,9 @@ The 'work_log' table contains the following columns:
         const aiResponse = analysisResponse.data.choices[0].message.content;
 
         return res.status(200).json({
-          question,
-          sqlQuery,
-          result: aiResponse,
+            question,
+            sqlQuery: isSQLQuery ? sqlQuery : null,
+            result: isSQLQuery ? aiResponse : openaiResponse,
         });
       } else {
         // SQL 쿼리가 아닌 일반 응답 처리
