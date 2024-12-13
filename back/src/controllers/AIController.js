@@ -68,8 +68,17 @@ const AIController = {
         // SQL 쿼리 실행
         const queryResult = await AIDao.executeSQL(sqlQuery);
 
-        // 결과에 대한 대화형 응답 생성
-        const response = await axios.post(
+        if (queryResult.length === 0) {
+          res.status(200).json({
+            question,
+            sqlQuery,
+            result: "해당 조건에 맞는 데이터가 없습니다.",
+          });
+          return;
+        }
+
+        // 결과 분석 및 대화형 응답 생성
+        const analysisResponse = await axios.post(
           "https://api.openai.com/v1/chat/completions",
           {
             model: "gpt-4",
@@ -78,8 +87,8 @@ const AIController = {
                 role: "system",
                 content: `
                   너는 SEnS 회사의 데이터를 분석하는 AI야.
-                  SQL 쿼리 결과를 기반으로 질문에 대해 친절한 대화형 응답을 생성해줘.
-                  결과가 없거나 오류가 있다면 적절한 메시지를 제공해.
+                  SQL 쿼리 결과를 분석하여 유저 친화적인 대답을 생성해줘.
+                  결과 데이터는 JSON 형태이며, 그 데이터를 사용해 통계나 중요한 정보를 요약해줘.
                 `,
               },
               {
@@ -88,7 +97,7 @@ const AIController = {
                   Here is the query result:
                   SQL Query: ${sqlQuery}
                   Result: ${JSON.stringify(queryResult)}
-                  
+
                   Summarize and provide a conversational response for the question "${question}".
                 `,
               },
@@ -102,8 +111,8 @@ const AIController = {
           }
         );
 
-        // OpenAI의 대화형 응답
-        const aiResponse = response.data.choices[0].message.content;
+        // OpenAI의 분석된 응답
+        const aiResponse = analysisResponse.data.choices[0].message.content;
 
         res.status(200).json({
           question,
@@ -111,13 +120,10 @@ const AIController = {
           result: aiResponse,
         });
       } else {
-        // SQL이 아닌 경우 대화형 응답 반환
-        console.log("Non-SQL Query Generated:", sqlQuery);
-
         res.status(200).json({
           question,
           sqlQuery: null,
-          result: sqlQuery, // OpenAI가 생성한 대화형 응답 반환
+          result: "SQL 쿼리를 생성할 수 없습니다. 질문을 다시 확인해주세요.",
         });
       }
     } catch (error) {
