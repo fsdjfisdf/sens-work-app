@@ -10,15 +10,6 @@ const AIController = {
       return res.status(400).json({ error: "질문이 필요합니다." });
     }
 
-    // 일반적인 질문 처리
-    if (!question.includes("설비") && !question.includes("작업") && !question.includes("데이터")) {
-      const generalResponse = handleGeneralQuestion(question);
-      return res.status(200).json({
-        question,
-        response: generalResponse,
-      });
-    }
-
     try {
       // OpenAI API를 통해 SQL 쿼리 생성
       const queryResponse = await axios.post(
@@ -47,7 +38,7 @@ The 'work_log' table contains the following columns:
 - task_cause: varchar(255) (Cause of the task)
 - task_result: varchar(255) (Result of the task)
 - task_duration: time (Task duration)
-`,
+              `,
             },
             { role: "user", content: `Convert this question into an SQL query: "${question}"` },
           ],
@@ -62,13 +53,15 @@ The 'work_log' table contains the following columns:
 
       // OpenAI가 반환한 응답에서 SQL 쿼리 추출
       let sqlQuery = queryResponse.data.choices[0].message.content.trim();
-      sqlQuery = sqlQuery
-        .replace(/```sql/g, "") // SQL 코드 블록 제거
-        .replace(/```/g, "") // 코드 블록 끝 제거
-        .replace(/.*SELECT/i, "SELECT") // SELECT 이전 텍스트 제거
-        .replace(/;\s*$/, ""); // 끝에 붙은 세미콜론 제거
 
-              // SQL 쿼리에 데이터베이스와 테이블 이름이 포함되었는지 확인
+      // SQL 쿼리만 추출하는 로직
+      const sqlMatch = sqlQuery.match(/SELECT\s.*FROM\s.*;/i);
+      if (!sqlMatch) {
+        throw new Error("SQL 쿼리가 유효하지 않습니다: " + sqlQuery);
+      }
+      sqlQuery = sqlMatch[0];
+
+      // 테이블 이름 추가 (필요한 경우)
       if (!sqlQuery.includes("work_log_db.work_log")) {
         sqlQuery = sqlQuery.replace(
           "FROM work_log",
@@ -77,10 +70,6 @@ The 'work_log' table contains the following columns:
       }
 
       console.log("Generated SQL Query:", sqlQuery);
-
-      if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
-        throw new Error("SQL 쿼리가 유효하지 않습니다: " + sqlQuery);
-      }
 
       // SQL 쿼리 실행
       const queryResult = await AIDao.executeSQL(sqlQuery);
