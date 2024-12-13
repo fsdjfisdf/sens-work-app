@@ -64,7 +64,7 @@ The 'work_log' table contains the following columns:
       // 테이블 이름 추가 (필요한 경우)
       if (!sqlQuery.includes("work_log_db.work_log")) {
         sqlQuery = sqlQuery.replace(
-          "FROM work_log",
+          /FROM\s+work_log/i,
           "FROM work_log_db.work_log"
         );
       }
