@@ -23,3 +23,17 @@ exports.addUpdate = async (req, res) => {
         res.status(500).json({ error: "Error adding update" });
     }
 };
+
+exports.getUpdateById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const update = await updateDao.getUpdateById(id);
+        if (!update) {
+            return res.status(404).json({ message: "Update not found" });
+        }
+        res.status(200).json(update);
+    } catch (error) {
+        console.error("Error fetching update by ID:", error);
+        res.status(500).json({ error: "Error fetching update by ID" });
+    }
+};

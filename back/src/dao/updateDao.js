@@ -24,3 +24,16 @@ exports.addUpdate = async (title, content) => {
         connection.release();
     }
 };
+
+exports.getUpdateById = async (id) => {
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+        const query = "SELECT id, title, content, created_at FROM updates WHERE id = ?";
+        const [rows] = await connection.query(query, [id]);
+        return rows[0]; // ID는 고유하므로 한 개의 결과만 반환
+    } catch (err) {
+        throw new Error(`Error fetching update by ID: ${err.message}`);
+    } finally {
+        connection.release();
+    }
+};

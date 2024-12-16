@@ -18,7 +18,21 @@
         <section id="update-section">
             <div class="inner">
                 <h2>Update Logs</h2>
+                <!-- 공지 추가 폼 -->
+                <div id="add-update">
+                    <input type="text" id="update-title" placeholder="Enter update title" required>
+                    <textarea id="update-content" placeholder="Enter update content" required></textarea>
+                    <button id="add-update-btn">Add Update</button>
+                </div>
+                <!-- 업데이트 목록 -->
                 <ul id="update-list"></ul>
+                <!-- 업데이트 세부내용 -->
+                <div id="update-details" class="hidden">
+                    <h3 id="detail-title"></h3>
+                    <p id="detail-content"></p>
+                    <span id="detail-date"></span>
+                    <button id="back-to-list">Back to List</button>
+                </div>
             </div>
         </section>
     </main>

@@ -8,4 +8,7 @@ router.get("/", updateController.getUpdates);
 // 새로운 업데이트 추가
 router.post("/", updateController.addUpdate);
 
+// 특정 업데이트 상세 가져오기
+router.get("/:id", updateController.getUpdateById);
+
 module.exports = router;
