@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
+    const token = localStorage.getItem('x-access-token');
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
     // HTML 요소 정의
     const updateList = document.getElementById("update-list");
     const updateModal = document.getElementById("update-modal");
@@ -18,6 +25,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const newUpdateTitle = document.getElementById("new-update-title");
     const newUpdateContent = document.getElementById("new-update-content");
+
+    const openAddModalBtn = document.getElementById("open-add-modal");
 
     const editUpdateTitle = document.getElementById("edit-update-title");
     const editUpdateContent = document.getElementById("edit-update-content");
@@ -43,14 +52,30 @@ document.addEventListener("DOMContentLoaded", async () => {
             updateList.innerHTML = updates
                 .map(update => `
                     <li class="update-item" data-id="${update.id}">
-                        <h3>${update.title}</h3>
-                        <span>${new Date(update.created_at).toLocaleString()}</span>
+                        <div class="item-content">
+                            <h3>${update.title}</h3>
+                            <span>${new Date(update.created_at).toLocaleString()}</span>
+                        </div>
                         <button class="edit-btn" data-id="${update.id}">Edit</button>
                     </li>
                 `)
                 .join("");
         } catch (error) {
             console.error("Error fetching updates:", error);
+        }
+    }
+
+    // 공지 상세보기
+    async function showUpdateDetails(id) {
+        try {
+            const response = await axios.get(`http://3.37.73.151:3001/api/updates/${id}`);
+            const update = response.data;
+            modalTitle.textContent = update.title;
+            modalContent.textContent = update.content;
+            modalDate.textContent = new Date(update.created_at).toLocaleString();
+            openModal(updateModal);
+        } catch (error) {
+            console.error("Error fetching update details:", error);
         }
     }
 
@@ -110,13 +135,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (editBtn) {
             const updateId = editBtn.getAttribute("data-id");
             showEditModal(updateId);
+        } else {
+            const updateItem = e.target.closest(".update-item");
+            if (updateItem) {
+                const updateId = updateItem.getAttribute("data-id");
+                showUpdateDetails(updateId);
+            }
         }
     });
 
     closeUpdateModal.addEventListener("click", () => closeModal(updateModal));
     closeAddModal.addEventListener("click", () => closeModal(addModal));
     closeEditModal.addEventListener("click", () => closeModal(editModal));
-
+    openAddModalBtn.addEventListener("click", () => openModal(addModal));
     addUpdateBtn.addEventListener("click", addUpdate);
     saveUpdateBtn.addEventListener("click", editUpdate);
 

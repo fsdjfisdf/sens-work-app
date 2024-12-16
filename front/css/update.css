@@ -1,52 +1,127 @@
-/* 기본 리셋 */
-body, h1, h2, h3, p, a, input, select, textarea, button {
+/* Reset some basic elements */
+body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
+    text-decoration: none;
+    color: inherit;
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
 }
-
 body {
-    background-color: #f4f4f9; /* 밝은 회색 배경 */
-    color: #000000; /* 검정 텍스트 */
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-/* 네비게이션 */
+/* Navigation styles */
 nav {
-    background-color: #0044cc; /* 진한 파란색 */
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-color: #0044cc;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
 }
 
 .nav-container {
-    max-width: 1400px; /* 더 넓은 화면폭 */
-    margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    max-width: 1600px; /* 확장된 화면 너비 */
+    padding: 0 20px;
 }
 
 .nav-title a {
-    color: white;
+    color: #fff;
     font-size: 24px;
     font-weight: bold;
-    text-decoration: none;
-    transition: color 0.3s ease;
 }
 
-.nav-title a:hover {
-    color: #f0f0f0; /* 살짝 밝은 색상으로 변경 */
+
+footer {
+    background-color: #0044cc;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: auto;
+}
+
+/* Menu button styles */
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    position: fixed;
+    top: 3%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1100;
+}
+
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25px;
+    height: 18px;
+}
+
+.menu-icon span {
+    height: 5px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Menu bar styles */
+.menu-bar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1001;
+}
+
+.menu-bar.open {
+    right: 0;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-item {
+    color: #0044cc;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #f4f4f9;
+    color: #003bb5;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
 }
 
 /* 메인 컨텐츠 */
 main {
     margin-top: 20px;
     padding: 20px;
+    min-width: 800px;
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
@@ -70,32 +145,36 @@ h2 {
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 15px;
 }
 
+/* 업데이트 항목 스타일 */
 .update-item {
-    background-color: #f9f9fb; /* 약간 밝은 배경 */
-    border: 1px solid #ddd; /* 얇은 테두리 */
-    border-radius: 8px;
-    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    padding: 15px 20px;
+    margin-top: 15px;
+    background-color: #f9f9fb;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
 }
 
 .update-item:hover {
-    background-color: #e8f0fe; /* 파란색 톤 강조 */
-    transform: translateY(-3px); /* 살짝 위로 */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #e8f0fe;
+    cursor: pointer;
+}
+
+.update-item .item-content {
+    flex: 1;
+    margin-right: 20px;
 }
 
 .update-item h3 {
     font-size: 18px;
     font-weight: bold;
-    color: #333;
     margin: 0;
+    color: #333;
 }
 
 .update-item span {
@@ -202,14 +281,14 @@ button {
 
 /* 모달 콘텐츠 */
 .modal-content {
-    position: relative; /* X 버튼 위치 조정을 위해 추가 */
+    position: relative;
     background-color: #ffffff;
-    padding: 30px;
+    padding: 40px; /* 패딩을 늘려 여유 공간 추가 */
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 600px;
-    text-align: center;
+    width: 80%; /* 모달 너비 조정 */
+    max-width: 800px; /* 최대 너비를 800px로 설정 */
+    text-align: left; /* 전체 텍스트 기본 정렬을 왼쪽으로 */
     animation: slideUp 0.4s ease-in-out;
 }
 
@@ -225,10 +304,11 @@ button {
 .modal-content h3 {
     font-size: 26px;
     font-weight: bold;
-    color: #0044cc; /* 파란색 강조 */
-    text-align: center;
+    color: #0044cc;
+    text-align: left; /* 제목도 왼쪽 정렬 */
     margin-bottom: 20px;
 }
+
 
 /* 입력 필드 스타일 */
 .modal-content input,
@@ -256,7 +336,7 @@ button {
 
 /* 텍스트 영역 크기 */
 .modal-content textarea {
-    min-height: 150px; /* 기본 높이 확장 */
+    min-height: 250px; /* 기본 높이 확장 */
 }
 
 /* 버튼 그룹 */
@@ -351,18 +431,20 @@ button {
 }
 
 .edit-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: bold;
     background-color: #0044cc;
     color: #fff;
-    padding: 8px 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .edit-btn:hover {
-    background-color: #003bb1;
+    background-color: #003bb5;
+    transform: scale(1.05);
 }
 
 .modal-buttons #save-update-btn {
@@ -395,4 +477,11 @@ button {
     display: flex;
     justify-content: center; /* Save 버튼 중앙 정렬 */
     gap: 15px; /* 버튼 간격 */
+}
+
+#modal-date {
+    font-size: 12px; /* 글씨 크기 작게 */
+    color: #888; /* 흐릿한 회색 */
+    margin-top: 10px; /* 위 요소와 간격 */
+    display: block; /* 블록으로 변경하여 줄바꿈 */
 }
