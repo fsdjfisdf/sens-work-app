@@ -18,24 +18,50 @@
         <section id="update-section">
             <div class="inner">
                 <h2>Update Logs</h2>
-                <!-- 공지 추가 폼 -->
-                <div id="add-update">
-                    <input type="text" id="update-title" placeholder="Enter update title" required>
-                    <textarea id="update-content" placeholder="Enter update content" required></textarea>
-                    <button id="add-update-btn">Add Update</button>
+                <!-- 공지 추가 버튼 -->
+                <div class="button-container">
+                    <button id="open-add-modal">+ Add Update</button>
                 </div>
                 <!-- 업데이트 목록 -->
                 <ul id="update-list"></ul>
-                <!-- 업데이트 세부내용 -->
-                <div id="update-details" class="hidden">
-                    <h3 id="detail-title"></h3>
-                    <p id="detail-content"></p>
-                    <span id="detail-date"></span>
-                    <button id="back-to-list">Back to List</button>
-                </div>
             </div>
         </section>
     </main>
+
+    <!-- 업데이트 상세보기 모달 -->
+    <div id="update-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn" id="close-update-modal">×</button>
+            <h3 id="modal-title"></h3>
+            <p id="modal-content"></p>
+            <span id="modal-date"></span>
+        </div>
+    </div>
+
+    <!-- 공지 추가 모달 -->
+    <div id="add-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn" id="close-add-modal">×</button>
+            <h3>Add New Update</h3>
+            <input type="text" id="new-update-title" placeholder="Enter update title" required>
+            <textarea id="new-update-content" placeholder="Enter update content" required></textarea>
+            <div class="modal-buttons">
+                <button id="add-update-btn">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn" id="close-edit-modal">×</button>
+            <h3>Edit Update</h3>
+            <input type="text" id="edit-update-title" placeholder="Enter update title" required>
+            <textarea id="edit-update-content" placeholder="Enter update content" required></textarea>
+            <div class="modal-buttons">
+                <button id="save-update-btn">Save</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <p>제공되는 모든 정보는 SEnS의 사외비로 간주됩니다.</p>

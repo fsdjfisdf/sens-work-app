@@ -11,4 +11,7 @@ router.post("/", updateController.addUpdate);
 // 특정 업데이트 상세 가져오기
 router.get("/:id", updateController.getUpdateById);
 
+// 공지사항 수정
+router.put("/:id", updateController.updateUpdate);
+
 module.exports = router;

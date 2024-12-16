@@ -37,3 +37,22 @@ exports.getUpdateById = async (req, res) => {
         res.status(500).json({ error: "Error fetching update by ID" });
     }
 };
+
+// 공지사항 수정
+exports.updateUpdate = async (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+    try {
+        if (!title || !content) {
+            return res.status(400).json({ message: "Title and content are required" });
+        }
+        const result = await updateDao.updateUpdate(id, title, content);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Update not found" });
+        }
+        res.status(200).json({ message: "Update edited successfully" });
+    } catch (error) {
+        console.error("Error editing update:", error);
+        res.status(500).json({ error: "Error editing update" });
+    }
+};

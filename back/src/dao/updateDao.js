@@ -37,3 +37,17 @@ exports.getUpdateById = async (id) => {
         connection.release();
     }
 };
+
+// 공지사항 수정
+exports.updateUpdate = async (id, title, content) => {
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+        const query = "UPDATE updates SET title = ?, content = ?, updated_at = NOW() WHERE id = ?";
+        const [result] = await connection.query(query, [title, content, id]);
+        return result; // 수정된 행 개수 반환
+    } catch (err) {
+        throw new Error(`Error editing update: ${err.message}`);
+    } finally {
+        connection.release();
+    }
+};
