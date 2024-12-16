@@ -6,6 +6,7 @@
     <title>S-WORKS</title>
     <link rel="stylesheet" href="./css/index.css" />
     <script src="./js/AI.js" defer></script> <!-- AI.js 파일 연결 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <nav>
@@ -27,17 +28,40 @@
                 <p class="click-hint" id="click-hint">S-WORKS 를 클릭하여 기능을 확인하세요</p>
                 
                 <div class="button-container hidden" id="button-container">
-                    <a href="./user_info.html" class="button disabled" data-description="SECM 정보를 확인할 수 있습니다.">SECM</a>
-                    <a href="./worklog.html" class="button disabled" data-description="작업 이력을 작성할 수 있습니다.">Create Worklog</a>
-                    <a href="./readworklog.html" class="button disabled" data-description="작업 이력을 불러올 수 있습니다.">Load Worklog</a>
-                    <a href="./equipment_signal.html" class="button disabled" data-description="설비 정보를 확인할 수 있습니다.">Equipment</a>
-                    <a href="./PCI.html" class="button disabled" data-description="Eng'r의 작업별 건 수 및 역량을 확인할 수 있습니다.">PCI</a>
-                    <a href="./CHECKLIST.html" class="button disabled" data-description="각 설비의 SET UP, MAINTENANCE CHECKLIST를 진행할 수 있습니다.">Self Checklist for PCI</a>
-                    <a href="./business.html" class="button disabled" data-description="해외 출장 관련 DATA를 확인할 수 있습니다.">Business trip</a>                     
-                    <a href="./report.html" class="button disabled" data-description="국내 출장 보고서를 작성할 수 있습니다.">국내 출장 보고서</a>
-                    <a href="./operatingrate.html" class="button admin-only disabled" data-description="가동율을 확인할 수 있습니다.">Operating Rate</a>
-                    <a href="./regression_analysis.html" class="button admin-only disabled" data-description="미래 필요 작업자 수를 예측할 수 있습니다.">Worker Forecast</a>
-                    <a href="./update.html" class="button disabled" data-description="update list를 확인할 수 있습니다.">Update</a>
+                    <a href="./user_info.html" class="button disabled" data-description="SECM 정보를 확인할 수 있습니다.">
+                        <i class="fas fa-user-circle"></i> SECM
+                    </a>
+                    <a href="./worklog.html" class="button disabled" data-description="작업 이력을 작성할 수 있습니다.">
+                        <i class="fas fa-edit"></i> Create Worklog
+                    </a>
+                    <a href="./readworklog.html" class="button disabled" data-description="작업 이력을 불러올 수 있습니다.">
+                        <i class="fas fa-folder-open"></i> Load Worklog
+                    </a>
+                    <a href="./equipment_signal.html" class="button disabled" data-description="설비 정보를 확인할 수 있습니다.">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> Equipment
+                    </a>
+                    <a href="./PCI.html" class="button disabled" data-description="Eng'r의 작업별 건 수 및 역량을 확인할 수 있습니다.">
+                        <i class="fas fa-chart-line"></i> PCI
+                    </a>
+                    <a href="./CHECKLIST.html" class="button disabled" data-description="각 설비의 SET UP, MAINTENANCE CHECKLIST를 진행할 수 있습니다.">
+                        <i class="fas fa-check-square"></i> Self Checklist for PCI
+                    </a>
+                    <a href="./business.html" class="button disabled" data-description="해외 출장 관련 DATA를 확인할 수 있습니다.">
+                        <i class="fas fa-plane"></i> Business trip
+                    </a>
+                    <a href="./report.html" class="button disabled" data-description="국내 출장 보고서를 작성할 수 있습니다.">
+                        <i class="fas fa-file-alt"></i> 국내 출장 보고서
+                    </a>
+                    <a href="./operatingrate.html" class="button admin-only disabled" data-description="가동율을 확인할 수 있습니다.">
+                        <i class="fas fa-chart-pie"></i> Operating Rate
+                    </a>
+                    <a href="./regression_analysis.html" class="button admin-only disabled" data-description="미래 필요 작업자 수를 예측할 수 있습니다.">
+                        <i class="fas fa-user-clock"></i> Worker Forecast
+                    </a>
+                    <a href="./update.html" class="button disabled" data-description="update list를 확인할 수 있습니다.">
+                        <i class="fa-solid fa-circle-exclamation"></i> Update
+                    </a>
+                    
 
                 </div>
                 <div id="description-box" class="description-box hidden">
@@ -49,7 +73,7 @@
 
     <footer>
         <div class="inner">
-            <p>Developed via PARADOX (HW.J)</p>
+            <p>Developed via PARADOX</p>
         </div>
     </footer>
 

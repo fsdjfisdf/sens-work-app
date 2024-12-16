@@ -88,7 +88,7 @@ nav {
 
 /* Main content and footer styles */
 .hero {
-    background-color: #0044cc;
+    background-size: 400% 400%;
     color: #fff;
     flex-grow: 1;
     display: flex;
@@ -113,10 +113,21 @@ nav {
     font-size: 170px;
     font-weight: 800;
     letter-spacing: 2px;
-    animation: pulse 2s infinite;
+    animation: fadeInSlide 1s ease-out forwards, pulse 2s infinite;
     cursor: pointer;
     position: relative;
     transition: transform 0.5s ease, font-size 0.5s ease;
+}
+
+@keyframes fadeInSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .main-title.shrink {
@@ -143,7 +154,7 @@ nav {
     font-size: 30px;
     color: #fff;
     margin-top: -20px;
-    animation: fadeInOut 3s infinite;
+    animation: fadeInSlide 1.5s ease-out forwards, fadeInOut 3s infinite;
 }
 
 @keyframes fadeInOut {
@@ -160,14 +171,16 @@ nav {
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
-    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
     opacity: 0;
-    transform: translateY(50px);
+    transform: translateY(50px); /* 아래쪽에서 올라오는 효과 */
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none; /* 클릭 방지 */
 }
 
 .button-container.visible {
     opacity: 1;
     transform: translateY(0);
+    pointer-events: auto; /* 클릭 가능 */
 }
 
 .button {
@@ -181,6 +194,30 @@ nav {
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     flex-basis: calc(25% - 20px);
+    animation: buttonAppear 0.4s ease forwards;
+    position: relative;
+    overflow: hidden; /* 물결 효과가 버튼 밖으로 넘어가지 않도록 제한 */
+}
+
+.button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease, opacity 0.8s ease;
+    opacity: 0;
+}
+
+.button:hover::after {
+    width: 300%;
+    height: 300%;
+    opacity: 0;
+    transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
 }
 
 .button:hover {
@@ -193,9 +230,68 @@ nav {
     opacity: 0;
 }
 
+
+
+
+/* 버튼 순차 애니메이션 (Dynamic) */
+/* 버튼에 애니메이션 적용 (빠르게) */
+.button {
+    opacity: 0;
+    transform: scale(0.9);
+    animation: buttonAppear 0.4s ease forwards, wiggle 2s infinite ease-in-out;
+}
+
+/* 버튼 개별 딜레이 적용 */
+.button:nth-child(1) { animation-delay: 0s; }
+.button:nth-child(2) { animation-delay: 0.1s; }
+.button:nth-child(3) { animation-delay: 0.2s; }
+.button:nth-child(4) { animation-delay: 0.3s; }
+.button:nth-child(5) { animation-delay: 0.4s; }
+.button:nth-child(6) { animation-delay: 0.5s; }
+.button:nth-child(7) { animation-delay: 0.6s; }
+.button:nth-child(8) { animation-delay: 0.7s; }
+.button:nth-child(9) { animation-delay: 0.8s; }
+.button:nth-child(10) { animation-delay: 0.9s; }
+.button:nth-child(11) { animation-delay: 1s; }
+
+/* 버튼 나타나는 애니메이션 */
+@keyframes buttonAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
+/* 버튼 꿈틀거림 애니메이션 */
+@keyframes buttonWiggle {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.05) rotate(1deg); /* 약간 커지고 회전 */
+    }
+    50% {
+        transform: scale(0.95) rotate(-1deg); /* 약간 작아지고 반대 방향 회전 */
+    }
+    75% {
+        transform: scale(1.03) rotate(0.5deg); /* 다시 커짐 */
+    }
+    100% {
+        transform: scale(1) rotate(0deg); /* 원래 상태 */
+    }
+}
+
+
+
 .description-box {
     padding: 0;
-    background-color: #fff;
+    background: linear-gradient(135deg, #ffffff, #dce6ff);
+    background-size: 200% 200%;
     color: #0044cc;
     text-align: center;
     font-size: 22px;
@@ -206,7 +302,15 @@ nav {
     width: 100%;
     height: 0;
     overflow: hidden;
-    transition: height 0.5s ease, padding 0.5s ease;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: 
+        height 0.5s ease, 
+        padding 0.5s ease, 
+        opacity 0.5s ease, 
+        transform 0.5s ease, 
+        box-shadow 0.3s ease,
+        background-position 1s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -215,8 +319,24 @@ nav {
 .description-box.visible {
     height: 60px;
     padding: 20px;
-    transition: height 0.5s ease, padding 0.5s ease;
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    background-position: 100% 0;
+    animation: fadeInUp 0.5s ease forwards;
 }
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 
 footer {
     background-color: #ffffff;
@@ -226,6 +346,7 @@ footer {
     margin-top: auto;
     font-weight: bold;
 }
+
 
 /* Media Queries for Responsive Design */
 @media (max-width: 768px) {
