@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 업데이트 데이터를 가져오기
     async function fetchUpdates() {
         try {
-            const response = await axios.get("/api/updates");
+            const response = await axios.get("http://3.37.73.151:3001/api/updates");
             const updates = response.data;
             updateList.innerHTML = updates
                 .map(update => `

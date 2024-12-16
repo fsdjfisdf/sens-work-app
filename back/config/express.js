@@ -83,7 +83,10 @@ module.exports = function () {
   const workLogController = require('../src/controllers/workLogController'); // 추가
 
   const updateRoute = require('../src/routes/updateRoute');
+
+  // 업데이트 라우트 연결
   app.use('/api/updates', updateRoute);
+  
 
 
 // 작업 카운트 증가 API 라우트 추가
