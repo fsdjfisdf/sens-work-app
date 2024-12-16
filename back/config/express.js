@@ -82,9 +82,6 @@ module.exports = function () {
   
   const workLogController = require('../src/controllers/workLogController'); // 추가
 
-  const AIRoute = require("../src/routes/AIRoute"); // AIRoute 경로 확인
-  app.use('/api/ai', AIRoute); // "/api/ai" 라우트를 AIRoute에 연결
-
 
 // 작업 카운트 증가 API 라우트 추가
 app.post('/api/update-task-count', workLogController.updateTaskCount);
