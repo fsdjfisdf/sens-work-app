@@ -1335,6 +1335,16 @@ createChart(monthlyCapaChartCtx, {
             },
             options: {
                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const equipmentName = context.label;
+                                const engineers = equipmentStats[equipmentName]?.engineers || [];
+                                // 엔지니어 이름들을 세로로 정렬하여 반환
+                                return engineers.join('\n');
+                            }
+                        }
+                    },
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
