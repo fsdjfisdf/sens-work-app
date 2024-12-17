@@ -84,7 +84,7 @@ exports.createJwt = async function (req, res) {
       );
 
       const sessionKey = `session:${userIdx}`;
-      await redis.set(sessionKey, token, "EX", 3600); // Redis 세션 1시간 만료
+      await redis.set(sessionKey, token, "EX", 60); // Redis 세션 1시간 만료
 
       console.log(`User logged in: ${nickname}`);
 
