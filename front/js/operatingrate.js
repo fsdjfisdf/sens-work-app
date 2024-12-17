@@ -153,7 +153,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
         '2024-12-09': {
-            weekday: { 'PEE1 PT': 10.6, 'PEE1 HS': 15.5, 'PEE1 IC': 3.8, 'PEE1 CJ': 2.6, 'PEE2 PT': 5.95, 'PEE2 HS': 4.4, 'PSKH PSKH': 8 },
+            weekday: { 'PEE1 PT': 12, 'PEE1 HS': 17.9, 'PEE1 IC': 3.7, 'PEE1 CJ': 3, 'PEE2 PT': 4.4, 'PEE2 HS': 5.6, 'PSKH PSKH': 8 },
+            weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
+        },
+        '2024-12-16': {
+            weekday: { 'PEE1 PT': 12, 'PEE1 HS': 17.9, 'PEE1 IC': 3.7, 'PEE1 CJ': 3, 'PEE2 PT': 4.4, 'PEE2 HS': 5.6, 'PSKH PSKH': 8 },
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
     };
@@ -696,8 +700,16 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
 
     function renderWeeklyOperatingRateChart(weeklyAverageRates) {
         const ctx = document.getElementById('weeklyOperatingRateChart').getContext('2d');
-        const labels = weeklyAverageRates.map(item => item.week);
-        const data = weeklyAverageRates.map(item => item.averageRate);
+        const recentWeeklyRates = weeklyAverageRates
+        .sort((a, b) => {
+            const weekA = parseInt(a.week.match(/(\d+)W/)[1], 10);
+            const weekB = parseInt(b.week.match(/(\d+)W/)[1], 10);
+            return weekA - weekB; // 주차를 기준으로 오름차순 정렬
+        })
+        .slice(-15); // 마지막 10개 데이터만 가져옴
+        const labels = recentWeeklyRates.map(item => item.week); // 최근 10개 주차 라벨
+        const data = recentWeeklyRates.map(item => item.averageRate); // 최근 10개 가동률 데이터
+    
         
         // 가동률을 시간으로 변환한 값을 보조 축 데이터로 사용합니다 (8시간 기준 가동률)
         const timeData = data.map(rate => (rate / 100) * 8); // 근무 시간 계산 (가동률의 8시간 기준)
@@ -780,7 +792,7 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
                     },
                     y: {
                         beginAtZero: true,
-                        max: maxRateValue, // 가동율 최대값 설정
+                        max: 200, // 가동율 최대값 설정
                         ticks: {
                             callback: (value) => `${value.toFixed(2)}%` // y축 레이블 소수점 둘째 자리까지 표시
                         }
