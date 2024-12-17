@@ -55,29 +55,3 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
-
-document.addEventListener("DOMContentLoaded", function () {
-    const sworksTitle = document.getElementById("sworks-title");
-    const buttonContainer = document.getElementById("button-container");
-    let isOpen = false;
-
-    sworksTitle.addEventListener("click", function () {
-        if (!isOpen) {
-            buttonContainer.classList.add("visible");
-            buttonContainer.querySelectorAll(".button").forEach((button, index) => {
-                setTimeout(() => {
-                    button.style.transform = `rotate(${index * 30}deg) translate(150px) scale(1)`;
-                    button.style.opacity = "1";
-                }, index * 100); // 순차 애니메이션
-            });
-            isOpen = true;
-        } else {
-            buttonContainer.classList.remove("visible");
-            buttonContainer.querySelectorAll(".button").forEach((button) => {
-                button.style.transform = "scale(0)";
-                button.style.opacity = "0";
-            });
-            isOpen = false;
-        }
-    });
-});
