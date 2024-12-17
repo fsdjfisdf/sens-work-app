@@ -35,17 +35,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const additionalOptions = document.getElementById('additionalOptions');
         const maintOptions = document.getElementById('maintOptions');
         const transferOptions = document.getElementById('transferOptions');
+        const transferOptions2 = document.getElementById('transferOptions2');
         if (workTypeValue === 'SET UP' || workTypeValue === 'RELOCATION') {
             additionalOptions.style.display = 'block';
             maintOptions.style.display = 'none';
             transferOptions.style.display = 'none';
+            transferOptions2.style.display = 'none';
         } else if (workTypeValue === 'MAINT') {
             transferOptions.style.display = 'block';
+            transferOptions2.style.display = 'block';
             additionalOptions.style.display = 'none';
         } else {
             additionalOptions.style.display = 'none';
             maintOptions.style.display = 'none';
             transferOptions.style.display = 'none';
+            transferOptions2.style.display = 'none';
         }
     });
 
