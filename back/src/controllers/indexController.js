@@ -80,7 +80,7 @@ exports.createJwt = async function (req, res) {
       const token = jwt.sign(
         { userIdx: userIdx, nickname: nickname, role: role },
         secret.jwtsecret,
-        { expiresIn: "1h" } // 1시간 만료
+        { expiresIn: "1m" } // 1시간 만료
       );
 
       const sessionKey = `session:${userIdx}`;

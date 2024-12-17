@@ -21,11 +21,13 @@ document.addEventListener("DOMContentLoaded", function() {
         let logoutTimer;
     
         function resetTimer() {
+            console.log("Timer Reset"); // 타이머 초기화 로그
             clearTimeout(logoutTimer);
             logoutTimer = setTimeout(logout, LOGOUT_TIME);
         }
     
         function logout() {
+            console.log("Logout Triggered"); // 로그아웃 확인 로그
             localStorage.removeItem("x-access-token");
             localStorage.removeItem("user-role");
             alert("세션이 만료되었습니다. 다시 로그인해주세요.");
