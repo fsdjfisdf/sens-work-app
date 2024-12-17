@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
         // 자동 로그아웃 유휴 시간 설정
-        const LOGOUT_TIME = 60 * 60 * 1000; // 1시간 (밀리초)
+        const LOGOUT_TIME = 60 * 1000; // 1분 (밀리초)
         let logoutTimer;
     
         function resetTimer() {
