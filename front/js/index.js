@@ -21,8 +21,8 @@ document.addEventListener("DOMContentLoaded", function() {
         let logoutTimer;
     
         function resetTimer() {
-            console.log("Timer Reset"); // 타이머 초기화 로그
             clearTimeout(logoutTimer);
+            console.log("Timer Reset: Setting logout timer for 1 minute");
             logoutTimer = setTimeout(logout, LOGOUT_TIME);
         }
     
@@ -34,10 +34,22 @@ document.addEventListener("DOMContentLoaded", function() {
             window.location.replace("./signin.html");
         }
     
-        document.addEventListener("mousemove", resetTimer);
-        document.addEventListener("keypress", resetTimer);
-        document.addEventListener("click", resetTimer);
-        document.addEventListener("scroll", resetTimer);
+        document.addEventListener("mousemove", () => {
+            console.log("Mouse moved");
+            resetTimer();
+        });
+        document.addEventListener("keypress", () => {
+            console.log("Key pressed");
+            resetTimer();
+        });
+        document.addEventListener("click", () => {
+            console.log("Mouse clicked");
+            resetTimer();
+        });
+        document.addEventListener("scroll", () => {
+            console.log("Scrolled");
+            resetTimer();
+        });
     
         resetTimer(); // 초기 타이머 설정
     
