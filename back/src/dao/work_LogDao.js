@@ -32,7 +32,7 @@ exports.addWorkLog = async (task_name, task_result, task_cause, task_man, task_d
     `;
     const values = [
       task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
-      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, task_maint, status
+      group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name, work_type, work_type2, setup_item, maint_item, transfer_item, task_maint, status
     ];
 
     console.log('Executing query:', query);

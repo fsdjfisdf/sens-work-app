@@ -182,7 +182,7 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
     try {
       const query = `
         INSERT INTO work_log 
-        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, setup_item, maint_item, transfer_item, status, task_maint) 
+        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2, setup_item, maint_item, transfer_item, status, task_maint) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
