@@ -2,12 +2,14 @@ document.addEventListener("DOMContentLoaded", function() {
     const token = localStorage.getItem("x-access-token");
     const userRole = localStorage.getItem("user-role");
 
-    if (!token) {
-        document.querySelector(".unsigned").classList.remove("hidden");
-        document.querySelector(".signed").classList.add("hidden");
-    } else {
-        document.querySelector(".unsigned").classList.add("hidden");
-        document.querySelector(".signed").classList.remove("hidden");
+    if (document.querySelector(".unsigned") && document.querySelector(".signed")) {
+        if (!token) {
+            document.querySelector(".unsigned").classList.remove("hidden");
+            document.querySelector(".signed").classList.add("hidden");
+        } else {
+            document.querySelector(".unsigned").classList.add("hidden");
+            document.querySelector(".signed").classList.remove("hidden");
+        }
     }
 
     if (!token || userRole !== 'admin') {
@@ -21,8 +23,8 @@ document.addEventListener("DOMContentLoaded", function() {
         let logoutTimer;
     
         function resetTimer() {
+            console.log("Reset Timer called");
             clearTimeout(logoutTimer);
-            console.log("Timer Reset: Setting logout timer for 1 minute");
             logoutTimer = setTimeout(logout, LOGOUT_TIME);
         }
     
@@ -35,19 +37,22 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     
         document.addEventListener("mousemove", () => {
-            console.log("Mouse moved");
+            console.log("Mouse moved - Event triggered");
             resetTimer();
         });
+        
         document.addEventListener("keypress", () => {
-            console.log("Key pressed");
+            console.log("Key pressed - Event triggered");
             resetTimer();
         });
+        
         document.addEventListener("click", () => {
-            console.log("Mouse clicked");
+            console.log("Mouse clicked - Event triggered");
             resetTimer();
         });
+        
         document.addEventListener("scroll", () => {
-            console.log("Scrolled");
+            console.log("Scrolled - Event triggered");
             resetTimer();
         });
     
