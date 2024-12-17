@@ -28,11 +28,10 @@ exports.createJwt = async function (req, res) {
     });
   }
 
-  // 브루트포스 방지 - Redis에 IP 기반 로그인 시도 저장
   const loginAttemptsKey = `login_attempts:${clientIp}`;
   const blockTimeKey = `block_time:${clientIp}`;
-  const maxAttempts = 5; // 최대 시도 횟수
-  const baseBlockTime = 15 * 60; // 기본 차단 시간 (15분)
+  const maxAttempts = 5;
+  const baseBlockTime = 15 * 60;
 
   try {
     const attempts = await redis.get(loginAttemptsKey);
@@ -51,14 +50,12 @@ exports.createJwt = async function (req, res) {
       const [rows] = await indexDao.isValidUsers(connection, userID, password);
 
       if (rows.length < 1) {
-        // 로그인 실패 시 시도 횟수 증가
         const newAttempts = await redis.incr(loginAttemptsKey);
         if (newAttempts === 1) {
-          await redis.expire(loginAttemptsKey, baseBlockTime); // 만료 시간 설정
+          await redis.expire(loginAttemptsKey, baseBlockTime);
         }
-
         if (newAttempts >= maxAttempts) {
-          const blockDuration = baseBlockTime * Math.pow(2, newAttempts - maxAttempts); // 점진적 증가
+          const blockDuration = baseBlockTime * Math.pow(2, newAttempts - maxAttempts);
           await redis.set(blockTimeKey, blockDuration, "EX", blockDuration);
 
           return res.status(429).send({
@@ -75,15 +72,19 @@ exports.createJwt = async function (req, res) {
         });
       }
 
-      // 로그인 성공 시 시도 횟수 초기화
+      // 로그인 성공 시 Redis에 세션 저장
       await redis.del(loginAttemptsKey);
       await redis.del(blockTimeKey);
 
       const { userIdx, nickname, role } = rows[0];
       const token = jwt.sign(
         { userIdx: userIdx, nickname: nickname, role: role },
-        secret.jwtsecret
+        secret.jwtsecret,
+        { expiresIn: "1h" } // 1시간 만료
       );
+
+      const sessionKey = `session:${userIdx}`;
+      await redis.set(sessionKey, token, "EX", 3600); // Redis 세션 1시간 만료
 
       console.log(`User logged in: ${nickname}`);
 
@@ -464,3 +465,24 @@ exports.resetPassword = async function (req, res) {
 };
 
 
+exports.logout = async function (req, res) {
+  const { userIdx } = req.verifiedToken;
+
+  try {
+    const sessionKey = `session:${userIdx}`;
+    await redis.del(sessionKey);
+
+    return res.status(200).json({
+      isSuccess: true,
+      code: 200,
+      message: "로그아웃 성공",
+    });
+  } catch (err) {
+    logger.error(`logout Redis error\n: ${JSON.stringify(err)}`);
+    return res.status(500).json({
+      isSuccess: false,
+      code: 500,
+      message: "로그아웃 중 오류가 발생했습니다.",
+    });
+  }
+};

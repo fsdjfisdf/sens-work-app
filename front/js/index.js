@@ -16,6 +16,44 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+        // 자동 로그아웃 유휴 시간 설정
+        const LOGOUT_TIME = 60 * 60 * 1000; // 1시간 (밀리초)
+        let logoutTimer;
+    
+        function resetTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(logout, LOGOUT_TIME);
+        }
+    
+        function logout() {
+            localStorage.removeItem("x-access-token");
+            localStorage.removeItem("user-role");
+            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+            window.location.replace("./signin.html");
+        }
+    
+        document.addEventListener("mousemove", resetTimer);
+        document.addEventListener("keypress", resetTimer);
+        document.addEventListener("click", resetTimer);
+        document.addEventListener("scroll", resetTimer);
+    
+        resetTimer(); // 초기 타이머 설정
+    
+        // 토큰 만료 검증 (백엔드 요청)
+        async function checkToken() {
+            const response = await fetch("/jwt", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+    
+            if (response.status === 401) {
+                logout();
+            }
+        }
+    
+        setInterval(checkToken, 5 * 60 * 1000); // 5분마다 토큰 유효성 확인
+
     const signOutButton = document.querySelector("#sign-out");
 
     if (signOutButton) {
@@ -55,3 +93,4 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+                                                                                                                                          
