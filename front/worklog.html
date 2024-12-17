@@ -79,6 +79,16 @@
                                 <option value="IC">IC</option>
                                 <option value="CJ">CJ</option>
                                 <option value="PSKH">PSKH</option>
+                                <option value="USA-Portland">USA-Portland</option>
+                                <option value="USA-Arizona">USA-Arizona</option>
+                                <option value="Ireland">Ireland</option>
+                                <option value="Japan-Hiroshiama">Japan-Hiroshima</option>
+                                <option value="China-Wuxi">China-Wuxi</option>
+                                <option value="China-Xian">China-Xian</option>
+                                <option value="China-Shanghai">China-Shanghai</option>
+                                <option value="China-Beijing">China-Beijing</option>
+                                <option value="Taiwan-Taichoung">Taiwan-Taichoung</option>
+                                <option value="Singapore">Singapore</option>
                             </select>
                         </div>
                         <div class="form-row">
@@ -180,7 +190,17 @@
                                 <option value="SELECT">SELECT</option>
                             </select>
                         </div>
-                        <p class="form-description">작업 유형에 맞게 TYPE을 선택하고 해당되는 옵션을 선택하세요.</p><br>
+                        <div class="form-row">
+                            <label for="workType2">WORK SORT</label>
+                            <select id="workType2" name="workType2" required>
+                                <option value="SELECT">SELECT</option>
+                                <option value="REP">REP</option>
+                                <option value="ADJ">ADJ</option>
+                                <option value="CLN">CLN</option>
+                                <option value="MON">MON</option>
+                            </select>
+                        </div>
+                        <p class="form-description">작업 유형에 맞게 TYPE을 선택하고 해당되는 옵션을 선택하세요.<br><br>WORK SORT 참고사항<br>REP : 교체<br>ADJ : 값 변경 ( parameter, value 등 )<br>CLN : CLEAN<br>MON : 점검</p><br>
                         <div class="form-buttons">
                             <button type="button" class="btn-secondary prev-step">이전</button>
                             <button type="button" class="btn-primary next-step">다음</button>

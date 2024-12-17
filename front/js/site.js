@@ -10,7 +10,18 @@ document.addEventListener('DOMContentLoaded', function() {
           "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRD-V", "U4", "M1", "5L"],
           "IC": ["M10", "M14", "M16", "R3"],
           "CJ": ["M11", "M12", "M15"],
-          "PSKH": ["PSKH", "C1", "C2", "C3", "C5"]
+          "PSKH": ["PSKH", "C1", "C2", "C3", "C5"],
+          "USA-Portland": ["INTEL"],
+          "USA-Arizona": ["INTEL"],
+          "Ireland": ["INTEL"],
+          "Japan-Hiroshiama": ["MICRON"],
+          "China-Wuxi": ["HYNIX"],
+          "China-Xian": ["HYNIX"],
+          "China-Shanghai": ["GTX"],
+          "China-Beijing": ["GTX"],
+          "Taiwan-Taichoung": ["MICRON"],
+          "SINGAPORE": ["MICRON"],
+
       };
 
       lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';

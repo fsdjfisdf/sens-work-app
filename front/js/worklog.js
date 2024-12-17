@@ -140,37 +140,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const equipment_type = document.getElementById('equipment_type').value;
         const equipment_name = document.getElementById('equipment_name').value;
         const workType = document.getElementById('workType').value;
+        const workType2 = document.getElementById('workType2').value;
         const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
         const maintItem = (workType === 'MAINT') ? document.getElementById('maintOptionSelect').value : 'SELECT';
         const transferItem = (workType === 'MAINT') ? document.getElementById('transferOptionSelect').value : 'SELECT';
         const task_maint = maintItem;
-
-        console.log('전송 데이터:', {
-            task_name,
-            task_result: taskResults,
-            task_cause: taskCauses,
-            task_man: taskMans,
-            task_description: taskDescriptions,
-            task_date,
-            start_time,
-            end_time,
-            noneTime,
-            moveTime,
-            group,
-            site,
-            SOP,
-            tsguide,
-            warranty,
-            line,
-            equipment_type,
-            equipment_name,
-            workType,
-            setupItem,
-            maintItem,
-            transferItem,
-            task_maint,
-            status
-        });
 
         try {
             const response = await axios.post(`http://3.37.73.151:3001/log`, {
@@ -193,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 equipment_type,
                 equipment_name,
                 workType,
+                workType2,
                 setupItem,
                 maintItem,
                 transferItem,
