@@ -21,7 +21,7 @@ h1, h2, h3, h4, p, a, input, select, label, button {
 
 /* Navigation bar styles */
 nav {
-    background-color: #0044cc;
+    background-color: #1d1d1d;
     padding: 10px 0;
     display: flex;
     justify-content: space-between;
@@ -55,7 +55,7 @@ nav {
 .menu-btn {
     background: none;
     border: none;
-    color: #fff;
+    color: #dcdcdc;
     cursor: pointer;
     padding: 8px;
     position: fixed;
@@ -88,7 +88,7 @@ nav {
     right: -350px; /* 메뉴 바가 초기 화면에서 완전히 숨겨짐 */
     width: 300px;
     height: 100%;
-    background-color: #fff;
+    background-color: #1d1d1d;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
@@ -108,7 +108,7 @@ nav {
 }
 
 .menu-item {
-    color: #0044cc;
+    color: #dcdcdc;
     padding: 10px;
     border-bottom: 1px solid #ddd;
     transition: background-color 0.3s, color 0.3s;
@@ -116,7 +116,7 @@ nav {
 
 .menu-item:hover {
     background-color: #f4f4f9;
-    color: #003bb5;
+    color: #3c3c3e;
 }
 
 .menu-item:last-child {
@@ -141,7 +141,7 @@ nav {
 .report-generator h2 {
     font-size: 24px;
     margin-bottom: 20px; /* 섹션 제목과 아래 내용 사이의 간격 */
-    color: #0044cc;
+    color: #555555;
 }
 
 .form-group {
@@ -165,7 +165,7 @@ input[type="month"] {
 
 button {
     padding: 12px 24px; /* 버튼 크기 조정 */
-    background-color: #0044cc;
+    background-color: #555555;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -174,7 +174,7 @@ button {
 }
 
 button:hover {
-    background-color: #003bb5;
+    background-color: #3c3c3e;
 }
 
 /* 달력 스타일링 */
@@ -340,7 +340,7 @@ input[type="text"] {
 }
 
 footer {
-    background-color: #0044cc;
+    background-color: #1d1d1d;
     color: #fff;
     text-align: center;
     padding: 20px 0;
@@ -392,7 +392,7 @@ input[type="month"] {
 /* 버튼 스타일링 */
 button {
     padding: 10px 20px;
-    background-color: #0044cc;
+    background-color: #3c3c3e;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -401,7 +401,7 @@ button {
 }
 
 button:hover {
-    background-color: #003bb5;
+    background-color: #555555;
 }
 
 .btn-generate {
