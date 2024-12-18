@@ -28,7 +28,5 @@ module.exports = function (app) {
 
     // 비밀번호 재설정
     app.post("/find-password", index.resetPassword);
-
-    app.post("/logout", jwtMiddleware, index.logout);
     
 };

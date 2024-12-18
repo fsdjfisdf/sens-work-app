@@ -21,7 +21,7 @@ body {
 
 /* Navigation styles */
 nav {
-    background-color: #0044cc;
+    background-color: #1a1a1a;
     padding: 10px 0;
     width: 100%;
     display: flex;
@@ -90,8 +90,8 @@ main {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 90%;
-    max-width: 350px; /* Reduce the maximum width */
+    width: 100%;
+    max-width: 400px; /* Reduce the maximum width */
 }
 
 .signin-form input[type="text"],
@@ -108,7 +108,7 @@ main {
     width: 100%;
     padding: 10px;
     margin: 20px 0;
-    background-color: #0044cc;
+    background-color: #1a1a1a;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -118,7 +118,7 @@ main {
 }
 
 .signin-form input[type="button"]:hover {
-    background-color: #003bb5;
+    background-color: #3a3a3a;
 }
 
 .signup-link-container {
@@ -128,17 +128,18 @@ main {
 }
 
 .signup-link-container a {
-    color: #0044cc;
-    padding: 8px 16px;
+    color: #000000;
+    padding: 11px 58px;
     border: 1px solid #ddd;
+    background-color:#f1f1f1;
     border-radius: 4px;
     font-size: 14px;
     transition: background-color 0.3s, color 0.3s;
 }
 
 .signup-link-container a:hover {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #e6edfc;
+    color: #000000;
 }
 
 .footer-text {
@@ -266,7 +267,7 @@ footer {
     width: 100%;
     padding: 12px;
     margin-top: 15px;
-    background-color: #0044cc;
+    background-color: #1a1a1a;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -276,7 +277,7 @@ footer {
 }
 
 .modal-content input[type="button"]:hover {
-    background-color: #003bb5;
+    background-color: #3a3a3a;
 }
 
 .close {
