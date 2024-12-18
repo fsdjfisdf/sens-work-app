@@ -80,11 +80,11 @@ exports.createJwt = async function (req, res) {
       const token = jwt.sign(
         { userIdx: userIdx, nickname: nickname, role: role },
         secret.jwtsecret,
-        { expiresIn: "1m" } // 1분 만료
+        { expiresIn: "10m" } // 1분 만료
       );
 
       const sessionKey = `session:${userIdx}`;
-      await redis.set(sessionKey, token, "EX", 60); // Redis 세션 1시간 만료
+      await redis.set(sessionKey, token, "EX", 10); // Redis 세션 1시간 만료
 
       console.log(`User logged in: ${nickname}`);
 
