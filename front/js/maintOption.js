@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         "JENEVA": ["이관항목 없음"]
     };
 
-    const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM"];
+    const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM", "SUPRA Q"];
     const integerModels = ["INTEGER IVr", "INTEGER XP"];
 
     // Assign the same options for SUPRA N to other SUPRA models
