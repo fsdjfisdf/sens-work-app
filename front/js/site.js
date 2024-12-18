@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
           "China-Wuxi": ["HYNIX"],
           "China-Xian": ["HYNIX"],
           "China-Shanghai": ["GTX"],
-          "China-Beijing": ["GTX"],
+          "China-Beijing": ["JIDIAN"],
           "Taiwan-Taichoung": ["MICRON"],
           "SINGAPORE": ["MICRON"],
 

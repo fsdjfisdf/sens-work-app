@@ -272,7 +272,7 @@ tbody tr:hover {
 
 /* Navigation styles */
 nav {
-    background-color: #0044cc;
+    background-color: #1d1d1d;
     padding: 10px 0;
     display: flex;
     justify-content: center;
@@ -446,7 +446,7 @@ nav {
 }
 
 footer {
-    background-color: #0044cc;
+    background-color: #1d1d1d;
     color: #fff;
     text-align: center;
     padding: 20px 0;
