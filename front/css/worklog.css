@@ -293,31 +293,31 @@ label {
 
 /* 버튼 스타일 */
 .btn-primary {
-    background-color: #2d5f8b; /* 파란색이 섞인 밝은 무채색 */
-    color: #ffffff;
-    border: 1px solid #234a6e; /* 테두리 */
+    background-color: #cccccc; /* 파란색이 섞인 밝은 무채색 */
+    color: #000000;
+    border: 1px solid #ffffff; /* 테두리 */
     border-radius: 4px;
     padding: 10px 20px;
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .btn-primary:hover {
-    background-color: #234a6e; /* 호버 시 더 진한 파란 무채색 */
-    border-color: #1b3753; /* 테두리 색상 변화 */
+    background-color: #838383; /* 호버 시 더 진한 파란 무채색 */
+    border-color: #ffffff; /* 테두리 색상 변화 */
 }
 
 .btn-secondary {
-    background-color: #1e2935; /* 더 어두운 무채색 */
-    color: #dcdcdc;
-    border: 1px solid #141a22; /* 테두리 */
+    background-color: #222222; /* 더 어두운 무채색 */
+    color: #ffffff;
+    border: 1px solid #ffffff; /* 테두리 */
     border-radius: 4px;
     padding: 10px 20px;
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .btn-secondary:hover {
-    background-color: #141a22; /* 호버 시 더 어두운 톤 */
-    border-color: #0f141a;
+    background-color: #555555; /* 호버 시 더 어두운 톤 */
+    border-color: #ffffff;
 }
 
 .form-description {
@@ -444,7 +444,7 @@ label {
 .print-container p {
     margin-bottom: 10px;
     font-size: 14px;
-    color: #85b9fd;
+    color: #fbff00;
 }
 
 .modal-buttons {
@@ -463,29 +463,30 @@ label {
 }
 
 .modal-buttons .btn-primary {
-    background-color: #2e86c1; /* 더 밝은 파란 무채색 */
-    border: 1px solid #21618c; /* 테두리 */
-    color: #ffffff; /* 흰색 텍스트 */
+    background-color: #cccccc; /* 더 밝은 파란 무채색 */
+    border: 1px solid #ffffff; /* 테두리 */
+    color: #000000; /* 흰색 텍스트 */
     transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .modal-buttons .btn-primary:hover {
-    background-color: #1f618d; /* 호버 시 더 진한 파란 무채색 */
-    border-color: #154360;
+    background-color: #bebebe; /* 호버 시 더 진한 파란 무채색 */
+    border-color: #ffffff;
 }
 
 .modal-buttons button.btn-secondary {
-    background-color: #133450;
+    background-color: #272727;
     color: #fff;
+    border: 1px solid #ffffff; /* 테두리 */
 }
 
 .modal-buttons button.btn-secondary:hover {
-    background-color: #0a1c2c;
+    background-color: #494949;
 }
 
 .btn-paste {
-    background-color: #1b5ae2; /* 중간 회색 */
-    color: #fff;
+    background-color: #cccccc; /* 중간 회색 */
+    color: #000000;
     border: none;
     padding: 10px 20px;
     border-radius: 4px;
@@ -496,7 +497,7 @@ label {
 }
 
 .btn-paste:hover {
-    background-color: #1747af; /* 중간 회색 */
+    background-color: #c9c9c9; /* 중간 회색 */
 }
 
 #popup {
@@ -868,9 +869,9 @@ footer {
     display: none;
     border: none;
     text-align: center;
-    outline: 2px solid #666; /* 중간 회색 */
-    background-color: #133450;
-    color: #ccc; /* 밝은 회색 */
+    outline: 2px solid #ffffff; /* 중간 회색 */
+    background-color: #cccccc;
+    color: #000000; /* 밝은 회색 */
     border: none;
     padding: 10px 20px;
     border-radius: 4px;
@@ -879,7 +880,7 @@ footer {
 }
 
 #save-info:hover {
-    background-color: #1e517e;
+    background-color: #b6b6b6;
 }
 
 /* Select2 기본 컨테이너 스타일 */

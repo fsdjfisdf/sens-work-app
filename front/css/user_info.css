@@ -98,7 +98,7 @@ button#view-average-info:focus {
 h2 {
     font-size: 28px;
     margin-bottom: 20px;
-    color: #0044cc;
+    color: #333;
 }
 
 h3 {
@@ -333,15 +333,15 @@ footer {
 }
 
 .menu-item {
-    color: #0044cc;
+    color: #333;
     padding: 10px;
     border-bottom: 1px solid #ddd;
     transition: background-color 0.3s, color 0.3s;
 }
 
 .menu-item:hover {
-    background-color: #f4f4f9;
-    color: #003bb5;
+    background-color: #e4e4e4;
+    color: #333;
 }
 
 .menu-item:last-child {
@@ -352,7 +352,7 @@ footer {
     position: absolute;
     top: 50px;
     right: 20px;
-    background-color: #0044cc; /* 파란색 버튼 */
+    background-color: #a5a5a5; /* 파란색 버튼 */
     border: 2px solid rgb(255, 255, 255); /* 테두리 색상 */
     color: white;
     font-size: 12pt;
