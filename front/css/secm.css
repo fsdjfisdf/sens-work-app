@@ -94,7 +94,7 @@ h2 {
 
 .search-container select,
 .search-container input {
-    padding: 10px;
+    padding: 5px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
@@ -103,8 +103,8 @@ h2 {
 }
 
 .search-container button {
-    background-color: #00b1cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     border: none;
     border-radius: 4px;
     padding: 10px 20px;
@@ -113,16 +113,17 @@ h2 {
 }
 
 .search-container button:hover {
-    background-color: #003bb5;
+    background-color: #9e9e9e;
     transform: scale(1.1);
 }
 
 #resetButton {
-    background-color: #777;
+    background-color: #000000;
+    color: #ffffff;
 }
 
 #resetButton:hover {
-    background-color: #555;
+    background-color: #555555;
 }
 
 /* 섹션 구분을 위한 기본 스타일 추가 */
@@ -162,7 +163,7 @@ h2 {
 .group-title {
     font-size: 30px;
     font-weight: bold;
-    color: #00eeff;
+    color: #ffffff;
     margin-bottom: 20px;
     text-align: center;
 }
@@ -264,7 +265,7 @@ footer {
 
 .spinner {
     border: 8px solid #f3f3f3;
-    border-top: 8px solid #3498db;
+    border-top: 8px solid #ffffff;
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -310,18 +311,20 @@ footer {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    background-color: #00b1cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     transition: background-color 0.3s, transform 0.3s;
 }
 
 .button-container button:hover {
-    background-color: #003bb5;
+    background-color: #000000;
+    color: #ffffff;
     transform: scale(1.1);
 }
 
 .button-container button.active {
-    background-color: #003bb5;
+    background-color: #000000;
+    color: #ffffff;
     transform: scale(1.1);
 }
 
@@ -373,7 +376,7 @@ footer {
 }
 
 .close {
-    color: #2ea4d7;
+    color: #ffffff;
     float: right;
     font-size: 20px;
     font-weight: bold;
@@ -387,7 +390,7 @@ footer {
 }
 
 .info-button {
-    background-color: #1f30ed;
+    background-color: #757575;
     color: rgb(255, 255, 255);
     border: none;
     border-radius: 50%;
@@ -521,22 +524,6 @@ canvas {
     font-weight: bold;
 }
 
-/* 버튼 기본 스타일 */
-#exportButton {
-    background-color: #28a745; /* Excel에 어울리는 녹색 계열 색상 */
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    margin-left: 10px; /* 기존 버튼과의 간격을 위해 약간의 여백 추가 */
-}
-
-#exportButton:hover {
-    background-color: #218838; /* 마우스 오버 시 색상 변화 */
-    transform: scale(1.1);
-}
 
 /* 반응형 디자인 - 모바일 뷰에서 버튼들이 잘 보이도록 조정 */
 @media (max-width: 768px) {
