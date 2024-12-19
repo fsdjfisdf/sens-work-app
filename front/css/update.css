@@ -109,8 +109,8 @@ footer {
 }
 
 .menu-item:hover {
-    background-color: #000000;
-    color: #003bb5;
+    background-color: #818181;
+    color: #ffffff;
 }
 
 .menu-item:last-child {
