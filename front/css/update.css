@@ -19,7 +19,7 @@ body {
 
 /* Navigation styles */
 nav {
-    background-color: #0044cc;
+    background-color: #1c1c1e;
     padding: 10px 0;
     display: flex;
     justify-content: center;
@@ -42,7 +42,7 @@ nav {
 
 
 footer {
-    background-color: #0044cc;
+    background-color: #1c1c1e;
     color: #fff;
     text-align: center;
     padding: 10px 0;
@@ -102,14 +102,14 @@ footer {
 }
 
 .menu-item {
-    color: #0044cc;
+    color: #000000;
     padding: 10px;
     border-bottom: 1px solid #ddd;
     transition: background-color 0.3s, color 0.3s;
 }
 
 .menu-item:hover {
-    background-color: #f4f4f9;
+    background-color: #000000;
     color: #003bb5;
 }
 
@@ -133,7 +133,7 @@ main {
 h2 {
     font-size: 24px;
     font-weight: bold;
-    color: #0044cc;
+    color: #000000;
     text-align: center;
     margin-bottom: 20px;
 }
@@ -196,7 +196,7 @@ h2 {
 #update-details h3 {
     font-size: 22px;
     font-weight: bold;
-    color: #0044cc;
+    color: #525252;
     margin-bottom: 10px;
 }
 
@@ -304,7 +304,7 @@ button {
 .modal-content h3 {
     font-size: 26px;
     font-weight: bold;
-    color: #0044cc;
+    color: #494949;
     text-align: left; /* 제목도 왼쪽 정렬 */
     margin-bottom: 20px;
 }
@@ -434,8 +434,8 @@ button {
     padding: 8px 12px;
     font-size: 14px;
     font-weight: bold;
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -443,13 +443,13 @@ button {
 }
 
 .edit-btn:hover {
-    background-color: #003bb5;
+    background-color: #a3a3a3;
     transform: scale(1.05);
 }
 
 .modal-buttons #save-update-btn {
-    background-color: #0044cc; /* 초록색 배경 */
-    color: white; /* 흰색 텍스트 */
+    background-color: #cccccc; /* 초록색 배경 */
+    color: rgb(0, 0, 0); /* 흰색 텍스트 */
     font-size: 16px; /* 글씨 크기 */
     font-weight: bold; /* 굵은 텍스트 */
     padding: 12px 20px; /* 패딩 */
@@ -461,14 +461,14 @@ button {
 
 /* Save 버튼 hover 효과 */
 .modal-buttons #save-update-btn:hover {
-    background-color: #003bb1; /* 약간 더 어두운 초록색 */
+    background-color: #afafaf; /* 약간 더 어두운 초록색 */
     transform: scale(1.02); /* 약간 확대 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
 }
 
 /* Save 버튼 active 효과 */
 .modal-buttons #save-update-btn:active {
-    background-color: #3e8e41; /* 더 어두운 초록색 */
+    background-color: #747474; /* 더 어두운 초록색 */
     transform: scale(0.98); /* 살짝 축소 */
 }
 

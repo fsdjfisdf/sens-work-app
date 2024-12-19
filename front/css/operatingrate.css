@@ -19,7 +19,7 @@ body {
 
 /* Navigation styles */
 nav {
-    background-color: #0044cc;
+    background-color: #1c1c1e;
     padding: 10px 0;
     display: flex;
     justify-content: center;
@@ -93,10 +93,10 @@ h3 {
 }
 
 footer {
-    background-color: #0044cc;
+    background-color: #1c1c1e;
     color: #fff;
     text-align: center;
-    padding: 20px 0;
+    padding: 10px 0;
     margin-top: auto;
 }
 
@@ -243,8 +243,8 @@ footer {
 }
 
 .filter-section button {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     border: none;
     border-radius: 4px;
     padding: 10px 20px;
@@ -253,11 +253,12 @@ footer {
 }
 
 .filter-section button:hover {
-    background-color: #003bb5;
+    background-color: #afafaf;
 }
 
 #reset-btn {
     background-color: #777;
+    color: #ffffff;
 }
 
 #reset-btn:hover {

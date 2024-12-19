@@ -9,7 +9,7 @@ body {
 h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: #0044cc;
+    color: #000000;
     font-size: 1.8rem;
 }
 
@@ -40,7 +40,7 @@ th, td {
 }
 
 th {
-    background-color: #0044cc;
+    background-color: #161616;
     color: white;
     font-size: 1rem; /* 헤더 글씨 크기 키우기 */
     position: sticky;
@@ -113,23 +113,23 @@ td.red {
 .search-container button#search-button {
     padding: 10px 20px;
     font-size: 14px;
-    background-color: #0044cc;
-    color: white;
+    background-color: #cccccc;
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
 .search-container button#search-button:hover {
-    background-color: #003bb5;
+    background-color: #b4b4b4;
 }
 
 /* Reset 버튼 스타일 */
 .search-container button#reset-button {
     padding: 10px 20px;
     font-size: 14px;
-    background-color: #cccccc;
-    color: black;
+    background-color: #000000;
+    color: rgb(255, 255, 255);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -137,7 +137,7 @@ td.red {
 }
 
 .search-container button#reset-button:hover {
-    background-color: #aaaaaa;
+    background-color: #464646;
 }
 
 /* AVERAGE 행 강조 */
@@ -323,20 +323,20 @@ nav {
     padding: 10px 20px;
     font-size: 14px;
     margin-right: 10px;
-    background-color: #0044cc;
-    color: white;
+    background-color: #cccccc;
+    color: rgb(0, 0, 0);
     border: none;
     cursor: pointer;
 }
 
 .button-container button:hover {
-    background-color: #45a049;
+    background-color: #a3a3a3;
 }
 
 /* TOTAL, COUNT, SELF 버튼 스타일 */
 .search-container button#show-total-button {
-    background-color: #000262; /* TOTAL: 초록색 */
-    color: white;
+    background-color: #cccccc; /* TOTAL: 초록색 */
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -345,12 +345,12 @@ nav {
 }
 
 .search-container button#show-total-button:hover {
-    background-color: #000142; /* TOTAL: Hover 시 진한 초록색 */
+    background-color: #b6b6b6; /* TOTAL: Hover 시 진한 초록색 */
 }
 
 .search-container button#show-count-button {
-    background-color: #300053; /* COUNT: 주황색 */
-    color: white;
+    background-color: #cccccc; /* TOTAL: 초록색 */
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -359,12 +359,12 @@ nav {
 }
 
 .search-container button#show-count-button:hover {
-    background-color: #160027; /* COUNT: Hover 시 진한 주황색 */
+    background-color: #b6b6b6; /* TOTAL: Hover 시 진한 초록색 */
 }
 
 .search-container button#show-self-button {
-    background-color: #002737; /* SELF: 파란색 */
-    color: white;
+    background-color: #cccccc; /* TOTAL: 초록색 */
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -373,7 +373,7 @@ nav {
 }
 
 .search-container button#show-self-button:hover {
-    background-color: #001923; /* SELF: Hover 시 진한 파란색 */
+    background-color: #b6b6b6; /* TOTAL: Hover 시 진한 초록색 */
 }
 
 /* 활성화된 버튼 스타일 */
@@ -449,7 +449,7 @@ footer {
     background-color: #1d1d1d;
     color: #fff;
     text-align: center;
-    padding: 20px 0;
+    padding: 10px 0;
     width: 100%;
     position: relative; /* 콘텐츠 아래에 자연스럽게 위치 */
     bottom: 0;
@@ -463,8 +463,8 @@ footer {
     top: 40%;
     transform: translateY(-230%);
     padding: 15px 25px;
-    background-color: #0044cc;
-    color: white;
+    background-color: #000000;
+    color: rgb(255, 255, 255);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -473,7 +473,7 @@ footer {
 }
 
 #main-button:hover {
-    background-color: #0033aa; /* 호버 시 어두운 색으로 변경 */
+    background-color: #333333; /* 호버 시 어두운 색으로 변경 */
 }
 
 /* 항목 리스트(버튼들) 숨김 처리, 초기 상태 */

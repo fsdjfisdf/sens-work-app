@@ -18,7 +18,7 @@ body {
 
 /* Navigation styles */
 nav {
-    background-color: #0044cc;
+    background-color: #1a1a1a;
     padding: 10px 0;
 }
 
@@ -43,7 +43,7 @@ nav {
 }
 
 .dropbtn {
-    background-color: #0044cc;
+    background-color: #1a1a1a;
     color: #fff;
     padding: 8px 16px;
     border: none;
@@ -140,8 +140,8 @@ h2 {
 }
 
 .search-container button {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     border: none;
     border-radius: 4px;
     padding: 10px 20px;
@@ -150,11 +150,11 @@ h2 {
 }
 
 .search-container button:hover {
-    background-color: #003bb5;
+    background-color: #b9b9b9;
 }
 
 #resetButton {
-    background-color: #777;
+    background-color: #8b8b8b;
 }
 
 #resetButton:hover {
@@ -199,8 +199,8 @@ h2 {
 button.view-details,
 button.delete-log,
 button.edit-log {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     border: none;
     border-radius: 4px;
     padding: 10px;
@@ -212,16 +212,17 @@ button.edit-log {
 
 button.view-details:hover,
 button.edit-log:hover {
-    background-color: #003bb5;
+    background-color: #bdbdbd;
     transform: scale(1.05);
 }
 
 button.delete-log {
-    background-color: #cc0000;
+    background-color: #000000;
+    color: #ffffff;
 }
 
 button.delete-log:hover {
-    background-color: #b20000;
+    background-color: #414141;
     transform: scale(1.05);
 }
 
@@ -250,7 +251,7 @@ button.delete-log:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과를 강화하여 입체감 부여 */
     font-size: 20px; /* 텍스트 크기 조금 확대 */
     font-weight: bold;
-    color: #0044cc;
+    color: #000000;
     margin: 10px;
     text-align: center;
     min-width: 200px; /* 카드 최소 너비 설정 */
@@ -286,7 +287,7 @@ button.delete-log:hover {
 
 .worker-stats h2 {
     font-size: 20px;
-    color: #0044cc;
+    color: #1a1a1a;
     margin-bottom: 10px;
 }
 
@@ -307,17 +308,17 @@ button.delete-log:hover {
 
 .worker-stat p.name {
     font-weight: bold;
-    color: #0044cc;
+    color: #000000;
 }
 
 /* Top 1 worker special style */
 .worker-stat.top-1 {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #888888;
+    color: #ffffff;
 }
 
 .worker-stat.top-1 p.name {
-    color: #ffd700;
+    color: #ffffff;
 }
 
 .worker-stat.top-1 p {
@@ -404,8 +405,8 @@ button.delete-log:hover {
 }
 
 .modal-content form button[type="submit"] {
-    background-color: #0044cc;
-    color: #fff;
+    background-color: #cccccc;
+    color: #000000;
     border: none;
     border-radius: 4px;
     padding: 10px;
@@ -416,13 +417,13 @@ button.delete-log:hover {
 }
 
 .modal-content form button[type="submit"]:hover {
-    background-color: #003bb5;
+    background-color: #c7c7c7;
     transform: scale(1.05);
 }
 
 /* Button styles */
 #exportExcelButton, #exportTransferExcelButton {
-    background-color: #28a745;
+    background-color: #000000;
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -433,16 +434,16 @@ button.delete-log:hover {
 }
 
 #exportTransferExcelButton {
-    background-color: #17a2b8;
+    background-color: #000000;
 }
 
 #exportExcelButton:hover {
-    background-color: #218838;
+    background-color: #363636;
     transform: scale(1.05);
 }
 
 #exportTransferExcelButton:hover {
-    background-color: #138496;
+    background-color: #363636;
     transform: scale(1.05);
 }
 
@@ -454,7 +455,7 @@ button.delete-log:hover {
 
 /* Footer styles */
 footer {
-    background-color: #0044cc;
+    background-color: #1a1a1a;
     color: #fff;
     text-align: center;
     padding: 20px 0;
@@ -598,15 +599,15 @@ footer {
 }
 
 .menu-item {
-    color: #0044cc;
+    color: #000000;
     padding: 10px;
     border-bottom: 1px solid #ddd;
     transition: background-color 0.3s, color 0.3s;
 }
 
 .menu-item:hover {
-    background-color: #f4f4f9;
-    color: #003bb5;
+    background-color: #e7e7e7;
+    color: #000000;
 }
 
 .menu-item:last-child {

@@ -15,7 +15,7 @@
 
 .loading-spinner {
     border: 8px solid rgba(0, 0, 0, 0.1);
-    border-top: 8px solid #0044cc;
+    border-top: 8px solid #000000;
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -31,5 +31,5 @@
     margin-top: 10px;
     font-size: 18px;
     font-weight: bold;
-    color: #0044cc;
+    color: #000000;
 }

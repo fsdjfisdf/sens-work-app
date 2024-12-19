@@ -42,12 +42,12 @@ button {
 }
 
 .btn-primary {
-    background-color: #0044cc;
-    color: white;
+    background-color: #cccccc;
+    color: rgb(0, 0, 0);
 }
 
 .btn-primary:hover {
-    background-color: #003bb5;
+    background-color: #a1a1a1;
 }
 
 #modal-overlay {
@@ -96,14 +96,14 @@ button {
 }
 
 #search-container button {
-    background-color: #0044cc;
-    color: white;
+    background-color: #cccccc;
+    color: rgb(0, 0, 0);
     border: none;
     cursor: pointer;
 }
 
 #search-container button:hover {
-    background-color: #003bb5;
+    background-color: #a1a1a1;
 }
 
 #business-table {
