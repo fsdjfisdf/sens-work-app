@@ -63,15 +63,10 @@
                         <div id="top5-worktime-stats"></div>
                         <div id="top5-taskcount-stats"></div>
                     </div>
-                    <div id="buttons-container">
-                        <button id="exportExcelButton">Export to Excel(task)</button>
-                        <button id="exportTransferExcelButton">Export to Excel(worker)</button>
-                    </div>
                 </div>
 
                 <div class="search-container">
                     <input type="date" id="searchStartDate">
-                    <span>to</span>
                     <input type="date" id="searchEndDate"><br>
                     <select id="searchGroup">
                         <option value="">Search by Group</option>
@@ -92,6 +87,10 @@
                     <input type="text" id="searchWorker" placeholder="Search by Worker">
                     <button id="searchButton">Search</button>
                     <button id="resetButton">Reset</button>
+                </div>
+                <div class="button-container">
+                    <button id="exportExcelButton">Export to Excel(task)</button>
+                    <button id="exportTransferExcelButton">Export to Excel(worker)</button>
                 </div>
                 <div id="worklog-cards" class="worklog-cards"></div>
             </div>

@@ -8,6 +8,8 @@ body, h1, h2, p, a, input, select, label, textarea, button {
 }
 
 body {
+    margin: 0;
+    padding: 0;
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
     color: #333;
@@ -87,9 +89,10 @@ nav {
 
 /* Inner container styles */
 .inner {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0; /* 기존 padding 제거 */
+    width: 100%; /* 너비를 전체로 확장 */
 }
 
 /* Main content styles */
@@ -118,7 +121,7 @@ h2 {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 1200px
+    width: 1600px
 }
 
 .search-container input,
@@ -126,12 +129,12 @@ h2 {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
-    min-width: 200px;
+    font-size: 13px;
+    min-width: 140px;
 }
 
 .search-container input[type="date"] {
-    max-width: 160px;
+    max-width: 140px;
 }
 
 .search-container input::placeholder,
@@ -229,33 +232,37 @@ button.delete-log:hover {
 /* Summary section */
 #summary {
     display: flex;
-    flex-direction: column; /* 수직으로 쌓이도록 설정 */
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     width: 100%;
-    margin-bottom: 30px; /* 섹션 간격을 좀 더 여유롭게 설정 */
+    margin-bottom: 20px;
+    gap: 20px; /* 요소 간의 간격 */
 }
+
 
 #total-work {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    gap: 20px; /* 카드 사이에 여유 간격 추가 */
+    justify-content: center;
+    gap: 10px; /* 각 항목 간격 */
     margin-bottom: 20px;
-    flex-wrap: wrap; /* 작은 화면에서 카드가 줄 바꿈되도록 설정 */
+    background-color: #fff; /* 카드 배경색 */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 카드 그림자 */
+    width: 100%;
+    max-width: 1600px; /* 카드 최대 너비 */
+    text-align: center;
 }
 
-#worklog-count, #total-worktime {
-    background-color: #fff;
-    padding: 15px 25px; /* 여유로운 패딩 설정 */
-    border-radius: 10px; /* 부드러운 모서리 처리 */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과를 강화하여 입체감 부여 */
-    font-size: 20px; /* 텍스트 크기 조금 확대 */
+#total-worktime, #worklog-count {
+    font-size: 18px;
     font-weight: bold;
-    color: #000000;
-    margin: 10px;
-    text-align: center;
-    min-width: 200px; /* 카드 최소 너비 설정 */
-    transition: transform 0.3s ease, box-shadow 0.3s ease; /* 마우스 오버 효과 추가 */
+    color: #333;
+    margin: 5px 0;
+    max-width: 1600px; /* 카드 최대 너비 */
 }
 
 #worklog-count:hover, #total-worktime:hover {
@@ -263,14 +270,52 @@ button.delete-log:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* 그림자 강화 */
 }
 
-/* Top 5 engineers section */
+#buttons-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* 버튼 간격 */
+    max-width: 1200px; /* 카드 최대 너비 */
+}
+
+#buttons-container button {
+    background-color: #000000;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#buttons-container button:hover {
+    background-color: #363636;
+    transform: scale(1.05);
+}
+
+/* Top 5 Engineers */
 #top5-engineers {
     display: flex;
-    justify-content: space-around;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    width: 100%;
-    flex-wrap: nowrap;
+    flex-direction: row; /* 가로 정렬 */
+    justify-content: space-between; /* 요소를 양쪽 끝에 배치 */
+    align-items: flex-start; /* 세로 방향으로 위쪽 정렬 */
+    width: 100%; /* 부모 컨테이너의 전체 너비 사용 */
+    max-width: 1200px; /* 최대 너비 제한 */
+    gap: 20px; /* 요소 간 간격 */
+    margin: 0 auto; /* 가운데 정렬 */
+}
+
+/* Individual stats sections */
+#top5-worktime-stats,
+#top5-taskcount-stats {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 48%; /* 두 요소가 동일한 크기 */
+    box-sizing: border-box; /* 패딩 포함 크기 */
+    text-align: center;
+    font-size: 16px;
 }
 
 .worker-stats {
@@ -313,7 +358,7 @@ button.delete-log:hover {
 
 /* Top 1 worker special style */
 .worker-stat.top-1 {
-    background-color: #888888;
+    background-color: #3a3a3a;
     color: #ffffff;
 }
 
@@ -490,53 +535,75 @@ footer {
         font-size: 24px;
     }
 
+    /* Search container */
     .search-container {
         flex-direction: column;
         gap: 10px;
         align-items: center;
+        width: 100%; /* 부모 요소의 전체 너비 사용 */
+        padding: 10px; /* 모바일에서 적절한 여백 */
+        box-sizing: border-box;
     }
 
     .search-container input,
     .search-container select {
-        width: 100%;
+        width: 90%; /* 화면 크기에 맞게 너비 조정 */
     }
 
     .search-container button {
-        width: 100%;
+        width: 90%; /* 버튼도 동일하게 정렬 */
     }
 
+    /* Worklog cards */
     .worklog-cards {
         flex-direction: column;
-        gap: 10px;
+        gap: 10px; /* 카드 간의 간격 */
+        align-items: center; /* 가운데 정렬 */
     }
 
     .worklog-card {
-        width: 90%;
+        width: 100%; /* 화면 크기에 맞춘 카드 너비 */
     }
 
+    /* Top 5 Engineers */
     #top5-engineers {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: column; /* 작은 화면에서는 세로 정렬 */
+        align-items: center; /* 가운데 정렬 */
+        gap: 15px; /* 카드 간격 추가 */
+    }
+
+    #top5-worktime-stats,
+    #top5-taskcount-stats {
+        width: 90%; /* 모바일에서는 전체 너비 */
     }
 
     .worker-stats {
-        width: 90%;
-        margin-bottom: 20px;
+        width: 90%; /* 카드 너비 */
+        margin-bottom: 15px; /* 카드 간격 */
     }
 
     #total-work {
         flex-direction: column;
+        padding: 15px;
+        width: 100%; /* 모바일에서는 전체 너비 */
+        text-align: center;
     }
 
     #worklog-count, #total-worktime {
-        width: 90%;
+        width: 100%; /* 너비 조정 */
         margin-bottom: 10px;
     }
 
-    #exportExcelButton, #exportTransferExcelButton {
-        width: 100%;
+    #exportExcelButton,
+    #exportTransferExcelButton {
+        width: 90%; /* 버튼 너비 조정 */
         margin-left: 0;
         margin-top: 10px;
+    }
+
+    /* Summary Section Gap */
+    #summary {
+        gap: 15px; /* 각 섹션 간 간격 */
     }
 }
 
@@ -621,7 +688,7 @@ footer {
 
 /* Main content and footer styles */
 .inner {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -658,21 +725,4 @@ footer {
 .button:hover {
     background-color: #003bb5;
     color: #fff;
-}
-
-#top5-engineers {
-    display: flex;
-    justify-content: space-between; /* 좌우로 공간 배분 */
-    align-items: flex-start; /* 상단에 정렬 */
-    width: 100%; /* 전체 너비 사용 */
-    margin-bottom: 20px; /* 아래에 간격 추가 */
-}
-
-.worker-stats {
-    width: 48%; /* 좌우로 배치될 때 각각 50% 미만으로 설정 */
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
 }
