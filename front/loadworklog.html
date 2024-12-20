@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 이력 관리</title>
+    <link rel="stylesheet" href="loadworklog.css">
+</head>
+<body>
+    <div class="container">
+        <h1>작업 이력 관리</h1>
+        <table id="worklog-table">
+            <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>작업명</th>
+                    <th>그룹</th>
+                    <th>사이트</th>
+                    <th>작업자</th>
+                    <th>작업 시간</th>
+                    <th>결과</th>
+                    <th>액션</th>
+                </tr>
+            </thead>
+            <tbody id="worklog-body">
+                <!-- 작업 이력이 여기에 로드됨 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 모달 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="worklog-form">
+                <h2>작업 이력 수정</h2>
+                <input type="hidden" id="worklog-id">
+
+                <!-- 기본 정보 -->
+                <label for="task_date">날짜:</label>
+                <input type="date" id="task_date" name="task_date">
+
+                <label for="task_name">작업명:</label>
+                <input type="text" id="task_name" name="task_name">
+
+                <label for="task_man">작업자:</label>
+                <input type="text" id="task_man" name="task_man">
+
+                <label for="group">그룹:</label>
+                <input type="text" id="group" name="group">
+
+                <label for="site">사이트:</label>
+                <input type="text" id="site" name="site">
+
+                <label for="task_duration">작업 시간:</label>
+                <input type="time" id="task_duration" name="task_duration">
+
+                <label for="task_result">결과:</label>
+                <input type="text" id="task_result" name="task_result">
+
+                <!-- 추가 정보 -->
+                <label for="status">상태:</label>
+                <input type="text" id="status" name="status">
+
+                <label for="task_description">작업 설명:</label>
+                <textarea id="task_description" name="task_description"></textarea>
+
+                <label for="task_cause">원인:</label>
+                <input type="text" id="task_cause" name="task_cause">
+
+                <label for="SOP">SOP:</label>
+                <input type="text" id="SOP" name="SOP">
+
+                <label for="tsguide">TS 가이드:</label>
+                <input type="text" id="tsguide" name="tsguide">
+
+                <label for="equipment_type">장비 유형:</label>
+                <input type="text" id="equipment_type" name="equipment_type">
+
+                <label for="equipment_name">장비명:</label>
+                <input type="text" id="equipment_name" name="equipment_name">
+
+                <button type="submit">저장</button>
+                <button type="button" id="delete-btn">삭제</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="loadworklog.js"></script>
+</body>
+</html>

@@ -157,7 +157,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
         '2024-12-16': {
-            weekday: { 'PEE1 PT': 12, 'PEE1 HS': 17.9, 'PEE1 IC': 3.7, 'PEE1 CJ': 3, 'PEE2 PT': 4.4, 'PEE2 HS': 5.6, 'PSKH PSKH': 8 },
+            weekday: { 'PEE1 PT': 12, 'PEE1 HS': 17.9, 'PEE1 IC': 3.7, 'PEE1 CJ': 3, 'PEE2 PT': 4.4, 'PEE2 HS': 5.6, 'PSKH PSKH': 8,
+                'PEE1 USA-Portland' : 1, 'PEE1 Taiwan-Taichoung' : 1, 'PEE1 Ireland' : 1, 'PEE2 China-Beijing' : 2 },
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
     };
@@ -697,7 +698,6 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
         return Math.ceil((dayOfYear + startOfYear.getDay() + 1) / 7);
     }
     
-
     function renderWeeklyOperatingRateChart(weeklyAverageRates) {
         const ctx = document.getElementById('weeklyOperatingRateChart').getContext('2d');
         const recentWeeklyRates = weeklyAverageRates
