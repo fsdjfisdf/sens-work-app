@@ -72,8 +72,8 @@ module.exports = function () {
   require('../src/routes/SECMRoute')(app);
   require('../src/routes/TitleRoute')(app);
   require('../src/routes/taskCountRoute')(app);  // 추가
-  const integerMaintCountRoute = require('../src/routes/integerMaintCountRoute'); // 올바른 라우트 가져오기
-  app.use('/api/integer-maint', integerMaintCountRoute); // 라우트 연결
+  const integerMaintCountRoute = require('../src/routes/integerMaintCountRoute');
+  app.use('/api', integerMaintCountRoute);
   
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
   
