@@ -1,4 +1,4 @@
-const integermaintenanceController = require("../controllers/integerMaintController");
+const integermaintenanceController = require("../controllers/integerMaintenanceController");
 const jwtMiddleware = require("../../config/jwtMiddleware");
 
 module.exports = function (app) {
