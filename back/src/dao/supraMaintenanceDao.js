@@ -279,7 +279,7 @@ exports.saveChecklist = async (checklistData) => {
         \`PRISM\`, \`MICROWAVE\`, \`APPLICATOR\`, \`GENERATOR\`, \`CHUCK\`, \`PROCESS_KIT\`, \`HELIUM_DETECTOR\`, 
         \`HOOK_LIFT_PIN\`, \`BELLOWS\`, \`PIN_SENSOR\`, \`LM_GUIDE\`, \`PIN_MOTOR_CONTROLLER\`, \`SINGLE_EPD\`, \`DUAL_EPD\`, 
         \`GAS_BOX_BOARD\`, \`TEMP_CONTROLLER_BOARD\`, \`POWER_DISTRIBUTION_BOARD\`, \`DC_POWER_SUPPLY\`, \`BM_SENSOR\`, 
-        \`PIO_SENSOR\`, \`IO_BOX\`, \`FPS_BOARD\`, \`SAFETY_MODULE\`, \`D_NET\`, \`MFC\`, \`VALVE\`, \`SOLENOID\`, 
+        \`PIO_SENSOR\`, \`SAFETY_MODULE\`, \`IO_BOX\`, \`FPS_BOARD\`, \`D_NET\`, \`MFC\`, \`VALVE\`, \`SOLENOID\`, 
         \`FAST_VAC_VALVE\`, \`SLOW_VAC_VALVE\`, \`SLIT_DOOR\`, \`APC_VALVE\`, \`SHUTOFF_VALVE\`, \`BARATRON_ASSY\`, 
         \`PIRANI_ASSY\`, \`VIEW_PORT_QUARTZ\`, \`FLOW_SWITCH\`, \`CERAMIC_PLATE\`, \`MONITOR\`, \`KEYBOARD\`, 
         \`MOUSE\`, \`HEATING_JACKET\`, \`WATER_LEAK_DETECTOR\`, \`MANOMETER\`, \`CTC\`, \`PMC\`, \`EDA\`, 
@@ -339,9 +339,9 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.DC_POWER_SUPPLY,
       checklistData.BM_SENSOR,
       checklistData.PIO_SENSOR,
+      checklistData.SAFETY_MODULE,
       checklistData.IO_BOX,
       checklistData.FPS_BOARD,
-      checklistData.SAFETY_MODULE,
       checklistData.D_NET,
       checklistData.MFC,
       checklistData.VALVE,
@@ -384,6 +384,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
