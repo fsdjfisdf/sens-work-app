@@ -271,20 +271,23 @@ exports.saveChecklist = async (checklistData) => {
   try {
     const query = `
       INSERT INTO SUPRA_N_MAINT_APPROVAL (
-        \`name\`, \`approver_name\`, \`approval_status\`, \`approval_date\`, \`request_date\`, \`checklist_data\`, \`LP_ESCORT\`, \`ROBOT_ESCORT\`,
-        \`SR8241_TEACHING\`, \`SR8240_TEACHING\`, \`M124_TEACHING\`, \`EFEM_FIXTURE\`, \`EFEM_ROBOT_REP\`, \`EFEM_ROBOT_CONTROLLER_REP\`,
-        \`SR8250_TEACHING\`, \`SR8232_TEACHING\`, \`TM_FIXTURE\`, \`TM_ROBOT_REP\`, \`TM_ROBOT_CONTROLLER_REP\`, \`PASSIVE_PAD_REP\`,
-        \`PIN_CYLINDER\`, \`PUSHER_CYLINDER\`, \`IB_FLOW\`, \`DRT\`, \`FFU_CONTROLLER\`, \`FAN\`, \`MOTOR_DRIVER\`, \`R1\`, \`R3\`,
-        \`R5\`, \`R3_TO_R5\`, \`PRISM\`, \`MICROWAVE\`, \`APPLICATOR\`, \`GENERATOR\`, \`CHUCK\`, \`PROCESS_KIT\`, \`HELIUM_DETECTOR\`,
-        \`HOOK_LIFT_PIN\`, \`BELLOWS\`, \`PIN_SENSOR\`, \`LM_GUIDE\`, \`PIN_MOTOR_CONTROLLER\`, \`SINGLE_EPD\`, \`DUAL_EPD\`,
-        \`GAS_BOX_BOARD\`, \`TEMP_CONTROLLER_BOARD\`, \`POWER_DISTRIBUTION_BOARD\`, \`DC_POWER_SUPPLY\`, \`BM_SENSOR\`, \`PIO_SENSOR\`,
-        \`IO_BOX\`, \`FPS_BOARD\`, \`SAFETY_MODULE\`, \`D_NET\`, \`MFC\`, \`VALVE\`, \`SOLENOID\`, \`FAST_VAC_VALVE\`, \`SLOW_VAC_VALVE\`,
-        \`SLIT_DOOR\`, \`APC_VALVE\`, \`SHUTOFF_VALVE\`, \`BARATRON_ASSY\`, \`PIRANI_ASSY\`, \`VIEW_PORT_QUARTZ\`, \`FLOW_SWITCH\`,
-        \`CERAMIC_PLATE\`, \`MONITOR\`, \`KEYBOARD\`, \`MOUSE\`, \`HEATING_JACKET\`, \`WATER_LEAK_DETECTOR\`, \`MANOMETER\`,
-        \`CTC\`, \`PMC\`, \`EDA\`, \`EFEM_CONTROLLER\`, \`TEMP_LIMIT_CONTROLLER\`, \`TEMP_CONTROLLER\`, \`SW_PATCH\`, \`updated_at\`
+        \`name\`, \`approver_name\`, \`approval_status\`, \`approval_date\`, \`request_date\`, \`checklist_data\`, 
+        \`LP_ESCORT\`, \`ROBOT_ESCORT\`, \`SR8241_TEACHING\`, \`SR8240_TEACHING\`, \`M124_TEACHING\`, \`EFEM_FIXTURE\`, 
+        \`EFEM_ROBOT_REP\`, \`EFEM_ROBOT_CONTROLLER_REP\`, \`SR8250_TEACHING\`, \`SR8232_TEACHING\`, \`TM_FIXTURE\`, 
+        \`TM_ROBOT_REP\`, \`TM_ROBOT_CONTROLLER_REP\`, \`PASSIVE_PAD_REP\`, \`PIN_CYLINDER\`, \`PUSHER_CYLINDER\`, 
+        \`IB_FLOW\`, \`DRT\`, \`FFU_CONTROLLER\`, \`FAN\`, \`MOTOR_DRIVER\`, \`R1\`, \`R3\`, \`R5\`, \`R3_TO_R5\`, 
+        \`PRISM\`, \`MICROWAVE\`, \`APPLICATOR\`, \`GENERATOR\`, \`CHUCK\`, \`PROCESS_KIT\`, \`HELIUM_DETECTOR\`, 
+        \`HOOK_LIFT_PIN\`, \`BELLOWS\`, \`PIN_SENSOR\`, \`LM_GUIDE\`, \`PIN_MOTOR_CONTROLLER\`, \`SINGLE_EPD\`, \`DUAL_EPD\`, 
+        \`GAS_BOX_BOARD\`, \`TEMP_CONTROLLER_BOARD\`, \`POWER_DISTRIBUTION_BOARD\`, \`DC_POWER_SUPPLY\`, \`BM_SENSOR\`, 
+        \`PIO_SENSOR\`, \`IO_BOX\`, \`FPS_BOARD\`, \`SAFETY_MODULE\`, \`D_NET\`, \`MFC\`, \`VALVE\`, \`SOLENOID\`, 
+        \`FAST_VAC_VALVE\`, \`SLOW_VAC_VALVE\`, \`SLIT_DOOR\`, \`APC_VALVE\`, \`SHUTOFF_VALVE\`, \`BARATRON_ASSY\`, 
+        \`PIRANI_ASSY\`, \`VIEW_PORT_QUARTZ\`, \`FLOW_SWITCH\`, \`CERAMIC_PLATE\`, \`MONITOR\`, \`KEYBOARD\`, 
+        \`MOUSE\`, \`HEATING_JACKET\`, \`WATER_LEAK_DETECTOR\`, \`MANOMETER\`, \`CTC\`, \`PMC\`, \`EDA\`, 
+        \`EFEM_CONTROLLER\`, \`TEMP_LIMIT_CONTROLLER\`, \`TEMP_CONTROLLER\`, \`SW_PATCH\`, \`updated_at\`
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
       )
     `;
 
@@ -380,6 +383,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
