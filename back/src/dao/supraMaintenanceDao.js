@@ -286,9 +286,9 @@ exports.saveChecklist = async (checklistData) => {
         \`EFEM_CONTROLLER\`, \`TEMP_LIMIT_CONTROLLER\`, \`TEMP_CONTROLLER\`, \`SW_PATCH\`, 
         \`approver_name\`, \`approval_status\`, \`approval_date\`, \`request_date\`, \`checklist_data\`
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `;
 
@@ -371,8 +371,8 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.SW_PATCH,
       checklistData.approver_name || '관리자',
       checklistData.approval_status || 'approved',
-      new Date().toISOString().slice(0, 19).replace('T', ' '), // 현재 날짜
-      checklistData.request_date || null,
+      checklistData.approval_date || new Date().toISOString().slice(0, 19).replace('T', ' '),
+      checklistData.request_date || new Date().toISOString().slice(0, 19).replace('T', ' '),
       JSON.stringify(checklistData) || null
     ];
 
