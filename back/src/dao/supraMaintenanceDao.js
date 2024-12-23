@@ -294,11 +294,6 @@ exports.saveChecklist = async (checklistData) => {
 
     const values = [
       checklistData.name,
-      checklistData.approver_name || '관리자',
-      checklistData.approval_status || 'pending',
-      checklistData.approval_date || null,
-      new Date().toISOString().slice(0, 19).replace('T', ' '),
-      JSON.stringify(checklistData) || null,
       checklistData.LP_ESCORT,
       checklistData.ROBOT_ESCORT,
       checklistData.SR8241_TEACHING,
@@ -373,12 +368,17 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.EFEM_CONTROLLER,
       checklistData.TEMP_LIMIT_CONTROLLER,
       checklistData.TEMP_CONTROLLER,
-      checklistData.SW_PATCH
+      checklistData.SW_PATCH,
+      checklistData.approver_name || '관리자',
+      checklistData.approval_status || 'approved',
+      new Date().toISOString().slice(0, 19).replace('T', ' '), // 현재 날짜
+      checklistData.request_date || null,
+      JSON.stringify(checklistData) || null
     ];
 
     await connection.query(query, values);
   } catch (err) {
-    console.error("Error inserting checklist into SUPRA_N_MAINT_APPROVAL:", err);
+    console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
     throw new Error("Error inserting checklist.");
   } finally {
     connection.release();
