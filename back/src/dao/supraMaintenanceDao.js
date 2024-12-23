@@ -171,7 +171,7 @@ exports.insertApprovalRequest = async (checklistData) => {
   try {
     const query = `
       INSERT INTO SUPRA_N_MAINT_APPROVAL (
-        name, approval_status, checklist_data, 
+        name, approver_name, approval_status, approval_date, request_date, checklist_data, 
         LP_ESCORT, ROBOT_ESCORT, SR8241_TEACHING, SR8240_TEACHING, M124_TEACHING, EFEM_FIXTURE, 
         EFEM_ROBOT_REP, EFEM_ROBOT_CONTROLLER_REP, SR8250_TEACHING, SR8232_TEACHING, TM_FIXTURE, 
         TM_ROBOT_REP, TM_ROBOT_CONTROLLER_REP, PASSIVE_PAD_REP, PIN_CYLINDER, PUSHER_CYLINDER, 
@@ -183,12 +183,12 @@ exports.insertApprovalRequest = async (checklistData) => {
         SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, PIRANI_ASSY, 
         VIEW_PORT_QUARTZ, FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, HEATING_JACKET, 
         WATER_LEAK_DETECTOR, MANOMETER, CTC, PMC, EDA, EFEM_CONTROLLER, TEMP_LIMIT_CONTROLLER, 
-        TEMP_CONTROLLER, SW_PATCH
+        TEMP_CONTROLLER, SW_PATCH, updated_at
       ) VALUES (
-        ?, 'pending', ?, 
+        ?, NULL, 'pending', NULL, NOW(), ?, 
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
       )
     `;
 
@@ -220,6 +220,7 @@ exports.insertApprovalRequest = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
