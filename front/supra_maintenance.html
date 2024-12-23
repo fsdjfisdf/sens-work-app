@@ -66,8 +66,20 @@
             <div class="category">
               <h2>EFEM Robot</h2>
               <div class="item" title="작업 후 설비 정상화">
-                <label>EFEM ROBOT TEACHING</label>
-                <input type="checkbox" name="EFEM_ROBOT_TEACHING" value="O">
+                <label>SR8241 TEACHING</label>
+                <input type="checkbox" name="SR8241_TEACHING" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>SR8240 TEACHING</label>
+                <input type="checkbox" name="SR8240_TEACHING" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>M124 TEACHING</label>
+                <input type="checkbox" name="M124_TEACHING" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>EFEM FIXTURE</label>
+                <input type="checkbox" name="EFEM_FIXTURE" value="O">
               </div>
               <div class="item" title="REP 후 Data Backup">
                 <label>EFEM Robot REP</label>
@@ -81,8 +93,16 @@
             <div class="category">
               <h2>TM Robot</h2>
               <div class="item" title="작업 후 설비정상화">
-                <label>TM ROBOT TEACHING</label>
-                <input type="checkbox" name="TM_ROBOT_TEACHING" value="O">
+                <label>SR8250 TEACHING</label>
+                <input type="checkbox" name="SR8250_TEACHING" value="O">
+              </div>
+              <div class="item" title="작업 후 설비정상화">
+                <label>SR8232 TEACHING</label>
+                <input type="checkbox" name="SR8232_TEACHING" value="O">
+              </div>
+              <div class="item" title="작업 후 설비정상화">
+                <label>TM FIXTURE</label>
+                <input type="checkbox" name="TM_FIXTURE" value="O">
               </div>
               <div class="item" title="REP 후 Data Backup">
                 <label>TM Robot REP</label>
@@ -133,10 +153,6 @@
             </div>
             <div class="category">
               <h2>FCIP</h2>
-              <div class="item" title="R1, R3, R5 중 하나라도 메인 가능시, O">
-                <label>FCIP</label>
-                <input type="checkbox" name="FCIP" value="O">
-              </div>
               <div class="item" title="REP 후 Power Cal 및 설비 정상화">
                 <label>R1</label>
                 <input type="checkbox" name="R1" value="O">
@@ -152,6 +168,10 @@
               <div class="item" title="REP 후 Power Cal 및 설비 정상화">
                 <label>R3 To R5</label>
                 <input type="checkbox" name="R3_TO_R5" value="O">
+              </div>
+              <div class="item" title="SUPRA NP PRISM SOURCE REP 후 설비 정상화">
+                <label>PRISM</label>
+                <input type="checkbox" name="PRISM" value="O">
               </div>
             </div>
             <div class="category">
@@ -255,6 +275,14 @@
                 <input type="checkbox" name="SAFETY_MODULE" value="O">
               </div>
               <div class="item" title="REP 후 설비 정상화">
+                <label>IO BOX</label>
+                <input type="checkbox" name="IO_BOX" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>FPS BOARD</label>
+                <input type="checkbox" name="FPS_BOARD" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
                 <label>D-NET</label>
                 <input type="checkbox" name="D_NET" value="O">
               </div>
@@ -331,9 +359,21 @@
                 <label>Mouse</label>
                 <input type="checkbox" name="MOUSE" value="O">
               </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Heating Jacket</label>
+                <input type="checkbox" name="HEATING_JACKET" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Water Leak Detector</label>
+                <input type="checkbox" name="WATER_LEAK_DETECTOR" value="O">
+              </div>
+              <div class="item" title="REP 후 설비 정상화">
+                <label>Manometer</label>
+                <input type="checkbox" name="MANOMETER" value="O">
+              </div>
             </div>
             <div class="category">
-              <h2>Y24 신규</h2>
+              <h2>CTR</h2>
               <div class="item" title="작업 후 설비 정상화">
                 <label>CTC</label>
                 <input type="checkbox" name="CTC" value="O">
@@ -347,13 +387,25 @@
                 <input type="checkbox" name="EDA" value="O">
               </div>
               <div class="item" title="작업 후 설비 정상화">
-                <label>EFEM CONTROLLER</label>
+                <label>EFEM</label>
                 <input type="checkbox" name="EFEM_CONTROLLER" value="O">
               </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>Temp limit CTR</label>
+                <input type="checkbox" name="TEMP_LIMIT_CONTROLLER" value="O">
+              </div>
+              <div class="item" title="작업 후 설비 정상화">
+                <label>Temp CTR</label>
+                <input type="checkbox" name="TEMP_CONTROLLER" value="O">
+              </div>
+              </div>
+              <div class="category">
+                <h2>S/W</h2>
               <div class="item" title="작업 후 설비 정상화">
                 <label>S/W Patch</label>
                 <input type="checkbox" name="SW_PATCH" value="O">
               </div>
+            </div>
             </div>
           </div>
           <select id="approver-select">
