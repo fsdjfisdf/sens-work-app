@@ -213,6 +213,8 @@ exports.insertApprovalRequest = async (checklistData) => {
       checklistData.TEMP_LIMIT_CONTROLLER, checklistData.TEMP_CONTROLLER, checklistData.SW_PATCH
     ];
 
+    console.log('Values length:', values.length);
+
     await connection.query(query, values);
   } catch (err) {
     throw new Error(`Error inserting approval request: ${err.message}`);
@@ -220,6 +222,7 @@ exports.insertApprovalRequest = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
