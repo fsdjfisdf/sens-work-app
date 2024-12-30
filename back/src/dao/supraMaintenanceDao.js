@@ -293,9 +293,9 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.name,
       checklistData.approver_name || "관리자",
       checklistData.approval_status || "pending",
-      checklistData.approval_date || null,
+      checklistData.approval_date || new Date().toISOString().slice(0, 19).replace("T", " "),
       checklistData.request_date || null,
-      JSON.stringify(checklistData), // JSON 필드만 포함
+      JSON.stringify(checklistData),
       checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT, checklistData.SR8241_TEACHING,
       checklistData.SR8240_TEACHING, checklistData.M124_TEACHING, checklistData.EFEM_FIXTURE,
       checklistData.EFEM_ROBOT_REP, checklistData.EFEM_ROBOT_CONTROLLER_REP, checklistData.SR8250_TEACHING,
@@ -323,8 +323,9 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.SW_PATCH
     ];
 
-    // 디버깅 로그
+    // 디버깅 로그 추가
     console.log("쿼리:", query);
+    console.log("열 개수:", query.match(/\?/g).length); // 쿼리의 ? 개수
     console.log("값 개수:", values.length);
     console.log("값:", values);
 
@@ -336,6 +337,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
