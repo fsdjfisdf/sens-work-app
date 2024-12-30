@@ -309,6 +309,10 @@ exports.saveChecklist = async (checklistData) => {
       JSON.stringify(checklistData) || null
     ];
 
+    console.log("Generated SQL Query:", query);
+    console.log("Provided Values:", values);
+    console.log("Values Count:", values.length);
+
     await connection.query(query, values);
   } catch (err) {
     console.error("Error inserting checklist into SUPRA_N_MAINT_SELF:", err);
@@ -317,6 +321,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
