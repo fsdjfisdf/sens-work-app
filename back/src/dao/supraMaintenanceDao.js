@@ -269,6 +269,7 @@ exports.updateApprovalStatus = async (id, status) => {
 exports.saveChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
+    // SQL Query
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
         name, LP_ESCORT, ROBOT_ESCORT, SR8241_TEACHING, SR8240_TEACHING, M124_TEACHING, EFEM_FIXTURE,
@@ -289,6 +290,7 @@ exports.saveChecklist = async (checklistData) => {
       )
     `;
 
+    // Provided Values
     const values = [
       checklistData.name, checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT,
       checklistData.SR8241_TEACHING, checklistData.SR8240_TEACHING, checklistData.M124_TEACHING, checklistData.EFEM_FIXTURE,
@@ -321,6 +323,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
