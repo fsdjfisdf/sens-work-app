@@ -285,7 +285,7 @@ exports.saveChecklist = async (checklistData) => {
         MOUSE, HEATING_JACKET, WATER_LEAK_DETECTOR, MANOMETER, CTC, PMC, EDA,
         EFEM_CONTROLLER, TEMP_LIMIT_CONTROLLER, TEMP_CONTROLLER, SW_PATCH
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       );
     `;
 
@@ -295,7 +295,7 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.approval_status || "pending",
       checklistData.approval_date || null,
       checklistData.request_date || null,
-      JSON.stringify(checklistData) || null,
+      JSON.stringify(checklistData), // JSON 필드만 포함
       checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT, checklistData.SR8241_TEACHING,
       checklistData.SR8240_TEACHING, checklistData.M124_TEACHING, checklistData.EFEM_FIXTURE,
       checklistData.EFEM_ROBOT_REP, checklistData.EFEM_ROBOT_CONTROLLER_REP, checklistData.SR8250_TEACHING,
@@ -323,7 +323,7 @@ exports.saveChecklist = async (checklistData) => {
       checklistData.SW_PATCH
     ];
 
-    // 디버깅용 로그 추가
+    // 디버깅 로그
     console.log("쿼리:", query);
     console.log("값 개수:", values.length);
     console.log("값:", values);
@@ -336,6 +336,7 @@ exports.saveChecklist = async (checklistData) => {
     connection.release();
   }
 };
+
 
 
 
