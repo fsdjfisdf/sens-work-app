@@ -269,7 +269,6 @@ exports.updateApprovalStatus = async (id, status) => {
 exports.saveChecklist = async (checklistData) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
-    // SQL Query
     const query = `
       INSERT INTO SUPRA_N_MAINT_SELF (
         name, LP_ESCORT, ROBOT_ESCORT, SR8241_TEACHING, SR8240_TEACHING, M124_TEACHING, EFEM_FIXTURE,
@@ -286,34 +285,93 @@ exports.saveChecklist = async (checklistData) => {
         EFEM_CONTROLLER, TEMP_LIMIT_CONTROLLER, TEMP_CONTROLLER, SW_PATCH,
         approver_name, approval_status, approval_date, request_date, checklist_data
       ) VALUES (
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       )
     `;
 
-    // Provided Values
     const values = [
-      checklistData.name, checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT,
-      checklistData.SR8241_TEACHING, checklistData.SR8240_TEACHING, checklistData.M124_TEACHING, checklistData.EFEM_FIXTURE,
-      checklistData.EFEM_ROBOT_REP, checklistData.EFEM_ROBOT_CONTROLLER_REP, checklistData.SR8250_TEACHING, checklistData.SR8232_TEACHING, checklistData.TM_FIXTURE,
-      checklistData.TM_ROBOT_REP, checklistData.TM_ROBOT_CONTROLLER_REP, checklistData.PASSIVE_PAD_REP, checklistData.PIN_CYLINDER, checklistData.PUSHER_CYLINDER,
-      checklistData.IB_FLOW, checklistData.DRT, checklistData.FFU_CONTROLLER, checklistData.FAN, checklistData.MOTOR_DRIVER, checklistData.R1, checklistData.R3, checklistData.R5, checklistData.R3_TO_R5,
-      checklistData.PRISM, checklistData.MICROWAVE, checklistData.APPLICATOR, checklistData.GENERATOR, checklistData.CHUCK, checklistData.PROCESS_KIT, checklistData.HELIUM_DETECTOR,
-      checklistData.HOOK_LIFT_PIN, checklistData.BELLOWS, checklistData.PIN_SENSOR, checklistData.LM_GUIDE, checklistData.PIN_MOTOR_CONTROLLER, checklistData.SINGLE_EPD, checklistData.DUAL_EPD,
-      checklistData.GAS_BOX_BOARD, checklistData.TEMP_CONTROLLER_BOARD, checklistData.POWER_DISTRIBUTION_BOARD, checklistData.DC_POWER_SUPPLY, checklistData.BM_SENSOR,
-      checklistData.PIO_SENSOR, checklistData.SAFETY_MODULE, checklistData.IO_BOX, checklistData.FPS_BOARD, checklistData.D_NET, checklistData.MFC, checklistData.VALVE, checklistData.SOLENOID,
-      checklistData.FAST_VAC_VALVE, checklistData.SLOW_VAC_VALVE, checklistData.SLIT_DOOR, checklistData.APC_VALVE, checklistData.SHUTOFF_VALVE, checklistData.BARATRON_ASSY,
-      checklistData.PIRANI_ASSY, checklistData.VIEW_PORT_QUARTZ, checklistData.FLOW_SWITCH, checklistData.CERAMIC_PLATE, checklistData.MONITOR, checklistData.KEYBOARD,
-      checklistData.MOUSE, checklistData.HEATING_JACKET, checklistData.WATER_LEAK_DETECTOR, checklistData.MANOMETER, checklistData.CTC, checklistData.PMC, checklistData.EDA,
-      checklistData.EFEM_CONTROLLER, checklistData.TEMP_LIMIT_CONTROLLER, checklistData.TEMP_CONTROLLER, checklistData.SW_PATCH,
-      checklistData.approver_name || '관리자', checklistData.approval_status || 'approved',
-      checklistData.approval_date || new Date().toISOString().slice(0, 19).replace('T', ' '),
-      checklistData.request_date || new Date().toISOString().slice(0, 19).replace('T', ' '),
+      checklistData.name,
+      checklistData.LP_ESCORT,
+      checklistData.ROBOT_ESCORT,
+      checklistData.SR8241_TEACHING,
+      checklistData.SR8240_TEACHING,
+      checklistData.M124_TEACHING,
+      checklistData.EFEM_FIXTURE,
+      checklistData.EFEM_ROBOT_REP,
+      checklistData.EFEM_ROBOT_CONTROLLER_REP,
+      checklistData.SR8250_TEACHING,
+      checklistData.SR8232_TEACHING,
+      checklistData.TM_FIXTURE,
+      checklistData.TM_ROBOT_REP,
+      checklistData.TM_ROBOT_CONTROLLER_REP,
+      checklistData.PASSIVE_PAD_REP,
+      checklistData.PIN_CYLINDER,
+      checklistData.PUSHER_CYLINDER,
+      checklistData.IB_FLOW,
+      checklistData.DRT,
+      checklistData.FFU_CONTROLLER,
+      checklistData.FAN,
+      checklistData.MOTOR_DRIVER,
+      checklistData.R1,
+      checklistData.R3,
+      checklistData.R5,
+      checklistData.R3_TO_R5,
+      checklistData.PRISM,
+      checklistData.MICROWAVE,
+      checklistData.APPLICATOR,
+      checklistData.GENERATOR,
+      checklistData.CHUCK,
+      checklistData.PROCESS_KIT,
+      checklistData.HELIUM_DETECTOR,
+      checklistData.HOOK_LIFT_PIN,
+      checklistData.BELLOWS,
+      checklistData.PIN_SENSOR,
+      checklistData.LM_GUIDE,
+      checklistData.PIN_MOTOR_CONTROLLER,
+      checklistData.SINGLE_EPD,
+      checklistData.DUAL_EPD,
+      checklistData.GAS_BOX_BOARD,
+      checklistData.TEMP_CONTROLLER_BOARD,
+      checklistData.POWER_DISTRIBUTION_BOARD,
+      checklistData.DC_POWER_SUPPLY,
+      checklistData.BM_SENSOR,
+      checklistData.PIO_SENSOR,
+      checklistData.SAFETY_MODULE,
+      checklistData.IO_BOX,
+      checklistData.FPS_BOARD,
+      checklistData.D_NET,
+      checklistData.MFC,
+      checklistData.VALVE,
+      checklistData.SOLENOID,
+      checklistData.FAST_VAC_VALVE,
+      checklistData.SLOW_VAC_VALVE,
+      checklistData.SLIT_DOOR,
+      checklistData.APC_VALVE,
+      checklistData.SHUTOFF_VALVE,
+      checklistData.BARATRON_ASSY,
+      checklistData.PIRANI_ASSY,
+      checklistData.VIEW_PORT_QUARTZ,
+      checklistData.FLOW_SWITCH,
+      checklistData.CERAMIC_PLATE,
+      checklistData.MONITOR,
+      checklistData.KEYBOARD,
+      checklistData.MOUSE,
+      checklistData.HEATING_JACKET,
+      checklistData.WATER_LEAK_DETECTOR,
+      checklistData.MANOMETER,
+      checklistData.CTC,
+      checklistData.PMC,
+      checklistData.EDA,
+      checklistData.EFEM_CONTROLLER,
+      checklistData.TEMP_LIMIT_CONTROLLER,
+      checklistData.TEMP_CONTROLLER,
+      checklistData.SW_PATCH,
+      checklistData.approver_name || '관리자',
+      checklistData.approval_status || 'approved',
+      new Date().toISOString().slice(0, 19).replace('T', ' '), // 현재 날짜
+      checklistData.request_date || null,
       JSON.stringify(checklistData) || null
     ];
-
-    console.log("Generated SQL Query:", query);
-    console.log("Provided Values:", values);
-    console.log("Values Count:", values.length);
 
     await connection.query(query, values);
   } catch (err) {
