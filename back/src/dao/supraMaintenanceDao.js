@@ -180,8 +180,9 @@ exports.insertApprovalRequest = async (checklistData) => {
         SOLENOID, FAST_VAC_VALVE, SLOW_VAC_VALVE, SLIT_DOOR, APC_VALVE, SHUTOFF_VALVE, BARATRON_ASSY, 
         PIRANI_ASSY, VIEW_PORT_QUARTZ, FLOW_SWITCH, CERAMIC_PLATE, MONITOR, KEYBOARD, MOUSE, HEATING_JACKET, WATER_LEAK_DETECTOR, MANOMETER, CTC, PMC, EDA, 
         EFEM_CONTROLLER, TEMP_LIMIT_CONTROLLER, TEMP_CONTROLLER, SW_PATCH
-      ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
     const values = [
       checklistData.name, JSON.stringify(checklistData), checklistData.LP_ESCORT, checklistData.ROBOT_ESCORT,
       checklistData.SR8241_TEACHING, checklistData.SR8240_TEACHING, checklistData.M124_TEACHING, checklistData.EFEM_FIXTURE, 
@@ -189,9 +190,9 @@ exports.insertApprovalRequest = async (checklistData) => {
       checklistData.SR8250_TEACHING, checklistData.SR8232_TEACHING, checklistData.TM_FIXTURE, 
       checklistData.TM_ROBOT_REP, checklistData.TM_ROBOT_CONTROLLER_REP,
       checklistData.PASSIVE_PAD_REP, checklistData.PIN_CYLINDER, checklistData.PUSHER_CYLINDER, checklistData.IB_FLOW,
-      checklistData.DRT, checklistData.FFU_CONTROLLER, checklistData.FAN, checklistData.MOTOR_DRIVER, checklistData.FCIP,
-      checklistData.R1, checklistData.R3, checklistData.R5, checklistData.R3_TO_R5, checklistData.MICROWAVE,
-      checklistData.APPLICATOR, checklistData.GENERATOR, checklistData.CHUCK, checklistData.PROCESS_KIT,
+      checklistData.DRT, checklistData.FFU_CONTROLLER, checklistData.FAN, checklistData.MOTOR_DRIVER,
+      checklistData.R1, checklistData.R3, checklistData.R5, checklistData.R3_TO_R5, checklistData.PRISM,
+      checklistData.MICROWAVE, checklistData.APPLICATOR, checklistData.GENERATOR, checklistData.CHUCK, checklistData.PROCESS_KIT,
       checklistData.HELIUM_DETECTOR, checklistData.HOOK_LIFT_PIN, checklistData.BELLOWS, checklistData.PIN_SENSOR,
       checklistData.LM_GUIDE, checklistData.PIN_MOTOR_CONTROLLER, checklistData.SINGLE_EPD, checklistData.DUAL_EPD,
       checklistData.GAS_BOX_BOARD, checklistData.TEMP_CONTROLLER_BOARD, checklistData.POWER_DISTRIBUTION_BOARD,
@@ -204,6 +205,12 @@ exports.insertApprovalRequest = async (checklistData) => {
       checklistData.HEATING_JACKET, checklistData.WATER_LEAK_DETECTOR, checklistData.MANOMETER,
       checklistData.CTC, checklistData.PMC, checklistData.EDA, checklistData.EFEM_CONTROLLER, checklistData.TEMP_LIMIT_CONTROLLER, checklistData.TEMP_CONTROLLER, checklistData.SW_PATCH
     ];
+
+    // 디버깅 코드
+    console.log("쿼리 열 개수:", query.split("?").length - 1);
+    console.log("값 개수:", values.length);
+    console.log("값:", values);
+
     await connection.query(query, values);
   } catch (err) {
     throw new Error(`Error inserting approval request: ${err.message}`);
