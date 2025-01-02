@@ -4,27 +4,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allData = []; // 전역 변수로 선언
 
     // 서버로부터 모든 작업자의 데이터를 불러오는 함수
+    function filterLatestApprovalData(data) {
+        const latestDataMap = new Map();
+    
+        data.forEach(row => {
+            const existingRow = latestDataMap.get(row.name);
+            if (!existingRow || new Date(row.approval_date) > new Date(existingRow.approval_date)) {
+                latestDataMap.set(row.name, row);
+            }
+        });
+    
+        // Map을 배열로 변환
+        return Array.from(latestDataMap.values());
+    }
+    
+    // 서버로부터 모든 데이터를 불러온 후 처리
     async function loadAllSupraMaintenanceData() {
         try {
-            // 토큰을 가져옴 (로그인이 되어 있을 경우)
             const token = localStorage.getItem("x-access-token");
-
-            // 서버에서 모든 작업자의 데이터를 가져옴
+    
             const response = await axios.get('http://3.37.73.151:3001/supra-maintenance/all', {
                 headers: {
-                    'x-access-token': token // 필요한 경우 토큰을 전달
+                    'x-access-token': token
                 }
             });
-
-            allData = response.data; // 서버로부터 받아온 모든 작업자의 데이터를 전역 변수에 저장
-            console.log("전체 작업자 데이터를 확인:", allData); // 서버에서 받은 전체 데이터를 확인
-
+    
+            allData = response.data;
+    
             if (!Array.isArray(allData)) {
                 console.error('Received data is not an array:', allData);
                 return;
             }
-
-            generateTable(allData); // 데이터를 테이블로 생성
+    
+            // approval_date 기준으로 최신 데이터 필터링
+            const filteredData = filterLatestApprovalData(allData);
+    
+            console.log("최신 approval_date 데이터를 확인:", filteredData);
+            generateTable(filteredData);
         } catch (error) {
             console.error('데이터를 불러오는 중 오류 발생:', error);
             if (error.response && error.response.status === 403) {
@@ -46,7 +62,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             category: "EFEM Robot",
             subcategories: [
-                { name: "EFEM_ROBOT_TEACHING", displayName: "EFEM ROBOT TEACHING" },
+                { name: "SR8241_TEACHING", displayName: "SR8241_TEACHING" },
+                { name: "SR8240_TEACHING", displayName: "SR8240_TEACHING" },
+                { name: "M124_TEACHING", displayName: "M124 TEACHING" },
+                { name: "EFEM_FIXTURE", displayName: "EFEM FIXTURE" },
                 { name: "EFEM_ROBOT_REP", displayName: "EFEM ROBOT REP" },
                 { name: "EFEM_ROBOT_CONTROLLER_REP", displayName: "EFEM ROBOT CONTROLLER REP" }
             ]
@@ -54,7 +73,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             category: "TM Robot",
             subcategories: [
-                { name: "TM_ROBOT_TEACHING", displayName: "TM ROBOT TEACHING" },
+                { name: "SR8250_TEACHING", displayName: "SR8250 TEACHING" },
+                { name: "SR8232_TEACHING", displayName: "SR8232 TEACHING" },
+                { name: "TM_FIXTURE", displayName: "TM FIXTURE" },
                 { name: "TM_ROBOT_REP", displayName: "TM ROBOT REP" },
                 { name: "TM_ROBOT_CONTROLLER_REP", displayName: "TM ROBOT CONTROLLER REP" },
                 { name: "PASSIVE_PAD_REP", displayName: "Passive Pad REP" }
@@ -80,11 +101,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             category: "FCIP",
             subcategories: [
-                { name: "FCIP", displayName: "FCIP" },
                 { name: "R1", displayName: "R1" },
                 { name: "R3", displayName: "R3" },
                 { name: "R5", displayName: "R5" },
-                { name: "R3_TO_R5", displayName: "R3 To R5" }
+                { name: "R3_TO_R5", displayName: "R3 To R5" },
+                { name: "PRISM", displayName: "PRISM" }
             ]
         },
         {
@@ -140,6 +161,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "BM_SENSOR", displayName: "BM Sensor" },
                 { name: "PIO_SENSOR", displayName: "PIO Sensor" },
                 { name: "SAFETY_MODULE", displayName: "Safety Module" },
+                { name: "IO_BOX", displayName: "IO BOX" },
+                { name: "FPS_BOARD", displayName: "FPS BOARD" },
                 { name: "D_NET", displayName: "D-NET" }
             ]
         },
@@ -164,16 +187,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "CERAMIC_PLATE", displayName: "Ceramic Plate" },
                 { name: "MONITOR", displayName: "Monitor" },
                 { name: "KEYBOARD", displayName: "Keyboard" },
-                { name: "MOUSE", displayName: "Mouse" }
+                { name: "MOUSE", displayName: "Mouse" },
+                { name: "HEATING_JACKET", displayName: "Heating Jacket" },
+                { name: "WATER_LEAK_DETECTOR", displayName: "Water Leak Detector" },
+                { name: "MANOMETER", displayName: "Manometer" },
             ]
         },
         {
-            category: "24Y 신규",
+            category: "CTR",
             subcategories: [
                 { name: "CTC", displayName: "CTC" },
                 { name: "PMC", displayName: "PMC" },
                 { name: "EDA", displayName: "EDA" },
-                { name: "EFEM_CONTROLLER", displayName: "EFEM CONTROLLER" },
+                { name: "EFEM_CONTROLLER", displayName: "EFEM" },
+                { name: "TEMP_LIMIT_CONTROLLER", displayName: "TEMP LIMIT CONTROLLER" },
+                { name: "TEMP_CONTROLLER", displayName: "TEMP CONTROLLER" },
+            ]
+        },
+        {
+            category: "S/W",
+            subcategories: [
                 { name: "SW_PATCH", displayName: "S/W PATCH" }
             ]
         }

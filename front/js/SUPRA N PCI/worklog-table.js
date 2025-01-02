@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let logs = [];
     let taskCounts = {};  // 전역으로 이동
     let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
-    const excludedWorkers = ["김지웅", "김태형", "퇴사자 여기에 추가"];  // 제외할 작업자들의 이름
+    const excludedWorkers = ["김지웅", "김태형", "홍정욱"];  // 제외할 작업자들의 이름
 
     // 대분류 및 중분류와 작업 항목 리스트 정의
     window.taskCategories = [
@@ -25,7 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             category: "EFEM ROBOT",
             subcategories: [
-                { name: "EFEM ROBOT TEACHING", 기준작업수: 5 },
+                { name: "SR8241 TEACHING", 기준작업수: 5 },
+                { name: "SR8240 TEACHING", 기준작업수: 5 },
+                { name: "M124 TEACHING", 기준작업수: 5 },
+                { name: "EFEM FIXTURE", 기준작업수: 5 },
                 { name: "EFEM ROBOT REP", 기준작업수: 5 },
                 { name: "EFEM ROBOT CONTROLLER REP", 기준작업수: 5 }
             ]
@@ -33,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             category: "TM ROBOT",
             subcategories: [
-                { name: "TM ROBOT TEACHING", 기준작업수: 5 },
+                { name: "SR8250 TEACHING", 기준작업수: 5 },
+                { name: "SR8232 TEACHING", 기준작업수: 5 },
                 { name: "TM ROBOT REP", 기준작업수: 5 },
                 { name: "TM ROBOT CONTROLLER REP", 기준작업수: 5 },
                 { name: "PASSIVE PAD REP", 기준작업수: 3 }
@@ -62,7 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "R1", 기준작업수: 5 },
                 { name: "R3", 기준작업수: 5 },
                 { name: "R5", 기준작업수: 5 },
-                { name: "R3 TO R5", 기준작업수: 5 }
+                { name: "R3 TO R5", 기준작업수: 5 },
+                { name: "PRISM", 기준작업수: 3 }
             ]
         },
         {
@@ -118,6 +123,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "BM SENSOR", 기준작업수: 1 },
                 { name: "PIO SENSOR", 기준작업수: 1 },
                 { name: "SAFETY MODULE", 기준작업수: 1 },
+                { name: "IO BOX", 기준작업수: 3 },
+                { name: "FPS BOARD", 기준작업수: 1 },
                 { name: "D-NET", 기준작업수: 2 }
             ]
         },
@@ -149,16 +156,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { name: "CERAMIC PLATE", 기준작업수: 3 },
                 { name: "MONITOR", 기준작업수: 1 },
                 { name: "KEYBOARD", 기준작업수: 1 },
-                { name: "MOUSE", 기준작업수: 1 }
+                { name: "MOUSE", 기준작업수: 1 },
+                { name: "HEATING JACKET", 기준작업수: 1 },
+                { name: "WATER LEAK DETECTOR", 기준작업수: 1 },
+                { name: "MANOMETER", 기준작업수: 1 }
             ]
         },
         {
-            category: "Y24 신규",
+            category: "CTR",
             subcategories: [
                 { name: "CTC", 기준작업수: 2 },
                 { name: "PMC", 기준작업수: 2 },
                 { name: "EDA", 기준작업수: 2 },
                 { name: "EFEM CONTROLLER", 기준작업수: 2 },
+                { name: "TEMP LIMIT CONTROLLER", 기준작업수: 3 },
+                { name: "TEMP CONTROLLER", 기준작업수: 3 },
+            ]
+        },
+        {
+            category: "S/W",
+            subcategories: [
                 { name: "S/W PATCH", 기준작업수: 2 }
             ]
         }
@@ -270,13 +287,15 @@ saveAggregatedDataToServer(taskCounts);
 
     function addRelatedTaskCounts() {
         Object.keys(taskCounts).forEach(worker => {
-            taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count;
-            taskCounts[worker]["TM ROBOT CONTROLLER REP"].count += taskCounts[worker]["TM ROBOT REP"].count;
-            taskCounts[worker]["IB FLOW"].count += taskCounts[worker]["PIN CYLINDER"].count;
-            taskCounts[worker]["EFEM ROBOT TEACHING"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
-            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count;
-            taskCounts[worker]["R3"].count += taskCounts[worker]["R3 TO R5"].count;
-            taskCounts[worker]["R5"].count += taskCounts[worker]["R3 TO R5"].count;
+            const safeGet = (taskCounts, worker, taskName) => taskCounts[worker][taskName] || { count: 0 };
+    
+            taskCounts[worker]["SR8250 TEACHING"].count += safeGet(taskCounts, worker, "TM ROBOT REP").count;
+            taskCounts[worker]["TM ROBOT CONTROLLER REP"].count += safeGet(taskCounts, worker, "TM ROBOT REP").count;
+            taskCounts[worker]["IB FLOW"].count += safeGet(taskCounts, worker, "PIN CYLINDER").count;
+            taskCounts[worker]["SR8241 TEACHING"].count += safeGet(taskCounts, worker, "EFEM ROBOT REP").count;
+            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += safeGet(taskCounts, worker, "EFEM ROBOT REP").count;
+            taskCounts[worker]["R3"].count += safeGet(taskCounts, worker, "R3 TO R5").count;
+            taskCounts[worker]["R5"].count += safeGet(taskCounts, worker, "R3 TO R5").count;
         });
     }
 

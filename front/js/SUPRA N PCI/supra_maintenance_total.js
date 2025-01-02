@@ -10,10 +10,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const taskMapping = {
         "LP_ESCORT": "LP ESCORT",
         "ROBOT_ESCORT": "ROBOT ESCORT",
-        "EFEM_ROBOT_TEACHING": "EFEM ROBOT TEACHING",
+        "SR8241_TEACHING": "SR8241 TEACHING",
+        "SR8240_TEACHING": "SR8240 TEACHING",
+        "M124_TEACHING": "M124 TEACHING",
+        "EFEM_FIXTURE": "EFEM FIXTURE",
         "EFEM_ROBOT_REP": "EFEM ROBOT REP",
         "EFEM_ROBOT_CONTROLLER_REP": "EFEM ROBOT CONTROLLER REP",
-        "TM_ROBOT_TEACHING": "TM ROBOT TEACHING",
+        "SR8250_TEACHING": "SR8250 TEACHING",
+        "SR8232_TEACHING": "SR8232 TEACHING",
+        "TM_FIXTURE": "TM FIXTURE",
         "TM_ROBOT_REP": "TM ROBOT REP",
         "TM_ROBOT_CONTROLLER_REP": "TM ROBOT CONTROLLER REP",
         "PASSIVE_PAD_REP": "PASSIVE PAD REP",
@@ -28,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         "R3": "R3",
         "R5": "R5",
         "R3_TO_R5": "R3 TO R5",
+        "PRISM": "PRISM",
         "MICROWAVE": "MICROWAVE",
         "APPLICATOR": "APPLICATOR",
         "GENERATOR": "GENERATOR",
@@ -48,6 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         "BM_SENSOR": "BM SENSOR",
         "PIO_SENSOR": "PIO SENSOR",
         "SAFETY_MODULE": "SAFETY MODULE",
+        "IO_BOX": "IO BOX",
+        "FPS_BOARD": "FPS_BOARD",
         "D_NET": "D-NET",
         "MFC": "MFC",
         "VALVE": "VALVE",
@@ -65,10 +73,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         "MONITOR": "MONITOR",
         "KEYBOARD": "KEYBOARD",
         "MOUSE": "MOUSE",
+        "HEATING_JACKET": "HEATING JACKET",
+        "WATER_LEAK_DETECTOR": "WATER LEAK DETECTOR",
+        "MANOMETER": "MANOMETER",
         "CTC": "CTC",
         "PMC": "PMC",
         "EDA": "EDA",
         "EFEM_CONTROLLER": "EFEM CONTROLLER",
+        "TEMP_LIMIT_CONTROLLER": "TEMP LIMIT CONTROLLER",
+        "TEMP_CONTROLLER": "TEMP CONTROLLER",
         "SW_PATCH": "S/W PATCH"
     };
 
@@ -83,7 +96,10 @@ const taskCategories = [
     {
         category: "EFEM Robot",
         subcategories: [
-            { name: "EFEM_ROBOT_TEACHING", displayName: "EFEM ROBOT TEACHING", 기준작업수: 5 },
+            { name: "SR8241_TEACHING", displayName: "SR8241 TEACHING", 기준작업수: 5 },
+            { name: "SR8240_TEACHING", displayName: "SR8240 TEACHING", 기준작업수: 5 },
+            { name: "M124_TEACHING", displayName: "M124 TEACHING", 기준작업수: 5 },
+            { name: "EFEM_FIXTURE", displayName: "EFEM FIXTURE", 기준작업수: 5 },
             { name: "EFEM_ROBOT_REP", displayName: "EFEM ROBOT REP", 기준작업수: 5 },
             { name: "EFEM_ROBOT_CONTROLLER_REP", displayName: "EFEM ROBOT CONTROLLER REP", 기준작업수: 5 }
         ]
@@ -91,7 +107,9 @@ const taskCategories = [
     {
         category: "TM Robot",
         subcategories: [
-            { name: "TM_ROBOT_TEACHING", displayName: "TM ROBOT TEACHING", 기준작업수: 5 },
+            { name: "SR8250_TEACHING", displayName: "SR8250 TEACHING", 기준작업수: 5 },
+            { name: "SR8232_TEACHING", displayName: "SR8232 TEACHING", 기준작업수: 5 },
+            { name: "TM_FIXTURE", displayName: "TM_FIXTURE", 기준작업수: 5 },
             { name: "TM_ROBOT_REP", displayName: "TM ROBOT REP", 기준작업수: 5 },
             { name: "TM_ROBOT_CONTROLLER_REP", displayName: "TM ROBOT CONTROLLER REP", 기준작업수: 5 },
             { name: "PASSIVE_PAD_REP", displayName: "PASSIVE PAD REP", 기준작업수: 3 }
@@ -120,7 +138,8 @@ const taskCategories = [
             { name: "R1", displayName: "R1", 기준작업수: 5 },
             { name: "R3", displayName: "R3", 기준작업수: 5 },
             { name: "R5", displayName: "R5", 기준작업수: 5 },
-            { name: "R3_TO_R5", displayName: "R3 TO R5", 기준작업수: 5 }
+            { name: "R3_TO_R5", displayName: "R3 TO R5", 기준작업수: 5 },
+            { name: "PRISM", displayName: "PRISM", 기준작업수: 3 }
         ]
     },
     {
@@ -176,6 +195,8 @@ const taskCategories = [
             { name: "BM_SENSOR", displayName: "BM SENSOR", 기준작업수: 1 },
             { name: "PIO_SENSOR", displayName: "PIO SENSOR", 기준작업수: 1 },
             { name: "SAFETY_MODULE", displayName: "SAFETY MODULE", 기준작업수: 1 },
+            { name: "IO_BOX", displayName: "IO BOX", 기준작업수: 3 },
+            { name: "FPS_BOARD", displayName: "FPS BOARD", 기준작업수: 1 },
             { name: "D_NET", displayName: "D-NET", 기준작업수: 2 }
         ]
     },
@@ -207,19 +228,29 @@ const taskCategories = [
             { name: "CERAMIC_PLATE", displayName: "CERAMIC PLATE", 기준작업수: 3 },
             { name: "MONITOR", displayName: "MONITOR", 기준작업수: 1 },
             { name: "KEYBOARD", displayName: "KEYBOARD", 기준작업수: 1 },
-            { name: "MOUSE", displayName: "MOUSE", 기준작업수: 1 }
+            { name: "MOUSE", displayName: "MOUSE", 기준작업수: 1 },
+            { name: "HEATING_JACKET", displayName: "HEATING JACKET", 기준작업수: 1 },
+            { name: "WATER_LEAK_DETECTOR", displayName: "WATER LEAK DETECTOR", 기준작업수: 1 },
+            { name: "MANOMETER", displayName: "MANOMETER", 기준작업수: 1 }
         ]
     },
     {
-        category: "Y24 신규",
+        category: "CTR",
         subcategories: [
             { name: "CTC", displayName: "CTC", 기준작업수: 2 },
             { name: "PMC", displayName: "PMC", 기준작업수: 2 },
             { name: "EDA", displayName: "EDA", 기준작업수: 2 },
             { name: "EFEM_CONTROLLER", displayName: "EFEM CONTROLLER", 기준작업수: 2 },
+            { name: "TEMP_LIMIT_CONTROLLER", displayName: "TEMP LIMIT CONTROLLER", 기준작업수: 3 },
+            { name: "TEMP_CONTROLLER", displayName: "TEMP CONTROLLER", 기준작업수: 3 },
+        ]
+    },
+    {
+        category: "S/W",
+        subcategories: [
             { name: "SW_PATCH", displayName: "S/W PATCH", 기준작업수: 2 }
         ]
-    }
+    },
 ];
 
 async function loadWorklogData() {
