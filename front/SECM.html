@@ -103,6 +103,7 @@
                     <button id="showCapaGroup">CAPA</button>
                     <button id="showMpiGroup">MPI</button>
                     <button id="showWorkGroup">WORK</button>
+                    <button id="showStatusGroup">STATUS</button>
                 </div>
                 <div id="personInfo" class="person-info hidden">
                     <p><strong>Name:</strong> <span id="personName"></span></p>
@@ -110,6 +111,11 @@
                     <p><strong>Group:</strong> <span id="personGroup"></span></p>
                     <p><strong>Site:</strong> <span id="personSite"></span></p>
                     <p><strong>ID:</strong> <span id="personID"></span></p>
+                </div>
+
+                <div class="graph-group hidden" id="statusGroup">
+                    <h3 class="group-title">STATUS</h3>
+                    <div id="koreaMapContainer" class="map-container"></div>
                 </div>
                 
                 <div class="graph-container">
@@ -514,8 +520,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=484add2cfbf23f118c0d8153dd1d1644"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="./js/SECM.js" defer></script>
+    <script src="./js/SECM2.js" defer></script>
     <script defer src="./js/logoutTimer.js"></script>
 
     <script>
@@ -559,6 +567,9 @@
         });
         document.getElementById('showMpiGroup').addEventListener('click', () => {
         toggleButton('showMpiGroup', 'mpiGroup');
+        });
+        document.getElementById('showStatusGroup').addEventListener('click', () => {
+        toggleButton('showStatusGroup', 'statusGroup');
         });
 
         // 모달 창 제어

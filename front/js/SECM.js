@@ -189,9 +189,6 @@ const additionalEngineers = [
 ];
 
 // 엔지니어 수 계산 함수 업데이트
-// 엔지니어 수 계산 함수 업데이트
-// 엔지니어 수 계산 함수 업데이트
-// 엔지니어 수 계산 함수 업데이트
 function calculateMonthlyEngineerCount(data) {
     const startYear = 2023;
     const endYear = new Date().getFullYear();
@@ -1997,3 +1994,67 @@ document.getElementById('exportButton').addEventListener('click', () => {
 });
 
 
+function calculateWorkTimeBySite(data) {
+    const siteData = {};
+
+    data.forEach(log => {
+        const site = log.site;
+        const durationParts = log.task_duration.split(':');
+        const workTime = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
+
+        if (!siteData[site]) {
+            siteData[site] = { totalWorkTime: 0, taskCount: 0 };
+        }
+
+        siteData[site].totalWorkTime += workTime;
+        siteData[site].taskCount += 1;
+    });
+
+    return siteData;
+}
+
+function renderWorkTimeBySiteChart(filteredData) {
+    const siteData = calculateWorkTimeBySite(filteredData);
+    const labels = Object.keys(siteData);
+    const workTimes = labels.map(site => siteData[site].totalWorkTime);
+    const taskCounts = labels.map(site => siteData[site].taskCount);
+
+    createChart(groupSiteDistributionChartCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Total Work Time (minutes)',
+                    data: workTimes,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Task Count',
+                    data: taskCounts,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                x: { ticks: { color: 'silver' } },
+                y: { beginAtZero: true, ticks: { color: 'silver' } }
+            }
+        }
+    });
+}
+
+function renderWorkCharts(data) {
+    const filteredData = filterWorkLogData(data);
+    renderWorkTimeBySiteChart(filteredData);
+    // 기존 작업 차트 렌더링 호출
+}
