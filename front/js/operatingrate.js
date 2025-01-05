@@ -162,7 +162,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
         '2024-12-23': {
-            weekday: { 'PEE1 PT': 12.3, 'PEE1 HS': 16.6, 'PEE1 IC': 3.4, 'PEE1 CJ': 3, 'PEE2 PT': 6, 'PEE2 HS': 4.3, 'PSKH PSKH': 7,
+            weekday: { 'PEE1 PT': 14.25, 'PEE1 HS': 15.5, 'PEE1 IC': 3.3, 'PEE1 CJ': 2.63, 'PEE2 PT': 5.625, 'PEE2 HS': 4.25, 'PSKH PSKH': 7,
+                'PEE1 USA-Portland' : 1, 'PEE1 Taiwan-Taichoung' : 1, 'PEE1 Ireland' : 1, 'PEE2 China-Beijing' : 2 },
+            weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
+        },
+        '2024-12-30': {
+            weekday: { 'PEE1 PT': 14.25, 'PEE1 HS': 15.5, 'PEE1 IC': 3.3, 'PEE1 CJ': 2.63, 'PEE2 PT': 5.625, 'PEE2 HS': 4.25, 'PSKH PSKH': 7,
                 'PEE1 USA-Portland' : 1, 'PEE1 Taiwan-Taichoung' : 1, 'PEE1 Ireland' : 1, 'PEE2 China-Beijing' : 2 },
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },

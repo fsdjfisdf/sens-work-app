@@ -127,7 +127,6 @@ function addMarkers(engineerCounts, averageCapas) {
         const popupContent = `
             <div class="custom-popup">
                 <div class="custom-popup-content">
-                    <h4 style="text-align: center; margin-bottom: 10px;">${site}</h4>
                     <table>
                         <thead>
                             <tr>
