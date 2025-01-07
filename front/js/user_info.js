@@ -134,13 +134,13 @@ function getFormattedMultiLevel(level) {
       case 0:
           return '0';
       case 1:
-          return '2-3(B)';
+          return '2-2(B)';
       case 2:
-          return '2-3(A)';
+          return '2-2(A)';
       case 3:
-          return '2-4(B)';
+          return '2-3(B)';
       case 4:
-          return '2-4(A)';
+          return '2-3(A)';
       default:
           return `${level}`; // 기본적으로 원래 값 반환
   }

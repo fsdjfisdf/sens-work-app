@@ -627,8 +627,8 @@ function calculateMonthlyEngineerCount(data) {
                 labels: Object.keys(multiLevelCounts).map(key => {
                     switch (key) {
                         case '0': return 'Lv.2-2';
-                        case '1': return 'Lv.2-3(B)';
-                        case '2': return 'Lv.2-3(A)';
+                        case '1': return 'Lv.2-2(B)';
+                        case '2': return 'Lv.2-2(A)';
                         default: return key;
                     }
                 }),
