@@ -110,6 +110,42 @@ async function loadUserInfo() {
           throw new Error('Network response was not ok');
       }
 
+// LEVEL 값을 변환하는 함수
+function getFormattedLevel(level) {
+  switch (level) {
+      case 0:
+          return '0';
+      case 1:
+          return '1-1';
+      case 2:
+          return '1-2';
+      case 3:
+          return '2-1';
+      case 4:
+          return '2-2';
+      default:
+          return `${level}`; // 기본적으로 원래 값 반환
+  }
+}
+
+// MULTI LEVEL 값을 변환하는 함수
+function getFormattedMultiLevel(level) {
+  switch (level) {
+      case 0:
+          return '0';
+      case 1:
+          return '2-3(B)';
+      case 2:
+          return '2-3(A)';
+      case 3:
+          return '2-4(B)';
+      case 4:
+          return '2-4(A)';
+      default:
+          return `${level}`; // 기본적으로 원래 값 반환
+  }
+}
+
       const data = await response.json();
       if (data.isSuccess) {
           const userInfo = data.result;
@@ -118,8 +154,8 @@ async function loadUserInfo() {
           userGroup.textContent = `${userInfo.GROUP}`;
           userSite.textContent = `${userInfo.SITE}`;
           userHireDate.textContent = `${new Date(userInfo.HIRE).toLocaleDateString()}`;
-          userLevel.textContent = `${userInfo.LEVEL}`;
-          userMultiLevel.textContent = `${userInfo['MULTI LEVEL']}`;
+          userLevel.textContent = getFormattedLevel(userInfo.LEVEL);
+          userMultiLevel.textContent = getFormattedMultiLevel(userInfo['MULTI LEVEL']);
           userMainEq.textContent = `${userInfo['MAIN EQ']}`;
           userMultiEq.textContent = `${userInfo['MULTI EQ']}`;
   
@@ -182,8 +218,8 @@ async function loadUserInfo() {
         };
   
         const currentMonthIndex = new Date().getMonth();
-        const monthlyCapaLabels = ['24YJAN', '24YFEB', '24YMAR', '24YAPR', '24YMAY', '24YJUN', '24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC'].slice(0, currentMonthIndex + 1);
-        const monthlyCapaData = monthlyCapaLabels.map(label => userInfo[label] * 100);
+        const monthlyCapaLabels = ['24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN', '25YFEB', '25YMAR', '25YAPR', '25YMAY'].slice(0,);
+        const monthlyCapaData = monthlyCapaLabels.map(label => userInfo[label] ? (userInfo[label] * 100).toFixed(1) : 0);
   
         // 그래프 생성
         const achievementCtx = document.getElementById('achievementChart').getContext('2d');
@@ -286,7 +322,7 @@ async function loadUserInfo() {
         new Chart(monthlyCapaCtx, {
           type: 'line',
           data: {
-            labels: monthlyCapaLabels.map(label => label.replace('24Y', '')),
+            labels: monthlyCapaLabels.map(label => label.replace('24Y', '24Y ').replace('25Y', '25Y ')),
             datasets: [{
               label: 'Monthly CAPA',
               data: monthlyCapaData,

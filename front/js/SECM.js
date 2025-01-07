@@ -552,7 +552,16 @@ function calculateMonthlyEngineerCount(data) {
         createChart(levelDistributionChartCtx, {
             type: 'bar',
             data: {
-                labels: Object.keys(levelCounts),
+                labels: Object.keys(levelCounts).map(key => {
+                    switch (key) {
+                        case '0': return 'Lv.0';
+                        case '1': return 'Lv.1-1';
+                        case '2': return 'Lv.1-2';
+                        case '3': return 'Lv.2-1';
+                        case '4': return 'Lv.2-2';
+                        default: return key;
+                    }
+                }),
                 datasets: [{
                     label: 'Number of Employees',
                     data: Object.values(levelCounts),
@@ -617,9 +626,9 @@ function calculateMonthlyEngineerCount(data) {
             data: {
                 labels: Object.keys(multiLevelCounts).map(key => {
                     switch (key) {
-                        case '0': return 'Lv.4';
-                        case '1': return 'Lv.4-1(B)';
-                        case '2': return 'Lv.4-1(A)';
+                        case '0': return 'Lv.2-2';
+                        case '1': return 'Lv.2-3(B)';
+                        case '2': return 'Lv.2-3(A)';
                         default: return key;
                     }
                 }),
@@ -963,7 +972,7 @@ function calculateMonthlyEngineerCount(data) {
         createChart(averageTimeToAchieveChartCtx, {
             type: 'bar',
             data: {
-                labels: ['Level1', 'Level2', 'Level3', 'Level4'],
+                labels: ['Lv.1-1', 'Lv.1-2', 'Lv.2-1', 'Lv.2-2'],
                 datasets: [{
                     label: 'Average Time to Achieve (Years)',
                     data: timeToAchieveLevels,
@@ -1010,14 +1019,14 @@ function calculateMonthlyEngineerCount(data) {
 
 // Monthly CAPA Graph 데이터 처리
 const currentMonth = new Date().getMonth();
-const monthlyCapaLabels = ['24YJAN', '24YFEB', '24YMAR', '24YAPR', '24YMAY', '24YJUN', '24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC'].slice(0, currentMonth);
+const monthlyCapaLabels = ['24YJUN', '24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN','25YFEB','25YMAR','25YAPR','25YMAY','25YJUN'].slice(0,);
 const monthlyCapaData = monthlyCapaLabels.map(label => {
     const capaValues = data.map(row => row[label]).filter(value => value !== null);
     return capaValues.reduce((sum, value) => sum + value, 0) / capaValues.length;
 });
 
 // CAPA Goal 데이터 추가 (여러 명일 경우 평균 계산)
-const capaGoals = data.map(row => row['24Y CAPA GOAL']).filter(goal => goal !== null);
+const capaGoals = data.map(row => row['25Y CAPA GOAL']).filter(goal => goal !== null);
 const capaGoal = capaGoals.length > 0 ? capaGoals.reduce((sum, goal) => sum + goal, 0) / capaGoals.length : 0; // 평균 계산
 const monthlyCapaGoal = Array(monthlyCapaLabels.length).fill(capaGoal); // 모든 월에 동일한 평균 CAPA GOAL 값
 
@@ -1025,7 +1034,7 @@ const monthlyCapaGoal = Array(monthlyCapaLabels.length).fill(capaGoal); // 모�
 createChart(monthlyCapaChartCtx, {
     type: 'line',
     data: {
-        labels: monthlyCapaLabels.map(label => label.replace('24Y', '')),
+        labels: monthlyCapaLabels.map(label => label.replace('24Y', '24Y ').replace('25Y', '25Y ')),
         datasets: [
             {
                 label: 'Monthly CAPA',
@@ -2051,10 +2060,4 @@ function renderWorkTimeBySiteChart(filteredData) {
             }
         }
     });
-}
-
-function renderWorkCharts(data) {
-    const filteredData = filterWorkLogData(data);
-    renderWorkTimeBySiteChart(filteredData);
-    // 기존 작업 차트 렌더링 호출
 }
