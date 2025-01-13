@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
           "Ireland": ["INTEL"],
           "Japan-Hiroshiama": ["MICRON"],
           "China-Wuxi": ["HYNIX"],
-          "China-Xian": ["HYNIX"],
+          "China-Xian": ["HYNIX", "SAMSUNG"],
           "China-Shanghai": ["GTX"],
           "China-Beijing": ["JIDIAN"],
           "Taiwan-Taichoung": ["MICRON"],
