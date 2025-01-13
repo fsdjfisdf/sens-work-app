@@ -139,7 +139,7 @@ const calculateCurrentEngineers = (data) => {
 // 그래프를 그리는 함수
 const drawChart = (data) => {
     canvas.width = 1580 * zoomFactor;
-    canvas.height = 550; // 높이 증가하여 범례 공간 확보
+    canvas.height = 700; // 높이 증가하여 범례 공간 확보
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const years = Array.from({ length: 2025 - 2018 + 1 }, (_, i) => 2018 + i);
