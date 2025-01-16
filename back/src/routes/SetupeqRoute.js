@@ -9,7 +9,7 @@ router.get("/", setupeqController.getEquipmentList);
 router.get("/:id", setupeqController.getEquipmentStatus);
 
 // 특정 설비 작업 상태 업데이트
-router.put("/:id", setupeqController.updateEquipmentStatus);
+router.patch("/:id", setupeqController.updateEquipmentStatus);
 
 
 module.exports = router;

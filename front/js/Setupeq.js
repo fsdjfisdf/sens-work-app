@@ -4,15 +4,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const modalTitle = document.getElementById("modal-title");
     const modalBody = document.getElementById("modal-body");
     const closeModalBtn = document.getElementById("close-modal");
+    const saveChangesBtn = document.getElementById("save-changes");
     const API_BASE_URL = "http://3.37.73.151:3001/api/setupeq";
 
-    // 설비 목록 가져오기
+    // 장비 목록 가져오기
     async function fetchEquipment() {
         try {
             const response = await axios.get(API_BASE_URL);
             const equipment = response.data;
 
-            // 평균값 계산 및 정렬
             const sortedEquipment = equipment
                 .map(e => {
                     const percentKeys = [
@@ -29,14 +29,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                         "TTTM_PERCENT",
                         "CUSTOMER_CERTIFICATION_PERCENT"
                     ];
-
-                    const sum = percentKeys.reduce((total, key) => total + (parseFloat(e[key]) || 0), 0);
-                    const averageProgress = Math.round((sum / percentKeys.length) * 100);
+                    const total = percentKeys.reduce((sum, key) => sum + (parseFloat(e[key]) || 0), 0);
+                    const averageProgress = Math.round((total / percentKeys.length) * 100);
                     return { ...e, averageProgress };
                 })
-                .sort((a, b) => a.averageProgress - b.averageProgress); // 낮은 값부터 정렬
+                .sort((a, b) => a.averageProgress - b.averageProgress);
 
-            // HTML 업데이트
             equipmentList.innerHTML = sortedEquipment
                 .map(e => `
                     <li class="equipment-item" data-id="${e.id}">
@@ -50,19 +48,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </li>
                 `)
                 .join("");
+
+            if (sortedEquipment.length === 0) {
+                document.getElementById("no-equipment").classList.remove("hidden");
+            }
         } catch (error) {
             console.error("Error fetching equipment:", error);
         }
     }
 
-    // 특정 설비 상세 상태 가져오기
+    // 특정 설비 정보 가져오기
     async function fetchEquipmentDetails(id) {
         try {
             const response = await axios.get(`${API_BASE_URL}/${id}`);
             const status = response.data;
-    
+
             modalTitle.textContent = status.EQNAME;
-    
+
             const steps = [
                 { key: "INSTALLATION_PREPARATION", label: "Installation Preparation" },
                 { key: "FAB_IN", label: "Fab In" },
@@ -77,69 +79,76 @@ document.addEventListener("DOMContentLoaded", async () => {
                 { key: "TTTM", label: "TTTM" },
                 { key: "CUSTOMER_CERTIFICATION", label: "Customer Certification" }
             ];
-    
+
             modalBody.innerHTML = steps
                 .map(({ key, label }) => {
                     const percentKey = `${key}_PERCENT`;
                     const companyKey = `${key}_COMPANY`;
                     const percentage = Math.round((status[percentKey] || 0) * 100);
-                    const company = status[companyKey] || "";
-    
+                    const company = status[companyKey] || "비어있음";
+
                     return `
                         <div class="status-item">
                             <div class="status-header">
                                 <span>${label}</span>
-                                <input type="number" class="percent-input" data-key="${percentKey}" value="${percentage}" min="0" max="100">%
                                 <select class="company-select" data-key="${companyKey}">
-                                    <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
+                                    <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
                                     <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
                                     <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
+                                    <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
                                 </select>
+                            </div>
+                            <div class="progress-bar">
+                                <input type="number" class="percent-input" data-key="${percentKey}" value="${percentage}" min="0" max="100" />
                             </div>
                         </div>`;
                 })
                 .join("");
-    
-            modalBody.insertAdjacentHTML(
-                "beforeend",
-                `<button id="save-status" class="save-btn">Save</button>`
-            );
-    
-            document.getElementById("save-status").addEventListener("click", () => saveEquipmentDetails(id));
-    
+
             equipmentModal.classList.add("open");
         } catch (error) {
             console.error("Error fetching equipment details:", error);
         }
     }
-    
-    // 설비 상태 업데이트
-    async function saveEquipmentDetails(id) {
-        const inputs = document.querySelectorAll(".percent-input");
+
+    // 저장 버튼 클릭 이벤트
+    saveChangesBtn.addEventListener("click", async () => {
         const selects = document.querySelectorAll(".company-select");
+        const inputs = document.querySelectorAll(".percent-input");
     
-        const updates = {};
+        const updates = Array.from(selects).map(select => ({
+            key: select.dataset.key,
+            value: select.value
+        }));
     
-        inputs.forEach(input => {
-            const key = input.dataset.key;
-            updates[key] = parseFloat(input.value) / 100; // 0~1 범위로 변환
+        Array.from(inputs).forEach(input => {
+            updates.push({
+                key: input.dataset.key,
+                value: parseFloat(input.value) / 100 // 백분율을 소수로 변환
+            });
         });
     
-        selects.forEach(select => {
-            const key = select.dataset.key;
-            updates[key] = select.value;
-        });
+        const equipmentId = modalTitle.dataset.id; // 모달에 ID 저장되어 있다고 가정
     
         try {
-            const response = await axios.put(`${API_BASE_URL}/${id}`, updates);
-            alert(response.data.message);
-            equipmentModal.classList.remove("open");
-            fetchEquipment(); // 리스트 재로드
+            const response = await axios.patch(`${API_BASE_URL}/${equipmentId}`, updates);
+            if (response.status === 200) {
+                alert("Changes saved successfully.");
+                equipmentModal.classList.remove("open");
+                await fetchEquipment(); // 업데이트된 데이터 반영
+            } else {
+                alert("Failed to save changes.");
+            }
         } catch (error) {
-            console.error("Error saving equipment details:", error);
-            alert("Failed to save changes.");
+            console.error("Error saving changes:", error);
+            alert("Error saving changes.");
         }
-    }
+    });
+
+    // 모달 닫기
+    closeModalBtn.addEventListener("click", () => {
+        equipmentModal.classList.remove("open");
+    });
 
     // 설비 리스트 클릭 이벤트
     equipmentList.addEventListener("click", (e) => {
@@ -150,11 +159,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // 모달 닫기 이벤트
-    closeModalBtn.addEventListener("click", () => {
-        equipmentModal.classList.remove("open");
-    });
-
-    // 초기 데이터 로드
     await fetchEquipment();
 });
