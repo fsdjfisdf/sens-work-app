@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const setupeqController = require("../controllers/Setupeq.Controller");
+const setupeqController = require("../controllers/SetupeqController");
 
 // 설비 목록 가져오기
 router.get("/", setupeqController.getEquipmentList);
