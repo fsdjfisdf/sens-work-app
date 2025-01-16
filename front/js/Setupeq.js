@@ -48,10 +48,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </li>
                 `)
                 .join("");
-
-            if (sortedEquipment.length === 0) {
-                document.getElementById("no-equipment").classList.remove("hidden");
-            }
         } catch (error) {
             console.error("Error fetching equipment:", error);
         }
@@ -64,6 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const status = response.data;
 
             modalTitle.textContent = status.EQNAME;
+            modalTitle.dataset.id = id; // ID 저장
 
             const steps = [
                 { key: "INSTALLATION_PREPARATION", label: "Installation Preparation" },
@@ -116,19 +113,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         const selects = document.querySelectorAll(".company-select");
         const inputs = document.querySelectorAll(".percent-input");
     
-        const updates = Array.from(selects).map(select => ({
-            key: select.dataset.key,
-            value: select.value
-        }));
-    
-        Array.from(inputs).forEach(input => {
-            updates.push({
-                key: input.dataset.key,
-                value: parseFloat(input.value) / 100 // 백분율을 소수로 변환
-            });
+        const updates = {};
+        selects.forEach(select => {
+            updates[select.dataset.key] = select.value; // 회사 변경
+        });
+        inputs.forEach(input => {
+            updates[input.dataset.key] = parseFloat(input.value) / 100; // 퍼센트 값 소수로 변환
         });
     
-        const equipmentId = modalTitle.dataset.id; // 모달에 ID 저장되어 있다고 가정
+        const equipmentId = modalTitle.dataset.id; // 모달에 저장된 ID 가져오기
+    
+        if (!equipmentId) {
+            alert("Equipment ID is missing.");
+            return;
+        }
     
         try {
             const response = await axios.patch(`${API_BASE_URL}/${equipmentId}`, updates);

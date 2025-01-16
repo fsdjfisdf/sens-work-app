@@ -29,20 +29,16 @@ exports.getEquipmentById = async (id) => {
 };
 
 // 특정 설비 작업 상태 업데이트
-exports.updateEquipment = async (id, updates) => {
+exports.updateEquipmentById = async (id, updates) => {
     const connection = await pool.getConnection(async conn => conn);
-
     try {
-        const updateFields = updates.map(({ key, value }) => `${key} = ?`).join(", ");
-        const updateValues = updates.map(({ value }) => value);
+        // 업데이트 쿼리 생성
+        const fields = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+        const values = Object.values(updates);
+        const query = `UPDATE SETUP_EQUIPMENT SET ${fields} WHERE id = ?`;
 
-        const query = `
-            UPDATE SETUP_EQUIPMENT
-            SET ${updateFields}
-            WHERE id = ?`;
-
-        const [result] = await connection.query(query, [...updateValues, id]);
-        return result; // 업데이트 결과 반환
+        const [result] = await connection.query(query, [...values, id]);
+        return result;
     } catch (err) {
         throw new Error(`Error updating equipment: ${err.message}`);
     } finally {

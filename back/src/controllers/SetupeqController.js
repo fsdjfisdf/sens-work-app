@@ -29,19 +29,19 @@ exports.getEquipmentStatus = async (req, res) => {
 };
 
 // 특정 설비 작업 상태 업데이트
-exports.updateEquipmentStatus = async (req, res) => {
-    const { id } = req.params; // 설비 ID
-    const updates = req.body; // 업데이트 데이터 (키-값 쌍 배열)
+exports.updateEquipment = async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
 
     try {
-        const result = await setupeqDao.updateEquipment(id, updates);
+        const result = await setupeqDao.updateEquipmentById(id, updates);
         if (result.affectedRows > 0) {
-            res.status(200).json({ message: "Equipment updated successfully." });
+            res.status(200).json({ message: "Equipment updated successfully" });
         } else {
-            res.status(404).json({ message: "Equipment not found." });
+            res.status(404).json({ message: "Equipment not found" });
         }
     } catch (error) {
-        console.error("Error updating equipment status:", error);
-        res.status(500).json({ error: "Error updating equipment status." });
+        console.error("Error updating equipment:", error);
+        res.status(500).json({ error: "Error updating equipment" });
     }
 };
