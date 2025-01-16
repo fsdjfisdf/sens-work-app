@@ -1,83 +1,92 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9fb;
-    color: #333;
+/* 모달 창 스타일 */
+#equipment-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+    overflow-y: auto;
+    max-height: 80%;
 }
 
-nav {
-    background-color: #1c1c1e;
-    padding: 10px;
-    display: flex;
-    justify-content: center;
+#equipment-modal.open {
+    opacity: 1;
+    visibility: visible;
 }
 
-.nav-container {
-    width: 100%;
-    max-width: 1200px;
+.modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #fff;
-}
-
-main {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 20px auto;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-    font-size: 24px;
     margin-bottom: 20px;
-    color: #1c1c1e;
 }
 
-ul {
-    list-style: none;
-    padding: 0;
+.modal-header h3 {
+    margin: 0;
+    font-size: 22px;
 }
 
-.equipment-item {
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-bottom: 10px;
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #888;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: color 0.3s ease;
 }
 
-.equipment-item:hover {
-    background-color: #f0f0f0;
+.close-btn:hover {
+    color: #333;
 }
 
-.hidden {
-    display: none;
+.status-item {
+    margin-bottom: 15px;
 }
 
-#status-list li {
+.status-header {
     display: flex;
     justify-content: space-between;
-    padding: 10px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    border-radius: 5px;
+    font-size: 14px;
+    margin-bottom: 5px;
 }
 
-#back-to-list {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.progress-bar {
+    background: #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+    height: 10px;
 }
 
-#back-to-list:hover {
-    background-color: #0056b3;
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #81c784);
+    transition: width 0.3s ease-in-out;
+}
+
+.progress-percent {
+    font-size: 14px;
+    color: #555;
+    text-align: right;
+}
+
+/* 애니메이션 */
+@keyframes slideUp {
+    from {
+        transform: translateY(20%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }

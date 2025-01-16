@@ -10,51 +10,45 @@
 <body>
     <nav>
         <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned"></div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <!-- Add relevant menu links here -->
-                <a href="./Setupeq.html" class="menu-item">SET UP STATUS BOARD</a>
-                <button id="sign-out" class="menu-item">Logout</button>
-            </div>
+            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
         </div>
     </nav>
 
     <main>
+        <!-- 설비 리스트 -->
         <section id="equipment-section">
             <div class="inner">
                 <h2>Equipment List</h2>
-                <ul id="equipment-list"></ul>
+                <ul id="equipment-list" class="equipment-container"></ul>
             </div>
         </section>
 
+        <!-- 설비 상세 상태 -->
         <section id="status-section" class="hidden">
             <div class="inner">
                 <h2 id="equipment-name"></h2>
-                <ul id="status-list"></ul>
-                <button id="back-to-list">Back to List</button>
+                <ul id="status-list" class="status-container"></ul>
+                <button id="back-to-list" class="back-button">Back to List</button>
             </div>
         </section>
     </main>
 
     <footer>
         <div class="inner">
-            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지합니다.</p>
+            <p>SEnS 제공 정보는 사외비입니다. 무단 유출 금지.</p>
         </div>
     </footer>
+    <!-- 모달 창 추가 -->
+    <div id="equipment-modal" class="hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title"></h3>
+                <button id="close-modal" class="close-btn">×</button>
+            </div>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
 
     <script src="./js/Setupeq.js"></script>
 </body>

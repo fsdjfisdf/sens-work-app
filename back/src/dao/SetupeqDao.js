@@ -4,7 +4,7 @@ const { pool } = require("../../config/database");
 exports.getAllEquipment = async () => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        const query = "SELECT id, EQNAME, `GROUP`, SITE FROM SETUP_EQUIPMENT ORDER BY create_at DESC";
+        const query = "SELECT * FROM SETUP_EQUIPMENT ORDER BY create_at DESC"; // 모든 컬럼 가져오기
         const [rows] = await connection.query(query);
         return rows;
     } catch (err) {
@@ -18,15 +18,7 @@ exports.getAllEquipment = async () => {
 exports.getEquipmentById = async (id) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        const query = `
-            SELECT 
-                id, EQNAME, INSTALLATION_PREPARATION_PERCENT, FAB_IN_PERCENT, DOCKING_PERCENT, 
-                CABLE_HOOK_UP_PERCENT, POWER_TURN_ON_PERCENT, UTILITY_TURN_ON_PERCENT, 
-                GAS_TURN_ON_PERCENT, TEACHING_PERCENT, PART_INSTALLATION_PERCENT, 
-                LEAK_CHECK_PERCENT, TTTM_PERCENT, CUSTOMER_CERTIFICATION_PERCENT, COMPLETE 
-            FROM SETUP_EQUIPMENT
-            WHERE id = ?
-        `;
+        const query = "SELECT * FROM SETUP_EQUIPMENT WHERE id = ?"; // 모든 컬럼 가져오기
         const [rows] = await connection.query(query, [id]);
         return rows[0]; // ID가 고유하므로 한 개의 결과만 반환
     } catch (err) {
