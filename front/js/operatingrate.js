@@ -353,11 +353,13 @@ async function calculateAndDisplayAverageOperatingRate(weeklyRates, firstLogDate
     const end = endDate ? new Date(endDate) : new Date();
     
     const filteredRates = Object.keys(weeklyRates)
-        .filter(weekKey => {
+        .flatMap(weekKey => {
             const weekDate = new Date(weekKey);
-            return weekDate >= start && weekDate <= end; // 날짜 범위 필터링
-        })
-        .flatMap(weekKey => weeklyRates[weekKey]); // 범위 내 데이터만 평탄화
+            if (weekDate >= start && weekDate <= end) {
+                return weeklyRates[weekKey];
+            }
+            return [];
+        });
 
         const totalOperatingRates = filteredRates.reduce((sum, rate) => sum + rate, 0);
         const count = filteredRates.length;
@@ -685,7 +687,7 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
     
         const operatingRateElement = document.createElement('p');
         operatingRateElement.classList.add('operating-rate');
-        operatingRateElement.innerText = `가동율: ${operatingRate}%`;
+        operatingRateElement.innerText = `WTM: ${operatingRate}%`;
         dayDiv.appendChild(operatingRateElement);
     
         dayDiv.addEventListener('click', () => openModal(dateString, dailyLogs));
@@ -709,7 +711,7 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
         const date = new Date(year, month - 1, day);
         const weekNumber = getWeekNumber(date);
         const monthName = date.toLocaleString('en', { month: 'short' });
-        return `${monthName} - ${weekNumber}W`;
+        return `${year}Y-${monthName}-${weekNumber}W`;
     }
     
 
@@ -922,7 +924,7 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">가동율</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">WTM</td>
                     <td style="padding: 8px; border-bottom: 1px solid #ddd;">
                         <div>(필요 Eng'r 수 / 주간 가용 Eng'r 수) x 100</div>
                         <div>(${requiredEngineers} / ${totalEngineers}) x 100 = <strong>${operatingRate}%</strong></div>
@@ -930,10 +932,10 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
                 </tr>
             </table>
             <div style="margin-top: 20px; font-size: 14px; line-height: 1.5; color: #555;">
-                <strong>IT TIME ( 4시간, 4.5시간 ) 에 대한 근거</strong><br>
-                -. IT TIME : FAB 내에서 작업하는 시간 및 식사시간을 제외한 시간<br>
-                -. 1건 작업 시 IT TIME(4시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2시간)<br>
-                -. 2건 작업 시 IT TIME(4.5시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2.5시간)<br>
+                <strong>TAT TIME ( 4시간, 4.5시간 ) 에 대한 근거</strong><br>
+                -. TAT(Turn Around Time) : FAB 내에서 작업하는 시간 및 식사시간을 제외한 시간<br>
+                -. 1건 작업 시 TAT(4시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2시간)<br>
+                -. 2건 작업 시 TAT(4.5시간) : TBM(0.5시간) + 작업 분배 및 준비(1시간) + 이력 작성(0.5시간) + 이동시간(2.5시간)<br>
                 -. 이동시간에는 Site 이동 및 방진복 착용, Air Shower 등의 시간이 포함됨
             </div>
         `;
@@ -1652,11 +1654,9 @@ function renderGroupSiteAverageChart(logs) {
         groupSiteRates[groupSiteKey].totalEngineers += numWorkers;
     });
 
-    console.log("Group-Site Operating Rate Calculation:");
     Object.keys(groupSiteRates).forEach(label => {
         const { totalWorkHours, totalEngineers } = groupSiteRates[label];
         const operatingRate = totalEngineers > 0 ? ((totalWorkHours / (totalEngineers * 8)) * 100).toFixed(1) : 0;
-        console.log(`Group-Site: ${label}, Total Work Hours: ${totalWorkHours.toFixed(2)}, Total Engineers: ${totalEngineers}, Operating Rate: ${operatingRate}%`);
     });
 
     const labels = Object.keys(groupSiteRates);

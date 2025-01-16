@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operating Rate</title>
+    <title>WTM</title>
     <link rel="stylesheet" href="./css/operatingrate.css">
 </head>
 <body>
@@ -36,7 +36,7 @@
                 <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
                 <a href="./business.html" class="menu-item">Business trip</a>
                 <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./group-site-stats.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./group-site-stats.html" class="menu-item admin-only">WTM</a>
                 <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
                 <a href="./update.html" class="menu-item">Update</a>
                 <button id="sign-out" class="menu-item">Logout</button>
@@ -94,11 +94,11 @@
 <main class="main-content">
     <section id="operating-rate-section" class="section">
         <div class="inner">
-            <h2 class="section-title">Operating Rate</h2>
+            <h2 class="section-title">WTM ( Working Time Matching )</h2>
                 <div class="chart-container">
                     <div class="donut-chart-wrapper">
                         <div id="average-operating-rate" class="average-operating-rate">
-                            <p>전체 평균 가동율: <span id="average-operating-rate-value">0%</span></p>
+                            <p>전체 평균 WTM: <span id="average-operating-rate-value">0%</span></p>
                             <canvas id="donutChart"></canvas>
                         </div>
                     </div>
@@ -116,7 +116,7 @@
 
     <section id="calendar-section" class="section">
         <div class="inner">
-            <h2 class="section-title">Calendar for Operating Rate</h2>
+            <h2 class="section-title">Calendar for WTM</h2>
 
                 <div id="current-month" class="current-month"></div>
                 <div class="calendar">
@@ -127,7 +127,7 @@
     </section>
 
     <div class="chart-pakage3">
-        <h3>Weekly Operating Rate</h3>
+        <h3>Weekly WTM</h3>
         <canvas id="weeklyOperatingRateChart"></canvas>
     </div>
 
@@ -179,7 +179,7 @@
             </div>
 
             <div class="chart-pakage2">
-                <h3>Group & Site Operating Rates</h3>
+                <h3>Group & Site WTM</h3>
                 <canvas id="groupSiteOperatingRateChart"></canvas>
             </div>
 

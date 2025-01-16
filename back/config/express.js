@@ -86,6 +86,9 @@ module.exports = function () {
 
   // 업데이트 라우트 연결
   app.use('/api/updates', updateRoute);
+
+  const setupeqRoute = require('../src/routes/Setupeq.Route');
+  app.use('/api/setupeq', setupeqRoute);
   
 
 
