@@ -30,7 +30,7 @@ module.exports = function () {
   // CORS 설정
   const corsOptions = {
     origin: '*', // 모든 도메인에서의 요청을 허용
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token']
   };
   app.use(cors(corsOptions));
