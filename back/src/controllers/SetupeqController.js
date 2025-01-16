@@ -27,3 +27,20 @@ exports.getEquipmentStatus = async (req, res) => {
         res.status(500).json({ error: "Error fetching equipment status" });
     }
 };
+
+// 특정 설비 작업 상태 업데이트
+exports.updateEquipmentStatus = async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body; // { INSTALLATION_PREPARATION_PERCENT, INSTALLATION_PREPARATION_COMPANY, ... }
+
+    try {
+        const result = await setupeqDao.updateEquipmentStatus(id, updates);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Equipment not found or no changes made" });
+        }
+        res.status(200).json({ message: "Equipment status updated successfully" });
+    } catch (error) {
+        console.error("Error updating equipment status:", error);
+        res.status(500).json({ error: "Error updating equipment status" });
+    }
+};

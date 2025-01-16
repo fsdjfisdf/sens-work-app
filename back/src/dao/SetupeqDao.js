@@ -27,3 +27,21 @@ exports.getEquipmentById = async (id) => {
         connection.release();
     }
 };
+
+// 특정 설비 작업 상태 업데이트
+exports.updateEquipmentStatus = async (id, updates) => {
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+        const fields = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+        const values = Object.values(updates);
+
+        const query = `UPDATE SETUP_EQUIPMENT SET ${fields}, update_at = NOW() WHERE id = ?`;
+        const [result] = await connection.query(query, [...values, id]);
+
+        return result;
+    } catch (err) {
+        throw new Error(`Error updating equipment status: ${err.message}`);
+    } finally {
+        connection.release();
+    }
+};
