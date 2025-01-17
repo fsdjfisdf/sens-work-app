@@ -159,17 +159,36 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.querySelectorAll(".section").forEach(section => {
                 section.addEventListener("mouseenter", function (event) {
                     const info = this.getAttribute("data-info");
-                    const details = this.getAttribute("data-details").split(", ").join("<br>");
+                    const detailsArray = this.getAttribute("data-details").split(", ");
                     
+                    // 각 하위 항목의 상태를 계산
+                    const formattedDetails = detailsArray.map(detail => {
+                        const [name, percentage] = detail.split(": ");
+                        const numericPercentage = parseFloat(percentage.replace("%", ""));
+                        
+                        let status;
+                        if (numericPercentage === 100) {
+                            status = "작업 완료";
+                        } else if (numericPercentage > 0 && numericPercentage < 100) {
+                            status = "작업 중";
+                        } else {
+                            status = "미작업";
+                        }
+                        
+                        return `${name}: ${status}`;
+                    }).join("<br>");
+            
+                    // 툴팁 생성
                     const tooltip = document.createElement("div");
                     tooltip.classList.add("polygon-tooltip");
-                    tooltip.innerHTML = `<strong class="tooltip-highlight">${info}</strong><br>${details}`;
+                    tooltip.innerHTML = `<strong class="tooltip-highlight">${info}</strong><br>${formattedDetails}`;
                     document.body.appendChild(tooltip);
-                    
+            
+                    // 툴팁 위치 계산
                     const rect = event.target.getBoundingClientRect();
                     const tooltipWidth = tooltip.offsetWidth;
                     const tooltipHeight = tooltip.offsetHeight;
-                    
+            
                     tooltip.style.top = `${rect.top + window.scrollY - tooltipHeight - 15}px`;
                     tooltip.style.left = `${rect.left + window.scrollX + rect.width / 2 - tooltipWidth / 2}px`;
                 });
