@@ -1,57 +1,196 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    const equipmentList = document.getElementById("equipment-list");
+    const equipmentMatrix = document.getElementById("equipment-matrix"); // 매트릭스 컨테이너
     const equipmentModal = document.getElementById("equipment-modal");
     const modalTitle = document.getElementById("modal-title");
     const modalBody = document.getElementById("modal-body");
     const closeModalBtn = document.getElementById("close-modal");
     const saveChangesBtn = document.getElementById("save-changes");
     const API_BASE_URL = "http://3.37.73.151:3001/api/setupeq";
+    
 
-    // 장비 목록 가져오기
+    function getPolygonPoints(cx, cy, radius, sides) {
+        const points = [];
+        for (let i = 0; i < sides; i++) {
+            const angle = (Math.PI * 2 * i) / sides - Math.PI / 2;
+            const x = cx + radius * Math.cos(angle);
+            const y = cy + radius * Math.sin(angle);
+            points.push({ x, y });
+        }
+        return points;
+    }
+    
+    function createSectionPolygon(cx, cy, radius, progress, index) {
+        const allPoints = getPolygonPoints(cx, cy, radius, 5);
+        const p1 = allPoints[index];
+        const p2 = allPoints[(index + 1) % 5];
+    
+        const p1Progress = {
+            x: cx + progress[index] * (p1.x - cx),
+            y: cy + progress[index] * (p1.y - cy),
+        };
+        const p2Progress = {
+            x: cx + progress[index] * (p2.x - cx),
+            y: cy + progress[index] * (p2.y - cy),
+        };
+    
+        return `${cx},${cy} ${p1Progress.x},${p1Progress.y} ${p2Progress.x},${p2Progress.y}`;
+    }
+    
     async function fetchEquipment() {
         try {
-            const response = await axios.get(API_BASE_URL);
+            const response = await axios.get("http://3.37.73.151:3001/api/setupeq");
             const equipment = response.data;
+    
+            const sortedEquipment = equipment.map(e => {
+                const sections = [
+                    {
+                        name: "Install",
+                        progress: (e.INSTALLATION_PREPARATION_PERCENT +
+                            e.FAB_IN_PERCENT +
+                            e.DOCKING_PERCENT +
+                            e.CABLE_HOOK_UP_PERCENT) / 4,
+                        details: [
+                            `Installation Preparation: ${Math.round(e.INSTALLATION_PREPARATION_PERCENT * 100)}%`,
+                            `Fab In: ${Math.round(e.FAB_IN_PERCENT * 100)}%`,
+                            `Docking: ${Math.round(e.DOCKING_PERCENT * 100)}%`,
+                            `Cable Hook Up: ${Math.round(e.CABLE_HOOK_UP_PERCENT * 100)}%`,
+                        ],
+                    },
+                    {
+                        name: "Turn On",
+                        progress: (e.POWER_TURN_ON_PERCENT +
+                            e.UTILITY_TURN_ON_PERCENT +
+                            e.GAS_TURN_ON_PERCENT) / 3,
+                        details: [
+                            `Power Turn On: ${Math.round(e.POWER_TURN_ON_PERCENT * 100)}%`,
+                            `Utility Turn On: ${Math.round(e.UTILITY_TURN_ON_PERCENT * 100)}%`,
+                            `Gas Turn On: ${Math.round(e.GAS_TURN_ON_PERCENT * 100)}%`,
+                        ],
+                    },
+                    {
+                        name: "Tuning",
+                        progress: e.TEACHING_PERCENT,
+                        details: [`Teaching: ${Math.round(e.TEACHING_PERCENT * 100)}%`],
+                    },
+                    {
+                        name: "TTTM",
+                        progress: (e.PART_INSTALLATION_PERCENT +
+                            e.LEAK_CHECK_PERCENT +
+                            e.TTTM_PERCENT) / 3,
+                        details: [
+                            `Part Installation: ${Math.round(e.PART_INSTALLATION_PERCENT * 100)}%`,
+                            `Leak Check: ${Math.round(e.LEAK_CHECK_PERCENT * 100)}%`,
+                            `TTTM: ${Math.round(e.TTTM_PERCENT * 100)}%`,
+                        ],
+                    },
+                    {
+                        name: "Customer Certification",
+                        progress: e.CUSTOMER_CERTIFICATION_PERCENT,
+                        details: [`Customer Certification: ${Math.round(e.CUSTOMER_CERTIFICATION_PERCENT * 100)}%`],
+                    },
+                ];
+    
+                const averageProgress = Math.round(
+                    (sections.reduce((sum, section) => sum + section.progress, 0) / 5) * 100
+                );
+    
+                return { ...e, sections, averageProgress };
+            });
 
-            const sortedEquipment = equipment
+            
+    
+            const equipmentMatrix = document.getElementById("equipment-matrix");
+            equipmentMatrix.innerHTML = sortedEquipment
                 .map(e => {
-                    const percentKeys = [
-                        "INSTALLATION_PREPARATION_PERCENT",
-                        "FAB_IN_PERCENT",
-                        "DOCKING_PERCENT",
-                        "CABLE_HOOK_UP_PERCENT",
-                        "POWER_TURN_ON_PERCENT",
-                        "UTILITY_TURN_ON_PERCENT",
-                        "GAS_TURN_ON_PERCENT",
-                        "TEACHING_PERCENT",
-                        "PART_INSTALLATION_PERCENT",
-                        "LEAK_CHECK_PERCENT",
-                        "TTTM_PERCENT",
-                        "CUSTOMER_CERTIFICATION_PERCENT"
-                    ];
-                    const total = percentKeys.reduce((sum, key) => sum + (parseFloat(e[key]) || 0), 0);
-                    const averageProgress = Math.round((total / percentKeys.length) * 100);
-                    return { ...e, averageProgress };
-                })
-                .sort((a, b) => a.averageProgress - b.averageProgress);
-
-            equipmentList.innerHTML = sortedEquipment
-                .map(e => `
-                    <li class="equipment-item" data-id="${e.id}">
-                        <div class="equipment-info">
-                            <h3>${e.EQNAME}</h3>
-                            <div class="progress-bar">
-                                <div class="progress" style="width: ${e.averageProgress}%"></div>
+                    const cx = 100,
+                        cy = 100,
+                        radius = 90;
+                        const colors = [
+                            "#1700C0", // Dark Blue for Install
+                            "#2D00C3", // Slightly lighter Blue for Turn On
+                            "#4200C6", // Light Blue for Tuning
+                            "#6100CA", // Purple for TTTM
+                            "#9500D0", // Light Purple for Customer Certification
+                        ];
+                        
+                        
+    
+                    const polygons = e.sections
+                        .map((section, i) => {
+                            const points = createSectionPolygon(cx, cy, radius, e.sections.map(s => s.progress), i);
+                            return `
+                                <polygon
+                                    class="section"
+                                    points="${points}"
+                                    fill="${colors[i]}"
+                                    data-info="${section.name}: ${Math.round(section.progress * 100)}%"
+                                    data-details="${section.details.join(", ")}"
+                                ></polygon>
+                            `;
+                        })
+                        .join("");
+    
+                    return `
+                        <div class="equipment-box" data-id="${e.id}">
+                            <svg viewBox="0 0 200 200" class="polygon-chart">
+                                <!-- 중심에서 꼭지점으로의 점선 -->
+                                ${getPolygonPoints(cx, cy, radius, 5)
+                                    .map(
+                                        p => `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" class="divider"></line>`
+                                    )
+                                    .join("")}
+                                <!-- 전체 오각형 경계 -->
+                                <polygon class="base" points="${getPolygonPoints(cx, cy, radius, 5)
+                                    .map(p => `${p.x},${p.y}`)
+                                    .join(" ")}"></polygon>
+                                <!-- 진행된 영역 -->
+                                ${polygons}
+                            </svg>
+                            <div class="equipment-info">
+                                <div class="equipment-name">${e.EQNAME}</div>
+                                <div class="equipment-percent">${e.averageProgress}%</div>
                             </div>
-                            <span class="progress-percent">${e.averageProgress}%</span>
                         </div>
-                    </li>
-                `)
+                    `;
+                })
                 .join("");
+    
+            // 호버 이벤트 추가
+            document.querySelectorAll(".section").forEach(section => {
+                section.addEventListener("mouseenter", function (event) {
+                    const info = this.getAttribute("data-info");
+                    const details = this.getAttribute("data-details").split(", ").join("<br>");
+                    
+                    const tooltip = document.createElement("div");
+                    tooltip.classList.add("polygon-tooltip");
+                    tooltip.innerHTML = `<strong class="tooltip-highlight">${info}</strong><br>${details}`;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = event.target.getBoundingClientRect();
+                    const tooltipWidth = tooltip.offsetWidth;
+                    const tooltipHeight = tooltip.offsetHeight;
+                    
+                    tooltip.style.top = `${rect.top + window.scrollY - tooltipHeight - 15}px`;
+                    tooltip.style.left = `${rect.left + window.scrollX + rect.width / 2 - tooltipWidth / 2}px`;
+                });
+            
+                section.addEventListener("mouseleave", function () {
+                    const tooltip = document.querySelector(".polygon-tooltip");
+                    if (tooltip) tooltip.remove();
+                });
+            });
         } catch (error) {
             console.error("Error fetching equipment:", error);
         }
     }
+    
+    document.addEventListener("DOMContentLoaded", fetchEquipment);
+    
+    
+    
+    
+    
+    
 
     // 특정 설비 정보 가져오기
     async function fetchEquipmentDetails(id) {
@@ -78,29 +217,39 @@ document.addEventListener("DOMContentLoaded", async () => {
             ];
 
             modalBody.innerHTML = steps
-                .map(({ key, label }) => {
-                    const percentKey = `${key}_PERCENT`;
-                    const companyKey = `${key}_COMPANY`;
-                    const percentage = Math.round((status[percentKey] || 0) * 100);
-                    const company = status[companyKey] || "비어있음";
-
-                    return `
-                        <div class="status-item">
-                            <div class="status-header">
-                                <span>${label}</span>
-                                <select class="company-select" data-key="${companyKey}">
-                                    <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
-                                    <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
-                                    <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
-                                    <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
-                                </select>
-                            </div>
-                            <div class="progress-bar">
-                                <input type="number" class="percent-input" data-key="${percentKey}" value="${percentage}" min="0" max="100" />
-                            </div>
-                        </div>`;
-                })
-                .join("");
+            .map(({ key, label }) => {
+                const percentKey = `${key}_PERCENT`;
+                const companyKey = `${key}_COMPANY`;
+                const statusValue = status[percentKey] || 0; // 작업 상태 값
+                const company = status[companyKey] || "비어있음";
+        
+                // 작업 상태에 따른 클래스
+                let statusClass = "not-started"; // 기본: 미작업
+                if (statusValue > 0 && statusValue < 1) {
+                    statusClass = "in-progress"; // 작업 중
+                } else if (statusValue === 1) {
+                    statusClass = "completed"; // 작업 완료
+                }
+        
+                return `
+                    <div class="status-item ${statusClass}">
+                        <span class="status-label">${label}</span>
+                        <div class="status-actions">
+                            <select class="company-select" data-key="${companyKey}">
+                                <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
+                                <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
+                                <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
+                                <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
+                            </select>
+                            <select class="status-select" data-key="${percentKey}">
+                                <option value="0" ${statusValue === 0 ? "selected" : ""}>미작업</option>
+                                <option value="0.5" ${statusValue === 0.5 ? "selected" : ""}>작업중</option>
+                                <option value="1" ${statusValue === 1 ? "selected" : ""}>작업완료</option>
+                            </select>
+                        </div>
+                    </div>`;
+            })
+            .join("");
 
             equipmentModal.classList.add("open");
         } catch (error) {
@@ -110,24 +259,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 저장 버튼 클릭 이벤트
     saveChangesBtn.addEventListener("click", async () => {
-        const selects = document.querySelectorAll(".company-select");
-        const inputs = document.querySelectorAll(".percent-input");
-    
+        const selects = document.querySelectorAll(".company-select, .status-select");
         const updates = {};
         selects.forEach(select => {
-            updates[select.dataset.key] = select.value; // 회사 변경
+            updates[select.dataset.key] = parseFloat(select.value) || select.value; // 값 변환
         });
-        inputs.forEach(input => {
-            updates[input.dataset.key] = parseFloat(input.value) / 100; // 퍼센트 값 소수로 변환
-        });
-    
+
         const equipmentId = modalTitle.dataset.id; // 모달에 저장된 ID 가져오기
-    
+
         if (!equipmentId) {
             alert("Equipment ID is missing.");
             return;
         }
-    
+
         try {
             const response = await axios.patch(`${API_BASE_URL}/${equipmentId}`, updates);
             if (response.status === 200) {
@@ -149,11 +293,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // 설비 리스트 클릭 이벤트
-    equipmentList.addEventListener("click", (e) => {
-        const item = e.target.closest(".equipment-item");
-        if (item) {
-            const equipmentId = item.getAttribute("data-id");
-            fetchEquipmentDetails(equipmentId);
+    equipmentMatrix.addEventListener("click", (e) => {
+        const box = e.target.closest(".equipment-box");
+        if (box) {
+            const equipmentId = box.getAttribute("data-id");
+            fetchEquipmentDetails(equipmentId); // 설비 상세 정보 가져오기 함수 호출
         }
     });
 

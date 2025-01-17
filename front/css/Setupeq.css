@@ -1,27 +1,135 @@
-/* 설비 리스트 */
-.equipment-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px;
-    margin: 10px 0;
-    background: linear-gradient(90deg, #f0f0f5, #ffffff);
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* 설비 매트릭스 */
+.equipment-matrix {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    justify-items: center;
+    padding: 20px;
 }
 
-.equipment-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+/* 설비 네모 박스 */
+.equipment-box {
+    position: relative;
+    width: 220px;
+    height: 270px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.equipment-box:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 오각형 */
+.polygon-chart {
+    position: relative;
+    width: 200px;
+    height: 200px;
+}
+
+/* 오각형 영역 스타일 */
+.polygon-chart .base {
+    fill: none;
+    stroke: #aaa;
+    stroke-width: 2;
+}
+
+/* 점선 */
+.polygon-chart .divider {
+    stroke: #ddd;
+    stroke-dasharray: 3;
+    stroke-width: 1;
+}
+
+.polygon-chart .section {
+    fill-opacity: 0.7;
+    transition: transform 0.2s ease, fill-opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.polygon-chart .section:hover {
+    fill-opacity: 0.9;
+    transition: transform 0.2s ease, fill-opacity 0.2s ease;
+}
+
+
+
+
+/* 툴팁 */
+.polygon-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+}
+
+.tooltip-highlight {
+    color: #cd93fc; /* 강조된 파란색 */
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+/* 설비명 및 퍼센트 */
 .equipment-info {
+    text-align: center;
+}
+
+.equipment-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.equipment-percent {
+    font-size: 14px;
+    color: #666;
+}
+
+
+/* 도넛형 프로그레스 바 */
+.progress-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #4caf50 var(--progress, 0%),
+        #e0e0e0 var(--progress, 0%)
+    );
     display: flex;
     align-items: center;
-    gap: 15px;
-    flex: 1;
+    justify-content: center;
 }
+
+.progress-ring::before {
+    content: "";
+    position: absolute;
+    width: 70%;
+    height: 70%;
+    background: #fff; /* 내부를 흰색으로 채워 도넛 모양으로 만듦 */
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* 도넛 내부 텍스트 */
+.progress-text {
+    position: absolute;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.2;
+    font-weight: bold;
+    color: #333;
+    z-index: 2; /* 텍스트가 도넛 중앙에 위치하도록 설정 */
+}
+
+
 
 /* 모달 창 스타일 */
 #equipment-modal {
@@ -29,18 +137,18 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
-    max-width: 600px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 700px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     padding: 20px;
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease-in-out;
     overflow-y: auto;
-    max-height: 80%;
+    max-height: 85%;
 }
 
 #equipment-modal.open {
@@ -53,88 +161,124 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
 }
 
 .modal-header h3 {
     margin: 0;
-    font-size: 22px;
+    font-size: 24px;
+    color: #333;
+    font-weight: bold;
 }
 
 .close-btn {
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 24px;
     color: #888;
     cursor: pointer;
     transition: color 0.3s ease;
 }
 
 .close-btn:hover {
-    color: #333;
+    color: #555;
 }
 
 .status-item {
     margin-bottom: 15px;
-}
-
-.status-header {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 작업 상태별 색상 */
+.status-item.not-started {
+    background: #ffe6e6; /* 연한 빨간색 배경 */
+    border-color: #ff6f6f; /* 빨간색 테두리 */
+}
+
+.status-item.in-progress {
+    background: #fff5cc; /* 연한 노란색 배경 */
+    border-color: #ffc107; /* 노란색 테두리 */
+}
+
+.status-item.completed {
+    background: #e6ffe6; /* 연한 초록색 배경 */
+    border-color: #4caf50; /* 초록색 테두리 */
+}
+
+/* 라벨 스타일 */
+.status-label {
     font-size: 14px;
-    margin-bottom: 5px;
-}
-
-.progress-bar {
+    font-weight: bold;
     flex: 2;
-    height: 10px;
-    background-color: #e0e0e0;
-    border-radius: 5px;
-    overflow: hidden;
-    position: relative;
+    color: #333;
 }
 
-.progress {
-    height: 100%;
-    background-color: #4caf50;
-    transition: width 0.3s ease;
+/* 작업 상태와 회사 선택 공간 */
+.status-actions {
+    display: flex;
+    gap: 10px;
+    flex: 3;
+    justify-content: flex-end;
+    align-items: center;
 }
 
-.progress-percent {
+
+/* 드롭다운 스타일 */
+.company-select,
+.status-select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #fff;
     font-size: 14px;
     color: #555;
-    margin-left: 15px;
+    transition: border-color 0.3s ease;
 }
 
-.percent-input {
-    width: 50px;
-    text-align: center;
-    margin-left: 10px;
-}
-
-.company-select {
-    margin-left: 10px;
-    padding: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+.status-select:hover,
+.status-select:focus {
+    border-color: #4caf50; /* 포커스 시 초록색 강조 */
 }
 
 .save-btn {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #4caf50;
+    display: block;
+    margin: 20px auto 0;
+    padding: 12px 25px;
+    background: linear-gradient(135deg, #4caf50, #45a049);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease, transform 0.2s ease;
 }
 
 .save-btn:hover {
-    background-color: #45a049;
+    background: linear-gradient(135deg, #45a049, #4caf50);
+    transform: scale(1.05);
 }
 
 
 /* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        transform: translateY(20%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(20%);
@@ -144,4 +288,8 @@
         transform: translateY(0);
         opacity: 1;
     }
+}
+
+#equipment-modal.open {
+    animation: fadeIn 0.4s ease-in-out;
 }
