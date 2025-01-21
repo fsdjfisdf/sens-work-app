@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const holidays = [
         '2024-08-15', '2024-09-16', '2024-09-17', 
         '2024-09-18', '2024-10-03', '2024-10-09', 
-        '2024-12-25', '2024-10-01'
+        '2024-12-25', '2024-10-01', '2025-01-01', '2025-01-27', '2025-01-28', '2025-01-29', '2025-01-30'
     ];
 
     monthInput.addEventListener('change', function() {
