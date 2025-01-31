@@ -32,12 +32,23 @@ exports.getEquipmentById = async (id) => {
 exports.updateEquipmentById = async (id, updates) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        // 업데이트할 필드 생성
-        const fields = Object.keys(updates).map(key => `${key} = ?`).join(", ");
-        const values = Object.values(updates);
-        const query = `UPDATE SETUP_EQUIPMENT SET ${fields}, update_at = NOW() WHERE id = ?`;
+        // 업데이트할 필드와 값 정리
+        const fields = Object.keys(updates).map(key => {
+            // 날짜 필드라면 빈 값 (`""`)을 `NULL`로 변환
+            if (key.endsWith("_DATE") && updates[key] === "") {
+                return `${key} = NULL`;
+            }
+            return `${key} = ?`;
+        }).join(", ");
 
-        const [result] = await connection.query(query, [...values, id]);
+        // `NULL` 처리를 위해 배열 필터링 (빈 문자열 값 제거)
+        const values = Object.values(updates).filter(value => value !== "");
+
+        // 최종 SQL 실행
+        const query = `UPDATE SETUP_EQUIPMENT SET ${fields}, update_at = NOW() WHERE id = ?`;
+        values.push(id); // ID 추가
+
+        const [result] = await connection.query(query, values);
         return result;
     } catch (err) {
         throw new Error(`Error updating equipment: ${err.message}`);

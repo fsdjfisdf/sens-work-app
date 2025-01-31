@@ -274,12 +274,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                 { key: "CUSTOMER_CERTIFICATION", label: "Customer Certification" }
             ];
 
-            modalBody.innerHTML = steps
-            .map(({ key, label }) => {
+            modalBody.innerHTML = steps.map(({ key, label }) => {
                 const percentKey = `${key}_PERCENT`;
                 const companyKey = `${key}_COMPANY`;
+                const dateKey = `${key}_DATE`; // 날짜 필드 추가
                 const statusValue = status[percentKey] || 0; // 작업 상태 값
                 const company = status[companyKey] || "비어있음";
+                const selectedDate = status[dateKey] || ""; // 선택된 날짜
         
                 // 작업 상태에 따른 클래스
                 let statusClass = "not-started"; // 기본: 미작업
@@ -290,24 +291,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
         
                 return `
-                    <div class="status-item ${statusClass}">
-                        <span class="status-label">${label}</span>
-                        <div class="status-actions">
-                            <select class="company-select" data-key="${companyKey}">
-                                <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
-                                <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
-                                <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
-                                <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
-                            </select>
-                            <select class="status-select" data-key="${percentKey}">
-                                <option value="0" ${statusValue === 0 ? "selected" : ""}>미작업</option>
-                                <option value="0.5" ${statusValue === 0.5 ? "selected" : ""}>작업중</option>
-                                <option value="1" ${statusValue === 1 ? "selected" : ""}>작업완료</option>
-                            </select>
-                        </div>
-                    </div>`;
-            })
-            .join("");
+                <div class="status-item ${statusClass}">
+                    <span class="status-label">${label}</span>
+                    <div class="status-actions">
+                        <select class="company-select" data-key="${companyKey}">
+                            <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
+                            <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
+                            <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
+                            <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
+                        </select>
+                        <select class="status-select" data-key="${percentKey}">
+                            <option value="0" ${statusValue === 0 ? "selected" : ""}>미작업</option>
+                            <option value="0.5" ${statusValue === 0.5 ? "selected" : ""}>작업중</option>
+                            <option value="1" ${statusValue === 1 ? "selected" : ""}>작업완료</option>
+                        </select>
+                        <input type="date" class="date-input" data-key="${dateKey}" value="${selectedDate}">
+                    </div>
+                </div>`;
+        }).join("");
 
             equipmentModal.classList.add("open");
         } catch (error) {
@@ -317,25 +318,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 저장 버튼 클릭 이벤트
     saveChangesBtn.addEventListener("click", async () => {
-        const selects = document.querySelectorAll(".company-select, .status-select");
+        const selects = document.querySelectorAll(".company-select, .status-select, .date-input");
         const updates = {};
+    
         selects.forEach(select => {
-            updates[select.dataset.key] = parseFloat(select.value) || select.value; // 값 변환
+            if (select.type === "date") {
+                updates[select.dataset.key] = select.value ? select.value : null; // 빈 값이면 NULL
+            } else {
+                updates[select.dataset.key] = parseFloat(select.value) || select.value;
+            }
         });
-
-        const equipmentId = modalTitle.dataset.id; // 모달에 저장된 ID 가져오기
-
+    
+        const equipmentId = modalTitle.dataset.id;
+    
         if (!equipmentId) {
             alert("Equipment ID is missing.");
             return;
         }
-
+    
         try {
             const response = await axios.patch(`${API_BASE_URL}/${equipmentId}`, updates);
             if (response.status === 200) {
                 alert("Changes saved successfully.");
                 equipmentModal.classList.remove("open");
-                await fetchEquipment(); // 업데이트된 데이터 반영
+                await fetchEquipment();
             } else {
                 alert("Failed to save changes.");
             }
@@ -344,6 +350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             alert("Error saving changes.");
         }
     });
+    
 
     // 모달 닫기
     closeModalBtn.addEventListener("click", () => {
