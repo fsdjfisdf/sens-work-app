@@ -128,7 +128,7 @@ confirmEquipmentAdd.addEventListener('click', async () => {
     }
 
     try {
-        const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment`, {
+        const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment/add`, {
             EQNAME: eqName,
             GROUP: group,
             SITE: site,
@@ -308,34 +308,6 @@ confirmEquipmentAdd.addEventListener('click', async () => {
         renderCalendar(logs, engineers, currentYear, currentMonth);
     }
 
-    // "추가" 버튼 클릭 시 설비 추가 요청
-confirmEquipmentAdd.addEventListener('click', async () => {
-    const eqName = document.getElementById('new_eqname').value;
-    const group = document.getElementById('new_group').value;
-    const site = document.getElementById('new_site').value;
-    const line = document.getElementById('new_line').value;
-    const eqType = document.getElementById('new_type').value;
-
-    try {
-        const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment`, {
-            EQNAME: eqName,
-            GROUP: group,
-            SITE: site,
-            LINE: line,
-            TYPE: eqType
-        });
-
-        if (addResponse.status === 201) {
-            alert('설비가 SETUP_EQUIPMENT 테이블에 추가되었습니다.');
-        } else {
-            alert('설비 추가 중 오류가 발생했습니다.');
-        }
-    } catch (error) {
-        console.error('설비 추가 중 오류 발생:', error);
-    } finally {
-        closeEquipmentAddModal();
-    }
-});
 
     const signOutButton = document.querySelector("#sign-out");
 

@@ -15,7 +15,7 @@ router.patch("/:id", setupeqController.updateEquipment);
 router.get("/check", setupeqController.checkEquipmentExists);
 
 // ✅ 새로운 설비 추가 API (현재 이 코드가 있음)
-router.post("/", setupeqController.addEquipment);
+router.post("/add", setupeqController.addEquipment);
 
 
 module.exports = router;
