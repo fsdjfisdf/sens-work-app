@@ -88,7 +88,9 @@ module.exports = function () {
   app.use('/api/updates', updateRoute);
 
   const setupeqRoute = require('../src/routes/SetupeqRoute');
+  const setupEquipmentRoutes = require("./routes/SetupeqRoute"); // ✅ 라우트 불러오기
   app.use('/api/setupeq', setupeqRoute);
+  app.use("/api/setup_equipment", setupEquipmentRoutes);
   
 
 
