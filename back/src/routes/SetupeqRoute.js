@@ -11,11 +11,11 @@ router.get("/:id", setupeqController.getEquipmentStatus);
 // 특정 설비 작업 상태 업데이트
 router.patch("/:id", setupeqController.updateEquipment);
 
-// ✅ 특정 EQNAME 존재 여부 확인 API (경로 수정)
-router.get("/setup_equipment", setupeqController.getEquipmentByName);
+// ✅ 특정 설비 존재 여부 확인 API (라우트 수정)
+router.get("/api/setup_equipment", setupeqController.getEquipmentByName);
 
 // ✅ 새로운 설비 추가 API
-router.post("/setup_equipment", setupeqController.addEquipment);
+router.post("/api/setup_equipment", setupeqController.addEquipment);
 
 
 module.exports = router;

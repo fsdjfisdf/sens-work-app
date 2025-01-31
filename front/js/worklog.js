@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     const encodedEqName = encodeURIComponent(equipment_name);
                     const checkResponse = await axios.get(`http://3.37.73.151:3001/api/setup_equipment?eqname=${encodedEqName}`);
-                    
+            
                     console.log("설비 확인 응답:", checkResponse.data);
             
                     if (!checkResponse.data.exists) {  
@@ -189,7 +189,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                         );
                     }
                 } catch (error) {
-                    console.error('설비 확인 및 추가 중 오류 발생:', error);
+                    if (error.response && error.response.status === 404) {
+                        console.warn("설비가 존재하지 않음, 추가 가능");
+                        openEquipmentAddModal(
+                            equipment_name,
+                            document.getElementById('group').value,
+                            document.getElementById('site').value,
+                            document.getElementById('line').value,
+                            document.getElementById('equipment_type').value
+                        );
+                    } else {
+                        console.error('설비 확인 및 추가 중 오류 발생:', error);
+                    }
                 }
             }
         const workType2 = document.getElementById('workType2').value;
