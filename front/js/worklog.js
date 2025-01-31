@@ -109,7 +109,7 @@ function openEquipmentAddModal(eqName, group, site, line, eqType) {
     document.getElementById('new_line').value = line !== "SELECT" ? line : "";
     document.getElementById('new_type').value = eqType !== "SELECT" ? eqType : "";
 
-    equipmentAddMessage.innerText = `${eqName}이(가) SETUP_EQUIPMENT 테이블에 존재하지 않습니다. 추가하시겠습니까?`;
+    equipmentAddMessage.innerText = `${eqName}설비가 SET UP EQ DB에 존재하지 않습니다. 추가하시겠습니까?`;
     equipmentAddModal.style.display = 'block';
 }
 

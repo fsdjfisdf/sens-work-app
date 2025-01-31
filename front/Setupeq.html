@@ -10,14 +10,43 @@
 <body>
     <nav>
         <div class="inner">
-            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./readworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
         </div>
     </nav>
 
     <main>
         <section id="filter-section">
             <div class="inner">
-                <h2>Equipment Filter</h2>
                 <div class="filter-container">
                     <label for="group-select">GROUP</label>
                     <select id="group-select">
@@ -67,7 +96,6 @@
         <!-- 설비 리스트 -->
         <section id="equipment-section">
             <div class="inner">
-                <h2>Equipment List</h2>
                 <div id="equipment-matrix" class="equipment-matrix"></div>
             </div>
         </section>
@@ -112,11 +140,55 @@
 
     <footer>
         <div class="inner">
-            <p>SEnS 제공 정보는 사외비입니다. 무단 유출 금지.</p>
+            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
         </div>
     </footer>
 
     <script src="./js/Setupeq.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
+

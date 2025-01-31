@@ -1,3 +1,143 @@
+/* Reset some basic elements */
+body, h1, h2, p, a, input, select, label, textarea, button {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    color: inherit;
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Navigation styles */
+nav {
+    background-color: #1c1c1e;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1600px; /* 확장된 화면 너비 */
+    padding: 0 20px;
+}
+
+.nav-title a {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+
+footer {
+    background-color: #1c1c1e;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: auto;
+}
+
+/* Menu button styles */
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    position: fixed;
+    top: 3%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1100;
+}
+
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25px;
+    height: 18px;
+}
+
+.menu-icon span {
+    height: 5px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Menu bar styles */
+.menu-bar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1001;
+}
+
+.menu-bar.open {
+    right: 0;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-item {
+    color: #000000;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #818181;
+    color: #ffffff;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+/* 메인 컨텐츠 */
+main {
+    margin-top: 20px;
+    padding: 20px;
+    min-width: 1800px;
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #ffffff; /* 흰색 배경 */
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #000000;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
 /* 설비 매트릭스 */
 .equipment-matrix {
     display: grid;

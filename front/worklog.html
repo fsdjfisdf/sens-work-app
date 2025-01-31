@@ -357,7 +357,6 @@
 <!-- 설비 추가 모달 -->
 <div id="equipment-add-modal" class="modal">
     <div class="modal-content">
-        <h3>설비 추가 확인</h3>
         <p id="equipment-add-message"></p>
         <div class="form-row">
             <label for="new_eqname">EQ NAME</label>
@@ -380,44 +379,12 @@
             <input type="text" id="new_type" disabled>
         </div>
         <div class="modal-buttons">
-            <button id="confirm-equipment-add" class="btn-primary">추가</button>
-            <button id="cancel-equipment-add" class="btn-secondary">취소</button>
+            <button id="confirm-equipment-add" class="btn-primary">ADD</button>
+            <button id="cancel-equipment-add" class="btn-secondary">CANCEL</button>
         </div>
     </div>
 </div>
 
-<style>
-/* 모달 스타일 */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-    background-color: white;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 5px;
-    width: 40%;
-    text-align: center;
-}
-
-.modal-buttons {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.modal-buttons button {
-    padding: 10px 20px;
-}
-</style>
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
