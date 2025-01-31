@@ -75,24 +75,25 @@ exports.addEquipment = async ({ EQNAME, GROUP, SITE, LINE, TYPE }) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
         const query = `
-            INSERT INTO SETUP_EQUIPMENT (
-                EQNAME, GROUP, SITE, LINE, TYPE, 
-                INSTALLATION_PREPARATION_PERCENT, FAB_IN_PERCENT, DOCKING_PERCENT,
-                CABLE_HOOK_UP_PERCENT, POWER_TURN_ON_PERCENT, UTILITY_TURN_ON_PERCENT, 
-                GAS_TURN_ON_PERCENT, TEACHING_PERCENT, PART_INSTALLATION_PERCENT, 
-                LEAK_CHECK_PERCENT, TTTM_PERCENT, CUSTOMER_CERTIFICATION_PERCENT,
-                INSTALLATION_PREPARATION_DATE, FAB_IN_DATE, DOCKING_DATE, 
-                CABLE_HOOK_UP_DATE, POWER_TURN_ON_DATE, UTILITY_TURN_ON_DATE,
-                GAS_TURN_ON_DATE, TEACHING_DATE, PART_INSTALLATION_DATE,
-                LEAK_CHECK_DATE, TTTM_DATE, CUSTOMER_CERTIFICATION_DATE,
-                COMPLETE, create_at, update_at
-            ) VALUES (
-                ?, ?, ?, ?, ?, 
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-                'ING', NOW(), NOW()
-            )`;
-
-        const [result] = await connection.query(query, [EQNAME, GROUP, SITE, LINE, TYPE]);
+        INSERT INTO SETUP_EQUIPMENT (
+            EQNAME, \`GROUP\`, SITE, \`LINE\`, \`TYPE\`, 
+            INSTALLATION_PREPARATION_PERCENT, FAB_IN_PERCENT, DOCKING_PERCENT,
+            CABLE_HOOK_UP_PERCENT, POWER_TURN_ON_PERCENT, UTILITY_TURN_ON_PERCENT, 
+            GAS_TURN_ON_PERCENT, TEACHING_PERCENT, PART_INSTALLATION_PERCENT, 
+            LEAK_CHECK_PERCENT, TTTM_PERCENT, CUSTOMER_CERTIFICATION_PERCENT,
+            INSTALLATION_PREPARATION_DATE, FAB_IN_DATE, DOCKING_DATE, 
+            CABLE_HOOK_UP_DATE, POWER_TURN_ON_DATE, UTILITY_TURN_ON_DATE,
+            GAS_TURN_ON_DATE, TEACHING_DATE, PART_INSTALLATION_DATE,
+            LEAK_CHECK_DATE, TTTM_DATE, CUSTOMER_CERTIFICATION_DATE,
+            COMPLETE, create_at, update_at
+        ) VALUES (
+            ?, ?, ?, ?, ?, 
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+            'ING', NOW(), NOW()
+        )`;
+    
+    const [result] = await connection.query(query, [EQNAME, GROUP, SITE, LINE, TYPE]);
+    
         return result;
     } catch (err) {
         throw new Error(`설비 추가 오류: ${err.message}`);
