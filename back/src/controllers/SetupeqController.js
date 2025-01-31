@@ -93,19 +93,22 @@ exports.addEquipment = async (req, res) => {
     const { EQNAME, GROUP, SITE, LINE, TYPE } = req.body;
 
     if (!EQNAME || !GROUP || !SITE || !LINE || !TYPE) {
-        return res.status(400).json({ error: "Missing required fields" });
+        return res.status(400).json({ error: "모든 필드를 입력해주세요." });
     }
 
     try {
-        const result = await setupeqDao.addEquipment({ EQNAME, GROUP, SITE, LINE, TYPE });
+        const result = await setupeqDao.addEquipment({
+            EQNAME, GROUP, SITE, LINE, TYPE
+        });
+
         if (result.insertId) {
-            res.status(201).json({ message: "Equipment added successfully", id: result.insertId });
+            res.status(201).json({ message: "설비 추가 완료", id: result.insertId });
         } else {
-            res.status(500).json({ error: "Failed to add equipment" });
+            res.status(500).json({ error: "설비 추가 실패" });
         }
     } catch (error) {
-        console.error("Error adding equipment:", error);
-        res.status(500).json({ error: "Error adding equipment" });
+        console.error("설비 추가 중 오류 발생:", error);
+        res.status(500).json({ error: "설비 추가 중 오류 발생" });
     }
 };
 
