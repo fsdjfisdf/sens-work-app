@@ -19,7 +19,7 @@
             <div class="inner">
                 <h2>Equipment Filter</h2>
                 <div class="filter-container">
-                    <label for="group-select">GROUP:</label>
+                    <label for="group-select">GROUP</label>
                     <select id="group-select">
                         <option value="">All</option>
                         <option value="PEE1">PEE1</option>
@@ -27,7 +27,7 @@
                         <option value="PSKH">PSKH</option>
                     </select>
         
-                    <label for="site-select">SITE:</label>
+                    <label for="site-select">SITE</label>
                     <select id="site-select">
                         <option value="">All</option>
                         <option value="PT">PT</option>
@@ -37,21 +37,26 @@
                         <option value="PSKH">PSKH</option>
                     </select>
         
-                    <label for="line-select">LINE:</label>
+                    <label for="line-select">LINE</label>
                     <select id="line-select">
                         <option value="">All</option>
                         <option value="P4F">P4F</option>
                         <option value="P4D">P4D</option>
                     </select>
+                    <label for="start-date">Start Date(FAB IN)</label>
+                    <input type="date" id="start-date">
+                
+                    <label for="end-date">~</label>
+                    <input type="date" id="end-date">
         
-                    <label for="complete-select">COMPLETE:</label>
+                    <label for="complete-select">PROGRESS</label>
                     <select id="complete-select">
                         <option value="">All</option>
                         <option value="ing">ing</option>
                         <option value="complete">complete</option>
                     </select>
         
-                    <label for="eqname-input">EQNAME:</label>
+                    <label for="eqname-input">EQNAME</label>
                     <input type="text" id="eqname-input" placeholder="Search Equipment">
         
                     <button id="search-btn">Search</button>
@@ -74,9 +79,32 @@
                     <h3 id="modal-title"></h3>
                     <button id="close-modal" class="close-btn" aria-label="Close modal">×</button>
                 </div>
-                <div id="modal-body"></div>
-                <div class="modal-footer">
+
+                <!-- 📌 탭 메뉴 추가 -->
+                <div class="modal-tabs">
+                    <button id="edit-tab" class="tab active">EDIT SECTION</button>
+                    <button id="analysis-tab" class="tab">ANALYSIS SECTION</button>
+                </div>
+
+                <!-- 📌 EDIT SECTION -->
+                <div id="edit-section" class="modal-section">
+                    <div id="modal-body"></div>
                     <button id="save-changes" class="save-btn">Save Changes</button>
+                </div>
+
+                <!-- ANALYSIS SECTION -->
+                <div id="analysis-section" class="modal-section hidden">
+
+                    <!-- 📊 FAB IN 날짜 기준 평균 작업 소요 시간 -->
+                    <h4>Average Task Completion Time from FAB IN</h4>
+                    <canvas id="avg-task-delay-chart"></canvas>
+
+                    <!-- 🏢 작업별 수행한 회사 비율 -->
+                    <h4>Company Distribution by Task</h4>
+                    <canvas id="company-distribution-chart"></canvas>
+                </div>
+
+                <div class="modal-footer">
                 </div>
             </div>
         </div>
@@ -89,5 +117,6 @@
     </footer>
 
     <script src="./js/Setupeq.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

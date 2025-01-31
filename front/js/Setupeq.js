@@ -6,6 +6,133 @@ document.addEventListener("DOMContentLoaded", async () => {
     const closeModalBtn = document.getElementById("close-modal");
     const saveChangesBtn = document.getElementById("save-changes");
     const API_BASE_URL = "http://3.37.73.151:3001/api/setupeq";
+
+    // 📌 탭 요소 가져오기
+    const editTab = document.getElementById("edit-tab");
+    const analysisTab = document.getElementById("analysis-tab");
+    const editSection = document.getElementById("edit-section");
+    const analysisSection = document.getElementById("analysis-section");
+
+    // 📌 탭 전환 이벤트
+    editTab.addEventListener("click", () => {
+        editTab.classList.add("active");
+        analysisTab.classList.remove("active");
+        editSection.classList.remove("hidden");
+        analysisSection.classList.add("hidden");
+    });
+
+    analysisTab.addEventListener("click", () => {
+        analysisTab.classList.add("active");
+        editTab.classList.remove("active");
+        analysisSection.classList.remove("hidden");
+        editSection.classList.add("hidden");
+
+        // 📌 분석 데이터 생성
+        generateAnalysisData();
+    });
+
+        // 📌 기존 차트 인스턴스를 추적하는 객체
+    const chartInstances = {};
+
+    // 📌 Chart.js 그래프 생성 전에 기존 차트 제거 함수
+    function destroyExistingChart(chartKey) {
+        if (chartInstances[chartKey]) {
+            chartInstances[chartKey].destroy();
+            chartInstances[chartKey] = null;
+        }
+    }
+
+
+    async function generateAnalysisData() {
+        const avgTaskDelayChartCanvas = document.getElementById("avg-task-delay-chart").getContext("2d");
+        const companyChartCanvas = document.getElementById("company-distribution-chart").getContext("2d");
+    
+        try {
+            const response = await axios.get("http://3.37.73.151:3001/api/setupeq");
+            const equipmentData = response.data;
+    
+            const taskCompanyCount = {};
+            const taskDelay = {};
+    
+            const tasks = [
+                "INSTALLATION_PREPARATION", "DOCKING", "CABLE_HOOK_UP",
+                "POWER_TURN_ON", "UTILITY_TURN_ON", "GAS_TURN_ON", "TEACHING",
+                "PART_INSTALLATION", "LEAK_CHECK", "TTTM", "CUSTOMER_CERTIFICATION"
+            ];
+    
+            equipmentData.forEach(equip => {
+                tasks.forEach(task => {
+                    const companyKey = `${task}_COMPANY`;
+                    const dateKey = `${task}_DATE`;
+    
+                    if (equip[companyKey] && equip[companyKey] !== "비어있음") {
+                        if (!taskCompanyCount[task]) taskCompanyCount[task] = {};
+                        taskCompanyCount[task][equip[companyKey]] = (taskCompanyCount[task][equip[companyKey]] || 0) + 1;
+                    }
+    
+                    if (equip.FAB_IN_DATE && equip[dateKey]) {
+                        const fabInDate = new Date(equip.FAB_IN_DATE);
+                        const taskDate = new Date(equip[dateKey]);
+                        const daysDiff = Math.floor((taskDate - fabInDate) / (1000 * 60 * 60 * 24));
+    
+                        if (!taskDelay[task]) taskDelay[task] = [];
+                        taskDelay[task].push(daysDiff);
+                    }
+                });
+            });
+    
+            console.log("📊 작업 평균 진행 시간 데이터:", taskDelay);
+            console.log("🏗️ 작업별 회사 분포 데이터:", taskCompanyCount);
+    
+            destroyExistingChart("avgTaskDelayChart");
+            destroyExistingChart("companyChart");
+    
+            const avgTaskDelays = Object.keys(taskDelay).map(task => {
+                return taskDelay[task].reduce((sum, val) => sum + val, 0) / taskDelay[task].length;
+            });
+    
+            chartInstances["avgTaskDelayChart"] = new Chart(avgTaskDelayChartCanvas, {
+                type: "bar",
+                data: {
+                    labels: Object.keys(taskDelay).map(label => label.replace(/_/g, " ")),
+                    datasets: [{
+                        label: "평균 진행 소요일",
+                        data: avgTaskDelays,
+                        backgroundColor: "rgba(75, 192, 192, 0.6)"
+                    }]
+                },
+                options: { responsive: true }
+            });
+    
+            const taskLabels = Object.keys(taskCompanyCount);
+            const companyNames = [...new Set(Object.values(taskCompanyCount).flatMap(company => Object.keys(company)))];
+    
+            const companyData = companyNames.map(company => {
+                return {
+                    label: company,
+                    data: taskLabels.map(task => taskCompanyCount[task][company] || 0),
+                    backgroundColor: `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.6)`
+                };
+            });
+    
+            chartInstances["companyChart"] = new Chart(companyChartCanvas, {
+                type: "bar",
+                data: { labels: taskLabels, datasets: companyData },
+                options: { responsive: true }
+            });
+    
+        } catch (error) {
+            console.error("Error generating analysis data:", error);
+        }
+    }
+    
+    
+    
+
+    // 📌 ANALYSIS SECTION 탭 클릭 시 데이터 로딩
+    analysisTab.addEventListener("click", () => {
+        generateAnalysisData();
+    });
     
 
     function getPolygonPoints(cx, cy, radius, sides) {
@@ -105,21 +232,26 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const selectedLine = document.getElementById("line-select").value;
                 const selectedComplete = document.getElementById("complete-select").value; // "ing" 또는 "complete"
                 const eqNameSearch = document.getElementById("eqname-input").value.toLowerCase();
+                const startDate = document.getElementById("start-date").value; // 시작 날짜
+                const endDate = document.getElementById("end-date").value; // 종료 날짜
         
                 // 📌 필터링 수행 (averageProgress가 계산된 후 적용)
-                const filteredEquipment = processedEquipment.filter(e =>
+                equipment = processedEquipment.filter(e => 
                     (selectedGroup === "" || e.GROUP === selectedGroup) &&
                     (selectedSite === "" || e.SITE === selectedSite) &&
                     (selectedLine === "" || e.LINE === selectedLine) &&
-                    (selectedComplete === "" ||
+                    (selectedComplete === "" || 
                         (selectedComplete === "complete" && e.averageProgress === 100) || 
                         (selectedComplete === "ing" && e.averageProgress < 100)
                     ) &&
-                    (eqNameSearch === "" || e.EQNAME.toLowerCase().includes(eqNameSearch))
+                    (eqNameSearch === "" || e.EQNAME.toLowerCase().includes(eqNameSearch)) &&
+                    (startDate === "" || endDate === "" || 
+                        (e.FAB_IN_DATE && new Date(e.FAB_IN_DATE) >= new Date(startDate) && new Date(e.FAB_IN_DATE) <= new Date(endDate))
+                    ) // 📌 날짜 필터 추가
                 );
         
                 // 📌 진행률 순으로 정렬
-                const sortedEquipment = filteredEquipment.sort((a, b) => b.averageProgress - a.averageProgress);
+                const sortedEquipment = equipment.sort((a, b) => b.averageProgress - a.averageProgress);
         
             
 
@@ -191,6 +323,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 document.getElementById("line-select").value = "";
                 document.getElementById("complete-select").value = "";
                 document.getElementById("eqname-input").value = "";
+                document.getElementById("start-date").value = "";
+                document.getElementById("end-date").value = "";
                 fetchEquipment();
             });
     
@@ -255,10 +389,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             const response = await axios.get(`${API_BASE_URL}/${id}`);
             const status = response.data;
-
+    
             modalTitle.textContent = status.EQNAME;
-            modalTitle.dataset.id = id; // ID 저장
-
+            modalTitle.dataset.id = id;
+    
             const steps = [
                 { key: "INSTALLATION_PREPARATION", label: "Installation Preparation" },
                 { key: "FAB_IN", label: "Fab In" },
@@ -273,43 +407,45 @@ document.addEventListener("DOMContentLoaded", async () => {
                 { key: "TTTM", label: "TTTM" },
                 { key: "CUSTOMER_CERTIFICATION", label: "Customer Certification" }
             ];
-
-            modalBody.innerHTML = steps.map(({ key, label }) => {
-                const percentKey = `${key}_PERCENT`;
-                const companyKey = `${key}_COMPANY`;
-                const dateKey = `${key}_DATE`; // 날짜 필드 추가
-                const statusValue = status[percentKey] || 0; // 작업 상태 값
-                const company = status[companyKey] || "비어있음";
-                const selectedDate = status[dateKey] || ""; // 선택된 날짜
-        
-                // 작업 상태에 따른 클래스
-                let statusClass = "not-started"; // 기본: 미작업
-                if (statusValue > 0 && statusValue < 1) {
-                    statusClass = "in-progress"; // 작업 중
-                } else if (statusValue === 1) {
-                    statusClass = "completed"; // 작업 완료
-                }
-        
-                return `
-                <div class="status-item ${statusClass}">
-                    <span class="status-label">${label}</span>
-                    <div class="status-actions">
-                        <select class="company-select" data-key="${companyKey}">
-                            <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
-                            <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
-                            <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
-                            <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
-                        </select>
-                        <select class="status-select" data-key="${percentKey}">
-                            <option value="0" ${statusValue === 0 ? "selected" : ""}>미작업</option>
-                            <option value="0.5" ${statusValue === 0.5 ? "selected" : ""}>작업중</option>
-                            <option value="1" ${statusValue === 1 ? "selected" : ""}>작업완료</option>
-                        </select>
-                        <input type="date" class="date-input" data-key="${dateKey}" value="${selectedDate}">
-                    </div>
-                </div>`;
-        }).join("");
-
+    
+            modalBody.innerHTML = steps
+                .map(({ key, label }) => {
+                    const percentKey = `${key}_PERCENT`;
+                    const companyKey = `${key}_COMPANY`;
+                    const dateKey = `${key}_DATE`; // 날짜 필드 추가
+    
+                    const statusValue = status[percentKey] || 0;
+                    const company = status[companyKey] || "비어있음";
+                    const dateValue = status[dateKey] ? status[dateKey].split("T")[0] : ""; // 날짜 값 처리
+    
+                    let statusClass = "not-started";
+                    if (statusValue > 0 && statusValue < 1) {
+                        statusClass = "in-progress";
+                    } else if (statusValue === 1) {
+                        statusClass = "completed";
+                    }
+    
+                    return `
+                        <div class="status-item ${statusClass}">
+                            <span class="status-label">${label}</span>
+                            <div class="status-actions">
+                                <select class="company-select" data-key="${companyKey}">
+                                    <option value="비어있음" ${company === "비어있음" ? "selected" : ""}>비어있음</option>
+                                    <option value="SEnS" ${company === "SEnS" ? "selected" : ""}>SEnS</option>
+                                    <option value="PSK" ${company === "PSK" ? "selected" : ""}>PSK</option>
+                                    <option value="BP" ${company === "BP" ? "selected" : ""}>BP</option>
+                                </select>
+                                <select class="status-select" data-key="${percentKey}">
+                                    <option value="0" ${statusValue === 0 ? "selected" : ""}>미작업</option>
+                                    <option value="0.5" ${statusValue === 0.5 ? "selected" : ""}>작업중</option>
+                                    <option value="1" ${statusValue === 1 ? "selected" : ""}>작업완료</option>
+                                </select>
+                                <input type="date" class="date-input" data-key="${dateKey}" value="${dateValue}">
+                            </div>
+                        </div>`;
+                })
+                .join("");
+    
             equipmentModal.classList.add("open");
         } catch (error) {
             console.error("Error fetching equipment details:", error);

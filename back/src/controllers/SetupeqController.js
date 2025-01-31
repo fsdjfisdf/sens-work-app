@@ -76,3 +76,35 @@ exports.updateEquipment = async (req, res) => {
         res.status(500).json({ error: "Error updating equipment" });
     }
 };
+
+exports.checkEquipmentExists = async (req, res) => {
+    const { eqname } = req.query;
+    try {
+        const exists = await setupeqDao.checkEquipmentExists(eqname);
+        res.status(200).json({ exists });
+    } catch (error) {
+        console.error("Error checking equipment existence:", error);
+        res.status(500).json({ error: "Error checking equipment existence" });
+    }
+};
+
+// ✅ SETUP_EQUIPMENT 테이블에 새 설비 추가
+exports.addEquipment = async (req, res) => {
+    const { EQNAME, GROUP, SITE, LINE, TYPE } = req.body;
+
+    if (!EQNAME || !GROUP || !SITE || !LINE || !TYPE) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const result = await setupeqDao.addEquipment({ EQNAME, GROUP, SITE, LINE, TYPE });
+        if (result.insertId) {
+            res.status(201).json({ message: "Equipment added successfully", id: result.insertId });
+        } else {
+            res.status(500).json({ error: "Failed to add equipment" });
+        }
+    } catch (error) {
+        console.error("Error adding equipment:", error);
+        res.status(500).json({ error: "Error adding equipment" });
+    }
+};

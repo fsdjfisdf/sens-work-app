@@ -230,7 +230,8 @@
 
 /* 드롭다운 스타일 */
 .company-select,
-.status-select {
+.status-select,
+.date-input {
     padding: 8px;
     border-radius: 6px;
     border: 1px solid #ccc;
@@ -347,4 +348,38 @@
 
 #reset-btn:hover {
     background: #545b62;
+}
+
+/* 모달 탭 스타일 */
+.modal-tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.modal-tabs button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-tabs button.active {
+    background: #4caf50;
+    color: white;
+}
+
+/* 각 섹션 스타일 */
+.modal-section {
+    display: none;
+}
+
+.modal-section.hidden {
+    display: none;
+}
+
+.modal-section:not(.hidden) {
+    display: block;
 }

@@ -56,3 +56,32 @@ exports.updateEquipmentById = async (id, updates) => {
         connection.release();
     }
 };
+
+exports.checkEquipmentExists = async (eqname) => {
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+        const query = "SELECT COUNT(*) AS count FROM SETUP_EQUIPMENT WHERE EQNAME = ?";
+        const [rows] = await connection.query(query, [eqname]);
+        return rows[0].count > 0;
+    } catch (err) {
+        throw new Error(`Error checking equipment existence: ${err.message}`);
+    } finally {
+        connection.release();
+    }
+};
+
+// ✅ SETUP_EQUIPMENT 테이블에 새 설비 추가
+exports.addEquipment = async ({ EQNAME, GROUP, SITE, LINE, TYPE }) => {
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+        const query = `
+            INSERT INTO SETUP_EQUIPMENT (EQNAME, GROUP, SITE, LINE, TYPE, create_at, update_at)
+            VALUES (?, ?, ?, ?, ?, NOW(), NOW())`;
+        const [result] = await connection.query(query, [EQNAME, GROUP, SITE, LINE, TYPE]);
+        return result;
+    } catch (err) {
+        throw new Error(`Error adding equipment: ${err.message}`);
+    } finally {
+        connection.release();
+    }
+};
