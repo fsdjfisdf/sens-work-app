@@ -291,3 +291,60 @@
 #equipment-modal.open {
     animation: fadeIn 0.4s ease-in-out;
 }
+
+/* 필터 컨테이너 */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 필터 라벨 */
+.filter-container label {
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
+}
+
+/* 필터 드롭다운 & 입력창 */
+.filter-container select, 
+.filter-container input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* 필터 버튼 */
+#search-btn, #reset-btn {
+    padding: 8px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s ease-in-out;
+}
+
+#search-btn {
+    background: #007bff;
+    color: white;
+}
+
+#search-btn:hover {
+    background: #0056b3;
+}
+
+#reset-btn {
+    background: #6c757d;
+    color: white;
+}
+
+#reset-btn:hover {
+    background: #545b62;
+}

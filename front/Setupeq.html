@@ -15,6 +15,50 @@
     </nav>
 
     <main>
+        <section id="filter-section">
+            <div class="inner">
+                <h2>Equipment Filter</h2>
+                <div class="filter-container">
+                    <label for="group-select">GROUP:</label>
+                    <select id="group-select">
+                        <option value="">All</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+        
+                    <label for="site-select">SITE:</label>
+                    <select id="site-select">
+                        <option value="">All</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+        
+                    <label for="line-select">LINE:</label>
+                    <select id="line-select">
+                        <option value="">All</option>
+                        <option value="P4F">P4F</option>
+                        <option value="P4D">P4D</option>
+                    </select>
+        
+                    <label for="complete-select">COMPLETE:</label>
+                    <select id="complete-select">
+                        <option value="">All</option>
+                        <option value="ing">ing</option>
+                        <option value="complete">complete</option>
+                    </select>
+        
+                    <label for="eqname-input">EQNAME:</label>
+                    <input type="text" id="eqname-input" placeholder="Search Equipment">
+        
+                    <button id="search-btn">Search</button>
+                    <button id="reset-btn">Reset</button>
+                </div>
+            </div>
+        </section>
         <!-- 설비 리스트 -->
         <section id="equipment-section">
             <div class="inner">

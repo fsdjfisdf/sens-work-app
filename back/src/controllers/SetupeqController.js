@@ -34,9 +34,40 @@ exports.updateEquipment = async (req, res) => {
     const updates = req.body;
 
     try {
+        // 현재 진행률 계산
+        const currentEquipment = await setupeqDao.getEquipmentById(id);
+        if (!currentEquipment) {
+            return res.status(404).json({ message: "Equipment not found" });
+        }
+
+        // 진행률 계산 (각 섹션 평균)
+        const sections = [
+            currentEquipment.INSTALLATION_PREPARATION_PERCENT,
+            currentEquipment.FAB_IN_PERCENT,
+            currentEquipment.DOCKING_PERCENT,
+            currentEquipment.CABLE_HOOK_UP_PERCENT,
+            currentEquipment.POWER_TURN_ON_PERCENT,
+            currentEquipment.UTILITY_TURN_ON_PERCENT,
+            currentEquipment.GAS_TURN_ON_PERCENT,
+            currentEquipment.TEACHING_PERCENT,
+            currentEquipment.PART_INSTALLATION_PERCENT,
+            currentEquipment.LEAK_CHECK_PERCENT,
+            currentEquipment.TTTM_PERCENT,
+            currentEquipment.CUSTOMER_CERTIFICATION_PERCENT
+        ];
+        
+        // 진행률 평균 계산
+        const averageProgress = Math.round(
+            (sections.reduce((sum, value) => sum + value, 0) / sections.length) * 100
+        );
+
+        // COMPLETE 상태 결정
+        updates.COMPLETE = averageProgress === 100 ? "COMPLETE" : "ING";
+
+        // 업데이트 실행
         const result = await setupeqDao.updateEquipmentById(id, updates);
         if (result.affectedRows > 0) {
-            res.status(200).json({ message: "Equipment updated successfully" });
+            res.status(200).json({ message: "Equipment updated successfully", complete: updates.COMPLETE });
         } else {
             res.status(404).json({ message: "Equipment not found" });
         }

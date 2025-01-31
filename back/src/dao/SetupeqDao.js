@@ -32,10 +32,10 @@ exports.getEquipmentById = async (id) => {
 exports.updateEquipmentById = async (id, updates) => {
     const connection = await pool.getConnection(async conn => conn);
     try {
-        // 업데이트 쿼리 생성
+        // 업데이트할 필드 생성
         const fields = Object.keys(updates).map(key => `${key} = ?`).join(", ");
         const values = Object.values(updates);
-        const query = `UPDATE SETUP_EQUIPMENT SET ${fields} WHERE id = ?`;
+        const query = `UPDATE SETUP_EQUIPMENT SET ${fields}, update_at = NOW() WHERE id = ?`;
 
         const [result] = await connection.query(query, [...values, id]);
         return result;

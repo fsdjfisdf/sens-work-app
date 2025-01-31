@@ -39,9 +39,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     async function fetchEquipment() {
         try {
             const response = await axios.get("http://3.37.73.151:3001/api/setupeq");
-            const equipment = response.data;
+            let equipment = response.data;
     
-            const sortedEquipment = equipment.map(e => {
+            // 📌 먼저 averageProgress 계산
+            const processedEquipment = equipment.map(e => {
                 const sections = [
                     {
                         name: "Install",
@@ -90,12 +91,37 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
                 ];
     
-                const averageProgress = Math.round(
-                    (sections.reduce((sum, section) => sum + section.progress, 0) / 5) * 100
+            // 📌 진행률 평균 계산
+            const averageProgress = Math.round(
+                (sections.reduce((sum, section) => sum + section.progress, 0) / 5) * 100
+            );
+
+            return { ...e, sections, averageProgress };
+        });
+
+                // 📌 필터 값 가져오기
+                const selectedGroup = document.getElementById("group-select").value;
+                const selectedSite = document.getElementById("site-select").value;
+                const selectedLine = document.getElementById("line-select").value;
+                const selectedComplete = document.getElementById("complete-select").value; // "ing" 또는 "complete"
+                const eqNameSearch = document.getElementById("eqname-input").value.toLowerCase();
+        
+                // 📌 필터링 수행 (averageProgress가 계산된 후 적용)
+                const filteredEquipment = processedEquipment.filter(e =>
+                    (selectedGroup === "" || e.GROUP === selectedGroup) &&
+                    (selectedSite === "" || e.SITE === selectedSite) &&
+                    (selectedLine === "" || e.LINE === selectedLine) &&
+                    (selectedComplete === "" ||
+                        (selectedComplete === "complete" && e.averageProgress === 100) || 
+                        (selectedComplete === "ing" && e.averageProgress < 100)
+                    ) &&
+                    (eqNameSearch === "" || e.EQNAME.toLowerCase().includes(eqNameSearch))
                 );
-    
-                return { ...e, sections, averageProgress };
-            });
+        
+                // 📌 진행률 순으로 정렬
+                const sortedEquipment = filteredEquipment.sort((a, b) => b.averageProgress - a.averageProgress);
+        
+            
 
             
     
@@ -154,6 +180,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                     `;
                 })
                 .join("");
+
+            // 📌 검색 버튼 이벤트 추가
+            document.getElementById("search-btn").addEventListener("click", fetchEquipment);
+
+            // 📌 초기화 버튼 이벤트 추가
+            document.getElementById("reset-btn").addEventListener("click", () => {
+                document.getElementById("group-select").value = "";
+                document.getElementById("site-select").value = "";
+                document.getElementById("line-select").value = "";
+                document.getElementById("complete-select").value = "";
+                document.getElementById("eqname-input").value = "";
+                fetchEquipment();
+            });
     
             // 호버 이벤트 추가
             document.querySelectorAll(".section").forEach(section => {
