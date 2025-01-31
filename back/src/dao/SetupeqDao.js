@@ -77,6 +77,10 @@ exports.addEquipment = async ({ EQNAME, GROUP, SITE, LINE, TYPE }) => {
         const query = `
         INSERT INTO SETUP_EQUIPMENT (
             EQNAME, \`GROUP\`, SITE, \`LINE\`, \`TYPE\`, 
+            INSTALLATION_PREPARATION_COMPANY, FAB_IN_COMPANY, DOCKING_COMPANY,
+            CABLE_HOOK_UP_COMPANY, POWER_TURN_ON_COMPANY, UTILITY_TURN_ON_COMPANY, 
+            GAS_TURN_ON_COMPANY, TEACHING_COMPANY, PART_INSTALLATION_COMPANY, 
+            LEAK_CHECK_COMPANY, TTTM_COMPANY, CUSTOMER_CERTIFICATION_COMPANY,
             INSTALLATION_PREPARATION_PERCENT, FAB_IN_PERCENT, DOCKING_PERCENT,
             CABLE_HOOK_UP_PERCENT, POWER_TURN_ON_PERCENT, UTILITY_TURN_ON_PERCENT, 
             GAS_TURN_ON_PERCENT, TEACHING_PERCENT, PART_INSTALLATION_PERCENT, 
@@ -88,12 +92,13 @@ exports.addEquipment = async ({ EQNAME, GROUP, SITE, LINE, TYPE }) => {
             COMPLETE, create_at, update_at
         ) VALUES (
             ?, ?, ?, ?, ?, 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+            '', '', '', '', '', '', '', '', '', '', '', '', '',
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
             'ING', NOW(), NOW()
         )`;
-    
-    const [result] = await connection.query(query, [EQNAME, GROUP, SITE, LINE, TYPE]);
-    
+
+        const [result] = await connection.query(query, [EQNAME, GROUP, SITE, LINE, TYPE]);
         return result;
     } catch (err) {
         throw new Error(`설비 추가 오류: ${err.message}`);
