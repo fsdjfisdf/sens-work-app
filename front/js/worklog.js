@@ -102,50 +102,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cancelEquipmentAdd = document.getElementById('cancel-equipment-add');
 
     // 모달 열기 함수
-    function openEquipmentAddModal(eqName, group, site, line, eqType) {
-        document.getElementById('new_eqname').value = eqName;
-        document.getElementById('new_group').value = group !== "SELECT" ? group : "";
-        document.getElementById('new_site').value = site !== "SELECT" ? site : "";
-        document.getElementById('new_line').value = line !== "SELECT" ? line : "";
-        document.getElementById('new_type').value = eqType !== "SELECT" ? eqType : "";
-    
-        equipmentAddMessage.innerText = `${eqName}이(가) SETUP_EQUIPMENT 테이블에 존재하지 않습니다. 추가하시겠습니까?`;
-        equipmentAddModal.style.display = 'block';
+function openEquipmentAddModal(eqName, group, site, line, eqType) {
+    document.getElementById('new_eqname').value = eqName;
+    document.getElementById('new_group').value = group !== "SELECT" ? group : "";
+    document.getElementById('new_site').value = site !== "SELECT" ? site : "";
+    document.getElementById('new_line').value = line !== "SELECT" ? line : "";
+    document.getElementById('new_type').value = eqType !== "SELECT" ? eqType : "";
+
+    equipmentAddMessage.innerText = `${eqName}이(가) SETUP_EQUIPMENT 테이블에 존재하지 않습니다. 추가하시겠습니까?`;
+    equipmentAddModal.style.display = 'block';
+}
+
+// "추가" 버튼 클릭 시 설비 추가 요청
+confirmEquipmentAdd.addEventListener('click', async () => {
+    const eqName = document.getElementById('new_eqname').value.trim();
+    const group = document.getElementById('new_group').value.trim();
+    const site = document.getElementById('new_site').value.trim();
+    const line = document.getElementById('new_line').value.trim();
+    const eqType = document.getElementById('new_type').value.trim();
+
+    // 필수 입력값 체크
+    if (!eqName || !group || !site || !line || !eqType) {
+        alert('모든 필드를 입력해주세요.');
+        return;
     }
-    
-    // "추가" 버튼 클릭 시 설비 추가 요청
-    confirmEquipmentAdd.addEventListener('click', async () => {
-        const eqName = document.getElementById('new_eqname').value.trim();
-        const group = document.getElementById('new_group').value.trim();
-        const site = document.getElementById('new_site').value.trim();
-        const line = document.getElementById('new_line').value.trim();
-        const eqType = document.getElementById('new_type').value.trim();
-    
-        // 필수 입력값 체크
-        if (!eqName || !group || !site || !line || !eqType) {
-            alert('모든 필드를 입력해주세요.');
-            return;
+
+    try {
+        const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment`, {
+            EQNAME: eqName,
+            GROUP: group,
+            SITE: site,
+            LINE: line,
+            TYPE: eqType
+        });
+
+        if (addResponse.status === 201) {
+            alert('설비가 SETUP_EQUIPMENT 테이블에 추가되었습니다.');
+            equipmentAddModal.style.display = 'none';
+        } else {
+            alert('설비 추가 중 오류가 발생했습니다.');
         }
-    
-        try {
-            const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment`, {
-                EQNAME: eqName,
-                GROUP: group,
-                SITE: site,
-                LINE: line,
-                TYPE: eqType
-            });
-    
-            if (addResponse.status === 201) {
-                alert('설비가 SETUP_EQUIPMENT 테이블에 추가되었습니다.');
-                equipmentAddModal.style.display = 'none';
-            } else {
-                alert('설비 추가 중 오류가 발생했습니다.');
-            }
-        } catch (error) {
-            console.error('설비 추가 중 오류 발생:', error);
-        }
-    });
+    } catch (error) {
+        console.error('설비 추가 중 오류 발생:', error);
+    }
+});
 
     // 모달 닫기 함수
     function closeEquipmentAddModal() {
