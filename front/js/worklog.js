@@ -95,6 +95,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('preview-modal').classList.remove('visible');
     });
 
+        // 모달 관련 요소 가져오기
+    const equipmentAddModal = document.getElementById('equipment-add-modal');
+    const equipmentAddMessage = document.getElementById('equipment-add-message');
+    const confirmEquipmentAdd = document.getElementById('confirm-equipment-add');
+    const cancelEquipmentAdd = document.getElementById('cancel-equipment-add');
+
+    // 모달 열기 함수
+    function openEquipmentAddModal(eqName, group, site, line, eqType) {
+        document.getElementById('new_eqname').value = eqName;
+        document.getElementById('new_group').value = group;
+        document.getElementById('new_site').value = site;
+        document.getElementById('new_line').value = line;
+        document.getElementById('new_type').value = eqType;
+        
+        equipmentAddMessage.innerText = `${eqName}이(가) SETUP_EQUIPMENT 테이블에 존재하지 않습니다. 추가하시겠습니까?`;
+        equipmentAddModal.style.display = 'block';
+    }
+
+    // 모달 닫기 함수
+    function closeEquipmentAddModal() {
+        equipmentAddModal.style.display = 'none';
+    }
+
+    // "취소" 버튼 클릭 시 모달 닫기
+    cancelEquipmentAdd.addEventListener('click', closeEquipmentAddModal);
+
+
     const form = document.getElementById('worklogForm');
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -143,42 +170,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const warranty = document.getElementById('warranty').value;
         const equipment_type = document.getElementById('equipment_type').value;
         const equipment_name = document.getElementById('equipment_name').value;
+        const workType = document.getElementById('workType').value;
             // 1️⃣ SETUP 작업일 경우에만 실행
             if (workType === 'SET UP') {
                 try {
-                    // 2️⃣ SETUP_EQUIPMENT 테이블에서 EQNAME이 존재하는지 확인
-                    const checkResponse = await axios.get(`http://3.37.73.151:3001/api/setup_equipment?eqname=${equipment_name}`);
-                    if (checkResponse.data.exists === false) {  
-                        // 3️⃣ 존재하지 않으면 사용자에게 추가 여부 질문
-                        const confirmAdd = confirm(`${equipment_name}이(가) SETUP_EQUIPMENT 테이블에 존재하지 않습니다. 추가하시겠습니까?`);
-                        if (confirmAdd) {
-                            // 4️⃣ 사용자가 추가를 원하면 STEP 1 데이터 가져와서 추가
-                            const group = document.getElementById('group').value;
-                            const site = document.getElementById('site').value;
-                            const line = document.getElementById('line').value;
-                            const eqtype = document.getElementById('equipment_type').value;
-
-                            // 5️⃣ SETUP_EQUIPMENT 테이블에 새 설비 추가
-                            const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment`, {
-                                EQNAME: equipment_name,
-                                GROUP: group,
-                                SITE: site,
-                                LINE: line,
-                                TYPE: eqtype
-                            });
-
-                            if (addResponse.status === 201) {
-                                alert('설비가 SETUP_EQUIPMENT 테이블에 추가되었습니다.');
-                            } else {
-                                alert('설비 추가 중 오류가 발생했습니다.');
-                            }
-                        }
+                    const encodedEqName = encodeURIComponent(equipment_name);
+                    const checkResponse = await axios.get(`http://3.37.73.151:3001/api/setup_equipment?eqname=${encodedEqName}`);
+                    
+                    console.log("설비 확인 응답:", checkResponse.data);
+            
+                    if (!checkResponse.data.exists) {
+                        openEquipmentAddModal(
+                            equipment_name,
+                            document.getElementById('group').value,
+                            document.getElementById('site').value,
+                            document.getElementById('line').value,
+                            document.getElementById('equipment_type').value
+                        );
                     }
                 } catch (error) {
                     console.error('설비 확인 및 추가 중 오류 발생:', error);
                 }
             }
-        const workType = document.getElementById('workType').value;
         const workType2 = document.getElementById('workType2').value;
         const setupItem = (workType === 'SET UP' || workType === 'RELOCATION') ? document.getElementById('additionalWorkType').value : 'SELECT';
         const maintItem = (workType === 'MAINT') ? document.getElementById('maintOptionSelect').value : 'SELECT';
@@ -249,6 +262,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadWorkLogs();
         renderCalendar(logs, engineers, currentYear, currentMonth);
     }
+
+    // "추가" 버튼 클릭 시 설비 추가 요청
+confirmEquipmentAdd.addEventListener('click', async () => {
+    const eqName = document.getElementById('new_eqname').value;
+    const group = document.getElementById('new_group').value;
+    const site = document.getElementById('new_site').value;
+    const line = document.getElementById('new_line').value;
+    const eqType = document.getElementById('new_type').value;
+
+    try {
+        const addResponse = await axios.post(`http://3.37.73.151:3001/api/setup_equipment`, {
+            EQNAME: eqName,
+            GROUP: group,
+            SITE: site,
+            LINE: line,
+            TYPE: eqType
+        });
+
+        if (addResponse.status === 201) {
+            alert('설비가 SETUP_EQUIPMENT 테이블에 추가되었습니다.');
+        } else {
+            alert('설비 추가 중 오류가 발생했습니다.');
+        }
+    } catch (error) {
+        console.error('설비 추가 중 오류 발생:', error);
+    } finally {
+        closeEquipmentAddModal();
+    }
+});
 
     const signOutButton = document.querySelector("#sign-out");
 

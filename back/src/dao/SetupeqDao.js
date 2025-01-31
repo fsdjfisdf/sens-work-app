@@ -85,3 +85,16 @@ exports.addEquipment = async ({ EQNAME, GROUP, SITE, LINE, TYPE }) => {
         connection.release();
     }
 };
+
+exports.getEquipmentByName = async (eqname) => {
+    const connection = await pool.getConnection(async conn => conn);
+    try {
+        const query = "SELECT * FROM SETUP_EQUIPMENT WHERE EQNAME = ?";
+        const [rows] = await connection.query(query, [eqname]);
+        return rows.length > 0 ? rows[0] : null;
+    } catch (err) {
+        throw new Error(`Error fetching equipment: ${err.message}`);
+    } finally {
+        connection.release();
+    }
+};

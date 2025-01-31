@@ -108,3 +108,20 @@ exports.addEquipment = async (req, res) => {
         res.status(500).json({ error: "Error adding equipment" });
     }
 };
+
+exports.getEquipmentByName = async (req, res) => {
+    const { eqname } = req.query;
+
+    try {
+        const equipment = await setupeqDao.getEquipmentByName(eqname);
+
+        if (!equipment) {
+            return res.status(200).json({ exists: false }); // 404 대신 exists: false 반환
+        }
+
+        res.status(200).json({ exists: true, equipment });
+    } catch (error) {
+        console.error("Error fetching equipment:", error);
+        res.status(500).json({ error: "Error fetching equipment" });
+    }
+};
