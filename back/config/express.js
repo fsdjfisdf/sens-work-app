@@ -87,10 +87,8 @@ module.exports = function () {
   // 업데이트 라우트 연결
   app.use('/api/updates', updateRoute);
 
-  const setupeqRoute = require('../src/routes/SetupeqRoute');
-  const setupEquipmentRoutes = require("./routes/SetupeqRoute"); // ✅ 라우트 불러오기
-  app.use('/api/setupeq', setupeqRoute);
-  app.use("/api/setup_equipment", setupEquipmentRoutes);
+  const setupeqRoute = require("../src/routes/SetupeqRoute"); // ✅ 올바른 파일 불러오기
+  app.use("/api/setup_equipment", setupeqRoute); // ✅ 경로 하나로 통일
   
 
 
