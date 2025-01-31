@@ -91,7 +91,7 @@ exports.getEquipmentByName = async (eqname) => {
     try {
         const query = "SELECT * FROM SETUP_EQUIPMENT WHERE EQNAME = ?";
         const [rows] = await connection.query(query, [eqname]);
-        return rows.length > 0 ? rows[0] : null;
+        return rows.length > 0 ? rows[0] : null; // ✅ 설비가 없으면 null 반환
     } catch (err) {
         throw new Error(`Error fetching equipment: ${err.message}`);
     } finally {

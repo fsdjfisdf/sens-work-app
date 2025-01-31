@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     console.log("설비 확인 응답:", checkResponse.data);
             
-                    if (!checkResponse.data.exists) {
+                    if (!checkResponse.data.exists) {  
                         openEquipmentAddModal(
                             equipment_name,
                             document.getElementById('group').value,

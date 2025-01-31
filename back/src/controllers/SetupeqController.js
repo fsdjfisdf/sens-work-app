@@ -116,7 +116,7 @@ exports.getEquipmentByName = async (req, res) => {
         const equipment = await setupeqDao.getEquipmentByName(eqname);
 
         if (!equipment) {
-            return res.status(200).json({ exists: false }); // 404 대신 exists: false 반환
+            return res.status(200).json({ exists: false }); // ✅ 404 대신 exists: false 반환
         }
 
         res.status(200).json({ exists: true, equipment });
