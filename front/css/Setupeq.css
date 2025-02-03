@@ -121,8 +121,6 @@ footer {
 main {
     margin-top: 20px;
     padding: 20px;
-    min-width: 1800px;
-    max-width: 1800px;
     margin-left: auto;
     margin-right: auto;
     background-color: #ffffff; /* 흰색 배경 */
@@ -463,7 +461,7 @@ h2 {
 }
 
 /* 필터 버튼 */
-#search-btn, #reset-btn {
+#search-btn, #reset-btn, #add-equipment-modal-btn {
     padding: 8px 15px;
     font-size: 14px;
     border: none;
@@ -488,6 +486,65 @@ h2 {
 
 #reset-btn:hover {
     background: #545b62;
+}
+
+#add-equipment-modal-btn {
+    background: #8400ff;
+    color: white;
+}
+
+#add-equipment-modal-btn:hover {
+    background: #6200be;
+}
+
+/* 📌 태블릿 (768px 이하) */
+@media (max-width: 1024px) {
+    .filter-container {
+        gap: 10px;
+        padding: 15px;
+        justify-content: center;
+    }
+
+    .filter-container label {
+        font-size: 13px;
+        min-width: 80px;
+    }
+
+    .filter-container select,
+    .filter-container input {
+        width: 160px;
+        min-width: unset;
+    }
+
+    #search-btn, #reset-btn, #add-equipment-modal-btn {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+/* 📌 모바일 (600px 이하) */
+@media (max-width: 600px) {
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-container label {
+        width: 100%;
+        text-align: left;
+    }
+
+    .filter-container select,
+    .filter-container input {
+        width: 100%;
+        min-width: unset;
+    }
+
+    #search-btn, #reset-btn, #add-equipment-modal-btn {
+        width: 100%;
+        font-size: 14px;
+        padding: 12px;
+    }
 }
 
 /* 모달 탭 스타일 */
@@ -522,4 +579,178 @@ h2 {
 
 .modal-section:not(.hidden) {
     display: block;
+}
+
+/* 📌 설비 추가 모달 (equipment-add-modal) */
+.equipment-add-modal {
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* 어두운 배경 */
+    backdrop-filter: blur(8px); /* 배경 흐림 효과 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+}
+
+/* 📌 모달 활성화 */
+.equipment-add-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 📌 모달 컨텐츠 박스 */
+.equipment-add-modal-content {
+    background-color: #ffffff;
+    width: 90%;
+    max-width: 480px;
+    padding: 28px;
+    border-radius: 14px;
+    box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.35);
+    text-align: center;
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-out;
+    opacity: 0;
+}
+
+/* 📌 모달 활성화 시 애니메이션 */
+.equipment-add-modal.active .equipment-add-modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* 📌 모달 헤더 */
+.equipment-add-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.equipment-add-modal-header h3 {
+    font-size: 22px;
+    font-weight: bold;
+    color: #222;
+}
+
+.equipment-add-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+    transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.equipment-add-modal-close:hover {
+    color: #d9534f;
+    transform: scale(1.2);
+}
+
+/* 📌 입력 폼 */
+.equipment-add-form {
+    margin-top: 20px;
+}
+
+.equipment-add-form .form-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.equipment-add-form label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+}
+
+.equipment-add-form input,
+.equipment-add-form select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* 📌 입력 필드 포커스 효과 */
+.equipment-add-form input:focus,
+.equipment-add-form select:focus {
+    border-color: #007bff;
+    box-shadow: 0px 0px 10px rgba(0, 123, 255, 0.4);
+    outline: none;
+}
+
+/* 📌 버튼 영역 */
+.equipment-add-modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+}
+
+.equipment-add-modal-buttons button {
+    padding: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 48%;
+    transition: all 0.2s ease-in-out;
+}
+
+/* 📌 확인 버튼 스타일 */
+.equipment-add-modal-buttons .confirm {
+    background: linear-gradient(to right, #007bff, #0056b3);
+    color: white;
+    font-weight: bold;
+    box-shadow: 0px 5px 10px rgba(0, 123, 255, 0.3);
+}
+
+.equipment-add-modal-buttons .confirm:hover {
+    background: linear-gradient(to right, #0056b3, #0040a0);
+    transform: translateY(-2px);
+}
+
+/* 📌 취소 버튼 스타일 */
+.equipment-add-modal-buttons .cancel {
+    background: #ddd;
+    color: black;
+}
+
+.equipment-add-modal-buttons .cancel:hover {
+    background: #bbb;
+    transform: translateY(-2px);
+}
+
+/* 📌 반응형 스타일 */
+@media (max-width: 600px) {
+    .equipment-add-modal-content {
+        width: 95%;
+        padding: 22px;
+    }
+
+    .equipment-add-modal-header h3 {
+        font-size: 20px;
+    }
+
+    .equipment-add-form label {
+        font-size: 13px;
+    }
+
+    .equipment-add-modal-buttons button {
+        font-size: 14px;
+        padding: 10px;
+    }
 }

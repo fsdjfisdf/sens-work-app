@@ -355,35 +355,159 @@
     </div>
 
 <!-- 설비 추가 모달 -->
-<div id="equipment-add-modal" class="modal">
-    <div class="modal-content">
-        <p id="equipment-add-message"></p>
+<div id="equipment-add-modal" class="equipment-add-modal">
+    <div class="equipment-add-modal-content">
+        <button class="equipment-add-modal-close" onclick="closeAddModal()">×</button>
+        <p>설비 정보가 없습니다. 설비를 등록해주세요.</p>
+        <p>등록하시면, 이후에 편리하게 작성하실 수 있습니다.</p><br>
+
         <div class="form-row">
             <label for="new_eqname">EQ NAME</label>
-            <input type="text" id="new_eqname" disabled>
+            <input type="text" id="new_eqname">
         </div>
         <div class="form-row">
             <label for="new_group">GROUP</label>
-            <input type="text" id="new_group" disabled>
+            <select id="new_group">
+                <option value="SELECT">SELECT</option>
+                <option value="PEE1">PEE1(SUPRA)</option>
+                <option value="PEE2">PEE2(INTEGER)</option>
+                <option value="PSKH">PSKH</option>
+            </select>
         </div>
         <div class="form-row">
             <label for="new_site">SITE</label>
-            <input type="text" id="new_site" disabled>
+            <select id="new_site">
+                <option value="">SELECT</option>
+                <option value="PT">PT</option>
+                <option value="HS">HS</option>
+                <option value="IC">IC</option>
+                <option value="CJ">CJ</option>
+                <option value="PSKH">PSKH</option>
+                <option value="USA-Portland">USA-Portland</option>
+                <option value="USA-Arizona">USA-Arizona</option>
+                <option value="Ireland">Ireland</option>
+                <option value="Japan-Hiroshima">Japan-Hiroshima</option>
+                <option value="China-Wuxi">China-Wuxi</option>
+                <option value="China-Xian">China-Xian</option>
+                <option value="China-Shanghai">China-Shanghai</option>
+                <option value="China-Beijing">China-Beijing</option>
+                <option value="Taiwan-Taichoung">Taiwan-Taichoung</option>
+                <option value="Singapore">Singapore</option>
+            </select>
         </div>
         <div class="form-row">
             <label for="new_line">LINE</label>
-            <input type="text" id="new_line" disabled>
+            <select id="new_line">
+                <option value="">SELECT</option> <!-- 기본 선택 옵션 -->
+                <option value="P1F">P1F</option>
+                <option value="P1D">P1D</option>
+                <option value="P2F">P2F</option>
+                <option value="P2D">P2D</option>
+                <option value="P2-S5">P2-S5</option>
+                <option value="P3F">P3F</option>
+                <option value="P3D">P3D</option>
+                <option value="P3-S5">P3-S5</option>
+                <option value="P4F">P4F</option>
+                <option value="P4D">P4D</option>
+                <option value="P4-S5">P4-S5</option>
+                <option value="12L">12L</option>
+                <option value="13L">13L</option>
+                <option value="15L">15L</option>
+                <option value="16L">16L</option>
+                <option value="17L">17L</option>
+                <option value="S1">S1</option>
+                <option value="S3">S3</option>
+                <option value="S4">S4</option>
+                <option value="S3V">S3V</option>
+                <option value="NRD">NRD</option>
+                <option value="NRDK">NRDK</option>
+                <option value="NRD-V">NRD-V</option>
+                <option value="U4">U4</option>
+                <option value="M1">M1</option>
+                <option value="5L">5L</option>
+                <option value="M10">M10</option>
+                <option value="M14">M14</option>
+                <option value="M16">M16</option>
+                <option value="R3">R3</option>
+                <option value="M11">M11</option>
+                <option value="M12">M12</option>
+                <option value="M15">M15</option>
+                <option value="PSKH">PSKH</option>
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+                <option value="C3">C3</option>
+                <option value="C5">C5</option>
+                <option value="INTEL">INTEL</option>
+                <option value="MICRON">MICRON</option>
+                <option value="HYNIX">HYNIX</option>
+                <option value="SAMSUNG">SAMSUNG</option>
+                <option value="GTX">GTX</option>
+                <option value="JIDIAN">JIDIAN</option>
+            <select id="new_line">
+            </select>
         </div>
         <div class="form-row">
             <label for="new_type">EQ TYPE</label>
-            <input type="text" id="new_type" disabled>
+            <select id="new_type">
+                <option value="SELECT">SELECT</option>
+                <option value="SUPRA N">SUPRA N</option>
+                <option value="SUPRA NM">SUPRA NM</option>
+                <option value="SUPRA III">SUPRA III</option>
+                <option value="SUPRA IV">SUPRA IV</option>
+                <option value="SUPRA V">SUPRA V</option>    
+                <option value="SUPRA Vplus">SUPRA Vplus</option>     
+                <option value="SUPRA VM">SUPRA VM</option>    
+                <option value="SUPRA XP">SUPRA XP</option>
+                <option value="SUPRA Q">SUPRA Q</option>                         
+                <option value="TERA21">TERA21</option>
+                <option value="INTEGER IVr">INTEGER IVr</option>
+                <option value="INTEGER Plus">INTEGER Plus</option>
+                <option value="INTEGER XP">INTEGER XP</option>
+                <option value="PRECIA">PRECIA</option>
+                <option value="ECOLITE 300">ECOLITE 300</option>
+                <option value="ECOLITE 400">ECOLITE 400</option>
+                <option value="ECOLITE 3000">ECOLITE 3000</option>
+                <option value="ECOLITE XP">ECOLITE XP</option>
+                <option value="GENEVA">GENEVA</option>
+            </select>
         </div>
+        <div class="form-row">
+            <label for="new_floor">FLOOR</label>
+            <input type="text" id="new_floor">
+        </div>
+        <div class="form-row">
+            <label for="new_bay">BAY</label>
+            <input type="text" id="new_bay">
+        </div>
+        <div class="form-row">
+            <label for="new_start_date">START DATE</label>
+            <input type="date" id="new_start_date">
+        </div>
+        <div class="form-row">
+            <label for="new_end_date">END DATE</label>
+            <input type="date" id="new_end_date">
+        </div>
+        <div class="form-row">
+            <label for="new_warranty">WARRANTY STATUS</label>
+            <select id="new_warranty">
+                <option value="SELECT">SELECT</option>
+                <option value="WI">WI</option>
+                <option value="WO">WO</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="new_info">INFO</label>
+            <textarea id="new_info"></textarea>
+        </div>
+
         <div class="modal-buttons">
             <button id="confirm-equipment-add" class="btn-primary">ADD</button>
-            <button id="cancel-equipment-add" class="btn-secondary">CANCEL</button>
+            <button id="cancel-equipment-add" class="btn-secondary" onclick="closeAddModal()">CANCEL</button>
         </div>
     </div>
 </div>
+
+
 
 
 

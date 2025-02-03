@@ -1,4 +1,11 @@
 document.addEventListener("DOMContentLoaded", async () => {
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
     const equipmentMatrix = document.getElementById("equipment-matrix"); // 매트릭스 컨테이너
     const equipmentModal = document.getElementById("equipment-modal");
     const modalTitle = document.getElementById("modal-title");
@@ -12,6 +19,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const analysisTab = document.getElementById("analysis-tab");
     const editSection = document.getElementById("edit-section");
     const analysisSection = document.getElementById("analysis-section");
+    
+
 
     // 📌 탭 전환 이벤트
     editTab.addEventListener("click", () => {
@@ -503,4 +512,149 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     await fetchEquipment();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const API_BASE_URL = "http://3.37.73.151:3001/api/setup_equipment";
+
+    // 📌 모달 관련 요소 가져오기
+    const addEquipmentModal = document.getElementById("equipment-add-modal");
+    const addEquipmentBtn = document.getElementById("add-equipment-modal-btn");
+    const confirmAddBtn = document.getElementById("confirm-equipment-add");
+    const cancelAddBtn = document.getElementById("cancel-equipment-add");
+    const closeAddModalBtn = document.getElementById("equipment-add-close");
+
+    const groupSelect = document.getElementById("new_group");
+    const siteSelect = document.getElementById("new_site");
+    const lineSelect = document.getElementById("new_line");
+    const eqTypeSelect = document.getElementById("new_type");
+
+    if (!addEquipmentBtn || !addEquipmentModal) {
+        console.error("❌ 모달 또는 버튼 요소를 찾을 수 없습니다. HTML을 확인해주세요.");
+        return;
+    }
+
+    console.log("📌 addEquipmentBtn 찾음:", addEquipmentBtn);
+    console.log("📌 addEquipmentModal 찾음:", addEquipmentModal);
+
+    // 📌 GROUP 옵션 추가
+    const groupOptions = ["PEE1", "PEE2", "PSKH"];
+    groupSelect.innerHTML = `<option value="">SELECT</option>` + 
+        groupOptions.map(group => `<option value="${group}">${group}</option>`).join("");
+
+    // 📌 SITE 옵션 추가
+    const siteOptions = [
+        "PT", "HS", "IC", "CJ", "PSKH", "USA-Portland", "USA-Arizona", "Ireland",
+        "Japan-Hiroshima", "China-Wuxi", "China-Xian", "China-Shanghai", 
+        "China-Beijing", "Taiwan-Taichoung", "Singapore"
+    ];
+    siteSelect.innerHTML = `<option value="">SELECT</option>` + 
+        siteOptions.map(site => `<option value="${site}">${site}</option>`).join("");
+
+    // 📌 LINE 옵션 맵
+    const lineOptions = {
+        "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
+        "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRDK", "NRD-V", "U4", "M1", "5L"],
+        "IC": ["M10", "M14", "M16", "R3"],
+        "CJ": ["M11", "M12", "M15"],
+        "PSKH": ["PSKH", "C1", "C2", "C3", "C5"],
+        "USA-Portland": ["INTEL"],
+        "USA-Arizona": ["INTEL"],
+        "Ireland": ["INTEL"],
+        "Japan-Hiroshima": ["MICRON"],
+        "China-Wuxi": ["HYNIX"],
+        "China-Xian": ["HYNIX", "SAMSUNG"],
+        "China-Shanghai": ["GTX"],
+        "China-Beijing": ["JIDIAN"],
+        "Taiwan-Taichoung": ["MICRON"],
+        "Singapore": ["MICRON"]
+    };
+
+    // 📌 SITE 선택 시, LINE 옵션 업데이트
+    siteSelect.addEventListener("change", () => {
+        const selectedSite = siteSelect.value;
+        lineSelect.innerHTML = `<option value="">SELECT</option>`;
+        if (lineOptions[selectedSite]) {
+            lineOptions[selectedSite].forEach(line => {
+                const option = document.createElement("option");
+                option.value = line;
+                option.textContent = line;
+                lineSelect.appendChild(option);
+            });
+        }
+    });
+
+    // 📌 EQ TYPE 옵션 추가
+    const eqTypes = [
+        "SELECT", "SUPRA N", "SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", 
+        "SUPRA Vplus", "SUPRA VM", "SUPRA XP", "SUPRA Q", "TERA21",
+        "INTEGER IVr", "INTEGER Plus", "INTEGER XP", "PRECIA",
+        "ECOLITE 300", "ECOLITE 400", "ECOLITE 3000", "ECOLITE XP", "GENEVA"
+    ];
+    eqTypeSelect.innerHTML = eqTypes.map(type => `<option value="${type}">${type}</option>`).join("");
+
+    // 📌 모달 열기
+    addEquipmentBtn.addEventListener("click", () => {
+        console.log("🟢 '설비 추가' 버튼 클릭됨!");
+        addEquipmentModal.classList.add("active");
+
+        // 📌 입력값 초기화
+        document.getElementById("new_eqname").value = "";
+        groupSelect.value = "";
+        siteSelect.value = "";
+        lineSelect.innerHTML = `<option value="">SELECT</option>`;
+        eqTypeSelect.value = "SELECT";
+    });
+
+    // 📌 모달 닫기
+    const closeModal = () => {
+        console.log("🔴 '모달 닫기' 버튼 클릭됨!");
+        addEquipmentModal.classList.remove("active");
+    };
+
+    [cancelAddBtn, closeAddModalBtn].forEach(btn => btn.addEventListener("click", closeModal));
+
+    // 📌 ESC 키로 모달 닫기 (애니메이션 적용)
+    window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            closeModal();
+        }
+    });
+
+    // 📌 설비 추가 기능
+    confirmAddBtn.addEventListener("click", async () => {
+        console.log("🔄 '설비 추가' 요청 중...");
+
+        const eqName = document.getElementById("new_eqname").value.trim();
+        const group = groupSelect.value;
+        const site = siteSelect.value;
+        const line = lineSelect.value;
+        const eqType = eqTypeSelect.value;
+
+        if (!eqName || !group || !site || !line || eqType === "SELECT") {
+            alert("⚠️ 모든 필드를 입력해주세요.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(`${API_BASE_URL}/add`, {
+                EQNAME: eqName,
+                GROUP: group,
+                SITE: site,
+                LINE: line,
+                TYPE: eqType
+            });
+
+            if (response.status === 201) {
+                alert("✅ 설비가 추가되었습니다.");
+                closeModal();
+                location.reload();
+            } else {
+                alert("❌ 설비 추가 실패.");
+            }
+        } catch (error) {
+            console.error("❌ 설비 추가 오류:", error);
+            alert("🚨 설비 추가 중 오류가 발생했습니다.");
+        }
+    });
 });

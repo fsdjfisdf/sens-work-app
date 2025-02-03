@@ -14,14 +14,13 @@ document.addEventListener('DOMContentLoaded', function() {
           "USA-Portland": ["INTEL"],
           "USA-Arizona": ["INTEL"],
           "Ireland": ["INTEL"],
-          "Japan-Hiroshiama": ["MICRON"],
+          "Japan-Hiroshima": ["MICRON"],
           "China-Wuxi": ["HYNIX"],
           "China-Xian": ["HYNIX", "SAMSUNG"],
           "China-Shanghai": ["GTX"],
           "China-Beijing": ["JIDIAN"],
           "Taiwan-Taichoung": ["MICRON"],
           "SINGAPORE": ["MICRON"],
-
       };
 
       lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';

@@ -4,7 +4,6 @@ const setupeqDao = require("../dao/SetupeqDao");
 exports.getEquipmentList = async (req, res) => {
     try {
         const equipmentList = await setupeqDao.getAllEquipment();
-        console.log("Fetched equipment list:", equipmentList); // 데이터 확인용
         res.status(200).json(equipmentList);
     } catch (error) {
         console.error("Error fetching equipment list:", error);
@@ -20,7 +19,6 @@ exports.getEquipmentStatus = async (req, res) => {
         if (!status) {
             return res.status(404).json({ message: "Equipment not found" });
         }
-        console.log(`Fetched status for equipment ID ${id}:`, status); // 데이터 확인용
         res.status(200).json(status);
     } catch (error) {
         console.error("Error fetching equipment status:", error);

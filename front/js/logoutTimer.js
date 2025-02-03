@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    const LOGOUT_TIME = 60 * 1000 * 10; // 10분 (밀리초)
+    const LOGOUT_TIME = 60 * 1000 * 30; // 30분 (밀리초)
     let logoutTimer;
 
     function resetTimer() {
