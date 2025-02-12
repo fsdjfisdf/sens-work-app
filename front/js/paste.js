@@ -35,49 +35,37 @@ document.addEventListener('DOMContentLoaded', function() {
         let moveTime = '';
 
         let currentSection = '';
-        let actionSectionEnded = false;
-        let resultSectionEnded = false;
 
+        // 제목은 첫번째 줄에서 가져옴
         if (lines.length > 0) {
             title = lines[0].trim();
         }
 
         lines.forEach(line => {
-            if (/^\s*1\)\s*status\s*/i.test(line)) {
+            // 섹션 구분 (대소문자 구분 없이)
+            if (/^\s*1\)\s*status/i.test(line)) {
                 currentSection = 'status';
-                actionSectionEnded = false;
-                resultSectionEnded = false;
-            } else if (/^\s*2\)\s*action\s*/i.test(line)) {
+            } else if (/^\s*2\)\s*action/i.test(line)) {
                 currentSection = 'action';
-                actionSectionEnded = false;
-            } else if (/^\s*3\)\s*cause\s*/i.test(line)) {
+            } else if (/^\s*3\)\s*cause/i.test(line)) {
                 currentSection = 'cause';
-                actionSectionEnded = true;
-                resultSectionEnded = true;
-            } else if (/^\s*4\)\s*result\s*/i.test(line)) {
+            } else if (/^\s*4\)\s*result/i.test(line)) {
                 currentSection = 'result';
-                actionSectionEnded = true;
-                resultSectionEnded = false;
-            } else if (/^\s*5\)\s*sop\s*및\s*t\s*\/\s*s\s*guide\s*활용\s*/i.test(line)) {
+            } else if (/^\s*5\)\s*sop\s*및\s*t\s*\/\s*s\s*guide/i.test(line)) {
                 currentSection = 'sopTsGuide';
-                resultSectionEnded = true;
             } else {
-                if (currentSection === 'status' && line.startsWith('-. ')) {
-                    statuses.push(line.replace('-. ', '').trim());
-                } else if (currentSection === 'action' && !actionSectionEnded) {
-                    if (line.trim() === '') {
-                        actionSectionEnded = true;
-                    } else if (line.startsWith('-. ')) {
-                        actions.push(line.replace('-. ', '').trim());
-                    } else if (actions.length > 0) {
-                        actions[actions.length - 1] += '\n' + line.trim();
+                // --- 여기서 ACTION 섹션의 처리를 단순화함 ---
+                if (currentSection === 'action') {
+                    // 2) ACTION과 3) CAUSE 사이의 모든 줄을 저장 (빈 줄은 제외)
+                    if (line.trim() !== '') {
+                        actions.push(line.trim());
                     }
+                } else if (currentSection === 'status' && line.startsWith('-. ')) {
+                    statuses.push(line.replace('-. ', '').trim());
                 } else if (currentSection === 'cause' && line.startsWith('-. ')) {
                     causes.push(line.replace('-. ', '').trim());
-                } else if (currentSection === 'result' && !resultSectionEnded) {
-                    if (line.trim() === '') {
-                        resultSectionEnded = true;
-                    } else if (line.startsWith('-. ')) {
+                } else if (currentSection === 'result') {
+                    if (line.trim() !== '' && line.startsWith('-. ')) {
                         results.push(line.replace('-. ', '').trim());
                     } else if (results.length > 0) {
                         results[results.length - 1] += '\n' + line.trim();
@@ -127,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // 필드 채우기
+        // 이후 나머지 필드 채우기 작업은 기존과 동일하게 진행합니다.
         const titleElement = document.getElementById('task_name');
         if (titleElement) {
             titleElement.value = title;
@@ -144,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const actionContainer = document.getElementById('task-descriptions-container');
         if (actionContainer) {
+            // 기존의 액션 필드들을 모두 제거한 후 새로 추가
             const actionContainers = actionContainer.querySelectorAll('.task-description-container');
             actionContainers.forEach(container => container.remove());
             actions.forEach((action, index) => {
@@ -260,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Move time element not found');
         }
 
-        // 'remove-field' 버튼에 이벤트 리스너 추가
+        // 'remove-field' 버튼 이벤트 등록
         document.querySelectorAll('.remove-field').forEach(button => {
             button.addEventListener('click', function() {
                 this.parentElement.remove();
