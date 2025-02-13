@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
           "PSKH": ["PSKH", "C1", "C2", "C3", "C5"],
           "USA-Portland": ["INTEL"],
           "USA-Arizona": ["INTEL"],
+          "USA-Texas": ["TEXAS INSTRUMENT"],
           "Ireland": ["INTEL"],
           "Japan-Hiroshima": ["MICRON"],
           "China-Wuxi": ["HYNIX"],
