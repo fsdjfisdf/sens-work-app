@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const editController = require("../controller/editController");
+const editController = require("../controllers/editController"); //
 
 // 특정 작업 이력 조회 API
 router.get("/logs/:id", editController.getWorkLogById);
