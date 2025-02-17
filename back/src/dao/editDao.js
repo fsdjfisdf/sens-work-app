@@ -1,19 +1,19 @@
-const db = require("../config/db");
+const { pool } = require("../../config/database");
 
 // 특정 작업 이력 조회 (id로 조회)
-const getWorkLogById = (id) => {
-    return new Promise((resolve, reject) => {
-        const query = `SELECT * FROM work_log WHERE id = ?`;
-        db.query(query, [id], (error, results) => {
-            if (error) return reject(error);
-            resolve(results[0]); // 단일 작업 이력 반환
-        });
-    });
+const getWorkLogById = async (id) => {
+    try {
+        const [rows] = await pool.promise().query("SELECT * FROM work_log WHERE id = ?", [id]);
+        return rows[0] || null; // 단일 작업 이력 반환 (없으면 null)
+    } catch (error) {
+        console.error("작업 이력 조회 오류:", error);
+        throw error;
+    }
 };
 
 // 작업 이력 수정
-const updateWorkLog = (id, updateData) => {
-    return new Promise((resolve, reject) => {
+const updateWorkLog = async (id, updateData) => {
+    try {
         const query = `
             UPDATE work_log 
             SET task_name = ?, task_date = ?, task_man = ?, \`group\` = ?, site = ?, 
@@ -36,11 +36,12 @@ const updateWorkLog = (id, updateData) => {
             updateData.move_time, updateData.task_maint, id
         ];
 
-        db.query(query, values, (error, results) => {
-            if (error) return reject(error);
-            resolve(results);
-        });
-    });
+        const [result] = await pool.promise().query(query, values);
+        return result;
+    } catch (error) {
+        console.error("작업 이력 수정 오류:", error);
+        throw error;
+    }
 };
 
 module.exports = {
