@@ -36,7 +36,7 @@ const updateWorkLog = async (id, updateData) => {
             updateData.move_time, updateData.task_maint, id
         ];
 
-        const [result] = await pool.promise().query(query, values);
+        const [result] = await pool.execute(query, values);
         return result;
     } catch (error) {
         console.error("작업 이력 수정 오류:", error);

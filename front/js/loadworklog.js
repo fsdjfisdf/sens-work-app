@@ -63,13 +63,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><button class="edit-btn" data-id="${log.id}">수정</button></td>
             `;
             worklogBody.appendChild(row);
+
+            // ✅ 작업 행을 클릭하면 상세 정보 모달 표시
+            row.addEventListener('click', async () => {
+                currentEditingId = log.id; // 현재 수정할 ID 저장
+                showEditForm(log);
+            });
         });
 
-        // 수정 버튼 이벤트 바인딩
+        // ✅ 기존의 '수정' 버튼 클릭 이벤트 (유지)
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', async (event) => {
+                event.stopPropagation(); // ⚠ 이벤트 버블링 방지
                 const id = event.target.dataset.id;
-                currentEditingId = id; // 현재 수정할 ID 저장
+                currentEditingId = id;
                 try {
                     const response = await fetch(`http://3.37.73.151:3001/api/logs/${id}`);
                     if (!response.ok) {
@@ -102,29 +109,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 수정 모달 표시 및 기존 데이터 입력
+    // ✅ 수정 모달 표시 및 기존 데이터 입력
     function showEditForm(log) {
-        editForm.elements['task_name'].value = log.task_name || '';
-        editForm.elements['task_date'].value = log.task_date || '';
-        editForm.elements['task_man'].value = log.task_man || '';
-        editForm.elements['group'].value = log.group || '';
-        editForm.elements['site'].value = log.site || '';
-        editForm.elements['task_duration'].value = log.task_duration || '';
-        editForm.elements['task_result'].value = log.task_result || '';
-        editForm.elements['task_description'].value = log.task_description || '';
-        editForm.elements['task_cause'].value = log.task_cause || '';
-        editForm.elements['status'].value = log.status || '';
-        editForm.elements['SOP'].value = log.SOP || '';
-        editForm.elements['tsguide'].value = log.tsguide || '';
-        editForm.elements['equipment_type'].value = log.equipment_type || '';
-        editForm.elements['equipment_name'].value = log.equipment_name || '';
-        editForm.elements['start_time'].value = log.start_time || '';
-        editForm.elements['end_time'].value = log.end_time || '';
-        editForm.elements['move_time'].value = log.move_time || '';
-        editForm.elements['none_time'].value = log.none_time || '';
-
+        if (!log) {
+            console.error("❌ log 데이터가 없습니다.");
+            return;
+        }
+    
+        console.log("✅ log 데이터:", log); // 로그 데이터 확인
+    
+        // 🔥 editForm이 올바르게 로드되었는지 확인
+        if (!editForm) {
+            console.error("❌ editForm을 찾을 수 없습니다.");
+            return;
+        }
+    
+        // 🔥 모든 요소가 존재하는지 확인
+        const requiredFields = [
+            'task_name', 'task_date', 'task_man', 'group', 'site',
+            'task_duration', 'task_result', 'task_description', 'task_cause',
+            'status', 'SOP', 'tsguide', 'equipment_type', 'equipment_name',
+            'start_time', 'end_time', 'move_time', 'none_time', 'setup_item',
+            'maint_item', 'transfer_item', 'warranty', 'work_type', 'work_type2'
+        ];
+    
+        for (const field of requiredFields) {
+            if (!editForm.elements[field]) {
+                console.error(`❌ 입력 필드를 찾을 수 없습니다: ${field}`);
+            }
+        }
+    
+        // 날짜 변환 (YYYY-MM-DD)
+        const formattedDate = log.task_date ? new Date(log.task_date).toISOString().split('T')[0] : '';
+    
+        // 시간 변환 (HH:MM)
+        const formattedStartTime = log.start_time ? log.start_time.substring(0, 5) : '';
+        const formattedEndTime = log.end_time ? log.end_time.substring(0, 5) : '';
+    
+        // ✅ 값 설정 (필드가 존재하는 경우에만 설정)
+        if (editForm.elements['task_name']) editForm.elements['task_name'].value = log.task_name || '';
+        if (editForm.elements['task_date']) editForm.elements['task_date'].value = formattedDate;
+        if (editForm.elements['task_man']) editForm.elements['task_man'].value = log.task_man || '';
+        if (editForm.elements['group']) editForm.elements['group'].value = log.group || '';
+        if (editForm.elements['site']) editForm.elements['site'].value = log.site || '';
+        if (editForm.elements['task_duration']) editForm.elements['task_duration'].value = log.task_duration || '';
+        if (editForm.elements['task_result']) editForm.elements['task_result'].value = log.task_result || '';
+        if (editForm.elements['task_description']) editForm.elements['task_description'].value = log.task_description || '';
+        if (editForm.elements['task_cause']) editForm.elements['task_cause'].value = log.task_cause || '';
+        if (editForm.elements['status']) editForm.elements['status'].value = log.status || '';
+        if (editForm.elements['SOP']) editForm.elements['SOP'].value = log.SOP || '';
+        if (editForm.elements['tsguide']) editForm.elements['tsguide'].value = log.tsguide || '';
+        if (editForm.elements['equipment_type']) editForm.elements['equipment_type'].value = log.equipment_type || '';
+        if (editForm.elements['equipment_name']) editForm.elements['equipment_name'].value = log.equipment_name || '';
+        if (editForm.elements['start_time']) editForm.elements['start_time'].value = formattedStartTime;
+        if (editForm.elements['end_time']) editForm.elements['end_time'].value = formattedEndTime;
+        if (editForm.elements['move_time']) editForm.elements['move_time'].value = log.move_time || '';
+        if (editForm.elements['none_time']) editForm.elements['none_time'].value = log.none_time || '';
+        if (editForm.elements['setup_item']) editForm.elements['setup_item'].value = log.setup_item || '';
+        if (editForm.elements['maint_item']) editForm.elements['maint_item'].value = log.maint_item || '';
+        if (editForm.elements['transfer_item']) editForm.elements['transfer_item'].value = log.transfer_item || '';
+        if (editForm.elements['warranty']) editForm.elements['warranty'].value = log.warranty || '';
+        if (editForm.elements['work_type']) editForm.elements['work_type'].value = log.work_type || '';
+        if (editForm.elements['work_type2']) editForm.elements['work_type2'].value = log.work_type2 || '';
+    
         editModal.style.display = 'block';
     }
+    
 
     // 모달 닫기
     closeModalBtn.addEventListener('click', () => {
@@ -137,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 작업 이력 수정 요청 (모달 내 "저장" 버튼)
+    // ✅ 작업 이력 수정 요청 (모달 내 "저장" 버튼)
     saveBtn.addEventListener('click', async (event) => {
         event.preventDefault();
         if (!currentEditingId) return;
