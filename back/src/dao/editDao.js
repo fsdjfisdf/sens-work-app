@@ -20,21 +20,22 @@ const updateWorkLog = async (id, updateData) => {
                 line = ?, equipment_type = ?, warranty = ?, equipment_name = ?, 
                 status = ?, task_description = ?, task_cause = ?, task_result = ?, 
                 SOP = ?, tsguide = ?, work_type = ?, work_type2 = ?, setup_item = ?, 
-                maint_item = ?, transfer_item = ?, task_duration = ?, start_time = ?, 
+                maint_item = ?, transfer_item = ?, start_time = ?, 
                 end_time = ?, none_time = ?, move_time = ?, task_maint = ?
-            WHERE id = ?`;
+            WHERE id = ?
+        `;
 
-        const values = [
-            updateData.task_name, updateData.task_date, updateData.task_man,
-            updateData.group, updateData.site, updateData.line,
-            updateData.equipment_type, updateData.warranty, updateData.equipment_name,
-            updateData.status, updateData.task_description, updateData.task_cause,
-            updateData.task_result, updateData.SOP, updateData.tsguide,
-            updateData.work_type, updateData.work_type2, updateData.setup_item,
-            updateData.maint_item, updateData.transfer_item, updateData.task_duration,
-            updateData.start_time, updateData.end_time, updateData.none_time,
-            updateData.move_time, updateData.task_maint, id
-        ];
+            const values = [
+                updateData.task_name ?? null, updateData.task_date ?? null, updateData.task_man ?? null,
+                updateData.group ?? null, updateData.site ?? null, updateData.line ?? null,
+                updateData.equipment_type ?? null, updateData.warranty ?? null, updateData.equipment_name ?? null,
+                updateData.status ?? null, updateData.task_description ?? null, updateData.task_cause ?? null,
+                updateData.task_result ?? null, updateData.SOP ?? null, updateData.tsguide ?? null,
+                updateData.work_type ?? null, updateData.work_type2 ?? null, updateData.setup_item ?? null,
+                updateData.maint_item ?? null, updateData.transfer_item ?? null,
+                updateData.start_time ?? null, updateData.end_time ?? null,
+                updateData.none_time ?? null, updateData.move_time ?? null, updateData.task_maint ?? null, id
+            ];
 
         const [result] = await pool.execute(query, values);
         return result;

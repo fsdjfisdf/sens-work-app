@@ -126,11 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // 🔥 모든 요소가 존재하는지 확인
         const requiredFields = [
-            'task_name', 'task_date', 'task_man', 'group', 'site',
-            'task_duration', 'task_result', 'task_description', 'task_cause',
+            'task_name', 'task_date', 'task_man', 'group', 'site', 'line',
+            'task_result', 'task_description', 'task_cause',
             'status', 'SOP', 'tsguide', 'equipment_type', 'equipment_name',
             'start_time', 'end_time', 'move_time', 'none_time', 'setup_item',
-            'maint_item', 'transfer_item', 'warranty', 'work_type', 'work_type2'
+            'maint_item', 'transfer_item', 'warranty', 'work_type', 'work_type2', 'task maint'
         ];
     
         for (const field of requiredFields) {
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editForm.elements['task_man']) editForm.elements['task_man'].value = log.task_man || '';
         if (editForm.elements['group']) editForm.elements['group'].value = log.group || '';
         if (editForm.elements['site']) editForm.elements['site'].value = log.site || '';
-        if (editForm.elements['task_duration']) editForm.elements['task_duration'].value = log.task_duration || '';
+        if (editForm.elements['line']) editForm.elements['line'].value = log.site || '';
         if (editForm.elements['task_result']) editForm.elements['task_result'].value = log.task_result || '';
         if (editForm.elements['task_description']) editForm.elements['task_description'].value = log.task_description || '';
         if (editForm.elements['task_cause']) editForm.elements['task_cause'].value = log.task_cause || '';
@@ -164,13 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editForm.elements['start_time']) editForm.elements['start_time'].value = formattedStartTime;
         if (editForm.elements['end_time']) editForm.elements['end_time'].value = formattedEndTime;
         if (editForm.elements['move_time']) editForm.elements['move_time'].value = log.move_time || '';
-        if (editForm.elements['none_time']) editForm.elements['none_time'].value = log.none_time || '';
+        if (editForm.elements['none_time']) editForm.elements['none_time'].value = log.none_time || ''; //
         if (editForm.elements['setup_item']) editForm.elements['setup_item'].value = log.setup_item || '';
         if (editForm.elements['maint_item']) editForm.elements['maint_item'].value = log.maint_item || '';
         if (editForm.elements['transfer_item']) editForm.elements['transfer_item'].value = log.transfer_item || '';
         if (editForm.elements['warranty']) editForm.elements['warranty'].value = log.warranty || '';
         if (editForm.elements['work_type']) editForm.elements['work_type'].value = log.work_type || '';
         if (editForm.elements['work_type2']) editForm.elements['work_type2'].value = log.work_type2 || '';
+        if (editForm.elements['task_maint']) editForm.elements['task_maint'].value = log.work_type2 || '';
     
         editModal.style.display = 'block';
     }
@@ -198,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             task_man: editForm.elements['task_man'].value,
             group: editForm.elements['group'].value,
             site: editForm.elements['site'].value,
-            task_duration: editForm.elements['task_duration'].value,
+            line: editForm.elements['line'].value,
             task_result: editForm.elements['task_result'].value,
             task_description: editForm.elements['task_description'].value,
             task_cause: editForm.elements['task_cause'].value,
@@ -211,6 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
             end_time: editForm.elements['end_time'].value,
             move_time: editForm.elements['move_time'].value,
             none_time: editForm.elements['none_time'].value,
+            setup_item: editForm.elements['setup_item'].value,
+            maint_item: editForm.elements['maint_item'].value,
+            transfer_item: editForm.elements['transfer_item'].value,
+            warranty: editForm.elements['warranty'].value,
+            work_type: editForm.elements['work_type'].value,
+            work_type2: editForm.elements['work_type2'].value,
+            task_maint: editForm.elements['task_maint'].value,
+
         };
 
         try {
