@@ -1,81 +1,431 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+/* Reset some basic elements */
+body, h1, h2, p, a, input, select, label, textarea, button {
     margin: 0;
     padding: 0;
+    text-decoration: none;
+    color: inherit;
+    box-sizing: border-box;
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
-.container {
-    width: 80%;
-    margin: 20px auto;
-    background: #fff;
+/* Navigation styles */
+nav {
+    background-color: #1c1c1e;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1600px; /* 확장된 화면 너비 */
+    padding: 0 20px;
+}
+
+.nav-title a {
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+
+footer {
+    background-color: #1c1c1e;
+    color: #fff;
+    text-align: center;
+    padding: 10px 0;
+    margin-top: auto;
+}
+
+/* Menu button styles */
+.menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    position: fixed;
+    top: 3%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1100;
+}
+
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 25px;
+    height: 18px;
+}
+
+.menu-icon span {
+    height: 5px;
+    background-color: #fff;
+    border-radius: 2px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Menu bar styles */
+.menu-bar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 300px;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
     padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1001;
 }
 
+.menu-bar.open {
+    right: 0;
+}
+
+.menu-bar-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-item {
+    color: #000000;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item:hover {
+    background-color: #818181;
+    color: #ffffff;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+/* 🌟 컨테이너 */
+.container {
+    width: 85%;
+    margin: 50px auto;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* 🌟 제목 */
 h1 {
     text-align: center;
-    color: #333;
+    font-size: 30px;
+    font-weight: 700;
+    color: #2c3e50;
+    animation: slideDown 0.6s ease-in-out;
 }
 
-table {
+/* 🌟 검색 필터 컨테이너 (반응형 6행 배치) */
+.filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+/* 🌟 각 필터 행 */
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+/* 🌟 3개 필드가 있는 행 (GROUP, SITE, LINE) */
+.filter-row:nth-child(2) {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* 🌟 검색 버튼과 리셋 버튼만 있는 행 */
+.filter-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* 🌟 필터 요소 공통 스타일 */
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* 🌟 필터 라벨 */
+.filter-container label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+/* 🌟 입력 필드 스타일 */
+.filter-container select,
+.filter-container input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #bdc3c7;
+    background: #ffffff;
+    transition: all 0.3s ease-in-out;
+    font-size: 14px;
+}
+
+/* 🌟 포커스 효과 */
+.filter-container select:focus,
+.filter-container input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+}
+
+/* 🌟 버튼 스타일 */
+#search-btn,
+#reset-btn {
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    width: 180px;
+    text-align: center;
+}
+
+#search-btn {
+    background-color: #5c5c5c;
+    color: #ffffff;
+}
+
+#search-btn:hover {
+    background-color: #1b1b1b;
+}
+
+#reset-btn {
+    background-color: #bdc3c7;
+    color: white;
+}
+
+#reset-btn:hover {
+    background-color: #7f8c8d;
+}
+
+/* 🌟 반응형 디자인 (모바일 최적화) */
+@media (max-width: 768px) {
+    .filter-row {
+        grid-template-columns: 1fr; /* 모바일에서는 한 줄씩 배치 */
+    }
+
+    .filter-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #search-btn,
+    #reset-btn {
+        width: 100%;
+    }
+}
+
+
+/* 🌟 테이블 스타일 */
+#worklog-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
-    border: 1px solid #ccc;
-    padding: 10px;
+/* 테이블 헤더 */
+#worklog-table thead {
+    background-color: #444444;
+    color: white;
+    font-weight: bold;
+}
+
+#worklog-table th, #worklog-table td {
+    padding: 14px;
     text-align: center;
+    border-bottom: 1px solid #ddd;
 }
 
-th {
-    background-color: #f2f2f2;
+/* 테이블 홀수 행 색상 변경 */
+#worklog-table tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
 }
 
+/* 테이블 마우스 호버 효과 */
+#worklog-table tbody tr:hover {
+    background-color: #ecf0f1;
+    transition: background 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+/* 🌟 페이지네이션 */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.pagination-container button {
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: #444444;
+    color: #ffffff;
+    border-radius: 8px;
+}
+
+.pagination-container span {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* 🌟 모달 스타일 */
 .modal {
-    display: none; /* 기본값 */
+    display: none;
     position: fixed;
-    z-index: 10;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-in-out;
 }
 
+/* 모달 콘텐츠 */
 .modal-content {
-    background: #fff;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #ccc;
+    background-color: white;
     width: 50%;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    max-height: 80%;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.5s ease-in-out;
+    overflow-y: auto; /* 🌟 스크롤 추가 */
 }
 
+/* 🌟 모달 스크롤 바 스타일 */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #34495e;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #ecf0f1;
+}
+
+/* 닫기 버튼 */
 .close {
-    color: #aaa;
     float: right;
-    font-size: 28px;
-    font-weight: bold;
+    font-size: 24px;
     cursor: pointer;
+    transition: color 0.3s ease-in-out;
 }
 
 .close:hover {
-    color: #000;
+    color: rgb(43, 43, 43);
 }
 
-button {
-    padding: 10px 15px;
-    border: none;
-    background-color: #007BFF;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 5px;
+/* 🌟 폼 스타일 */
+form {
+    display: flex;
+    flex-direction: column;
 }
 
-button:hover {
-    background-color: #0056b3;
+form label {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+form input, form select, form textarea {
+    padding: 12px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #bdc3c7;
+    transition: all 0.3s ease-in-out;
+}
+
+form input:focus, form select:focus, form textarea:focus {
+    border-color: #2980b9;
+    box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
+}
+
+/* 🌟 저장 및 삭제 버튼 */
+#save-btn {
+    background-color: #636363;
+    color: #ffffff;
+    font-size: 16px;
+    padding: 14px;
+    border-radius: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#save-btn:hover {
+    background-color: #272727;
+}
+
+#delete-btn {
+    background-color: #c7c7c7;
+    font-size: 16px;
+    padding: 14px;
+    border-radius: 8px;
+}
+
+#delete-btn:hover {
+    background-color: #afafaf;
+}
+
+/* 🌟 애니메이션 효과 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }

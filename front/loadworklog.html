@@ -3,23 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>작업 이력 관리</title>
-    <link rel="stylesheet" href="loadworklog.css">
+    <title>LOAD WORKLOG</title>
+    <link rel="stylesheet" href="./css/loadworklog.css">
 </head>
 <body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+    <main>
     <div class="container">
-        <h1>작업 이력 관리</h1>
+        <h1>WORK LOG</h1>
+        <div class="filter-container">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="start-date">START DATE</label>
+                    <input type="date" id="start-date">
+                </div>
+                <div class="filter-item">
+                    <label for="end-date">END DATE</label>
+                    <input type="date" id="end-date">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="group">GROUP</label>
+                    <select id="group">
+                        <option value="">ALL</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+        
+                    <label for="site">SITE</label>
+                    <select id="site">
+                        <option value="">SELECT</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                        <option value="USA-Portland">USA-Portland</option>
+                        <option value="USA-Arizona">USA-Arizona</option>
+                        <option value="USA-Texas">USA-Texas</option>
+                        <option value="Ireland">Ireland</option>
+                        <option value="Japan-Hiroshiama">Japan-Hiroshima</option>
+                        <option value="China-Wuxi">China-Wuxi</option>
+                        <option value="China-Xian">China-Xian</option>
+                        <option value="China-Shanghai">China-Shanghai</option>
+                        <option value="China-Beijing">China-Beijing</option>
+                        <option value="Taiwan-Taichoung">Taiwan-Taichoung</option>
+                        <option value="Singapore">Singapore</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+
+                    <label for="line">LINE</label>
+                    <select id="line">
+                        <option value="">ALL</option>
+                        <option value="P1F">P1F</option>
+                        <option value="P1D">P1D</option>
+                        <option value="P2F">P2F</option>
+                        <option value="P2D">P2D</option>
+                        <option value="P2-S5">P2-S5</option>
+                        <option value="P3F">P3F</option>
+                        <option value="P3D">P3D</option>
+                        <option value="P3-S5">P3-S5</option>
+                        <option value="P4F">P4F</option>
+                        <option value="P4D">P4D</option>
+                        <option value="P4-S5">P4-S5</option>
+                        <option value="12L">12L</option>
+                        <option value="13L">13L</option>
+                        <option value="15L">15L</option>
+                        <option value="16L">16L</option>
+                        <option value="17L">17L</option>
+                        <option value="S1">S1</option>
+                        <option value="S3">S3</option>
+                        <option value="S4">S4</option>
+                        <option value="S3V">S3V</option>
+                        <option value="NRD">NRD</option>
+                        <option value="NRDK">NRDK</option>
+                        <option value="NRD-V">NRD-V</option>
+                        <option value="U4">U4</option>
+                        <option value="M1">M1</option>
+                        <option value="5L">5L</option>
+                        <option value="M10">M10</option>
+                        <option value="M14">M14</option>
+                        <option value="M16">M16</option>
+                        <option value="R3">R3</option>
+                        <option value="M11">M11</option>
+                        <option value="M12">M12</option>
+                        <option value="M15">M15</option>
+                        <option value="PSKH">PSKH</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
+                        <option value="C3">C3</option>
+                        <option value="C5">C5</option>
+                        <option value="INTEL">INTEL</option>
+                        <option value="MICRON">MICRON</option>
+                        <option value="HYNIX">HYNIX</option>
+                        <option value="SAMSUNG">SAMSUNG</option>
+                        <option value="GTX">GTX</option>
+                        <option value="JIDIAN">JIDIAN</option>
+                        <option value="Texas Instrument">Texas Instrument</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item">
+        
+                    <label for="eq-type">EQ TYPE</label>
+                    <select id="eq-type">
+                        <option value="">ALL</option>
+                        <option value="SUPRA N">SUPRA N</option>
+                        <option value="SUPRA NM">SUPRA NM</option>
+                        <option value="SUPRA III">SUPRA III</option>
+                        <option value="SUPRA IV">SUPRA IV</option>
+                        <option value="SUPRA V">SUPRA V</option>
+                        <option value="SUPRA Vplus">SUPRA Vplus</option>
+                        <option value="SUPRA VM">SUPRA VM</option>
+                        <option value="SUPRA XP">SUPRA XP</option>
+                        <option value="SUPRA Q">SUPRA Q</option>
+                        <option value="TERA21">TERA21</option>
+                        <option value="INTEGER IVr">INTEGER IVr</option>
+                        <option value="INTEGER Plus">INTEGER Plus</option>
+                        <option value="INTEGER XP">INTEGER XP</option>
+                        <option value="PRECIA">PRECIA</option>
+                        <option value="ECOLITE 300">ECOLITE 300</option>
+                        <option value="ECOLITE 400">ECOLITE 400</option>
+                        <option value="ECOLITE 3000">ECOLITE 3000</option>
+                        <option value="ECOLITE XP">ECOLITE XP</option>
+                        <option value="GENEVA">GENEVA</option>
+                        <option value="HDW">HDW</option>
+
+                    </select>
+                </div>
+                <div class="filter-item">
+                
+                    <label for="eq-name">EQ NAME</label>
+                    <input type="text" id="eq-name">
+                </div>
+            </div>
+        
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="title">TITLE</label>
+                    <input type="text" id="title">
+                </div>
+                <div class="filter-item">
+                
+                    <label for="worker">WORKER</label>
+                    <input type="text" id="worker">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-item">
+        
+                    <label for="transfer-item">TRANSFER ITEM</label>
+                    <input type="text" id="transfer-item">
+                </div>
+                <div class="filter-item">
+                
+                    <label for="setup-item">SETUP ITEM</label>
+                    <select id="setup-item">
+                        <option value="">ALL</option>
+                        <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+                        <option value="FAB IN">FAB IN</option>
+                        <option value="DOCKING">DOCKING</option>
+                        <option value="CABLE HOOK UP">CABLE HOOK UP</option>
+                        <option value="POWER TURN ON">POWER TURN ON</option>
+                        <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+                        <option value="GAS TURN ON">GAS TURN ON</option>
+                        <option value="LEVELING">LEVELING</option>
+                        <option value="TEACHING">TEACHING</option>
+                        <option value="PART INSTALLATION">PART INSTALLATION</option>
+                        <option value="LEAK CHECK">LEAK CHECK</option>
+                        <option value="TTTM">TTTM</option>
+                        <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
+                        <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-row filter-buttons">
+                    <button id="search-btn">Search</button>
+                    <button id="reset-btn">Reset</button>
+                </div>
+            </div>
+        </div>
         <table id="worklog-table">
             <thead>
                 <tr>
-                    <th>날짜</th>
-                    <th>작업명</th>
-                    <th>그룹</th>
-                    <th>사이트</th>
-                    <th>작업자</th>
-                    <th>작업 시간</th>
-                    <th>결과</th>
-                    <th>액션</th>
+                    <th>DATE</th>
+                    <th>GROUP</th>
+                    <th>SITE</th>
+                    <th>TITLE</th>
+                    <th>RESULT</th>
+                    <th>WORKER</th>
+                    <th>TIME</th>
                 </tr>
             </thead>
             <tbody id="worklog-body">
@@ -28,9 +246,9 @@
         </table>
     </div>
     <div class="pagination-container">
-        <button id="prev-page" disabled>이전</button>
+        <button id="prev-page" disabled>←</button>
         <span id="page-info">1 / 1</span>
-        <button id="next-page" disabled>다음</button>
+        <button id="next-page" disabled>→</button>
     </div>
 
     <!-- 모달 -->
@@ -38,93 +256,254 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <form id="worklog-form">
-                <h2>작업 이력 수정</h2>
+                <h2>EDIT</h2>
                 <input type="hidden" id="worklog-id">
 
                 <!-- 기본 정보 -->
-                <label for="task_date">날짜:</label>
+                <label for="task_date">DATE</label>
                 <input type="date" id="task_date" name="task_date">
 
-                <label for="task_name">작업명:</label>
+                <label for="task_name">TITLE</label>
                 <input type="text" id="task_name" name="task_name">
 
-                <label for="task_man">작업자:</label>
+                <label for="task_man">WORKER</label>
                 <input type="text" id="task_man" name="task_man">
 
-                <label for="group">그룹:</label>
-                <input type="text" id="group" name="group">
+                <label for="group">GROUP</label>
+                <select id="group" name="group">
+                    <option value="">SELECT</option>
+                    <option value="PEE1">PEE1</option>
+                    <option value="PEE2">PEE2</option>
+                    <option value="PSKH">PSKH</option>
+                </select>
 
-                <label for="line">라인:</label>
-                <input type="text" id="line" name="line">
+                <label for="line">LINE</label>
+                <select id="line" name="line">
+                    <option value="">SELECT</option>
+                    <option value="P1F">P1F</option>
+                    <option value="P1D">P1D</option>
+                    <option value="P2F">P2F</option>
+                    <option value="P2D">P2D</option>
+                    <option value="P2-S5">P2-S5</option>
+                    <option value="P3F">P3F</option>
+                    <option value="P3D">P3D</option>
+                    <option value="P3-S5">P3-S5</option>
+                    <option value="P4F">P4F</option>
+                    <option value="P4D">P4D</option>
+                    <option value="P4-S5">P4-S5</option>
+                    <option value="12L">12L</option>
+                    <option value="13L">13L</option>
+                    <option value="15L">15L</option>
+                    <option value="16L">16L</option>
+                    <option value="17L">17L</option>
+                    <option value="S1">S1</option>
+                    <option value="S3">S3</option>
+                    <option value="S4">S4</option>
+                    <option value="S3V">S3V</option>
+                    <option value="NRD">NRD</option>
+                    <option value="NRDK">NRDK</option>
+                    <option value="NRD-V">NRD-V</option>
+                    <option value="U4">U4</option>
+                    <option value="M1">M1</option>
+                    <option value="5L">5L</option>
+                    <option value="M10">M10</option>
+                    <option value="M14">M14</option>
+                    <option value="M16">M16</option>
+                    <option value="R3">R3</option>
+                    <option value="M11">M11</option>
+                    <option value="M12">M12</option>
+                    <option value="M15">M15</option>
+                    <option value="PSKH">PSKH</option>
+                    <option value="C1">C1</option>
+                    <option value="C2">C2</option>
+                    <option value="C3">C3</option>
+                    <option value="C5">C5</option>
+                    <option value="INTEL">INTEL</option>
+                    <option value="MICRON">MICRON</option>
+                    <option value="HYNIX">HYNIX</option>
+                    <option value="SAMSUNG">SAMSUNG</option>
+                    <option value="GTX">GTX</option>
+                    <option value="JIDIAN">JIDIAN</option>
+                    <option value="Texas Instrument">Texas Instrument</option>
+                </select>
 
-                <label for="site">사이트:</label>
-                <input type="text" id="site" name="site">
 
-                <label for="task_result">결과:</label>
+                <label for="site">SITE</label>
+                <select id="site" name="site">
+                    <option value="">SELECT</option>
+                    <option value="PT">PT</option>
+                    <option value="HS">HS</option>
+                    <option value="IC">IC</option>
+                    <option value="CJ">CJ</option>
+                    <option value="PSKH">PSKH</option>
+                    <option value="USA-Portland">USA-Portland</option>
+                    <option value="USA-Arizona">USA-Arizona</option>
+                    <option value="USA-Texas">USA-Texas</option>
+                    <option value="Ireland">Ireland</option>
+                    <option value="Japan-Hiroshiama">Japan-Hiroshima</option>
+                    <option value="China-Wuxi">China-Wuxi</option>
+                    <option value="China-Xian">China-Xian</option>
+                    <option value="China-Shanghai">China-Shanghai</option>
+                    <option value="China-Beijing">China-Beijing</option>
+                    <option value="Taiwan-Taichoung">Taiwan-Taichoung</option>
+                    <option value="Singapore">Singapore</option>
+                </select>
+
+                <label for="task_result">RESULT</label>
                 <input type="text" id="task_result" name="task_result">
 
                 <!-- 추가 정보 -->
-                <label for="status">상태:</label>
+                <label for="status">STATUS</label>
                 <input type="text" id="status" name="status">
 
-                <label for="task_description">작업 설명:</label>
+                <label for="task_description">DESCRIPTION</label>
                 <textarea id="task_description" name="task_description"></textarea>
 
-                <label for="task_cause">원인:</label>
+                <label for="task_cause">CAUSE</label>
                 <input type="text" id="task_cause" name="task_cause">
 
-                <label for="SOP">SOP:</label>
+                <label for="SOP">SOP</label>
                 <input type="text" id="SOP" name="SOP">
 
-                <label for="tsguide">TS 가이드:</label>
+                <label for="tsguide">TS GUIDE</label>
                 <input type="text" id="tsguide" name="tsguide">
 
-                <label for="equipment_type">장비 유형:</label>
-                <input type="text" id="equipment_type" name="equipment_type">
+                <label for="equipment_type">EQ TYPE</label>
+                <select id="equipment_type" name="equipment_type">
+                    <option value="">SELECT</option>
+                    <option value="SUPRA N">SUPRA N</option>
+                    <option value="SUPRA NM">SUPRA NM</option>
+                    <option value="SUPRA III">SUPRA III</option>
+                    <option value="SUPRA IV">SUPRA IV</option>
+                    <option value="SUPRA V">SUPRA V</option>
+                    <option value="SUPRA Vplus">SUPRA Vplus</option>
+                    <option value="SUPRA VM">SUPRA VM</option>
+                    <option value="SUPRA XP">SUPRA XP</option>
+                    <option value="SUPRA Q">SUPRA Q</option>
+                    <option value="TERA21">TERA21</option>
+                    <option value="INTEGER IVr">INTEGER IVr</option>
+                    <option value="INTEGER Plus">INTEGER Plus</option>
+                    <option value="INTEGER XP">INTEGER XP</option>
+                    <option value="PRECIA">PRECIA</option>
+                    <option value="ECOLITE 300">ECOLITE 300</option>
+                    <option value="ECOLITE 400">ECOLITE 400</option>
+                    <option value="ECOLITE 3000">ECOLITE 3000</option>
+                    <option value="ECOLITE XP">ECOLITE XP</option>
+                    <option value="GENEVA">GENEVA</option>
+                </select>
 
-                <label for="equipment_name">장비명:</label>
+                <label for="equipment_name">EQ NAME</label>
                 <input type="text" id="equipment_name" name="equipment_name">
 
                 <!-- 🛠 추가해야 할 필드 -->
-                <label for="start_time">시작 시간:</label>
+                <label for="start_time">START TIME</label>
                 <input type="time" id="start_time" name="start_time">
 
-                <label for="end_time">종료 시간:</label>
+                <label for="end_time">END TIME</label>
                 <input type="time" id="end_time" name="end_time">
 
-                <label for="move_time">이동 시간:</label>
+                <label for="move_time">MOVE TIME</label>
                 <input type="number" id="move_time" name="move_time">
 
-                <label for="none_time">대기 시간:</label>
+                <label for="none_time">NONE TIME</label>
                 <input type="number" id="none_time" name="none_time">
 
-                <label for="setup_item">설정 항목:</label>
-                <input type="text" id="setup_item" name="setup_item">
+                <label for="setup_item">SETUP ITEM</label>
+                <select id="setup_item" name="setup_item">
+                    <option value="SELECT">SELECT</option>
+                    <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+                    <option value="FAB IN">FAB IN</option>
+                    <option value="DOCKING">DOCKING</option>
+                    <option value="CABLE HOOK UP">CABLE HOOK UP</option>
+                    <option value="POWER TURN ON">POWER TURN ON</option>
+                    <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+                    <option value="GAS TURN ON">GAS TURN ON</option>
+                    <option value="LEVELING">LEVELING</option>
+                    <option value="TEACHING">TEACHING</option>
+                    <option value="PART INSTALLATION">PART INSTALLATION</option>
+                    <option value="LEAK CHECK">LEAK CHECK</option>
+                    <option value="TTTM">TTTM</option>
+                    <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
+                    <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+                </select>
 
-                <label for="maint_item">유지보수 항목:</label>
-                <input type="text" id="maint_item" name="maint_item">
 
-                <label for="transfer_item">전달 항목:</label>
+                <label for="transfer_item">TRANSFER ITEM</label>
                 <input type="text" id="transfer_item" name="transfer_item">
 
-                <label for="warranty">보증:</label>
-                <input type="text" id="warranty" name="warranty">
+                <label for="warranty">WARRANTY</label>
+                <select id="warranty" name="warranty">
+                    <option value="WI">WARRANTY IN</option>
+                    <option value="WO">WARRANTY OUT</option>
+                </select>
 
-                <label for="work_type">작업 유형:</label>
-                <input type="text" id="work_type" name="work_type">
 
-                <label for="work_type2">작업 유형2:</label>
-                <input type="text" id="work_type2" name="work_type2">
+                <label for="work_type">WORK TYPE</label>
+                <select id="work_type" name="work_type">
+                        <option value="SET UP">SET UP</option>
+                        <option value="RELOCATION">RELOCATION</option>
+                        <option value="MAINT">MAINT</option>
+                    </select>
 
-                <label for="task_maint">task maint</label>:</label>
-                <input type="text" id="task_maint" name="task_maint">
+                <label for="work_type2">WORK TYPE II</label>
+                <select id="work_type2" name="work_type2">
+                    <option value="REP">REP</option>
+                    <option value="ADJ">ADJ</option>
+                    <option value="CLN">CLN</option>
+                    <option value="MON">MON</option>
+                </select>
 
-                <button type="submit" id="save-btn">저장</button>
-                <button type="button" id="delete-btn">삭제</button>
+
+                <button type="submit" id="save-btn">SAVE</button>
+                <button type="button" id="delete-btn">DELETE</button>
             </form>
         </div>
     </div>
+    </main>
 
     <script src="loadworklog.js"></script>
 </body>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const token = localStorage.getItem("x-access-token");
+        const userRole = localStorage.getItem("user-role");
+
+        if (!token) {
+            document.querySelector(".unsigned").classList.remove("hidden");
+            document.querySelector(".signed").classList.add("hidden");
+        } else {
+            document.querySelector(".unsigned").classList.add("hidden");
+            document.querySelector(".signed").classList.remove("hidden");
+        }
+
+        if (!token || userRole !== 'admin') {
+            document.querySelectorAll('.admin-only').forEach(element => {
+                element.style.display = 'none';
+            });
+        }
+
+        const signOutButton = document.querySelector("#sign-out");
+
+        if (signOutButton) {
+            signOutButton.addEventListener("click", function() {
+                localStorage.removeItem("x-access-token");
+                localStorage.removeItem("user-role");
+                alert("로그아웃 되었습니다.");
+                window.location.replace("./signin.html");
+            });
+        }
+        const menuBtn = document.querySelector('.menu-btn');
+        const menuBar = document.querySelector('.menu-bar');
+
+        menuBtn.addEventListener('click', function() {
+            menuBar.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                menuBar.classList.remove('open');
+            }
+        });
+    });
+</script>
 </html>

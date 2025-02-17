@@ -1,4 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+    }
     const worklogBody = document.getElementById('worklog-body');
     const editModal = document.getElementById('modal');
     const editForm = document.getElementById('worklog-form');
@@ -23,19 +31,155 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             allLogs = await response.json();
-            console.log("전체 작업 이력:", allLogs);
+            console.log("📌 정렬 전 작업 이력:", allLogs); // 디버깅용 로그
 
             if (allLogs.length === 0) {
                 worklogBody.innerHTML = '<tr><td colspan="8">작업 이력이 없습니다.</td></tr>';
                 return;
             }
 
+            // ✅ 작업 이력을 정렬: 날짜 최신순 → 종료시간 늦은순 정렬
+            allLogs.sort((a, b) => {
+                const dateA = new Date(a.task_date).getTime();
+                const dateB = new Date(b.task_date).getTime();
+
+                // 최신 날짜가 먼저 나오도록 정렬
+                if (dateA !== dateB) {
+                    return dateB - dateA; // 최신 날짜가 앞으로 오게 함
+                }
+
+                // 같은 날짜라면, end_time 기준으로 늦게 끝난 작업이 먼저 나오도록 정렬
+                const timeA = a.end_time ? a.end_time.replace(/:/g, '') : '000000';
+                const timeB = b.end_time ? b.end_time.replace(/:/g, '') : '000000';
+
+                return timeB - timeA; // 가장 늦게 끝난 작업이 앞으로 오게 함
+            });
+
+            console.log("📌 정렬 후 작업 이력:", allLogs); // 정렬된 데이터 확인
+
             updatePagination();
             renderPage(currentPage);
         } catch (error) {
-            console.error('Error fetching work logs:', error);
+            console.error('❌ 작업 이력 불러오기 오류:', error);
         }
     }
+
+    function applyFilters() {
+        let filteredLogs = allLogs;
+    
+        // ✅ START DATE ~ END DATE 필터링
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        if (startDate) {
+            filteredLogs = filteredLogs.filter(log => log.task_date >= startDate);
+        }
+        if (endDate) {
+            filteredLogs = filteredLogs.filter(log => log.task_date <= endDate);
+        }
+    
+        // ✅ GROUP 필터링
+        const group = document.getElementById('group').value;
+        if (group) {
+            filteredLogs = filteredLogs.filter(log => log.group === group);
+        }
+    
+        // ✅ SITE 필터링
+        const site = document.getElementById('site').value;
+        if (site) {
+            filteredLogs = filteredLogs.filter(log => log.site === site);
+        }
+
+        const line = document.getElementById('line').value;
+        if (line) {
+            filteredLogs = filteredLogs.filter(log => log.line === line);
+        }
+
+        
+    
+        // ✅ EQ TYPE 필터링
+        const eqType = document.getElementById('eq-type').value;
+        if (eqType) {
+            filteredLogs = filteredLogs.filter(log => log.equipment_type === eqType);
+        }
+    
+        // ✅ EQ NAME 필터링
+        const eqName = document.getElementById('eq-name').value.trim();
+        if (eqName) {
+            filteredLogs = filteredLogs.filter(log => log.equipment_name.includes(eqName));
+        }
+    
+        // ✅ TITLE 필터링
+        const title = document.getElementById('title').value.trim();
+        if (title) {
+            filteredLogs = filteredLogs.filter(log => log.task_name.includes(title));
+        }
+    
+        // ✅ WORKER 필터링
+        const worker = document.getElementById('worker').value.trim();
+        if (worker) {
+            filteredLogs = filteredLogs.filter(log => log.task_man.includes(worker));
+        }
+    
+        // ✅ TRANSFER ITEM 필터링
+        const transferItem = document.getElementById('transfer-item').value.trim();
+        if (transferItem) {
+            filteredLogs = filteredLogs.filter(log => log.transfer_item.includes(transferItem));
+        }
+    
+        // ✅ SETUP ITEM 필터링
+        const setupItem = document.getElementById('setup-item').value;
+        if (setupItem) {
+            filteredLogs = filteredLogs.filter(log => log.setup_item === setupItem);
+        }
+    
+        // ✅ 최신 날짜 순 정렬 (task_date 내림차순) → end_time 기준으로 다시 정렬
+        filteredLogs.sort((a, b) => {
+            const dateA = new Date(a.task_date).getTime();
+            const dateB = new Date(b.task_date).getTime();
+            if (dateA !== dateB) {
+                return dateB - dateA; // 최신 날짜가 앞으로 오게 함
+            }
+            return (b.end_time || '').localeCompare(a.end_time || ''); // end_time 기준 정렬
+        });
+    
+        // ✅ 필터링된 데이터 렌더링
+        renderFilteredLogs(filteredLogs);
+    }
+    
+    // ✅ 필터링된 데이터 화면 출력
+    function renderFilteredLogs(filteredLogs) {
+        allLogs = filteredLogs;
+        currentPage = 1; // 첫 페이지로 이동
+        updatePagination();
+        renderPage(currentPage);
+    }
+
+    document.getElementById('search-btn').addEventListener('click', () => {
+        applyFilters();
+    });
+
+        // ✅ Reset 버튼 이벤트 리스너 추가
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        resetFilters();
+    });
+
+    // ✅ 필터 초기화 함수
+    function resetFilters() {
+        document.getElementById('start-date').value = '';
+        document.getElementById('end-date').value = '';
+        document.getElementById('group').value = '';
+        document.getElementById('site').value = '';
+        document.getElementById('line').value = '';
+        document.getElementById('eq-type').value = '';
+        document.getElementById('eq-name').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('worker').value = '';
+        document.getElementById('transfer-item').value = '';
+        document.getElementById('setup-item').value = '';
+
+        fetchAllWorkLogs(); // ✅ 모든 데이터 다시 불러오기
+    }
+
 
     // 페이지네이션 업데이트
     function updatePagination() {
@@ -53,16 +197,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const logsToShow = allLogs.slice(startIndex, endIndex);
 
         logsToShow.forEach(log => {
+            // ✅ 날짜 변환 (YYYY-MM-DD 형식으로 변환)
+            const formattedDate = log.task_date ? log.task_date.split('T')[0] : '';
+    
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${log.task_date}</td>
-                <td>${log.task_name}</td>
+                <td>${formattedDate}</td>
                 <td>${log.group}</td>
                 <td>${log.site}</td>
+                <td>${log.task_name}</td>
+                <td>${log.task_result}</td>
                 <td>${log.task_man}</td>
                 <td>${log.task_duration}</td>
-                <td>${log.task_result}</td>
-                <td><button class="edit-btn" data-id="${log.id}">수정</button></td>
             `;
             worklogBody.appendChild(row);
 
@@ -132,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'task_result', 'task_description', 'task_cause',
             'status', 'SOP', 'tsguide', 'equipment_type', 'equipment_name',
             'start_time', 'end_time', 'move_time', 'none_time', 'setup_item',
-            'maint_item', 'transfer_item', 'warranty', 'work_type', 'work_type2', 'task maint'
+            'transfer_item', 'warranty', 'work_type', 'work_type2'
         ];
     
         for (const field of requiredFields) {
@@ -154,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editForm.elements['task_man']) editForm.elements['task_man'].value = log.task_man || '';
         if (editForm.elements['group']) editForm.elements['group'].value = log.group || '';
         if (editForm.elements['site']) editForm.elements['site'].value = log.site || '';
-        if (editForm.elements['line']) editForm.elements['line'].value = log.site || '';
+        if (editForm.elements['line']) editForm.elements['line'].value = log.line || '';
         if (editForm.elements['task_result']) editForm.elements['task_result'].value = log.task_result || '';
         if (editForm.elements['task_description']) editForm.elements['task_description'].value = log.task_description || '';
         if (editForm.elements['task_cause']) editForm.elements['task_cause'].value = log.task_cause || '';
@@ -168,12 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editForm.elements['move_time']) editForm.elements['move_time'].value = log.move_time || '';
         if (editForm.elements['none_time']) editForm.elements['none_time'].value = log.none_time || ''; //
         if (editForm.elements['setup_item']) editForm.elements['setup_item'].value = log.setup_item || '';
-        if (editForm.elements['maint_item']) editForm.elements['maint_item'].value = log.maint_item || '';
         if (editForm.elements['transfer_item']) editForm.elements['transfer_item'].value = log.transfer_item || '';
         if (editForm.elements['warranty']) editForm.elements['warranty'].value = log.warranty || '';
         if (editForm.elements['work_type']) editForm.elements['work_type'].value = log.work_type || '';
         if (editForm.elements['work_type2']) editForm.elements['work_type2'].value = log.work_type2 || '';
-        if (editForm.elements['task_maint']) editForm.elements['task_maint'].value = log.work_type2 || '';
     
         editModal.style.display = 'block';
     }
@@ -215,12 +359,10 @@ document.addEventListener('DOMContentLoaded', () => {
             move_time: editForm.elements['move_time'].value,
             none_time: editForm.elements['none_time'].value,
             setup_item: editForm.elements['setup_item'].value,
-            maint_item: editForm.elements['maint_item'].value,
             transfer_item: editForm.elements['transfer_item'].value,
             warranty: editForm.elements['warranty'].value,
             work_type: editForm.elements['work_type'].value,
             work_type2: editForm.elements['work_type2'].value,
-            task_maint: editForm.elements['task_maint'].value,
 
         };
 
