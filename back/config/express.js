@@ -90,6 +90,13 @@ module.exports = function () {
   const setupeqRoute = require("../src/routes/SetupeqRoute"); // ✅ 단일 require
   app.use("/api/setup_equipment", setupeqRoute);
   app.use("/api/setupeq", setupeqRoute);
+
+  // 기존 코드 상단 부분에 추가
+const editRoutes = require("../src/routes/editRoute"); // 🔹 작업 이력 편집을 위한 라우트 추가
+
+// 기존 코드의 라우트 설정 부분에 추가
+app.use("/api", editRoutes); // 🔹 작업 이력 편집 API 라우트 연결
+
   
 
 
