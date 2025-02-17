@@ -45,7 +45,21 @@ const updateWorkLog = async (id, updateData) => {
     }
 };
 
+// 작업 이력 삭제
+const deleteWorkLog = async (id) => {
+    try {
+        const query = `DELETE FROM work_log WHERE id = ?`;
+        const [result] = await pool.execute(query, [id]);
+        return result;
+    } catch (error) {
+        console.error("작업 이력 삭제 오류:", error);
+        throw error;
+    }
+};
+
+
 module.exports = {
     getWorkLogById,
     updateWorkLog,
+    deleteWorkLog,
 };

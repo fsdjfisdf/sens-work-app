@@ -4,9 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const editForm = document.getElementById('worklog-form');
     const closeModalBtn = document.querySelector('.close');
     const saveBtn = document.querySelector('#save-btn'); // 저장 버튼
+    const deleteBtn = document.querySelector('#delete-btn'); //삭제 버튼튼
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
+
 
     let currentPage = 1;
     const logsPerPage = 10;
@@ -240,6 +242,30 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('작업 이력 수정 중 오류 발생:', error);
         }
     });
+
+        deleteBtn.addEventListener('click', async () => {
+            if (!currentEditingId) return;
+
+            const confirmDelete = confirm("정말 삭제하시겠습니까?");
+            if (!confirmDelete) return;
+
+            try {
+                const response = await fetch(`http://3.37.73.151:3001/api/logs/${currentEditingId}`, {
+                    method: 'DELETE',
+                });
+
+                if (!response.ok) {
+                    throw new Error("삭제 실패");
+                }
+
+                alert("작업 이력이 삭제되었습니다.");
+                editModal.style.display = 'none';
+                fetchAllWorkLogs(); // 최신 작업 이력 목록 다시 불러오기
+            } catch (error) {
+                console.error('작업 이력 삭제 중 오류 발생:', error);
+            }
+        });
+
 
     fetchAllWorkLogs(); // 최초 데이터 로드
 });
