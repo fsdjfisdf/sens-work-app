@@ -202,14 +202,11 @@ exports.getDailyOperationRates = async function (connection, group, site, startD
 };
 
 // 회원 정보 조회 (닉네임으로 조회)
-exports.getUserInfoByNickname = async (connection, userNickname) => {
-  const query = `
-    SELECT userIdx, nickname, role 
-    FROM Users 
-    WHERE nickname = ?;
-  `;
-  const [rows] = await connection.query(query, [userNickname]);
+exports.getUserInfoByNickname = async function (connection, nickname) {
+  const Query = `SELECT * FROM userDB WHERE NAME = ?`;
+  const Params = [nickname];
+
+  const [rows] = await connection.query(Query, Params);
   return rows;
 };
-
 
