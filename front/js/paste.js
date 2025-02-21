@@ -35,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let moveTime = '';
     
         let currentSection = '';
+        let sopExists = false;  // SOP 섹션 존재 여부 확인
+        let resultCompleted = false; // Result 섹션이 끝났는지 확인하는 플래그
     
         // 제목은 첫 번째 줄에서 가져옴
         if (lines.length > 0) {
@@ -57,6 +59,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             } else if (/^\s*5[).]\s*sop\s*및\s*t\s*\/\s*s\s*guide/i.test(line)) {
                 currentSection = 'sopTsGuide';
+                sopExists = true;
+                resultCompleted = true; // Result 섹션 끝
                 return;
             }
     
@@ -69,7 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         actions.push(line.trim());
                     } else if (currentSection === 'cause') {
                         causes.push(line.trim());
-                    } else if (currentSection === 'result') {
+                    } else if (currentSection === 'result' && !resultCompleted) {
+                        // "작업시간", "작업자" 등의 키워드를 만나면 저장 중단
+                        if (/작업시간|작업자|SEC|비고/i.test(line)) {
+                            resultCompleted = true;
+                            return;
+                        }
                         results.push(line.trim());
                     }
                 }
@@ -104,6 +113,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 moveTime = moveMatch[1];
             }
         });
+
+        if (!sopExists && results.length > 0) {
+            results = [results[results.length - 1]];
+        }
 
         // 이후 나머지 필드 채우기 작업은 기존과 동일하게 진행합니다.
         const titleElement = document.getElementById('task_name');
