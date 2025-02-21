@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     const token = localStorage.getItem('x-access-token');
 
@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.replace('./signin.html');
         return;
     }
+
+
     const worklogBody = document.getElementById('worklog-body');
     const editModal = document.getElementById('modal');
     const editForm = document.getElementById('worklog-form');
@@ -22,41 +24,77 @@ document.addEventListener('DOMContentLoaded', () => {
     const logsPerPage = 10;
     let allLogs = []; // 전체 작업 이력을 저장할 배열
     let currentEditingId = null; // 현재 수정 중인 작업 이력 ID
+    let currentUserNickname = null; // 로그인한 사용자 닉네임
+    let userRole = null; // 로그인한 사용자 역할
+
+        // 로그인한 사용자 정보 가져오기
+        async function getCurrentUser() {
+            try {
+                const response = await fetch('http://3.37.73.151:3001/user-info', {
+                    headers: { 'x-access-token': token }
+                });
+        
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+        
+                const data = await response.json();
+        
+                console.log("🔍 사용자 정보 응답 데이터:", data); 
+        
+                if (data && data.result) {
+                    currentUserNickname = data.result.nickname || "이름 없음";
+                    userRole = data.result.role || "worker";  // 기본값 설정
+        
+                    // ✅ 로컬 스토리지에 저장 (필요한 경우)
+                    localStorage.setItem("user-role", userRole);
+        
+                    console.log(`✅ 현재 로그인한 사용자: ${currentUserNickname}, 역할: ${userRole}`);
+                } else {
+                    console.warn("⚠️ 사용자 정보 없음.");
+                }
+            } catch (error) {
+                console.error('❌ 현재 사용자 정보를 가져오는 중 오류 발생:', error);
+            }
+        }
+        
+        
 
     // 모든 작업 이력을 불러옴
     async function fetchAllWorkLogs() {
         try {
+            console.log(`📌 현재 사용자: ${currentUserNickname}, 역할: ${userRole}`); // ✅ 현재 사용자 정보 출력
+    
             const response = await fetch(`http://3.37.73.151:3001/logs`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             allLogs = await response.json();
+    
             console.log("📌 정렬 전 작업 이력:", allLogs); // 디버깅용 로그
-
+    
             if (allLogs.length === 0) {
                 worklogBody.innerHTML = '<tr><td colspan="8">작업 이력이 없습니다.</td></tr>';
                 return;
             }
-
+    
             // ✅ 작업 이력을 정렬: 날짜 최신순 → 종료시간 늦은순 정렬
             allLogs.sort((a, b) => {
                 const dateA = new Date(a.task_date).getTime();
                 const dateB = new Date(b.task_date).getTime();
-
-                // 최신 날짜가 먼저 나오도록 정렬
+    
                 if (dateA !== dateB) {
-                    return dateB - dateA; // 최신 날짜가 앞으로 오게 함
+                    return dateB - dateA;
                 }
-
-                // 같은 날짜라면, end_time 기준으로 늦게 끝난 작업이 먼저 나오도록 정렬
+    
                 const timeA = a.end_time ? a.end_time.replace(/:/g, '') : '000000';
                 const timeB = b.end_time ? b.end_time.replace(/:/g, '') : '000000';
-
-                return timeB - timeA; // 가장 늦게 끝난 작업이 앞으로 오게 함
+    
+                return timeB - timeA;
             });
-
+    
             console.log("📌 정렬 후 작업 이력:", allLogs); // 정렬된 데이터 확인
-
+    
             updatePagination();
             renderPage(currentPage);
         } catch (error) {
@@ -189,18 +227,45 @@ document.addEventListener('DOMContentLoaded', () => {
         nextPageBtn.disabled = currentPage >= totalPages;
     }
 
+    function cleanWorkerNames(taskMan) {
+        console.log(`🔍 원본 작업자 목록: ${taskMan}`);
+    
+        const cleanedNames = taskMan
+            ? taskMan.split(/,\s*/) // 쉼표와 공백으로 구분
+                .map(name => name.replace(/\(.*?\)/g, '').trim()) // 괄호 속 정보 제거 및 정리
+                .filter(name => name.length > 0) // 빈 값 제거
+            : [];
+    
+        console.log(`✅ 정리된 작업자 목록: ${cleanedNames}`);
+        return cleanedNames;
+    }
+    
+
     // 현재 페이지의 데이터 렌더링
     function renderPage(page) {
         worklogBody.innerHTML = '';
         const startIndex = (page - 1) * logsPerPage;
         const endIndex = startIndex + logsPerPage;
         const logsToShow = allLogs.slice(startIndex, endIndex);
-
-        logsToShow.forEach(log => {
-            // ✅ 날짜 변환 (YYYY-MM-DD 형식으로 변환)
-            const formattedDate = log.task_date ? log.task_date.split('T')[0] : '';
     
+        logsToShow.forEach(log => {
+            const formattedDate = log.task_date ? log.task_date.split('T')[0] : '';
             const row = document.createElement('tr');
+    
+            // ✅ 작업자 목록 정리 후 비교
+            const workerNames = cleanWorkerNames(log.task_man);
+            const isOwner = workerNames.includes(currentUserNickname);
+            const isAdminOrEditor = userRole === 'admin' || userRole === 'editor';
+    
+            // ✅ 수정 및 삭제 버튼 생성 (권한 체크)
+            let actionButtons = '';
+            if (isOwner || isAdminOrEditor) {
+                actionButtons = `
+                    <button class="edit-btn" data-id="${log.id}">수정</button>
+                    <button class="delete-btn" data-id="${log.id}">삭제</button>
+                `;
+            }
+    
             row.innerHTML = `
                 <td>${formattedDate}</td>
                 <td>${log.group}</td>
@@ -209,20 +274,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${log.task_result}</td>
                 <td>${log.task_man}</td>
                 <td>${log.task_duration}</td>
+                <td>${actionButtons}</td>
             `;
             worklogBody.appendChild(row);
-
+    
             // ✅ 작업 행을 클릭하면 상세 정보 모달 표시
             row.addEventListener('click', async () => {
-                currentEditingId = log.id; // 현재 수정할 ID 저장
+                currentEditingId = log.id;
                 showEditForm(log);
             });
         });
-
-        // ✅ 기존의 '수정' 버튼 클릭 이벤트 (유지)
+    
+        // ✅ 기존의 '수정' 버튼 클릭 이벤트 유지
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', async (event) => {
-                event.stopPropagation(); // ⚠ 이벤트 버블링 방지
+                event.stopPropagation();
                 const id = event.target.dataset.id;
                 currentEditingId = id;
                 try {
@@ -338,6 +404,16 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.addEventListener('click', async (event) => {
         event.preventDefault();
         if (!currentEditingId) return;
+    
+        const log = allLogs.find(log => log.id === currentEditingId);
+        const workerNames = cleanWorkerNames(log.task_man);
+        const isOwner = workerNames.includes(currentUserNickname);
+        const isAdminOrEditor = userRole === 'admin' || userRole === 'editor';
+    
+        if (!isOwner && !isAdminOrEditor) {
+            alert("이 작업 이력을 수정할 권한이 없습니다.");
+            return;
+        }
 
         const updatedLog = {
             task_name: editForm.elements['task_name'].value,
@@ -365,49 +441,59 @@ document.addEventListener('DOMContentLoaded', () => {
             work_type2: editForm.elements['work_type2'].value,
 
         };
-
+        
         try {
             const response = await fetch(`http://3.37.73.151:3001/api/logs/${currentEditingId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedLog),
             });
-
+    
             if (!response.ok) {
                 throw new Error("수정 실패");
             }
-
+    
             alert("작업 이력이 수정되었습니다.");
             editModal.style.display = 'none';
-            fetchAllWorkLogs(); // 최신 작업 이력 목록 다시 불러오기
+            fetchAllWorkLogs();
         } catch (error) {
             console.error('작업 이력 수정 중 오류 발생:', error);
         }
     });
 
-        deleteBtn.addEventListener('click', async () => {
-            if (!currentEditingId) return;
-
-            const confirmDelete = confirm("정말 삭제하시겠습니까?");
-            if (!confirmDelete) return;
-
-            try {
-                const response = await fetch(`http://3.37.73.151:3001/api/logs/${currentEditingId}`, {
-                    method: 'DELETE',
-                });
-
-                if (!response.ok) {
-                    throw new Error("삭제 실패");
-                }
-
-                alert("작업 이력이 삭제되었습니다.");
-                editModal.style.display = 'none';
-                fetchAllWorkLogs(); // 최신 작업 이력 목록 다시 불러오기
-            } catch (error) {
-                console.error('작업 이력 삭제 중 오류 발생:', error);
+    deleteBtn.addEventListener('click', async () => {
+        if (!currentEditingId) return;
+    
+        const log = allLogs.find(log => log.id === currentEditingId);
+        const workerNames = cleanWorkerNames(log.task_man);
+        const isOwner = workerNames.includes(currentUserNickname);
+        const isAdminOrEditor = userRole === 'admin' || userRole === 'editor';
+    
+        if (!isOwner && !isAdminOrEditor) {
+            alert("이 작업 이력을 삭제할 권한이 없습니다.");
+            return;
+        }
+    
+        const confirmDelete = confirm("정말 삭제하시겠습니까?");
+        if (!confirmDelete) return;
+    
+        try {
+            const response = await fetch(`http://3.37.73.151:3001/api/logs/${currentEditingId}`, {
+                method: 'DELETE',
+            });
+    
+            if (!response.ok) {
+                throw new Error("삭제 실패");
             }
-        });
+    
+            alert("작업 이력이 삭제되었습니다.");
+            editModal.style.display = 'none';
+            fetchAllWorkLogs();
+        } catch (error) {
+            console.error('작업 이력 삭제 중 오류 발생:', error);
+        }
+    });
 
-
+    await getCurrentUser(); // ✅ 사용자의 정보 불러오기 (async/await 추가)
     fetchAllWorkLogs(); // 최초 데이터 로드
 });
