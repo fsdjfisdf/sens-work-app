@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     pasteSubmit.addEventListener('click', function() {
         const text = pasteTextarea.value;
         const lines = text.split('\n');
-
+    
         let title = '';
         let statuses = [];
         let actions = [];
@@ -33,63 +33,63 @@ document.addEventListener('DOMContentLoaded', function() {
         let endTime = '';
         let noneTime = '';
         let moveTime = '';
-
+    
         let currentSection = '';
-
-        // 제목은 첫번째 줄에서 가져옴
+    
+        // 제목은 첫 번째 줄에서 가져옴
         if (lines.length > 0) {
             title = lines[0].trim();
         }
-
+    
         lines.forEach(line => {
-            // 섹션 구분 (대소문자 구분 없이)
+            // 섹션 구분
             if (/^\s*1\)\s*status/i.test(line)) {
                 currentSection = 'status';
+                return;
             } else if (/^\s*2\)\s*action/i.test(line)) {
                 currentSection = 'action';
+                return;
             } else if (/^\s*3\)\s*cause/i.test(line)) {
                 currentSection = 'cause';
+                return;
             } else if (/^\s*4\)\s*result/i.test(line)) {
                 currentSection = 'result';
-            } else if (/^\s*5\)\s*sop\s*및\s*t\s*\/\s*s\s*guide/i.test(line)) {
+                return;
+            } else if (/^\s*5[).]\s*sop\s*및\s*t\s*\/\s*s\s*guide/i.test(line)) {
                 currentSection = 'sopTsGuide';
-            } else {
-                // --- 여기서 ACTION 섹션의 처리를 단순화함 ---
-                if (currentSection === 'action') {
-                    // 2) ACTION과 3) CAUSE 사이의 모든 줄을 저장 (빈 줄은 제외)
-                    if (line.trim() !== '') {
+                return;
+            }
+    
+            // --- 모든 섹션을 ACTION 방식처럼 처리 ---
+            if (currentSection === 'status' || currentSection === 'action' || currentSection === 'cause' || currentSection === 'result') {
+                if (line.trim() !== '') {
+                    if (currentSection === 'status') {
+                        statuses.push(line.trim());
+                    } else if (currentSection === 'action') {
                         actions.push(line.trim());
-                    }
-                } else if (currentSection === 'status' && line.startsWith('-. ')) {
-                    statuses.push(line.replace('-. ', '').trim());
-                } else if (currentSection === 'cause' && line.startsWith('-. ')) {
-                    causes.push(line.replace('-. ', '').trim());
-                } else if (currentSection === 'result') {
-                    if (line.trim() !== '' && line.startsWith('-. ')) {
-                        results.push(line.replace('-. ', '').trim());
-                    } else if (results.length > 0) {
-                        results[results.length - 1] += '\n' + line.trim();
-                    }
-                } else if (currentSection === 'sopTsGuide' && line.startsWith('-. ')) {
-                    const sopTsMatch = line.replace('-. ', '').trim().split(' / ');
-                    if (sopTsMatch.length === 2) {
-                        sop = sopTsMatch[0].trim();
-                        tsGuide = sopTsMatch[1].trim();
+                    } else if (currentSection === 'cause') {
+                        causes.push(line.trim());
+                    } else if (currentSection === 'result') {
+                        results.push(line.trim());
                     }
                 }
             }
-
+    
+            // SOP 및 T/S Guide 처리
+            if (currentSection === 'sopTsGuide' && line.startsWith('-. ')) {
+                const sopTsMatch = line.replace('-. ', '').trim().split(' / ');
+                if (sopTsMatch.length === 2) {
+                    sop = sopTsMatch[0].trim();
+                    tsGuide = sopTsMatch[1].trim();
+                }
+            }
+    
             // 작업자, 작업 시간, None 시간 및 Move 시간 추출
             const workerMatch = line.match(/작업자\s*[:：]?\s*(.*)/);
             const timeMatch = line.match(/작업\s*시간\s*[:：]?\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/);
-            const emsTimeMatch = line.match(/ems :\s*(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})/i);
             const noneMatch = line.match(/(?:Non|None|none|논)\s*(\d+)/i);
             const moveMatch = line.match(/(?:move|mov|무브|무)\s*(\d+)/i);
-            
-            // 새로운 양식에서 None 시간 및 Move 시간 추출
-            const noneTimeMatch = line.match(/Non\s*Working\s*Time\s*[:：]?\s*([\d\-]+)/i);
-            const moveTimeMatch = line.match(/Moving\s*Time\s*\(.*\)\s*[:：]?\s*(\d+)m/i);
-
+    
             if (workerMatch) {
                 workers = workerMatch[1].split(/[ ,]/).filter(Boolean);
             }
@@ -97,21 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 startTime = timeMatch[1];
                 endTime = timeMatch[2];
             }
-            if (emsTimeMatch) {
-                startTime = emsTimeMatch[1];
-                endTime = emsTimeMatch[2];
-            }
             if (noneMatch) {
                 noneTime = noneMatch[1];
             }
             if (moveMatch) {
                 moveTime = moveMatch[1];
-            }
-            if (noneTimeMatch) {
-                noneTime = noneTimeMatch[1] === '-' ? '0' : noneTimeMatch[1];
-            }
-            if (moveTimeMatch) {
-                moveTime = moveTimeMatch[1];
             }
         });
 
