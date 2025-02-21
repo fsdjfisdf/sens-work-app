@@ -97,6 +97,8 @@ async function loadUserInfo() {
       return;
   }
 
+  
+
   try {
       const response = await fetch('http://3.37.73.151:3001/user-info', {
           method: 'GET',
@@ -591,20 +593,24 @@ function calculateMonthlyWorkHoursByMonth(workLogs) {
 // 월별 작업 시간 그래프 생성 함수
 function renderMonthlyWorkHoursChart(monthlyHours) {
   const maxHours = Math.max(...monthlyHours) * 1.2; // 최대값의 1.2배로 설정
+  const labels = [
+    '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11',
+    '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05'
+  ];
 
   const ctx = document.getElementById('monthlyWorkHoursChart').getContext('2d');
   new Chart(ctx, {
       type: 'bar',
       data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-          datasets: [{
-              label: 'Monthly Working time(hrs)',
-              data: monthlyHours,
-              backgroundColor: 'rgba(75, 192, 192, 0.2)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 1
-          }]
-      },
+        labels: labels,  // 새로운 X축 레이블 적용
+        datasets: [{
+            label: 'Monthly Working time (hrs)',
+            data: monthlyHours.slice(5, 17), // 6월부터 다음 해 5월까지 데이터 추출
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
       options: {
           scales: {
               y: {

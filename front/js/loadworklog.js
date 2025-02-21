@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentEditingId = null; // 현재 수정 중인 작업 이력 ID
     let currentUserNickname = null; // 로그인한 사용자 닉네임
     let userRole = null; // 로그인한 사용자 역할
+    
 
         // 로그인한 사용자 정보 가져오기
         async function getCurrentUser() {
@@ -38,17 +39,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
         
-                const data = await response.json();
+                const data = await response.json(); // ✅ JSON 변환
         
-                console.log("🔍 사용자 정보 응답 데이터:", data); 
+                console.log("🔍 사용자 정보 응답 데이터:", data); // ✅ 응답 데이터 확인
         
                 if (data && data.result) {
-                    currentUserNickname = data.result.nickname || "이름 없음";
-                    userRole = data.result.role || "worker";  // 기본값 설정
-        
-                    // ✅ 로컬 스토리지에 저장 (필요한 경우)
-                    localStorage.setItem("user-role", userRole);
-        
+                    currentUserNickname = data.result.NAME.replace(/\(.*?\)/g, '').trim();
+                    userRole = data.result.role || "역할 없음"; 
                     console.log(`✅ 현재 로그인한 사용자: ${currentUserNickname}, 역할: ${userRole}`);
                 } else {
                     console.warn("⚠️ 사용자 정보 없음.");
@@ -57,7 +54,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('❌ 현재 사용자 정보를 가져오는 중 오류 발생:', error);
             }
         }
-        
         
 
     // 모든 작업 이력을 불러옴
@@ -251,20 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         logsToShow.forEach(log => {
             const formattedDate = log.task_date ? log.task_date.split('T')[0] : '';
             const row = document.createElement('tr');
-    
-            // ✅ 작업자 목록 정리 후 비교
-            const workerNames = cleanWorkerNames(log.task_man);
-            const isOwner = workerNames.includes(currentUserNickname);
-            const isAdminOrEditor = userRole === 'admin' || userRole === 'editor';
-    
-            // ✅ 수정 및 삭제 버튼 생성 (권한 체크)
-            let actionButtons = '';
-            if (isOwner || isAdminOrEditor) {
-                actionButtons = `
-                    <button class="edit-btn" data-id="${log.id}">수정</button>
-                    <button class="delete-btn" data-id="${log.id}">삭제</button>
-                `;
-            }
+
     
             row.innerHTML = `
                 <td>${formattedDate}</td>
@@ -274,7 +257,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${log.task_result}</td>
                 <td>${log.task_man}</td>
                 <td>${log.task_duration}</td>
-                <td>${actionButtons}</td>
             `;
             worklogBody.appendChild(row);
     
@@ -337,6 +319,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error("❌ editForm을 찾을 수 없습니다.");
             return;
         }
+
+        function formatText(text) {
+            return text ? text.replace(/<br\s*\/?>/gi, '\n') : ''; 
+        }
     
         // 🔥 모든 요소가 존재하는지 확인
         const requiredFields = [
@@ -367,23 +353,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (editForm.elements['group']) editForm.elements['group'].value = log.group || '';
         if (editForm.elements['site']) editForm.elements['site'].value = log.site || '';
         if (editForm.elements['line']) editForm.elements['line'].value = log.line || '';
-        if (editForm.elements['task_result']) editForm.elements['task_result'].value = log.task_result || '';
-        if (editForm.elements['task_description']) editForm.elements['task_description'].value = log.task_description || '';
-        if (editForm.elements['task_cause']) editForm.elements['task_cause'].value = log.task_cause || '';
-        if (editForm.elements['status']) editForm.elements['status'].value = log.status || '';
+        if (editForm.elements['task_result']) editForm.elements['task_result'].value = formatText(log.task_result);
+        if (editForm.elements['task_description']) {
+            editForm.elements['task_description'].value = formatText(log.task_description);
+            editForm.elements['task_description'].style.height = "200px"; // 크기 조정
+        }
+        if (editForm.elements['task_cause']) editForm.elements['task_cause'].value = formatText(log.task_cause);
+        if (editForm.elements['status']) editForm.elements['status'].value = formatText(log.status);
         if (editForm.elements['SOP']) editForm.elements['SOP'].value = log.SOP || '';
         if (editForm.elements['tsguide']) editForm.elements['tsguide'].value = log.tsguide || '';
         if (editForm.elements['equipment_type']) editForm.elements['equipment_type'].value = log.equipment_type || '';
         if (editForm.elements['equipment_name']) editForm.elements['equipment_name'].value = log.equipment_name || '';
         if (editForm.elements['start_time']) editForm.elements['start_time'].value = formattedStartTime;
         if (editForm.elements['end_time']) editForm.elements['end_time'].value = formattedEndTime;
-        if (editForm.elements['move_time']) editForm.elements['move_time'].value = log.move_time || '';
-        if (editForm.elements['none_time']) editForm.elements['none_time'].value = log.none_time || ''; //
+        if (editForm.elements['move_time']) editForm.elements['move_time'].value = log.move_time || '0';
+        if (editForm.elements['none_time']) editForm.elements['none_time'].value = log.none_time || '0'; //
         if (editForm.elements['setup_item']) editForm.elements['setup_item'].value = log.setup_item || '';
         if (editForm.elements['transfer_item']) editForm.elements['transfer_item'].value = log.transfer_item || '';
         if (editForm.elements['warranty']) editForm.elements['warranty'].value = log.warranty || '';
         if (editForm.elements['work_type']) editForm.elements['work_type'].value = log.work_type || '';
-        if (editForm.elements['work_type2']) editForm.elements['work_type2'].value = log.work_type2 || '';
+        if (editForm.elements['work_type2']) editForm.elements['work_type2'].value = log.work_type2 || 'SELECT';
     
         editModal.style.display = 'block';
     }

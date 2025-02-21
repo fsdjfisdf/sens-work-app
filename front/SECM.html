@@ -60,6 +60,11 @@
             <div class="inner">
                 <h2 class="section-title">SECM</h2>
                 <div class="search-container">
+                    <select id="searchCompany">
+                        <option value="">Company</option>
+                        <option value="SEnS">SEnS</option>
+                        <option value="SEnI">SEnI</option>
+                    </select>
                     <select id="searchGroup">
                         <option value="">Group</option>
                         <option value="PEE1">PEE1</option>
@@ -95,8 +100,8 @@
                     </select>
                     <select id="searchHireDate">
                         <option value="">Hire date</option>
-                        <option value="before2024">Before 2024</option>
-                        <option value="from2024">After 2024</option>
+                        <option value="before2025">Before 2025</option>
+                        <option value="from2025">After 2025</option>
                     </select>
                     <input list="names" id="searchName" placeholder="Enter Name">
                     <datalist id="names"></datalist>
@@ -110,7 +115,6 @@
                     <button id="showCapaGroup">CAPA</button>
                     <button id="showMpiGroup">MPI</button>
                     <button id="showWorkGroup">WORK</button>
-                    <button id="showStatusGroup">STATUS</button>
                 </div>
                 <div id="personInfo" class="person-info hidden">
                     <p><strong>Name:</strong> <span id="personName"></span></p>
@@ -120,10 +124,6 @@
                     <p><strong>ID:</strong> <span id="personID"></span></p>
                 </div>
 
-                <div class="graph-group hidden" id="statusGroup">
-                    <h3 class="group-title">STATUS</h3>
-                    <div id="koreaMapContainer" class="map-container"></div>
-                </div>
                 
                 <div class="graph-container">
                     <!-- Engineer Group -->
@@ -573,9 +573,6 @@
         });
         document.getElementById('showMpiGroup').addEventListener('click', () => {
         toggleButton('showMpiGroup', 'mpiGroup');
-        });
-        document.getElementById('showStatusGroup').addEventListener('click', () => {
-        toggleButton('showStatusGroup', 'statusGroup');
         });
 
         // 모달 창 제어

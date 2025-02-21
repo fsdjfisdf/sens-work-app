@@ -75,13 +75,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = searchName.value.toLowerCase();
         const multiEngr = searchMultiEngr.value;
         const hireDate = searchHireDate.value;
+        const company = searchCompany.value; // 추가된 부분
     
         return data.filter(row => {
             const isMultiEngr = multiEngr === 'O' ? row.MPI >= 2 : multiEngr === 'X' ? row.MPI < 2 : true;
             const hireDateCondition = 
                 !hireDate || 
-                (hireDate === 'before2024' && new Date(row.HIRE).getFullYear() < 2024) || 
-                (hireDate === 'from2024' && new Date(row.HIRE).getFullYear() >= 2024);
+                (hireDate === 'before2025' && new Date(row.HIRE).getFullYear() < 2025) || 
+                (hireDate === 'from2025' && new Date(row.HIRE).getFullYear() >= 2025);
     
             return (
                 (!group || row.GROUP === group) &&
@@ -89,6 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 (!level || row.LEVEL == level) &&
                 (!multiLevel || row['MULTI LEVEL'] == multiLevel) &&
                 (!name || row.NAME.toLowerCase().includes(name)) &&
+                (!company || row.COMPANY === company) &&
                 isMultiEngr &&
                 hireDateCondition
             );
@@ -1965,6 +1967,12 @@ createChart(monthlyCapaChartCtx, {
         namesDatalist.innerHTML = uniqueNames.map(name => `<option value="${name}">`).join('');
     }
 
+    function updateCompanyOptions(data) {
+        const uniqueCompanies = [...new Set(data.map(row => row.COMPANY))];
+        searchCompany.innerHTML = `<option value="">Company</option>` + 
+            uniqueCompanies.map(company => `<option value="${company}">${company}</option>`).join('');
+    }
+
     // 기존 이벤트 리스너에 추가된 필터 연결
     searchButton.addEventListener('click', updateAllCharts);
     resetButton.addEventListener('click', () => {
@@ -1984,11 +1992,13 @@ createChart(monthlyCapaChartCtx, {
     searchMultiLevel.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
     searchMultiEngr.addEventListener('change', () => updateDatalistOptions(filterData(originalData))); // Multi Eng'r 필터 추가
     searchHireDate.addEventListener('change', () => updateDatalistOptions(filterData(originalData)));
+    searchCompany.addEventListener('change', updateAllCharts);
     searchHireDate.addEventListener('change', updateAllCharts);
 
 
 // 데이터 로딩 및 차트 렌더링
 const data = await fetchData();
+updateCompanyOptions(data);
 await fetchWorkLogs(); // 작업 이력 데이터 로드
 updateDatalistOptions(data);
 renderCompanyDistributionChart(data);
