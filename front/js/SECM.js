@@ -174,20 +174,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 추가 엔지니어 데이터
 const additionalEngineers = [
-    { NAME: '장우석', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-02-27', resignation_date: '2023-07-14' },
-    { NAME: '전병국', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-07-04', resignation_date: '2023-10-20' },
-    { NAME: '김민규', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-02-27', resignation_date: '2023-12-27' },
-    { NAME: '배주찬', GROUP: 'PEE1', SITE: 'IC', HIRE: '2019-10-21', resignation_date: '2024-01-11' },
-    { NAME: '남동우', GROUP: 'PEE1', SITE: 'CJ', HIRE: '2022-12-01', resignation_date: '2024-02-16' },
-    { NAME: '이선학', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-06-26', resignation_date: '2024-05-27' },
-    { NAME: '김지웅', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-03-07', resignation_date: '2024-06-21' },
-    { NAME: '전산해', GROUP: 'PEE2', SITE: 'PT', HIRE: '2019-07-01', resignation_date: '2023-02-24' },
-    { NAME: '엄준용', GROUP: 'PEE2', SITE: 'PT', HIRE: '2022-02-07', resignation_date: '2023-07-27' },
-    { NAME: '김승기', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-05-02', resignation_date: '2023-12-27' },
-    { NAME: '조현민', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-07-26', resignation_date: '2024-03-27' },
-    { NAME: '정재윤', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-11-06', resignation_date: '2024-09-27' },
-    { NAME: '김태형', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-10-11', resignation_date: '2024-11-22' },
-    { NAME: '홍정욱', GROUP: 'PEE1', SITE: 'HS', HIRE: '2022-09-26', resignation_date: '2024-12-21' }
+    { NAME: '장우석', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-02-27', resignation_date: '2023-07-14', COMPANY: 'SE&S' },
+    { NAME: '전병국', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-07-04', resignation_date: '2023-10-20', COMPANY: 'SE&S' },
+    { NAME: '김민규', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-02-27', resignation_date: '2023-12-27', COMPANY: 'SE&I' },
+    { NAME: '배주찬', GROUP: 'PEE1', SITE: 'IC', HIRE: '2019-10-21', resignation_date: '2024-01-11', COMPANY: 'SE&S' },
+    { NAME: '남동우', GROUP: 'PEE1', SITE: 'CJ', HIRE: '2022-12-01', resignation_date: '2024-02-16', COMPANY: 'SE&S' },
+    { NAME: '이선학', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-06-26', resignation_date: '2024-05-27', COMPANY: 'SE&S' },
+    { NAME: '김지웅', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-03-07', resignation_date: '2024-06-21', COMPANY: 'SE&S' },
+    { NAME: '전산해', GROUP: 'PEE2', SITE: 'PT', HIRE: '2019-07-01', resignation_date: '2023-02-24', COMPANY: 'SE&S' },
+    { NAME: '엄준용', GROUP: 'PEE2', SITE: 'PT', HIRE: '2022-02-07', resignation_date: '2023-07-27', COMPANY: 'SE&I' },
+    { NAME: '김승기', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-05-02', resignation_date: '2023-12-27', COMPANY: 'SE&I' },
+    { NAME: '조현민', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-07-26', resignation_date: '2024-03-27', COMPANY: 'SE&I' },
+    { NAME: '정재윤', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-11-06', resignation_date: '2024-09-27', COMPANY: 'SE&I' },
+    { NAME: '김태형', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-10-11', resignation_date: '2024-11-22', COMPANY: 'SE&S' },
+    { NAME: '홍정욱', GROUP: 'PEE1', SITE: 'HS', HIRE: '2022-09-26', resignation_date: '2024-12-21', COMPANY: 'SE&S' },
+    { NAME: '김태준', GROUP: 'PEE1', SITE: 'HS', HIRE: '2023-05-02', resignation_date: '2025-02-27', COMPANY: 'SE&I' },
+    { NAME: '김희수', GROUP: 'PEE1', SITE: 'PT', HIRE: '2021-01-25', resignation_date: '2025-02-27', COMPANY: 'SE&S' },
+    { NAME: '이준호', GROUP: 'PEE1', SITE: 'PT', HIRE: '2024-04-29', resignation_date: '2025-02-27', COMPANY: 'SE&S' }
 ];
 
 // 엔지니어 수 계산 함수 업데이트
@@ -209,11 +212,13 @@ function calculateMonthlyEngineerCount(data) {
     const hiredEngineers = months.map(() => 0);
     const resignedEngineers = months.map(() => 0);
     const engineersPerMonth = months.map(() => ({ hired: [], resigned: [] })); // 월별 입사 및 퇴사자 이름 저장
+    const companyFilter = searchCompany.value;
 
     const allEngineers = [...data, ...additionalEngineers].filter(row => {
         // 그룹과 사이트 필터를 적용
         return (!searchGroup.value || row.GROUP === searchGroup.value) &&
-               (!searchSite.value || row.SITE === searchSite.value);
+               (!searchSite.value || row.SITE === searchSite.value) &&
+               (!companyFilter || row.COMPANY === companyFilter);
     });
 
     // 초기 인원 계산 (2023년 1월 이전에 입사한 엔지니어 수)
@@ -236,12 +241,12 @@ function calculateMonthlyEngineerCount(data) {
 
             if (hireDate >= monthStart && hireDate <= monthEnd) {
                 hiresThisMonth++;
-                engineersPerMonth[index].hired.push(row.NAME); // 입사자 이름 저장
+                engineersPerMonth[index].hired.push(`${row.NAME} (${row.COMPANY})`); // 입사자 이름 저장
             }
 
             if (resignationDate && resignationDate >= monthStart && resignationDate <= monthEnd) {
                 resignsThisMonth++;
-                engineersPerMonth[index].resigned.push(row.NAME); // 퇴사자 이름 저장
+                engineersPerMonth[index].resigned.push(`${row.NAME} (${row.COMPANY})`); // 퇴사자 이름 저장
             }
         });
 
@@ -1983,6 +1988,7 @@ createChart(monthlyCapaChartCtx, {
         searchMultiEngr.value = ''; // 추가된 필터 초기화
         searchName.value = '';
         searchHireDate.value = '';
+        searchCompany.value = '';
         updateAllCharts();
     });
 

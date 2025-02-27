@@ -366,7 +366,7 @@ const drawChart = (data) => {
         citySelect.innerHTML = '<option value="SELECT">City</option>';
 
         const cityOptions = {
-            USA: ['Portland', 'Arizona'],
+            USA: ['Portland', 'Arizona', 'Texas'],
             Ireland: ['Leixlip'],
             Japan: ['Hiroshima'],
             China: ['Wuxi', 'Xian', 'Shanghai', 'Beijing'],

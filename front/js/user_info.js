@@ -576,17 +576,21 @@ async function renderLevelChangeChart(levelChangeData, allQuarters) {
 
 // 월별 작업 시간 계산 함수
 function calculateMonthlyWorkHoursByMonth(workLogs) {
-  const monthlyHours = Array(12).fill(0);
-  
+  const monthlyHours = Array(24).fill(0); // 2024년 6월 ~ 2025년 5월까지 24개월 배열
+
   workLogs.forEach(log => {
-      const logMonth = new Date(log.task_date).getMonth();
-      if (log.task_duration) {
-          const [hours, minutes, seconds] = log.task_duration.split(':').map(Number);
-          const durationInHours = hours + minutes / 60 + seconds / 3600;
-          monthlyHours[logMonth] += durationInHours;
+      const logDate = new Date(log.task_date);
+      const logYear = logDate.getFullYear();
+      const logMonth = logDate.getMonth();
+
+      if (logYear === 2024) {
+          monthlyHours[logMonth - 5] += log.task_duration ? parseFloat(log.task_duration) : 0;
+      } else if (logYear === 2025) {
+          monthlyHours[logMonth + 7] += log.task_duration ? parseFloat(log.task_duration) : 0;
       }
   });
-  
+
+  console.log("Monthly Hours Data:", monthlyHours); // 디버깅용
   return monthlyHours;
 }
 
@@ -605,7 +609,7 @@ function renderMonthlyWorkHoursChart(monthlyHours) {
         labels: labels,  // 새로운 X축 레이블 적용
         datasets: [{
             label: 'Monthly Working time (hrs)',
-            data: monthlyHours.slice(5, 17), // 6월부터 다음 해 5월까지 데이터 추출
+            data: monthlyHours.slice(0, 12), // 6월부터 다음 해 5월까지 데이터 추출
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1
