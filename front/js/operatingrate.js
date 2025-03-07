@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         '2024-01-01', '2024-02-09', '2024-02-10', '2024-02-11', '2024-02-12',
         '2024-03-01', '2024-05-05', '2024-05-06', '2024-05-15', '2024-06-06',
         '2024-08-15', '2024-09-16', '2024-09-17', '2024-09-18', '2024-10-03',
-        '2024-10-09', '2024-12-25', '2024-10-01', '2025-01-01', '2025-01-27', '2025-01-28', '2025-01-29', '2025-01-30'
+        '2024-10-09', '2024-12-25', '2024-10-01', '2025-01-01', '2025-01-27', '2025-01-28', '2025-01-29', '2025-01-30', '2025-03-03'
     ];
 
     // 주차별 GROUP과 SITE에 따라 평일 및 주말 엔지니어 수 설정
@@ -208,7 +208,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
         '2025-02-24': {
-            weekday: { 'PEE1 PT': 15.8, 'PEE1 HS': 19.9, 'PEE1 IC': 4, 'PEE1 CJ': 2.6, 'PEE2 PT': 8.2, 'PEE2 HS': 5.9, 'PSKH PSKH': 7.6,
+            weekday: { 'PEE1 PT': 14.7, 'PEE1 HS': 16.38, 'PEE1 IC': 4, 'PEE1 CJ': 2.6, 'PEE2 PT': 8.4, 'PEE2 HS': 5.1, 'PSKH PSKH': 5.9,
+                'PEE1 USA-Portland' : 3, 'PEE1 Ireland' : 1,},
+            weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
+        },
+        '2025-03-03': {
+            weekday: { 'PEE1 PT': 14.7, 'PEE1 HS': 16.38, 'PEE1 IC': 4, 'PEE1 CJ': 2.6, 'PEE2 PT': 8.4, 'PEE2 HS': 5.1, 'PSKH PSKH': 5.9,
                 'PEE1 USA-Portland' : 3, 'PEE1 Ireland' : 1,},
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
