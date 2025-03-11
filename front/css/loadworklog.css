@@ -205,7 +205,8 @@ h1 {
 
 /* 🌟 버튼 스타일 */
 #search-btn,
-#reset-btn {
+#reset-btn,
+#export-excel-btn {
     padding: 14px 20px;
     font-size: 16px;
     font-weight: 600;
@@ -232,6 +233,15 @@ h1 {
 
 #reset-btn:hover {
     background-color: #7f8c8d;
+}
+
+#export-excel-btn {
+    background-color: #108800;
+    color: white;
+}
+
+#export-excel-btn:hover {
+    background-color: #004d04;
 }
 
 /* 🌟 반응형 디자인 (모바일 최적화) */

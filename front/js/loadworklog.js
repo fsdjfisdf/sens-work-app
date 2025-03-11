@@ -486,3 +486,95 @@ document.addEventListener('DOMContentLoaded', async () => {
     await getCurrentUser(); // ✅ 사용자의 정보 불러오기 (async/await 추가)
     fetchAllWorkLogs(); // 최초 데이터 로드
 });
+
+// 📌 엑셀 다운로드 버튼 이벤트 리스너 추가
+document.getElementById('export-excel-btn').addEventListener('click', async () => {
+    const token = localStorage.getItem('x-access-token');
+
+    if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+
+    try {
+        // 사용자 역할 확인
+        const userResponse = await fetch('http://3.37.73.151:3001/user-info', {
+            headers: { 'x-access-token': token }
+        });
+
+        if (!userResponse.ok) {
+            throw new Error('사용자 정보를 가져오지 못했습니다.');
+        }
+
+        const userData = await userResponse.json();
+        const userRole = userData.result.role;
+
+        if (userRole !== 'admin') {
+            alert('엑셀 다운로드 권한이 없습니다.');
+            return;
+        }
+
+        // ✅ 서버에서 작업 이력 가져오기
+        const response = await fetch('http://3.37.73.151:3001/logs');
+        if (!response.ok) {
+            throw new Error('작업 이력을 가져오지 못했습니다.');
+        }
+
+        const workLogs = await response.json();
+
+        if (workLogs.length === 0) {
+            alert('작업 이력이 없습니다.');
+            return;
+        }
+
+                // ✅ 시간 형식(HH:MM:SS)을 분 단위로 변환하는 함수
+                function convertToMinutes(timeStr) {
+                    if (!timeStr) return 0; // 값이 없으면 0 반환
+                    const [hours, minutes, seconds] = timeStr.split(':').map(Number);
+                    return (hours * 60) + minutes; // 시간 * 60 + 분
+                }
+
+        // ✅ 엑셀 데이터 변환
+        const formattedData = workLogs.map(log => ({
+            "id": log.id,
+            "task_name": log.task_name,
+            "task_date": log.task_date ? log.task_date.split('T')[0] : '',
+            "man": log.task_man,
+            "group": log.group,
+            "site": log.site,
+            "line": log.line,
+            "eq type": log.equipment_type,
+            "task_warranty": log.warranty,
+            "eq name": log.equipment_name,
+            "status": log.status,
+            "action": log.task_description,
+            "cause": log.task_cause,
+            "result": log.task_result,
+            "SOP": log.SOP,
+            "TS guide": log.tsguide,
+            "work_type": log.work_type,
+            "work_type2": log.work_type2,
+            "setup_item": log.setup_item,
+            "transfer_item": log.transfer_item,
+            "time": convertToMinutes(log.task_duration),
+            "start time": log.start_time,
+            "end time": log.end_time,
+            "none": log.none_time,
+            "move": log.move_time,
+        }));
+
+        // ✅ 엑셀 파일 생성
+        const ws = XLSX.utils.json_to_sheet(formattedData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "WorkLogs");
+
+        // ✅ 엑셀 다운로드
+        XLSX.writeFile(wb, `workLogs_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        alert("엑셀 파일이 다운로드되었습니다.");
+
+    } catch (error) {
+        console.error('엑셀 다운로드 오류:', error);
+        alert('엑셀 다운로드 중 오류가 발생했습니다.');
+    }
+});

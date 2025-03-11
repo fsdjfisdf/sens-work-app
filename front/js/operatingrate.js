@@ -1321,9 +1321,23 @@ function renderWorkTypeStatsChart(logs) {
                             return `${label}: ${value} tasks (${percentage}%)`;
                         }
                     }
+                },
+                datalabels: { // ✅ 데이터 레이블 항상 표시 설정
+                    color: '#000',
+                    font: {
+                        weight: 'bold',
+                        size: 12
+                    },
+                    formatter: (value, context) => {
+                        const percentage = ((value / totalTasks) * 100).toFixed(2);
+                        return `${value} (${percentage}%)`; // 예: "12 (30.00%)"
+                    },
+                    anchor: 'center', // 위치 조정 (start, center, end 가능)
+                    align: 'center'
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels] // ✅ Chart.js 플러그인 추가
     });
 }
 

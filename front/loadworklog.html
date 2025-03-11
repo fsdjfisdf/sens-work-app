@@ -226,6 +226,9 @@
             <div class="filter-row filter-buttons">
                     <button id="search-btn">Search</button>
                     <button id="reset-btn">Reset</button>
+                    <div class="admin-only">
+                        <button id="export-excel-btn">EXCEL</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -466,6 +469,7 @@
     </main>
 
     <script src="loadworklog.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 </body>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
