@@ -236,3 +236,5 @@ exports.getAllSupraSetupData = async () => {
       throw new Error(`Error retrieving data from SUPRA_SETUP: ${err.message}`);
   }
 };
+
+
