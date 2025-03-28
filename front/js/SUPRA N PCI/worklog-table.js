@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const validEquipmentTypes = [
         "SUPRA N", "SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", 
-        "SUPRA Vplus", "SUPRA VM"
+        "SUPRA Vplus", "SUPRA VM", "SUPRA Q"
     ];
 
     async function loadWorkLogs() {

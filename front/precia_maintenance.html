@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRECIA Maintenance Checklist</title>
+  <link rel="stylesheet" href="./css/supra_maintenance.css" />
+  <link rel="stylesheet" href="./css/readworklog.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/precia_maintenance.js" defer></script>
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+        <div class="nav-container">
+            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+            <div class="sign-container unsigned">
+                <a href="./signin.html" class="sign-link">Login</a>
+            </div>
+            <div class="sign-container signed hidden">
+                <button class="menu-btn">
+                    <div class="menu-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+          <a href="./user_info.html" class="menu-item">SECM</a>
+          <a href="./worklog.html" class="menu-item">Create Worklog</a>
+          <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+          <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+          <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+          <a href="./PCI.html" class="menu-item">PCI</a>
+          <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+          <a href="./business.html" class="menu-item">Business trip</a>
+          <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+          <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+          <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+          <a href="./update.html" class="menu-item">Update</a>
+          <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+  </div>
+</nav>
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
+          <div id="checklist-container">
+            <div class="category">
+                <h2>PM</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM CENTERING</label>
+                  <input type="checkbox" name="PM_CENTERING" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM CLN</label>
+                  <input type="checkbox" name="PM_CLN" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM SLOT VALVE REP</label>
+                  <input type="checkbox" name="PM_SLOT_VALVE_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM PEEK PLATE REP</label>
+                  <input type="checkbox" name="PM_PEEK_PLATE_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM RF MATCHER REP</label>
+                  <input type="checkbox" name="PM_RF_MATCHER_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>2PT CAL</label>
+                  <input type="checkbox" name="2PT_CAL" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM PIN HOLDER REP</label>
+                  <input type="checkbox" name="PM_PIN_HOLDER_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM GDP REP</label>
+                  <input type="checkbox" name="PM_GDP_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM ISO RING REP</label>
+                  <input type="checkbox" name="PM_ISO_RING_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM EXHAUST RING REP</label>
+                  <input type="checkbox" name="PM_EXHAUST_RING_REP" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PM OUTER REP</label>
+                  <input type="checkbox" name="PM_OUTER_REP" value="O">
+                </div>
+              </div>
+              
+              <div class="category">
+                <h2>TEACHING</h2>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>EFEM ROBOT TEACHING</label>
+                  <input type="checkbox" name="EFEM_ROBOT_TEACHING" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>TM ROBOT TEACHING</label>
+                  <input type="checkbox" name="TM_ROBOT_TEACHING" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>GAP BALL TEACHING</label>
+                  <input type="checkbox" name="GAP_BALL_TEACHING" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>PIN TEACHING</label>
+                  <input type="checkbox" name="PIN_TEACHING" value="O">
+                </div>
+                <div class="item" title="REP 후 설비 정상화">
+                  <label>CHUCK TEACHING</label>
+                  <input type="checkbox" name="CHUCK_TEACHING" value="O">
+                </div>
+              </div>            
+          </div>
+          <button type="submit">SAVE</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+          document.querySelector(".unsigned").classList.remove("hidden");
+          document.querySelector(".signed").classList.add("hidden");
+      } else {
+          document.querySelector(".unsigned").classList.add("hidden");
+          document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+          document.querySelectorAll('.admin-only').forEach(element => {
+              element.style.display = 'none';
+          });
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+
+      if (signOutButton) {
+          signOutButton.addEventListener("click", function() {
+              localStorage.removeItem("x-access-token");
+              localStorage.removeItem("user-role");
+              alert("로그아웃 되었습니다.");
+              window.location.replace("./signin.html");
+          });
+      }
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      menuBtn.addEventListener('click', function() {
+          menuBar.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function(event) {
+          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+              menuBar.classList.remove('open');
+          }
+      });
+  });
+</script>
+</html>

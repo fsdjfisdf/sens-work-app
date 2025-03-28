@@ -11,161 +11,42 @@ if (!token) {
 let logs = [];
 let taskCounts = {};  // 전역으로 이동
 let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
-const excludedWorkers = ["김지웅", "김태형", "홍정욱", "김희수", "김태준"];  // 제외할 작업자들의 이름
+const excludedWorkers = ["김지웅", "퇴사자 여기에 추가"];  // 제외할 작업자들의 이름
+
 
 // 대분류 및 중분류와 작업 항목 리스트 정의
 window.taskCategories = [
     {
-        category: "Escort",
+        category: "PM",
         subcategories: [
-            { name: "LP ESCORT", 기준작업수: 3 },
-            { name: "ROBOT ESCORT", 기준작업수: 3 }
+            { name: "PM CENTERING", 기준작업수: 2 },
+            { name: "PM CLN", 기준작업수: 1 },
+            { name: "PM SLOT VALVE REP", 기준작업수: 1 },
+            { name: "PM PEEK PLATE REP", 기준작업수: 2 },
+            { name: "PM RF MATCHER REP", 기준작업수: 1 },
+            { name: "2PT CAL", 기준작업수: 2 },
+            { name: "PM PIN HOLDER REP", 기준작업수: 3 },
+            { name: "PM GDP REP", 기준작업수: 1 },
+            { name: "PM ISO RING REP", 기준작업수: 1 },
+            { name: "PM EXHAUST RING REP", 기준작업수: 1 },
+            { name: "PM OUTER REP", 기준작업수: 1 }
         ]
     },
     {
-        category: "EFEM Robot",
+        category: "TEACHING",
         subcategories: [
-            { name: "SR8241 TEACHING", 기준작업수: 15 },
-            { name: "ROBOT REP", 기준작업수: 15 },
-            { name: "ROBOT CONTROLLER REP", 기준작업수: 15 },
-            { name: "END EFFECTOR REP", 기준작업수: 10 }
-        ]
-    },
-    {
-        category: "TM Robot",
-        subcategories: [
-            { name: "PERSIMMON TEACHING", 기준작업수: 15 },
-            { name: "END EFFECTOR PAD REP", 기준작업수: 10 }
-        ]
-    },
-    {
-        category: "L/L",
-        subcategories: [
-            { name: "L L PIN", 기준작업수: 5 },
-            { name: "L L SENSOR", 기준작업수: 5 },
-            { name: "L L DSA", 기준작업수: 5 },
-            { name: "GAS LINE", 기준작업수: 5 },
-            { name: "L L ISOLATION VV", 기준작업수: 5 }
-        ]
-    },
-    {
-        category: "EFEM FFU",
-        subcategories: [
-            { name: "FFU CONTROLLER", 기준작업수: 3 },
-            { name: "FAN", 기준작업수: 3 },
-            { name: "MOTOR DRIVER", 기준작업수: 1 }
-        ]
-    },
-    {
-        category: "SOURCE",
-        subcategories: [
-            { name: "MATCHER", 기준작업수: 5 },
-            { name: "3000QC", 기준작업수: 5 },
-            { name: "3100QC", 기준작업수: 5 }
-        ]
-    },
-    {
-        category: "Chuck",
-        subcategories: [
-            { name: "CHUCK", 기준작업수: 5 }
-        ]
-    },
-    {
-        category: "Preventive Maintenance",
-        subcategories: [
-            { name: "PROCESS KIT", 기준작업수: 5 },
-            { name: "SLOT VALVE BLADE", 기준작업수: 3 },
-            { name: "TEFLON ALIGN PIN", 기준작업수: 3 },
-            { name: "O RING", 기준작업수: 3 }
-        ]
-    },
-    {
-        category: "Leak",
-        subcategories: [
-            { name: "HELIUM DETECTOR", 기준작업수: 3 }
-        ]
-    },
-    {
-        category: "Pin",
-        subcategories: [
-            { name: "HOOK LIFT PIN", 기준작업수: 3 },
-            { name: "BELLOWS", 기준작업수: 1 },
-            { name: "PIN BOARD", 기준작업수: 1 },
-            { name: "LM GUIDE", 기준작업수: 1 },
-            { name: "PIN MOTOR CONTROLLER", 기준작업수: 3 },
-            { name: "LASER PIN SENSOR", 기준작업수: 1 }
-        ]
-    },
-    {
-        category: "EPD",
-        subcategories: [
-            { name: "DUAL", 기준작업수: 1 }
-        ]
-    },
-    {
-        category: "Board",
-        subcategories: [
-            { name: "DC POWER SUPPLY", 기준작업수: 2 },
-            { name: "PIO SENSOR", 기준작업수: 1 },
-            { name: "D NET", 기준작업수: 2 },
-            { name: "SIM BOARD", 기준작업수: 2 }
-        ]
-    },
-    {
-        category: "IGS Block",
-        subcategories: [
-            { name: "MFC", 기준작업수: 2 },
-            { name: "VALVE", 기준작업수: 2 }
-        ]
-    },
-    {
-        category: "Valve",
-        subcategories: [
-            { name: "SOLENOID", 기준작업수: 2 },
-            { name: "PENDULUM VALVE", 기준작업수: 2 },
-            { name: "SLOT VALVE DOOR VALVE", 기준작업수: 3 },
-            { name: "SHUTOFF VALVE", 기준작업수: 3 }
-        ]
-    },
-    {
-        category: "Rack",
-        subcategories: [
-            { name: "RF GENERATOR", 기준작업수: 3 }
-        ]
-    },
-    {
-        category: "ETC",
-        subcategories: [
-            { name: "BARATRON ASSY", 기준작업수: 1 },
-            { name: "PIRANI ASSY", 기준작업수: 1 },
-            { name: "VIEW PORT QUARTZ", 기준작업수: 1 },
-            { name: "FLOW SWITCH", 기준작업수: 1 },
-            { name: "CERAMIC PLATE", 기준작업수: 3 },
-            { name: "MONITOR", 기준작업수: 1 },
-            { name: "KEYBOARD", 기준작업수: 1 },
-            { name: "SIDE STORAGE", 기준작업수: 5 },
-            { name: "MULTI PORT 32", 기준작업수: 3 },
-            { name: "MINI8", 기준작업수: 3 },
-            { name: "TM EPC MFC", 기준작업수: 3 }
-        ]
-    },
-    {
-        category: "CTR",
-        subcategories: [
-            { name: "CTC", 기준작업수: 2 },
-            { name: "EFEM CONTROLLER", 기준작업수: 2 }
-        ]
-    },
-    {
-        category: "S/W",
-        subcategories: [
-            { name: "SW PATCH", 기준작업수: 2 }
+            { name: "EFEM ROBOT TEACHING", 기준작업수: 5 },
+            { name: "TM ROBOT TEACHING", 기준작업수: 5 },
+            { name: "GAP BALL TEACHING", 기준작업수: 2 },
+            { name: "PIN TEACHING", 기준작업수: 2 },
+            { name: "CHUCK TEACHING", 기준작업수: 2 }
         ]
     }
 ];
 
+
 const validEquipmentTypes = [
-    "SUPRA XP"
+    "PRECIA"
 ];
 
 async function loadWorkLogs() {
@@ -183,7 +64,7 @@ async function loadWorkLogs() {
 
 async function loadDbTaskCounts() {
     try {
-        const response = await axios.get('http://3.37.73.151:3001/api/supraxp-task-count');
+        const response = await axios.get('http://3.37.73.151:3001/api/precia-task-count');
         dbTaskCounts = response.data.reduce((acc, row) => {
             const taskItem = row['작업_항목'];
             Object.keys(row).forEach(worker => {
@@ -208,7 +89,7 @@ async function loadDbTaskCounts() {
 // 모든 데이터 계산 후 서버로 전송하는 함수 추가
 async function saveAggregatedDataToServer(aggregatedData) {
 try {
-    const response = await axios.post('http://3.37.73.151:3001/api/supraxp-maintenance/aggregated', aggregatedData, {
+    const response = await axios.post('http://3.37.73.151:3001/api/precia-maintenance/aggregated', aggregatedData, {
 
         headers: {
             'x-access-token': localStorage.getItem('x-access-token')
@@ -292,8 +173,11 @@ function calculateTaskCounts(logs) {
 
 function addRelatedTaskCounts() {
     Object.keys(taskCounts).forEach(worker => {
-        if (taskCounts[worker]["ROBOT CONTROLLER REP"] && taskCounts[worker]["ROBOT REP"]) { // EFEM 로교하면 로봇이랑 컨트롤러 둘다 교체하는 거로 인식
-            taskCounts[worker]["ROBOT CONTROLLER REP"].count += taskCounts[worker]["ROBOT REP"].count || 0;
+        if (taskCounts[worker]["TM ROBOT TEACHING"] && taskCounts[worker]["TM ROBOT REP"]) {
+            taskCounts[worker]["TM ROBOT TEACHING"].count += taskCounts[worker]["TM ROBOT REP"].count || 0;
+        }
+        if (taskCounts[worker]["EFEM ROBOT CONTROLLER REP"] && taskCounts[worker]["EFEM ROBOT REP"]) {
+            taskCounts[worker]["EFEM ROBOT CONTROLLER REP"].count += taskCounts[worker]["EFEM ROBOT REP"].count || 0;
         }
     });
 
