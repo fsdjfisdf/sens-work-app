@@ -74,9 +74,27 @@ document.addEventListener('DOMContentLoaded', function() {
         "DIFFUSER",
         "LOT 조사"
     ],
-        "PRECIA": ["이관항목 없음"],
+        "PRECIA": [
+            "SELECT",
+            "PM CENTERING",
+            "PM CLN",
+            "EFEM ROBOT TEACHING",
+            "TM ROBOT TEACHING",
+            "PM SLOT VALVE REP",
+            "PM PEEK PLATE REP",
+            "PM RF MATCHER REP",
+            "2PT CAL",
+            "GAP BALL TEACHING",
+            "PM PIN HOLDER REP",
+            "PIN TEACHING",
+            "CHUCK TEACHING",
+            "PM GDP REP",
+            "PM ISO RING REP",
+            "PM EXHAUST RING REP",
+            "PM OUTER REP"
+        ],
         "ECOLITE": ["이관항목 없음"],
-        "JENEVA": ["이관항목 없음"]
+        "GENEVA": ["이관항목 없음"]
     };
 
     const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM", "SUPRA Q"];
