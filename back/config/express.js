@@ -67,6 +67,7 @@ module.exports = function () {
   app.use('/api/Equipment', signalRoute);
 
   require("../src/routes/integerMaintenanceRoute")(app);  // 추가된 라우트
+  require("../src/routes/preciaMaintenanceRoute")(app);  // 추가된 라우트
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
   require('../src/routes/SECMRoute')(app);
@@ -74,6 +75,8 @@ module.exports = function () {
   require('../src/routes/taskCountRoute')(app);  // 추가
   const integerMaintCountRoute = require('../src/routes/integerMaintCountRoute');
   app.use('/api', integerMaintCountRoute);
+  const preciaMaintCountRoute = require('../src/routes/preciaMaintCountRoute');
+  app.use('/api', preciaMaintCountRoute);
   
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
   
