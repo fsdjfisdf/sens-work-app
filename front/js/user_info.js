@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const currentMonthHours = monthlyHours[currentMonthIndex];
   document.getElementById('userMonthlyHours').textContent = `${currentMonthHours.toFixed(2)} 시간`;
 
-  await calculateAndRenderUserRanking(currentMonthHours);
+  await calculateAndRenderUserRanking();
 
   const workTypeCounts = calculateWorkTypeCounts(workLogs);
   renderWorkTypeChart(workTypeCounts);
@@ -644,7 +644,7 @@ function renderMonthlyWorkHoursChart(monthlyHours) {
   });
 }
 
-async function calculateAndRenderUserRanking(currentUserHours) {
+async function calculateAndRenderUserRanking() {
   const token = localStorage.getItem('x-access-token');
   if (!token) return;
 
@@ -662,24 +662,25 @@ async function calculateAndRenderUserRanking(currentUserHours) {
               const [hours, minutes, seconds] = log.task_duration.split(':').map(Number);
               const durationInHours = hours + minutes / 60 + seconds / 3600;
 
-              // task_man 필드를 쉼표로 분리해 각 이름을 개별적으로 처리
               const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
 
               userNames.forEach(userName => {
-                  // 월별 작업 시간을 각 사용자별로 누적 계산
                   if (!allUserMonthlyHours[userName]) {
                       allUserMonthlyHours[userName] = 0;
                   }
                   allUserMonthlyHours[userName] += durationInHours;
-
               });
           }
       });
+
+      const currentUserHours = allUserMonthlyHours[loggedInUserName] || 0;
 
       const sortedHours = Object.values(allUserMonthlyHours).sort((a, b) => b - a);
       const userRank = sortedHours.indexOf(currentUserHours) + 1;
       const percentageRank = ((userRank / sortedHours.length) * 100).toFixed(1);
 
+      // 화면 출력
+      document.getElementById('userMonthlyHours').textContent = `${currentUserHours.toFixed(2)} 시간`;
       document.getElementById('userRankingPercent').textContent = `Top ${percentageRank}%`;
 
       renderUserRankingChart(sortedHours, currentUserHours, userRank, percentageRank);
@@ -691,7 +692,9 @@ async function calculateAndRenderUserRanking(currentUserHours) {
 // 사용자 랭킹 차트 생성 함수
 function renderUserRankingChart(sortedHours, currentUserHours, userRank, percentageRank) {
   const ctx = document.getElementById('userRankingChart').getContext('2d');
-  const backgroundColors = sortedHours.map(hours => hours === currentUserHours ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 0.4)');
+  const backgroundColors = sortedHours.map(hours =>
+    Math.abs(hours - currentUserHours) < 0.01 ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 0.4)'
+  );
 
   new Chart(ctx, {
       type: 'bar',

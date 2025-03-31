@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             "category": "TEACHING",
             "subcategories": [
                 {"name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING"},
-                {"name": "TM_ROBOT TEACHING", "displayName": "TM ROBOT TEACHING"},
+                {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING"},
                 {"name": "GAP_BALL_TEACHING", "displayName": "GAP BALL TEACHING"},
                 {"name": "PIN_TEACHING", "displayName": "PIN TEACHING"},
                 {"name": "CHUCK_TEACHING", "displayName": "CHUCK TEACHING"},
