@@ -53,16 +53,57 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     async function generateAnalysisData() {
+        destroyExistingChart("avgTaskDelayChart");
+        destroyExistingChart("companyChart");
         const avgTaskDelayChartCanvas = document.getElementById("avg-task-delay-chart").getContext("2d");
         const companyChartCanvas = document.getElementById("company-distribution-chart").getContext("2d");
     
         try {
             const response = await axios.get("http://3.37.73.151:3001/api/setupeq");
-            const equipmentData = response.data;
+            let equipmentData = response.data;
     
+            // 📌 필터 값 가져오기
+            const selectedGroup = document.getElementById("group-select").value;
+            const selectedSite = document.getElementById("site-select").value;
+            const selectedLine = document.getElementById("line-select").value;
+            const selectedComplete = document.getElementById("complete-select").value;
+            const eqNameSearch = document.getElementById("eqname-input").value.toLowerCase();
+            const startDate = document.getElementById("start-date").value;
+            const endDate = document.getElementById("end-date").value;
+            const selectedType = document.getElementById("eqtype-select").value;
+    
+            // 📌 진행률 계산을 위한 averageProgress 계산
+            equipmentData = equipmentData.map(e => {
+                const sections = [
+                    (e.INSTALLATION_PREPARATION_PERCENT + e.FAB_IN_PERCENT + e.DOCKING_PERCENT + e.CABLE_HOOK_UP_PERCENT) / 4,
+                    (e.POWER_TURN_ON_PERCENT + e.UTILITY_TURN_ON_PERCENT + e.GAS_TURN_ON_PERCENT) / 3,
+                    e.TEACHING_PERCENT,
+                    (e.PART_INSTALLATION_PERCENT + e.LEAK_CHECK_PERCENT + e.TTTM_PERCENT) / 3,
+                    e.CUSTOMER_CERTIFICATION_PERCENT
+                ];
+                const averageProgress = Math.round(sections.reduce((a, b) => a + b, 0) / 5 * 100);
+                return { ...e, averageProgress };
+            });
+    
+            // 📌 필터링
+            equipmentData = equipmentData.filter(e =>
+                (selectedGroup === "" || e.GROUP === selectedGroup) &&
+                (selectedSite === "" || e.SITE === selectedSite) &&
+                (selectedLine === "" || e.LINE === selectedLine) &&
+                (selectedType === "SELECT" || e.TYPE === selectedType) &&
+                (selectedComplete === "" || 
+                    (selectedComplete === "complete" && e.averageProgress === 100) ||
+                    (selectedComplete === "ing" && e.averageProgress < 100)
+                ) &&
+                (eqNameSearch === "" || e.EQNAME.toLowerCase().includes(eqNameSearch)) &&
+                (startDate === "" || endDate === "" || (
+                    e.FAB_IN_DATE && new Date(e.FAB_IN_DATE) >= new Date(startDate) && new Date(e.FAB_IN_DATE) <= new Date(endDate)
+                ))
+            );
+    
+            // 📊 차트 생성용 데이터
             const taskCompanyCount = {};
             const taskDelay = {};
-    
             const tasks = [
                 "INSTALLATION_PREPARATION", "DOCKING", "CABLE_HOOK_UP",
                 "POWER_TURN_ON", "UTILITY_TURN_ON", "GAS_TURN_ON", "TEACHING",
@@ -73,31 +114,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                 tasks.forEach(task => {
                     const companyKey = `${task}_COMPANY`;
                     const dateKey = `${task}_DATE`;
-    
+            
                     if (equip[companyKey] && equip[companyKey] !== "비어있음") {
                         if (!taskCompanyCount[task]) taskCompanyCount[task] = {};
                         taskCompanyCount[task][equip[companyKey]] = (taskCompanyCount[task][equip[companyKey]] || 0) + 1;
                     }
-    
+            
                     if (equip.FAB_IN_DATE && equip[dateKey]) {
                         const fabInDate = new Date(equip.FAB_IN_DATE);
                         const taskDate = new Date(equip[dateKey]);
                         const daysDiff = Math.floor((taskDate - fabInDate) / (1000 * 60 * 60 * 24));
-    
+            
                         if (!taskDelay[task]) taskDelay[task] = [];
                         taskDelay[task].push(daysDiff);
                     }
                 });
             });
     
-            console.log("📊 작업 평균 진행 시간 데이터:", taskDelay);
-            console.log("🏗️ 작업별 회사 분포 데이터:", taskCompanyCount);
-    
             destroyExistingChart("avgTaskDelayChart");
             destroyExistingChart("companyChart");
     
             const avgTaskDelays = Object.keys(taskDelay).map(task => {
-                return taskDelay[task].reduce((sum, val) => sum + val, 0) / taskDelay[task].length;
+                const values = taskDelay[task];
+                return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
             });
     
             chartInstances["avgTaskDelayChart"] = new Chart(avgTaskDelayChartCanvas, {
@@ -243,6 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const eqNameSearch = document.getElementById("eqname-input").value.toLowerCase();
                 const startDate = document.getElementById("start-date").value; // 시작 날짜
                 const endDate = document.getElementById("end-date").value; // 종료 날짜
+                const selectedType = document.getElementById("eqtype-select").value; // <-- 추가된 부분
         
                 // 📌 필터링 수행 (averageProgress가 계산된 후 적용)
                 equipment = processedEquipment.filter(e => 
@@ -253,6 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         (selectedComplete === "complete" && e.averageProgress === 100) || 
                         (selectedComplete === "ing" && e.averageProgress < 100)
                     ) &&
+                    (selectedType === "SELECT" || e.TYPE === selectedType) && // <-- 추가된 조건
                     (eqNameSearch === "" || e.EQNAME.toLowerCase().includes(eqNameSearch)) &&
                     (startDate === "" || endDate === "" || 
                         (e.FAB_IN_DATE && new Date(e.FAB_IN_DATE) >= new Date(startDate) && new Date(e.FAB_IN_DATE) <= new Date(endDate))
@@ -323,7 +364,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 .join("");
 
             // 📌 검색 버튼 이벤트 추가
-            document.getElementById("search-btn").addEventListener("click", fetchEquipment);
+            document.getElementById("search-btn").addEventListener("click", () => {
+                fetchEquipment();          // 설비 목록 새로고침
+                generateAnalysisData();    // 📌 분석 차트도 새로고침
+            });
+            
 
             // 📌 초기화 버튼 이벤트 추가
             document.getElementById("reset-btn").addEventListener("click", () => {
@@ -334,7 +379,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 document.getElementById("eqname-input").value = "";
                 document.getElementById("start-date").value = "";
                 document.getElementById("end-date").value = "";
+                document.getElementById("eqtype-select").value = "SELECT"; // <-- 추가
                 fetchEquipment();
+                generateAnalysisData(); // 📌 reset 시에도 차트 초기화
             });
     
             // 호버 이벤트 추가
