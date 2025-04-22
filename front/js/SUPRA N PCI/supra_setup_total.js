@@ -1,3 +1,5 @@
+let cachedCombinedData = [];
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
 
@@ -738,20 +740,14 @@ checklistTableBody.appendChild(totalAverageRow);
     document.getElementById('search-button').addEventListener('click', () => {
         const searchName = document.getElementById('search-name').value.trim();
         if (searchName) {
-            const filteredSetupData = setupData.filter(worker => worker.name.includes(searchName));
-            const filteredChecklistData = checklistData.filter(worker => worker.name.includes(searchName));
-            const filteredWorklogData = worklogData.filter(log => log.task_man.includes(searchName));
-            renderSetupTable(filteredSetupData, filteredWorklogData);
-            renderChecklistTable(filteredChecklistData);
-            renderCombinedTable(filteredSetupData, filteredChecklistData); // 합산된 표도 렌더링
+            const filtered = cachedCombinedData.filter(d => d.name.includes(searchName));
+            renderCachedCombinedTable(filtered);
         }
     });
-
+    
     document.getElementById('reset-button').addEventListener('click', () => {
         document.getElementById('search-name').value = '';
-        renderSetupTable(setupData, worklogData);
-        renderChecklistTable(checklistData);
-        renderCombinedTable(setupData, checklistData); // 합산된 표도 렌더링
+        renderCachedCombinedTable(cachedCombinedData);
     });
 });
 
@@ -1097,6 +1093,35 @@ function renderCombinedTable(setupData, checklistData) {
             // 작업자들의 평균을 구해 화면 상단에 표시
     const totalAverage = workerAverages.reduce((acc, curr) => acc + curr, 0) / workerAverages.length;
     totalAverageContainer.innerHTML = `Total Average: ${totalAverage.toFixed(1)}%`;
+
+    cachedCombinedData = workerNames.map(workerName => {
+        let breakdown = {};
+        let totalWeightedAverage = 0;
+        let totalWeight = 0;
+    
+        columns.forEach(col => {
+            const workerData = setupData.find(worker => worker.name === workerName);
+            const checklistWorkerData = checklistData.find(worker => worker.name === workerName);
+    
+            const setupCount = workerData ? (workerData[col.name] || 0) : 0;
+            const setupPercentage = Math.min((setupCount / col.기준작업수) * 80, 80);
+    
+            const checklistItems = categories[col.name];
+            const checklistAverage = checklistWorkerData ? calculateCategoryAverage(checklistItems, checklistData, workerName) : 0;
+            const checklistPercentage = (checklistAverage / 100) * 20;
+    
+            const combinedPercentage = Math.min(setupPercentage + checklistPercentage, 100);
+            breakdown[col.name] = combinedPercentage;
+    
+            const weight = categoryWeights[col.name] || 0;
+            totalWeightedAverage += combinedPercentage * (weight / 100);
+            totalWeight += weight;
+        });
+    
+        const overall = (totalWeightedAverage / totalWeight) * 100;
+        return { name: workerName, average: overall, breakdown };
+    });
+    
 
     
 
