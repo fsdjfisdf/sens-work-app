@@ -22,9 +22,11 @@ window.taskCategories = [
             { name: "PM CENTERING", 기준작업수: 2 },
             { name: "PM CLN", 기준작업수: 1 },
             { name: "PM SLOT VALVE REP", 기준작업수: 1 },
-            { name: "PM PEEK PLATE REP", 기준작업수: 2 },
+            { name: "PM PEEK PLATE REP", 기준작업수: 3 },
             { name: "PM RF MATCHER REP", 기준작업수: 1 },
-            { name: "PM PIN HOLDER REP", 기준작업수: 3 }
+            { name: "PM PIN HOLDER REP", 기준작업수: 3 },
+            { name: "PM GAP SENSOR ADJUST", 기준작업수: 3 },
+            { name: "PM PROCESS KIT REP", 기준작업수: 3 }
         ]
     },
     {

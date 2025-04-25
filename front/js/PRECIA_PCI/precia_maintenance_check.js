@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {"name": "PM_SLOT_VALVE_REP", "displayName": "PM SLOT VALVE REP"},
                 {"name": "PM_PEEK_PLATE_REP", "displayName": "PM PEEK PLATE REP"},
                 {"name": "PM_RF_MATCHER_REP", "displayName": "PM RF MATCHER REP"},
+                {"name": "PM_GAP_SENSOR_ADJUST", "displayName": "PM GAP SENSOR ADJUST"},
+                {"name": "PM_PROCESS_KIT_REP", "displayName": "PM PROCESS KIT REP"},
                 {"name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP"}
             ]
         },

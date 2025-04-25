@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         "PM_SLOT_VALVE_REP": "PM SLOT VALVE REP",
         "PM_PEEK_PLATE_REP": "PM PEEK PLATE REP",
         "PM_RF_MATCHER_REP": "PM RF MATCHER REP",
+        "PM_GAP_SENSOR_ADJUST": "PM GAP SENSOR ADJUST",
+        "PM_PROCESS_KIT_REP": "PM PROCESS KIT REP",
         "PM_PIN_HOLDER_REP": "PM PIN HOLDER REP"
     };
     
@@ -26,9 +28,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { "name": "PM_CENTERING", "displayName": "PM CENTERING", "기준작업수": 2 },//
                 { "name": "PM_CLN", "displayName": "PM CLN", "기준작업수": 1 },//
                 { "name": "PM_SLOT_VALVE_REP", "displayName": "PM SLOT VALVE REP", "기준작업수": 1 },//
-                { "name": "PM_PEEK_PLATE_REP", "displayName": "PM PEEK PLATE REP", "기준작업수": 2 },//
+                { "name": "PM_PEEK_PLATE_REP", "displayName": "PM PEEK PLATE REP", "기준작업수": 3 },//
                 { "name": "PM_RF_MATCHER_REP", "displayName": "PM RF MATCHER REP", "기준작업수": 1 },//
-                { "name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP", "기준작업수": 3 }
+                { "name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP", "기준작업수": 3 },
+                { "name": "PM_GAP_SENSOR_ADJUST", "displayName": "PM GAP SENSOR ADJUST", "기준작업수": 3 },
+                { "name": "PM_PROCESS_KIT_REP", "displayName": "PM PROCESS KIT REP", "기준작업수": 3 }
             ]
         },
         {
