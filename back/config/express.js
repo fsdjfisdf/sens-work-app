@@ -99,6 +99,7 @@ const editRoutes = require("../src/routes/editRoute"); // 🔹 작업 이력 편
 
 // 기존 코드의 라우트 설정 부분에 추가
 app.use("/api", editRoutes); // 🔹 작업 이력 편집 API 라우트 연결
+app.use('/api/test', require('./routes/testRoute'));
 
   
 

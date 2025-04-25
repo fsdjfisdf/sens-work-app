@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>설비별 레벨 시험</title>
+  <link rel="stylesheet" href="test.css">
+</head>
+<body>
+  <h1>설비별 레벨 시험</h1>
+  <select id="equipment-select">
+    <option value="SUPRA N">SUPRA N</option>
+    <option value="SUPRA XP">SUPRA XP</option>
+  </select>
+
+  <select id="level-select">
+    <option value="1-1">1-1</option>
+    <option value="1-2">1-2</option>
+    <option value="2-1">2-1</option>
+    <option value="2-2">2-2</option>
+  </select>
+
+  <button id="start-test">시험 시작</button>
+
+  <form id="test-form" style="display:none;">
+    <div id="questions-container"></div>
+    <button type="submit">제출</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script src="test.js"></script>
+</body>
+</html>
