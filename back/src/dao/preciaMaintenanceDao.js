@@ -32,10 +32,9 @@ exports.insertChecklist = async (checklistData) => {
       const query = `
         INSERT INTO PRECIA_MAINT_SELF (
           name, PM_CENTERING, PM_CLN, EFEM_ROBOT_TEACHING, TM_ROBOT_TEACHING,
-          PM_SLOT_VALVE_REP, PM_PEEK_PLATE_REP, PM_RF_MATCHER_REP, \`2PT_CAL\`,
-          GAP_BALL_TEACHING, PM_PIN_HOLDER_REP, PIN_TEACHING, CHUCK_TEACHING,
-          PM_GDP_REP, PM_ISO_RING_REP, PM_EXHAUST_RING_REP, PM_OUTER_REP
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          PM_SLOT_VALVE_REP, PM_PEEK_PLATE_REP, PM_RF_MATCHER_REP, PM_PIN_HOLDER_REP
+          
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
   
       const values = [
@@ -47,15 +46,7 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.PM_SLOT_VALVE_REP,
         checklistData.PM_PEEK_PLATE_REP,
         checklistData.PM_RF_MATCHER_REP,
-        checklistData['2PT_CAL'],
-        checklistData.GAP_BALL_TEACHING,
-        checklistData.PM_PIN_HOLDER_REP,
-        checklistData.PIN_TEACHING,
-        checklistData.CHUCK_TEACHING,
-        checklistData.PM_GDP_REP,
-        checklistData.PM_ISO_RING_REP,
-        checklistData.PM_EXHAUST_RING_REP,
-        checklistData.PM_OUTER_REP
+        checklistData.PM_PIN_HOLDER_REP
       ];
 
     await connection.query(query, values);
@@ -78,15 +69,7 @@ exports.updateChecklist = async (checklistData) => {
           PM_SLOT_VALVE_REP = ?,
           PM_PEEK_PLATE_REP = ?,
           PM_RF_MATCHER_REP = ?,
-          \`2PT_CAL\` = ?,
-          GAP_BALL_TEACHING = ?,
-          PM_PIN_HOLDER_REP = ?,
-          PIN_TEACHING = ?,
-          CHUCK_TEACHING = ?,
-          PM_GDP_REP = ?,
-          PM_ISO_RING_REP = ?,
-          PM_EXHAUST_RING_REP = ?,
-          PM_OUTER_REP = ?
+          PM_PIN_HOLDER_REP = ?
         WHERE name = ?
       `;
   
@@ -98,15 +81,7 @@ exports.updateChecklist = async (checklistData) => {
         checklistData.PM_SLOT_VALVE_REP,
         checklistData.PM_PEEK_PLATE_REP,
         checklistData.PM_RF_MATCHER_REP,
-        checklistData['2PT_CAL'],
-        checklistData.GAP_BALL_TEACHING,
         checklistData.PM_PIN_HOLDER_REP,
-        checklistData.PIN_TEACHING,
-        checklistData.CHUCK_TEACHING,
-        checklistData.PM_GDP_REP,
-        checklistData.PM_ISO_RING_REP,
-        checklistData.PM_EXHAUST_RING_REP,
-        checklistData.PM_OUTER_REP,
         checklistData.name
       ];
   

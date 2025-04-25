@@ -15,15 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         "PM_SLOT_VALVE_REP": "PM SLOT VALVE REP",
         "PM_PEEK_PLATE_REP": "PM PEEK PLATE REP",
         "PM_RF_MATCHER_REP": "PM RF MATCHER REP",
-        "2PT_CAL": "2PT CAL",
-        "GAP_BALL_TEACHING": "GAP BALL TEACHING",
-        "PM_PIN_HOLDER_REP": "PM PIN HOLDER REP",
-        "PIN_TEACHING": "PIN TEACHING",
-        "CHUCK_TEACHING": "CHUCK TEACHING",
-        "PM_GDP_REP": "PM GDP REP",
-        "PM_ISO_RING_REP": "PM ISO RING REP",
-        "PM_EXHAUST_RING_REP": "PM EXHAUST RING REP",
-        "PM_OUTER_REP": "PM OUTER REP"
+        "PM_PIN_HOLDER_REP": "PM PIN HOLDER REP"
     };
     
 
@@ -31,27 +23,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             "category": "PM",
             "subcategories": [
-                { "name": "PM_CENTERING", "displayName": "PM CENTERING", "기준작업수": 2 },
-                { "name": "PM_CLN", "displayName": "PM CLN", "기준작업수": 1 },
-                { "name": "PM_SLOT_VALVE_REP", "displayName": "PM SLOT VALVE REP", "기준작업수": 1 },
-                { "name": "PM_PEEK_PLATE_REP", "displayName": "PM PEEK PLATE REP", "기준작업수": 2 },
-                { "name": "PM_RF_MATCHER_REP", "displayName": "PM RF MATCHER REP", "기준작업수": 1 },
-                { "name": "2PT_CAL", "displayName": "2PT CAL", "기준작업수": 2 },
-                { "name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP", "기준작업수": 3 },
-                { "name": "PM_GDP_REP", "displayName": "PM GDP REP", "기준작업수": 1 },
-                { "name": "PM_ISO_RING_REP", "displayName": "PM ISO RING REP", "기준작업수": 1 },
-                { "name": "PM_EXHAUST_RING_REP", "displayName": "PM EXHAUST RING REP", "기준작업수": 1 },
-                { "name": "PM_OUTER_REP", "displayName": "PM OUTER REP", "기준작업수": 1 }
+                { "name": "PM_CENTERING", "displayName": "PM CENTERING", "기준작업수": 2 },//
+                { "name": "PM_CLN", "displayName": "PM CLN", "기준작업수": 1 },//
+                { "name": "PM_SLOT_VALVE_REP", "displayName": "PM SLOT VALVE REP", "기준작업수": 1 },//
+                { "name": "PM_PEEK_PLATE_REP", "displayName": "PM PEEK PLATE REP", "기준작업수": 2 },//
+                { "name": "PM_RF_MATCHER_REP", "displayName": "PM RF MATCHER REP", "기준작업수": 1 },//
+                { "name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP", "기준작업수": 3 }
             ]
         },
         {
             "category": "ROBOT",
             "subcategories": [
-                { "name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING", "기준작업수": 5 },
-                { "name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING", "기준작업수": 5 },
-                { "name": "GAP_BALL_TEACHING", "displayName": "GAP BALL TEACHING", "기준작업수": 2 },
-                { "name": "PIN_TEACHING", "displayName": "PIN TEACHING", "기준작업수": 2 },
-                { "name": "CHUCK_TEACHING", "displayName": "CHUCK TEACHING", "기준작업수": 2 }
+                { "name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING", "기준작업수": 5 },//
+                { "name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING", "기준작업수": 5 }
             ]
         }
     ];

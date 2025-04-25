@@ -44,22 +44,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {"name": "PM_SLOT_VALVE_REP", "displayName": "PM SLOT VALVE REP"},
                 {"name": "PM_PEEK_PLATE_REP", "displayName": "PM PEEK PLATE REP"},
                 {"name": "PM_RF_MATCHER_REP", "displayName": "PM RF MATCHER REP"},
-                {"name": "2PT_CAL", "displayName": "2PT CAL"},
-                {"name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP"},
-                {"name": "PM_GDP_REP", "displayName": "PM GDP REP"},
-                {"name": "PM_ISO_RING_REP", "displayName": "PM ISO RING REP"},
-                {"name": "PM_EXHAUST_RING_REP", "displayName": "PM EXHAUS RING REP"},
-                {"name": "PM_OUTER_REP", "displayName": "PM OUTER REP"}
+                {"name": "PM_PIN_HOLDER_REP", "displayName": "PM PIN HOLDER REP"}
             ]
         },
         {
             "category": "TEACHING",
             "subcategories": [
                 {"name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING"},
-                {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING"},
-                {"name": "GAP_BALL_TEACHING", "displayName": "GAP BALL TEACHING"},
-                {"name": "PIN_TEACHING", "displayName": "PIN TEACHING"},
-                {"name": "CHUCK_TEACHING", "displayName": "CHUCK TEACHING"},
+                {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING"}
             ]
         }
     ];

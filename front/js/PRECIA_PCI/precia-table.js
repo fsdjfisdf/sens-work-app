@@ -24,22 +24,14 @@ window.taskCategories = [
             { name: "PM SLOT VALVE REP", 기준작업수: 1 },
             { name: "PM PEEK PLATE REP", 기준작업수: 2 },
             { name: "PM RF MATCHER REP", 기준작업수: 1 },
-            { name: "2PT CAL", 기준작업수: 2 },
-            { name: "PM PIN HOLDER REP", 기준작업수: 3 },
-            { name: "PM GDP REP", 기준작업수: 1 },
-            { name: "PM ISO RING REP", 기준작업수: 1 },
-            { name: "PM EXHAUST RING REP", 기준작업수: 1 },
-            { name: "PM OUTER REP", 기준작업수: 1 }
+            { name: "PM PIN HOLDER REP", 기준작업수: 3 }
         ]
     },
     {
         category: "TEACHING",
         subcategories: [
             { name: "EFEM ROBOT TEACHING", 기준작업수: 5 },
-            { name: "TM ROBOT TEACHING", 기준작업수: 5 },
-            { name: "GAP BALL TEACHING", 기준작업수: 2 },
-            { name: "PIN TEACHING", 기준작업수: 2 },
-            { name: "CHUCK TEACHING", 기준작업수: 2 }
+            { name: "TM ROBOT TEACHING", 기준작업수: 5 }
         ]
     }
 ];

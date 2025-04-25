@@ -52,15 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PM_SLOT_VALVE_REP',
             'PM_PEEK_PLATE_REP',
             'PM_RF_MATCHER_REP',
-            '2PT_CAL',
-            'GAP_BALL_TEACHING',
             'PM_PIN_HOLDER_REP',
-            'PIN_TEACHING',
-            'CHUCK_TEACHING',
-            'PM_GDP_REP',
-            'PM_ISO_RING_REP',
-            'PM_EXHAUST_RING_REP',
-            'PM_OUTER_REP'
         ];
 
         // 모든 필드를 0으로 초기화
