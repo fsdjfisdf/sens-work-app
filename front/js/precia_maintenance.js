@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PM_PEEK_PLATE_REP',
             'PM_RF_MATCHER_REP',
             'PM_PIN_HOLDER_REP',
+            'PM_GAP_SENSOR_ADJUST',
+            'PM_PROCESS_KIT_REP',
+
         ];
 
         // 모든 필드를 0으로 초기화
