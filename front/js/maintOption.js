@@ -83,15 +83,9 @@ document.addEventListener('DOMContentLoaded', function() {
             "PM SLOT VALVE REP",
             "PM PEEK PLATE REP",
             "PM RF MATCHER REP",
-            "2PT CAL",
-            "GAP BALL TEACHING",
             "PM PIN HOLDER REP",
-            "PIN TEACHING",
-            "CHUCK TEACHING",
-            "PM GDP REP",
-            "PM ISO RING REP",
-            "PM EXHAUST RING REP",
-            "PM OUTER REP"
+            "PM GAP SENSOR ADJUST",
+            "PM PROCESS KIT REP"
         ],
         "ECOLITE": ["이관항목 없음"],
         "GENEVA": ["이관항목 없음"]
