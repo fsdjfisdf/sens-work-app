@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         },
         '2025-04-21': {
-            weekday: { 'PEE1 PT': 17.3, 'PEE1 HS': 20.5, 'PEE1 IC': 4.4, 'PEE1 CJ': 5.4, 'PEE2 PT': 9.9, 'PEE2 HS': 5.5, 'PSKH PSKH': 9.1,
+            weekday: { 'PEE1 PT': 18.3, 'PEE1 HS': 22.1, 'PEE1 IC': 4.4, 'PEE1 CJ': 4.8, 'PEE2 PT': 9.9, 'PEE2 HS': 5.5, 'PSKH PSKH': 11,
                 'PEE1 USA-Portland' : 3, 'PEE1 Ireland' : 1,},
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         }

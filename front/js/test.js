@@ -2,7 +2,7 @@ document.getElementById('start-test').addEventListener('click', async () => {
     const equipment = document.getElementById('equipment-select').value;
     const level = document.getElementById('level-select').value;
   
-    const res = await fetch(`/api/test/questions?equipment=${equipment}&level=${level}`);
+    const res = await fetch(`http://3.37.73.151:3001/api/test/questions?equipment=${equipment}&level=${level}`);
     const questions = await res.json();
   
     const container = document.getElementById('questions-container');
@@ -41,11 +41,11 @@ document.getElementById('start-test').addEventListener('click', async () => {
       }
     });
   
-    const res = await fetch('/api/test/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, equipment, level, answers })
-    });
+    const res = await fetch('http://3.37.73.151:3001/api/test/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, equipment, level, answers })
+      });
   
     const result = await res.json();
     document.getElementById('result').innerText = result.message;
