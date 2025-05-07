@@ -19,6 +19,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         "PM_PROCESS_KIT_REP": "PM PROCESS KIT REP",
         "PM_PIN_HOLDER_REP": "PM PIN HOLDER REP"
     };
+
+    const taskWeights = {
+        "PM_CENTERING": 10,
+        "PM_CLN": 5,
+        "EFEM_ROBOT_TEACHING": 15,
+        "TM_ROBOT_TEACHING": 15,
+        "PM_SLOT_VALVE_REP": 5,
+        "PM_PEEK_PLATE_REP": 10,
+        "PM_RF_MATCHER_REP": 10,
+        "PM_GAP_SENSOR_ADJUST": 10,
+        "PM_PROCESS_KIT_REP": 10,
+        "PM_PIN_HOLDER_REP": 10
+    };
     
 
     const taskCategories = [
@@ -92,25 +105,29 @@ function renderCombinedTable(worklogData, preciaData, taskCategories, filteredWo
     }
 
     const averageScores = allWorkers.map(worker => {
-        let totalPercent = 0;
-        let taskCount = 0;
-
+        let totalWeightedPercent = 0;
+        let totalWeight = 0;
+    
         taskCategories.forEach(category => {
             category.subcategories.forEach(subcategory => {
-                const mappedTaskNameWorklog = taskMapping[subcategory.name] || subcategory.name;
-                const mappedTaskNamePrecia = Object.keys(taskMapping).find(key => taskMapping[key] === subcategory.name) || subcategory.name;
-
+                const taskKey = subcategory.name;
+                const weight = taskWeights[taskKey] || 0;
+    
+                const mappedTaskNameWorklog = taskMapping[taskKey] || taskKey;
+                const mappedTaskNamePrecia = Object.keys(taskMapping).find(key => taskMapping[key] === taskKey) || taskKey;
+    
                 const worklogPercent = worklogPercentages[worker]?.[mappedTaskNameWorklog] || 0;
                 const preciaItem = preciaData.find(precia => precia.name === worker);
                 const preciaPercent = preciaItem ? preciaItem[mappedTaskNamePrecia] || 0 : 0;
-
+    
                 const finalPercent = (worklogPercent * 0.8) + (preciaPercent * 0.2);
-                totalPercent += finalPercent;
-                taskCount++;
+    
+                totalWeightedPercent += finalPercent * weight;
+                totalWeight += weight;
             });
         });
-
-        const averagePercent = totalPercent / taskCount;
+    
+        const averagePercent = totalWeight > 0 ? totalWeightedPercent / totalWeight : 0;
         return { worker, averagePercent };
     });
 
