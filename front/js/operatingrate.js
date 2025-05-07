@@ -257,6 +257,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             weekday: { 'PEE1 PT': 18.8, 'PEE1 HS': 22.3, 'PEE1 IC': 4.6, 'PEE1 CJ': 4.6, 'PEE2 PT': 9.5, 'PEE2 HS': 5.6, 'PSKH PSKH': 11.75,
                 'PEE1 USA-Portland' : 3, 'PEE1 Ireland' : 1,},
             weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
+        },
+        '2025-05-05': {
+            weekday: { 'PEE1 PT': 18.8, 'PEE1 HS': 22.3, 'PEE1 IC': 4.6, 'PEE1 CJ': 4.6, 'PEE2 PT': 9.5, 'PEE2 HS': 5.6, 'PSKH PSKH': 11.75,
+                'PEE1 USA-Portland' : 3, 'PEE1 Ireland' : 1,},
+            weekend: { 'PEE1 PT': 3, 'PEE1 HS': 4, 'PEE1 IC': 1, 'PEE1 CJ': 1, 'PEE2 PT': 1, 'PEE2 HS': 1, 'PSKH PSKH': 1 },
         }
     };
 
