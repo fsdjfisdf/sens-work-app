@@ -45,7 +45,7 @@ exports.insertChecklist = async (checklistData) => {
       `;
 
       const values = [
-        checklistData.name,
+        checklistData.name, // ✅ 반드시 맨 앞에
         checklistData['SWAP_KIT'], checklistData['GAS_LINE_&_GAS_FILTER'], checklistData['TOP_FEED_THROUGH'], checklistData['GAS_FEED_THROUGH'],
         checklistData['CERAMIC_PARTS'], checklistData['MATCHER'], checklistData['PM_BAFFLE'], checklistData['AM_BAFFLE'], checklistData['FLANGE_ADAPTOR'],
         checklistData['SLOT_VALVE_ASSY(HOUSING)'], checklistData['SLOT_VALVE'], checklistData['DOOR_VALVE'], checklistData['PENDULUM_VALVE'],
