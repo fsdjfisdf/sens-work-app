@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "SELECT",
         "SWAP KIT",
         "GAS LINE & GAS FILTER",
+        "TOP FEED THROUGH",
+        "GAS GEED THROUGH",
         "CERAMIC PARTS",
         "MATCHER",
         "PM BAFFLE",
@@ -51,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
         "TM ROBOT REP",
         "EFEM ROBOT TEACHING",
         "TM ROBOT TEACHING",
+        "TM ROBOT SERVO PACK",
         "UNDER COVER",
         "VAC LINE",
         "BARATRON GAUGE",
@@ -62,9 +65,15 @@ document.addEventListener('DOMContentLoaded', function() {
         "VACUUM BLOCK",
         "CHECK VALVE",
         "EPC",
+        "PURGE LINE REGULATOR",
         "COOLING CHUCK",  // Changed from "CHUCK" to match the table
         "HEATER CHUCK",  // Added from the table
         "GENERATOR",
+        "D-NET BOARD",
+        "SOURCE BOX BOARD",
+        "INTERFACE BOARD",
+        "SENSOR BOARD",
+        "PIO SENSOR BOARD",
         "AIO CALIBRATION(PSK BOARD)",
         "AIO CALIBRATION(TOS BOARD)",
         "CODED SENSOR",
@@ -72,7 +81,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "LASER SENSOR AMP",
         "HE LEAK CHECK",
         "DIFFUSER",
-        "LOT 조사"
+        "LOT 조사",
+        "GAS SPRING"
     ],
         "PRECIA": [
             "SELECT",
