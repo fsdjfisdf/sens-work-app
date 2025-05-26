@@ -41,6 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             "subcategories": [
                 {"name": "SWAP_KIT", "displayName": "SWAP KIT"},
                 {"name": "GAS_LINE_&_GAS_FILTER", "displayName": "GAS LINE & GAS FILTER"},
+                {"name": "TOP_FEED_THROUGH", "displayName": "TOP FEED THROUGH"},
+                {"name": "GAS_FEED_THROUGH", "displayName": "GAS FEED THROUGH"},
                 {"name": "CERAMIC_PARTS", "displayName": "CERAMIC PARTS"},
                 {"name": "MATCHER", "displayName": "MATCHER"},
                 {"name": "PM_BAFFLE", "displayName": "PM BAFFLE"},
@@ -89,7 +91,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {"name": "EFEM_ROBOT_REP", "displayName": "EFEM ROBOT REP"},
                 {"name": "TM_ROBOT_REP", "displayName": "TM ROBOT REP"},
                 {"name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING"},
-                {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING"}
+                {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING"},
+                {"name": "TM_ROBOT_SERVO_PACK", "displayName": "TM ROBOT SERVO PACK"}
             ]
         },
         {
@@ -105,7 +108,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {"name": "ISOLATION_VALVE", "displayName": "ISOLATION VALVE"},
                 {"name": "VACUUM_BLOCK", "displayName": "VACUUM BLOCK"},
                 {"name": "CHECK_VALVE", "displayName": "CHECK VALVE"},
-                {"name": "EPC", "displayName": "EPC"}
+                {"name": "EPC", "displayName": "EPC"},
+                {"name": "PURGE_LINE_REGULATOR", "displayName": "PURGE LINE REGULATOR"}
             ]
         },
         {
@@ -124,6 +128,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         {
             "category": "Board",
             "subcategories": [
+                {"name": "D-NET_BOARD", "displayName": "D-NET BOARD"},
+                {"name": "SOURCE_BOX_BOARD", "displayName": "SOURCE BOX BOARD"},
+                {"name": "INTERFACE_BOARD", "displayName": "INTERFACE BOARD"},
+                {"name": "SENSOR_BOARD", "displayName": "SENSOR BOARD"},
+                {"name": "PIO_SENSOR_BOARD", "displayName": "PIO SENSOR BOARD"},
                 {"name": "AIO_CALIBRATION[PSK_BOARD]", "displayName": "AIO CALIBRATION[PSK BOARD]"},
                 {"name": "AIO_CALIBRATION[TOS_BOARD]", "displayName": "AIO CALIBRATION[TOS BOARD]"}
             ]
@@ -141,7 +150,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             "subcategories": [
                 {"name": "HE_LEAK_CHECK", "displayName": "HE LEAK CHECK"},
                 {"name": "DIFFUSER", "displayName": "DIFFUSER"},
-                {"name": "LOT_조사", "displayName": "LOT 조사"}
+                {"name": "LOT_조사", "displayName": "LOT 조사"},
+                {"name": "GAS_SPRING", "displayName": "GAS SPRING"}
             ]
         }
     ];

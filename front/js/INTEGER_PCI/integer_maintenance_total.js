@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const taskMapping = {
         "SWAP_KIT": "SWAP KIT",
         "GAS_LINE_&_GAS_FILTER": "GAS LINE & GAS FILTER",
+        "TOP_FEED_THROUGH": "TOP FEED THROUGH",
+        "GAS_FEED_THROUGH": "GAS FEED THROUGH",
         "CERAMIC_PARTS": "CERAMIC PARTS",
         "MATCHER": "MATCHER",
         "PM_BAFFLE": "PM BAFFLE",
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         "BELLOWS": "BELLOWS",
         "EFEM_ROBOT_REP": "EFEM ROBOT REP",
         "TM_ROBOT_REP": "TM ROBOT REP",
+        "TM_ROBOT_SERVO_PACK": "TM ROBOT SERVO PACK",
         "EFEM_ROBOT_TEACHING": "EFEM ROBOT TEACHING",
         "TM_ROBOT_TEACHING": "TM ROBOT TEACHING",
         "UNDER_COVER": "UNDER COVER",
@@ -45,9 +48,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         "VACUUM_BLOCK": "VACUUM BLOCK",
         "CHECK_VALVE": "CHECK VALVE",
         "EPC": "EPC",
+        "PURGE_LINE_REGULATOR": "PURGE LINE REGULATOR",
         "COOLING_CHUCK": "COOLING CHUCK",
         "HEATER_CHUCK": "HEATER CHUCK",
         "GENERATOR": "GENERATOR",
+        "D-NET_BOARD": "D-NET BOARD",
+        "SOURCE_BOX_BOARD": "SOURCE BOX BOARD",
+        "INTERFACE_BOARD": "INTERFACE BOARD",
+        "SENSOR_BOARD": "SENSOR BOARD",
+        "PIO_SENSOR_BOARD": "PIO SENSOR BOARD",
         "AIO_CALIBRATION[PSK_BOARD]": "AIO CALIBRATION[PSK BOARD]",
         "AIO_CALIBRATION[TOS_BOARD]": "AIO CALIBRATION[TOS BOARD]",
         "CODED_SENSOR": "CODED SENSOR",
@@ -55,7 +64,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         "LASER_SENSOR_AMP": "LASER SENSOR AMP",
         "HE_LEAK_CHECK": "HE LEAK CHECK",
         "DIFFUSER": "DIFFUSER",
-        "LOT_조사": "LOT 조사"
+        "LOT_조사": "LOT 조사",
+        "GAS_SPRING": "GAS SPRING"
     };
     
 
@@ -65,6 +75,8 @@ const taskCategories = [
         "subcategories": [
             {"name": "SWAP_KIT", "displayName": "SWAP KIT", "기준작업수": 2},
             {"name": "GAS_LINE_&_GAS_FILTER", "displayName": "GAS LINE & GAS FILTER", "기준작업수": 1},
+            {"name": "TOP_FEED_THROUGH", "displayName": "TOP FEED THROUGH", "기준작업수": 1},
+            {"name": "GAS_FEED_THROUGH", "displayName": "GAS FEED THROUGH", "기준작업수": 1},
             {"name": "CERAMIC_PARTS", "displayName": "CERAMIC PARTS", "기준작업수": 1},
             {"name": "MATCHER", "displayName": "MATCHER", "기준작업수": 1},
             {"name": "PM_BAFFLE", "displayName": "PM BAFFLE", "기준작업수": 2},
@@ -113,7 +125,8 @@ const taskCategories = [
             {"name": "EFEM_ROBOT_REP", "displayName": "EFEM ROBOT REP", "기준작업수": 5},
             {"name": "TM_ROBOT_REP", "displayName": "TM ROBOT REP", "기준작업수": 5},
             {"name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING", "기준작업수": 5},
-            {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING", "기준작업수": 5}
+            {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING", "기준작업수": 5},
+            {"name": "TM_ROBOT_SERVO_PACK", "displayName": "TM ROBOT SERVO PACK", "기준작업수": 2}
         ]
     },
     {
@@ -129,7 +142,8 @@ const taskCategories = [
             {"name": "ISOLATION_VALVE", "displayName": "ISOLATION VALVE", "기준작업수": 2},
             {"name": "VACUUM_BLOCK", "displayName": "VACUUM BLOCK", "기준작업수": 2},
             {"name": "CHECK_VALVE", "displayName": "CHECK VALVE", "기준작업수": 2},
-            {"name": "EPC", "displayName": "EPC", "기준작업수": 2}
+            {"name": "EPC", "displayName": "EPC", "기준작업수": 2},
+            {"name": "PURGE_LINE_REGULATOR", "displayName": "PURGE LINE REGULATOR", "기준작업수": 1}
         ]
     },
     {
@@ -148,6 +162,11 @@ const taskCategories = [
     {
         "category": "Board",
         "subcategories": [
+            {"name": "D-NET_BOARD", "displayName": "D-NET BOARD", "기준작업수": 2},
+            {"name": "SOURCE_BOX_BOARD", "displayName": "SOURCE BOX BOARD", "기준작업수": 2},
+            {"name": "INTERFACE_BOARD", "displayName": "INTERFACE BOARD", "기준작업수": 2},
+            {"name": "SENSOR_BOARD", "displayName": "SENSOR BOARD", "기준작업수": 2},
+            {"name": "PIO_SENSOR_BOARD", "displayName": "PIO SENSOR BOARD", "기준작업수": 2},
             {"name": "AIO_CALIBRATION[PSK_BOARD]", "displayName": "AIO CALIBRATION[PSK BOARD]", "기준작업수": 2},
             {"name": "AIO_CALIBRATION[TOS_BOARD]", "displayName": "AIO CALIBRATION[TOS BOARD]", "기준작업수": 2}
         ]
@@ -165,7 +184,8 @@ const taskCategories = [
         "subcategories": [
             {"name": "HE_LEAK_CHECK", "displayName": "HE LEAK CHECK", "기준작업수": 2},
             {"name": "DIFFUSER", "displayName": "DIFFUSER", "기준작업수": 2},
-            {"name": "LOT_조사", "displayName": "LOT 조사", "기준작업수": 2}
+            {"name": "LOT_조사", "displayName": "LOT 조사", "기준작업수": 2},
+            {"name": "GAS_SPRING", "displayName": "GAS SPRING", "기준작업수": 1}
         ]
     }
 ];

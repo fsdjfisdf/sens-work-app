@@ -13,6 +13,7 @@ let taskCounts = {};  // 전역으로 이동
 let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
 const excludedWorkers = ["김지웅", "퇴사자 여기에 추가"];  // 제외할 작업자들의 이름
 
+
 // 대분류 및 중분류와 작업 항목 리스트 정의
 window.taskCategories = [
     {
@@ -20,6 +21,8 @@ window.taskCategories = [
         subcategories: [
             { name: "SWAP KIT", 기준작업수: 2 },
             { name: "GAS LINE & GAS FILTER", 기준작업수: 1 },
+            { name: "TOP FEED THROUGH", 기준작업수: 1 },
+            { name: "GAS FEED THROUGH", 기준작업수: 1 },
             { name: "CERAMIC PARTS", 기준작업수: 1 },
             { name: "MATCHER", 기준작업수: 1 },
             { name: "PM BAFFLE", 기준작업수: 2 },
@@ -68,7 +71,8 @@ window.taskCategories = [
             { name: "EFEM ROBOT REP", 기준작업수: 5 },
             { name: "TM ROBOT REP", 기준작업수: 5 },
             { name: "EFEM ROBOT TEACHING", 기준작업수: 5 },
-            { name: "TM ROBOT TEACHING", 기준작업수: 5 }
+            { name: "TM ROBOT TEACHING", 기준작업수: 5 },
+            { name: "TM ROBOT SERVO PACK", 기준작업수: 2 }
         ]
     },
     {
@@ -84,7 +88,8 @@ window.taskCategories = [
             { name: "ISOLATION VALVE", 기준작업수: 2 },
             { name: "VACUUM BLOCK", 기준작업수: 2 },
             { name: "CHECK VALVE", 기준작업수: 2 },
-            { name: "EPC", 기준작업수: 2 }
+            { name: "EPC", 기준작업수: 2 },
+            { name: "PURGE LINE REGULATOR", 기준작업수: 1 }
         ]
     },
     {
@@ -103,6 +108,11 @@ window.taskCategories = [
     {
         category: "Board",
         subcategories: [
+            { name: "D-NET BOARD", 기준작업수: 2 },
+            { name: "SOURCE BOX BOARD", 기준작업수: 2 },
+            { name: "INTERFACE BOARD", 기준작업수: 2 },
+            { name: "SENSOR BOARD", 기준작업수: 2 },
+            { name: "PIO SENSOR BOARD", 기준작업수: 2 },
             { name: "AIO CALIBRATION[PSK BOARD]", 기준작업수: 2 },
             { name: "AIO CALIBRATION[TOS BOARD]", 기준작업수: 2 }
         ]
@@ -120,7 +130,8 @@ window.taskCategories = [
         subcategories: [
             { name: "HE LEAK CHECK", 기준작업수: 2 },
             { name: "DIFFUSER", 기준작업수: 2 },
-            { name: "LOT 조사", 기준작업수: 2 }
+            { name: "LOT 조사", 기준작업수: 2 },
+            { name: "GAS SPRING", 기준작업수: 1 }
         ]
     }
 ];
