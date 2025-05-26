@@ -46,21 +46,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 모든 체크리스트 항목을 0으로 초기화
         const checklistFields = [
             'SWAP_KIT', 'GAS_LINE_&_GAS_FILTER',
-            'TOP_FEED_THROUGH', 'GAS_FEED_THROUGH', // new
+            'TOP_FEED_THROUGH', 'GAS_FEED_THROUGH', // new 2항목
             'CERAMIC_PARTS', 'MATCHER', 'PM_BAFFLE', 'AM_BAFFLE', 'FLANGE_ADAPTOR',
             'SLOT_VALVE_ASSY(HOUSING)', 'SLOT_VALVE', 'DOOR_VALVE', 'PENDULUM_VALVE', 'PIN_ASSY_MODIFY', 'MOTOR_&_CONTROLLER',
             'PIN_구동부_ASSY', 'PIN_BELLOWS', 'SENSOR', 'STEP_MOTOR_&_CONTROLLER', 'CASSETTE_&_HOLDER_PAD', 'BALL_SCREW_ASSY',
             'BUSH', 'MAIN_SHAFT', 'BELLOWS', 'EFEM_ROBOT_REP', 'TM_ROBOT_REP', 'EFEM_ROBOT_TEACHING', 'TM_ROBOT_TEACHING',
-            'TM_ROBOT_SERVO_PACK',// new
+            'TM_ROBOT_SERVO_PACK',// new 1항목 
             'UNDER_COVER', 'VAC._LINE', 'BARATRON_GAUGE', 'PIRANI_GAUGE', 'CONVACTRON_GAUGE', 'MANUAL_VALVE',
             'PNEUMATIC_VALVE', 'ISOLATION_VALVE', 'VACUUM_BLOCK', 'CHECK_VALVE', 'EPC',
-            'PURGE_LINE_REGULATOR', // new
+            'PURGE_LINE_REGULATOR', // new 1항목
             'COOLING_CHUCK', 'HEATER_CHUCK',
             'GENERATOR',
-            'D-NET_BOARD', 'SOURCE_BOX_BOARD', 'INTERFACE_BOARD', 'SENSOR_BOARD', 'PIO_SENSOR_BOARD', // new
+            'D-NET_BOARD', 'SOURCE_BOX_BOARD', 'INTERFACE_BOARD', 'SENSOR_BOARD', 'PIO_SENSOR_BOARD', // new 5항목
             'AIO_CALIBRATION[PSK_BOARD]', 'AIO_CALIBRATION[TOS_BOARD]', 'CODED_SENSOR', 'GAS_BOX_DOOR_SENSOR',
             'LASER_SENSOR_AMP', 'HE_LEAK_CHECK', 'DIFFUSER', 'LOT_조사',
-            'GAS_SPRING' // new
+            'GAS_SPRING' // new 1항목
         ];
 
         // 모든 필드를 0으로 초기화

@@ -46,7 +46,7 @@ exports.insertChecklist = async (checklistData) => {
           AIO_CALIBRATION[PSK_BOARD],
           AIO_CALIBRATION[TOS_BOARD], CODED_SENSOR, GAS_BOX_DOOR_SENSOR, LASER_SENSOR_AMP, HE_LEAK_CHECK,
           DIFFUSER, LOT_조사,
-          GAS SPRING
+          GAS_SPRING
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
@@ -97,7 +97,7 @@ exports.updateChecklist = async (checklistData) => {
           COOLING_CHUCK = ?, HEATER_CHUCK = ?, GENERATOR = ?,
           D-NET_BOARD = ?, SOURCE_BOX_BOARD = ?, INTERFACE_BOARD = ?, SENSOR_BOARD = ?, PIO_SENSOR_BOARD = ?,
           \`AIO_CALIBRATION[PSK_BOARD]\` = ?, \`AIO_CALIBRATION[TOS_BOARD]\` = ?, CODED_SENSOR = ?, GAS_BOX_DOOR_SENSOR = ?, LASER_SENSOR_AMP = ?,
-          HE_LEAK_CHECK = ?, DIFFUSER = ?, LOT_조사 = ?, GAS SPRING = ?
+          HE_LEAK_CHECK = ?, DIFFUSER = ?, LOT_조사 = ?, GAS_SPRING = ?
         WHERE name = ?
       `;
   
