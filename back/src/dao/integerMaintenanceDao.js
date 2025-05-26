@@ -121,8 +121,7 @@ exports.updateChecklist = async (checklistData) => {
         checklistData['D-NET_BOARD'], checklistData['SOURCE_BOX_BOARD'], checklistData['INTERFACE_BOARD'], checklistData['SENSOR_BOARD'], checklistData['PIO_SENSOR_BOARD'],
         checklistData['AIO_CALIBRATION[PSK_BOARD]'], checklistData['AIO_CALIBRATION[TOS_BOARD]'], checklistData['CODED_SENSOR'],
         checklistData['GAS_BOX_DOOR_SENSOR'], checklistData['LASER_SENSOR_AMP'], checklistData['HE_LEAK_CHECK'], checklistData['DIFFUSER'],
-        checklistData['LOT_조사'], checklistData.name,
-        checklistData['GAS_SPRING'],
+        checklistData['LOT_조사'], checklistData['GAS_SPRING'], checklistData.name,
       ];
   
       await connection.query(query, values);
