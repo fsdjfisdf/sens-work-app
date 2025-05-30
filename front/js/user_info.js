@@ -122,9 +122,9 @@ function getFormattedLevel(level) {
       case 2:
           return '1-2';
       case 3:
-          return '2-1';
+          return '1-3';
       case 4:
-          return '2-2';
+          return '2';
       default:
           return `${level}`; // 기본적으로 원래 값 반환
   }
