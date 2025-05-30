@@ -979,7 +979,7 @@ function calculateMonthlyEngineerCount(data) {
         createChart(averageTimeToAchieveChartCtx, {
             type: 'bar',
             data: {
-                labels: ['Lv.1-1', 'Lv.1-2', 'Lv.2-1', 'Lv.2-2'],
+                labels: ['Lv.1-1', 'Lv.1-2', 'Lv.1-3', 'Lv.2-2'],
                 datasets: [{
                     label: 'Average Time to Achieve (Years)',
                     data: timeToAchieveLevels,
