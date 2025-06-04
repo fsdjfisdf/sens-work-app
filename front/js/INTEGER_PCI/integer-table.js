@@ -137,7 +137,7 @@ window.taskCategories = [
 ];
 
 const validEquipmentTypes = [
-    "INTEGER Ivr", "INTEGER plus", "INTEGER XP"
+    "INTEGER IVr", "INTEGER Plus", "INTEGER XP", "INTEGER Ivr", "INTEGER plus", "INTEGER ivr", "INTEGER PLUS"
 ];
 
 async function loadWorkLogs() {

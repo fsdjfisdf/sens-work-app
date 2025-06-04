@@ -180,7 +180,7 @@ const additionalEngineers = [
     { NAME: '배주찬', GROUP: 'PEE1', SITE: 'IC', HIRE: '2019-10-21', resignation_date: '2024-01-11', COMPANY: 'SE&S' },
     { NAME: '남동우', GROUP: 'PEE1', SITE: 'CJ', HIRE: '2022-12-01', resignation_date: '2024-02-16', COMPANY: 'SE&S' },
     { NAME: '이선학', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2023-06-26', resignation_date: '2024-05-27', COMPANY: 'SE&S' },
-    { NAME: '김지웅', GROUP: 'PEE1', SITE: 'PT', HIRE: '2022-03-07', resignation_date: '2024-06-21', COMPANY: 'SE&S' },
+    { NAME: '김지웅', GROUP: 'PSKH', SITE: 'PSKH', HIRE: '2022-03-07', resignation_date: '2024-06-21', COMPANY: 'SE&S' },
     { NAME: '전산해', GROUP: 'PEE2', SITE: 'PT', HIRE: '2019-07-01', resignation_date: '2023-02-24', COMPANY: 'SE&S' },
     { NAME: '엄준용', GROUP: 'PEE2', SITE: 'PT', HIRE: '2022-02-07', resignation_date: '2023-07-27', COMPANY: 'SE&I' },
     { NAME: '김승기', GROUP: 'PEE2', SITE: 'PT', HIRE: '2023-05-02', resignation_date: '2023-12-27', COMPANY: 'SE&I' },
@@ -227,39 +227,47 @@ function calculateMonthlyEngineerCount(data) {
         return hireDate < new Date(startYear, 0, 1); // 2023년 1월 이전 입사자
     }).length;
 
+    const currentEngineers = []; // 현재 재직자 명단을 관리
+
     months.forEach((monthLabel, index) => {
         const [year, month] = monthLabel.split('-').map(Number);
         const monthStart = new Date(year, month - 1, 1);
         const monthEnd = new Date(year, month, 0);
-
+    
         let hiresThisMonth = 0;
         let resignsThisMonth = 0;
-
+    
+        const currentEngineersThisMonth = [];
+    
         allEngineers.forEach(row => {
             const hireDate = new Date(row.HIRE);
             const resignationDate = row.resignation_date ? new Date(row.resignation_date) : null;
-
+    
+            // 입사자 및 퇴사자 수 계산
             if (hireDate >= monthStart && hireDate <= monthEnd) {
                 hiresThisMonth++;
-                engineersPerMonth[index].hired.push(`${row.NAME} (${row.COMPANY})`); // 입사자 이름 저장
+                engineersPerMonth[index].hired.push(`${row.NAME} (${row.COMPANY})`);
             }
-
+    
             if (resignationDate && resignationDate >= monthStart && resignationDate <= monthEnd) {
                 resignsThisMonth++;
-                engineersPerMonth[index].resigned.push(`${row.NAME} (${row.COMPANY})`); // 퇴사자 이름 저장
+                engineersPerMonth[index].resigned.push(`${row.NAME} (${row.COMPANY})`);
+            }
+    
+            // 현재 재직자 추출
+            if (hireDate <= monthEnd && (!resignationDate || resignationDate > monthEnd)) {
+                currentEngineersThisMonth.push(`${row.NAME} (${row.COMPANY})`);
             }
         });
-
-        // 이전 인원 수에 입사자와 퇴사자를 반영하여 누적 계산
-        totalEngineers = totalEngineers + hiresThisMonth - resignsThisMonth;
-
-        // 각 월별 입사자와 퇴사자 정보 저장
+    
+        totalEngineers = currentEngineersThisMonth.length;
         hiredEngineers[index] = hiresThisMonth;
         resignedEngineers[index] = resignsThisMonth;
         engineerCount[index] = totalEngineers;
-
-        // 계산 과정 출력
-        console.log(`Month: ${monthLabel}, Total Engineers: ${engineerCount[index]}, Hired: ${hiredEngineers[index]}, Resigned: ${resignedEngineers[index]}`);
+    
+        // 최종 출력
+        console.log(`Month: ${monthLabel}, Total Engineers: ${totalEngineers}, Hired: ${hiresThisMonth}, Resigned: ${resignsThisMonth}`);
+        console.log(`Engineers: [${currentEngineersThisMonth.join(', ')}]`);
     });
 
     return { months, engineerCount, hiredEngineers, resignedEngineers, engineersPerMonth };

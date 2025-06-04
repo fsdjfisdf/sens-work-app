@@ -40,7 +40,7 @@ window.taskCategories = [
 
 
 const validEquipmentTypes = [
-    "PRECIA"
+    "PRECIA", "Precia", "precia"
 ];
 
 async function loadWorkLogs() {
