@@ -1,3 +1,7 @@
+    let logs = [];
+    let taskCounts = {};  // 전역으로 이동
+    let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
+
 document.addEventListener('DOMContentLoaded', async () => {
         const token = localStorage.getItem('x-access-token');
 
@@ -8,9 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
 
-    let logs = [];
-    let taskCounts = {};  // 전역으로 이동
-    let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
     const excludedWorkers = ["김지웅", "김태형", "홍정욱", "김희수", "김태준"];  // 제외할 작업자들의 이름
 
     // 대분류 및 중분류와 작업 항목 리스트 정의
