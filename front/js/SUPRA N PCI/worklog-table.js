@@ -591,18 +591,25 @@ document.addEventListener('click', function (e) {
         if (matchedLogs.length === 0) {
             logList.innerHTML = '<li>관련 로그가 없습니다.</li>';
         } else {
-matchedLogs.forEach(log => {
+matchedLogs.forEach((log, index) => {
     const item = document.createElement('li');
     item.classList.add('log-item');
 
     const date = new Date(log.task_date).toISOString().split('T')[0];
-    const eq = log.equipment_name || '장비명 없음';
-    const desc = (log.task_description || '내용 없음').replace(/\n/g, '<br>');
+    const taskName = log.task_name || '-';
+    const taskMan = log.task_man || '-';
+    const equipmentName = log.equipment_name || '-';
+    const taskDuration = log.task_duration || '-';
+    const taskDesc = (log.task_description || '설명 없음').replace(/\n/g, '<br>');
 
     item.innerHTML = `
-        <div class="log-date">📅 ${date}</div>
-        <div class="log-eq">🔧 ${eq}</div>
-        <div class="log-desc">${desc}</div>
+        <div class="log-summary">
+            <strong>📅 ${date}</strong> | 🧾 ${taskName} | 👷‍♂️ ${taskMan} | 🛠 ${equipmentName} | ⏱ ${taskDuration}
+            <button class="toggle-desc-btn" data-index="${index}">자세히 보기</button>
+        </div>
+        <div class="log-desc hidden" id="desc-${index}">
+            ${taskDesc}
+        </div>
     `;
 
     logList.appendChild(item);
@@ -615,4 +622,18 @@ matchedLogs.forEach(log => {
 
 document.getElementById('close-modal').addEventListener('click', () => {
     document.getElementById('log-modal').classList.add('hidden');
+});
+
+document.querySelectorAll('.toggle-desc-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        const index = button.getAttribute('data-index');
+        const descBox = document.getElementById(`desc-${index}`);
+        if (descBox.classList.contains('hidden')) {
+            descBox.classList.remove('hidden');
+            button.textContent = '접기';
+        } else {
+            descBox.classList.add('hidden');
+            button.textContent = '자세히 보기';
+        }
+    });
 });
