@@ -536,3 +536,29 @@ footer {
     font-size: 20px;
     cursor: pointer;
 }
+#log-list {
+    list-style: none;
+    padding: 0;
+}
+
+.log-item {
+    border-bottom: 1px solid #ccc;
+    padding: 10px 0;
+}
+
+.log-date {
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 4px;
+}
+
+.log-eq {
+    font-weight: 600;
+    color: #1a73e8;
+    margin-bottom: 4px;
+}
+
+.log-desc {
+    line-height: 1.6;
+    white-space: pre-line;
+}

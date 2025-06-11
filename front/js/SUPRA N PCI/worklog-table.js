@@ -591,11 +591,22 @@ document.addEventListener('click', function (e) {
         if (matchedLogs.length === 0) {
             logList.innerHTML = '<li>관련 로그가 없습니다.</li>';
         } else {
-            matchedLogs.forEach(log => {
-                const item = document.createElement('li');
-                item.textContent = `[${log.task_date}] ${log.equipment_name} - ${log.task_description || '설명 없음'}`;
-                logList.appendChild(item);
-            });
+matchedLogs.forEach(log => {
+    const item = document.createElement('li');
+    item.classList.add('log-item');
+
+    const date = new Date(log.task_date).toISOString().split('T')[0];
+    const eq = log.equipment_name || '장비명 없음';
+    const desc = (log.task_description || '내용 없음').replace(/\n/g, '<br>');
+
+    item.innerHTML = `
+        <div class="log-date">📅 ${date}</div>
+        <div class="log-eq">🔧 ${eq}</div>
+        <div class="log-desc">${desc}</div>
+    `;
+
+    logList.appendChild(item);
+});
         }
 
         document.getElementById('log-modal').classList.remove('hidden');
