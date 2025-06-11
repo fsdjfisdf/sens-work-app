@@ -473,15 +473,19 @@ function displayTaskCounts(taskCounts, filterWorker = null) {
             기준작업수Cell.textContent = taskItem.기준작업수;
             row.appendChild(기준작업수Cell);
 
-            sortedWorkers.forEach(worker => {
-                if (taskCounts[worker] && taskCounts[worker][taskItem.name]) {
-                    const countData = taskCounts[worker][taskItem.name];
-                    const count = countData.count;
-                    const 기준작업수 = countData.기준작업수;
-                    let percentage = Math.min((count / 기준작업수) * 100, 100);
-
-                    const countCell = document.createElement('td');
+                sortedWorkers.forEach(worker => {
+                    if (taskCounts[worker] && taskCounts[worker][taskItem.name]) {
+                        const countData = taskCounts[worker][taskItem.name];
+                        const count = countData.count;
+                        const 기준작업수 = countData.기준작업수;
+                        let percentage = Math.min((count / 기준작업수) * 100, 100);
+    
+                        const countCell = document.createElement('td');
                     countCell.textContent = `${count} (${Math.round(percentage)}%)`;
+                    countCell.setAttribute('data-worker', worker);
+                    countCell.setAttribute('data-task', taskItem.name);
+                    countCell.classList.add('clickable-cell');
+                    row.appendChild(countCell);
 
                     if (percentage === 100) {
                         countCell.classList.add('blue');
