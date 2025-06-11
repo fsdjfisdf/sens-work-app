@@ -477,6 +477,10 @@ saveAggregatedDataToServer(taskCounts);
     
                         const countCell = document.createElement('td');
                         countCell.textContent = `${count} (${Math.round(percentage)}%)`;
+                        countCell.setAttribute('data-worker', worker);
+                        countCell.setAttribute('data-task', taskItem.name);
+                        countCell.classList.add('clickable-cell');
+                        row.appendChild(countCell);
     
                         if (percentage === 100) {
                             countCell.classList.add('blue');
@@ -563,4 +567,40 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = url;
         });
     });
+});
+
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('clickable-cell')) {
+        const worker = e.target.getAttribute('data-worker');
+        const task = e.target.getAttribute('data-task');
+
+        // (main) 제거
+        const normalizedWorker = worker.replace(/\(main\)/g, '').trim();
+
+        const matchedLogs = logs.filter(log =>
+            log.transfer_item === task &&
+            log.task_man &&
+            log.task_man.split(/[\s,]+/)
+                .map(w => w.replace(/\(main\)/g, '').trim())
+                .includes(normalizedWorker)
+        );
+
+        const logList = document.getElementById('log-list');
+        logList.innerHTML = '';
+        if (matchedLogs.length === 0) {
+            logList.innerHTML = '<li>관련 로그가 없습니다.</li>';
+        } else {
+            matchedLogs.forEach(log => {
+                const item = document.createElement('li');
+                item.textContent = `[${log.task_date}] ${log.equipment_name} - ${log.task_description || '설명 없음'}`;
+                logList.appendChild(item);
+            });
+        }
+
+        document.getElementById('log-modal').classList.remove('hidden');
+    }
+});
+
+document.getElementById('close-modal').addEventListener('click', () => {
+    document.getElementById('log-modal').classList.add('hidden');
 });
