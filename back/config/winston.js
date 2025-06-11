@@ -58,7 +58,7 @@ function setupWebSocket(server) {
         const today = new Date().toISOString().split('T')[0];
         const logFilePath = path.join(logDir, `${today}-app.log`);
         if (fs.existsSync(logFilePath)) {
-            const oldLogs = fs.readFileSync(logFilePath, 'utf8');
+            const oldLogs = fs.readFileSync(logFilePath, 'utf8');f
             ws.send(oldLogs); // 기존 로그 전송
         }
 

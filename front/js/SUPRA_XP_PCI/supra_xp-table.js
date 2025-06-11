@@ -165,7 +165,7 @@ window.taskCategories = [
 ];
 
 const validEquipmentTypes = [
-    "SUPRA XP"
+    "SUPRA XP", "SUPRA XQ"
 ];
 
 async function loadWorkLogs() {
