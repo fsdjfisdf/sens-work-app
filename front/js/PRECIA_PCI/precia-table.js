@@ -1,3 +1,7 @@
+let logs = [];
+let taskCounts = {};  // 전역으로 이동
+let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
+
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
 
@@ -8,9 +12,7 @@ if (!token) {
 }
 
 
-let logs = [];
-let taskCounts = {};  // 전역으로 이동
-let dbTaskCounts = {};  // DB에서 가져온 작업자별 작업 건수를 저장할 객체
+
 const excludedWorkers = ["김지웅", "퇴사자 여기에 추가"];  // 제외할 작업자들의 이름
 
 
@@ -447,3 +449,69 @@ equipmentBtnElements.forEach(button => {
 });
 });
 
+document.addEventListener('click', function (e) {
+    // 1. 셀 클릭 시 로그 표시
+    if (e.target.classList.contains('clickable-cell')) {
+        const worker = e.target.getAttribute('data-worker');
+        const task = e.target.getAttribute('data-task');
+        const normalizedWorker = worker.replace(/\(main\)/g, '').trim();
+
+        const matchedLogs = logs.filter(log =>
+            log.transfer_item === task &&
+            log.task_man &&
+            log.task_man.split(/[\s,]+/)
+                .map(w => w.replace(/\(main\)/g, '').trim())
+                .includes(normalizedWorker)
+        );
+
+        const logList = document.getElementById('log-list');
+        logList.innerHTML = '';
+
+        if (matchedLogs.length === 0) {
+            logList.innerHTML = '<li>관련 로그가 없습니다.</li>';
+        } else {
+            matchedLogs.forEach((log, index) => {
+                const item = document.createElement('li');
+                item.classList.add('log-item');
+
+                const date = new Date(log.task_date).toISOString().split('T')[0];
+                const taskName = log.task_name || '-';
+                const taskMan = log.task_man || '-';
+                const equipmentName = log.equipment_name || '-';
+                const taskDuration = log.task_duration || '-';
+                const taskDesc = (log.task_description || '설명 없음').replace(/\n/g, '<br>');
+
+                item.innerHTML = `
+                    <div class="log-summary">
+                        <strong>📅 ${date}</strong> | 🧾 ${taskName} | 👷‍♂️ ${taskMan} | 🛠 ${equipmentName} | ⏱ ${taskDuration}
+                        <button class="toggle-desc-btn" data-index="${index}">자세히 보기</button>
+                    </div>
+                    <div class="log-desc hidden" id="desc-${index}">
+                        ${taskDesc}
+                    </div>
+                `;
+
+                logList.appendChild(item);
+            });
+        }
+
+        document.getElementById('log-modal').classList.remove('hidden');
+    }
+
+    // 2. 자세히 보기 / 접기 버튼 클릭 처리
+    if (e.target.classList.contains('toggle-desc-btn')) {
+        const index = e.target.getAttribute('data-index');
+        const descBox = document.getElementById(`desc-${index}`);
+        if (descBox.classList.contains('hidden')) {
+            descBox.classList.remove('hidden');
+            e.target.textContent = '접기';
+        } else {
+            descBox.classList.add('hidden');
+            e.target.textContent = '자세히 보기';
+        }
+    }
+});
+
+document.getElementById('close-modal').addEventListener('click', () => {
+    document.getElementById('log-modal').classList.add('hidden');
+});
