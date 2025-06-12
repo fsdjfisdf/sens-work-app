@@ -16,6 +16,7 @@ const jwtMiddleware = function (req, res, next) {
   try {
     const verifiedToken = jwt.verify(token, secret_config.jwtsecret);
     req.verifiedToken = verifiedToken;
+    req.user = verifiedToken;
 
     // 검증된 토큰 정보 로그 출력
     console.log('Verified Token:', verifiedToken);
