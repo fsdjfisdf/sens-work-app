@@ -2,31 +2,45 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>설비별 레벨 시험</title>
+  <title>문제 풀이</title>
   <link rel="stylesheet" href="test.css">
 </head>
 <body>
-  <h1>설비별 레벨 시험</h1>
-  <select id="equipment-select">
-    <option value="SUPRA N">SUPRA N</option>
-    <option value="SUPRA XP">SUPRA XP</option>
-  </select>
+  <div class="container">
+    <h1>기술 문제 풀이</h1>
 
-  <select id="level-select">
-    <option value="1-1">1-1</option>
-    <option value="1-2">1-2</option>
-    <option value="2-1">2-1</option>
-    <option value="2-2">2-2</option>
-  </select>
+    <div class="selector">
+      <label for="equipment">설비:</label>
+      <select id="equipment">
+        <option value="SUPRA N">SUPRA N</option>
+        <option value="SUPRA XP">SUPRA XP</option>
+        <option value="INTEGER">INTEGER</option>
+        <option value="PRECIA">PRECIA</option>
+        <option value="ECOLITE">ECOLITE</option>
+        <option value="GENEVA">GENEVA</option>
+      </select>
 
-  <button id="start-test">시험 시작</button>
+      <label for="level">레벨:</label>
+      <select id="level">
+        <option value="1">LEVEL 1</option>
+        <option value="2">LEVEL 2</option>
+      </select>
 
-  <form id="test-form" style="display:none;">
-    <div id="questions-container"></div>
-    <button type="submit">제출</button>
-  </form>
+      <button id="start-test">문제 시작</button>
+    </div>
 
-  <div id="result"></div>
+    <div id="quiz-container" class="hidden">
+      <div id="question-box"></div>
+      <ul id="choices"></ul>
+      <button id="next-btn">다음 문제</button>
+    </div>
+
+    <div id="result-container" class="hidden">
+      <h2>결과</h2>
+      <p id="score"></p>
+      <button onclick="location.reload()">다시 시작</button>
+    </div>
+  </div>
 
   <script src="test.js"></script>
 </body>

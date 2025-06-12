@@ -1,35 +1,33 @@
 const testDao = require('../dao/testDao');
 
 exports.getQuestions = async (req, res) => {
-  const { equipment, level } = req.query;
+  const { equipment_type, level } = req.query;
   try {
-    const questions = await testDao.getQuestionsByTypeAndLevel(equipment, level);
-    res.json(questions);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const questions = await testDao.getQuestions(equipment_type, level);
+    res.status(200).json(questions);
+  } catch (error) {
+    res.status(500).json({ message: '문제 로드 중 오류 발생', error });
   }
 };
 
-exports.submitAnswers = async (req, res) => {
-  const { userId, equipment, level, answers } = req.body; // answers: [{ questionId, selectedOption }]
+exports.submitTest = async (req, res) => {
+  const user_id = req.user.id; // JWT 미들웨어에서 user.id 제공
+  const { equipment_type, level, answers } = req.body;
+
   try {
-    for (const ans of answers) {
-      const correctOption = await testDao.getCorrectOption(ans.questionId);
-      const isCorrect = (ans.selectedOption === correctOption);
-      await testDao.saveResult(userId, equipment, level, ans.questionId, ans.selectedOption, isCorrect);
-    }
-    res.json({ message: '시험 결과 저장 완료' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const result = await testDao.gradeAndSaveTest(user_id, equipment_type, level, answers);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: '시험 저장 중 오류 발생', error });
   }
 };
 
-exports.addQuestion = async (req, res) => {
-  const questionData = req.body;
+exports.getTestResults = async (req, res) => {
+  const user_id = req.user.id;
   try {
-    await testDao.insertQuestion(questionData);
-    res.json({ message: '문제 추가 완료' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const results = await testDao.getTestResults(user_id);
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(500).json({ message: '시험 결과 조회 중 오류 발생', error });
   }
 };

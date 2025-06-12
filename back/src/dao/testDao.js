@@ -1,62 +1,52 @@
-const { pool } = require('../../config/database');
+const { pool } = require('../../database');
 
-exports.getQuestionsByTypeAndLevel = async (equipment, level) => {
-  const conn = await pool.getConnection(async conn => conn);
-  try {
-    const [rows] = await conn.query(
-      `SELECT * FROM test_questions WHERE equipment_type = ? AND level = ?`,
-      [equipment, level]
-    );
-    return rows;
-  } finally {
-    conn.release();
-  }
+exports.getQuestions = async (equipment_type, level) => {
+  const [rows] = await pool.query(
+    'SELECT id, question_text, choice_1, choice_2, choice_3, choice_4 FROM questions WHERE equipment_type = ? AND level = ?',
+    [equipment_type, level]
+  );
+  return rows;
 };
 
-exports.getCorrectOption = async (questionId) => {
-  const conn = await pool.getConnection(async conn => conn);
-  try {
-    const [rows] = await conn.query(
-      `SELECT correct_option FROM test_questions WHERE id = ?`,
-      [questionId]
-    );
-    return rows[0].correct_option;
-  } finally {
-    conn.release();
-  }
+exports.gradeAndSaveTest = async (user_id, equipment_type, level, answers) => {
+  const questionIds = answers.map(a => a.question_id);
+  const [questions] = await pool.query(
+    `SELECT id, correct_answer FROM questions WHERE id IN (?)`,
+    [questionIds]
+  );
+
+  let score = 0;
+  const details = answers.map(answer => {
+    const correct = questions.find(q => q.id === answer.question_id)?.correct_answer === answer.user_answer;
+    if (correct) score++;
+    return {
+      question_id: answer.question_id,
+      user_answer: answer.user_answer,
+      correct
+    };
+  });
+
+  const result = {
+    user_id,
+    equipment_type,
+    level,
+    score,
+    total_questions: answers.length,
+    details: JSON.stringify(details)
+  };
+
+  await pool.query(
+    `INSERT INTO test_results (user_id, equipment_type, level, score, total_questions, details) VALUES (?, ?, ?, ?, ?, ?)`,
+    [user_id, equipment_type, level, score, answers.length, result.details]
+  );
+
+  return { score, total_questions: answers.length };
 };
 
-exports.saveResult = async (userId, equipment, level, questionId, selectedOption, isCorrect) => {
-  const conn = await pool.getConnection(async conn => conn);
-  try {
-    await conn.query(
-      `INSERT INTO test_results (user_id, equipment_type, level, question_id, selected_option, is_correct)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, equipment, level, questionId, selectedOption, isCorrect]
-    );
-  } finally {
-    conn.release();
-  }
-};
-
-exports.insertQuestion = async (questionData) => {
-  const conn = await pool.getConnection(async conn => conn);
-  try {
-    await conn.query(
-      `INSERT INTO test_questions (equipment_type, level, question, option1, option2, option3, option4, correct_option)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        questionData.equipment_type,
-        questionData.level,
-        questionData.question,
-        questionData.option1,
-        questionData.option2,
-        questionData.option3,
-        questionData.option4,
-        questionData.correct_option
-      ]
-    );
-  } finally {
-    conn.release();
-  }
+exports.getTestResults = async (user_id) => {
+  const [rows] = await pool.query(
+    'SELECT id, equipment_type, level, score, total_questions, test_date FROM test_results WHERE user_id = ? ORDER BY test_date DESC',
+    [user_id]
+  );
+  return rows;
 };

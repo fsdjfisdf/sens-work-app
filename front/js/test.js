@@ -1,54 +1,88 @@
-document.getElementById('start-test').addEventListener('click', async () => {
-    const equipment = document.getElementById('equipment-select').value;
-    const level = document.getElementById('level-select').value;
-  
-    const res = await fetch(`http://3.37.73.151:3001/api/test/questions?equipment=${equipment}&level=${level}`);
-    const questions = await res.json();
-  
-    const container = document.getElementById('questions-container');
-    container.innerHTML = '';
-    questions.forEach((q, idx) => {
-      const qDiv = document.createElement('div');
-      qDiv.innerHTML = `
-        <p><strong>${idx + 1}. ${q.question}</strong></p>
-        ${[1,2,3,4].map(n => `
-          <label>
-            <input type="radio" name="q${q.id}" value="${n}" required>
-            ${q[`option${n}`]}
-          </label><br>
-        `).join('')}
-      `;
-      container.appendChild(qDiv);
-    });
-  
-    document.getElementById('test-form').style.display = 'block';
+let currentQuestionIndex = 0;
+let questions = [];
+let answers = [];
+
+document.getElementById("start-test").addEventListener("click", async () => {
+  const equipment = document.getElementById("equipment").value;
+  const level = document.getElementById("level").value;
+
+  try {
+    const res = await fetch(`/api/test/questions?equipment_type=${encodeURIComponent(equipment)}&level=${level}`);
+    questions = await res.json();
+    if (questions.length === 0) {
+      alert("해당 조건의 문제가 없습니다.");
+      return;
+    }
+    document.querySelector(".selector").classList.add("hidden");
+    document.getElementById("quiz-container").classList.remove("hidden");
+    showQuestion();
+  } catch (err) {
+    alert("문제를 불러오는 중 오류가 발생했습니다.");
+    console.error(err);
+  }
+});
+
+function showQuestion() {
+  const q = questions[currentQuestionIndex];
+  document.getElementById("question-box").innerText = `${currentQuestionIndex + 1}. ${q.question_text}`;
+
+  const choices = document.getElementById("choices");
+  choices.innerHTML = "";
+
+  for (let i = 1; i <= 4; i++) {
+    if (!q[`choice_${i}`]) continue;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <label>
+        <input type="radio" name="choice" value="${i}"> ${q[`choice_${i}`]}
+      </label>
+    `;
+    choices.appendChild(li);
+  }
+}
+
+document.getElementById("next-btn").addEventListener("click", () => {
+  const selected = document.querySelector("input[name='choice']:checked");
+  if (!selected) {
+    alert("정답을 선택하세요.");
+    return;
+  }
+
+  answers.push({
+    question_id: questions[currentQuestionIndex].id,
+    user_answer: parseInt(selected.value)
   });
-  
-  document.getElementById('test-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-  
-    const userId = 1; // 예시 ID. 로그인된 사용자 ID로 교체하세요.
-    const equipment = document.getElementById('equipment-select').value;
-    const level = document.getElementById('level-select').value;
-  
-    const formData = new FormData(e.target);
-    const answers = [];
-  
-    formData.forEach((value, key) => {
-      if (key.startsWith('q')) {
-        const questionId = parseInt(key.slice(1));
-        answers.push({ questionId, selectedOption: parseInt(value) });
-      }
+
+  currentQuestionIndex++;
+  if (currentQuestionIndex < questions.length) {
+    showQuestion();
+  } else {
+    submitTest();
+  }
+});
+
+async function submitTest() {
+  const token = localStorage.getItem("x-access-token");
+  const equipment = document.getElementById("equipment").value;
+  const level = parseInt(document.getElementById("level").value);
+
+  try {
+    const res = await fetch("/api/test/submit-test", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-access-token": token
+      },
+      body: JSON.stringify({ equipment_type: equipment, level, answers })
     });
-  
-    const res = await fetch('http://3.37.73.151:3001/api/test/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, equipment, level, answers })
-      });
-  
+
     const result = await res.json();
-    document.getElementById('result').innerText = result.message;
-    document.getElementById('test-form').style.display = 'none';
-  });
-  
+
+    document.getElementById("quiz-container").classList.add("hidden");
+    document.getElementById("result-container").classList.remove("hidden");
+    document.getElementById("score").innerText = `총 ${result.total_questions}문제 중 ${result.score}개 맞았습니다.`;
+  } catch (err) {
+    alert("시험 결과 제출 중 오류 발생");
+    console.error(err);
+  }
+}
