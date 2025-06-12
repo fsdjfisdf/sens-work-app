@@ -9,11 +9,15 @@ exports.getQuestions = async (equipment_type, level) => {
 };
 
 exports.gradeAndSaveTest = async (user_id, equipment_type, level, answers) => {
+
+  console.log(">>> user_id:", user_id);
+  console.log(">>> answers:", answers);
   const questionIds = answers.map(a => a.question_id);
   const [questions] = await pool.query(
     `SELECT id, correct_answer FROM questions WHERE id IN (?)`,
     [questionIds]
   );
+  console.log(">>> Fetched questions:", questions);
 
   let score = 0;
   const details = answers.map(answer => {
