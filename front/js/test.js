@@ -82,6 +82,23 @@ async function submitTest() {
     document.getElementById("quiz-container").classList.add("hidden");
     document.getElementById("result-container").classList.remove("hidden");
     document.getElementById("score").innerText = `총 ${result.total_questions}문제 중 ${result.score}개 맞았습니다.`;
+
+    // 결과 상세 표시
+    const resultDetailsBox = document.getElementById("result-details");
+    resultDetailsBox.innerHTML = ""; // 초기화
+
+    result.details.forEach((item, index) => {
+      const question = questions.find(q => q.id === item.question_id);
+      const correctText = item.correct ? "⭕ 정답" : "❌ 오답";
+
+      const detailDiv = document.createElement("div");
+      detailDiv.innerHTML = `
+        <p><strong>${index + 1}. ${question.question_text}</strong></p>
+        <p>당신의 선택: ${question[`choice_${item.user_answer}`]} (${correctText})</p>
+        <hr>
+      `;
+      resultDetailsBox.appendChild(detailDiv);
+    });
   } catch (err) {
     alert("시험 결과 제출 중 오류 발생");
     console.error(err);
