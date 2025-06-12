@@ -24,7 +24,7 @@ exports.submitTest = async (req, res) => {
 };
 
 exports.getTestResults = async (req, res) => {
-  const user_id = req.user.nickname;
+  const user_id = req.user.userIdx;
   try {
     const results = await testDao.getTestResults(user_id);
     res.status(200).json(results);
