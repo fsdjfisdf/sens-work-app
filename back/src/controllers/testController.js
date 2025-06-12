@@ -37,3 +37,36 @@ exports.getTestResults = async (req, res) => {
     res.status(500).json({ message: '시험 결과 조회 중 오류 발생', error });
   }
 };
+
+exports.addQuestion = async (req, res) => {
+  const {
+    equipment_type,
+    level,
+    question_text,
+    choice_1,
+    choice_2,
+    choice_3,
+    choice_4,
+    correct_answer,
+    explanation
+  } = req.body;
+
+  try {
+    await testDao.addQuestion({
+      equipment_type,
+      level,
+      question_text,
+      choice_1,
+      choice_2,
+      choice_3,
+      choice_4,
+      correct_answer,
+      explanation
+    });
+
+    res.status(200).json({ message: '문제가 성공적으로 추가되었습니다.' });
+  } catch (error) {
+    console.error("🔥 문제 추가 중 오류:", error);
+    res.status(500).json({ message: '문제 추가 중 오류 발생', error });
+  }
+};

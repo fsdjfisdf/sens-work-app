@@ -65,3 +65,40 @@ exports.getTestResults = async (user_id) => {
   );
   return rows;
 };
+
+exports.addQuestion = async ({
+  equipment_type,
+  level,
+  question_text,
+  choice_1,
+  choice_2,
+  choice_3,
+  choice_4,
+  correct_answer,
+  explanation
+}) => {
+  await pool.query(
+    `INSERT INTO questions (
+      equipment_type,
+      level,
+      question_text,
+      choice_1,
+      choice_2,
+      choice_3,
+      choice_4,
+      correct_answer,
+      explanation
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      equipment_type,
+      level,
+      question_text,
+      choice_1,
+      choice_2,
+      choice_3,
+      choice_4,
+      correct_answer,
+      explanation
+    ]
+  );
+};

@@ -41,6 +41,21 @@
   <button onclick="location.reload()">다시 풀기</button>
 </div>
   </div>
+  <h2>문제 추가</h2>
+<form id="add-form">
+  <input name="equipment_type" placeholder="Equipment Type (SUPRA N 등)" required><br>
+  <input name="level" type="number" placeholder="Level (숫자)" required><br>
+  <textarea name="question_text" placeholder="문제 내용" required></textarea><br>
+  <input name="choice_1" placeholder="1번 보기" required><br>
+  <input name="choice_2" placeholder="2번 보기" required><br>
+  <input name="choice_3" placeholder="3번 보기"><br>
+  <input name="choice_4" placeholder="4번 보기"><br>
+  <input name="correct_answer" type="number" min="1" max="4" placeholder="정답 번호 (1~4)" required><br>
+  <textarea name="explanation" placeholder="해설" required></textarea><br>
+  <button type="submit">문제 추가</button>
+</form>
+<div id="response-message"></div>
+<script src="add-question.js"></script>
 
   <script src="test.js"></script>
 </body>
