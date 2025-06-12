@@ -7,6 +7,12 @@ document.getElementById("start-test").addEventListener("click", async () => {
   
   const equipment = document.getElementById("equipment").value;
   const level = document.getElementById("level").value;
+  const token = localStorage.getItem('x-access-token');
+      if (!token) {
+        alert("로그인이 필요합니다.");
+        window.location.replace("./signin.html");
+        return;
+    }
 
   try {
     const res = await fetch(`${API_BASE_URL}/api/test/questions?equipment_type=${encodeURIComponent(equipment)}&level=${level}`);
