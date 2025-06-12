@@ -3,23 +3,8 @@ let questions = [];
 let answers = [];
 const API_BASE_URL = "http://3.37.73.151:3001";
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('x-access-token');
-
-    if (!token) {
-        alert('로그인이 필요합니다.');
-        window.location.replace('./signin.html');
-        return;
-    }
-})
-
 document.getElementById("start-test").addEventListener("click", async () => {
-      // 토큰이 없는 경우 로그인 페이지로 리다이렉트
-    if (!token) {
-        alert("로그인이 필요합니다.");
-        window.location.replace("./signin.html");
-        return;
-    }
+  
   const equipment = document.getElementById("equipment").value;
   const level = document.getElementById("level").value;
 
