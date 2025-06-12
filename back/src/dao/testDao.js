@@ -2,7 +2,11 @@ const { pool } = require('../../config/database');
 
 exports.getQuestions = async (equipment_type, level) => {
   const [rows] = await pool.query(
-    'SELECT id, question_text, choice_1, choice_2, choice_3, choice_4 FROM questions WHERE equipment_type = ? AND level = ?',
+    `SELECT id, question_text, choice_1, choice_2, choice_3, choice_4 
+     FROM questions 
+     WHERE equipment_type = ? AND level = ?
+     ORDER BY RAND()
+     LIMIT 50`,
     [equipment_type, level]
   );
   return rows;
