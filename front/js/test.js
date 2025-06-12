@@ -1,13 +1,14 @@
 let currentQuestionIndex = 0;
 let questions = [];
 let answers = [];
+const API_BASE_URL = "http://3.37.73.151:3001";
 
 document.getElementById("start-test").addEventListener("click", async () => {
   const equipment = document.getElementById("equipment").value;
   const level = document.getElementById("level").value;
 
   try {
-    const res = await fetch(`/api/test/questions?equipment_type=${encodeURIComponent(equipment)}&level=${level}`);
+    const res = await fetch(`${API_BASE_URL}/api/test/questions?equipment_type=${encodeURIComponent(equipment)}&level=${level}`);
     questions = await res.json();
     if (questions.length === 0) {
       alert("해당 조건의 문제가 없습니다.");
@@ -67,7 +68,7 @@ async function submitTest() {
   const level = parseInt(document.getElementById("level").value);
 
   try {
-    const res = await fetch("/api/test/submit-test", {
+    const res = await fetch(`${API_BASE_URL}/api/test/submit-test`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
