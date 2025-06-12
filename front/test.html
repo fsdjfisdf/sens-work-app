@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>기술 문제 풀이</title>
+  <title>SEnS/I TEST</title>
   <link rel="stylesheet" href="./css/test.css">
     <link rel="stylesheet" href="./css/report.css">
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -45,10 +45,9 @@
 
   <main>
     <div class="inner">
-      <h2>기술 문제 풀이</h2>
 
       <div class="selector">
-        <label for="equipment">설비:</label>
+        <label for="equipment">EQ</label>
         <select id="equipment">
           <option value="SUPRA N">SUPRA N</option>
           <option value="SUPRA XP">SUPRA XP</option>
@@ -58,20 +57,20 @@
           <option value="GENEVA">GENEVA</option>
         </select>
 
-        <label for="level">레벨:</label>
+        <label for="level">LEVEL</label>
         <select id="level">
           <option value="1">LEVEL 1</option>
           <option value="2">LEVEL 2</option>
         </select>
 
-        <button id="start-test">문제 시작</button>
-        <button id="open-add-modal" class="admin-only">문제 추가</button>
+        <button id="start-test">START</button>
+        <button id="open-add-modal" class="admin-only">ADD QUESTION</button>
       </div>
 
       <div id="quiz-container" class="hidden">
         <div id="question-box"></div>
         <ul id="choices"></ul>
-        <button id="next-btn">다음 문제</button>
+        <button id="next-btn">NEXT</button>
       </div>
 
       <div id="result-container" class="hidden">
@@ -86,9 +85,9 @@
 <div id="add-modal" class="modal hidden">
   <div class="modal-content">
     <span class="close-btn" id="close-modal">&times;</span>
-    <h3>문제 추가</h3>
+    <h3>ADD QUESTION</h3>
     <form id="add-form">
-      <label>설비:</label>
+      <label>EQ</label>
       <select name="equipment_type" required>
         <option value="">선택하세요</option>
         <option value="SUPRA N">SUPRA N</option>
@@ -99,32 +98,32 @@
         <option value="GENEVA">GENEVA</option>
       </select><br>
 
-      <label>레벨:</label>
+      <label>LEVEL</label>
       <select name="level" required>
         <option value="">선택하세요</option>
         <option value="1">LEVEL 1</option>
         <option value="2">LEVEL 2</option>
       </select><br>
 
-      <label>문제 내용:</label>
+      <label>문제</label>
       <textarea name="question_text" placeholder="문제 내용 입력" required></textarea><br>
 
-      <label>1번 보기:</label>
+      <label>보기 1</label>
       <input name="choice_1" placeholder="1번 보기" required><br>
 
-      <label>2번 보기:</label>
+      <label>보기 2</label>
       <input name="choice_2" placeholder="2번 보기" required><br>
 
-      <label>3번 보기:</label>
+      <label>보기 3</label>
       <input name="choice_3" placeholder="3번 보기"><br>
 
-      <label>4번 보기:</label>
+      <label>보기 4</label>
       <input name="choice_4" placeholder="4번 보기"><br>
 
-      <label>정답 번호 (1~4):</label>
+      <label>정답 번호</label>
       <input name="correct_answer" type="number" min="1" max="4" required><br>
 
-      <label>해설:</label>
+      <label>해설</label>
       <textarea name="explanation" placeholder="해설 입력" required></textarea><br>
 
       <button type="submit">문제 추가</button>
@@ -136,7 +135,7 @@
 
   <footer>
     <div class="inner">
-      <p>SEnS의 정보는 사외비이며 무단 복사 및 유출을 금합니다.</p>
+      <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
     </div>
   </footer>
 
