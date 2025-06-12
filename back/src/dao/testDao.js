@@ -18,8 +18,8 @@ const [questions] = await pool.query(
 
 let score = 0;
 const details = answers.map(answer => {
-  const question = questions.find(q => q.id === answer.question_id);
-  const correct = Number(q.correct_answer) === Number(answer.user_answer);
+  const question = questions.find(q => q.id === answer.question_id);  // 올바르게 정의
+  const correct = Number(question?.correct_answer) === Number(answer.user_answer);
   if (correct) score++;
   return {
     question_id: answer.question_id,
