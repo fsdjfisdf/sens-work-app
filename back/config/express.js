@@ -80,7 +80,6 @@ module.exports = function () {
   
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
   require('../src/routes/testRoute')(app);
-  app.use("/api/test", router); // ✅ /api/test 하위 라우트 연결
   
   const businessRoute = require('../src/routes/businessRoute'); // 새로 추가된 라우트
   app.use('/api/business', businessRoute); // "/api/business" 경로와 라우트 연결
