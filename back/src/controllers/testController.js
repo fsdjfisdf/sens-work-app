@@ -11,7 +11,7 @@ exports.getQuestions = async (req, res) => {
 };
 
 exports.submitTest = async (req, res) => {
-  const user_id = req.user.nickname;
+  const user_id = req.verifiedToken.nickname;
   const { equipment_type, level, answers } = req.body;
   
 
@@ -19,12 +19,13 @@ exports.submitTest = async (req, res) => {
     const result = await testDao.gradeAndSaveTest(user_id, equipment_type, level, answers);
     res.status(200).json(result);
   } catch (error) {
+    console.error("🔥 시험 저장 중 오류:", error); // 에러 로그 추가
     res.status(500).json({ message: '시험 저장 중 오류 발생', error });
   }
 };
 
 exports.getTestResults = async (req, res) => {
-  const user_id = req.user.userIdx;
+  const user_id = req.verifiedToken.userIdx;
   try {
     const results = await testDao.getTestResults(user_id);
     res.status(200).json(results);
