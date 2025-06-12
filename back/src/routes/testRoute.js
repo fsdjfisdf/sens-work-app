@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const testController = require("../controllers/testController");
-const jwtMiddleware = require("../../jwtMiddleware"); // ✅ 이 줄이 반드시 있어야 함
+const jwtMiddleware = require("../../config/jwtMiddleware");
 
 module.exports = function (app) {
   app.use("/api/test", router);
