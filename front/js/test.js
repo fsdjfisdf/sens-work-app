@@ -87,18 +87,41 @@ async function submitTest() {
     const resultDetailsBox = document.getElementById("result-details");
     resultDetailsBox.innerHTML = ""; // 초기화
 
-    result.details.forEach((item, index) => {
-      const question = questions.find(q => q.id === item.question_id);
-      const correctText = item.correct ? "⭕ 정답" : "❌ 오답";
+result.details.forEach((item, index) => {
+  const choicesHTML = Object.entries(item.choices).map(([num, text]) => {
+    const isUserChoice = parseInt(num) === item.user_answer;
+    const isCorrect = parseInt(num) === item.correct_answer;
 
-      const detailDiv = document.createElement("div");
-      detailDiv.innerHTML = `
-        <p><strong>${index + 1}. ${question.question_text}</strong></p>
-        <p>당신의 선택: ${question[`choice_${item.user_answer}`]} (${correctText})</p>
-        <hr>
-      `;
-      resultDetailsBox.appendChild(detailDiv);
-    });
+    let choiceLabel = "";
+    if (isUserChoice && isCorrect) {
+      choiceLabel = "✅ 내 선택 (정답)";
+    } else if (isUserChoice) {
+      choiceLabel = "❌ 내 선택";
+    } else if (isCorrect) {
+      choiceLabel = "✅ 정답";
+    }
+
+    return `
+      <li style="margin-bottom: 5px;">
+        <strong>${num}.</strong> ${text}
+        ${choiceLabel ? `<span style="margin-left: 10px; color: ${isCorrect ? 'green' : 'red'};">${choiceLabel}</span>` : ""}
+      </li>
+    `;
+  }).join("");
+
+  const detailDiv = document.createElement("div");
+  detailDiv.innerHTML = `
+    <div class="question-feedback" style="margin-bottom: 25px;">
+      <p><strong>${index + 1}. ${item.question_text}</strong></p>
+      <ul style="list-style: none; padding-left: 0;">
+        ${choicesHTML}
+      </ul>
+      <p><strong>💬 해설:</strong> ${item.explanation || "해설 없음"}</p>
+      <hr>
+    </div>
+  `;
+  resultDetailsBox.appendChild(detailDiv);
+});
   } catch (err) {
     alert("시험 결과 제출 중 오류 발생");
     console.error(err);
