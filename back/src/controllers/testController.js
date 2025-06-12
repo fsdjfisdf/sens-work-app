@@ -11,7 +11,7 @@ exports.getQuestions = async (req, res) => {
 };
 
 exports.submitTest = async (req, res) => {
-  const user_id = req.user.id; // JWT 미들웨어에서 user.id 제공
+  const user_id = req.user.userIdx;
   const { equipment_type, level, answers } = req.body;
 
   try {
@@ -23,7 +23,7 @@ exports.submitTest = async (req, res) => {
 };
 
 exports.getTestResults = async (req, res) => {
-  const user_id = req.user.id;
+  const user_id = req.user.userIdx;
   try {
     const results = await testDao.getTestResults(user_id);
     res.status(200).json(results);
