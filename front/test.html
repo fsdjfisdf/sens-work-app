@@ -2,61 +2,200 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>문제 풀이</title>
-  <link rel="stylesheet" href="test.css">
+  <title>기술 문제 풀이</title>
+  <link rel="stylesheet" href="./css/test.css">
+    <link rel="stylesheet" href="./css/report.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>기술 문제 풀이</h1>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
+        </div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
 
-    <div class="selector">
-      <label for="equipment">설비:</label>
-      <select id="equipment">
+  <main>
+    <div class="inner">
+      <h2>기술 문제 풀이</h2>
+
+      <div class="selector">
+        <label for="equipment">설비:</label>
+        <select id="equipment">
+          <option value="SUPRA N">SUPRA N</option>
+          <option value="SUPRA XP">SUPRA XP</option>
+          <option value="INTEGER">INTEGER</option>
+          <option value="PRECIA">PRECIA</option>
+          <option value="ECOLITE">ECOLITE</option>
+          <option value="GENEVA">GENEVA</option>
+        </select>
+
+        <label for="level">레벨:</label>
+        <select id="level">
+          <option value="1">LEVEL 1</option>
+          <option value="2">LEVEL 2</option>
+        </select>
+
+        <button id="start-test">문제 시작</button>
+        <button id="open-add-modal" class="admin-only">문제 추가</button>
+      </div>
+
+      <div id="quiz-container" class="hidden">
+        <div id="question-box"></div>
+        <ul id="choices"></ul>
+        <button id="next-btn">다음 문제</button>
+      </div>
+
+      <div id="result-container" class="hidden">
+        <h3 id="score"></h3>
+        <div id="result-details"></div>
+        <button onclick="location.reload()">다시 풀기</button>
+      </div>
+    </div>
+  </main>
+
+<!-- ✅ 문제 추가 모달 -->
+<div id="add-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" id="close-modal">&times;</span>
+    <h3>문제 추가</h3>
+    <form id="add-form">
+      <label>설비:</label>
+      <select name="equipment_type" required>
+        <option value="">선택하세요</option>
         <option value="SUPRA N">SUPRA N</option>
         <option value="SUPRA XP">SUPRA XP</option>
         <option value="INTEGER">INTEGER</option>
         <option value="PRECIA">PRECIA</option>
         <option value="ECOLITE">ECOLITE</option>
         <option value="GENEVA">GENEVA</option>
-      </select>
+      </select><br>
 
-      <label for="level">레벨:</label>
-      <select id="level">
+      <label>레벨:</label>
+      <select name="level" required>
+        <option value="">선택하세요</option>
         <option value="1">LEVEL 1</option>
         <option value="2">LEVEL 2</option>
-      </select>
+      </select><br>
 
-      <button id="start-test">문제 시작</button>
-    </div>
+      <label>문제 내용:</label>
+      <textarea name="question_text" placeholder="문제 내용 입력" required></textarea><br>
 
-    <div id="quiz-container" class="hidden">
-      <div id="question-box"></div>
-      <ul id="choices"></ul>
-      <button id="next-btn">다음 문제</button>
-    </div>
+      <label>1번 보기:</label>
+      <input name="choice_1" placeholder="1번 보기" required><br>
 
-<div id="result-container" class="hidden">
-  <h3 id="score"></h3>
-  <div id="result-details"></div>
-  <button onclick="location.reload()">다시 풀기</button>
-</div>
+      <label>2번 보기:</label>
+      <input name="choice_2" placeholder="2번 보기" required><br>
+
+      <label>3번 보기:</label>
+      <input name="choice_3" placeholder="3번 보기"><br>
+
+      <label>4번 보기:</label>
+      <input name="choice_4" placeholder="4번 보기"><br>
+
+      <label>정답 번호 (1~4):</label>
+      <input name="correct_answer" type="number" min="1" max="4" required><br>
+
+      <label>해설:</label>
+      <textarea name="explanation" placeholder="해설 입력" required></textarea><br>
+
+      <button type="submit">문제 추가</button>
+    </form>
+
+    <div id="response-message" style="margin-top: 10px;"></div>
   </div>
-  <h2>문제 추가</h2>
-<form id="add-form">
-  <input name="equipment_type" placeholder="Equipment Type (SUPRA N 등)" required><br>
-  <input name="level" type="number" placeholder="Level (숫자)" required><br>
-  <textarea name="question_text" placeholder="문제 내용" required></textarea><br>
-  <input name="choice_1" placeholder="1번 보기" required><br>
-  <input name="choice_2" placeholder="2번 보기" required><br>
-  <input name="choice_3" placeholder="3번 보기"><br>
-  <input name="choice_4" placeholder="4번 보기"><br>
-  <input name="correct_answer" type="number" min="1" max="4" placeholder="정답 번호 (1~4)" required><br>
-  <textarea name="explanation" placeholder="해설" required></textarea><br>
-  <button type="submit">문제 추가</button>
-</form>
-<div id="response-message"></div>
-<script src="add-question.js"></script>
+</div>
 
-  <script src="test.js"></script>
+  <footer>
+    <div class="inner">
+      <p>SEnS의 정보는 사외비이며 무단 복사 및 유출을 금합니다.</p>
+    </div>
+  </footer>
+
+  <script src="./test.js"></script>
+  <script src="./add-question.js"></script>
+  <script defer src="./js/logoutTimer.js"></script>
+
+  <script>
+    // 모달 열기/닫기
+document.getElementById("open-add-modal").addEventListener("click", () => {
+  const modal = document.getElementById("add-modal");
+  modal.classList.remove("hidden");
+  modal.style.display = "flex"; // 추가
+});
+
+document.getElementById("close-modal").addEventListener("click", () => {
+  const modal = document.getElementById("add-modal");
+  modal.classList.add("hidden");
+  modal.style.display = "none"; // 추가
+});
+
+    // 로그인 상태 UI 처리
+    document.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+        document.querySelector(".unsigned").classList.remove("hidden");
+        document.querySelector(".signed").classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned").classList.add("hidden");
+        document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(element => {
+          element.style.display = 'none';
+        });
+      }
+
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+      menuBtn.addEventListener('click', () => menuBar.classList.toggle('open'));
+      document.addEventListener('click', (e) => {
+        if (!menuBtn.contains(e.target) && !menuBar.contains(e.target)) {
+          menuBar.classList.remove('open');
+        }
+      });
+
+      const signOutButton = document.getElementById("sign-out");
+      if (signOutButton) {
+        signOutButton.addEventListener("click", () => {
+          localStorage.removeItem("x-access-token");
+          localStorage.removeItem("user-role");
+          alert("로그아웃 되었습니다.");
+          window.location.replace("./signin.html");
+        });
+      }
+    });
+  </script>
 </body>
 </html>
