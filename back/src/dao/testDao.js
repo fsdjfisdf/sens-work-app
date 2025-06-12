@@ -16,10 +16,11 @@ const [questions] = await pool.query(
   [questionIds]
 );
 
-  let score = 0;
+let score = 0;
 const details = answers.map(answer => {
   const question = questions.find(q => q.id === answer.question_id);
-  const correct = question?.correct_answer === answer.user_answer;
+  const correct = Number(q.correct_answer) === Number(answer.user_answer);
+  if (correct) score++;
   return {
     question_id: answer.question_id,
     user_answer: answer.user_answer,
