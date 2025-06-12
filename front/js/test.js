@@ -15,13 +15,95 @@ document.getElementById("start-test").addEventListener("click", async () => {
       return;
     }
     document.querySelector(".selector").classList.add("hidden");
-    document.getElementById("quiz-container").classList.remove("hidden");
-    showQuestion();
+    renderAllQuestions();  // ← 여기만 변경
   } catch (err) {
     alert("문제를 불러오는 중 오류가 발생했습니다.");
     console.error(err);
   }
 });
+
+function renderAllQuestions() {
+  const container = document.getElementById("quiz-container");
+  container.innerHTML = '';  // 기존 내용 초기화
+
+  const form = document.createElement("form");
+  form.id = "test-form";
+
+  questions.forEach((q, index) => {
+    const questionBlock = document.createElement("div");
+    questionBlock.className = "question-block";
+    questionBlock.style.marginBottom = "40px";
+    questionBlock.style.padding = "20px";
+    questionBlock.style.border = "1px solid #ccc";
+    questionBlock.style.borderRadius = "10px";
+    questionBlock.style.backgroundColor = "#fdfdfd";
+
+    const questionTitle = document.createElement("p");
+    questionTitle.innerHTML = `<strong>${index + 1}. ${q.question_text}</strong>`;
+    questionTitle.style.marginBottom = "10px";
+    questionBlock.appendChild(questionTitle);
+
+    for (let i = 1; i <= 4; i++) {
+      if (!q[`choice_${i}`]) continue;
+
+      const choiceWrapper = document.createElement("div");
+      choiceWrapper.style.marginBottom = "8px";
+
+      const inputId = `q${q.id}_choice${i}`;
+
+      choiceWrapper.innerHTML = `
+        <label for="${inputId}">
+          <input type="radio" id="${inputId}" name="question_${q.id}" value="${i}">
+          ${q[`choice_${i}`]}
+        </label>
+      `;
+
+      questionBlock.appendChild(choiceWrapper);
+    }
+
+    form.appendChild(questionBlock);
+  });
+
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "submit";
+  submitBtn.innerText = "제출하기";
+  submitBtn.style.padding = "10px 20px";
+  submitBtn.style.backgroundColor = "#28a745";
+  submitBtn.style.color = "white";
+  submitBtn.style.fontWeight = "bold";
+  submitBtn.style.border = "none";
+  submitBtn.style.borderRadius = "8px";
+  submitBtn.style.cursor = "pointer";
+  submitBtn.style.marginTop = "20px";
+
+  form.appendChild(submitBtn);
+
+  container.appendChild(form);
+  container.classList.remove("hidden");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    answers = [];
+
+    questions.forEach(q => {
+      const selected = form.querySelector(`input[name="question_${q.id}"]:checked`);
+      if (selected) {
+        answers.push({
+          question_id: q.id,
+          user_answer: parseInt(selected.value)
+        });
+      }
+    });
+
+    if (answers.length !== questions.length) {
+      alert("모든 문제에 답을 선택해 주세요.");
+      return;
+    }
+
+    await submitTest();
+  });
+}
+
 
 function showQuestion() {
   const q = questions[currentQuestionIndex];

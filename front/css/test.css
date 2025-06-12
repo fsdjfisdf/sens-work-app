@@ -272,3 +272,13 @@ h2 {
 #result-details li span.incorrect {
   color: red;
 }
+
+.question-block {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-left: 5px solid #0044cc;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
