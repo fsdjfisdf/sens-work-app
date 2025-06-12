@@ -40,7 +40,11 @@ exports.gradeAndSaveTest = async (user_id, equipment_type, level, answers) => {
     [user_id, equipment_type, level, score, answers.length, result.details]
   );
 
-  return { score, total_questions: answers.length };
+  return {
+  score,
+  total_questions: answers.length,
+  details // 이건 객체 상태임 (JSON.parse 불필요)
+  };
 };
 
 exports.getTestResults = async (user_id) => {

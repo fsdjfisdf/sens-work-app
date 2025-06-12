@@ -20,7 +20,7 @@ exports.submitTest = async (req, res) => {
     res.status(200).json({
     score: result.score,
     total_questions: result.total_questions,
-    details: JSON.parse(result.details) // 프론트에서 쉽게 다루도록 파싱
+    details: result.details
     });
   } catch (error) {
     console.error("🔥 시험 저장 중 오류:", error); // 에러 로그 추가
