@@ -1,4 +1,4 @@
-const { pool } = require('../../../database');
+const { pool } = require('../../config/database');
 
 exports.getQuestions = async (equipment_type, level) => {
   const [rows] = await pool.query(
