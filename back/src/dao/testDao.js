@@ -9,42 +9,46 @@ exports.getQuestions = async (equipment_type, level) => {
 };
 
 exports.gradeAndSaveTest = async (user_id, equipment_type, level, answers) => {
+  try {
+    const questionIds = answers.map(a => a.question_id);
+    const [questions] = await pool.query(
+      `SELECT id, correct_answer FROM questions WHERE id IN (?)`,
+      [questionIds]
+    );
 
-  console.log(">>> user_id:", user_id);
-  console.log(">>> answers:", answers);
-  const questionIds = answers.map(a => a.question_id);
-  const [questions] = await pool.query(
-    `SELECT id, correct_answer FROM questions WHERE id IN (?)`,
-    [questionIds]
-  );
-  console.log(">>> Fetched questions:", questions);
+    let score = 0;
+    const details = answers.map(answer => {
+      const correct = questions.find(q => q.id === answer.question_id)?.correct_answer === answer.user_answer;
+      if (correct) score++;
+      return {
+        question_id: answer.question_id,
+        user_answer: answer.user_answer,
+        correct
+      };
+    });
 
-  let score = 0;
-  const details = answers.map(answer => {
-    const correct = questions.find(q => q.id === answer.question_id)?.correct_answer === answer.user_answer;
-    if (correct) score++;
-    return {
-      question_id: answer.question_id,
-      user_answer: answer.user_answer,
-      correct
+    const result = {
+      user_id,
+      equipment_type,
+      level,
+      score,
+      total_questions: answers.length,
+      details: JSON.stringify(details)
     };
-  });
 
-  const result = {
-    user_id,
-    equipment_type,
-    level,
-    score,
-    total_questions: answers.length,
-    details: JSON.stringify(details)
-  };
+    console.log(">>> INSERT 데이터:", [user_id, equipment_type, level, score, answers.length, result.details]);
 
-  await pool.query(
-    `INSERT INTO test_results (user_id, equipment_type, level, score, total_questions, details) VALUES (?, ?, ?, ?, ?, ?)`,
-    [user_id, equipment_type, level, score, answers.length, result.details]
-  );
+    await pool.query(
+      `INSERT INTO test_results (user_id, equipment_type, level, score, total_questions, details)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [user_id, equipment_type, level, score, answers.length, result.details]
+    );
 
-  return { score, total_questions: answers.length };
+    return { score, total_questions: answers.length };
+  } catch (err) {
+    console.error("🔥 INSERT 실패:", err);
+    throw err; // 컨트롤러로 던지기
+  }
 };
 
 exports.getTestResults = async (user_id) => {
