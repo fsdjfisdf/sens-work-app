@@ -11,8 +11,9 @@ exports.getQuestions = async (req, res) => {
 };
 
 exports.submitTest = async (req, res) => {
-  const user_id = req.user.userIdx;
+  const user_id = req.user.nickname;
   const { equipment_type, level, answers } = req.body;
+  
 
   try {
     const result = await testDao.gradeAndSaveTest(user_id, equipment_type, level, answers);
@@ -23,7 +24,7 @@ exports.submitTest = async (req, res) => {
 };
 
 exports.getTestResults = async (req, res) => {
-  const user_id = req.user.userIdx;
+  const user_id = req.user.nickname;
   try {
     const results = await testDao.getTestResults(user_id);
     res.status(200).json(results);
