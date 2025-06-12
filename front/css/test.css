@@ -77,8 +77,8 @@ h2 {
 
 /* 퀴즈 박스 */
 #quiz-container {
-  width: 100%;
-  min-width: 600px;
+  width: 90%;
+  min-width: 400px;
   margin-top: 30px;
 }
 
