@@ -1,4 +1,5 @@
 let cachedCombinedData = [];
+let logs = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('x-access-token');
@@ -248,26 +249,35 @@ function renderSetupTable(setupData, worklogData) {
         row.appendChild(document.createElement('td')).textContent = col.name;
         row.appendChild(document.createElement('td')).textContent = col.기준작업수;
 
-        workerNames.forEach(workerName => {
-            const workerData = setupData.find(worker => worker.name === workerName);
-            const taskCount = workerData ? workerData[col.name] || 0 : 0;
-            let percentage = (taskCount / col.기준작업수) * 100;
-            percentage = Math.min(percentage, 100);
-    
-            const td = document.createElement('td');
-            td.textContent = `${taskCount} (${Math.round(percentage)}%)`;
-    
-            // 퍼센트에 따른 색상 적용
-            if (percentage === 100) {
-                td.style.color = 'blue';
-            } else if (percentage === 0) {
-                td.style.color = 'red';
-            } else {
-                td.style.color = 'black';
-            }
-    
-            row.appendChild(td);
-        });
+            workerNames.forEach(workerName => {
+                const workerData = setupData.find(worker => worker.name === workerName);
+                const taskCount = workerData ? workerData[col.name] || 0 : 0;
+                let percentage = (taskCount / col.기준작업수) * 100;
+                percentage = Math.min(percentage, 100);
+
+                const td = document.createElement('td');
+
+                // ✅ 기본 텍스트 작성
+                td.textContent = `${taskCount} (${Math.round(percentage)}%)`;
+
+                // ✅ 조건: taskCount가 0 이상이면 모달 속성 부여
+                if (taskCount > 0) {
+                    td.classList.add('clickable-cell');
+                    td.setAttribute('data-worker', workerName);
+                    td.setAttribute('data-task', col.name);
+                }
+
+                // ✅ 퍼센트에 따른 색상 적용
+                if (percentage === 100) {
+                    td.style.color = 'blue';
+                } else if (percentage === 0) {
+                    td.style.color = 'red';
+                } else {
+                    td.style.color = 'black';
+                }
+
+                row.appendChild(td);
+            });
         tableBody.appendChild(row);
     });
 }
@@ -1152,3 +1162,68 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('clickable-cell')) {
+        const worker = e.target.getAttribute('data-worker');
+        const task = e.target.getAttribute('data-task');
+        const normalizedWorker = worker.replace(/\(main\)/g, '').trim();
+
+        const matchedLogs = logs.filter(log =>
+            log.setup_item &&
+            log.setup_item.replace(/ /g, "_").toUpperCase() === task &&
+            log.task_man &&
+            log.task_man.split(/[\s,]+/)
+                .map(w => w.replace(/\(main\)/g, '').trim())
+                .includes(normalizedWorker)
+        );
+
+        const logList = document.getElementById('log-list');
+        logList.innerHTML = '';
+
+        if (matchedLogs.length === 0) {
+            logList.innerHTML = '<li>관련 로그가 없습니다.</li>';
+        } else {
+            matchedLogs.forEach((log, index) => {
+                const item = document.createElement('li');
+                item.classList.add('log-item');
+
+                const date = new Date(log.task_date).toISOString().split('T')[0];
+                const taskName = log.task_name || '-';
+                const taskMan = log.task_man || '-';
+                const equipmentName = log.equipment_name || '-';
+                const taskDuration = log.task_duration || '-';
+                const taskDesc = (log.task_description || '설명 없음').replace(/\n/g, '<br>');
+
+                item.innerHTML = `
+                    <div class="log-summary">
+                        <strong>📅 ${date}</strong> | 🧾 ${taskName} | 👷‍♂️ ${taskMan} | 🛠 ${equipmentName} | ⏱ ${taskDuration}
+                        <button class="toggle-desc-btn" data-index="${index}">자세히 보기</button>
+                    </div>
+                    <div class="log-desc hidden" id="desc-${index}">
+                        ${taskDesc}
+                    </div>
+                `;
+
+                logList.appendChild(item);
+            });
+        }
+
+        document.getElementById('log-modal').classList.remove('hidden');
+    }
+
+    if (e.target.classList.contains('toggle-desc-btn')) {
+        const index = e.target.getAttribute('data-index');
+        const descBox = document.getElementById(`desc-${index}`);
+        if (descBox.classList.contains('hidden')) {
+            descBox.classList.remove('hidden');
+            e.target.textContent = '접기';
+        } else {
+            descBox.classList.add('hidden');
+            e.target.textContent = '자세히 보기';
+        }
+    }
+});
+
+document.getElementById('close-modal').addEventListener('click', () => {
+    document.getElementById('log-modal').classList.add('hidden');
+});
