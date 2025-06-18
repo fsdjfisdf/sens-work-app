@@ -55,7 +55,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PM_PIN_HOLDER_REP',
             'PM_GAP_SENSOR_ADJUST',
             'PM_PROCESS_KIT_REP',
-
+            'LOT 조사',
+            'LP_ESCORT'
         ];
 
         // 모든 필드를 0으로 초기화

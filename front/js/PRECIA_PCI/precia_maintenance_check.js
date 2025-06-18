@@ -55,7 +55,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 {"name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING"},
                 {"name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING"}
             ]
-        }
+        },
+        {
+            "category": "ETC",
+            "subcategories": [
+                {"name": "LOT_조사", "displayName": "LOT 조사"},
+                {"name": "LP_ESCORT", "displayName": "LP ESCORT"}
+            ]
+        },
     ];
 
     // 작업자별 평균 계산 함수

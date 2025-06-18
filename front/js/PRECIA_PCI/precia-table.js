@@ -37,6 +37,13 @@ window.taskCategories = [
             { name: "EFEM ROBOT TEACHING", 기준작업수: 5 },
             { name: "TM ROBOT TEACHING", 기준작업수: 5 }
         ]
+    },
+    {
+        category: "ETC",
+        subcategories: [
+            { name: "LOT 조사", 기준작업수: 1 },
+            { name: "LP_ESCORT", 기준작업수: 1 }
+        ]
     }
 ];
 

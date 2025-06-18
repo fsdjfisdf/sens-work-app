@@ -32,9 +32,9 @@ exports.insertChecklist = async (checklistData) => {
       const query = `
         INSERT INTO PRECIA_MAINT_SELF (
           name, PM_CENTERING, PM_CLN, EFEM_ROBOT_TEACHING, TM_ROBOT_TEACHING,
-          PM_SLOT_VALVE_REP, PM_PEEK_PLATE_REP, PM_RF_MATCHER_REP, PM_PIN_HOLDER_REP, PM_GAP_SENSOR_ADJUST, PM_PROCESS_KIT_REP
+          PM_SLOT_VALVE_REP, PM_PEEK_PLATE_REP, PM_RF_MATCHER_REP, PM_PIN_HOLDER_REP, PM_GAP_SENSOR_ADJUST, PM_PROCESS_KIT_REP, LOT_조사, LP_ESCORT
           
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
   
       const values = [
@@ -48,7 +48,9 @@ exports.insertChecklist = async (checklistData) => {
         checklistData.PM_RF_MATCHER_REP,
         checklistData.PM_GAP_SENSOR_ADJUST,
         checklistData.PM_PROCESS_KIT_REP,
-        checklistData.PM_PIN_HOLDER_REP
+        checklistData.PM_PIN_HOLDER_REP,
+        checklistData.LOT_조사,
+        checklistData.LP_ESCORT
       ];
 
     await connection.query(query, values);
@@ -73,7 +75,9 @@ exports.updateChecklist = async (checklistData) => {
           PM_RF_MATCHER_REP = ?,
           PM_PIN_HOLDER_REP = ?,
           PM_GAP_SENSOR_ADJUST = ?,
-          PM_PROCESS_KIT_REP = ?
+          PM_PROCESS_KIT_REP = ?,
+          LOT_조사 = ?,
+          LP_ESCORT = ?
         WHERE name = ?
       `;
   
@@ -88,6 +92,8 @@ exports.updateChecklist = async (checklistData) => {
         checklistData.PM_GAP_SENSOR_ADJUST,
         checklistData.PM_PROCESS_KIT_REP,
         checklistData.PM_PIN_HOLDER_REP,
+        checklistData.LOT_조사,
+        checklistData.LP_ESCORT,
         checklistData.name
       ];
   

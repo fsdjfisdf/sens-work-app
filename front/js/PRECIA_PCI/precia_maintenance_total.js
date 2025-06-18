@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         "PM_RF_MATCHER_REP": "PM RF MATCHER REP",
         "PM_GAP_SENSOR_ADJUST": "PM GAP SENSOR ADJUST",
         "PM_PROCESS_KIT_REP": "PM PROCESS KIT REP",
-        "PM_PIN_HOLDER_REP": "PM PIN HOLDER REP"
+        "PM_PIN_HOLDER_REP": "PM PIN HOLDER REP",
+        "LOT_조사": "LOT 조사",
+        "LP_ESCORT": "LP ESCORT"
     };
 
     const taskWeights = {
@@ -27,10 +29,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         "TM_ROBOT_TEACHING": 15,
         "PM_SLOT_VALVE_REP": 5,
         "PM_PEEK_PLATE_REP": 10,
-        "PM_RF_MATCHER_REP": 10,
+        "PM_RF_MATCHER_REP": 5,
         "PM_GAP_SENSOR_ADJUST": 10,
-        "PM_PROCESS_KIT_REP": 10,
-        "PM_PIN_HOLDER_REP": 10
+        "PM_PROCESS_KIT_REP": 5,
+        "PM_PIN_HOLDER_REP": 10,
+        "LOT_조사":5,
+        "LP_ESCORT":5
     };
     
 
@@ -53,6 +57,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             "subcategories": [
                 { "name": "EFEM_ROBOT_TEACHING", "displayName": "EFEM ROBOT TEACHING", "기준작업수": 5 },//
                 { "name": "TM_ROBOT_TEACHING", "displayName": "TM ROBOT TEACHING", "기준작업수": 5 }
+            ]
+        },
+        {
+            "category": "ETC",
+            "subcategories": [
+                { "name": "LOT_조사", "displayName": "LOT 조사", "기준작업수": 1 },
+                { "name": "LP_ESCORT", "displayName": "LP ESCORT", "기준작업수": 1 }
             ]
         }
     ];
