@@ -95,7 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
             "PM RF MATCHER REP",
             "PM PIN HOLDER REP",
             "PM GAP SENSOR ADJUST",
-            "PM PROCESS KIT REP"
+            "PM PROCESS KIT REP",
+            "LOT 조사",
+            "LP ESCORT"
         ],
         "ECOLITE": ["이관항목 없음"],
         "GENEVA": ["이관항목 없음"]
