@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'PM_PIN_HOLDER_REP',
             'PM_GAP_SENSOR_ADJUST',
             'PM_PROCESS_KIT_REP',
-            'LOT 조사',
+            'LOT_조사',
             'LP_ESCORT'
         ];
 
