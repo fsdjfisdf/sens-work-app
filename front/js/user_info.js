@@ -136,13 +136,13 @@ function getFormattedMultiLevel(level) {
       case 0:
           return '0';
       case 1:
-          return '2-2(B)';
+          return '2-2';
       case 2:
-          return '2-2(A)';
+          return '2-3';
       case 3:
-          return '2-3(B)';
+          return '2-4';
       case 4:
-          return '2-3(A)';
+          return '2-5';
       default:
           return `${level}`; // 기본적으로 원래 값 반환
   }
@@ -164,10 +164,10 @@ function getFormattedMultiLevel(level) {
         // 그래프 데이터
         const hireDate = new Date(userInfo.HIRE);
         const achievementData = [
-          { label: 'Level 1', date: userInfo['Level1 Achieve'] ? new Date(userInfo['Level1 Achieve']) : null },
-          { label: 'Level 2', date: userInfo['Level2 Achieve'] ? new Date(userInfo['Level2 Achieve']) : null },
-          { label: 'Level 3', date: userInfo['Level3 Achieve'] ? new Date(userInfo['Level3 Achieve']) : null },
-          { label: 'Level 4', date: userInfo['Level4 Achieve'] ? new Date(userInfo['Level4 Achieve']) : null }
+          { label: 'Level 1-1', date: userInfo['Level1 Achieve'] ? new Date(userInfo['Level1 Achieve']) : null },
+          { label: 'Level 1-2', date: userInfo['Level2 Achieve'] ? new Date(userInfo['Level2 Achieve']) : null },
+          { label: 'Level 1-3', date: userInfo['Level3 Achieve'] ? new Date(userInfo['Level3 Achieve']) : null },
+          { label: 'Level 2', date: userInfo['Level4 Achieve'] ? new Date(userInfo['Level4 Achieve']) : null }
         ].map(level => ({
           label: level.label,
           timeToAchieve: level.date ? calculateYearsMonths(hireDate, level.date) : null

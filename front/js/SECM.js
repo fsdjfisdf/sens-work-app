@@ -155,7 +155,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     
                 if (hireDate <= quarterEnd) {
                     levelCountsByQuarter[index][`level${currentLevel}`]++;
-                    levelSumsByQuarter[index] += currentLevel;
+
+                    // ✅ 여기서 변환된 레벨 기준으로 평균 계산
+                    let transformedLevel = 0;
+                    if ([1, 2, 3].includes(currentLevel)) {
+                        transformedLevel = 1;
+                    } else if (currentLevel === 4) {
+                        transformedLevel = 2;
+                    }
+                    levelSumsByQuarter[index] += transformedLevel;
+
                     countByQuarter[index]++;
                 }
             });
@@ -561,8 +570,18 @@ function calculateMonthlyEngineerCount(data) {
             return acc;
         }, {});
 
+                // 평균 레벨 계산용 변환 함수
+        function transformLevel(level) {
+            if ([1, 2, 3].includes(level)) return 1;
+            if (level === 4) return 2;
+            return 0;
+        }
+
         const levelPercentages = Object.values(levelCounts).map(count => ((count / totalEngineers) * 100).toFixed(2));
-        const averageLevel = (levels.reduce((sum, level) => sum + level, 0) / totalEngineers).toFixed(2);
+        const averageLevel = (
+            levels.reduce((sum, level) => sum + transformLevel(level), 0) / totalEngineers
+        ).toFixed(2);
+
 
         createChart(levelDistributionChartCtx, {
             type: 'bar',
@@ -632,6 +651,7 @@ function calculateMonthlyEngineerCount(data) {
             acc[level] = (acc[level] || 0) + 1;
             return acc;
         }, {});
+        
 
         const multiLevelPercentages = Object.values(multiLevelCounts).map(count => ((count / totalEngineers) * 100).toFixed(2));
         const averageMultiLevel = (multiLevels.reduce((sum, level) => sum + parseInt(level), 0) / multiLevels.length).toFixed(2);
@@ -642,8 +662,9 @@ function calculateMonthlyEngineerCount(data) {
                 labels: Object.keys(multiLevelCounts).map(key => {
                     switch (key) {
                         case '0': return 'Lv.2';
-                        case '1': return 'Lv.2-2(B)';
-                        case '2': return 'Lv.2-2(A)';
+                        case '1': return 'Lv.2-2';
+                        case '2': return 'Lv.2-3';
+                        case '3': return 'Lv.2-4';
                         default: return key;
                     }
                 }),
@@ -721,7 +742,7 @@ function calculateMonthlyEngineerCount(data) {
                         }
                     },
                     {
-                        label: 'Level 1',
+                        label: 'Level 1-1',
                         data: levelCountsByQuarter.map(l => l.level1),
                         backgroundColor: 'rgba(54, 162, 235, 0.2)',
                         borderColor: 'rgba(54, 162, 235, 1)',
@@ -735,7 +756,7 @@ function calculateMonthlyEngineerCount(data) {
                         }
                     },
                     {
-                        label: 'Level 2',
+                        label: 'Level 1-2',
                         data: levelCountsByQuarter.map(l => l.level2),
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         borderColor: 'rgba(75, 192, 192, 1)',
@@ -749,7 +770,7 @@ function calculateMonthlyEngineerCount(data) {
                         }
                     },
                     {
-                        label: 'Level 3',
+                        label: 'Level 1-3',
                         data: levelCountsByQuarter.map(l => l.level3),
                         backgroundColor: 'rgba(153, 102, 255, 0.2)',
                         borderColor: 'rgba(153, 102, 255, 1)',
@@ -763,7 +784,7 @@ function calculateMonthlyEngineerCount(data) {
                         }
                     },
                     {
-                        label: 'Level 4',
+                        label: 'Level 2',
                         data: levelCountsByQuarter.map(l => l.level4),
                         backgroundColor: 'rgba(255, 205, 86, 0.2)',
                         borderColor: 'rgba(255, 205, 86, 1)',
@@ -817,7 +838,7 @@ function calculateMonthlyEngineerCount(data) {
                         stacked: true,
                         title: { display: true, text: 'Number of Engineers' },
                         ticks: { color: 'silver' },
-                        max: Math.max(...averageLevels.map(Number)) * 40 // 막대그래프의 정확한 최대값 설정
+                        max: Math.max(...averageLevels.map(Number)) * 80 // 막대그래프의 정확한 최대값 설정
                     },
                     'y-averageLevel': {
                         beginAtZero: true,
