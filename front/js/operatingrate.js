@@ -636,11 +636,10 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
     const calendarContainer = document.getElementById('calendar-container');
     calendarContainer.innerHTML = '';
 
-    cumulativeTotalWorkHours = 0; // 초기화
+    cumulativeTotalWorkHours = 0;
 
-    renderDaysRow(); // 요일 헤더 렌더링 (월, 화, 수, 목, 금, 토, 일)
+    renderDaysRow();
 
-    // 작업 시작 날짜와 종료 날짜 계산
     const firstLogDate = filteredLogs.length > 0
         ? new Date(Math.min(...filteredLogs.map(log => new Date(log.task_date))))
         : new Date(year, month - 1, 1); // 작업이 없을 경우 해당 월의 첫 날
@@ -649,64 +648,75 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
         : new Date(year, month, 0); // 작업이 없을 경우 해당 월의 마지막 날
 
     const logsByDate = {};
-    const weeklyRates = {}; // 주차별 가동률 저장
 
+    // 해당 월 전체 날짜를 미리 초기화
+    let tempDate = new Date(firstLogDate);
+    while (tempDate <= lastLogDate) {
+        const dateStr = tempDate.toISOString().split('T')[0];
+        logsByDate[dateStr] = [];
+        tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    // 실제 로그를 각 날짜에 추가
     filteredLogs.forEach(log => {
         const logDate = new Date(log.task_date).toISOString().split('T')[0];
         if (!logsByDate[logDate]) logsByDate[logDate] = [];
         logsByDate[logDate].push(log);
     });
 
-    // 달력의 시작 날짜를 첫 작업 시작 날짜 또는 월 첫 날의 월요일로 조정
+    // 달력 시작일: 달의 첫 날이 포함된 주의 월요일로 조정
     const calendarStartDate = new Date(firstLogDate);
-    const startDayOfWeek = calendarStartDate.getDay(); // 0(일)~6(토)
-    const adjustedStartDate = new Date(calendarStartDate);
-    adjustedStartDate.setDate(calendarStartDate.getDate() - (startDayOfWeek === 0 ? 6 : startDayOfWeek - 1)); // 월요일로 조정
+    const startDayOfWeek = calendarStartDate.getDay();
+    calendarStartDate.setDate(calendarStartDate.getDate() - (startDayOfWeek === 0 ? 7 : startDayOfWeek));
 
-    // 달력의 종료 날짜를 마지막 작업 종료 날짜 또는 월 마지막 날의 일요일로 조정
+    // 달력 종료일: 마지막 날이 포함된 주의 일요일로 조정
     const calendarEndDate = new Date(lastLogDate);
-    const endDayOfWeek = calendarEndDate.getDay(); // 0(일)~6(토)
-    const adjustedEndDate = new Date(calendarEndDate);
-    adjustedEndDate.setDate(calendarEndDate.getDate() + (endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek)); // 일요일로 조정
+    const endDayOfWeek = calendarEndDate.getDay();
+    calendarEndDate.setDate(calendarEndDate.getDate() + (endDayOfWeek === 0 ? 0 : 7 - endDayOfWeek));
 
-    let currentDate = new Date(adjustedStartDate);
+    // 오늘 날짜를 기준으로 출력 제한
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);  // 시간 제거 (날짜 비교만 위해)
 
-    // 첫 번째 주의 시작 요일을 맞추기 위한 빈 셀 추가
+    if (calendarEndDate > today) {
+        calendarEndDate.setTime(today.getTime());  // 오늘까지만 출력
+    }
+
+    const weeklyRates = {};
+    let currentDate = new Date(calendarStartDate);
+
+    // 첫 주 빈 셀 추가
     for (let i = 0; i < currentDate.getDay(); i++) {
         const emptyDiv = document.createElement('div');
         emptyDiv.classList.add('calendar-day', 'empty');
         calendarContainer.appendChild(emptyDiv);
     }
 
-    // 날짜 범위 내의 모든 날짜를 출력
-    while (currentDate <= adjustedEndDate) {
+    while (currentDate <= calendarEndDate) {
         const dateString = currentDate.toISOString().split('T')[0];
         const dailyLogs = logsByDate[dateString] || [];
 
-        const isEmptyDay = dailyLogs.length === 0; // 작업이 없는 날 여부 확인
+        const isEmptyDay = dailyLogs.length === 0;
         const dayDiv = createDayDiv(dateString, dailyLogs, weeklyRates, dayType, isEmptyDay);
-
-        // 날짜에 맞는 셀 추가
         calendarContainer.appendChild(dayDiv);
 
-        currentDate.setDate(currentDate.getDate() + 1); // 하루 증가
+        currentDate.setDate(currentDate.getDate() + 1);
 
-        // 주의 마지막 날(일요일) 이후 줄바꿈
-        if (currentDate.getDay() === 1 && currentDate <= adjustedEndDate) {
+        // 주가 바뀌는 시점에 줄 나누기
+        if (currentDate.getDay() === 1 && currentDate <= calendarEndDate) {
             const lineBreak = document.createElement('div');
             lineBreak.classList.add('week-separator');
             calendarContainer.appendChild(lineBreak);
         }
     }
 
-    // 마지막 주의 남은 빈 셀 추가
+    // 마지막 주 빈 셀 추가
     for (let i = currentDate.getDay(); i <= 6 && i !== 0; i++) {
         const emptyDiv = document.createElement('div');
         emptyDiv.classList.add('calendar-day', 'empty');
         calendarContainer.appendChild(emptyDiv);
     }
 
-    // 주차별 평균 가동율 계산
     const weeklyAverageRates = Object.keys(weeklyRates)
         .sort((a, b) => new Date(a) - new Date(b))
         .map(weekKey => {
@@ -723,97 +733,135 @@ function renderCalendar(filteredLogs, year, month, dayType, collectAllWeeks = fa
     return weeklyRates;
 }
 
+
     
     
     
     
     
-    function createDayDiv(dateString, dailyLogs = [], weeklyRates, dayType, isEmpty = false) {
-        const dayDiv = document.createElement('div');
-        dayDiv.classList.add('calendar-day');
-    
-        const date = new Date(dateString);
-        const dayOfWeek = date.getUTCDay();
-        const isWeekend = dayOfWeek === 6 || dayOfWeek === 0;
-        const isHoliday = holidays.includes(dateString);
-    
-        // 날짜 항상 표시
-        const dateElement = document.createElement('h2');
-        dateElement.innerText = date.toISOString().split('T')[0];
-        dayDiv.appendChild(dateElement);
-    
-        if (isEmpty) {
-            // 빈 날 처리
-            dayDiv.classList.add('empty');
-            return dayDiv; // 빈 공간으로 표시
-        }
-    
-        if (isHoliday) {
-            dayDiv.classList.add('holiday');
-        }
-        if (isWeekend) {
-            dayDiv.classList.add('weekend');
-        }
-    
-        const taskCount = dailyLogs.length;
-        const totalMinutes = dailyLogs.reduce((acc, log) => {
-            const workerCount = log.task_man.split(',').length;
-            const [hours, minutes] = log.task_duration.split(':').map(Number);
-            return acc + (hours * 60 + minutes) * workerCount;
-        }, 0);
-    
-        const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim()))))
-            .reduce((acc, worker) => {
-                const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
-                return acc + (workerTaskCount === 1 ? 4 : 4.5);
-            }, 0);
-    
-        const totalWorkHours = totalMinutes / 60 + additionalTime;
-        const requiredEngineers = (totalWorkHours / 8).toFixed(1);
-    
-        const group = document.getElementById('group-select').value;
-        const site = document.getElementById('site-select').value;
-        const weekKey = getWeekKey(dateString);
-        const totalEngineers = getTotalEngineersByFilter(weekKey, isWeekend || isHoliday, group, site);
-        const operatingRate = totalEngineers ? ((requiredEngineers / totalEngineers) * 100).toFixed(1) : 0;
-    
+function createDayDiv(dateString, dailyLogs = [], weeklyRates, dayType, isEmpty = false) {
+    const dayDiv = document.createElement('div');
+    dayDiv.classList.add('calendar-day');
+
+    const date = new Date(dateString);
+    const dayOfWeek = date.getUTCDay();
+    const isWeekend = dayOfWeek === 6 || dayOfWeek === 0;
+    const isHoliday = holidays.includes(dateString);
+
+    // 날짜 항상 표시
+    const dateElement = document.createElement('h2');
+    dateElement.innerText = date.toISOString().split('T')[0];
+    dayDiv.appendChild(dateElement);
+
+    const group = document.getElementById('group-select').value;
+    const site = document.getElementById('site-select').value;
+    const isWeekendOrHoliday = isWeekend || isHoliday;
+    const weekKey = getWeekKey(dateString);
+
+    // 작업이 없는 날 처리
+    if (isEmpty) {
+        dayDiv.classList.add('empty');
+
+        const totalEngineers = getTotalEngineersByFilter(weekKey, isWeekendOrHoliday, group, site);
+        const requiredEngineers = 0;
+        const operatingRate = 0;
+
         if (!weeklyRates[weekKey]) weeklyRates[weekKey] = [];
-    
-        // 주차별 평균 계산 조건
-        if (dayType === 'all' || 
-            (dayType === 'workday' && !isWeekend && !isHoliday) || 
-            (dayType === 'holiday' && (isWeekend || isHoliday))) {
-             weeklyRates[weekKey].push(parseFloat(operatingRate));
+        if (
+            dayType === 'all' ||
+            (dayType === 'workday' && !isWeekend && !isHoliday) ||
+            (dayType === 'holiday' && (isWeekend || isHoliday))
+        ) {
+            weeklyRates[weekKey].push(operatingRate);
         }
-    
-        // 스타일 적용 (가동율에 따른 색상)
-        if (operatingRate >= 100) {
-            dayDiv.classList.add('lack');
-        } else if (operatingRate >= 70 && operatingRate < 100) {
-            dayDiv.classList.add('optimal');
-        } else if (operatingRate > 0 && operatingRate < 70) {
-            dayDiv.classList.add('surplus');
-        }
-    
-        // 작업 건수, 엔지니어 요구 수, 가동율 추가
+
+        // 색상 스타일 (0% → surplus)
+        dayDiv.classList.add('surplus');
+
         const taskCountElement = document.createElement('p');
         taskCountElement.classList.add('task-count');
-        taskCountElement.innerText = `건 수: ${taskCount}`;
+        taskCountElement.innerText = `건 수: 0`;
         dayDiv.appendChild(taskCountElement);
-    
+
         const requiredEngineersElement = document.createElement('p');
         requiredEngineersElement.classList.add('required-engineers');
-        requiredEngineersElement.innerText = `필요 Eng'r 수: ${requiredEngineers}`;
+        requiredEngineersElement.innerText = `필요 Eng'r 수: 0`;
         dayDiv.appendChild(requiredEngineersElement);
-    
+
         const operatingRateElement = document.createElement('p');
         operatingRateElement.classList.add('operating-rate');
-        operatingRateElement.innerText = `WTM: ${operatingRate}%`;
+        operatingRateElement.innerText = `WTM: 0%`;
         dayDiv.appendChild(operatingRateElement);
-    
-        dayDiv.addEventListener('click', () => openModal(dateString, dailyLogs));
+
+        dayDiv.addEventListener('click', () => openModal(dateString, []));
         return dayDiv;
     }
+
+    // 주말/공휴일 스타일
+    if (isHoliday) {
+        dayDiv.classList.add('holiday');
+    }
+    if (isWeekend) {
+        dayDiv.classList.add('weekend');
+    }
+
+    const taskCount = dailyLogs.length;
+    const totalMinutes = dailyLogs.reduce((acc, log) => {
+        const workerCount = log.task_man.split(',').length;
+        const [hours, minutes] = log.task_duration.split(':').map(Number);
+        return acc + (hours * 60 + minutes) * workerCount;
+    }, 0);
+
+    const additionalTime = Array.from(new Set(dailyLogs.flatMap(log => log.task_man.split(',').map(worker => worker.trim().split('(')[0].trim()))))
+        .reduce((acc, worker) => {
+            const workerTaskCount = dailyLogs.filter(log => log.task_man.includes(worker)).length;
+            return acc + (workerTaskCount === 1 ? 4 : 4.5);
+        }, 0);
+
+    const totalWorkHours = totalMinutes / 60 + additionalTime;
+    const requiredEngineers = (totalWorkHours / 8).toFixed(1);
+    const totalEngineers = getTotalEngineersByFilter(weekKey, isWeekendOrHoliday, group, site);
+    const operatingRate = totalEngineers ? ((requiredEngineers / totalEngineers) * 100).toFixed(1) : 0;
+
+    if (!weeklyRates[weekKey]) weeklyRates[weekKey] = [];
+
+    if (
+        dayType === 'all' ||
+        (dayType === 'workday' && !isWeekend && !isHoliday) ||
+        (dayType === 'holiday' && (isWeekend || isHoliday))
+    ) {
+        weeklyRates[weekKey].push(parseFloat(operatingRate));
+    }
+
+    // 색상 스타일 적용
+    if (operatingRate >= 100) {
+        dayDiv.classList.add('lack');
+    } else if (operatingRate >= 70 && operatingRate < 100) {
+        dayDiv.classList.add('optimal');
+    } else if (operatingRate > 0 && operatingRate < 70) {
+        dayDiv.classList.add('surplus');
+    }
+
+    // 작업 건수, 필요 Engr 수, 가동률 표시
+    const taskCountElement = document.createElement('p');
+    taskCountElement.classList.add('task-count');
+    taskCountElement.innerText = `건 수: ${taskCount}`;
+    dayDiv.appendChild(taskCountElement);
+
+    const requiredEngineersElement = document.createElement('p');
+    requiredEngineersElement.classList.add('required-engineers');
+    requiredEngineersElement.innerText = `필요 Eng'r 수: ${requiredEngineers}`;
+    dayDiv.appendChild(requiredEngineersElement);
+
+    const operatingRateElement = document.createElement('p');
+    operatingRateElement.classList.add('operating-rate');
+    operatingRateElement.innerText = `WTM: ${operatingRate}%`;
+    dayDiv.appendChild(operatingRateElement);
+
+    dayDiv.addEventListener('click', () => openModal(dateString, dailyLogs));
+    return dayDiv;
+}
+
     
     
     
