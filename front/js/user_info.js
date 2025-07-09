@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const userInfo = await loadUserInfo();  // loadUserInfo 함수에서 반환된 userInfo를 기다림
+  loggedInUserName = userInfo?.NAME?.replace(/\(.*?\)/g, '').trim();
   const workLogs = await loadWorkLogs(); // 작업 이력을 가져오고 변수에 저장
   const monthlyHours = calculateMonthlyWorkHoursByMonth(workLogs); // 월별 작업 시간을 계산
 
@@ -649,43 +650,46 @@ async function calculateAndRenderUserRanking() {
   if (!token) return;
 
   try {
-      const response = await axios.get('http://3.37.73.151:3001/logs', {
-          headers: { 'x-access-token': token }
-      });
+    const response = await axios.get('http://3.37.73.151:3001/logs', {
+      headers: { 'x-access-token': token }
+    });
 
-      const currentMonth = new Date().getMonth();
-      const allUserMonthlyHours = {};
+    const allUserMonthlyHours = {};
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);         // 이번 달 시작
+    const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);        // 다음 달 시작
 
-      response.data.forEach(log => {
-          const logMonth = new Date(log.task_date).getMonth();
-          if (logMonth === currentMonth && log.task_duration) {
-              const [hours, minutes, seconds] = log.task_duration.split(':').map(Number);
-              const durationInHours = hours + minutes / 60 + seconds / 3600;
+    response.data.forEach(log => {
+      const logDate = new Date(log.task_date);
 
-              const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
+      // ✅ 정확히 이번 달 범위인지 확인
+      if (logDate >= currentMonthStart && logDate < nextMonthStart && log.task_duration) {
+        const [hours, minutes, seconds] = log.task_duration.split(':').map(Number);
+        const durationInHours = hours + minutes / 60 + seconds / 3600;
 
-              userNames.forEach(userName => {
-                  if (!allUserMonthlyHours[userName]) {
-                      allUserMonthlyHours[userName] = 0;
-                  }
-                  allUserMonthlyHours[userName] += durationInHours;
-              });
+        const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
+
+        userNames.forEach(userName => {
+          if (!allUserMonthlyHours[userName]) {
+            allUserMonthlyHours[userName] = 0;
           }
-      });
+          allUserMonthlyHours[userName] += durationInHours;
+        });
+      }
+    });
 
-      const currentUserHours = allUserMonthlyHours[loggedInUserName] || 0;
+    const currentUserHours = allUserMonthlyHours[loggedInUserName] || 0;
+    const sortedHours = Object.values(allUserMonthlyHours).sort((a, b) => b - a);
+    const userRank = sortedHours.indexOf(currentUserHours) + 1;
+    const percentageRank = ((userRank / sortedHours.length) * 100).toFixed(1);
 
-      const sortedHours = Object.values(allUserMonthlyHours).sort((a, b) => b - a);
-      const userRank = sortedHours.indexOf(currentUserHours) + 1;
-      const percentageRank = ((userRank / sortedHours.length) * 100).toFixed(1);
+    // 화면 출력
+    document.getElementById('userMonthlyHours').textContent = `${currentUserHours.toFixed(2)} 시간`;
+    document.getElementById('userRankingPercent').textContent = `Top ${percentageRank}%`;
 
-      // 화면 출력
-      document.getElementById('userMonthlyHours').textContent = `${currentUserHours.toFixed(2)} 시간`;
-      document.getElementById('userRankingPercent').textContent = `Top ${percentageRank}%`;
-
-      renderUserRankingChart(sortedHours, currentUserHours, userRank, percentageRank);
+    renderUserRankingChart(sortedHours, currentUserHours, userRank, percentageRank);
   } catch (error) {
-      console.error('모든 사용자 작업 로그를 불러오는 중 오류 발생:', error);
+    console.error('모든 사용자 작업 로그를 불러오는 중 오류 발생:', error);
   }
 }
 
@@ -718,6 +722,88 @@ function renderUserRankingChart(sortedHours, currentUserHours, userRank, percent
       }
   });
 
+}
+
+// 작업 건수 랭킹을 계산하고 화면에 표시
+async function calculateAndRenderUserTaskRanking() {
+  const token = localStorage.getItem('x-access-token');
+  if (!token) return;
+
+  try {
+    const response = await axios.get('http://3.37.73.151:3001/logs', {
+      headers: { 'x-access-token': token }
+    });
+
+    const allUserTaskCounts = {};
+    const currentDate = new Date();
+    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);  // 예: 2025-07-01
+    const nextMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1); // 예: 2025-08-01
+
+    const currentUser = loggedInUserName;
+    let currentUserTaskCount = 0;
+
+    response.data.forEach(log => {
+      const logDate = new Date(log.task_date);
+
+      if (logDate >= currentMonthStart && logDate < nextMonthStart) {
+        const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
+
+        userNames.forEach(userName => {
+          if (!allUserTaskCounts[userName]) {
+            allUserTaskCounts[userName] = 0;
+          }
+          allUserTaskCounts[userName] += 1;
+
+          if (userName === currentUser) {
+            currentUserTaskCount += 1;
+          }
+        });
+      }
+    });
+
+    const sortedTaskCounts = Object.values(allUserTaskCounts).sort((a, b) => b - a);
+    const userRank = sortedTaskCounts.indexOf(currentUserTaskCount) + 1;
+    const percentageRank = userRank ? ((userRank / sortedTaskCounts.length) * 100).toFixed(1) : 0;
+
+    document.getElementById('userMonthlyTasks').textContent = `${currentUserTaskCount} 건`;
+    document.getElementById('userTaskRankingPercent').textContent = `Top ${percentageRank}%`;
+
+    renderUserTaskRankingChart(sortedTaskCounts, currentUserTaskCount, userRank, percentageRank);
+  } catch (error) {
+    console.error('작업 건수 랭킹을 불러오는 중 오류 발생:', error);
+  }
+}
+
+
+
+// 작업 건수 랭킹 차트 생성 함수
+function renderUserTaskRankingChart(sortedTaskCounts, userTaskCount, userRank, percentageRank) {
+  const ctx = document.getElementById('userTaskRankingChart').getContext('2d');
+  const backgroundColors = sortedTaskCounts.map(count => count === userTaskCount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 0.4)');
+
+  new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: Array.from({ length: sortedTaskCounts.length }, (_, i) => i + 1),
+          datasets: [{
+              label: 'Task Count',
+              data: sortedTaskCounts,
+              backgroundColor: backgroundColors,
+              borderWidth: 1
+          }]
+      },
+      options: {
+          plugins: {
+              tooltip: {
+                  callbacks: {
+                      label: (context) => `${context.raw} 건`
+                  }
+              }
+          }
+      }
+  });
+
+  console.log(`사용자 작업 건수 랭킹: ${userRank}, Top ${percentageRank}%`);
 }
 
 
@@ -953,84 +1039,7 @@ function calculateUserTaskCount(workLogs) {
 
   return taskCount;
 }
-// 작업 건수 랭킹을 계산하고 화면에 표시
-async function calculateAndRenderUserTaskRanking(userTaskCount) {
-  const token = localStorage.getItem('x-access-token');
-  if (!token) return;
 
-  try {
-      const response = await axios.get('http://3.37.73.151:3001/logs', {
-          headers: { 'x-access-token': token }
-      });
-
-      const currentMonth = new Date().getMonth(); // 이번 달의 인덱스
-      const allUserTaskCounts = {};
-
-      // 이번 달의 작업 건수만 계산
-      response.data.forEach(log => {
-          const logMonth = new Date(log.task_date).getMonth();
-          
-          // 이번 달의 작업만 필터링
-          if (logMonth === currentMonth) {
-              const userNames = log.task_man.split(',').map(name => name.replace(/\(.*?\)/g, '').trim());
-
-              userNames.forEach(userName => {
-                  if (!allUserTaskCounts[userName]) {
-                      allUserTaskCounts[userName] = 0;
-                  }
-                  allUserTaskCounts[userName] += 1; // 작업 건수 증가
-              });
-          }
-      });
-
-      // 모든 사용자 작업 건수 정렬 (내림차순)
-      const sortedTaskCounts = Object.values(allUserTaskCounts).sort((a, b) => b - a);
-
-      // 사용자 작업 건수의 랭킹과 퍼센트 계산
-      const userRank = sortedTaskCounts.indexOf(userTaskCount) + 1;
-      const percentageRank = userRank ? ((userRank / sortedTaskCounts.length) * 100).toFixed(1) : 0;
-
-      // 화면에 작업 건수, 랭킹, 퍼센트 출력
-      document.getElementById('userMonthlyTasks').textContent = `${userTaskCount} 건`;
-      document.getElementById('userTaskRankingPercent').textContent = `Top ${percentageRank}%`;
-
-      renderUserTaskRankingChart(sortedTaskCounts, userTaskCount, userRank, percentageRank);
-
-  } catch (error) {
-      console.error('작업 건수 랭킹을 불러오는 중 오류 발생:', error);
-  }
-}
-
-
-// 작업 건수 랭킹 차트 생성 함수
-function renderUserTaskRankingChart(sortedTaskCounts, userTaskCount, userRank, percentageRank) {
-  const ctx = document.getElementById('userTaskRankingChart').getContext('2d');
-  const backgroundColors = sortedTaskCounts.map(count => count === userTaskCount ? 'rgba(255, 99, 132, 1)' : 'rgba(54, 162, 235, 0.4)');
-
-  new Chart(ctx, {
-      type: 'bar',
-      data: {
-          labels: Array.from({ length: sortedTaskCounts.length }, (_, i) => i + 1),
-          datasets: [{
-              label: 'Task Count',
-              data: sortedTaskCounts,
-              backgroundColor: backgroundColors,
-              borderWidth: 1
-          }]
-      },
-      options: {
-          plugins: {
-              tooltip: {
-                  callbacks: {
-                      label: (context) => `${context.raw} 건`
-                  }
-              }
-          }
-      }
-  });
-
-  console.log(`사용자 작업 건수 랭킹: ${userRank}, Top ${percentageRank}%`);
-}
 
 // 작업 시작 시간 AM/PM 계산 함수
 function calculateTaskStartTime(workLogs) {
