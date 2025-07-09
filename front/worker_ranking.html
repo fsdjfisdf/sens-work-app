@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>RANKING</title>
+  <link rel="stylesheet" href="./css/worker_ranking.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+</head>
+<body>
+  <main>
+    <section class="filter-section">
+      <input type="date" id="startDate">
+      <input type="date" id="endDate">
+
+      <select id="groupSelect">
+        <option value="">ALL</option>
+        <option value="PEE1">PEE1</option>
+        <option value="PEE2">PEE2</option>
+        <option value="PSKH">PSKH</option>
+      </select>
+
+      <select id="siteSelect">
+        <option value="">ALL</option>
+        <option value="PT">PT</option>
+        <option value="HS">HS</option>
+        <option value="IC">IC</option>
+        <option value="CJ">CJ</option>
+        <option value="PSKH">PSKH</option>
+        <!-- 필요한 SITE 추가 -->
+      </select>
+
+      <button id="searchBtn">SEARCH</button>
+      <button id="resetBtn">RESET</button>
+    </section>
+
+    <section class="chart-section">
+      <canvas id="taskCountChart"></canvas>
+      <canvas id="workTimeChart"></canvas>
+    </section>
+  </main>
+
+  <script src="./js/worker_ranking.js"></script>
+</body>
+</html>
