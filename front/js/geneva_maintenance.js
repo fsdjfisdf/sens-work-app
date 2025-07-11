@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'O2_Analyzer', 'O2_Controller', 'O2_Pump', 'O2_Cell', 'O2_Sample_Valve',
             'Feed_Delivery_Valve', 'Fill_Vent_Valve', 'Drain_Valve', 'APC_Valve', 'Bypass_Valve', 'Shutoff_Valve', 'Vac_Sol_Valve', 'Vac_CDA_Valve',
             'Bubbler_Level_Sensor', 'Bubbler_Flexible_Hose',
-            'Baratron_ASSY', 'View_Port', 'Flow_Switch', 'LL_Door_Cylinder', 'Chuck_Cylinder',
+            'Baratron_Assy', 'View_Port', 'Flow_Switch', 'LL_Door_Cylinder', 'Chuck_Cylinder',
             'Monitor', 'Keyboard', 'Mouse', 'Water_Leak_Detector', 'Formic_Detector', 'Exhaust_Gauge',
             'CTC', 'EDA', 'Temp_Limit_Controller', 'Temp_Controller',
             'SW_Patch'

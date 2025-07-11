@@ -39,7 +39,7 @@ exports.insertChecklist = async (data) => {
       'D_NET', 'MFC', 'Valve', 'O2_analyzer_replace', 'O2_controller_replace', 'O2_pump_replace',
       'O2_cell_replace', 'O2_Sample_valve', 'Feed_Delivery_valve', 'Fill_Vent_valve', 'Drain_valve',
       'APC_valve', 'Bypass_valve', 'Shutoff_valve', 'Vac_sol_valve', 'Vac_CDA_valve',
-      'Bubbler_level_sensor', 'Bubbler_flexible_hose', "Baratron_Ass'y", 'View_Port', 'Flow_Switch',
+      'Bubbler_level_sensor', 'Bubbler_flexible_hose', "Baratron_Assy", 'View_Port', 'Flow_Switch',
       'LL_Door_cylinder', 'Chuck_cylinder', 'Monitor', 'Keyboard', 'Mouse', 'Water_Leak_Detector',
       'Formic_Detector', 'Exhaust_gauge', 'CTC', 'EDA', 'Temp_Limit_Controller', 'Temp_Controller', 'SW_Patch'
     ];
@@ -69,7 +69,7 @@ exports.updateChecklist = async (data) => {
       'D_NET', 'MFC', 'Valve', 'O2_analyzer_replace', 'O2_controller_replace', 'O2_pump_replace',
       'O2_cell_replace', 'O2_Sample_valve', 'Feed_Delivery_valve', 'Fill_Vent_valve', 'Drain_valve',
       'APC_valve', 'Bypass_valve', 'Shutoff_valve', 'Vac_sol_valve', 'Vac_CDA_valve',
-      'Bubbler_level_sensor', 'Bubbler_flexible_hose', "Baratron_Ass'y", 'View_Port', 'Flow_Switch',
+      'Bubbler_level_sensor', 'Bubbler_flexible_hose', "Baratron_Assy", 'View_Port', 'Flow_Switch',
       'LL_Door_cylinder', 'Chuck_cylinder', 'Monitor', 'Keyboard', 'Mouse', 'Water_Leak_Detector',
       'Formic_Detector', 'Exhaust_gauge', 'CTC', 'EDA', 'Temp_Limit_Controller', 'Temp_Controller', 'SW_Patch'
     ];
