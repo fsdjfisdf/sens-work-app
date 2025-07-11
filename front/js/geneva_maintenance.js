@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Elbow_Heater', 'Insulation_Heater', 'Chuck_Heater',
             'Harmonic_Driver', 'Amplifier', 'Disc_Bearing', 'Chuck_Leveling', 'Wafer_Support_Pin_Alignment', 'Temp_Profile',
             'O2_Leak_Test', 'Chuck_Up_Down_Status',
-            'Ring_Seal', 'Door_Seal', 'Ring_Seal_O_Ring', 'Door_Seal_O_Ring',
+            'Ring_Seal', 'Door_Seal', 'Ring_seal_Oring', 'Door_seal_Oring',
             'Gas_Box_Board', 'Temp_Controller_Board', 'Power_Distribution_Board', 'DC_Power_Supply',
             'Facility_Board', 'Station_Board', 'Bubbler_Board', 'D_NET',
             'MFC', 'Valve',

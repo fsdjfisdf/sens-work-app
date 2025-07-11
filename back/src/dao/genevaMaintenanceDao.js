@@ -64,7 +64,7 @@ exports.updateChecklist = async (data) => {
       'GENMARK_Robot_REP', 'Robot_Controller_REP', 'FFU_Controller', 'Fan', 'Motor_Driver', 'Elbow_heater',
       'Insulation_heater', 'Chuck_heater', 'Harmonic_driver', 'Amplifier', 'Disc_bearing', 'Chuck_leveling',
       'Wafer_support_pin_alignment', 'Temp_profile', 'O2_leak_test', 'Chuck_up_down_status', 'Ring_seal',
-      'Door_seal', 'Ring_seal_O_ring', 'Door_seal_O_ring', 'Gas_Box_Board', 'Temp_Controller_Board',
+      'Door_seal', 'Ring_seal_Oring', 'Door_seal_Oring', 'Gas_Box_Board', 'Temp_Controller_Board',
       'Power_Distribution_Board', 'DC_Power_Supply', 'Facility_Board', 'Station_Board', 'Bubbler_Board',
       'D_NET', 'MFC', 'Valve', 'O2_analyzer_replace', 'O2_controller_replace', 'O2_pump_replace',
       'O2_cell_replace', 'O2_Sample_valve', 'Feed_Delivery_valve', 'Fill_Vent_valve', 'Drain_valve',
