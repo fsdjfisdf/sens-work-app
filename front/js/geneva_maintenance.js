@@ -7,9 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 체크리스트 불러오기
     try {
-        const response = await axios.get('http://3.37.73.151:3001/ecolite-maintenance', {
+        const response = await axios.get('http://3.37.73.151:3001/geneva-maintenance', {
             headers: {
                 'x-access-token': token
             }
@@ -43,20 +42,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const checklistFields = [
             'LP_Escort', 'Robot_Escort',
-            'SR8240_Teaching', 'M124V_Teaching', 'M124C_Teaching', 'Robot_REP', 'Robot_Controller_REP',
-            'SR8250_Teaching', 'SR8232_Teaching', 'TM_Robot_REP', 'TM_Robot_Controller_REP',
-            'Pin_Cylinder', 'Pusher_Cylinder', 'DRT',
-            'FFU_Controller', 'FFU_Fan', 'FFU_Motor_Driver',
-            'Microwave', 'Applicator', 'Applicator_Tube', 'Microwave_Generator',
-            'RF_Matcher', 'RF_Generator',
-            'Chuck', 'Toplid_Process_Kit', 'Chamber_Process_Kit', 'Helium_Detector',
-            'Hook_Lift_Pin', 'Pin_Bellows', 'Pin_Sensor', 'LM_Guide', 'HOOK_LIFTER_SERVO_MOTOR', 'Pin_Motor_Controller',
-            'EPD_Single',
-            'Gas_Box_Board', 'Power_Distribution_Board', 'DC_Power_Supply', 'BM_Sensor', 'PIO_Sensor', 'Safety_Module', 'IO_BOX', 'Rack_Board', 'D_NET',
-            'IGS_MFC', 'IGS_Valve',
-            'Solenoid', 'Fast_Vac_Valve', 'Slow_Vac_Valve', 'Slit_Door', 'APC_Valve', 'Shutoff_Valve',
-            'Baratron_ASSY', 'Pirani_ASSY', 'View_Port_Quartz', 'Flow_Switch', 'Monitor', 'Keyboard', 'Mouse', 'Water_Leak_Detector', 'Manometer', 'LIGHT_CURTAIN', 'GAS_SPRING',
-            'CTC', 'PMC', 'EDA', 'EFEM_CONTROLLER',
+            'SR8240_Teaching', 'GENMARK_Robot_Teaching', 'SR8240_Robot_REP', 'GENMARK_Robot_REP', 'Robot_Controller_REP',
+            'FFU_Controller', 'Fan', 'Motor_Driver',
+            'Elbow_Heater', 'Insulation_Heater', 'Chuck_Heater',
+            'Harmonic_Driver', 'Amplifier_Disc_Controller', 'Disc_Bearing', 'Chuck_Leveling', 'Wafer_Support_Pin_Alignment', 'Temp_Profile',
+            'O2_Leak_Test', 'Chuck_Up_Down_Status',
+            'Ring_Seal', 'Door_Seal', 'Ring_Seal_O_Ring', 'Door_Seal_O_Ring',
+            'Gas_Box_Board', 'Temp_Controller_Board', 'Power_Distribution_Board', 'DC_Power_Supply',
+            'Facility_Board', 'Station_Board', 'Bubbler_Board', 'D_NET',
+            'MFC', 'Valve',
+            'O2_Analyzer', 'O2_Controller', 'O2_Pump', 'O2_Cell', 'O2_Sample_Valve',
+            'Feed_Delivery_Valve', 'Fill_Vent_Valve', 'Drain_Valve', 'APC_Valve', 'Bypass_Valve', 'Shutoff_Valve', 'Vac_Sol_Valve', 'Vac_CDA_Valve',
+            'Bubbler_Level_Sensor', 'Bubbler_Flexible_Hose',
+            'Baratron_ASSY', 'View_Port', 'Flow_Switch', 'LL_Door_Cylinder', 'Chuck_Cylinder',
+            'Monitor', 'Keyboard', 'Mouse', 'Water_Leak_Detector', 'Formic_Detector', 'Exhaust_Gauge',
+            'CTC', 'EDA', 'Temp_Limit_Controller', 'Temp_Controller',
             'SW_Patch'
         ];
 
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/ecolite-maintenance', data, {
+            const response = await axios.post('http://3.37.73.151:3001/geneva-maintenance', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token

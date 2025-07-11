@@ -68,6 +68,7 @@ module.exports = function () {
 
   require("../src/routes/integerMaintenanceRoute")(app);  // 추가된 라우트
   require("../src/routes/ecoliteMaintenanceRoute")(app);  // 추가된 라우트
+  require("../src/routes/genevaMaintenanceRoute")(app);  // 추가된 라우트
   require("../src/routes/preciaMaintenanceRoute")(app);  // 추가된 라우트
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인

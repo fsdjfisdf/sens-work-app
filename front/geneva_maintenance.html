@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GENEVA Maintenance Checklist</title>
+  <link rel="stylesheet" href="./css/supra_maintenance.css" />
+  <link rel="stylesheet" href="./css/readworklog.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/geneva_maintenance.js" defer></script>
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+        <div class="nav-container">
+            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+            <div class="sign-container unsigned">
+                <a href="./signin.html" class="sign-link">Login</a>
+            </div>
+            <div class="sign-container signed hidden">
+                <button class="menu-btn">
+                    <div class="menu-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+          <a href="./user_info.html" class="menu-item">SECM</a>
+          <a href="./worklog.html" class="menu-item">Create Worklog</a>
+          <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+          <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+          <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+          <a href="./PCI.html" class="menu-item">PCI</a>
+          <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+          <a href="./business.html" class="menu-item">Business trip</a>
+          <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+          <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+          <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+          <a href="./update.html" class="menu-item">Update</a>
+          <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+  </div>
+</nav>
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
+          <div id="checklist-container">
+            <div class="category"><h2>Escort</h2>
+              <div class="item"><label>LP Escort</label><input type="checkbox" name="LP_Escort" value="O"></div>
+              <div class="item"><label>Robot Escort</label><input type="checkbox" name="Robot_Escort" value="O"></div>
+            </div>
+
+            <div class="category"><h2>EFEM Robot</h2>
+              <div class="item"><label>SR8240 Teaching</label><input type="checkbox" name="SR8240_Teaching" value="O"></div>
+              <div class="item"><label>GENMARK Robot Teaching</label><input type="checkbox" name="GENMARK_Robot_Teaching" value="O"></div>
+              <div class="item"><label>SR8240 Robot REP</label><input type="checkbox" name="SR8240_Robot_REP" value="O"></div>
+              <div class="item"><label>GENMARK Robot REP</label><input type="checkbox" name="GENMARK_Robot_REP" value="O"></div>
+              <div class="item"><label>Robot Controller REP</label><input type="checkbox" name="Robot_Controller_REP" value="O"></div>
+            </div>
+
+            <div class="category"><h2>FFU</h2>
+              <div class="item"><label>FFU Controller</label><input type="checkbox" name="FFU_Controller" value="O"></div>
+              <div class="item"><label>Fan</label><input type="checkbox" name="Fan" value="O"></div>
+              <div class="item"><label>Motor Driver</label><input type="checkbox" name="Motor_Driver" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Heater</h2>
+              <div class="item"><label>Elbow Heater</label><input type="checkbox" name="Elbow_Heater" value="O"></div>
+              <div class="item"><label>Insulation Heater</label><input type="checkbox" name="Insulation_Heater" value="O"></div>
+              <div class="item"><label>Chuck Heater</label><input type="checkbox" name="Chuck_Heater" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Chuck & Drive</h2>
+              <div class="item"><label>Harmonic Driver</label><input type="checkbox" name="Harmonic_Driver" value="O"></div>
+              <div class="item"><label>Amplifier (Disc Controller)</label><input type="checkbox" name="Amplifier_Disc_Controller" value="O"></div>
+              <div class="item"><label>Disc Bearing</label><input type="checkbox" name="Disc_Bearing" value="O"></div>
+              <div class="item"><label>Chuck Leveling</label><input type="checkbox" name="Chuck_Leveling" value="O"></div>
+              <div class="item"><label>Wafer Support Pin Alignment</label><input type="checkbox" name="Wafer_Support_Pin_Alignment" value="O"></div>
+              <div class="item"><label>Chuck Up & Down Status</label><input type="checkbox" name="Chuck_Up_Down_Status" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Leak & O2</h2>
+              <div class="item"><label>O2 Leak Test</label><input type="checkbox" name="O2_Leak_Test" value="O"></div>
+              <div class="item"><label>O2 Analyzer 교체</label><input type="checkbox" name="O2_Analyzer" value="O"></div>
+              <div class="item"><label>O2 Controller 교체</label><input type="checkbox" name="O2_Controller" value="O"></div>
+              <div class="item"><label>O2 Pump 교체</label><input type="checkbox" name="O2_Pump" value="O"></div>
+              <div class="item"><label>O2 Cell 교체</label><input type="checkbox" name="O2_Cell" value="O"></div>
+              <div class="item"><label>O2 Sample Valve</label><input type="checkbox" name="O2_Sample_Valve" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Seal & Ring</h2>
+              <div class="item"><label>Ring Seal</label><input type="checkbox" name="Ring_Seal" value="O"></div>
+              <div class="item"><label>Door Seal</label><input type="checkbox" name="Door_Seal" value="O"></div>
+              <div class="item"><label>Ring Seal O-Ring</label><input type="checkbox" name="Ring_Seal_O_Ring" value="O"></div>
+              <div class="item"><label>Door Seal O-Ring</label><input type="checkbox" name="Door_Seal_O_Ring" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Board</h2>
+              <div class="item"><label>Gas Box Board</label><input type="checkbox" name="Gas_Box_Board" value="O"></div>
+              <div class="item"><label>Temp Controller Board</label><input type="checkbox" name="Temp_Controller_Board" value="O"></div>
+              <div class="item"><label>Power Distribution Board</label><input type="checkbox" name="Power_Distribution_Board" value="O"></div>
+              <div class="item"><label>DC Power Supply</label><input type="checkbox" name="DC_Power_Supply" value="O"></div>
+              <div class="item"><label>Facility Board</label><input type="checkbox" name="Facility_Board" value="O"></div>
+              <div class="item"><label>Station Board</label><input type="checkbox" name="Station_Board" value="O"></div>
+              <div class="item"><label>Bubbler Board</label><input type="checkbox" name="Bubbler_Board" value="O"></div>
+              <div class="item"><label>D-NET</label><input type="checkbox" name="D_NET" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Valve & MFC</h2>
+              <div class="item"><label>MFC</label><input type="checkbox" name="MFC" value="O"></div>
+              <div class="item"><label>Valve</label><input type="checkbox" name="Valve" value="O"></div>
+              <div class="item"><label>Feed & Delivery Valve</label><input type="checkbox" name="Feed_Delivery_Valve" value="O"></div>
+              <div class="item"><label>Fill & Vent Valve</label><input type="checkbox" name="Fill_Vent_Valve" value="O"></div>
+              <div class="item"><label>Drain Valve</label><input type="checkbox" name="Drain_Valve" value="O"></div>
+              <div class="item"><label>APC Valve</label><input type="checkbox" name="APC_Valve" value="O"></div>
+              <div class="item"><label>Bypass Valve</label><input type="checkbox" name="Bypass_Valve" value="O"></div>
+              <div class="item"><label>Shutoff Valve</label><input type="checkbox" name="Shutoff_Valve" value="O"></div>
+              <div class="item"><label>Vac Sol Valve</label><input type="checkbox" name="Vac_Sol_Valve" value="O"></div>
+              <div class="item"><label>Vac CDA Valve</label><input type="checkbox" name="Vac_CDA_Valve" value="O"></div>
+            </div>
+
+            <div class="category"><h2>Bubbler</h2>
+              <div class="item"><label>Bubbler Level Sensor</label><input type="checkbox" name="Bubbler_Level_Sensor" value="O"></div>
+              <div class="item"><label>Bubbler Flexible Hose</label><input type="checkbox" name="Bubbler_Flexible_Hose" value="O"></div>
+            </div>
+
+            <div class="category"><h2>ETC</h2>
+              <div class="item"><label>Baratron Ass'y</label><input type="checkbox" name="Baratron_ASSY" value="O"></div>
+              <div class="item"><label>View Port</label><input type="checkbox" name="View_Port" value="O"></div>
+              <div class="item"><label>Flow Switch</label><input type="checkbox" name="Flow_Switch" value="O"></div>
+              <div class="item"><label>LL Door Cylinder</label><input type="checkbox" name="LL_Door_Cylinder" value="O"></div>
+              <div class="item"><label>Chuck Cylinder</label><input type="checkbox" name="Chuck_Cylinder" value="O"></div>
+              <div class="item"><label>Monitor</label><input type="checkbox" name="Monitor" value="O"></div>
+              <div class="item"><label>Keyboard</label><input type="checkbox" name="Keyboard" value="O"></div>
+              <div class="item"><label>Mouse</label><input type="checkbox" name="Mouse" value="O"></div>
+              <div class="item"><label>Water Leak Detector</label><input type="checkbox" name="Water_Leak_Detector" value="O"></div>
+              <div class="item"><label>Formic Detector</label><input type="checkbox" name="Formic_Detector" value="O"></div>
+              <div class="item"><label>Exhaust Gauge</label><input type="checkbox" name="Exhaust_Gauge" value="O"></div>
+            </div>
+
+            <div class="category"><h2>CTR</h2>
+              <div class="item"><label>CTC</label><input type="checkbox" name="CTC" value="O"></div>
+              <div class="item"><label>EDA</label><input type="checkbox" name="EDA" value="O"></div>
+              <div class="item"><label>Temp Limit Controller</label><input type="checkbox" name="Temp_Limit_Controller" value="O"></div>
+              <div class="item"><label>Temp Controller</label><input type="checkbox" name="Temp_Controller" value="O"></div>
+            </div>
+
+            <div class="category"><h2>S/W</h2>
+              <div class="item"><label>S/W Patch</label><input type="checkbox" name="SW_Patch" value="O"></div>
+            </div>
+          </div>
+          <button type="submit">SAVE</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+          document.querySelector(".unsigned").classList.remove("hidden");
+          document.querySelector(".signed").classList.add("hidden");
+      } else {
+          document.querySelector(".unsigned").classList.add("hidden");
+          document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+          document.querySelectorAll('.admin-only').forEach(element => {
+              element.style.display = 'none';
+          });
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+
+      if (signOutButton) {
+          signOutButton.addEventListener("click", function() {
+              localStorage.removeItem("x-access-token");
+              localStorage.removeItem("user-role");
+              alert("로그아웃 되었습니다.");
+              window.location.replace("./signin.html");
+          });
+      }
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      menuBtn.addEventListener('click', function() {
+          menuBar.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function(event) {
+          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+              menuBar.classList.remove('open');
+          }
+      });
+  });
+</script>
+</html>
