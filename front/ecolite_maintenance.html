@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECOLITE Maintenance Checklist</title>
+  <link rel="stylesheet" href="./css/supra_maintenance.css" />
+  <link rel="stylesheet" href="./css/readworklog.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/ecolite_maintenance.js" defer></script>
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+        <div class="nav-container">
+            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+            <div class="sign-container unsigned">
+                <a href="./signin.html" class="sign-link">Login</a>
+            </div>
+            <div class="sign-container signed hidden">
+                <button class="menu-btn">
+                    <div class="menu-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+          <a href="./user_info.html" class="menu-item">SECM</a>
+          <a href="./worklog.html" class="menu-item">Create Worklog</a>
+          <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+          <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+          <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+          <a href="./PCI.html" class="menu-item">PCI</a>
+          <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+          <a href="./business.html" class="menu-item">Business trip</a>
+          <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+          <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+          <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+          <a href="./update.html" class="menu-item">Update</a>
+          <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+  </div>
+</nav>
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
+          <div id="checklist-container">
+                <div class="category">
+                <h2>Escort</h2>
+                <div class="item" title="작업 후 설비 정상화"><label>LP Escort</label><input type="checkbox" name="LP_Escort" value="O"></div>
+                <div class="item" title="작업 후 설비 정상화"><label>Robot Escort</label><input type="checkbox" name="Robot_Escort" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>EFEM Robot</h2>
+                <div class="item" title="작업 후 설비 정상화"><label>SR8240 Teaching</label><input type="checkbox" name="SR8240_Teaching" value="O"></div>
+                <div class="item" title="작업 후 설비 정상화"><label>M124V Teaching</label><input type="checkbox" name="M124V_Teaching" value="O"></div>
+                <div class="item" title="작업 후 설비 정상화"><label>M124C Teaching</label><input type="checkbox" name="M124C_Teaching" value="O"></div>
+                <div class="item" title="REP 후 Data Backup"><label>Robot REP</label><input type="checkbox" name="EFEM_Robot_REP" value="O"></div>
+                <div class="item" title="REP 후 Data Backup"><label>Robot Controller REP</label><input type="checkbox" name="EFEM_Robot_Controller_REP" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>TM Robot</h2>
+                <div class="item" title="작업 후 설비 정상화"><label>SR8250 Teaching</label><input type="checkbox" name="SR8250_Teaching" value="O"></div>
+                <div class="item" title="작업 후 설비 정상화"><label>SR8232 Teaching</label><input type="checkbox" name="SR8232_Teaching" value="O"></div>
+                <div class="item" title="REP 후 Data Backup"><label>Robot REP</label><input type="checkbox" name="TM_Robot_REP" value="O"></div>
+                <div class="item" title="REP 후 Data Backup"><label>Robot Controller REP</label><input type="checkbox" name="TM_Robot_Controller_REP" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>BM Module</h2>
+                <div class="item" title="Sensor, Speed Adjust"><label>Pin Cylinder</label><input type="checkbox" name="Pin_Cylinder" value="O"></div>
+                <div class="item" title="Sensor, Speed Adjust"><label>Pusher Cylinder</label><input type="checkbox" name="Pusher_Cylinder" value="O"></div>
+                <div class="item" title="작업 후 설비 정상화"><label>DRT</label><input type="checkbox" name="DRT" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>FFU (EFEM, TM)</h2>
+                <div class="item" title="REP 후 설비 정상화"><label>FFU Controller</label><input type="checkbox" name="FFU_Controller" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Fan</label><input type="checkbox" name="FFU_Fan" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Motor Driver</label><input type="checkbox" name="FFU_Motor_Driver" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>Microwave</h2>
+                <div class="item" title="Head, Matcher, PPD REP"><label>Microwave</label><input type="checkbox" name="Microwave" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Applicator</label><input type="checkbox" name="Applicator" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Applicator Tube</label><input type="checkbox" name="Applicator_Tube" value="O"></div>
+                <div class="item" title="REP 후 D-net Cal"><label>Generator</label><input type="checkbox" name="Microwave_Generator" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>RF Bias</h2>
+                <div class="item" title="REP 후 설비 정상화"><label>Matcher</label><input type="checkbox" name="RF_Matcher" value="O"></div>
+                <div class="item" title="REP 후 D-net Cal"><label>Generator</label><input type="checkbox" name="RF_Generator" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>Chuck</h2>
+                <div class="item" title="REP 후 미세 Teaching"><label>Chuck</label><input type="checkbox" name="Chuck" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>Process Kit</h2>
+                <div class="item" title="Baffle, Focus REP"><label>Toplid Process Kit</label><input type="checkbox" name="Toplid_Kit" value="O"></div>
+                <div class="item" title="Ceramic Ring, Insulator, Walliner REP / REP 후 미세 Teaching"><label>Chamber Process Kit</label><input type="checkbox" name="Chamber_Kit" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>Leak</h2>
+                <div class="item" title="Leak Point Confirm"><label>Helium Detector</label><input type="checkbox" name="Helium_Detector" value="O"></div>
+                </div>
+
+                <div class="category">
+
+                <h2>Pin</h2>
+                <div class="item" title="REP 후 Teaching"><label>Hook Lift Pin</label><input type="checkbox" name="Hook_Lift_Pin" value="O"></div>
+                <div class="item" title="REP 후 Teaching"><label>Bellows</label><input type="checkbox" name="Pin_Bellows" value="O"></div>
+                <div class="item" title="REP 후 Teaching"><label>Pin Sensor</label><input type="checkbox" name="Pin_Sensor" value="O"></div>
+                <div class="item" title="REP 후 Teaching"><label>LM Guide</label><input type="checkbox" name="LM_Guide" value="O"></div>
+                <div class="item" title="REP 후 Teaching"><label>HOOK LIFTER SERVO MOTOR</label><input type="checkbox" name="HOOK_LIFTER_SERVO_MOTOR" value="O"></div>
+                <div class="item" title="REP 후 Teaching"><label>Pin Motor Controller</label><input type="checkbox" name="Pin_Motor_Controller" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>EPD</h2>
+                <div class="item" title="REP 후 Set, Gain 값 Adjust"><label>Single</label><input type="checkbox" name="EPD_Single" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>Board</h2>
+                <div class="item" title="REP 후 설비 정상화"><label>Gas Box Board</label><input type="checkbox" name="Gas_Box_Board" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Power Distribution Board</label><input type="checkbox" name="Power_Distribution_Board" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>DC Power Supply</label><input type="checkbox" name="DC_Power_Supply" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>BM Sensor</label><input type="checkbox" name="BM_Sensor" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>PIO Sensor</label><input type="checkbox" name="PIO_Sensor" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Safety Module</label><input type="checkbox" name="Safety_Module" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>IO BOX</label><input type="checkbox" name="IO_BOX" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Rack Board</label><input type="checkbox" name="Rack_Board" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>D-NET</label><input type="checkbox" name="D_NET" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>IGS Block</h2>
+                <div class="item" title="REP 후 Zero Cal"><label>MFC</label><input type="checkbox" name="IGS_MFC" value="O"></div>
+                <div class="item" title="Manual, Regulator, N.C REP"><label>Valve</label><input type="checkbox" name="IGS_Valve" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>Valve</h2>
+                <div class="item" title="Ass;y & Solenoid Kit Rep"><label>Solenoid</label><input type="checkbox" name="Solenoid" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Fast Vac Valve</label><input type="checkbox" name="Fast_Vac_Valve" value="O"></div>
+                <div class="item" title="Pumping Time Adjust"><label>Slow Vac Valve</label><input type="checkbox" name="Slow_Vac_Valve" value="O"></div>
+                <div class="item" title="Blade & Body REP"><label>Slit Door</label><input type="checkbox" name="Slit_Door" value="O"></div>
+                <div class="item" title="REP 후 Service Auto Learn"><label>APC Valve</label><input type="checkbox" name="APC_Valve" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Shutoff Valve</label><input type="checkbox" name="Shutoff_Valve" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>ETC</h2>
+                <div class="item" title="REP 후 Gain 값 Adjust"><label>Baratron Ass'y</label><input type="checkbox" name="Baratron" value="O"></div>
+                <div class="item" title="REP 후 Gain 값 Adjust"><label>Pirani Ass'y</label><input type="checkbox" name="Pirani" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>View Port Quartz</label><input type="checkbox" name="View_Port_Quartz" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Flow Switch</label><input type="checkbox" name="Flow_Switch" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Monitor</label><input type="checkbox" name="Monitor" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Keyboard</label><input type="checkbox" name="Keyboard" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Mouse</label><input type="checkbox" name="Mouse" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Water Leak Detector</label><input type="checkbox" name="Water_Leak_Detector" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>Manometer</label><input type="checkbox" name="Manometer" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>LIGHT CURTAIN</label><input type="checkbox" name="LIGHT_CURTAIN" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>GAS SPRING</label><input type="checkbox" name="GAS_SPRING" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>CTR</h2>
+                <div class="item" title="REP 후 설비 정상화"><label>CTC</label><input type="checkbox" name="CTC" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>PMC</label><input type="checkbox" name="PMC" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>EDA</label><input type="checkbox" name="EDA" value="O"></div>
+                <div class="item" title="REP 후 설비 정상화"><label>EFEM CONTROLLER</label><input type="checkbox" name="EFEM_CONTROLLER" value="O"></div>
+                </div>
+
+                <div class="category">
+                <h2>S/W</h2>
+                <div class="item" title="S/W Patch 후 설비 정상화"><label>S/W Patch</label><input type="checkbox" name="SW_Patch" value="O"></div>
+                </div>
+          </div>
+          <button type="submit">SAVE</button>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+          document.querySelector(".unsigned").classList.remove("hidden");
+          document.querySelector(".signed").classList.add("hidden");
+      } else {
+          document.querySelector(".unsigned").classList.add("hidden");
+          document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+          document.querySelectorAll('.admin-only').forEach(element => {
+              element.style.display = 'none';
+          });
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+
+      if (signOutButton) {
+          signOutButton.addEventListener("click", function() {
+              localStorage.removeItem("x-access-token");
+              localStorage.removeItem("user-role");
+              alert("로그아웃 되었습니다.");
+              window.location.replace("./signin.html");
+          });
+      }
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      menuBtn.addEventListener('click', function() {
+          menuBar.classList.toggle('open');
+      });
+
+      document.addEventListener('click', function(event) {
+          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+              menuBar.classList.remove('open');
+          }
+      });
+  });
+</script>
+</html>
