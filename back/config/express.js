@@ -77,6 +77,8 @@ module.exports = function () {
   require('../src/routes/taskCountRoute')(app);  // 추가
   const integerMaintCountRoute = require('../src/routes/integerMaintCountRoute');
   app.use('/api', integerMaintCountRoute);
+  const ecoliteMaintCountRoute = require('../src/routes/ecoliteMaintCountRoute');
+  app.use('/api', ecoliteMaintCountRoute);
   const preciaMaintCountRoute = require('../src/routes/preciaMaintCountRoute');
   app.use('/api', preciaMaintCountRoute);
   
