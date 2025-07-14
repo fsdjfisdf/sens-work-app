@@ -79,6 +79,8 @@ module.exports = function () {
   app.use('/api', integerMaintCountRoute);
   const ecoliteMaintCountRoute = require('../src/routes/ecoliteMaintCountRoute');
   app.use('/api', ecoliteMaintCountRoute);
+  const genevaMaintCountRoute = require('../src/routes/genevaMaintCountRoute');
+  app.use('/api', genevaMaintCountRoute);
   const preciaMaintCountRoute = require('../src/routes/preciaMaintCountRoute');
   app.use('/api', preciaMaintCountRoute);
   
