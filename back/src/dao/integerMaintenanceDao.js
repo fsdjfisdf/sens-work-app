@@ -133,9 +133,9 @@ exports.getChecklistByName = async (name) => {
 exports.getAllChecklists = async () => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const query = `SELECT * FROM INTEGER_MAINT_SELF`;
+    const query = `SELECT * FROM GENEVA_MAINT_SELF`;
     const [rows] = await connection.query(query);
-    return rows; // 모든 사용자의 체크리스트 데이터를 반환
+    return rows;
   } catch (err) {
     throw new Error(`Error retrieving all checklists: ${err.message}`);
   } finally {
