@@ -110,4 +110,15 @@ exports.getChecklistByName = async (name) => {
   }
 };
 
-console.log("✅ Exported DAO functions:", Object.keys(module.exports));
+exports.getAllChecklists = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `SELECT * FROM GENEVA_MAINT_SELF`;
+    const [rows] = await connection.query(query);
+    return rows;
+  } catch (err) {
+    throw new Error(`Error retrieving all checklists: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};
