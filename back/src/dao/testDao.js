@@ -106,3 +106,11 @@ exports.addQuestion = async ({
     ]
   );
 };
+
+exports.getTestResults = async (user_id) => {
+  const [rows] = await pool.query(
+    'SELECT id, equipment_type, level, score, total_questions, test_date FROM test_results WHERE user_id = ? ORDER BY test_date DESC',
+    [user_id]
+  );
+  return rows;
+};

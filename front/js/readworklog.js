@@ -157,7 +157,9 @@ async function loadWorkLogs() {
                         "Transfer Item": log.transfer_item,
                         "Task Duration": formatDuration(log.task_duration),
                         "Start Time": log.start_time,
-                        "End Time": log.end_time
+                        "End Time": log.end_time,
+                        "non time": log.none_time,
+                        "move time": log.move_time
                     });
                 });
             });

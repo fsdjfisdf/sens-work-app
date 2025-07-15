@@ -70,3 +70,13 @@ exports.addQuestion = async (req, res) => {
     res.status(500).json({ message: '문제 추가 중 오류 발생', error });
   }
 };
+
+exports.getTestResults = async (req, res) => {
+  const user_id = req.verifiedToken.userIdx; // 또는 nickname 사용 시 조정
+  try {
+    const results = await testDao.getTestResults(user_id);
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(500).json({ message: '시험 결과 조회 중 오류 발생', error });
+  }
+};

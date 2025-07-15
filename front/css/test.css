@@ -282,3 +282,24 @@ h2 {
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
+
+#test-history-container {
+  margin-top: 40px;
+}
+
+#test-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#test-history-table th,
+#test-history-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+
+#test-history-table th {
+  background-color: #f2f2f2;
+}
