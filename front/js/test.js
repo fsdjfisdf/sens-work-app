@@ -217,9 +217,22 @@ result.details.forEach((item, index) => {
   }
 }
 
+document.getElementById("open-history-modal").addEventListener("click", () => {
+  document.getElementById("history-modal").classList.remove("hidden");
+  document.getElementById("history-modal").style.display = "flex";
+  loadTestResults(); // 모달 열릴 때 로딩
+});
+
+document.getElementById("close-history-modal").addEventListener("click", () => {
+  document.getElementById("history-modal").classList.add("hidden");
+  document.getElementById("history-modal").style.display = "none";
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   loadTestResults(); // 로그인 상태일 때 불러오기
 });
+
+let allTestResults = [];
 
 async function loadTestResults() {
   const token = localStorage.getItem('x-access-token');
@@ -230,31 +243,51 @@ async function loadTestResults() {
     const res = await fetch(`${API_BASE_URL}/api/test/all-test-results`, {
       headers: { 'x-access-token': token }
     });
-    const results = await res.json();
-    if (results.length === 0) return;
-
-    const table = document.getElementById('test-history-table').querySelector('tbody');
-    table.innerHTML = '';
-
-    results.forEach(result => {
-      const row = document.createElement('tr');
-      const date = new Date(result.test_date).toLocaleString('ko-KR');
-      const scoreText = `${result.score} / ${result.total_questions}`;
-      const note = result.score >= result.total_questions * 0.8 ? '✅ 우수' : '';
-
-      row.innerHTML = `
-        <td>${result.user_id}</td>
-        <td>${date}</td>
-        <td>${result.equipment_type}</td>
-        <td>Level ${result.level}</td>
-        <td>${scoreText}</td>
-        <td>${note}</td>
-      `;
-      table.appendChild(row);
-    });
-
-    document.getElementById('test-history-container').classList.remove('hidden');
+    allTestResults = await res.json();
+    renderTestResults(allTestResults);
   } catch (err) {
     console.error("전체 시험 결과 조회 오류:", err);
   }
 }
+
+function renderTestResults(data) {
+  const tbody = document.getElementById('test-history-table').querySelector('tbody');
+  tbody.innerHTML = '';
+  data.forEach(result => {
+    const row = document.createElement('tr');
+    const date = new Date(result.test_date).toLocaleString('ko-KR');
+    const scoreText = `${result.score} / ${result.total_questions}`;
+    const note = result.score >= result.total_questions * 0.8 ? '합격' : '';
+
+    row.innerHTML = `
+      <td>${result.user_id}</td>
+      <td>${date}</td>
+      <td>${result.equipment_type}</td>
+      <td>Level ${result.level}</td>
+      <td>${scoreText}</td>
+      <td>${note}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+document.getElementById("filter-results").addEventListener("click", () => {
+  const name = document.getElementById("search-name").value.trim().toLowerCase();
+  const eq = document.getElementById("search-eq").value;
+  const level = document.getElementById("search-level").value;
+
+  const filtered = allTestResults.filter(r => {
+    return (!name || r.user_id.toLowerCase().includes(name)) &&
+           (!eq || r.equipment_type === eq) &&
+           (!level || r.level.toString() === level);
+  });
+
+  renderTestResults(filtered);
+});
+
+document.getElementById("reset-results").addEventListener("click", () => {
+  document.getElementById("search-name").value = '';
+  document.getElementById("search-eq").value = '';
+  document.getElementById("search-level").value = '';
+  renderTestResults(allTestResults);
+});
