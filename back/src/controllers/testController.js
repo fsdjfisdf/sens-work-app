@@ -71,12 +71,12 @@ exports.addQuestion = async (req, res) => {
   }
 };
 
-exports.getTestResults = async (req, res) => {
-  const user_id = req.verifiedToken.userIdx; // 또는 nickname 사용 시 조정
+exports.getAllTestResults = async (req, res) => {
   try {
-    const results = await testDao.getTestResults(user_id);
+    const results = await testDao.getAllTestResults(); // DAO 함수 호출
     res.status(200).json(results);
   } catch (error) {
-    res.status(500).json({ message: '시험 결과 조회 중 오류 발생', error });
+    console.error("🔥 전체 시험 결과 조회 오류:", error);
+    res.status(500).json({ message: '전체 시험 결과 조회 중 오류 발생', error });
   }
 };

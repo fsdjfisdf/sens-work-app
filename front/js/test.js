@@ -223,26 +223,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadTestResults() {
   const token = localStorage.getItem('x-access-token');
-  if (!token) return;
+  const role = localStorage.getItem('user-role');
+  if (!token || role !== 'admin') return;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/test/test-results`, {
+    const res = await fetch(`${API_BASE_URL}/api/test/all-test-results`, {
       headers: { 'x-access-token': token }
     });
     const results = await res.json();
     if (results.length === 0) return;
 
     const table = document.getElementById('test-history-table').querySelector('tbody');
-    table.innerHTML = ''; // 초기화
+    table.innerHTML = '';
 
     results.forEach(result => {
       const row = document.createElement('tr');
-
       const date = new Date(result.test_date).toLocaleString('ko-KR');
       const scoreText = `${result.score} / ${result.total_questions}`;
       const note = result.score >= result.total_questions * 0.8 ? '✅ 우수' : '';
 
       row.innerHTML = `
+        <td>${result.user_id}</td>
         <td>${date}</td>
         <td>${result.equipment_type}</td>
         <td>Level ${result.level}</td>
@@ -254,6 +255,6 @@ async function loadTestResults() {
 
     document.getElementById('test-history-container').classList.remove('hidden');
   } catch (err) {
-    console.error("시험 이력 불러오기 오류:", err);
+    console.error("전체 시험 결과 조회 오류:", err);
   }
 }
