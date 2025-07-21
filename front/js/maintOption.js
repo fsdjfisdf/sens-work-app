@@ -99,12 +99,40 @@ document.addEventListener('DOMContentLoaded', function() {
             "LOT 조사",
             "LP ESCORT"
         ],
-        "ECOLITE": ["이관항목 없음"],
-        "GENEVA": ["이관항목 없음"]
+        "ECOLITE 300": [
+            "SELECT", "LP Escort", "Robot Escort", "SR8240 Teaching", "M124V Teaching", "M124C Teaching", "Robot REP", "Robot Controller REP",
+            "SR8250 Teaching", "SR8232 Teaching", "Pin Cylinder", "Pusher Cylinder", "DRT", "FFU Controller", "Fan", "Motor Driver",
+            "Microwave", "Applicator", "Applicator Tube", "Generator", "Matcher", "Chuck", "Toplid Process Kit", "Chamber Process Kit",
+            "Helium Detector", "Hook Lift Pin", "Bellows", "Pin Sensor", "LM Guide", "HOOK LIFTER SERVO MOTOR", "Pin Motor Controller",
+            "Single", "Gas Box Board", "Power Distribution Board", "DC Power Supply", "BM Sensor", "PIO Sensor", "Safety Module",
+            "IO BOX", "Rack Board", "D-NET", "MFC", "Valve", "Solenoid", "Fast Vac Valve", "Slow Vac Valve", "Slit Door", "APC Valve",
+            "Shutoff Valve", "Baratron Ass'y", "Pirani Ass'y", "View Port Quartz", "Flow Switch", "Monitor", "Keyboard", "Mouse",
+            "Water Leak Detector", "Manometer", "LIGHT CURTAIN", "GAS SPRING", "CTC", "PMC", "EDA", "Temp Limit Controller",
+            "Temp Controller", "EFEM CONTROLLER", "S/W Patch"
+        ],
+        "GENEVA": [
+            "SELECT", "LP Escort", "Robot Escort", "SR8240 Teaching", "GENMARK robot teaching", "SR8240 Robot REP", "GENMARK Robot REP",
+            "Robot Controller REP", "FFU Controller", "Fan", "Motor Driver", "Elbow heater", "Insulation heater", "Chuck heater",
+            "Harmonic driver", "Amplifier (Disc controller)", "Disc bearing", "Chuck leveling", "Wafer support pin alignment",
+            "Temp profile", "O2 leak test", "Chuck up & down status", "Ring seal", "Ring seal O-ring", "Door seal", "Door seal O-ring",
+            "Gas Box Board", "Temp Controller Board", "Power Distribution Board", "DC Power Supply", "Facility Board", "Station Board",
+            "Bubbler Board", "D-NET", "MFC", "Valve", "O2 analyzer 교체", "O2 controller 교체", "O2 pump 교체", "O2 cell 교체",
+            "O2 Sample valve", "Feed & Delivery valve", "Fill & Vent valve", "Drain valve", "APC valve", "Bypass valve", "Shutoff valve",
+            "Vac sol valve", "Vac CDA valve", "Bubbler level sensor", "Bubbler flexible hose", "Baratron Ass'y", "View Port",
+            "Flow Switch", "LL Door cylinder", "Chuck cylinder", "Monitor", "Keyboard", "Mouse", "Water Leak Detector",
+            "Formic Detector", "Exhaust gauge", "CTC", "EDA", "Temp Limit Controller", "Temp Controller", "S/W Patch"
+        ],
+        "HDW": [
+            "SELECT", "OD REP", "Relay REP", "Fan REP", "NTC / NTU REP", "SSR REP", "MC REP", "Fuse REP", "CT REP", "HBD REP", "SMPS REP",
+            "PLC (main unit 제외) REP", "ELB REP", "Heater (Halogen lamp) REP", "Q'tz tank REP", "Leak troubleshooting", "Flow meter REP",
+            "Air valve REP", "Shut off valve REP", "Sol valve REP", "Elbow fitting (Q'tz) REP", "Leak tray", "TC Sensor", "Touch panel patch",
+            "PLC patch", "Touch panel REP", "PLC REP"
+        ]
     };
 
     const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM", "SUPRA Q"];
     const integerModels = ["INTEGER IVr", "INTEGER XP"];
+    const ecoliteModels = ["ECOLITE 300", "ECOLITE 400", "ECOLITE 3000", "ECOLITE XP"];
 
     // Assign the same options for SUPRA N to other SUPRA models
     supraModels.forEach(model => {
@@ -114,6 +142,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Assign the same options for INTEGER to other INTEGER models
     integerModels.forEach(model => {
         transferOptions[model] = transferOptions["INTEGER Plus"];
+    });
+
+    ecoliteModels.forEach(model => {
+    transferOptions[model] = transferOptions["ECOLITE 300"];
     });
 
     function updateTransferOptions() {

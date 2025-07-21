@@ -109,19 +109,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(input => input.value).join('<br>');
         const taskCauses = Array.from(document.getElementsByClassName('task-cause-input')).map(input => input.value).join('<br>');
             if (task_name.length > 255) {
-                alert(`작업명은 255자 이내로 입력해 주세요. 현재 ${task_name.length}자입니다.`);
+                alert(`TITLE은 255자 이내로 입력해 주세요. 현재 ${task_name.length}자입니다.`);
                 return;
             }
             if (taskResults.length > 255) {
-                alert(`작업 결과는 255자 이내로 입력해 주세요. 현재 ${taskResults.length}자입니다.`);
+                alert(`RESULT는 255자 이내로 입력해 주세요. 현재 ${taskResults.length}자입니다.`);
                 return;
             }
             if (taskCauses.length > 255) {
-                alert(`작업 원인은 255자 이내로 입력해 주세요. 현재 ${taskCauses.length}자입니다.`);
+                alert(`CAUSE은 255자 이내로 입력해 주세요. 현재 ${taskCauses.length}자입니다.`);
                 return;
             }
             if (status.length > 255) {
-                alert(`작업 상태는 255자 이내로 입력해 주세요. 현재 ${status.length}자입니다.`);
+                alert(`STATUS는 255자 이내로 입력해 주세요. 현재 ${status.length}자입니다.`);
                 return;
             }
         let taskMans = Array.from(document.querySelectorAll('.task-man-container')).map((container, index) => {
