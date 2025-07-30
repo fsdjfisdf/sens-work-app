@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const supraModels = ["SUPRA NM", "SUPRA III", "SUPRA IV", "SUPRA V", "SUPRA Vplus", "SUPRA VM", "SUPRA Q"];
     const integerModels = ["INTEGER IVr", "INTEGER XP"];
-    const ecoliteModels = ["ECOLITE 300", "ECOLITE 400", "ECOLITE 3000", "ECOLITE XP"];
+    const ecoliteModels = ["ECOLITE 300", "ECOLITE 400", "ECOLITE 3000", "ECOLITE XP", "TERA21"];
 
     // Assign the same options for SUPRA N to other SUPRA models
     supraModels.forEach(model => {

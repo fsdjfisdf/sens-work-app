@@ -6,22 +6,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const siteSelection = this.value;
 
       const lineOptions = {
-          "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
-          "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRDK", "NRD-V", "U4", "M1", "5L", "G1L"],
-          "IC": ["M10", "M14", "M16", "R3"],
-          "CJ": ["M11", "M12", "M15"],
-          "PSKH": ["PSKH", "C1", "C2", "C3", "C5"],
-          "USA-Portland": ["INTEL"],
-          "USA-Arizona": ["INTEL"],
-          "USA-Texas": ["TEXAS INSTRUMENT"],
-          "Ireland": ["INTEL"],
-          "Japan-Hiroshima": ["MICRON"],
-          "China-Wuxi": ["HYNIX"],
-          "China-Xian": ["HYNIX", "SAMSUNG"],
-          "China-Shanghai": ["GTX"],
-          "China-Beijing": ["JIDIAN"],
-          "Taiwan-Taichoung": ["MICRON"],
-          "SINGAPORE": ["MICRON"],
+          "PT": ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5", "Training"],
+          "HS": ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRDK", "NRD-V", "U4", "M1", "5L", "G1L", "Training"],
+          "IC": ["M10", "M14", "M16", "R3", "Training"],
+          "CJ": ["M11", "M12", "M15", "Training"],
+          "PSKH": ["PSKH", "C1", "C2", "C3", "C5", "Training"],
+          "USA-Portland": ["INTEL", "Training"],
+          "USA-Arizona": ["INTEL", "Training"],
+          "USA-Texas": ["TEXAS INSTRUMENT", "Training"],
+          "Ireland": ["INTEL", "Training"],
+          "Japan-Hiroshima": ["MICRON", "Training"],
+          "China-Wuxi": ["HYNIX", "Training"],
+          "China-Xian": ["HYNIX", "SAMSUNG", "Training"],
+          "China-Shanghai": ["GTX", "Training"],
+          "China-Beijing": ["JIDIAN", "Training"],
+          "Taiwan-Taichoung": ["MICRON", "Training"],
+          "SINGAPORE": ["MICRON", "Training"],
       };
 
       lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';
