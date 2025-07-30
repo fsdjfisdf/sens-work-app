@@ -86,7 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
         "China-Shanghai": ["GTX"],
         "China-Beijing": ["JIDIAN"],
         "Taiwan-Taichoung": ["MICRON"],
-        "Singapore": ["MICRON"]
+        "Singapore": ["MICRON"],
+        "Training": ["Training"]
     };
 
     /** ✅ `SITE` 선택 시 `LINE` 옵션 자동 업데이트 */
@@ -255,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
             IC: ["M10", "M14", "M16", "R3"],
             CJ: ["M11", "M12", "M15"],
             PSKH: ["PSKH", "C1", "C2", "C3", "C5"],
+            Training: ["Training"]
         };
 
         lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';
