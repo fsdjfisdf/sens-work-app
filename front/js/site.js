@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
           "China-Beijing": ["JIDIAN", "Training"],
           "Taiwan-Taichoung": ["MICRON", "Training"],
           "SINGAPORE": ["MICRON", "Training"],
-          "Training": ["P1F", "Training", "TRAINING"]
+          "Training": ["Training", "TRAINING"]
       };
 
       lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';

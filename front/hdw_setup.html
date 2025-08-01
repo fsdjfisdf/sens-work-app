@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HDW Set up Checklist</title>
+  <link rel="stylesheet" href="./css/supra_setup.css" />
+  <link rel="stylesheet" href="./css/readworklog.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/hdw_setup.js" defer></script>
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+        <div class="nav-container">
+            <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+            <div class="sign-container unsigned">
+                <a href="./signin.html" class="sign-link">Login</a>
+            </div>
+            <div class="sign-container signed hidden">
+                <button class="menu-btn">
+                    <div class="menu-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+          <a href="./user_info.html" class="menu-item">SECM</a>
+          <a href="./worklog.html" class="menu-item">Create Worklog</a>
+          <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+          <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+          <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+          <a href="./PCI.html" class="menu-item">PCI</a>
+          <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+          <a href="./business.html" class="menu-item">Business trip</a>
+          <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+          <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+          <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+          <a href="./update.html" class="menu-item">Update</a>
+          <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+  </div>
+</nav>
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
+          <div id="checklist-container">
+
+
+<!-- 예시: INSTALLATION PREPARATION -->
+<div class="category">
+  <div class="category-header">
+    <h2>INSTALLATION PREPARATION</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="설비반입 순서를 숙지하고 있는가?">
+    <label>설비반입 순서를 숙지하고 있는가?</label>
+    <input type="checkbox" name="EQ_IMPORT_ORDER" value="O" />
+  </div>
+  <div class="item" title="Packing List 확인하여 반입 Part 확인이 가능 한가?">
+    <label>Packing List 확인하여 반입 Part 확인이 가능 한가?</label>
+    <input type="checkbox" name="PACK_LIST_CHECK" value="O" />
+  </div>
+  <div class="item" title="고객사에서 그린 기준선 일치하는지 확인 알고 있는가?">
+    <label>고객사에서 그린 기준선 일치하는지 확인 알고 있는가?</label>
+    <input type="checkbox" name="OHT_LINE_CHECK_GENERAL" value="O" />
+  </div>
+  <div class="item" title="설비간 유격거리가 충분한지 확인 알고 있는가?">
+    <label>설비간 유격거리가 충분한지 확인 알고 있는가?</label>
+    <input type="checkbox" name="EQ_SPACING_CHECK" value="O" />
+  </div>
+  <div class="item" title="Drawing Template을 기준선에 맞춰 배치 알고 있는가?">
+    <label>Drawing Template을 기준선에 맞춰 배치 알고 있는가?</label>
+    <input type="checkbox" name="DRAWING_TEMPLATE_SETUP" value="O" />
+  </div>
+  <div class="item" title="Drawing Template를 펼쳐 타공, H빔 및 Adjust를 Marking 알고 있는가?">
+    <label>Drawing Template를 펼쳐 타공, H빔 및 Adjust를 Marking 알고 있는가?</label>
+    <input type="checkbox" name="DRAWING_TEMPLATE_MARKING" value="O" />
+  </div>
+  <div class="item" title="Wood Packaging 에서 내릴 때 장비의 Poke 위치를 알고 있는가?">
+    <label>Wood Packaging 에서 내릴 때 장비의 Poke 위치를 알고 있는가?</label>
+    <input type="checkbox" name="POKE_POSITION_UNDERSTANDING" value="O" />
+  </div>
+  <div class="item" title="타공별 Utility Spec을 숙지하고 있는가?">
+    <label>타공별 Utility Spec을 숙지하고 있는가?</label>
+    <input type="checkbox" name="UTILITY_SPEC_UNDERSTANDING" value="O" />
+  </div>
+</div>
+<!-- FAB IN -->
+<div class="category">
+  <div class="category-header">
+    <h2>FAB IN</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="Module Unpacking시 주의 사항에 대해 숙지하고 있는가?">
+    <label>Module Unpacking시 주의 사항에 대해 숙지하고 있는가?</label>
+    <input type="checkbox" name="MODULE_UNPACKING_CAUTION" value="O" />
+  </div>
+  <div class="item" title="Module Clean시 주의 사항에 대해 숙지하고 있는가?">
+    <label>Module Clean시 주의 사항에 대해 숙지하고 있는가?</label>
+    <input type="checkbox" name="MODULE_CLEAN_CAUTION" value="O" />
+  </div>
+  <div class="item" title="Module 이동시 주의 사항에 대해 숙지하고 있는가?">
+    <label>Module 이동시 주의 사항에 대해 숙지하고 있는가?</label>
+    <input type="checkbox" name="MODULE_MOVEMENT_CAUTION" value="O" />
+  </div>
+</div>
+<!-- DOCKING -->
+<div class="category">
+  <div class="category-header">
+    <h2>DOCKING</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="장비별 필요 Tool를 숙지하고 있는가?">
+    <label>장비별 필요 Tool를 숙지하고 있는가?</label>
+    <input type="checkbox" name="TOOL_REQUIREMENT_UNDERSTANDING" value="O" />
+  </div>
+  <div class="item" title="장비별 Tool size를 숙지하고 있는가?">
+    <label>장비별 Tool size를 숙지하고 있는가?</label>
+    <input type="checkbox" name="TOOL_SIZE_UNDERSTANDING" value="O" />
+  </div>
+  <div class="item" title="각 Module의 지면에서 frame의 높이를 알고 Spec에 맞춰 Docking 알고 있는가?">
+    <label>각 Module의 지면에서 frame의 높이를 알고 Spec에 맞춰 Docking 알고 있는가?</label>
+    <input type="checkbox" name="MODULE_HEIGHT_DOCKING" value="O" />
+  </div>
+  <div class="item" title="Caster 랑 moving jig 분리가 하는 법을 알고 있는가?">
+    <label>Caster 랑 moving jig 분리가 하는 법을 알고 있는가?</label>
+    <input type="checkbox" name="CASTER_JIG_SEPARATION" value="O" />
+  </div>
+  <div class="item" title="Module Docking 할 수 있는가?">
+    <label>Module Docking 할 수 있는가?</label>
+    <input type="checkbox" name="MODULE_DOCKING" value="O" />
+  </div>
+  <div class="item" title="Docking작업 중 설비와 배관 정렬이 틀어졌을 경우 재정렬 알고 있는가?">
+    <label>Docking작업 중 설비와 배관 정렬이 틀어졌을 경우 재정렬 알고 있는가?</label>
+    <input type="checkbox" name="DOCKING_PIPE_REALIGNMENT" value="O" />
+  </div>
+  <div class="item" title="Docking작업 후 설비와 (고객요청)배관 정렬이 틀어졌을 경우 재정렬 알고 있는가?">
+    <label>Docking작업 후 설비와 (고객요청)배관 정렬이 틀어졌을 경우 재정렬 알고 있는가?</label>
+    <input type="checkbox" name="CUSTOM_PIPE_REALIGNMENT" value="O" />
+  </div>
+  <div class="item" title="장비의 Level 고려해야하는 위치를 숙지하고 있는가?">
+    <label>장비의 Level 고려해야하는 위치를 숙지하고 있는가?</label>
+    <input type="checkbox" name="LEVEL_CONSIDERATION_POSITION" value="O" />
+  </div>
+</div>
+
+<!-- CABLE HOOK UP -->
+<div class="category">
+  <div class="category-header">
+    <h2>CABLE HOOK UP</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="Grating Open시 주의 사항을 숙지하고 있는가?">
+    <label>Grating Open시 주의 사항을 숙지하고 있는가?</label>
+    <input type="checkbox" name="GRATING_OPEN_CAUTION" value="O" />
+  </div>
+  <div class="item" title="Cable을 설비에 정확히 연결 알고 있는가?">
+    <label>Cable을 설비에 정확히 연결 알고 있는가?</label>
+    <input type="checkbox" name="CABLE_CONNECTION" value="O" />
+  </div>
+  <div class="item" title="Cable 정리를 간섭 없게 할 수 있는가?">
+    <label>Cable 정리를 간섭 없게 할 수 있는가?</label>
+    <input type="checkbox" name="CABLE_NO_INTERFERENCE" value="O" />
+  </div>
+  <div class="item" title="CN1 의 위치를 알고 있는가?">
+    <label>CN1 의 위치를 알고 있는가?</label>
+    <input type="checkbox" name="CN1_POSITION_UNDERSTANDING" value="O" />
+  </div>
+  <div class="item" title="Signal Cable의 Pin map을 알고 있는가?">
+    <label>Signal Cable의 Pin map을 알고 있는가?</label>
+    <input type="checkbox" name="SIGNAL_CABLE_PINMAP" value="O" />
+  </div>
+  <div class="item" title="Signal Cable이 무슨 역할을 하는지 설명 할 수 있는가?">
+    <label>Signal Cable이 무슨 역할을 하는지 설명 할 수 있는가?</label>
+    <input type="checkbox" name="SIGNAL_CABLE_FUNCTION_EXPLANATION" value="O" />
+  </div>
+</div>
+
+<!-- POWER TURN ON -->
+<div class="category">
+  <div class="category-header">
+    <h2>POWER TURN ON</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="GPS, UPS 의 역할과 원리에 대해 숙지하고 있는가?">
+    <label>GPS, UPS 의 역할과 원리에 대해 숙지하고 있는가?</label>
+    <input type="checkbox" name="GPS_UPS_UNDERSTANDING" value="O" />
+  </div>
+  <div class="item" title="Power turn on 순서를 숙지하고 있는가?">
+    <label>Power turn on 순서를 숙지하고 있는가?</label>
+    <input type="checkbox" name="POWER_TURN_ON_SEQUENCE" value="O" />
+  </div>
+  <div class="item" title="Power turn on 후 발생하는 Alram Troble Shooting 알고 있는가?">
+    <label>Power turn on 후 발생하는 Alram Troble Shooting 알고 있는가?</label>
+    <input type="checkbox" name="ALARM_TROUBLESHOOTING" value="O" />
+  </div>
+  <div class="item" title="CB 종류와 기능을 숙지하고 있는가?">
+    <label>CB 종류와 기능을 숙지하고 있는가?</label>
+    <input type="checkbox" name="RACK_CB_UNDERSTANDING" value="O" />
+  </div>
+  <div class="item" title="EMO 동작 Check 알고 있는가?">
+    <label>EMO 동작 Check 알고 있는가?</label>
+    <input type="checkbox" name="EMO_CHECK" value="O" />
+  </div>
+  <div class="item" title="Utility turn on 의 순서를 숙지하고 있는가?">
+    <label>Utility turn on 의 순서를 숙지하고 있는가?</label>
+    <input type="checkbox" name="UTILITY_TURN_ON_SEQUENCE" value="O" />
+  </div>
+  <div class="item" title="CDA Turn on 및 Spec에 맞게 조정 알고 있는가?">
+    <label>CDA Turn on 및 Spec에 맞게 조정 알고 있는가?</label>
+    <input type="checkbox" name="CDA_TURN_ON" value="O" />
+  </div>
+  <div class="item" title="UPW Turn on 및 Spec에 맞게 조정 알고 있는가?">
+    <label>UPW Turn on 및 Spec에 맞게 조정 알고 있는가?</label>
+    <input type="checkbox" name="UPW_TURN_ON" value="O" />
+  </div>
+  <div class="item" title="Inlet v/v를 상황에 맞게 동작 할 수 있는가?">
+    <label>Inlet v/v를 상황에 맞게 동작 할 수 있는가?</label>
+    <input type="checkbox" name="INLET_VALVE_OPERATION" value="O" />
+  </div>
+  <div class="item" title="Outlet v/v를 상황에 맞게 동작 할 수 있는가?">
+    <label>Outlet v/v를 상황에 맞게 동작 할 수 있는가?</label>
+    <input type="checkbox" name="OUTLET_VALVE_OPERATION" value="O" />
+  </div>
+  <div class="item" title="Bypass v/v를 상황에 맞게 동작 할 수 있는가?">
+    <label>Bypass v/v를 상황에 맞게 동작 할 수 있는가?</label>
+    <input type="checkbox" name="BYPASS_VALVE_OPERATION" value="O" />
+  </div>
+  <div class="item" title="Drain v/v를 상황에 맞게 동작 할 수 있는가?">
+    <label>Drain v/v를 상황에 맞게 동작 할 수 있는가?</label>
+    <input type="checkbox" name="DRAIN_VALVE_OPERATION" value="O" />
+  </div>
+</div>
+<!-- GAS TURN ON -->
+<div class="category">
+  <div class="category-header">
+    <h2>GAS TURN ON</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="Gas turn on 의 순서(경로)를 숙지하고 있는가?">
+    <label>Gas turn on 의 순서(경로)를 숙지하고 있는가?</label>
+    <input type="checkbox" name="GAS_TURN_ON_SEQUENCE" value="O" />
+  </div>
+  <div class="item" title="CDA Turn on 및 가스 유입유무를 확인 알고 있는가?">
+    <label>CDA Turn on 및 가스 유입유무를 확인 알고 있는가?</label>
+    <input type="checkbox" name="CDA_GAS_CHECK" value="O" />
+  </div>
+</div>
+
+<!-- PART INSTALLATION -->
+<div class="category">
+  <div class="category-header">
+    <h2>PART INSTALLATION</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="Valve 설치 위치와 방법을 알고 있는가?">
+    <label>Valve 설치 위치와 방법을 알고 있는가?</label>
+    <input type="checkbox" name="VALVE_INSTALLATION" value="O" />
+  </div>
+  <div class="item" title="Leak Sensor 설치 위치와 방법을 알고 있는가?">
+    <label>Leak Sensor 설치 위치와 방법을 알고 있는가?</label>
+    <input type="checkbox" name="LEAK_SENSOR_INSTALLATION" value="O" />
+  </div>
+  <div class="item" title="Signal Tower 설치 위치와 방법을 알고 있는가?">
+    <label>Signal Tower 설치 위치와 방법을 알고 있는가?</label>
+    <input type="checkbox" name="SIGNAL_TOWER_INSTALLATION" value="O" />
+  </div>
+</div>
+
+<!-- LEAK CHECK -->
+<div class="category">
+  <div class="category-header">
+    <h2>LEAK CHECK</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="HDW Leak Check에 대해 알고 있는가?">
+    <label>HDW Leak Check에 대해 알고 있는가?</label>
+    <input type="checkbox" name="HDW_LEAK_CHECK" value="O" />
+  </div>
+  <div class="item" title="Gas Line Leak Check에 대해 알고 있는가?">
+    <label>Gas Line Leak Check에 대해 알고 있는가?</label>
+    <input type="checkbox" name="GAS_LINE_LEAK_CHECK" value="O" />
+  </div>
+  <div class="item" title="배관부 Leak Check 에 대해 알고 있는가?">
+    <label>배관부 Leak Check 에 대해 알고 있는가?</label>
+    <input type="checkbox" name="PIPE_LEAK_CHECK" value="O" />
+  </div>
+  <div class="item" title="UPW turn on 후 leak check 방법에 대해 알고 있는가?">
+    <label>UPW turn on 후 leak check 방법에 대해 알고 있는가?</label>
+    <input type="checkbox" name="UPW_LEAK_CHECK_METHOD" value="O" />
+  </div>
+  <div class="item" title="Leak 발생 시 조치 방법에 대해 알고 있는가?">
+    <label>Leak 발생 시 조치 방법에 대해 알고 있는가?</label>
+    <input type="checkbox" name="LEAK_RESPONSE_ACTION" value="O" />
+  </div>
+</div>
+
+<!-- TTTM -->
+<div class="category">
+  <div class="category-header">
+    <h2>TTTM</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="Flow Off 유량을 조정 할 수 있는가?">
+    <label>Flow Off 유량을 조정 할 수 있는가?</label>
+    <input type="checkbox" name="FLOW_OFF_ADJUST" value="O" />
+  </div>
+  <div class="item" title="Flow On 유량을 조정 할 수 있는가?">
+    <label>Flow On 유량을 조정 할 수 있는가?</label>
+    <input type="checkbox" name="FLOW_ON_ADJUST" value="O" />
+  </div>
+  <div class="item" title="Setting Temp를 설정 할 수 있는가?">
+    <label>Setting Temp를 설정 할 수 있는가?</label>
+    <input type="checkbox" name="TEMP_SETTING" value="O" />
+  </div>
+  <div class="item" title="Parameter 설정을 할 수 있는가?">
+    <label>Parameter 설정을 할 수 있는가?</label>
+    <input type="checkbox" name="PARAMETER_SETTING" value="O" />
+  </div>
+  <div class="item" title="TC 설정을 조정 할 수 있는가?">
+    <label>TC 설정을 조정 할 수 있는가?</label>
+    <input type="checkbox" name="TC_ADJUST" value="O" />
+  </div>
+  <div class="item" title="OD 조정 할 수 있는가?">
+    <label>OD 조정 할 수 있는가?</label>
+    <input type="checkbox" name="OD_ADJUST" value="O" />
+  </div>
+  <div class="item" title="배관부 배관 DI Leak Check 가능 한가?">
+    <label>배관부 배관 DI Leak Check 가능 한가?</label>
+    <input type="checkbox" name="PIPE_DI_LEAK_CHECK" value="O" />
+  </div>
+</div>
+
+<!-- CUSTOMER CERTIFICATION -->
+<div class="category">
+  <div class="category-header">
+    <h2>CUSTOMER CERTIFICATION</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="중간인증 전 I-Marking 위치 알고 있는가?">
+    <label>중간인증 전 I-Marking 위치 알고 있는가?</label>
+    <input type="checkbox" name="IMARKING_POSITION" value="O" />
+  </div>
+  <div class="item" title="GND 저항값, CDA 및 UPW 라인에 대해 라벨링 가능한가?">
+    <label>GND 저항값, CDA 및 UPW 라인에 대해 라벨링 가능한가?</label>
+    <input type="checkbox" name="GND_LABELING" value="O" />
+  </div>
+  <div class="item" title="중간인증에 대해 알고 대응 할 수 있는가?">
+    <label>중간인증에 대해 알고 대응 할 수 있는가?</label>
+    <input type="checkbox" name="MID_CERT_RESPONSE" value="O" />
+  </div>
+  <div class="item" title="Air cap의 위치 및 제거를 할 수 있는가?">
+    <label>Air cap의 위치 및 제거를 할 수 있는가?</label>
+    <input type="checkbox" name="AIR_CAP_REMOVAL" value="O" />
+  </div>
+</div>
+
+<!-- PROCESS CONFIRM -->
+<div class="category">
+  <div class="category-header">
+    <h2>PROCESS CONFIRM</h2>
+    <button type="button" class="all-check-btn">ALL CHECK</button>
+  </div>
+  <div class="item" title="HDW Remote Test 알고 있는가?">
+    <label>HDW Remote Test 알고 있는가?</label>
+    <input type="checkbox" name="HDW_REMOTE_TEST" value="O" />
+  </div>
+  <div class="item" title="HDW Local mode Test 알고 있는가?">
+    <label>HDW Local mode Test 알고 있는가?</label>
+    <input type="checkbox" name="HDW_LOCAL_TEST" value="O" />
+  </div>
+</div>
+
+          </div>
+          <button type="submit">SAVE</button>
+        </form>
+      </div>
+    </section>
+  </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+        document.querySelector(".unsigned").classList.remove("hidden");
+        document.querySelector(".signed").classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned").classList.add("hidden");
+        document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      }
+
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      menuBtn.addEventListener('click', () => menuBar.classList.toggle('open'));
+
+      document.addEventListener('click', function(event) {
+        if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+          menuBar.classList.remove('open');
+        }
+      });
+
+      const signOutButton = document.querySelector("#sign-out");
+      if (signOutButton) {
+        signOutButton.addEventListener("click", function() {
+          localStorage.removeItem("x-access-token");
+          localStorage.removeItem("user-role");
+          alert("로그아웃 되었습니다.");
+          window.location.replace("./signin.html");
+        });
+      }
+    });
+  </script>
+</body>
+</html>
