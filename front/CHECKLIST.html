@@ -125,15 +125,17 @@
                 "INTEGER": { "SET UP": "integer_setup.html", "MAINTENANCE": "integer_maintenance.html" },
                 "PRECIA": { "SET UP": "precia_setup.html", "MAINTENANCE": "precia_maintenance.html" },
                 "ECOLITE": { "SET UP": "ecolite_setup.html", "MAINTENANCE": "ecolite_maintenance.html" },
-                "GENEVA": { "SET UP": "geneva_setup.html", "MAINTENANCE": "geneva_maintenance.html" }
+                "GENEVA": { "SET UP": "geneva_setup.html", "MAINTENANCE": "geneva_maintenance.html" },
+                "HDW": { "SET UP": "hdw_setup.html", "MAINTENANCE": "hdw_maintenance.html" },
+
             };
 
             // 그룹 선택에 따른 설비 옵션
             const equipmentOptions = {
-                "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA"],
+                "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA", "HDW"],
                 "PEE1": ["SUPRA N", "SUPRA XP"],
                 "PEE2": ["INTEGER", "PRECIA"],
-                "PSKH": ["ECOLITE", "GENEVA"]
+                "PSKH": ["ECOLITE", "GENEVA", "HDW"]
             };
 
             function updateMoveButtonState() {
