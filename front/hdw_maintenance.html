@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HDW Maintenance Checklist</title>
+  <link rel="stylesheet" href="./css/supra_maintenance.css" />
+  <link rel="stylesheet" href="./css/readworklog.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/hdw_maintenance.js" defer></script>
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
+        </div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./operatingrate.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section id="checklist-form">
+      <div class="inner">
+        <form id="checklistForm">
+          <div id="checklist-container">
+
+            <!-- 전장부 -->
+            <div class="category">
+              <h2>전장부</h2>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>OD REP</label><input type="checkbox" name="OD_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>Relay REP</label><input type="checkbox" name="Relay_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>Fan REP</label><input type="checkbox" name="Fan_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>NTC / NTU REP</label><input type="checkbox" name="NTC_NTU_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>SSR REP</label><input type="checkbox" name="SSR_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>MC REP</label><input type="checkbox" name="MC_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>Fuse REP</label><input type="checkbox" name="Fuse_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>CT REP</label><input type="checkbox" name="CT_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>HBD REP</label><input type="checkbox" name="HBD_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>SMPS REP</label><input type="checkbox" name="SMPS_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>PLC (main unit 제외) REP</label><input type="checkbox" name="PLC_REP" value="O"></div>
+              <div class="item" title="교체 및 점검 후 설비 정상화 가능한가?"><label>ELB REP</label><input type="checkbox" name="ELB_REP" value="O"></div>
+            </div>
+
+            <!-- 배관부 -->
+            <div class="category">
+              <h2>배관부</h2>
+              <div class="item"><label>Heater REP (Halogen lamp)</label><input type="checkbox" name="Heater_REP" value="O"></div>
+              <div class="item"><label>Q'tz tank REP</label><input type="checkbox" name="Qtz_tank_REP" value="O"></div>
+              <div class="item"><label>Leak troubleshooting</label><input type="checkbox" name="Leak_troubleshooting" value="O"></div>
+              <div class="item"><label>Flow meter REP</label><input type="checkbox" name="Flow_meter_REP" value="O"></div>
+              <div class="item"><label>Air valve REP</label><input type="checkbox" name="Air_valve_REP" value="O"></div>
+              <div class="item"><label>Shut off valve REP</label><input type="checkbox" name="Shut_off_valve_REP" value="O"></div>
+              <div class="item"><label>Sol valve REP</label><input type="checkbox" name="Sol_valve_REP" value="O"></div>
+              <div class="item"><label>Elbow fitting REP (Qtz)</label><input type="checkbox" name="Elbow_fitting_REP" value="O"></div>
+              <div class="item"><label>Leak tray</label><input type="checkbox" name="Leak_tray" value="O"></div>
+              <div class="item"><label>TC Sensor</label><input type="checkbox" name="TC_Sensor" value="O"></div>
+            </div>
+
+            <!-- SW -->
+            <div class="category">
+              <h2>SW</h2>
+              <div class="item"><label>Touch panel patch</label><input type="checkbox" name="Touch_panel_patch" value="O"></div>
+              <div class="item"><label>PLC patch</label><input type="checkbox" name="PLC_patch" value="O"></div>
+              <div class="item"><label>Touch panel REP</label><input type="checkbox" name="Touch_panel_REP" value="O"></div>
+              <div class="item"><label>PLC REP</label><input type="checkbox" name="PLC_REP_SW" value="O"></div>
+            </div>
+
+          </div>
+          <button type="submit">SAVE</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+        document.querySelector(".unsigned").classList.remove("hidden");
+        document.querySelector(".signed").classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned").classList.add("hidden");
+        document.querySelector(".signed").classList.remove("hidden");
+      }
+
+      if (!token || userRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(element => {
+          element.style.display = 'none';
+        });
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+      if (signOutButton) {
+        signOutButton.addEventListener("click", function() {
+          localStorage.removeItem("x-access-token");
+          localStorage.removeItem("user-role");
+          alert("로그아웃 되었습니다.");
+          window.location.replace("./signin.html");
+        });
+      }
+
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+      menuBtn.addEventListener('click', function() {
+        menuBar.classList.toggle('open');
+      });
+      document.addEventListener('click', function(event) {
+        if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+          menuBar.classList.remove('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

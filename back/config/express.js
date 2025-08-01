@@ -71,6 +71,7 @@ module.exports = function () {
   require("../src/routes/ecoliteMaintenanceRoute")(app);  // 추가된 라우트
   require("../src/routes/genevaMaintenanceRoute")(app);  // 추가된 라우트
   require("../src/routes/preciaMaintenanceRoute")(app);  // 추가된 라우트
+  require("../src/routes/hdwMaintenanceRoute")(app);  // 추가된 라우트
   console.log("Setting up equipmentRoute...");
   require("../src/routes/equipmentRoute")(app); // 여기 경로 확인
   require('../src/routes/SECMRoute')(app);
@@ -84,6 +85,8 @@ module.exports = function () {
   app.use('/api', genevaMaintCountRoute);
   const preciaMaintCountRoute = require('../src/routes/preciaMaintCountRoute');
   app.use('/api', preciaMaintCountRoute);
+    const hdwMaintCountRoute = require('../src/routes/hdwMaintCountRoute');
+  app.use('/api', hdwMaintCountRoute);
   
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
   require('../src/routes/testRoute')(app);
