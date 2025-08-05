@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA"],
         "PEE1": ["SUPRA N", "SUPRA XP"],
         "PEE2": ["INTEGER", "PRECIA"],
-        "PSKH": ["ECOLITE", "GENEVA"]
+        "PSKH": ["ECOLITE", "GENEVA", "HDW"]
     };
 
     // 설비와 작업 종류에 따른 URL 매핑
@@ -28,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         "INTEGER": { "SET UP": "integer_setup_total.html", "MAINTENANCE": "integer-table.html" },
         "PRECIA": { "SET UP": "precia_setup_total.html", "MAINTENANCE": "precia-table.html" },
         "ECOLITE": { "SET UP": "ecolite_setup_total.html", "MAINTENANCE": "ecolite-table.html" },
-        "GENEVA": { "SET UP": "geneva_setup_total.html", "MAINTENANCE": "geneva-table.html" }
+        "GENEVA": { "SET UP": "geneva_setup_total.html", "MAINTENANCE": "geneva-table.html" },
+        "HDW": { "SET UP": "hdw_setup_total.html", "MAINTENANCE": "hdw-table.html" }
     };
 
     // 그룹 선택 시 설비 필드 업데이트
