@@ -42,28 +42,28 @@ const taskCategories = [
       { name: "OD_REP", displayName: "OD REP", 기준작업수: 3 },
       { name: "Relay_REP", displayName: "Relay REP", 기준작업수: 1 },
       { name: "Fan_REP", displayName: "Fan REP", 기준작업수: 1 },
-      { name: "NTC_/_NTU_REP", displayName: "NTC / NTU REP", 기준작업수: 1 },
+      { name: "NTC_NTU_REP", displayName: "NTC / NTU REP", 기준작업수: 1 },
       { name: "SSR_REP", displayName: "SSR REP", 기준작업수: 3 },
       { name: "MC_REP", displayName: "MC REP", 기준작업수: 1 },
       { name: "Fuse_REP", displayName: "Fuse REP", 기준작업수: 1 },
       { name: "CT_REP", displayName: "CT REP", 기준작업수: 3 },
       { name: "HBD_REP", displayName: "HBD REP", 기준작업수: 1 },
       { name: "SMPS_REP", displayName: "SMPS REP", 기준작업수: 1 },
-      { name: "PLC_(main_unit_제외)_REP", displayName: "PLC (main unit 제외) REP", 기준작업수: 3 },
+      { name: "PLC_REP", displayName: "PLC (main unit 제외) REP", 기준작업수: 3 },
       { name: "ELB_REP", displayName: "ELB REP", 기준작업수: 1 }
     ]
   },
   {
     category: "배관부",
     subcategories: [
-      { name: "Heater_REP_(Halogen_lamp)", displayName: "Heater REP (Halogen lamp)", 기준작업수: 1 },
-      { name: "Q'tz_tank_REP", displayName: "Q'tz tank REP", 기준작업수: 3 },
+      { name: "Heater_REP", displayName: "Heater REP (Halogen lamp)", 기준작업수: 1 },
+      { name: "Qtz_tank_REP", displayName: "Q'tz tank REP", 기준작업수: 3 },
       { name: "Leak_troubleshooting", displayName: "Leak troubleshooting", 기준작업수: 3 },
       { name: "Flow_meter_REP", displayName: "Flow meter REP", 기준작업수: 1 },
       { name: "Air_valve_REP", displayName: "Air valve REP", 기준작업수: 1 },
       { name: "Shut_off_valve_REP", displayName: "Shut off valve REP", 기준작업수: 3 },
       { name: "Sol_valve_REP", displayName: "Sol valve REP", 기준작업수: 1 },
-      { name: "Elbow_fitting_REP_(Qtz)", displayName: "Elbow fitting REP (Qtz)", 기준작업수: 3 },
+      { name: "Elbow_fitting_REP", displayName: "Elbow fitting REP (Qtz)", 기준작업수: 3 },
       { name: "Leak_tray", displayName: "Leak tray", 기준작업수: 1 },
       { name: "TC_Sensor", displayName: "TC Sensor", 기준작업수: 1 }
     ]
@@ -74,7 +74,7 @@ const taskCategories = [
       { name: "Touch_panel_patch", displayName: "Touch panel patch", 기준작업수: 3 },
       { name: "PLC_patch", displayName: "PLC patch", 기준작업수: 3 },
       { name: "Touch_panel_REP", displayName: "Touch panel REP", 기준작업수: 1 },
-      { name: "PLC_REP", displayName: "PLC REP", 기준작업수: 1 }
+      { name: "PLC_REP_SW", displayName: "PLC REP_SW", 기준작업수: 1 }
     ]
   }
 ];

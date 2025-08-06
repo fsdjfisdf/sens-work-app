@@ -21,31 +21,31 @@ window.taskCategories = [
   {
     category: "전장부",
     subcategories: [
-      { name: "OD REP", 기준작업수: 1 },
+      { name: "OD REP", 기준작업수: 3 },
       { name: "Relay REP", 기준작업수: 1 },
       { name: "Fan REP", 기준작업수: 1 },
       { name: "NTC / NTU REP", 기준작업수: 1 },
-      { name: "SSR REP", 기준작업수: 1 },
+      { name: "SSR REP", 기준작업수: 3 },
       { name: "MC REP", 기준작업수: 1 },
       { name: "Fuse REP", 기준작업수: 1 },
-      { name: "CT REP", 기준작업수: 1 },
+      { name: "CT REP", 기준작업수: 3 },
       { name: "HBD REP", 기준작업수: 1 },
       { name: "SMPS REP", 기준작업수: 1 },
-      { name: "PLC (main unit 제외) REP", 기준작업수: 1 },
+      { name: "PLC (main unit 제외) REP", 기준작업수: 3 },
       { name: "ELB REP", 기준작업수: 1 }
     ]
   },
   {
     category: "배관부",
     subcategories: [
-      { name: "Heater REP (Halogen lamp)", 기준작업수: 1 },
-      { name: "Q'tz tank REP", 기준작업수: 1 },
+      { name: "Heater REP (Halogen lamp)", 기준작업수: 3 },
+      { name: "Q'tz tank REP", 기준작업수: 3 },
       { name: "Leak troubleshooting", 기준작업수: 1 },
       { name: "Flow meter REP", 기준작업수: 1 },
-      { name: "Air valve REP", 기준작업수: 1 },
-      { name: "Shut off valve REP", 기준작업수: 1 },
+      { name: "Air valve REP", 기준작업수: 3 },
+      { name: "Shut off valve REP", 기준작업수: 3 },
       { name: "Sol valve REP", 기준작업수: 1 },
-      { name: "Elbow fitting REP (Qtz)", 기준작업수: 1 },
+      { name: "Elbow fitting REP (Qtz)", 기준작업수: 3 },
       { name: "Leak tray", 기준작업수: 1 },
       { name: "TC Sensor", 기준작업수: 1 }
     ]
@@ -53,8 +53,8 @@ window.taskCategories = [
   {
     category: "SW",
     subcategories: [
-      { name: "Touch panel patch", 기준작업수: 1 },
-      { name: "PLC patch", 기준작업수: 1 },
+      { name: "Touch panel patch", 기준작업수: 3 },
+      { name: "PLC patch", 기준작업수: 3 },
       { name: "Touch panel REP", 기준작업수: 1 },
       { name: "PLC REP", 기준작업수: 1 }
     ]

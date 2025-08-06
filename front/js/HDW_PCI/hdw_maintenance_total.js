@@ -11,29 +11,29 @@ const taskMapping = {
   "OD_REP": "OD REP",
   "Relay_REP": "Relay REP",
   "Fan_REP": "Fan REP",
-  "NTC_/_NTU_REP": "NTC / NTU REP",
+  "NTC_NTU_REP": "NTC / NTU REP",
   "SSR_REP": "SSR REP",
   "MC_REP": "MC REP",
   "Fuse_REP": "Fuse REP",
   "CT_REP": "CT REP",
   "HBD_REP": "HBD REP",
   "SMPS_REP": "SMPS REP",
-  "PLC_(main_unit_제외)_REP": "PLC (main unit 제외) REP",
+  "PLC_REP": "PLC (main unit 제외) REP",
   "ELB_REP": "ELB REP",
-  "Heater_REP_(Halogen_lamp)": "Heater REP (Halogen lamp)",
-  "Q'tz_tank_REP": "Q'tz tank REP",
+  "Heater_REP": "Heater REP (Halogen lamp)",
+  "Qtz_tank_REP": "Q'tz tank REP",
   "Leak_troubleshooting": "Leak troubleshooting",
   "Flow_meter_REP": "Flow meter REP",
   "Air_valve_REP": "Air valve REP",
   "Shut_off_valve_REP": "Shut off valve REP",
   "Sol_valve_REP": "Sol valve REP",
-  "Elbow_fitting_REP_(Qtz)": "Elbow fitting REP (Qtz)",
+  "Elbow_fitting_REP": "Elbow fitting REP (Qtz)",
   "Leak_tray": "Leak tray",
   "TC_Sensor": "TC Sensor",
   "Touch_panel_patch": "Touch panel patch",
   "PLC_patch": "PLC patch",
   "Touch_panel_REP": "Touch panel REP",
-  "PLC_REP": "PLC REP"
+  "PLC_REP_SW": "PLC REP"
 };
 
 
@@ -41,29 +41,29 @@ const taskWeights = {
   "OD_REP": 5,
   "Relay_REP": 4,
   "Fan_REP": 4,
-  "NTC_/_NTU_REP": 2,
+  "NTC_NTU_REP": 2,
   "SSR_REP": 4,
   "MC_REP": 4,
   "Fuse_REP": 3,
   "CT_REP": 3,
   "HBD_REP": 4,
   "SMPS_REP": 4,
-  "PLC_(main_unit_제외_REP)": 2,
+  "PLC_REP": 2,
   "ELB_REP": 2,
-  "Heater_REP_(Halogen_lamp)": 6,
-  "Q'tz_tank_REP": 6,
+  "Heater_REP": 6,
+  "Qtz_tank_REP": 6,
   "Leak_troubleshooting": 7,
   "Flow_meter_REP": 3,
   "Air_valve_REP": 3,
   "Shut_off_valve_REP": 5,
   "Sol_valve_REP": 3,
-  "Elbow_fitting_REP_(Qtz)": 5,
+  "Elbow_fitting_REP": 5,
   "Leak_tray": 4,
   "TC_Sensor": 5,
   "Touch_panel_patch": 3,
   "PLC_patch": 3,
   "Touch_panel_REP": 3,
-  "PLC_REP": 3
+  "PLC_REP_SW": 3
 };
     
 
@@ -74,28 +74,28 @@ const taskCategories = [
       { name: "OD_REP", displayName: "OD REP", 기준작업수: 3 },
       { name: "Relay_REP", displayName: "Relay REP", 기준작업수: 1 },
       { name: "Fan_REP", displayName: "Fan REP", 기준작업수: 1 },
-      { name: "NTC_/_NTU_REP", displayName: "NTC / NTU REP", 기준작업수: 1 },
+      { name: "NTC_NTU_REP", displayName: "NTC / NTU REP", 기준작업수: 1 },
       { name: "SSR_REP", displayName: "SSR REP", 기준작업수: 3 },
       { name: "MC_REP", displayName: "MC REP", 기준작업수: 1 },
       { name: "Fuse_REP", displayName: "Fuse REP", 기준작업수: 1 },
       { name: "CT_REP", displayName: "CT REP", 기준작업수: 3 },
       { name: "HBD_REP", displayName: "HBD REP", 기준작업수: 1 },
       { name: "SMPS_REP", displayName: "SMPS REP", 기준작업수: 1 },
-      { name: "PLC_(main_unit_제외)_REP", displayName: "PLC (main unit 제외) REP", 기준작업수: 3 },
+      { name: "PLC_REP", displayName: "PLC (main unit 제외) REP", 기준작업수: 3 },
       { name: "ELB_REP", displayName: "ELB REP", 기준작업수: 1 }
     ]
   },
   {
     category: "배관부",
     subcategories: [
-      { name: "Heater_REP_(Halogen_lamp)", displayName: "Heater REP (Halogen lamp)", 기준작업수: 1 },
-      { name: "Q'tz_tank_REP", displayName: "Q'tz tank REP", 기준작업수: 3 },
+      { name: "Heater_REP", displayName: "Heater REP (Halogen lamp)", 기준작업수: 1 },
+      { name: "Qtz_tank_REP", displayName: "Q'tz tank REP", 기준작업수: 3 },
       { name: "Leak_troubleshooting", displayName: "Leak troubleshooting", 기준작업수: 3 },
       { name: "Flow_meter_REP", displayName: "Flow meter REP", 기준작업수: 1 },
       { name: "Air_valve_REP", displayName: "Air valve REP", 기준작업수: 1 },
       { name: "Shut_off_valve_REP", displayName: "Shut off valve REP", 기준작업수: 3 },
       { name: "Sol_valve_REP", displayName: "Sol valve REP", 기준작업수: 1 },
-      { name: "Elbow_fitting_REP_(Qtz)", displayName: "Elbow fitting REP (Qtz)", 기준작업수: 3 },
+      { name: "Elbow_fitting_REP", displayName: "Elbow fitting REP (Qtz)", 기준작업수: 3 },
       { name: "Leak_tray", displayName: "Leak tray", 기준작업수: 1 },
       { name: "TC_Sensor", displayName: "TC Sensor", 기준작업수: 1 }
     ]
@@ -106,7 +106,7 @@ const taskCategories = [
       { name: "Touch_panel_patch", displayName: "Touch panel patch", 기준작업수: 3 },
       { name: "PLC_patch", displayName: "PLC patch", 기준작업수: 3 },
       { name: "Touch_panel_REP", displayName: "Touch panel REP", 기준작업수: 1 },
-      { name: "PLC_REP", displayName: "PLC REP", 기준작업수: 1 }
+      { name: "PLC_REP_SW", displayName: "PLC REP", 기준작업수: 1 }
     ]
   }
 ];
