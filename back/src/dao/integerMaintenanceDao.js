@@ -133,7 +133,7 @@ exports.getChecklistByName = async (name) => {
 exports.getAllChecklists = async () => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const query = `SELECT * FROM GENEVA_MAINT_SELF`;
+    const query = `SELECT * FROM INTEGER_MAINT_SELF`;
     const [rows] = await connection.query(query);
     return rows;
   } catch (err) {
