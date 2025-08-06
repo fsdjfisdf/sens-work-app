@@ -188,9 +188,7 @@ function renderSetupTable(setupData, worklogData) {
         { name: 'DOCKING', 기준작업수: 10 },
         { name: 'CABLE_HOOK_UP', 기준작업수: 10 },
         { name: 'POWER_TURN_ON', 기준작업수: 10 },
-        { name: 'UTILITY_TURN_ON', 기준작업수: 5 },
         { name: 'GAS_TURN_ON', 기준작업수: 5 },
-        { name: 'TEACHING', 기준작업수: 15 },
         { name: 'PART_INSTALLATION', 기준작업수: 5 },
         { name: 'LEAK_CHECK', 기준작업수: 5 },
         { name: 'TTTM', 기준작업수: 15 },
@@ -289,15 +287,13 @@ function renderSetupTable(setupData, worklogData) {
     const categoryWeights = {
         'INSTALLATION PREPARATION': 5,
         'FAB IN': 5,
-        'DOCKING': 10,
+        'DOCKING': 20,
         'CABLE HOOK UP': 10,
         'POWER TURN ON': 10,
-        'UTILITY TURN ON': 2.5,
-        'GAS TURN ON': 2.5,
-        'TEACHING': 30,
+        'GAS TURN ON': 5,
         'PART INSTALLATION': 2.5,
         'LEAK CHECK': 2.5,
-        'TTTM': 10,
+        'TTTM': 30,
         'CUSTOMER CERTIFICATION': 5,
         'PROCESS CONFIRM': 5
     };
@@ -690,9 +686,7 @@ function renderCombinedTable(setupData, checklistData) {
         { name: 'DOCKING', 기준작업수: 10 },
         { name: 'CABLE_HOOK_UP', 기준작업수: 10 },
         { name: 'POWER_TURN_ON', 기준작업수: 10 },
-        { name: 'UTILITY_TURN_ON', 기준작업수: 5 },
         { name: 'GAS_TURN_ON', 기준작업수: 5 },
-        { name: 'TEACHING', 기준작업수: 15 },
         { name: 'PART_INSTALLATION', 기준작업수: 5 },
         { name: 'LEAK_CHECK', 기준작업수: 5 },
         { name: 'TTTM', 기준작업수: 15 },
@@ -716,127 +710,91 @@ function renderCombinedTable(setupData, checklistData) {
         'PROCESS_CONFIRM': 5
     };
 
-    const categories = {
-        'INSTALLATION_PREPARATION': [
-            'INST_IMPORT_ORDER', 
-            'INST_PACKING_LIST', 
-            'INST_OHT_LINE_CHECK', 
-            'INST_SPACING_CHECK', 
-            'INST_DRAW_SETUP', 
-            'INST_DRAW_MARKING', 
-            'INST_UTILITY_SPEC'
-        ],
-        'FAB_IN': [
-            'FAB_MODULE_UNPACK', 
-            'FAB_MODULE_CLEAN', 
-            'FAB_MODULE_MOVE'
-        ],
-        'DOCKING': [
-            'DOCK_TOOL_SIZE', 
-            'DOCK_LASER_JIG', 
-            'DOCK_JACK_USE', 
-            'DOCK_HEIGHT_CHECK', 
-            'DOCK_MODULE_CONNECT', 
-            'DOCK_REALIGN', 
-            'DOCK_LEVEL_POS', 
-            'DOCK_LEVEL_SPEC', 
-            'DOCK_HOOK_UP'
-        ],
-        'CABLE_HOOK_UP': [
-            'CABLE_SORTING', 
-            'CABLE_GRATING', 
-            'CABLE_LADDER_RULES', 
-            'CABLE_CONNECTION', 
-            'CABLE_TRAY_ARRANGE', 
-            'CABLE_REAR_MONITOR', 
-            'CABLE_EFEM_PM_SIGNAL', 
-            'CABLE_BUBBLER_PM_CONNECT', 
-            'CABLE_FORMIC_PM_CONNECT'
-        ],
-        'POWER_TURN_ON': [
-            'POWER_GPS_UPS_SPS', 
-            'POWER_TURN_SEQ', 
-            'POWER_ALARM_TROUBLE', 
-            'POWER_CB_UNDERSTAND', 
-            'POWER_SAFETY_MODULE', 
-            'POWER_EMO_CHECK', 
-            'POWER_SYCON_NUMBER', 
-            'POWER_SYCON_SETUP', 
-            'POWER_SYCON_TROUBLE'
-        ],
-        'UTILITY_TURN_ON': [
-            'UTIL_TURN_SEQ', 
-            'UTIL_VACUUM_TURN', 
-            'UTIL_CDA_TURN', 
-            'UTIL_PCW_TURN', 
-            'UTIL_EXHAUST_TURN'
-        ],
-        'GAS_TURN_ON': [
-            'GAS_TURN_SEQ', 
-            'GAS_N2_CHECK', 
-            'GAS_FORMIC_CHECK'
-        ],
-        'TEACHING': [
-            'TEACH_ROBOT_CONTROL', 
-            'TEACH_ROBOT_LEVELING', 
-            'TEACH_ARM_LEVELING', 
-            'TEACH_LOAD_PORT', 
-            'TEACH_ALIGNER', 
-            'TEACH_LOADLOCK', 
-            'TEACH_DATA_SAVE', 
-            'TEACH_MICRO_ADJUST', 
-            'TEACH_MARGIN_CHECK', 
-            'TEACH_SEMI_TRANSFER'
-        ],
-        'PART_INSTALLATION': [
-            'PART_EXHAUST_PORT', 
-            'PART_END_EFFECTOR', 
-            'PART_END_EFFECTOR_LEVEL', 
-            'PART_APC_SETUP', 
-            'PART_PROCESS_KIT', 
-            'PART_PIO_SENSOR', 
-            'PART_CCTV_SETUP'
-        ],
-        'LEAK_CHECK': [
-            'LEAK_PM', 
-            'LEAK_GAS_LINE', 
-            'LEAK_LL', 
-            'LEAK_BUBBLER', 
-            'LEAK_SOLENOID', 
-            'LEAK_FORMIC_ON', 
-            'LEAK_FORMIC_GAS'
-        ],
-        'TTTM': [
-            'TTTM_CHUCK_LEVEL', 
-            'TTTM_CHUCK_SPEED', 
-            'TTTM_TEMP_CALIBRATION', 
-            'TTTM_TEMP_PROFILE', 
-            'TTTM_SEASONING_TEST', 
-            'TTTM_APC_AUTO_LEARN', 
-            'TTTM_REGULATOR', 
-            'TTTM_MFC_ZERO_CAL', 
-            'TTTM_HW_SETUP', 
-            'TTTM_MFC_HUNTING', 
-            'TTTM_GAS_LEAK_CHECK', 
-            'TTTM_DNET_CAL', 
-            'TTTM_SHEET_WRITE'
-        ],
-        'CUSTOMER_CERTIFICATION': [
-            'CUST_OHT_CERT', 
-            'CUST_IMARK_LOC', 
-            'CUST_LABELING', 
-            'CUST_MID_CERT', 
-            'CUST_ENV_QUAL', 
-            'CUST_OHT_LAYOUT'
-        ],
-        'PROCESS_CONFIRM': [
-            'PROC_AGING_TEST', 
-            'PROC_AR_TEST', 
-            'PROC_SCRATCH_TEST', 
-            'PROC_PARTICLE_CHECK', 
-            'PROC_EES_TOOL'
-        ]
-    };
+const categories = {
+  'INSTALLATION_PREPARATION': [
+    'EQ_IMPORT_ORDER',
+    'PACK_LIST_CHECK',
+    'OHT_LINE_CHECK_GENERAL',
+    'EQ_SPACING_CHECK',
+    'DRAWING_TEMPLATE_SETUP',
+    'DRAWING_TEMPLATE_MARKING',
+    'POKE_POSITION_UNDERSTANDING',
+    'UTILITY_SPEC_UNDERSTANDING'
+  ],
+  'FAB_IN': [
+    'MODULE_UNPACKING_CAUTION',
+    'MODULE_CLEAN_CAUTION',
+    'MODULE_MOVEMENT_CAUTION'
+  ],
+  'DOCKING': [
+    'TOOL_REQUIREMENT_UNDERSTANDING',
+    'TOOL_SIZE_UNDERSTANDING',
+    'MODULE_HEIGHT_DOCKING',
+    'CASTER_JIG_SEPARATION',
+    'MODULE_DOCKING',
+    'DOCKING_PIPE_REALIGNMENT',
+    'CUSTOM_PIPE_REALIGNMENT',
+    'LEVEL_CONSIDERATION_POSITION'
+  ],
+  'CABLE_HOOK_UP': [
+    'GRATING_OPEN_CAUTION',
+    'CABLE_CONNECTION',
+    'CABLE_NO_INTERFERENCE',
+    'CN1_POSITION_UNDERSTANDING',
+    'SIGNAL_CABLE_PINMAP',
+    'SIGNAL_CABLE_FUNCTION_EXPLANATION'
+  ],
+  'POWER_TURN_ON': [
+    'GPS_UPS_UNDERSTANDING',
+    'POWER_TURN_ON_SEQUENCE',
+    'ALARM_TROUBLESHOOTING',
+    'RACK_CB_UNDERSTANDING',
+    'EMO_CHECK',
+    'UTILITY_TURN_ON_SEQUENCE',
+    'CDA_TURN_ON',
+    'UPW_TURN_ON',
+    'INLET_VALVE_OPERATION',
+    'OUTLET_VALVE_OPERATION',
+    'BYPASS_VALVE_OPERATION',
+    'DRAIN_VALVE_OPERATION'
+  ],
+  'GAS_TURN_ON': [
+    'GAS_TURN_ON_SEQUENCE',
+    'CDA_GAS_CHECK'
+  ],
+  'PART_INSTALLATION': [
+    'VALVE_INSTALLATION',
+    'LEAK_SENSOR_INSTALLATION',
+    'SIGNAL_TOWER_INSTALLATION'
+  ],
+  'LEAK_CHECK': [
+    'HDW_LEAK_CHECK',
+    'GAS_LINE_LEAK_CHECK',
+    'PIPE_LEAK_CHECK',
+    'UPW_LEAK_CHECK_METHOD',
+    'LEAK_RESPONSE_ACTION'
+  ],
+  'TTTM': [
+    'FLOW_OFF_ADJUST',
+    'FLOW_ON_ADJUST',
+    'TEMP_SETTING',
+    'PARAMETER_SETTING',
+    'TC_ADJUST',
+    'OD_ADJUST',
+    'PIPE_DI_LEAK_CHECK'
+  ],
+  'CUSTOMER_CERTIFICATION': [
+    'IMARKING_POSITION',
+    'GND_LABELING',
+    'MID_CERT_RESPONSE',
+    'AIR_CAP_REMOVAL'
+  ],
+  'PROCESS_CONFIRM': [
+    'HDW_REMOTE_TEST',
+    'HDW_LOCAL_TEST'
+  ]
+};
+
     
     
 
