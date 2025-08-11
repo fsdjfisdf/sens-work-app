@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>워크로드 H/Day 대시보드</title>
+  <link rel="stylesheet" href="./css/workload.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+        <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./workload.html" class="menu-item admin-only">Workload</a>
+                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+  <div class="container">
+    <header class="header">
+      <h1 class="title">SEnS/I Workload</h1>
+      <span class="pill">전시간 가산</span>
+    </header>
+
+<section class="panel">
+  <div class="panel-header">
+    <!-- 좌측: 필터 -->
+    <div class="filters">
+      <!-- 1행: 시작일 / 종료일 / 최근 30일 / 최근 3개월 -->
+      <div class="field field-date">
+        <label for="startDate">시작일</label>
+        <div class="date-input">
+          <input type="date" id="startDate" placeholder="YYYY-MM-DD" />
+          <button type="button" class="cal-btn-input" data-target="startDate" title="달력 열기" aria-label="시작일 달력">📅</button>
+        </div>
+      </div>
+
+      <div class="field field-date">
+        <label for="endDate">종료일</label>
+        <div class="date-input">
+          <input type="date" id="endDate" placeholder="YYYY-MM-DD" />
+          <button type="button" class="cal-btn-input" data-target="endDate" title="달력 열기" aria-label="종료일 달력">📅</button>
+        </div>
+      </div>
+
+      <div class="field check-field">
+        <label for="recent30">최근 30일</label>
+        <label class="chip input-chip">
+          <input type="checkbox" id="recent30" />
+          <span>최근 30일</span>
+        </label>
+      </div>
+
+      <div class="field check-field">
+        <label for="recent3m">최근 3개월</label>
+        <label class="chip input-chip">
+          <input type="checkbox" id="recent3m" />
+          <span>최근 3개월</span>
+        </label>
+      </div>
+
+      <!-- 2행: 그룹 / 사이트 -->
+      <div class="field span-6">
+        <label for="groupSelect">그룹</label>
+        <select id="groupSelect">
+          <option value="">전체</option>
+          <option>PEE1</option>
+          <option>PEE2</option>
+          <option>PSKH</option>
+        </select>
+      </div>
+      <div class="field span-6">
+        <label for="siteSelect">사이트</label>
+        <select id="siteSelect">
+          <option value="">전체</option>
+          <option>PT</option>
+          <option>HS</option>
+          <option>IC</option>
+          <option>CJ</option>
+          <option>PSKH</option>
+        </select>
+      </div>
+
+      <!-- 3행: 가동율 기준 / 기준 시간 -->
+      <div class="field span-6">
+        <label for="utilMode">가동율 기준</label>
+        <select id="utilMode">
+          <option value="weekday" selected>평일만</option>
+          <option value="holiday">공휴일만</option>
+          <option value="all">전체</option>
+        </select>
+      </div>
+      <div class="field span-6 field-number">
+        <label for="utilBase">기준 시간(h)</label>
+        <input id="utilBase" type="number" step="0.1" min="0.1" value="4" />
+      </div>
+
+      <!-- 4행: 작업/이동/대기 토글 -->
+      <div class="toggle-row span-12">
+        <div class="toggles">
+          <label class="chip"><input type="checkbox" id="includeTask" checked /><span>작업 시간(working time)</span></label>
+          <label class="chip"><input type="checkbox" id="includeMove" checked/><span>이동 시간(moving time)</span></label>
+          <label class="chip"><input type="checkbox" id="includeNone" /><span>대기 시간(none time)</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우측: 액션 -->
+    <div class="actions">
+      <button class="btn primary" id="searchBtn" type="button">조회</button>
+      <button class="btn ghost" id="resetBtn" type="button">초기화</button>
+    </div>
+  </div>
+
+
+  <!-- 이하 그대로 -->
+  <div class="panel-body">
+        <!-- 탭 -->
+        <div class="tabs">
+          <button class="tab active" data-view="site">사이트별 가동율</button>
+          <button class="tab" data-view="weekly">주차별 가동율</button>
+          <button class="tab" data-view="calendar">달력 가동율</button>
+          <button class="tab" data-view="ranking">작업자 랭킹</button>
+        </div>
+
+        <!-- KPI -->
+        <div class="kpis">
+          <div class="kpi"><div class="label">H/Day (가중 평균)</div><div class="value" id="kpiHDay">-</div><div class="sublabel" id="kpiHDayDetail">Σ(h²/d)/Σh</div></div>
+          <div class="kpi">
+            <div class="label">가동율(%)</div>
+            <div class="value" id="kpiUtil">-</div>
+            <div class="sublabel">H/Day ÷ <span id="kpiBase">4</span> × 100%</div>
+          </div>
+
+          <div class="kpi"><div class="label">작업자 수</div><div class="value" id="kpiWorkers">-</div><div class="sublabel">선택 기간 내 유효 인원</div></div>
+          <div class="kpi"><div class="label">총 작업시간(시간)</div><div class="value" id="kpiTotalHours">-</div><div class="sublabel">Σh (시간)</div></div>
+          <div class="kpi"><div class="label">근무가능일수(d)</div><div class="value" id="kpiDstd">-</div><div class="sublabel">주말/휴일 제외</div></div>
+        </div>
+
+        <!-- 사이트별 -->
+        <div class="view active" id="view-site">
+          <div class="chart-card">
+            <canvas id="siteCombo" height="190"></canvas>
+          </div>
+        </div>
+
+        <!-- 주차별 -->
+        <div class="view" id="view-weekly">
+          <div class="chart-card">
+            <canvas id="weeklyCombo" height="190"></canvas>
+          </div>
+        </div>
+
+        <!-- 달력 -->
+        <div class="view" id="view-calendar">
+          <div class="calendar-header">
+            <button class="cal-btn" id="prevMonth" type="button">◀</button>
+            <div class="cal-title" id="calTitle">YYYY-MM</div>
+            <button class="cal-btn" id="nextMonth" type="button">▶</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="legend">
+            <span class="lg lg-holiday">휴일/주말</span>
+            <span class="lg"><b>숫자</b> = 가동율%</span>
+            <span class="lg lg-u100">>100%</span>
+            <span class="lg lg-u70">>70%</span>
+            <span class="lg lg-u0">≤70%</span>
+          </div>
+        </div>
+
+        <!-- 작업자 랭킹 -->
+        <div class="view" id="view-ranking">
+          <h3 class="section-title">작업자 랭킹 (전체)</h3>
+          <div class="rank-controls">
+            <input id="rankSearch" type="text" placeholder="작업자 이름 검색…" />
+            <button id="rankClear" class="btn ghost" type="button">지우기</button>
+            
+            
+          </div>
+          <!-- 스크롤 가능한 컨테이너 -->
+          <div class="chart-card scroll-x">
+            <canvas id="rankTime"></canvas>
+          </div>
+          <div class="chart-card scroll-x">
+            <canvas id="rankCount"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- 날짜 상세 모달 -->
+  <div id="dayModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalDate">YYYY-MM-DD</div>
+        <button class="modal-close" id="closeModal" type="button">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-kpis">
+          <div><span>H/Day</span><b id="mHDay">-</b></div>
+          <div><span>가동율</span><b id="mUtil">-</b></div>
+        </div>
+        <h4>요약</h4>
+        <div class="modal-grid">
+          <div><span>1개 작업한 작업자 수</span><b id="mSingle">-</b></div>
+          <div><span>2개 이상 작업한 작업자 수</span><b id="mMulti">-</b></div>
+          <div><span>총 작업자 수</span><b id="mWorkers">-</b></div>
+          <div><span>작업시간 합계(h)</span><b id="mTaskH">-</b></div>
+          <div><span>이동시간 합계(h)</span><b id="mMoveH">-</b></div>
+          <div><span>대기시간 합계(h)</span><b id="mNoneH">-</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/workload.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // ===== 로그인/권한 처리 =====
+  const token = localStorage.getItem("x-access-token");
+  const userRole = localStorage.getItem("user-role");
+
+  const unsigned = document.querySelector(".unsigned");
+  const signed   = document.querySelector(".signed");
+  if (!token) {
+    unsigned?.classList.remove("hidden");
+    signed?.classList.add("hidden");
+  } else {
+    unsigned?.classList.add("hidden");
+    signed?.classList.remove("hidden");
+  }
+  if (!token || userRole !== 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => { el.style.display = 'none'; });
+  }
+
+  const signOutButton = document.querySelector("#sign-out");
+  signOutButton?.addEventListener("click", function() {
+    localStorage.removeItem("x-access-token");
+    localStorage.removeItem("user-role");
+    alert("로그아웃 되었습니다.");
+    window.location.replace("./signin.html");
+  });
+
+  // ===== 햄버거 메뉴 (단일 초기화) =====
+  const nav = document.querySelector('nav');
+  const btn = nav?.querySelector('.menu-btn');
+  const bar = nav?.querySelector('.menu-bar');
+  const iconSpans = btn?.querySelectorAll('.menu-icon span') || [];
+
+  if (!btn || !bar) return;
+
+  // 중복 초기화 방지
+  if (btn.dataset.hamburgerInit === '1') return;
+  btn.dataset.hamburgerInit = '1';
+
+  btn.setAttribute('aria-expanded', 'false');
+  bar.setAttribute('aria-hidden', 'true');
+
+  function animateIcon(opened) {
+    if (iconSpans.length !== 3) return;
+    if (opened) {
+      iconSpans[0].style.transform = 'translateY(6px) rotate(45deg)';
+      iconSpans[1].style.opacity = '0';
+      iconSpans[2].style.transform = 'translateY(-6px) rotate(-45deg)';
+    } else {
+      iconSpans[0].style.transform = '';
+      iconSpans[1].style.opacity = '';
+      iconSpans[2].style.transform = '';
+    }
+  }
+
+  function openMenu() {
+    bar.classList.add('open');
+    bar.style.maxHeight = bar.scrollHeight + 'px'; // ★ 슬라이드 열림
+    btn.setAttribute('aria-expanded', 'true');
+    bar.setAttribute('aria-hidden', 'false');
+    animateIcon(true);
+
+    document.addEventListener('keydown', escClose);
+    document.addEventListener('click', outsideClose);
+    window.addEventListener('resize', recalcHeight);
+  }
+
+  function closeMenu() {
+    // 현재 높이에서 0으로 애니메이트
+    bar.style.maxHeight = bar.scrollHeight + 'px';
+    void bar.offsetHeight; // reflow
+    bar.style.maxHeight = '0px';
+    bar.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    bar.setAttribute('aria-hidden', 'true');
+    animateIcon(false);
+
+    document.removeEventListener('keydown', escClose);
+    document.removeEventListener('click', outsideClose);
+    window.removeEventListener('resize', recalcHeight);
+  }
+
+  function toggleMenu(e) {
+    e?.preventDefault();
+    bar.classList.contains('open') ? closeMenu() : openMenu();
+  }
+
+  function escClose(e){ if (e.key === 'Escape') closeMenu(); }
+  function outsideClose(e){
+    if (!nav.contains(e.target)) closeMenu();
+  }
+  function recalcHeight(){
+    if (bar.classList.contains('open')) {
+      bar.style.maxHeight = bar.scrollHeight + 'px';
+    }
+  }
+
+  // 클릭/키보드 토글
+  btn.addEventListener('click', toggleMenu);
+  btn.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleMenu(); } });
+
+  // 메뉴 아이템 클릭 시 자동 닫기
+  bar.querySelectorAll('a.menu-item, button.menu-item').forEach(el=>{
+    el.addEventListener('click', ()=> closeMenu());
+  });
+});
+</script>
+
+</body>
+</html>
