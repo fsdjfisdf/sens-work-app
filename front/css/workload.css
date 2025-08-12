@@ -274,3 +274,17 @@ button.menu-item:focus-visible{
 
 /* KPI 분모 숫자 가독성 */
 #kpiBase{ font-variant-numeric: tabular-nums; }
+
+.modal-calc{
+  margin-top:10px; background:#0c121a; border:1px solid var(--border);
+  border-radius:10px; padding:10px;
+}
+.modal-calc .formula div{ margin:4px 0; }
+.modal-calc .dim{ color:#9fb2c7; font-size:12px; margin-left:6px; }
+.modal-calc .hint{ color:#9fb2c7; font-size:12px; margin-top:6px }
+.modal-calc .note{ padding:10px; border-radius:8px; background:#0e1420; border:1px solid #132036; }
+.modal-calc .note.excluded{ background:#1c1212; border-color:#402525; }
+.modal-calc details{ margin-top:8px }
+.modal-calc summary{ cursor:pointer; color:#cfe0f5 }
+.modal-calc ol{ margin:8px 0 0 18px }
+.modal-calc code{ background:#0b0f14; padding:1px 6px; border-radius:6px; border:1px solid var(--border) }

@@ -30,6 +30,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindTabs();
   bindModal();
   wireStaticUI();
+
+  // ✅ 초기 로딩 기본 선택값 보정: task=true, none=false, move=true
+  const chkTask = document.getElementById("includeTask");
+  const chkNone = document.getElementById("includeNone");
+  const chkMove = document.getElementById("includeMove");
+  if (chkTask) chkTask.checked = true;
+  if (chkNone) chkNone.checked = false;
+  if (chkMove) chkMove.checked = true;
+
   await run();
 
   // 상단 버튼/네비 등 이벤트
@@ -763,21 +772,83 @@ function bindTabs() {
   }));
 }
 
-function openDayModal(cellData){
-  document.getElementById('modalDate').textContent = cellData.date;
-  document.getElementById('mHDay').textContent     = fmtHour(Number(cellData.hday));
-  document.getElementById('mUtil').textContent     = `${fmtPct(Number(cellData.util))}%`;
+// ✅ 모달: 해당 날짜의 계산과정까지 표기
+function openDayModal(dateYMD){
+  // 현재 토글/설정 읽기
+  const includeTask = document.getElementById("includeTask")?.checked ?? true;
+  const includeNone = document.getElementById("includeNone")?.checked ?? false;
+  const includeMove = document.getElementById("includeMove")?.checked ?? true; // 기본값 true
+  const toggles = { includeTask, includeNone, includeMove };
 
-  document.getElementById('mSingle').textContent   = cellData.single;
-  document.getElementById('mMulti').textContent    = cellData.multi;
-  document.getElementById('mWorkers').textContent  = cellData.workers;
+  const utilMode = (document.getElementById('utilMode')?.value) || 'weekday';
+  let baseHours = parseFloat(document.getElementById('utilBase')?.value);
+  if (!isFinite(baseHours) || baseHours <= 0) baseHours = 4;
 
-  document.getElementById('mTaskH').textContent    = fmtHour(Number(cellData.taskh));
-  document.getElementById('mMoveH').textContent    = fmtHour(Number(cellData.moveh));
-  document.getElementById('mNoneH').textContent    = fmtHour(Number(cellData.noneh));
+  // 날짜별 로그 / 포함여부
+  const logsForDay = allLogs.filter(r => ymdFromAny(r.task_date) === dateYMD);
+  const included   = includeByMode(dateYMD, utilMode);
+  const dayTypeLbl = (dayCategory(dateYMD) === 'weekday') ? '평일' : '휴일/주말';
+  const modeLbl    = utilMode === 'weekday' ? '평일만'
+                    : utilMode === 'holiday' ? '공휴일만' : '전체';
+
+  // 요약(기존 KPI들)
+  const sums = dayCountsAndSums(logsForDay);
+  const workerHours = included ? aggregateWorkerHoursFull(logsForDay, toggles) : [];
+  const sumH  = workerHours.reduce((a,[,h])=>a+h,0);
+  const sumH2 = workerHours.reduce((a,[,h])=>a+(h*h),0);
+  const hday  = (included && sumH>0) ? (sumH2/sumH) : 0;
+  const util  = (included && sumH>0 && baseHours>0) ? (hday/baseHours)*100 : 0;
+
+  // 모달 상단 숫자 채우기
+  document.getElementById('modalDate').textContent = dateYMD;
+  document.getElementById('mHDay').textContent     = (included && sumH>0) ? fmtHour(hday) : '-';
+  document.getElementById('mUtil').textContent     = (included && sumH>0) ? `${fmtPct(util)}%` : '-';
+
+  document.getElementById('mSingle').textContent   = sums.singleWorkers;
+  document.getElementById('mMulti').textContent    = sums.multiWorkers;
+  document.getElementById('mWorkers').textContent  = sums.totalWorkers;
+  document.getElementById('mTaskH').textContent    = fmtHour(Number(sums.taskHours));
+  document.getElementById('mMoveH').textContent    = fmtHour(Number(sums.moveHours));
+  document.getElementById('mNoneH').textContent    = fmtHour(Number(sums.noneHours));
+
+  // 계산식 영역 HTML
+  let html = '';
+  if (!included) {
+    html = `
+      <div class="note excluded">
+        이 날짜는 <b>${dayTypeLbl}</b>이며, '가동율 기준'이 <b>${modeLbl}</b>로 설정되어 있어
+        <b>계산에서 제외</b>되었습니다.
+      </div>
+    `;
+  } else if (workerHours.length === 0) {
+    html = `<div class="note">이 날짜에 계산에 포함된 시간이 없습니다.</div>`;
+  } else {
+    const items = workerHours
+      .sort((a,b)=>b[1]-a[1])
+      .map(([n,h])=>`<li><code>${n}</code> : ${fmtHour(h)}h</li>`)
+      .join('');
+    html = `
+      <div class="formula">
+        <div><b>공식</b> : H/Day = Σ(hᵢ²) / Σ(hᵢ)  <span class="dim">(하루는 d = 1)</span></div>
+        <div><b>Σ(hᵢ)</b> = ${fmtHour(sumH)} h</div>
+        <div><b>Σ(hᵢ²)</b> = ${fmtHour(sumH2)} h²</div>
+        <div><b>H/Day</b> = ${fmtHour(sumH2)} ÷ ${fmtHour(sumH)} = <b>${fmtHour(hday)} h</b></div>
+        <div><b>가동율</b> = H/Day ÷ 기준(${baseHours}h) × 100% = <b>${fmtPct(util)}%</b></div>
+        <div class="hint">* 계산에는 현재 선택된 항목만 포함됨: ${
+          [includeTask?'작업':'', includeMove?'이동':'', includeNone?'대기':''].filter(Boolean).join(', ') || '없음'
+        }</div>
+      </div>
+      <details class="workers"><summary>작업자별 시간 목록 (${workerHours.length}명)</summary>
+        <ol>${items}</ol>
+      </details>
+    `;
+  }
+  const calcBox = document.getElementById('mCalc');
+  if (calcBox) calcBox.innerHTML = html;
 
   document.getElementById('dayModal').classList.remove('hidden');
 }
+
 function bindModal(){
   document.getElementById('closeModal')?.addEventListener('click',()=>{ document.getElementById('dayModal').classList.add('hidden'); });
   document.getElementById('dayModal')?.addEventListener('click',(e)=>{ if(e.target.id==='dayModal') e.currentTarget.classList.add('hidden'); });
@@ -895,7 +966,7 @@ function applyAndRender(keepCalMonth=false){
 
   const includeTask = document.getElementById("includeTask")?.checked ?? true;
   const includeNone = document.getElementById("includeNone")?.checked ?? false;
-  const includeMove = document.getElementById("includeMove")?.checked ?? false;
+  const includeMove = document.getElementById("includeMove")?.checked ?? true; // ✅ 기본값 true
   const toggles = { includeTask, includeNone, includeMove };
 
   const utilMode = (document.getElementById('utilMode')?.value) || 'weekday'; // weekday|holiday|all
@@ -951,22 +1022,11 @@ function applyAndRender(keepCalMonth=false){
   if(!keepCalMonth && endForCalendar) setCalendarByEndDate(endForCalendar);
   buildCalendar(filtered, toggles, utilMode, baseHours);
 
-  // 달력 클릭 -> 모달
+  // 달력 클릭 -> 모달 (날짜만 전달하고 내부에서 재계산)
   document.querySelectorAll('#calendarGrid .cal-cell').forEach(cell=>{
-    if(!cell.dataset.date) return;
-    cell.addEventListener('click', ()=>{
-      openDayModal({
-        date:  cell.dataset.date,
-        hday:  cell.dataset.hday,
-        util:  cell.dataset.util,
-        workers: cell.dataset.workers,
-        single:  cell.dataset.single,
-        multi:   cell.dataset.multi,
-        taskh:   cell.dataset.taskh,
-        moveh:   cell.dataset.moveh,
-        noneh:   cell.dataset.noneh
-      });
-    });
+    const ymd = cell.dataset.date;
+    if(!ymd) return;
+    cell.addEventListener('click', ()=> openDayModal(ymd));
   });
 
   // 랭킹
@@ -1003,7 +1063,7 @@ function onReset(){
   document.getElementById("siteSelect").value  = "";
   document.getElementById("includeTask").checked = true;
   document.getElementById("includeNone").checked = false;
-  document.getElementById("includeMove").checked = true;
+  document.getElementById("includeMove").checked = true; // ✅ 리셋 후에도 move 기본 체크
 
   document.getElementById("recent3m").checked = false;
   document.getElementById("recent30").checked = false;
