@@ -18,6 +18,54 @@ let hpAbortCtrl = null;      // hiring-plan 전용
 let hpReqSeq = 0;            // 응답 역전 방지 시퀀스
 let isSyncInstalled = false; // 스크롤 동기화 설치 가드
 let userEditedDaysPerBucket = false;
+document.addEventListener('DOMContentLoaded', async () => {
+  // ⬇️ 가장 먼저 실행 (권한 없으면 여기서 redirect 되고 아래 코드들은 실행 안 됨)
+  await assertAdmin();
+});
+async function assertAdmin() {
+  const token = localStorage.getItem('x-access-token');
+  const role  = localStorage.getItem('user-role');
+
+  // 1차: 로그인/권한 로컬 체크
+  if (!token) {
+    alert('로그인이 필요합니다.');
+    window.location.replace('./signin.html');
+    throw new Error('no token'); // 이후 코드 실행 중단
+  }
+  if (role !== 'admin') {
+    alert('접근 권한이 없습니다.');
+    window.location.replace('./index.html');
+    throw new Error('not admin (local)'); // 이후 코드 실행 중단
+  }
+
+  // 2차: 서버에서 역할 재검증(조작/만료 대비)
+  try {
+    const res = await axios.get('http://3.37.73.151:3001/user-info', {
+      headers: { 'x-access-token': token }
+    });
+    const serverRole = res.data?.result?.ROLE || res.data?.result?.role || res.data?.result?.UserRole;
+    if (serverRole && serverRole !== 'admin') {
+      alert('접근 권한이 없습니다.');
+      window.location.replace('./index.html');
+      throw new Error('not admin (server)');
+    }
+  } catch (err) {
+    // 토큰 만료/검증 실패 => 로그인으로
+    console.error('admin check failed:', err);
+    alert('세션이 만료되었거나 권한 확인에 실패했습니다. 다시 로그인해주세요.');
+    window.location.replace('./signin.html');
+    throw err;
+  }
+}
+
+// 다른 탭에서 로그아웃된 경우 즉시 차단
+window.addEventListener('storage', (e) => {
+  if (e.key === 'x-access-token' && !e.newValue) {
+    alert('로그아웃되었습니다.');
+    window.location.replace('./signin.html');
+  }
+});
+
 
 const LS_TRIP = 'analysis.tripMatrix.v1';
 const LS_TRIP_APPLIED_SNAPSHOT = 'analysis.tripMatrix.applied.snapshot.v1';
