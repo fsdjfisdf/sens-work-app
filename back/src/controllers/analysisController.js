@@ -268,49 +268,61 @@ exports.getHiringPlan = async (req, res) => {
     const absencePct = Math.max(0, parseFloat(req.query.absencePct) || 10); // %
     const travelPerBucket = Math.max(0, parseFloat(req.query.travelPerBucket) || 0);
 
-    // 対象 (group, site) 목록
-    let pairs = [];
-    if (group && site) {
-      pairs = [{ grp: String(group).trim(), site: String(site).trim() }];
-    } else {
-      pairs = await analysisDao.listPairs({ group: group || null });
-    }
-    // 월 라벨 배열 준비용 (첫 행에서 채택)
-    let monthBuckets = null;
+    // ✅ 화이트리스트(표시 순서 고정)
+    const whitelist = [
+      { grp: 'PEE1', site: 'PT' },
+      { grp: 'PEE1', site: 'HS' },
+      { grp: 'PEE1', site: 'IC' },
+      { grp: 'PEE1', site: 'CJ' },
+      { grp: 'PEE2', site: 'PT' },
+      { grp: 'PEE2', site: 'HS' },
+      { grp: 'PSKH', site: 'PSKH' }
+    ];
+    // group/site 파라미터로 추가 필터 (있으면 교집합)
+    const pairs = whitelist.filter(p =>
+      (!group || p.grp === group.trim()) &&
+      (!site  || p.site === site.trim())
+    );
 
-    const rows = [];
-    for (const p of pairs) {
-      // 1) 과거→월 집계
-      const daily = await analysisDao.fetchDailyHours({
-        group: p.grp, site: p.site, startDate: null, endDate: null, includeMove: includeMoveBool
-      });
-      const series = resample(daily, 'month');
-      if (!series.length) continue;
+    // 보조 유틸: 월 라벨
+    const mNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const toYYMonLabel = (bucket) => {
+      const [Y, M] = String(bucket).split('-');
+      const yy = Y.slice(2);
+      const idx = Math.max(1, Math.min(12, parseInt(M,10))) - 1;
+      return `${yy}Y-${mNames[idx]}`;
+    };
+    const stepsFromHorizon = (hDays) => Math.max(1, Math.round((Number(hDays)||720)/30));
+    const nextStartDate = (cur) => new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    const bucketLabel = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const monthStart = (d) => { const x=new Date(d); x.setHours(0,0,0,0); x.setDate(1); return x; };
 
-      // 2) 추세 적합
-      const { a, b, sigma } = fitNonNegativeLinear(series);
+    // 마스터 월 버킷(모든 행이 동일한 컬럼을 갖도록)
+    let masterMonths = null;
 
-      // 3) 미래 월 예측
-      const steps = stepsFromHorizon('month', horizonDays);
-      let cur = series[series.length - 1].date;
+    // 행 생성 함수
+    const buildRow = (key, series, available, steps, a, b, sigma) => {
+      // 미래 월 라인 만들기
+      let cur = series && series.length ? series[series.length - 1].date : monthStart(new Date());
       const fcs = [];
-      const t0  = series.length;
+      const t0  = series && series.length ? series.length : 0;
+
       for (let i=0; i<steps; i++){
-        cur = nextStartDate(cur, 'month');
+        cur = nextStartDate(cur);
         const t = t0 + i;
-        let yhat = a + b * t; if (!isFinite(yhat) || yhat < 0) yhat = 0;
-        const upper = yhat + 1.96 * sigma;
+        let yhat = (a!=null && b!=null) ? (a + b * t) : 0;
+        if (!isFinite(yhat) || yhat < 0) yhat = 0;
+        const upper = (sigma!=null) ? (yhat + 1.96 * sigma) : yhat;
+
         const base  = (planMode==='upper') ? upper
                     : (planMode==='blend') ? (alpha*upper + (1-alpha)*yhat)
-                    : yhat; // baseline
+                    : yhat;
         const withBuffer = base * (1 + bufferPct/100);
 
-        // 4) 인원 환산 (+ 결원 반영)
+        // 인원 환산 + 결원/출장
         let req = hpw>0 ? (withBuffer / hpw) : 0;
-        // 결원율 적용: 필요 인원을 1/(1-α) 배
-        const absentRate = Math.min(0.9, absencePct/100); // 과한 폭주 방지
-        req = (absentRate < 0.999) ? (req / (1 - absentRate)) : (req * 10); // 99.9% 방지
-        // 해외출장 결원 추가(명/월)
+        const absentRate = Math.min(0.9, absencePct/100);
+        req = (absentRate < 0.999) ? (req / (1 - absentRate)) : (req * 10);
         req += travelPerBucket;
 
         // 반올림
@@ -319,41 +331,133 @@ exports.getHiringPlan = async (req, res) => {
         else if (rounding==='floor') reqRounded = Math.floor(req);
         else reqRounded = Math.round(req);
 
-        fcs.push({ bucket: bucketLabel(cur, 'month'), reqRounded });
+        fcs.push({ bucket: bucketLabel(cur), reqRounded });
       }
 
-      // 5) 단조(누적 최대) 보정
+      // 단조(누적 최대)
       const reqMono = [];
       for (let i=0; i<fcs.length; i++){
         const v = fcs[i].reqRounded;
         reqMono[i] = (i===0) ? v : Math.max(reqMono[i-1], v);
       }
-
-      // 6) 현재 인원
-      const available = await analysisDao.countHeadcount({ group: p.grp, site: p.site });
-
-      // 7) 누적 갭 (월별)
       const cumGap = reqMono.map(v => Math.max(0, v - available));
 
-      if (!monthBuckets) monthBuckets = fcs.map(r => r.bucket);
+      return { buckets: fcs.map(r => r.bucket), required: reqMono, cumGap };
+    };
 
+    const rows = [];
+    const steps = stepsFromHorizon(horizonDays);
+
+    // 첫 번째로 데이터가 있는 페어에서 masterMonths 결정, 없으면 "다음 달부터 steps개월"
+    let masterPrepared = false;
+
+    for (const p of pairs) {
+      // 1) 과거→월 집계
+      const daily = await analysisDao.fetchDailyHours({
+        group: p.grp, site: p.site, startDate: null, endDate: null, includeMove: includeMoveBool
+      });
+      // 월 리샘플
+      const monthly = (() => {
+        if (!Array.isArray(daily) || !daily.length) return [];
+        // 간단 월 집계(컨트롤러 상단과 동일 로직 이용)
+        const buckets = new Map();
+        for (const r of daily){
+          const d = new Date(`${r.date}T00:00:00`);
+          const m = new Date(d.getFullYear(), d.getMonth(), 1);
+          const key = `${m.getFullYear()}-${String(m.getMonth()+1).padStart(2,'0')}`;
+          buckets.set(key, (buckets.get(key)||0) + (Number(r.hours)||0));
+        }
+        const out = [];
+        // 정렬
+        const keys = Array.from(buckets.keys()).sort();
+        for (const k of keys){
+          const [Y,M] = k.split('-').map(v=>parseInt(v,10));
+          out.push({ date: new Date(Y, M-1, 1), label: k, value: buckets.get(k) });
+        }
+        return out;
+      })();
+
+      // 2) 선형(비음 금지) 추세 적합
+      let a = 0, b = 0, sigma = 0;
+      if (monthly.length){
+        const N = monthly.length;
+        const t = Array.from({length:N}, (_,i)=>i);
+        const y = monthly.map(x=>x.value);
+        const meanT = t.reduce((s,v)=>s+v,0)/N;
+        const meanY = y.reduce((s,v)=>s+v,0)/N;
+        let cov=0, varT=0;
+        for (let i=0;i<N;i++){ cov+=(t[i]-meanT)*(y[i]-meanY); varT+=(t[i]-meanT)*(t[i]-meanT); }
+        b = varT>0 ? (cov/varT) : 0;
+        if (!isFinite(b) || b<0) b = 0;
+        a = meanY - b*meanT;
+        // sigma
+        const resid = y.map((yi,i)=> yi - (a + b*t[i]));
+        const m = resid.reduce((s,v)=>s+v,0)/Math.max(1,resid.length);
+        const v = resid.reduce((s,vv)=>s+(vv-m)*(vv-m),0)/Math.max(1,resid.length-1);
+        sigma = Math.sqrt(Math.max(0,v));
+        if (!isFinite(sigma) || sigma<=0) sigma = Math.max(1e-6, (meanY||0)*0.15);
+      }
+
+      // 3) 현재 인원
+      const available = await analysisDao.countHeadcount({ group: p.grp, site: p.site });
+
+      // 4) 행 생성
+      const rowBuilt = buildRow(`${p.grp}-${p.site}`, monthly, available, steps, a, b, sigma);
+
+      // 5) 마스터 월 버킷 확정
+      if (!masterPrepared) {
+        if (rowBuilt.buckets && rowBuilt.buckets.length) {
+          masterMonths = rowBuilt.buckets.slice();
+          masterPrepared = true;
+        }
+      }
       rows.push({
         key: `${p.grp}-${p.site}`,
         available,
-        buckets: fcs.map(r => r.bucket),
-        required: reqMono,
-        cumGap
+        buckets: rowBuilt.buckets,
+        required: rowBuilt.required,
+        cumGap: rowBuilt.cumGap
       });
     }
 
-    // 응답 라벨은 '25Y-SEP' 형식으로도 제공
-    const monthsYYMon = (monthBuckets || []).map(toYYMonLabel);
+    // 모든 페어에서 과거 데이터가 전무한 경우 → 현재월 기준으로 masterMonths 생성
+    if (!masterPrepared) {
+      let cur = new Date(); cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
+      masterMonths = [];
+      for (let i=0;i<steps;i++){
+        cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+        masterMonths.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
+      }
+      // 각 행이 비어있다면 0으로 채움
+      for (const r of rows) {
+        r.buckets = masterMonths.slice();
+        r.required = new Array(steps).fill(0);
+        // available 대비 누적갭은 항상 0
+        r.cumGap = new Array(steps).fill(0);
+      }
+    } else {
+      // 일부 행의 buckets 길이나 월 라벨이 다르면 masterMonths 기준으로 보정 (없는 월은 0)
+      for (const r of rows){
+        if (!r.buckets || r.buckets.length !== masterMonths.length ||
+            r.buckets.some((b,i)=>b!==masterMonths[i])) {
+          // 재매핑
+          const mapReq = new Map(r.buckets.map((b,i)=>[b, r.required[i] ?? 0]));
+          const newReq = masterMonths.map(mb => mapReq.get(mb) ?? 0);
+          const available = r.available || 0;
+          const newCum = newReq.map(v=>0); // 단조 보정 + 누적갭 다시 계산
+          for (let i=0;i<newReq.length;i++){
+            newReq[i] = (i===0) ? newReq[i] : Math.max(newReq[i-1], newReq[i]); // 단조
+            newCum[i] = Math.max(0, newReq[i] - available);
+          }
+          r.buckets = masterMonths.slice();
+          r.required = newReq;
+          r.cumGap = newCum;
+        }
+      }
+    }
 
-    return res.json({
-      months: monthBuckets || [],
-      months_fmt: monthsYYMon,
-      rows
-    });
+    const months_fmt = (masterMonths || []).map(toYYMonLabel);
+    return res.json({ months: masterMonths || [], months_fmt, rows });
   } catch (err) {
     console.error('getHiringPlan error:', err);
     return res.status(500).json({ months: [], rows: [], error: 'Failed to build hiring plan' });
