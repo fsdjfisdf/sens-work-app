@@ -142,7 +142,12 @@ async function runForecast(){
   }
 }
 
-// 계획(상향) + 갭
+/**
+ * 계획(상향) + 갭 + **단조 보정**
+ * - yhat -> (상한/블렌드/버퍼) -> required_plan_raw
+ * - 반올림(올림/반올림/내림) -> required_plan_rounded
+ * - 단조 보정: prev = max(available, first_rounded), 이후 prev = max(prev, rounded_i)
+ */
 function buildPlannedForecast(forecast, params, available){
   const mode = document.getElementById('planMode').value; // baseline|upper|blend
   const alpha = Number(document.getElementById('alpha').value || 0.5);
@@ -151,31 +156,47 @@ function buildPlannedForecast(forecast, params, available){
 
   const hpw = (Number(params.hoursPerDay)||8) * (Number(params.daysPerBucket)||22);
 
-  return forecast.map(r => {
+  // 1) 각 버킷의 원시/반올림 필요 인원 계산
+  const tmp = forecast.map(r => {
     const y = Number(r.yhat)||0;
     const u = Number(r.yhat_upper)||y;
     const base = (mode === 'upper') ? u
                : (mode === 'blend') ? (alpha*u + (1-alpha)*y)
-               : y;
+               : y; // baseline
     const withBuffer = base * (1 + bufferPct/100);
-    const reqBase = hpw>0 ? (y / hpw) : 0;
+    const reqBase    = hpw>0 ? (y / hpw) : 0;
     const reqPlanRaw = hpw>0 ? (withBuffer / hpw) : 0;
 
-    let reqPlan;
-    if (rounding==='ceil') reqPlan = Math.ceil(reqPlanRaw);
-    else if (rounding==='floor') reqPlan = Math.floor(reqPlanRaw);
-    else reqPlan = Math.round(reqPlanRaw);
-
-    const gap = reqPlan - (Number(available)||0);
+    let reqPlanRounded;
+    if (rounding==='ceil') reqPlanRounded = Math.ceil(reqPlanRaw);
+    else if (rounding==='floor') reqPlanRounded = Math.floor(reqPlanRaw);
+    else reqPlanRounded = Math.round(reqPlanRaw);
 
     return {
       bucket: r.bucket,
       yhat_plan: withBuffer,
-      required_plan: reqPlan,
-      required_base: reqBase,
-      gap
+      required_plan_rounded: reqPlanRounded,
+      required_base: reqBase
     };
   });
+
+  // 2) **단조 보정** (현재 인원 이상에서 시작, 누적 최댓값)
+  const out = [];
+  let prev = Math.max(available, tmp[0]?.required_plan_rounded || 0);
+  for (let i=0; i<tmp.length; i++){
+    const t = tmp[i];
+    const reqPlanMonotone = Math.max(prev, t.required_plan_rounded);
+    prev = reqPlanMonotone;
+    const gap = reqPlanMonotone - (Number(available)||0);
+    out.push({
+      bucket: t.bucket,
+      yhat_plan: t.yhat_plan,
+      required_plan: reqPlanMonotone, // ← 단조 보정된 계획 인원
+      required_base: t.required_base, // 참고용(비단조 가능)
+      gap
+    });
+  }
+  return out;
 }
 
 function renderCharts(series, forecast, planned, params, available){
@@ -247,9 +268,7 @@ function renderCharts(series, forecast, planned, params, available){
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: true },
-        tooltip: {
-          callbacks: { label: (ctx) => `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,1)} h` }
-        }
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,1)} h` } }
       },
       scales: { y: { beginAtZero: true, title: { display: true, text: '시간(h)' } } },
       elements: { point: { radius: 0 } }
@@ -262,7 +281,7 @@ function renderCharts(series, forecast, planned, params, available){
       labels: labelsFc,
       datasets: [
         { type: 'line', label: '필요 인원(기본)', data: baseWorkers, borderWidth: 2, tension: 0.2 },
-        { type: 'line', label: '필요 인원(계획)', data: planWorkers, borderWidth: 2, borderDash: [4,3], tension: 0.2 },
+        { type: 'line', label: '필요 인원(계획·단조)', data: planWorkers, borderWidth: 2, borderDash: [4,3], tension: 0.2 },
         { type: 'line', label: '현재 인원(고정)', data: labelsFc.map(()=>available), borderWidth: 2, borderDash: [2,2], tension: 0, stepped: true },
         { type: 'bar',  label: '갭(계획−현재)', data: gaps, yAxisID: 'y', barPercentage: 0.65, order: 0 }
       ]
@@ -396,7 +415,7 @@ function exportCsv(){
     showNotice('내보낼 예측 행이 없습니다.');
     return;
   }
-  const header = ['기간','예측 작업시간(h)','계획 작업시간(h)','하한','상한','필요 인원(기본)','필요 인원(계획)','현재 인원','갭(계획−현재)'];
+  const header = ['기간','예측 작업시간(h)','계획 작업시간(h)','하한','상한','필요 인원(기본)','필요 인원(계획·단조)','현재 인원','갭(계획−현재)'];
   const csv = [header, ...rows].map(r => r.join(',')).join('\n');
   const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
