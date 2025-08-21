@@ -1,7 +1,6 @@
-// src/controllers/analysisController.js
 const analysisDao = require('../dao/analysisDao');
 
-/** ===== 공통 유틸 ===== */
+/** ===== 유틸 ===== */
 const pad2 = n => String(n).padStart(2, '0');
 const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
@@ -22,7 +21,7 @@ function toDateAny(x) {
   return d;
 }
 
-// 집계 기준 경계
+// 주/월 경계
 function startOfISOWeek(d) {
   const dt = new Date(d);
   const day = (dt.getDay() + 6) % 7; // Mon=0..Sun=6
@@ -44,7 +43,7 @@ function monthStart(d) {
   return dt;
 }
 
-// 일 → (day|week|month) 합계 리샘플 + 결측 0 채움
+// 일 → (day|week|month) 합계 리샘플 + 결측 0
 function resample(dailyRows, freq) {
   if (!Array.isArray(dailyRows) || !dailyRows.length) return [];
 
@@ -125,10 +124,7 @@ function stdDev(arr) {
   return Math.sqrt(v);
 }
 
-/** ===== 비음 선형회귀(β ≥ 0) =====
- * 시계열을 등간격 index t = 0..N-1 로 두고,
- * OLS로 (a, b)를 추정 후 b<0이면 b=0으로 클리핑.
- */
+/** ===== 비음(≥0) 선형회귀 ===== */
 function fitNonNegativeLinear(series) {
   const N = series.length;
   if (N === 0) return { a: 0, b: 0, sigma: 0 };
@@ -146,11 +142,10 @@ function fitNonNegativeLinear(series) {
   }
   let b = (varT>0) ? (covTY/varT) : 0;
   if (!(isFinite(b))) b = 0;
-  if (b < 0) b = 0; // 🔒 비음 제약
+  if (b < 0) b = 0; // 🔒 추세 하락 금지
 
   const a = meanY - b*meanT;
 
-  // 훈련 잔차 표준편차
   const resid = y.map((yi, i) => yi - (a + b * t[i]));
   let sigma = stdDev(resid);
   if (!isFinite(sigma) || sigma <= 0) {
@@ -160,9 +155,19 @@ function fitNonNegativeLinear(series) {
   return { a, b, sigma };
 }
 
+/** ===== 월 라벨 포맷: 25Y-SEP ===== */
+function toYYMonLabel(bucket) {
+  // bucket: 'YYYY-MM'
+  const mNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const [Y, M] = String(bucket).split('-');
+  const yy = Y.slice(2);
+  const idx = Math.max(1, Math.min(12, parseInt(M,10))) - 1;
+  return `${yy}Y-${mNames[idx]}`;
+}
+
 /** ===== 컨트롤러 ===== */
 
-// 과거 시리즈(집계)
+// 과거 시리즈
 exports.getSeries = async (req, res) => {
   try {
     const freq   = (req.query.freq || 'month').toLowerCase(); // day|week|month
@@ -170,18 +175,11 @@ exports.getSeries = async (req, res) => {
     const site   = req.query.site || null;
     const start  = req.query.startDate || null;
     const end    = req.query.endDate || null;
-
-    // ▶ 이동시간 포함 여부(기본 true)
     const includeMove = (req.query.includeMove ?? '1');
     const includeMoveBool = !['0','false','False','FALSE'].includes(String(includeMove));
 
-    const daily = await analysisDao.fetchDailyHours({
-      group, site, startDate: start, endDate: end, includeMove: includeMoveBool
-    });
-    const series = resample(daily, freq).map(r => ({
-      bucket: r.label,
-      total_hours: r.value
-    }));
+    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end, includeMove: includeMoveBool });
+    const series = resample(daily, freq).map(r => ({ bucket: r.label, total_hours: r.value }));
     return res.json({ series });
   } catch (err) {
     console.error('getSeries error:', err);
@@ -189,34 +187,27 @@ exports.getSeries = async (req, res) => {
   }
 };
 
-// 미래 예측(추세만, β≥0)
+// 단조 우상향 추세 예측(계절 無)
 exports.getForecast = async (req, res) => {
   try {
-    const freq   = (req.query.freq || 'month').toLowerCase(); // day|week|month
+    const freq   = (req.query.freq || 'month').toLowerCase();
     const group  = req.query.group || null;
     const site   = req.query.site || null;
     const start  = req.query.startDate || null;
     const end    = req.query.endDate || null;
     const horizonDays = parseInt(req.query.horizon, 10) || 730;
-
     const includeMove = (req.query.includeMove ?? '1');
     const includeMoveBool = !['0','false','False','FALSE'].includes(String(includeMove));
 
-    const daily  = await analysisDao.fetchDailyHours({
-      group, site, startDate: start, endDate: end, includeMove: includeMoveBool
-    });
+    const daily  = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end, includeMove: includeMoveBool });
     const series = resample(daily, freq);
     if (!series.length) return res.json({ forecast: [] });
 
-    // (a, b) 적합 (b >= 0)
     const { a, b, sigma } = fitNonNegativeLinear(series);
-
-    // 예측 스텝 수
     const steps = stepsFromHorizon(freq, horizonDays);
     let cur = series[series.length - 1].date;
 
     const out = [];
-    // 훈련의 마지막 인덱스 기준 앞으로 이어감: t = N, N+1, ...
     const t0 = series.length;
     for (let i=0; i<steps; i++) {
       cur = nextStartDate(cur, freq);
@@ -227,10 +218,7 @@ exports.getForecast = async (req, res) => {
       const lower = Math.max(0, yhat - 1.96 * sigma);
       const upper = yhat + 1.96 * sigma;
 
-      out.push({
-        bucket: bucketLabel(cur, freq),
-        yhat, yhat_lower: lower, yhat_upper: upper
-      });
+      out.push({ bucket: bucketLabel(cur, freq), yhat, yhat_lower: lower, yhat_upper: upper });
     }
     return res.json({ forecast: out });
   } catch (err) {
@@ -249,5 +237,125 @@ exports.getHeadcount = async (req, res) => {
   } catch (err) {
     console.error('getHeadcount error:', err);
     return res.status(500).json({ count: 0, error: 'Failed to fetch headcount' });
+  }
+};
+
+/**
+ * 증원 시점 표: 월 기준으로 (그룹-사이트)별 필요 인원 누적 갭을 반환
+ * Params:
+ *  - group/site (선택), includeMove, horizon
+ *  - hoursPerDay, daysPerBucket, rounding(ceil|round|floor)
+ *  - planMode(baseline|upper|blend), alpha(0..1), bufferPct
+ *  - absencePct (예: 10 => 10%), travelPerBucket (명/월)
+ */
+exports.getHiringPlan = async (req, res) => {
+  try {
+    const group  = req.query.group || null;
+    const site   = req.query.site || null;
+    const includeMove = (req.query.includeMove ?? '1');
+    const includeMoveBool = !['0','false','False','FALSE'].includes(String(includeMove));
+    const horizonDays = parseInt(req.query.horizon, 10) || (24*30); // 기본 24개월
+
+    const hoursPerDay   = Math.max(0.1, parseFloat(req.query.hoursPerDay) || 8);
+    const daysPerBucket = Math.max(1, parseInt(req.query.daysPerBucket,10) || 22);
+    const hpw = hoursPerDay * daysPerBucket;
+
+    const rounding = (req.query.rounding || 'ceil').toLowerCase();
+    const planMode = (req.query.planMode || 'blend').toLowerCase();
+    const alpha    = Math.min(1, Math.max(0, parseFloat(req.query.alpha) || 0.5));
+    const bufferPct= Math.max(0, parseFloat(req.query.bufferPct) || 5);
+
+    const absencePct = Math.max(0, parseFloat(req.query.absencePct) || 10); // %
+    const travelPerBucket = Math.max(0, parseFloat(req.query.travelPerBucket) || 0);
+
+    // 対象 (group, site) 목록
+    let pairs = [];
+    if (group && site) {
+      pairs = [{ grp: String(group).trim(), site: String(site).trim() }];
+    } else {
+      pairs = await analysisDao.listPairs({ group: group || null });
+    }
+    // 월 라벨 배열 준비용 (첫 행에서 채택)
+    let monthBuckets = null;
+
+    const rows = [];
+    for (const p of pairs) {
+      // 1) 과거→월 집계
+      const daily = await analysisDao.fetchDailyHours({
+        group: p.grp, site: p.site, startDate: null, endDate: null, includeMove: includeMoveBool
+      });
+      const series = resample(daily, 'month');
+      if (!series.length) continue;
+
+      // 2) 추세 적합
+      const { a, b, sigma } = fitNonNegativeLinear(series);
+
+      // 3) 미래 월 예측
+      const steps = stepsFromHorizon('month', horizonDays);
+      let cur = series[series.length - 1].date;
+      const fcs = [];
+      const t0  = series.length;
+      for (let i=0; i<steps; i++){
+        cur = nextStartDate(cur, 'month');
+        const t = t0 + i;
+        let yhat = a + b * t; if (!isFinite(yhat) || yhat < 0) yhat = 0;
+        const upper = yhat + 1.96 * sigma;
+        const base  = (planMode==='upper') ? upper
+                    : (planMode==='blend') ? (alpha*upper + (1-alpha)*yhat)
+                    : yhat; // baseline
+        const withBuffer = base * (1 + bufferPct/100);
+
+        // 4) 인원 환산 (+ 결원 반영)
+        let req = hpw>0 ? (withBuffer / hpw) : 0;
+        // 결원율 적용: 필요 인원을 1/(1-α) 배
+        const absentRate = Math.min(0.9, absencePct/100); // 과한 폭주 방지
+        req = (absentRate < 0.999) ? (req / (1 - absentRate)) : (req * 10); // 99.9% 방지
+        // 해외출장 결원 추가(명/월)
+        req += travelPerBucket;
+
+        // 반올림
+        let reqRounded;
+        if (rounding==='ceil') reqRounded = Math.ceil(req);
+        else if (rounding==='floor') reqRounded = Math.floor(req);
+        else reqRounded = Math.round(req);
+
+        fcs.push({ bucket: bucketLabel(cur, 'month'), reqRounded });
+      }
+
+      // 5) 단조(누적 최대) 보정
+      const reqMono = [];
+      for (let i=0; i<fcs.length; i++){
+        const v = fcs[i].reqRounded;
+        reqMono[i] = (i===0) ? v : Math.max(reqMono[i-1], v);
+      }
+
+      // 6) 현재 인원
+      const available = await analysisDao.countHeadcount({ group: p.grp, site: p.site });
+
+      // 7) 누적 갭 (월별)
+      const cumGap = reqMono.map(v => Math.max(0, v - available));
+
+      if (!monthBuckets) monthBuckets = fcs.map(r => r.bucket);
+
+      rows.push({
+        key: `${p.grp}-${p.site}`,
+        available,
+        buckets: fcs.map(r => r.bucket),
+        required: reqMono,
+        cumGap
+      });
+    }
+
+    // 응답 라벨은 '25Y-SEP' 형식으로도 제공
+    const monthsYYMon = (monthBuckets || []).map(toYYMonLabel);
+
+    return res.json({
+      months: monthBuckets || [],
+      months_fmt: monthsYYMon,
+      rows
+    });
+  } catch (err) {
+    console.error('getHiringPlan error:', err);
+    return res.status(500).json({ months: [], rows: [], error: 'Failed to build hiring plan' });
   }
 };

@@ -7,9 +7,8 @@
   <link rel="stylesheet" href="./css/workload.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
-    .loading{position:fixed;inset:0;background:rgba(2,6,23,0.35);display:flex;align-items:center;justify-content:center;z-index:50}
+    .loading{position:fixed;inset:0;background:rgba(2,6,23,.35);display:flex;align-items:center;justify-content:center;z-index:50}
     .loading.hidden{display:none}
     .loading .box{background:#0b1220;color:#e6f0ff;border:1px solid rgba(96,165,250,.4);border-radius:12px;padding:14px 18px;font-weight:700}
     .notice{margin:8px 0;padding:8px 12px;border-radius:10px;background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.35);color:#cfe0f5}
@@ -17,15 +16,16 @@
     .notice.error{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.35);color:#fecaca}
     small.dim{display:block;opacity:.7;margin-top:4px}
     .panel-header .actions .btn + .btn{margin-left:8px}
-    .right-info{font-size:12px; opacity:.7; margin-left:auto}
     .toolbar{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
     .field .inline{display:flex; align-items:center; gap:8px}
     .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.35);font-size:12px;color:#cfe0f5}
-    input[type="range"]{width:100%}
     .muted{opacity:.75}
     .table td,.table th{white-space:nowrap}
     .delta.pos{color:#86efac}
     .delta.neg{color:#fca5a5}
+    .table.compact td,.table.compact th{padding:6px 8px}
+    .scroll-x{overflow-x:auto}
+    .mono{font-variant-numeric: tabular-nums}
   </style>
 </head>
 <body>
@@ -108,18 +108,9 @@
             <small id="daysHint" class="dim">월 기준 예: 22</small>
           </div>
 
-          <!-- 이동시간 포함 -->
-          <div class="field span-4">
-            <label>총 작업시간 구성</label>
-            <label class="chip input-chip">
-              <input type="checkbox" id="includeMove" checked />
-              <span>이동시간 포함</span>
-            </label>
-          </div>
-
           <!-- 계획(상향) 옵션 -->
           <div class="field span-12">
-            <label>계획 모드 (바쁠 때 상향)</label>
+            <label>계획 모드</label>
             <div class="grid" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;">
               <div class="span-4">
                 <div class="field">
@@ -144,13 +135,23 @@
                     <input id="addBuffer" type="number" step="1" value="5" />
                     <span class="muted">× (1 + p/100)</span>
                   </div>
-                  <small class="dim">실제 운영상 바쁠 여지 고려(권장 5~15%)</small>
+                  <small class="dim">운영상 여유(권장 5~15%)</small>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 인원 산식 옵션 -->
+          <!-- 결원 옵션 -->
+          <div class="field span-4">
+            <label for="absencePct">결원율(휴가/교육, %)</label>
+            <input id="absencePct" type="number" step="1" min="0" value="10" />
+          </div>
+          <div class="field span-4">
+            <label for="travelPerBucket">해외출장(명/구간)</label>
+            <input id="travelPerBucket" type="number" step="1" min="0" value="0" />
+          </div>
+
+          <!-- 인원 반올림 / 표시 -->
           <div class="field span-4">
             <label for="rounding">인원 반올림</label>
             <select id="rounding">
@@ -159,8 +160,6 @@
               <option value="floor">내림</option>
             </select>
           </div>
-
-          <!-- 표시 옵션 -->
           <div class="field span-4">
             <label for="showConf">표시 옵션</label>
             <label class="chip input-chip">
@@ -181,20 +180,21 @@
         <div id="noti" class="notice hidden"></div>
         <div id="err" class="notice error hidden"></div>
 
+        <!-- KPI -->
         <div class="kpis">
           <div class="kpi">
             <div class="label">다음 구간 필요 인원(계획)</div>
-            <div class="value" id="kpiNextWorkers">-</div>
+            <div class="value mono" id="kpiNextWorkers">-</div>
             <div class="sublabel">기본: <span id="kpiNextWorkersBase">-</span> 명</div>
           </div>
           <div class="kpi">
             <div class="label">평균 필요 인원(계획)</div>
-            <div class="value" id="kpiAvgWorkers">-</div>
+            <div class="value mono" id="kpiAvgWorkers">-</div>
             <div class="sublabel">기본: <span id="kpiAvgWorkersBase">-</span> 명</div>
           </div>
           <div class="kpi">
             <div class="label">총 작업시간(계획)</div>
-            <div class="value" id="kpiForecastHours">-</div>
+            <div class="value mono" id="kpiForecastHours">-</div>
             <div class="sublabel">기본: <span id="kpiForecastHoursBase">-</span> h</div>
           </div>
         </div>
@@ -202,17 +202,17 @@
         <div class="kpis">
           <div class="kpi">
             <div class="label">현재 인원(필터 적용)</div>
-            <div class="value" id="kpiAvailable">-</div>
+            <div class="value mono" id="kpiAvailable">-</div>
             <div class="sublabel">userDB 기준</div>
           </div>
           <div class="kpi">
             <div class="label">다음 구간 추가 필요</div>
-            <div class="value"><span id="kpiNextGap" class="delta">-</span></div>
+            <div class="value"><span id="kpiNextGap" class="delta mono">-</span></div>
             <div class="sublabel">계획 − 현재</div>
           </div>
           <div class="kpi">
             <div class="label">평균 추가 필요</div>
-            <div class="value"><span id="kpiAvgGap" class="delta">-</span></div>
+            <div class="value"><span id="kpiAvgGap" class="delta mono">-</span></div>
             <div class="sublabel">예측 구간 평균</div>
           </div>
         </div>
@@ -235,7 +235,7 @@
                 <th>하한</th>
                 <th>상한</th>
                 <th>필요 인원(기본)</th>
-                <th>필요 인원(계획)</th>
+                <th>필요 인원(계획, 단조)</th>
                 <th>현재 인원</th>
                 <th>갭(계획−현재)</th>
               </tr>
@@ -243,14 +243,21 @@
             <tbody></tbody>
           </table>
         </div>
+
+        <!-- ✅ 증원 시점 표 -->
+        <div class="chart-card scroll-x">
+          <h3 class="section-title">증원 시점 표 (월•그룹-사이트별 누적 증원 필요)</h3>
+          <table id="tblIncrements" class="table compact">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+          <small class="dim">셀 값 예) +2 = 시작 시점 대비 누적 증원 2명 필요 • 마지막 달 셀에는 “(누적)” 표기</small>
+        </div>
       </div>
     </section>
   </div>
 
-  <div id="loading" class="loading hidden">
-    <div class="box">예측 계산 중…</div>
-  </div>
-
+  <div id="loading" class="loading hidden"><div class="box">예측 계산 중…</div></div>
   <script src="./js/analysis.js"></script>
 </body>
 </html>

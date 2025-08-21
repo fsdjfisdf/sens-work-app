@@ -1,4 +1,3 @@
-// src/routes/analysisRoute.js
 const express = require('express');
 const router = express.Router();
 
@@ -23,8 +22,9 @@ function normalizeTokenHeader(req, res, next) {
   next();
 }
 
-router.get('/series',    normalizeTokenHeader, jwtMiddleware, analysisController.getSeries);
-router.get('/forecast',  normalizeTokenHeader, jwtMiddleware, analysisController.getForecast);
-router.get('/headcount', normalizeTokenHeader, jwtMiddleware, analysisController.getHeadcount);
+router.get('/series',      normalizeTokenHeader, jwtMiddleware, analysisController.getSeries);
+router.get('/forecast',    normalizeTokenHeader, jwtMiddleware, analysisController.getForecast);
+router.get('/headcount',   normalizeTokenHeader, jwtMiddleware, analysisController.getHeadcount);
+router.get('/hiring-plan', normalizeTokenHeader, jwtMiddleware, analysisController.getHiringPlan);
 
 module.exports = router;

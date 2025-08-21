@@ -1,4 +1,3 @@
-// src/dao/analysisDao.js
 const { pool } = require('../../config/database');
 
 /**
@@ -17,9 +16,8 @@ exports.fetchDailyHours = async ({ group, site, startDate, endDate, includeMove 
 
     if (startDate) { where.push('DATE(task_date) >= ?'); params.push(startDate); }
     if (endDate)   { where.push('DATE(task_date) <= ?'); params.push(endDate); }
-
-    if (group) { where.push('TRIM(`group`) = ?'); params.push(group.trim()); }
-    if (site)  { where.push('TRIM(site) = ?');   params.push(site.trim()); }
+    if (group)     { where.push('TRIM(`group`) = ?'); params.push(group.trim()); }
+    if (site)      { where.push('TRIM(site) = ?');   params.push(site.trim()); }
 
     const moveExpr = includeMove ? `COALESCE(move_time, 0) / 60.0` : `0.0`;
 
@@ -48,15 +46,34 @@ exports.fetchDailyHours = async ({ group, site, startDate, endDate, includeMove 
   }
 };
 
-/**
- * userDB 현재 인원 집계 (필터: GROUP, SITE)
- */
+/** (group, site) distinct 목록 (빈 site는 제외) */
+exports.listPairs = async ({ group }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    const params = [];
+    const where = ['site IS NOT NULL', "TRIM(site) <> ''", '`group` IS NOT NULL', "TRIM(`group`) <> ''"];
+    if (group) { where.push('TRIM(`group`) = ?'); params.push(group.trim()); }
+
+    const sql = `
+      SELECT TRIM(\`group\`) AS grp, TRIM(site) AS site
+      FROM work_log
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+      GROUP BY TRIM(\`group\`), TRIM(site)
+      ORDER BY TRIM(\`group\`), TRIM(site)
+    `;
+    const [rows] = await conn.query(sql, params);
+    return rows.map(r => ({ grp: r.grp, site: r.site }));
+  } finally {
+    conn.release();
+  }
+};
+
+/** userDB 현재 인원 집계 (필터: GROUP, SITE) */
 exports.countHeadcount = async ({ group, site }) => {
   const conn = await pool.getConnection(async c => c);
   try {
     const where = [];
     const params = [];
-
     if (group) { where.push('TRIM(`GROUP`) = ?'); params.push(group.trim()); }
     if (site)  { where.push('TRIM(SITE) = ?');   params.push(site.trim()); }
 
