@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const analysisController = require('./analysisController');
+const analysisController = require('../controllers/analysisController');
 
 // 과거 시계열(집계) 조회
 router.get('/series', analysisController.getSeries);
