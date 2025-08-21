@@ -18,6 +18,11 @@ function toDateAny(x) {
   d.setHours(0,0,0,0);
   return d;
 }
+function bool01(v, def=1){
+  if (v === undefined || v === null || v === '') return def;
+  if (typeof v === 'string') return (v === '1' || v.toLowerCase() === 'true') ? 1 : 0;
+  return (v === 1 || v === true) ? 1 : 0;
+}
 
 // ISO 주간 계산
 function startOfISOWeek(d) {
@@ -170,13 +175,14 @@ function bucketLabel(d, freq) {
 // 과거 시리즈
 exports.getSeries = async (req, res) => {
   try {
-    const freq   = (req.query.freq || 'month').toLowerCase(); // day|week|month
-    const group  = req.query.group || null;
-    const site   = req.query.site || null;
-    const start  = req.query.startDate || null;
-    const end    = req.query.endDate || null;
+    const freq        = (req.query.freq || 'month').toLowerCase(); // day|week|month
+    const group       = req.query.group || null;
+    const site        = req.query.site || null;
+    const start       = req.query.startDate || null;
+    const end         = req.query.endDate || null;
+    const includeMove = bool01(req.query.includeMove, 1);
 
-    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end });
+    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end, includeMove });
     const series = resample(daily, freq).map(r => ({
       bucket: r.label,
       total_hours: r.value
@@ -191,14 +197,15 @@ exports.getSeries = async (req, res) => {
 // 예측
 exports.getForecast = async (req, res) => {
   try {
-    const freq   = (req.query.freq || 'month').toLowerCase(); // day|week|month
-    const group  = req.query.group || null;
-    const site   = req.query.site || null;
-    const start  = req.query.startDate || null;
-    const end    = req.query.endDate || null;
+    const freq        = (req.query.freq || 'month').toLowerCase(); // day|week|month
+    const group       = req.query.group || null;
+    const site        = req.query.site || null;
+    const start       = req.query.startDate || null;
+    const end         = req.query.endDate || null;
     const horizonDays = parseInt(req.query.horizon, 10) || 730;
+    const includeMove = bool01(req.query.includeMove, 1);
 
-    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end });
+    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end, includeMove });
     const series = resample(daily, freq);
     if (!series.length) return res.json({ forecast: [] });
 

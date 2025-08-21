@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userEditedDaysPerBucket = true;
   });
   document.getElementById('showConf')?.addEventListener('change', runForecast);
+  document.getElementById('includeMove')?.addEventListener('change', runForecast);
 
   ['planMode','alpha','addBuffer','rounding'].forEach(id=>{
     document.getElementById(id)?.addEventListener('change', ()=>{
@@ -82,7 +83,17 @@ function collectParams(){
   const site   = document.getElementById('siteSelect').value.trim();
   const hpd    = parseFloat(document.getElementById('hoursPerDay').value) || 8;
   const dpb    = parseInt(document.getElementById('daysPerBucket').value, 10) || 22;
-  return { freq, horizon, group: group || null, site: site || null, hoursPerDay: hpd, daysPerBucket: dpb };
+  const incMove= document.getElementById('includeMove')?.checked ? 1 : 0;
+
+  return {
+    freq,
+    horizon,
+    group: group || null,
+    site: site || null,
+    hoursPerDay: hpd,
+    daysPerBucket: dpb,
+    includeMove: incMove // ✅ 백엔드로 이동시간 포함 여부 전달
+  };
 }
 
 async function runForecast(){
@@ -133,9 +144,12 @@ async function runForecast(){
 
     const ts = new Date().toLocaleString('ko-KR');
     document.getElementById('lastUpdated').textContent = ts;
+
+    // KPI 라벨에 (+이동) 배지 갱신
+    document.getElementById('lblHoursDef').textContent = params.includeMove ? '작업+대기(+이동)' : '작업+대기';
   } catch (err) {
     if (axios.isCancel?.(err) || err.name === 'CanceledError') {
-      // 취소
+      // 취소됨
     } else {
       console.error(err);
       showError('예측 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
@@ -376,6 +390,7 @@ function resetForm(){
   document.getElementById('rounding').value = 'ceil';
 
   document.getElementById('showConf').checked = true;
+  document.getElementById('includeMove').checked = true;
   runForecast();
 }
 
