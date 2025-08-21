@@ -7,6 +7,27 @@
   <link rel="stylesheet" href="./css/workload.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- 추가 CSS (원하면 workload.css로 이동) -->
+  <style>
+    .loading{position:fixed;inset:0;background:rgba(2,6,23,0.35);display:flex;align-items:center;justify-content:center;z-index:50}
+    .loading.hidden{display:none}
+    .loading .box{background:#0b1220;color:#e6f0ff;border:1px solid rgba(96,165,250,.4);border-radius:12px;padding:14px 18px;font-weight:700}
+    .notice{margin:8px 0;padding:8px 12px;border-radius:10px;background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.35);color:#cfe0f5}
+    .notice.hidden{display:none}
+    .notice.error{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.35);color:#fecaca}
+    small.dim{display:block;opacity:.7;margin-top:4px}
+    .panel-header .actions .btn + .btn{margin-left:8px}
+    .right-info{font-size:12px; opacity:.7; margin-left:auto}
+    .toolbar{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .field .inline{display:flex; align-items:center; gap:8px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.35);font-size:12px;color:#cfe0f5}
+    input[type="range"]{width:100%}
+    .muted{opacity:.75}
+    .table td,.table th{white-space:nowrap}
+    .delta.pos{color:#86efac}
+    .delta.neg{color:#fca5a5}
+  </style>
 </head>
 <body>
   <nav>
@@ -35,6 +56,7 @@
     <header class="header">
       <h1 class="title">Predicted Workers</h1>
       <span class="pill">1~2년 장기 예측</span>
+      <div class="right-info">업데이트: <span id="lastUpdated">-</span></div>
     </header>
 
     <section class="panel">
@@ -48,13 +70,12 @@
               <option value="day">일</option>
             </select>
           </div>
+
           <div class="field span-4">
             <label for="horizon">예측 기간</label>
-            <select id="horizon">
-              <option value="365">1년</option>
-              <option value="730" selected>2년</option>
-            </select>
+            <select id="horizon"></select>
           </div>
+
           <div class="field span-4">
             <label for="groupSelect">그룹</label>
             <select id="groupSelect">
@@ -64,6 +85,7 @@
               <option>PSKH</option>
             </select>
           </div>
+
           <div class="field span-4">
             <label for="siteSelect">사이트</label>
             <select id="siteSelect">
@@ -80,24 +102,113 @@
             <label for="hoursPerDay">기준 근로시간(1인·h)</label>
             <input id="hoursPerDay" type="number" step="0.5" min="1" value="8" />
           </div>
+
           <div class="field span-4">
             <label for="daysPerBucket">근무가능일수(d)</label>
             <input id="daysPerBucket" type="number" step="1" min="1" value="22" />
-            <small class="dim">월 기준 예: 22 / 주 기준 예: 5 / 일 기준: 1</small>
+            <small id="daysHint" class="dim">월 기준 예: 22</small>
+          </div>
+
+          <!-- 계획(상향) 옵션 -->
+          <div class="field span-12">
+            <label>계획 모드 (바쁠 때 상향)</label>
+            <div class="grid" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;">
+              <div class="span-4">
+                <div class="field">
+                  <label for="planMode">모드</label>
+                  <select id="planMode">
+                    <option value="baseline">평균 (ŷ)</option>
+                    <option value="upper">상한 95% (ŷᵤ)</option>
+                    <option value="blend" selected>상한 가중(α·ŷᵤ + (1-α)·ŷ)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="span-4" id="alphaWrap">
+                <div class="field">
+                  <label for="alpha">상한 가중치 α <span class="badge" id="alphaVal">0.50</span></label>
+                  <input type="range" id="alpha" min="0" max="1" step="0.05" value="0.5" />
+                </div>
+              </div>
+              <div class="span-4">
+                <div class="field">
+                  <label for="addBuffer">추가 버퍼(%)</label>
+                  <div class="inline">
+                    <input id="addBuffer" type="number" step="1" value="5" />
+                    <span class="muted">× (1 + p/100)</span>
+                  </div>
+                  <small class="dim">실제 운영상 바쁠 여지 고려(권장 5~15%)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 인원 산식 옵션 -->
+          <div class="field span-4">
+            <label for="rounding">인원 반올림</label>
+            <select id="rounding">
+              <option value="ceil" selected>올림(권장)</option>
+              <option value="round">반올림</option>
+              <option value="floor">내림</option>
+            </select>
+          </div>
+
+          <!-- 표시 옵션 -->
+          <div class="field span-4">
+            <label for="showConf">표시 옵션</label>
+            <label class="chip input-chip">
+              <input type="checkbox" id="showConf" checked />
+              <span>신뢰구간 표시</span>
+            </label>
           </div>
         </div>
 
-        <div class="actions">
+        <div class="actions toolbar">
           <button id="btnRun" class="btn primary" type="button">예측 실행</button>
           <button id="btnReset" class="btn ghost" type="button">초기화</button>
+          <button id="btnCsv" class="btn ghost" type="button">CSV 내보내기</button>
         </div>
       </div>
 
       <div class="panel-body">
+        <div id="noti" class="notice hidden"></div>
+        <div id="err" class="notice error hidden"></div>
+
+        <!-- KPI 1: 계획 vs 기본 -->
         <div class="kpis">
-          <div class="kpi"><div class="label">다음 구간 필요 인원(예측)</div><div class="value" id="kpiNextWorkers">-</div><div class="sublabel">선택 집계 단위 1구간</div></div>
-          <div class="kpi"><div class="label">평균 필요 인원(예측)</div><div class="value" id="kpiAvgWorkers">-</div><div class="sublabel">예측 구간 평균</div></div>
-          <div class="kpi"><div class="label">총 작업시간(예측)</div><div class="value" id="kpiForecastHours">-</div><div class="sublabel">예측 구간 합계(h)</div></div>
+          <div class="kpi">
+            <div class="label">다음 구간 필요 인원(계획)</div>
+            <div class="value" id="kpiNextWorkers">-</div>
+            <div class="sublabel">기본: <span id="kpiNextWorkersBase">-</span> 명</div>
+          </div>
+          <div class="kpi">
+            <div class="label">평균 필요 인원(계획)</div>
+            <div class="value" id="kpiAvgWorkers">-</div>
+            <div class="sublabel">기본: <span id="kpiAvgWorkersBase">-</span> 명</div>
+          </div>
+          <div class="kpi">
+            <div class="label">총 작업시간(계획)</div>
+            <div class="value" id="kpiForecastHours">-</div>
+            <div class="sublabel">기본: <span id="kpiForecastHoursBase">-</span> h</div>
+          </div>
+        </div>
+
+        <!-- KPI 2: 현재 인원 & 갭 -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">현재 인원(필터 적용)</div>
+            <div class="value" id="kpiAvailable">-</div>
+            <div class="sublabel">userDB 기준</div>
+          </div>
+          <div class="kpi">
+            <div class="label">다음 구간 추가 필요</div>
+            <div class="value"><span id="kpiNextGap" class="delta">-</span></div>
+            <div class="sublabel">계획 − 현재</div>
+          </div>
+          <div class="kpi">
+            <div class="label">평균 추가 필요</div>
+            <div class="value"><span id="kpiAvgGap" class="delta">-</span></div>
+            <div class="sublabel">예측 구간 평균</div>
+          </div>
         </div>
 
         <div class="chart-card">
@@ -110,12 +221,29 @@
         <div class="chart-card">
           <h3 class="section-title">예측 표 (일부)</h3>
           <table id="tblForecast" class="table">
-            <thead><tr><th>기간</th><th>예측 작업시간(h)</th><th>하한</th><th>상한</th><th>필요 인원</th></tr></thead>
+            <thead>
+              <tr>
+                <th>기간</th>
+                <th>예측 작업시간(h)</th>
+                <th>계획 작업시간(h)</th>
+                <th>하한</th>
+                <th>상한</th>
+                <th>필요 인원(기본)</th>
+                <th>필요 인원(계획)</th>
+                <th>현재 인원</th>
+                <th>갭(계획−현재)</th>
+              </tr>
+            </thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- 로딩 오버레이 -->
+  <div id="loading" class="loading hidden">
+    <div class="box">예측 계산 중…</div>
   </div>
 
   <script src="./js/analysis.js"></script>

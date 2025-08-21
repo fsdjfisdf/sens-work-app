@@ -1,215 +1,258 @@
 const analysisDao = require('../dao/analysisDao');
 
-// =============================
-// 시계열 원본 조회
-// =============================
-exports.getSeries = async (req, res) => {
-  try {
-    const { freq = 'month', group = null, site = null } = req.query;
-    const series = await analysisDao.getAggregatedSeries({ freq, group, site });
-    return res.status(200).json({ series });
-  } catch (err) {
-    console.error('getSeries error', err.message);
-    return res.status(500).json({ error: 'failed_to_fetch_series' });
-  }
-};
+/** 유틸 */
+const pad2 = n => String(n).padStart(2, '0');
+const toDate = s => new Date(s + 'T00:00:00'); // local midnight
+const ymd = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
 
-// =============================
-// 장기 예측 (간단 STL-like)
-// =============================
-exports.getForecast = async (req, res) => {
-  try {
-    const {
-      freq = 'month',
-      horizon = 730,            // days 기반 입력(1~2년)
-      group = null,
-      site = null,
-      hoursPerDay = 8,          // 1인 하루 근무시간
-      daysPerBucket = 22        // 집계단위별 근무가능일수(월=22/주=5/일=1 등)
-    } = req.query;
+// ISO 주간: 월=0..일=6
+function startOfISOWeek(d) {
+  const dt = new Date(d);
+  const day = (dt.getDay() + 6) % 7; // Mon=0..Sun=6
+  dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate() - day);
+  return dt;
+}
+function weekNumberISO(d) {
+  const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  return Math.ceil((((tmp - yearStart)/86400000) + 1) / 7);
+}
 
-    const H = parseInt(horizon, 10) || 730;
-    const bucketsToForecast = horizonToBuckets(freq, H);
+function monthStart(d) {
+  const dt = new Date(d);
+  dt.setHours(0,0,0,0);
+  dt.setDate(1);
+  return dt;
+}
 
-    // 1) 과거 시계열
-    const series = await analysisDao.getAggregatedSeries({ freq, group, site });
-    if (!series.length) return res.status(200).json({ forecast: [] });
+/** 일 단위 → (day|week|month)로 리샘플 + 빈 구간 0채움 */
+function resample(dailyRows, freq) {
+  if (!Array.isArray(dailyRows) || !dailyRows.length) return [];
 
-    const y = series.map(r => Number(r.total_hours) || 0);
+  // 1) 키/라벨/시작일 계산
+  const buckets = new Map(); // key -> { date(start), label, value }
+  let minDate = toDate(dailyRows[0].date);
+  let maxDate = toDate(dailyRows[0].date);
 
-    // 2) 추세(이동평균)
-    const win = (freq === 'day') ? 28 : (freq === 'week' ? 12 : 12);
-    const trend = movingAverage(y, win);
+  const pushVal = (key, dateStart, label, v) => {
+    const cur = buckets.get(key);
+    if (cur) cur.value += v; else buckets.set(key, { date: dateStart, label, value: v });
+  };
 
-    // 3) 계절성(평균 잔차 by key)
-    const seasonal = (freq === 'day')
-      ? seasonalByKey(series, y, trend, keyOfWeekday)      // 7
-      : (freq === 'week')
-        ? seasonalByKey(series, y, trend, keyOfWeekOfYear) // 52
-        : seasonalByKey(series, y, trend, keyOfMonth);     // 12
+  for (const r of dailyRows) {
+    const d = toDate(r.date);
+    if (d < minDate) minDate = d;
+    if (d > maxDate) maxDate = d;
 
-    // 4) 잔차 표준편차 → 신뢰구간
-    const resid = y.map((v, i) => v - (trend[i] + seasonal[i]));
-    const sigma = std(resid.filter(Number.isFinite));
-
-    // 5) 추세 외삽(마지막 10포인트 선형 기울기)
-    const slope = lastSlope(trend);
-    const lastTrend = trend[trend.length - 1];
-
-    // 6) 미래 라벨 생성
-    const lastBucket = series[series.length - 1].bucket;
-    const buckets = nextBuckets(lastBucket, freq, bucketsToForecast);
-
-    // 7) 미래 예측 생성
-    const hpw = (Number(hoursPerDay) || 8) * (Number(daysPerBucket) || defaultDaysPerBucket(freq));
-    const forecast = [];
-    for (let i = 0; i < buckets.length; i++) {
-      const t = lastTrend + slope * (i + 1);
-      const s = seasonalForBucket(buckets[i], freq, seasonal, series);
-      const yhat = Math.max(0, t + s);
-      const yhat_lower = Math.max(0, yhat - 1.96 * sigma);
-      const yhat_upper = yhat + 1.96 * sigma;
-
-      const required_workers = hpw > 0 ? (yhat / hpw) : 0;
-
-      forecast.push({
-        bucket: buckets[i],
-        yhat,
-        yhat_lower,
-        yhat_upper,
-        required_workers
-      });
+    if (freq === 'day') {
+      pushVal(ymd(d), d, ymd(d), r.hours);
+    } else if (freq === 'week') {
+      const s = startOfISOWeek(d);
+      const label = `${s.getFullYear()}-W${pad2(weekNumberISO(d))}`;
+      pushVal(`W:${ymd(s)}`, s, label, r.hours);
+    } else { // month
+      const s = monthStart(d);
+      const label = `${s.getFullYear()}-${pad2(s.getMonth()+1)}`;
+      pushVal(`M:${s.getFullYear()}-${pad2(s.getMonth()+1)}`, s, label, r.hours);
     }
-
-    return res.status(200).json({ forecast });
-  } catch (err) {
-    console.error('getForecast error', err.message);
-    return res.status(500).json({ error: 'failed_to_forecast' });
   }
-};
 
-// =============================
-// Helpers (컨트롤러에 캡슐화)
-// =============================
-function horizonToBuckets(freq, horizonDays){
-  if (freq === 'day') return horizonDays;
-  if (freq === 'week') return Math.ceil(horizonDays / 7);
-  // month
-  return Math.ceil(horizonDays / 30);
-}
-
-function defaultDaysPerBucket(freq){
-  if (freq === 'day') return 1;
-  if (freq === 'week') return 5;
-  return 22; // month
-}
-
-function movingAverage(arr, win){
+  // 2) 시퀀스 보장 + 결측 0 채움
   const out = [];
-  for (let i=0;i<arr.length;i++){
-    const s = Math.max(0, i - win + 1), e = i+1;
-    const slice = arr.slice(s, e);
-    const m = slice.reduce((a,b)=>a+b,0) / slice.length;
-    out.push(m);
+  if (freq === 'day') {
+    for (let d = new Date(minDate); d <= maxDate; d.setDate(d.getDate()+1)) {
+      const key = ymd(d);
+      out.push(buckets.get(key) || { date: new Date(d), label: key, value: 0 });
+    }
+  } else if (freq === 'week') {
+    let s = startOfISOWeek(minDate);
+    const end = startOfISOWeek(maxDate);
+    for (; s <= end; s.setDate(s.getDate()+7)) {
+      const key = `W:${ymd(s)}`;
+      const label = `${s.getFullYear()}-W${pad2(weekNumberISO(s))}`;
+      out.push(buckets.get(key) || { date: new Date(s), label, value: 0 });
+    }
+  } else {
+    let s = monthStart(minDate);
+    const end = monthStart(maxDate);
+    for (; s <= end; s = new Date(s.getFullYear(), s.getMonth()+1, 1)) {
+      const key = `M:${s.getFullYear()}-${pad2(s.getMonth()+1)}`;
+      const label = `${s.getFullYear()}-${pad2(s.getMonth()+1)}`;
+      out.push(buckets.get(key) || { date: new Date(s), label, value: 0 });
+    }
   }
   return out;
 }
 
-function std(arr){
+/** 시즌 키: day→요일(0~6), week→주(1~53), month→월(1~12) */
+function seasonKey(d, freq) {
+  if (freq === 'day') return (d.getDay() + 6) % 7; // Mon=0..Sun=6
+  if (freq === 'week') return weekNumberISO(d);    // 1..53
+  return d.getMonth()+1;                           // 1..12
+}
+
+/** 시즌 계수(평균/전체평균) */
+function seasonalFactors(series, freq) {
+  if (!series.length) return { map: new Map(), fallback: 1 };
+
+  const sums = new Map();
+  const counts = new Map();
+  let total = 0, n = 0;
+
+  for (const row of series) {
+    const k = seasonKey(row.date, freq);
+    sums.set(k, (sums.get(k)||0) + row.value);
+    counts.set(k, (counts.get(k)||0) + 1);
+    total += row.value; n += 1;
+  }
+  const overallMean = n ? total / n : 1;
+  const fac = new Map();
+
+  // 안전장치: 전부 0이면 1로
+  const denom = overallMean > 0 ? overallMean : 1;
+
+  for (const [k, s] of sums.entries()) {
+    const c = counts.get(k) || 1;
+    const mean = s / c;
+    fac.set(k, mean / denom || 1);
+  }
+
+  return { map: fac, fallback: 1 };
+}
+
+/** 표준편차 */
+function stdDev(arr) {
   if (!arr.length) return 0;
   const m = arr.reduce((a,b)=>a+b,0)/arr.length;
-  const v = arr.reduce((a,b)=>a + (b-m)*(b-m), 0)/arr.length;
+  const v = arr.reduce((a,b)=>a+(b-m)*(b-m),0) / Math.max(1, arr.length-1);
   return Math.sqrt(v);
 }
 
-function lastSlope(arr){
-  const n = Math.min(10, arr.length);
-  if (n < 2) return 0;
-  const xs = Array.from({length:n}, (_,i)=>i+1);
-  const ys = arr.slice(-n);
-  return linearSlope(xs, ys);
-}
-function linearSlope(xs, ys){
-  const n = xs.length;
-  const sx = xs.reduce((a,b)=>a+b,0);
-  const sy = ys.reduce((a,b)=>a+b,0);
-  const sxx= xs.reduce((a,b)=>a+b*b,0);
-  const sxy= xs.reduce((a, x, i)=>a + x*ys[i],0);
-  const denom = n*sxx - sx*sx;
-  if (!denom) return 0;
-  return (n*sxy - sx*sy)/denom;
-}
-
-// 계절성 키
-function keyOfWeekday(bucket){ // YYYY-MM-DD
-  const d = new Date(bucket);
-  return d.getDay(); // 0..6
-}
-function keyOfWeekOfYear(bucket){ // "YYYY-Www"
-  return bucket; // 52개 카테고리처럼 취급
-}
-function keyOfMonth(bucket){ // "YYYY-MM"
-  return parseInt(bucket.split('-')[1], 10); // 1..12
-}
-
-function seasonalByKey(series, y, trend, keyFn){
-  const acc = new Map();
-  for (let i=0;i<series.length;i++){
-    const k = keyFn(series[i].bucket);
-    const v = y[i] - trend[i];
-    if (!acc.has(k)) acc.set(k, {sum:0, cnt:0});
-    const o = acc.get(k); o.sum += v; o.cnt += 1;
+/** 레벨(추세 없는 평균 기반). 최근 W개 가중 */
+function baseLevel(series, factors, freq) {
+  if (!series.length) return 0;
+  const W = (freq === 'day') ? 28 : (freq === 'week' ? 12 : 12);
+  const N = Math.min(W, series.length);
+  let sum = 0;
+  for (let i = series.length - N; i < series.length; i++) {
+    const row = series[i];
+    const k = seasonKey(row.date, freq);
+    const f = factors.map.get(k) ?? factors.fallback;
+    const z = f !== 0 ? (row.value / f) : row.value; // 탈계절화
+    sum += z;
   }
-  const meanByKey = new Map();
-  for (const [k, {sum, cnt}] of acc.entries()){
-    meanByKey.set(k, cnt ? sum/cnt : 0);
+  return sum / N;
+}
+
+/** 예측 스텝 계산 (프런트 horizon은 '일' 기준) */
+function stepsFromHorizon(freq, horizonDays) {
+  const d = Number(horizonDays) || 365;
+  if (freq === 'day')  return Math.max(1, Math.round(d / 1));
+  if (freq === 'week') return Math.max(1, Math.round(d / 7));
+  return Math.max(1, Math.round(d / 30));
+}
+
+/** 다음 버킷 시작일 */
+function nextStartDate(cur, freq) {
+  if (freq === 'day')  { const d = new Date(cur); d.setDate(d.getDate()+1); return d; }
+  if (freq === 'week') { const d = new Date(cur); d.setDate(d.getDate()+7); return d; }
+  return new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+}
+
+/** 버킷 라벨 */
+function bucketLabel(d, freq) {
+  if (freq === 'day')  return ymd(d);
+  if (freq === 'week') return `${d.getFullYear()}-W${pad2(weekNumberISO(d))}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+}
+
+/** 컨트롤러: 과거 시리즈 */
+exports.getSeries = async (req, res) => {
+  try {
+    const freq   = (req.query.freq || 'month').toLowerCase(); // day|week|month
+    const group  = req.query.group || null;
+    const site   = req.query.site || null;
+    const start  = req.query.startDate || null;
+    const end    = req.query.endDate || null;
+
+    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end });
+    const series = resample(daily, freq).map(r => ({
+      bucket: r.label,
+      total_hours: r.value
+    }));
+    return res.json({ series });
+  } catch (err) {
+    console.error('getSeries error:', err);
+    return res.status(500).json({ series: [], error: 'Failed to build series' });
   }
-  // 펼치기
-  return series.map(r => meanByKey.get(keyFn(r.bucket)) ?? 0);
-}
+};
 
-function averageByKey(histSeries, seasonalArr, keyFn, futureBucket){
-  const key = keyFn(futureBucket);
-  const vals = [];
-  for (let i=0;i<histSeries.length;i++){
-    if (keyFn(histSeries[i].bucket) === key) vals.push(seasonalArr[i]);
-  }
-  if (!vals.length) return 0;
-  return vals.reduce((a,b)=>a+b,0)/vals.length;
-}
+/** 컨트롤러: 예측 */
+exports.getForecast = async (req, res) => {
+  try {
+    const freq   = (req.query.freq || 'month').toLowerCase(); // day|week|month
+    const group  = req.query.group || null;
+    const site   = req.query.site || null;
+    const start  = req.query.startDate || null;
+    const end    = req.query.endDate || null;
+    const horizonDays = parseInt(req.query.horizon, 10) || 730;
 
-function seasonalForBucket(bucket, freq, seasonalArr, histSeries){
-  if (freq === 'day')   return averageByKey(histSeries, seasonalArr, keyOfWeekday, bucket);
-  if (freq === 'week')  return averageByKey(histSeries, seasonalArr, keyOfWeekOfYear, bucket);
-  return averageByKey(histSeries, seasonalArr, keyOfMonth, bucket);
-}
+    const daily = await analysisDao.fetchDailyHours({ group, site, startDate: start, endDate: end });
+    const series = resample(daily, freq);
+    if (!series.length) return res.json({ forecast: [] });
 
-function nextBuckets(lastBucket, freq, n){
-  const out = [];
-  if (freq === 'day'){
-    const d = new Date(lastBucket);
-    for (let i=1;i<=n;i++){
-      const t = new Date(d); t.setDate(t.getDate()+i);
-      out.push(t.toISOString().slice(0,10));
+    // 시즌 계수 & 레벨
+    const factors = seasonalFactors(series, freq);
+    const level   = baseLevel(series, factors, freq);
+
+    // 단순 잔차 표준편차 (레벨*season 예측 대비)
+    const residuals = series.map(row => {
+      const k = seasonKey(row.date, freq);
+      const s = factors.map.get(k) ?? factors.fallback;
+      const pred = level * s;
+      return row.value - pred;
+    });
+    let sigma = stdDev(residuals);
+    // 너무 작을 때 안정적 CI 확보
+    if (!isFinite(sigma) || sigma <= 0) sigma = (series.reduce((a,b)=>a+b.value,0)/series.length) * 0.15;
+
+    // 예측
+    const steps = stepsFromHorizon(freq, horizonDays);
+    let cur = series[series.length - 1].date;
+    const out = [];
+    for (let i=0; i<steps; i++) {
+      cur = nextStartDate(cur, freq);
+      const k = seasonKey(cur, freq);
+      const s = factors.map.get(k) ?? factors.fallback;
+      const yhat = Math.max(0, level * s);
+      const yhat_lower = Math.max(0, yhat - 1.96 * sigma);
+      const yhat_upper = yhat + 1.96 * sigma;
+      out.push({
+        bucket: bucketLabel(cur, freq),
+        yhat,
+        yhat_lower,
+        yhat_upper
+      });
     }
-  } else if (freq === 'week'){
-    // lastBucket: "YYYY-Www"
-    let [y, w] = lastBucket.split('-W');
-    let year = parseInt(y,10), week = parseInt(w,10);
-    for (let i=0;i<n;i++){
-      week += 1;
-      if (week > 53){ week = 1; year += 1; }
-      out.push(`${year}-W${String(week).padStart(2,'0')}`);
-    }
-  } else {
-    // month: "YYYY-MM"
-    let [y, m] = lastBucket.split('-').map(x=>parseInt(x,10));
-    let year = y, month = m;
-    for (let i=0;i<n;i++){
-      month += 1;
-      if (month > 12){ month = 1; year += 1; }
-      out.push(`${year}-${String(month).padStart(2,'0')}`);
-    }
+    return res.json({ forecast: out });
+  } catch (err) {
+    console.error('getForecast error:', err);
+    return res.status(500).json({ forecast: [], error: 'Failed to forecast' });
   }
-  return out;
-}
+};
+
+/** 컨트롤러: 현재 인원(userDB) */
+exports.getHeadcount = async (req, res) => {
+  try {
+    const group = req.query.group || null;
+    const site  = req.query.site || null;
+    const count = await analysisDao.countHeadcount({ group, site });
+    return res.json({ count });
+  } catch (err) {
+    console.error('getHeadcount error:', err);
+    return res.status(500).json({ count: 0, error: 'Failed to fetch headcount' });
+  }
+};
