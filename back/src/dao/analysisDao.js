@@ -3,10 +3,7 @@ const { pool } = require('../../config/database');
 /**
  * 일 단위 총 작업시간 집계
  * 합계 = TIME_TO_SEC(task_duration)/3600 + none_time/60 + (includeMove? move_time/60 : 0)
- *
- * ONLY_FULL_GROUP_BY 호환을 위해:
- *  - 내부 서브쿼리에서 DATE(task_date) AS d, hours 를 만든 다음
- *  - 바깥 쿼리에서 d로 GROUP BY/ORDER BY 수행
+ * ONLY_FULL_GROUP_BY 호환: 내부 서브쿼리에서 일자 d, hours 생성 후 바깥에서 GROUP BY d
  */
 exports.fetchDailyHours = async ({ group, site, startDate, endDate, includeMove = 1 }) => {
   const conn = await pool.getConnection(async c => c);
@@ -47,9 +44,7 @@ exports.fetchDailyHours = async ({ group, site, startDate, endDate, includeMove 
   }
 };
 
-/**
- * userDB 현재 인원 집계 (필터: GROUP, SITE)
- */
+/** userDB 현재 인원 집계 (필터: GROUP, SITE) */
 exports.countHeadcount = async ({ group, site }) => {
   const conn = await pool.getConnection(async c => c);
   try {

@@ -5,7 +5,6 @@ let userEditedDaysPerBucket = false;
 document.addEventListener('DOMContentLoaded', () => {
   secureGate();
 
-  // 이벤트
   document.getElementById('btnRun')?.addEventListener('click', runForecast);
   document.getElementById('btnReset')?.addEventListener('click', resetForm);
   document.getElementById('btnCsv')?.addEventListener('click', exportCsv);
@@ -13,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('freq')?.addEventListener('change', () => {
     updateHorizonOptions();
     suggestDaysPerBucket();
+    runForecast();
   });
   document.getElementById('daysPerBucket')?.addEventListener('input', () => {
     userEditedDaysPerBucket = true;
@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 초기
   updateHorizonOptions();
   suggestDaysPerBucket();
   document.getElementById('alphaVal').textContent = Number(document.getElementById('alpha').value).toFixed(2);
@@ -83,17 +82,9 @@ function collectParams(){
   const site   = document.getElementById('siteSelect').value.trim();
   const hpd    = parseFloat(document.getElementById('hoursPerDay').value) || 8;
   const dpb    = parseInt(document.getElementById('daysPerBucket').value, 10) || 22;
-  const incMove= document.getElementById('includeMove')?.checked ? 1 : 0;
+  const includeMove = document.getElementById('includeMove')?.checked ? 1 : 0;
 
-  return {
-    freq,
-    horizon,
-    group: group || null,
-    site: site || null,
-    hoursPerDay: hpd,
-    daysPerBucket: dpb,
-    includeMove: incMove // ✅ 백엔드로 이동시간 포함 여부 전달
-  };
+  return { freq, horizon, group: group || null, site: site || null, hoursPerDay: hpd, daysPerBucket: dpb, includeMove, engine: 'reg' };
 }
 
 async function runForecast(){
@@ -105,19 +96,18 @@ async function runForecast(){
   const token = localStorage.getItem('x-access-token');
 
   try {
-    // 1) 과거 시계열
     const seriesRes = await axios.get('http://3.37.73.151:3001/analysis/series', {
-      headers: {'x-access-token': token}, params, signal: abortCtrl.signal
+      headers: {'x-access-token': token},
+      params, signal: abortCtrl.signal
     });
     const series = seriesRes.data?.series || [];
 
-    // 2) 예측
     const fcRes = await axios.get('http://3.37.73.151:3001/analysis/forecast', {
-      headers: {'x-access-token': token}, params, signal: abortCtrl.signal
+      headers: {'x-access-token': token},
+      params, signal: abortCtrl.signal
     });
     const forecast = fcRes.data?.forecast || [];
 
-    // 3) 현재 인원(userDB)
     let available = 0;
     try {
       const hcRes = await axios.get('http://3.37.73.151:3001/analysis/headcount', {
@@ -126,30 +116,23 @@ async function runForecast(){
         signal: abortCtrl.signal
       });
       available = Number(hcRes.data?.count) || 0;
-    } catch (e) {
-      available = 0; // 실패 시 0 처리
-    }
+    } catch (e) { available = 0; }
 
     if (!series.length){
       showNotice('표시할 과거 데이터가 없습니다. 필터를 바꿔보세요.');
     }
 
-    // 4) 계획(상향) 적용 + 갭 계산
     const planned = buildPlannedForecast(forecast, params, available);
 
-    // 5) 렌더링
     renderCharts(series, forecast, planned, params, available);
     renderTable(forecast, planned, available);
     renderKpis(forecast, planned, available);
 
     const ts = new Date().toLocaleString('ko-KR');
     document.getElementById('lastUpdated').textContent = ts;
-
-    // KPI 라벨에 (+이동) 배지 갱신
-    document.getElementById('lblHoursDef').textContent = params.includeMove ? '작업+대기(+이동)' : '작업+대기';
   } catch (err) {
     if (axios.isCancel?.(err) || err.name === 'CanceledError') {
-      // 취소됨
+      // pass
     } else {
       console.error(err);
       showError('예측 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
@@ -159,7 +142,7 @@ async function runForecast(){
   }
 }
 
-// 계획(상향) + 갭 만들기
+// 계획(상향) + 갭
 function buildPlannedForecast(forecast, params, available){
   const mode = document.getElementById('planMode').value; // baseline|upper|blend
   const alpha = Number(document.getElementById('alpha').value || 0.5);
@@ -173,7 +156,7 @@ function buildPlannedForecast(forecast, params, available){
     const u = Number(r.yhat_upper)||y;
     const base = (mode === 'upper') ? u
                : (mode === 'blend') ? (alpha*u + (1-alpha)*y)
-               : y; // baseline
+               : y;
     const withBuffer = base * (1 + bufferPct/100);
     const reqBase = hpw>0 ? (y / hpw) : 0;
     const reqPlanRaw = hpw>0 ? (withBuffer / hpw) : 0;
@@ -215,7 +198,6 @@ function renderCharts(series, forecast, planned, params, available){
   const labels = [...labelsHist, ...labelsFc];
   const showConf = document.getElementById('showConf')?.checked ?? true;
 
-  // ---- 시계열 + 예측 + 계획(상향) ----
   const ds = [
     {
       label: '실측(총 작업시간, h)',
@@ -266,19 +248,14 @@ function renderCharts(series, forecast, planned, params, available){
       plugins: {
         legend: { display: true },
         tooltip: {
-          callbacks: {
-            label: (ctx) => `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,1)} h`
-          }
+          callbacks: { label: (ctx) => `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,1)} h` }
         }
       },
-      scales: {
-        y: { beginAtZero: true, title: { display: true, text: '시간(h)' } }
-      },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '시간(h)' } } },
       elements: { point: { radius: 0 } }
     }
   });
 
-  // ---- 필요 인원: 기본/계획 + 현재 인원 + 갭(막대) ----
   if (chartWorkers) chartWorkers.destroy();
   chartWorkers = new Chart(ctx2, {
     data: {
@@ -296,17 +273,10 @@ function renderCharts(series, forecast, planned, params, available){
       plugins: {
         legend: { display: true },
         tooltip: {
-          callbacks: {
-            label: (ctx)=> {
-              const unit = ctx.dataset.type==='bar' ? '명' : '명';
-              return `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,2)} ${unit}`;
-            }
-          }
+          callbacks: { label: (ctx)=> `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,2)} 명` }
         }
       },
-      scales: {
-        y: { beginAtZero: true, title: { display: true, text: '인원(명)' } }
-      },
+      scales: { y: { beginAtZero: true, title: { display: true, text: '인원(명)' } } },
       elements: { point: { radius: 0 } }
     }
   });
@@ -354,12 +324,9 @@ function renderKpis(forecast, planned, available){
   setText('kpiAvgWorkersBase', numberFmt(avgBase,2));
   setText('kpiForecastHoursBase', numberFmt(sumBaseH,1));
 
-  // 현재 인원 & 갭
   setText('kpiAvailable', numberFmt(available,0));
-  const nextGap = nextPlan - available;
-  const avgGap  = avgPlan - available;
-  paintDelta('kpiNextGap', nextGap);
-  paintDelta('kpiAvgGap',  avgGap);
+  paintDelta('kpiNextGap', nextPlan - available);
+  paintDelta('kpiAvgGap',  avgPlan - available);
 }
 
 function paintDelta(id, v){
@@ -367,8 +334,8 @@ function paintDelta(id, v){
   if (!el) return;
   el.textContent = numberFmt(v,2);
   el.classList.remove('pos','neg');
-  if (v > 0) el.classList.add('neg');   // 부족(빨강)
-  else if (v < 0) el.classList.add('pos'); // 여유(초록)
+  if (v > 0) el.classList.add('neg');
+  else if (v < 0) el.classList.add('pos');
 }
 
 function setText(id, v){ const el = document.getElementById(id); if (el) el.textContent = v; }
@@ -388,13 +355,12 @@ function resetForm(){
   document.getElementById('alphaVal').textContent = '0.50';
   document.getElementById('addBuffer').value = 5;
   document.getElementById('rounding').value = 'ceil';
+  document.getElementById('includeMove').checked = true;
 
   document.getElementById('showConf').checked = true;
-  document.getElementById('includeMove').checked = true;
   runForecast();
 }
 
-// 집계 단위에 맞춘 예측 기간 옵션(1년·2년)
 function updateHorizonOptions(){
   const freq = document.getElementById('freq').value;
   const sel  = document.getElementById('horizon');
@@ -409,10 +375,9 @@ function updateHorizonOptions(){
     sel.append(new Option('1년 (12개월)',  String(12*30)));
     sel.append(new Option('2년 (24개월)', String(24*30)));
   }
-  sel.value = sel.options[1]?.value ?? sel.options[0]?.value; // 기본 2년
+  sel.value = sel.options[1]?.value ?? sel.options[0]?.value;
 }
 
-// 집계 단위 바꾸면 근무가능일수(d) 추천 (사용자가 이미 수정한 경우 유지)
 function suggestDaysPerBucket(){
   if (userEditedDaysPerBucket) return;
   const freq = document.getElementById('freq').value;
@@ -423,7 +388,6 @@ function suggestDaysPerBucket(){
   else { el.value = 22; if (hint) hint.textContent = '월 기준 예: 22'; }
 }
 
-// CSV 내보내기
 function exportCsv(){
   const rows = Array.from(document.querySelectorAll('#tblForecast tbody tr')).map(tr=>{
     return Array.from(tr.querySelectorAll('td')).map(td => td.textContent.replace(/,/g,''));
