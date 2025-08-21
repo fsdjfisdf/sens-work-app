@@ -4,13 +4,33 @@ const router = express.Router();
 const analysisController = require('../controllers/analysisController');
 const jwtMiddleware = require('../../config/jwtMiddleware');
 
-// 과거 시계열 (집계 단위: day|week|month, 기본 day→주/월로 리샘플)
-router.get('/series', jwtMiddleware, analysisController.getSeries);
+// 🔎 진단 로그: 어떤 헤더가 왔는지 확인
+router.use((req, res, next) => {
+  console.log('[analysis]', req.method, req.originalUrl, {
+    auth: req.headers.authorization ? 'Authorization' : null,
+    x: req.headers['x-access-token'] ? 'x-access-token' : null
+  });
+  next();
+});
 
-// 예측 (프런트의 horizon=일 수 기준, day:1, week:7, month:30으로 환산)
-router.get('/forecast', jwtMiddleware, analysisController.getForecast);
+// ✅ ping (무인증) - 라우트 마운트 확인용
+router.get('/ping', (req, res) => res.json({ ok: true }));
 
-// 현재 인원 (userDB)
-router.get('/headcount', jwtMiddleware, analysisController.getHeadcount);
+// 토큰 헤더 정규화: x-access-token → Authorization: Bearer
+function normalizeTokenHeader(req, res, next) {
+  const x = req.headers['x-access-token'];
+  const auth = req.headers.authorization;
+  if (!auth && x) req.headers.authorization = `Bearer ${x}`;
+  // (반대 케이스도 허용하려면 아래 주석 해제)
+  // if (!req.headers['x-access-token'] && auth?.startsWith('Bearer ')) {
+  //   req.headers['x-access-token'] = auth.split(' ')[1];
+  // }
+  next();
+}
+
+// 보호 라우트
+router.get('/series',   normalizeTokenHeader, jwtMiddleware, analysisController.getSeries);
+router.get('/forecast', normalizeTokenHeader, jwtMiddleware, analysisController.getForecast);
+router.get('/headcount',normalizeTokenHeader, jwtMiddleware, analysisController.getHeadcount);
 
 module.exports = router;
