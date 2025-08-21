@@ -16,11 +16,12 @@ exports.fetchDailyHours = async ({ group, site, startDate, endDate, includeMove 
 
     if (startDate) { where.push('DATE(task_date) >= ?'); params.push(startDate); }
     if (endDate)   { where.push('DATE(task_date) <= ?'); params.push(endDate); }
-    if (group)     { where.push('TRIM(`group`) = ?'); params.push(group.trim()); }
-    if (site)      { where.push('TRIM(site) = ?');   params.push(site.trim()); }
 
-    const moveExpr = includeMove ? `COALESCE(move_time, 0) / 60.0` : `0.0`;
+    if (group) { where.push('TRIM(`group`) = ?'); params.push(group.trim()); }
+    if (site)  { where.push('TRIM(site) = ?');   params.push(site.trim()); }
 
+    // 이동시간 포함 여부
+    const moveExpr = includeMove ? 'COALESCE(move_time, 0) / 60.0' : '0';
     const sql = `
       SELECT
         DATE_FORMAT(d, '%Y-%m-%d') AS d,
@@ -45,6 +46,7 @@ exports.fetchDailyHours = async ({ group, site, startDate, endDate, includeMove 
     conn.release();
   }
 };
+
 
 /** (group, site) distinct 목록 (빈 site는 제외) */
 exports.listPairs = async ({ group }) => {

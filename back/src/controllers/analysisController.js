@@ -254,7 +254,7 @@ exports.getHiringPlan = async (req, res) => {
     const site   = req.query.site || null;
     const includeMove = (req.query.includeMove ?? '1');
     const includeMoveBool = !['0','false','False','FALSE'].includes(String(includeMove));
-    const horizonDays = parseInt(req.query.horizon, 10) || (24*30); // 기본 24개월
+    const horizonDays = parseInt(req.query.horizon, 10) || (24*30);
 
     const hoursPerDay   = Math.max(0.1, parseFloat(req.query.hoursPerDay) || 8);
     const daysPerBucket = Math.max(1, parseInt(req.query.daysPerBucket,10) || 22);
@@ -264,11 +264,15 @@ exports.getHiringPlan = async (req, res) => {
     const planMode = (req.query.planMode || 'blend').toLowerCase();
     const alpha    = Math.min(1, Math.max(0, parseFloat(req.query.alpha) || 0.5));
     const bufferPct= Math.max(0, parseFloat(req.query.bufferPct) || 5);
-
     const absencePct = Math.max(0, parseFloat(req.query.absencePct) || 10); // %
-    const travelPerBucket = Math.max(0, parseFloat(req.query.travelPerBucket) || 0);
 
-    // ✅ 화이트리스트(표시 순서 고정)
+    // ▶ 사이트별 해외출장 (JSON 문자열)
+    let travelBySite = {};
+    try {
+      if (req.query.travelBySite) travelBySite = JSON.parse(req.query.travelBySite);
+    } catch(e){ travelBySite = {}; }
+
+    // 화이트리스트 + 필터
     const whitelist = [
       { grp: 'PEE1', site: 'PT' },
       { grp: 'PEE1', site: 'HS' },
@@ -278,13 +282,11 @@ exports.getHiringPlan = async (req, res) => {
       { grp: 'PEE2', site: 'HS' },
       { grp: 'PSKH', site: 'PSKH' }
     ];
-    // group/site 파라미터로 추가 필터 (있으면 교집합)
     const pairs = whitelist.filter(p =>
       (!group || p.grp === group.trim()) &&
       (!site  || p.site === site.trim())
     );
 
-    // 보조 유틸: 월 라벨
     const mNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
     const toYYMonLabel = (bucket) => {
       const [Y, M] = String(bucket).split('-');
@@ -297,15 +299,19 @@ exports.getHiringPlan = async (req, res) => {
     const bucketLabel = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     const monthStart = (d) => { const x=new Date(d); x.setHours(0,0,0,0); x.setDate(1); return x; };
 
-    // 마스터 월 버킷(모든 행이 동일한 컬럼을 갖도록)
     let masterMonths = null;
+    const steps = stepsFromHorizon(horizonDays);
+    const rows = [];
 
     // 행 생성 함수
-    const buildRow = (key, series, available, steps, a, b, sigma) => {
-      // 미래 월 라인 만들기
+    const buildRow = (pairKey, series, available, steps, a, b, sigma) => {
       let cur = series && series.length ? series[series.length - 1].date : monthStart(new Date());
       const fcs = [];
       const t0  = series && series.length ? series.length : 0;
+
+      // 이 사이트의 해외출장(명/월)
+      const travelThis = Math.max(0, Number(travelBySite[pairKey] || 0));
+      const absentRate = Math.min(0.9, absencePct/100);
 
       for (let i=0; i<steps; i++){
         cur = nextStartDate(cur);
@@ -321,9 +327,8 @@ exports.getHiringPlan = async (req, res) => {
 
         // 인원 환산 + 결원/출장
         let req = hpw>0 ? (withBuffer / hpw) : 0;
-        const absentRate = Math.min(0.9, absencePct/100);
         req = (absentRate < 0.999) ? (req / (1 - absentRate)) : (req * 10);
-        req += travelPerBucket;
+        req += travelThis;
 
         // 반올림
         let reqRounded;
@@ -345,21 +350,15 @@ exports.getHiringPlan = async (req, res) => {
       return { buckets: fcs.map(r => r.bucket), required: reqMono, cumGap };
     };
 
-    const rows = [];
-    const steps = stepsFromHorizon(horizonDays);
-
-    // 첫 번째로 데이터가 있는 페어에서 masterMonths 결정, 없으면 "다음 달부터 steps개월"
-    let masterPrepared = false;
-
+    // 시계열/적합
     for (const p of pairs) {
-      // 1) 과거→월 집계
+      const pairKey = `${p.grp}-${p.site}`;
       const daily = await analysisDao.fetchDailyHours({
         group: p.grp, site: p.site, startDate: null, endDate: null, includeMove: includeMoveBool
       });
-      // 월 리샘플
+      // 월 집계
       const monthly = (() => {
         if (!Array.isArray(daily) || !daily.length) return [];
-        // 간단 월 집계(컨트롤러 상단과 동일 로직 이용)
         const buckets = new Map();
         for (const r of daily){
           const d = new Date(`${r.date}T00:00:00`);
@@ -368,7 +367,6 @@ exports.getHiringPlan = async (req, res) => {
           buckets.set(key, (buckets.get(key)||0) + (Number(r.hours)||0));
         }
         const out = [];
-        // 정렬
         const keys = Array.from(buckets.keys()).sort();
         for (const k of keys){
           const [Y,M] = k.split('-').map(v=>parseInt(v,10));
@@ -377,7 +375,7 @@ exports.getHiringPlan = async (req, res) => {
         return out;
       })();
 
-      // 2) 선형(비음 금지) 추세 적합
+      // 선형(비음 금지) 추세 적합
       let a = 0, b = 0, sigma = 0;
       if (monthly.length){
         const N = monthly.length;
@@ -390,7 +388,7 @@ exports.getHiringPlan = async (req, res) => {
         b = varT>0 ? (cov/varT) : 0;
         if (!isFinite(b) || b<0) b = 0;
         a = meanY - b*meanT;
-        // sigma
+
         const resid = y.map((yi,i)=> yi - (a + b*t[i]));
         const m = resid.reduce((s,v)=>s+v,0)/Math.max(1,resid.length);
         const v = resid.reduce((s,vv)=>s+(vv-m)*(vv-m),0)/Math.max(1,resid.length-1);
@@ -398,55 +396,43 @@ exports.getHiringPlan = async (req, res) => {
         if (!isFinite(sigma) || sigma<=0) sigma = Math.max(1e-6, (meanY||0)*0.15);
       }
 
-      // 3) 현재 인원
       const available = await analysisDao.countHeadcount({ group: p.grp, site: p.site });
+      const built = buildRow(pairKey, monthly, available, steps, a, b, sigma);
 
-      // 4) 행 생성
-      const rowBuilt = buildRow(`${p.grp}-${p.site}`, monthly, available, steps, a, b, sigma);
+      if (!masterMonths && built.buckets?.length) masterMonths = built.buckets.slice();
 
-      // 5) 마스터 월 버킷 확정
-      if (!masterPrepared) {
-        if (rowBuilt.buckets && rowBuilt.buckets.length) {
-          masterMonths = rowBuilt.buckets.slice();
-          masterPrepared = true;
-        }
-      }
       rows.push({
-        key: `${p.grp}-${p.site}`,
+        key: pairKey,
         available,
-        buckets: rowBuilt.buckets,
-        required: rowBuilt.required,
-        cumGap: rowBuilt.cumGap
+        buckets: built.buckets,
+        required: built.required,
+        cumGap: built.cumGap
       });
     }
 
-    // 모든 페어에서 과거 데이터가 전무한 경우 → 현재월 기준으로 masterMonths 생성
-    if (!masterPrepared) {
+    // 마스터 달 보정
+    if (!masterMonths) {
       let cur = new Date(); cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
       masterMonths = [];
       for (let i=0;i<steps;i++){
         cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
         masterMonths.push(`${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}`);
       }
-      // 각 행이 비어있다면 0으로 채움
       for (const r of rows) {
         r.buckets = masterMonths.slice();
         r.required = new Array(steps).fill(0);
-        // available 대비 누적갭은 항상 0
         r.cumGap = new Array(steps).fill(0);
       }
     } else {
-      // 일부 행의 buckets 길이나 월 라벨이 다르면 masterMonths 기준으로 보정 (없는 월은 0)
       for (const r of rows){
         if (!r.buckets || r.buckets.length !== masterMonths.length ||
             r.buckets.some((b,i)=>b!==masterMonths[i])) {
-          // 재매핑
           const mapReq = new Map(r.buckets.map((b,i)=>[b, r.required[i] ?? 0]));
           const newReq = masterMonths.map(mb => mapReq.get(mb) ?? 0);
           const available = r.available || 0;
-          const newCum = newReq.map(v=>0); // 단조 보정 + 누적갭 다시 계산
+          const newCum = newReq.map(v=>0);
           for (let i=0;i<newReq.length;i++){
-            newReq[i] = (i===0) ? newReq[i] : Math.max(newReq[i-1], newReq[i]); // 단조
+            newReq[i] = (i===0) ? newReq[i] : Math.max(newReq[i-1], newReq[i]);
             newCum[i] = Math.max(0, newReq[i] - available);
           }
           r.buckets = masterMonths.slice();
@@ -456,8 +442,8 @@ exports.getHiringPlan = async (req, res) => {
       }
     }
 
-    const months_fmt = (masterMonths || []).map(toYYMonLabel);
-    return res.json({ months: masterMonths || [], months_fmt, rows });
+    const months_fmt = masterMonths.map(toYYMonLabel);
+    return res.json({ months: masterMonths, months_fmt, rows });
   } catch (err) {
     console.error('getHiringPlan error:', err);
     return res.status(500).json({ months: [], rows: [], error: 'Failed to build hiring plan' });

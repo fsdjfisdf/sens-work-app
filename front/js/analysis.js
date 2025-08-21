@@ -5,20 +5,15 @@ let userEditedDaysPerBucket = false;
 document.addEventListener('DOMContentLoaded', () => {
   secureGate();
 
+  // 이벤트
   document.getElementById('btnRun')?.addEventListener('click', runForecast);
   document.getElementById('btnReset')?.addEventListener('click', resetForm);
   document.getElementById('btnCsv')?.addEventListener('click', exportCsv);
-
-  document.getElementById('freq')?.addEventListener('change', () => {
-    updateHorizonOptions();
-    suggestDaysPerBucket();
-  });
-  document.getElementById('daysPerBucket')?.addEventListener('input', () => {
-    userEditedDaysPerBucket = true;
-  });
   document.getElementById('showConf')?.addEventListener('change', runForecast);
+  document.getElementById('includeMove')?.addEventListener('change', runForecast);
+  document.getElementById('monthsToShow')?.addEventListener('change', () => renderHiringTable(window._hiringPlan));
 
-  ['planMode','alpha','addBuffer','rounding','absencePct','travelPerBucket'].forEach(id=>{
+  ['planMode','alpha','addBuffer','rounding','absencePct'].forEach(id=>{
     document.getElementById(id)?.addEventListener('change', ()=>{
       if (id==='alpha'){
         const v = Number(document.getElementById('alpha').value);
@@ -34,10 +29,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.getElementById('freq')?.addEventListener('change', () => {
+    updateHorizonOptions();
+    suggestDaysPerBucket();
+  });
+  document.getElementById('daysPerBucket')?.addEventListener('input', () => {
+    userEditedDaysPerBucket = true;
+  });
+
+  // 초기
   updateHorizonOptions();
   suggestDaysPerBucket();
   document.getElementById('alphaVal').textContent = Number(document.getElementById('alpha').value).toFixed(2);
-
   runForecast();
 });
 
@@ -81,26 +84,27 @@ function collectParams(){
   const site   = document.getElementById('siteSelect').value.trim();
   const hpd    = parseFloat(document.getElementById('hoursPerDay').value) || 8;
   const dpb    = parseInt(document.getElementById('daysPerBucket').value, 10) || 22;
-
+  const rounding = document.getElementById('rounding').value;
   const planMode = document.getElementById('planMode').value;
   const alpha    = Number(document.getElementById('alpha').value || 0.5);
-  const buffer   = Number(document.getElementById('addBuffer').value || 0);
-
-  const rounding = document.getElementById('rounding').value;
+  const bufferPct= Number(document.getElementById('addBuffer').value || 0);
   const absencePct = Number(document.getElementById('absencePct').value || 0);
-  const travelPerBucket = Number(document.getElementById('travelPerBucket').value || 0);
-
-  // includeMove 체크박스가 없으면 디폴트 1
-  const includeMove = document.getElementById('includeMove')?.checked ? 1 : 1;
+  const includeMove = !!document.getElementById('includeMove')?.checked;
 
   return {
-    freq, horizon,
-    group: group || null, site: site || null,
+    freq, horizon, group: group || null, site: site || null,
     hoursPerDay: hpd, daysPerBucket: dpb,
-    planMode, alpha, bufferPct: buffer,
-    rounding, absencePct, travelPerBucket,
-    includeMove
+    rounding, planMode, alpha, bufferPct, absencePct, includeMove
   };
+}
+
+function getTravelBySite(){
+  const map = {};
+  document.querySelectorAll('#travelGrid input[data-key]').forEach(inp=>{
+    const k = inp.dataset.key;
+    map[k] = Math.max(0, Number(inp.value) || 0);
+  });
+  return map;
 }
 
 async function runForecast(){
@@ -118,13 +122,13 @@ async function runForecast(){
     });
     const series = seriesRes.data?.series || [];
 
-    // 2) 예측 (시간)
+    // 2) 예측
     const fcRes = await axios.get('http://3.37.73.151:3001/analysis/forecast', {
       headers: {'x-access-token': token}, params, signal: abortCtrl.signal
     });
     const forecast = fcRes.data?.forecast || [];
 
-    // 3) 현재 인원(userDB)
+    // 3) 현재 인원(userDB) - 현재 필터 기준 (그래프/KPI용)
     let available = 0;
     try {
       const hcRes = await axios.get('http://3.37.73.151:3001/analysis/headcount', {
@@ -133,32 +137,52 @@ async function runForecast(){
         signal: abortCtrl.signal
       });
       available = Number(hcRes.data?.count) || 0;
-    } catch { available = 0; }
+    } catch (e) { available = 0; }
 
     if (!series.length){
       showNotice('표시할 과거 데이터가 없습니다. 필터를 바꿔보세요.');
     }
 
-    // 4) 계획(상향) + 결원 반영 + 단조 보정 + 갭 (프론트 시각화용)
+    // 4) 계획(상향) + 갭 계산 (그래프/KPI용)
     const planned = buildPlannedForecast(forecast, params, available);
 
-    // 5) 증원 시점 표 (그룹-사이트 매트릭스)
-    const gridRes = await axios.get('http://3.37.73.151:3001/analysis/hiring-plan', {
-      headers: {'x-access-token': token}, params, signal: abortCtrl.signal
-    });
-    const hiringGrid = gridRes.data || { months: [], months_fmt: [], rows: [] };
-
-    // 렌더
+    // 5) 렌더링(그래프/표/KPI)
     renderCharts(series, forecast, planned, params, available);
     renderTable(forecast, planned, available);
-    renderHiringTable(hiringGrid);
     renderKpis(forecast, planned, available);
+
+    // 6) 증원 시점 표 (월/사이트별, 여행/결원 반영)
+    const travelBySite = getTravelBySite();
+    const hpRes = await axios.get('http://3.37.73.151:3001/analysis/hiring-plan', {
+      headers: {'x-access-token': token},
+      params: {
+        // 월 기준 고정(증원표는 월이 가장 직관적)
+        freq: 'month',
+        horizon: 24*30,
+        hoursPerDay: params.hoursPerDay,
+        daysPerBucket: params.daysPerBucket,
+        rounding: params.rounding,
+        planMode: params.planMode,
+        alpha: params.alpha,
+        bufferPct: params.bufferPct,
+        absencePct: params.absencePct,
+        includeMove: params.includeMove ? 1 : 0,
+        // travelBySite는 문자열(JSON)로 전달
+        travelBySite: JSON.stringify(travelBySite),
+        // 상위 필터가 있으면 교집합으로 좁혀서 보여줌
+        group: params.group,
+        site: params.site
+      },
+      signal: abortCtrl.signal
+    });
+    window._hiringPlan = hpRes.data || { months:[], months_fmt:[], rows:[] };
+    renderHiringTable(window._hiringPlan);
 
     const ts = new Date().toLocaleString('ko-KR');
     document.getElementById('lastUpdated').textContent = ts;
   } catch (err) {
     if (axios.isCancel?.(err) || err.name === 'CanceledError') {
-      // 취소됨
+      // 취소
     } else {
       console.error(err);
       showError('예측 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
@@ -168,47 +192,40 @@ async function runForecast(){
   }
 }
 
-// 프론트에서 “계획” 적용(상한/버퍼/결원/출장 + 단조)
+// 계획(상향) + 갭 만들기 (그래프/KPI용 집계)
 function buildPlannedForecast(forecast, params, available){
-  const { planMode, alpha, bufferPct, rounding, hoursPerDay, daysPerBucket, absencePct, travelPerBucket } = params;
-  const hpw = (Number(hoursPerDay)||8) * (Number(daysPerBucket)||22);
-  const absentRate = Math.min(0.9, Number(absencePct||0)/100);
+  const mode = params.planMode; // baseline|upper|blend
+  const alpha = Number(params.alpha || 0.5);
+  const bufferPct = Number(params.bufferPct || 0);
+  const rounding = params.rounding;
 
-  // 기본·계획 라인 + 단조
-  let prevMono = 0;
-  return forecast.map((r, i) => {
+  const hpw = (Number(params.hoursPerDay)||8) * (Number(params.daysPerBucket)||22);
+
+  return forecast.map(r => {
     const y = Number(r.yhat)||0;
     const u = Number(r.yhat_upper)||y;
-    const base = (planMode === 'upper') ? u
-               : (planMode === 'blend') ? (alpha*u + (1-alpha)*y)
-               : y;
-    const withBuffer = base * (1 + (Number(bufferPct)||0)/100);
+    const base = (mode === 'upper') ? u
+               : (mode === 'blend') ? (alpha*u + (1-alpha)*y)
+               : y; // baseline
+    const withBuffer = base * (1 + bufferPct/100);
 
+    // 결원 보정은 그래프의 “필터 기준 전체”에서는 사용하지 않고(사이트별 채용표에서 적용),
+    // 여기서는 단순 비교용으로만 표시 -> 원 코드 유지.
     const reqBase = hpw>0 ? (y / hpw) : 0;
+    let reqPlanRaw = hpw>0 ? (withBuffer / hpw) : 0;
 
-    // 결원 반영 + 출장
-    let reqPlan = hpw>0 ? (withBuffer / hpw) : 0;
-    reqPlan = (absentRate < 0.999) ? (reqPlan / (1 - absentRate)) : (reqPlan * 10);
-    reqPlan += Number(travelPerBucket)||0;
+    let reqPlan;
+    if (rounding==='ceil') reqPlan = Math.ceil(reqPlanRaw);
+    else if (rounding==='floor') reqPlan = Math.floor(reqPlanRaw);
+    else reqPlan = Math.round(reqPlanRaw);
 
-    // 반올림
-    const roundFn = (rounding==='ceil') ? Math.ceil : (rounding==='floor') ? Math.floor : Math.round;
-    let reqPlanRounded = roundFn(reqPlan);
-
-    // 단조(누적 최대)
-    if (i === 0) prevMono = reqPlanRounded;
-    else prevMono = Math.max(prevMono, reqPlanRounded);
-
-    const gap = prevMono - (Number(available)||0);
+    const gap = reqPlan - (Number(available)||0);
 
     return {
       bucket: r.bucket,
-      yhat: y,
-      yhat_lower: r.yhat_lower,
-      yhat_upper: r.yhat_upper,
       yhat_plan: withBuffer,
+      required_plan: reqPlan,
       required_base: reqBase,
-      required_plan: prevMono,      // 단조 처리가 반영된 ‘계획’ 인원
       gap
     };
   });
@@ -234,6 +251,7 @@ function renderCharts(series, forecast, planned, params, available){
   const labels = [...labelsHist, ...labelsFc];
   const showConf = document.getElementById('showConf')?.checked ?? true;
 
+  // ---- 시계열 + 예측 + 계획(상향) ----
   const ds = [
     {
       label: '실측(총 작업시간, h)',
@@ -283,20 +301,25 @@ function renderCharts(series, forecast, planned, params, available){
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: true },
-        tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${numberFmt(c.parsed.y,1)} h` } }
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,1)} h`
+          }
+        }
       },
       scales: { y: { beginAtZero: true, title: { display: true, text: '시간(h)' } } },
       elements: { point: { radius: 0 } }
     }
   });
 
+  // ---- 필요 인원: 기본/계획 + 현재 인원 + 갭(막대) ----
   if (chartWorkers) chartWorkers.destroy();
   chartWorkers = new Chart(ctx2, {
     data: {
       labels: labelsFc,
       datasets: [
         { type: 'line', label: '필요 인원(기본)', data: baseWorkers, borderWidth: 2, tension: 0.2 },
-        { type: 'line', label: '필요 인원(계획, 단조)', data: planWorkers, borderWidth: 2, borderDash: [4,3], tension: 0.2 },
+        { type: 'line', label: '필요 인원(계획)', data: planWorkers, borderWidth: 2, borderDash: [4,3], tension: 0.2 },
         { type: 'line', label: '현재 인원(고정)', data: labelsFc.map(()=>available), borderWidth: 2, borderDash: [2,2], tension: 0, stepped: true },
         { type: 'bar',  label: '갭(계획−현재)', data: gaps, yAxisID: 'y', barPercentage: 0.65, order: 0 }
       ]
@@ -307,7 +330,9 @@ function renderCharts(series, forecast, planned, params, available){
       plugins: {
         legend: { display: true },
         tooltip: {
-          callbacks: { label: (ctx)=> `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,2)} 명` }
+          callbacks: {
+            label: (ctx)=> `${ctx.dataset.label}: ${numberFmt(ctx.parsed.y,2)} 명`
+          }
         }
       },
       scales: { y: { beginAtZero: true, title: { display: true, text: '인원(명)' } } },
@@ -324,46 +349,16 @@ function renderTable(forecast, planned, available){
     const p = planned[i];
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="mono">${f.bucket}</td>
-      <td class="mono">${numberFmt(f.yhat,1)}</td>
-      <td class="mono">${numberFmt(p.yhat_plan,1)}</td>
-      <td class="mono">${numberFmt(f.yhat_lower,1)}</td>
-      <td class="mono">${numberFmt(f.yhat_upper,1)}</td>
-      <td class="mono">${numberFmt(p.required_base,2)}</td>
-      <td class="mono">${numberFmt(p.required_plan,2)}</td>
-      <td class="mono">${numberFmt(available,0)}</td>
-      <td class="mono">${numberFmt(p.gap,2)}</td>
+      <td>${f.bucket}</td>
+      <td>${numberFmt(f.yhat,1)}</td>
+      <td>${numberFmt(p.yhat_plan,1)}</td>
+      <td>${numberFmt(f.yhat_lower,1)}</td>
+      <td>${numberFmt(f.yhat_upper,1)}</td>
+      <td>${numberFmt(p.required_base,2)}</td>
+      <td>${numberFmt(p.required_plan,2)}</td>
+      <td>${numberFmt(available,0)}</td>
+      <td>${numberFmt(p.gap,2)}</td>
     `;
-    tbody.appendChild(tr);
-  }
-}
-
-function renderHiringTable(grid){
-  const thead = document.querySelector('#tblIncrements thead');
-  const tbody = document.querySelector('#tblIncrements tbody');
-  thead.innerHTML = ''; tbody.innerHTML = '';
-
-  if (!grid || !grid.rows || !grid.rows.length){
-    thead.innerHTML = '<tr><th>그룹-사이트</th></tr>';
-    tbody.innerHTML = '<tr><td>표시할 데이터가 없습니다.</td></tr>';
-    return;
-  }
-  // 헤더: (그룹-사이트) + 월들(YY-MON)
-  const trh = document.createElement('tr');
-  trh.innerHTML = `<th>그룹-사이트</th>` + grid.months_fmt.map(m => `<th class="mono">${m}</th>`).join('');
-  thead.appendChild(trh);
-
-  for (const row of grid.rows){
-    const tr = document.createElement('tr');
-    const cells = [];
-    cells.push(`<td>${row.key}</td>`);
-    for (let i=0; i<grid.months.length; i++){
-      const cum = Number(row.cumGap[i] || 0);
-      let txt = cum > 0 ? `+${cum}` : '0';
-      if (i === grid.months.length - 1 && cum > 0) txt += '(누적)';
-      cells.push(`<td class="mono">${txt}</td>`);
-    }
-    tr.innerHTML = cells.join('');
     tbody.appendChild(tr);
   }
 }
@@ -388,9 +383,50 @@ function renderKpis(forecast, planned, available){
   setText('kpiAvgWorkersBase', numberFmt(avgBase,2));
   setText('kpiForecastHoursBase', numberFmt(sumBaseH,1));
 
+  // 현재 인원 & 갭
   setText('kpiAvailable', numberFmt(available,0));
-  paintDelta('kpiNextGap', nextPlan - available);
-  paintDelta('kpiAvgGap',  avgPlan - available);
+  const nextGap = nextPlan - available;
+  const avgGap  = avgPlan - available;
+  paintDelta('kpiNextGap', nextGap);
+  paintDelta('kpiAvgGap',  avgGap);
+}
+
+function renderHiringTable(plan){
+  const thead = document.getElementById('tblHiringThead');
+  const tbody = document.getElementById('tblHiringTbody');
+  thead.innerHTML = ''; tbody.innerHTML = '';
+  if (!plan || !plan.months || !plan.rows || !plan.rows.length){
+    thead.innerHTML = '<tr><th>사이트</th></tr>';
+    return;
+  }
+  const monthsToShow = Math.min(Number(document.getElementById('monthsToShow').value || 12), plan.months.length);
+
+  // 헤더
+  const trH = document.createElement('tr');
+  trH.innerHTML = ['<th>사이트</th>', ...plan.months_fmt.slice(0, monthsToShow).map(m => `<th>${m}</th>`)].join('');
+  thead.appendChild(trH);
+
+  // 각 행(사이트)
+  for (const row of plan.rows){
+    // monthly increment: Δcum = max(0, cum[i] - cum[i-1])
+    const inc = [];
+    for (let i=0;i<row.cumGap.length;i++){
+      const prev = i===0 ? 0 : row.cumGap[i-1];
+      inc[i] = Math.max(0, (row.cumGap[i]||0) - prev);
+    }
+
+    const tr = document.createElement('tr');
+    const cells = ['<td><b>'+row.key+'</b></td>'];
+    for (let i=0;i<monthsToShow;i++){
+      const plus = inc[i] || 0;
+      const cum  = row.cumGap[i] || 0;
+      let text = (plus>0) ? `+${plus}` : '0';
+      if (cum>0) text += ` (${cum})`;
+      cells.push(`<td>${text}</td>`);
+    }
+    tr.innerHTML = cells.join('');
+    tbody.appendChild(tr);
+  }
 }
 
 function paintDelta(id, v){
@@ -398,8 +434,8 @@ function paintDelta(id, v){
   if (!el) return;
   el.textContent = numberFmt(v,2);
   el.classList.remove('pos','neg');
-  if (v > 0) el.classList.add('neg');
-  else if (v < 0) el.classList.add('pos');
+  if (v > 0) el.classList.add('neg');   // 부족(빨강)
+  else if (v < 0) el.classList.add('pos'); // 여유(초록)
 }
 
 function setText(id, v){ const el = document.getElementById(id); if (el) el.textContent = v; }
@@ -419,14 +455,17 @@ function resetForm(){
   document.getElementById('alphaVal').textContent = '0.50';
   document.getElementById('addBuffer').value = 5;
   document.getElementById('rounding').value = 'ceil';
-
   document.getElementById('absencePct').value = 10;
-  document.getElementById('travelPerBucket').value = 0;
+  document.getElementById('includeMove').checked = true;
+
+  // 해외출장 리셋
+  document.querySelectorAll('#travelGrid input[data-key]').forEach(inp=> inp.value = 0);
 
   document.getElementById('showConf').checked = true;
   runForecast();
 }
 
+// 집계 단위에 맞춘 예측 기간 옵션(1년·2년)
 function updateHorizonOptions(){
   const freq = document.getElementById('freq').value;
   const sel  = document.getElementById('horizon');
@@ -443,6 +482,8 @@ function updateHorizonOptions(){
   }
   sel.value = sel.options[1]?.value ?? sel.options[0]?.value; // 기본 2년
 }
+
+// 집계 단위 바꾸면 근무가능일수(d) 추천 (사용자가 이미 수정한 경우 유지)
 function suggestDaysPerBucket(){
   if (userEditedDaysPerBucket) return;
   const freq = document.getElementById('freq').value;
@@ -453,12 +494,13 @@ function suggestDaysPerBucket(){
   else { el.value = 22; if (hint) hint.textContent = '월 기준 예: 22'; }
 }
 
+// CSV 내보내기 (예측표 일부)
 function exportCsv(){
   const rows = Array.from(document.querySelectorAll('#tblForecast tbody tr')).map(tr=>{
     return Array.from(tr.querySelectorAll('td')).map(td => td.textContent.replace(/,/g,''));
   });
   if (!rows.length){ showNotice('내보낼 예측 행이 없습니다.'); return; }
-  const header = ['기간','예측 작업시간(h)','계획 작업시간(h)','하한','상한','필요 인원(기본)','필요 인원(계획,단조)','현재 인원','갭(계획−현재)'];
+  const header = ['기간','예측 작업시간(h)','계획 작업시간(h)','하한','상한','필요 인원(기본)','필요 인원(계획)','현재 인원','갭(계획−현재)'];
   const csv = [header, ...rows].map(r => r.join(',')).join('\n');
   const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);

@@ -7,25 +7,69 @@
   <link rel="stylesheet" href="./css/workload.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- 추가 CSS (가독성/섹션/테이블) -->
   <style>
-    .loading{position:fixed;inset:0;background:rgba(2,6,23,.35);display:flex;align-items:center;justify-content:center;z-index:50}
+    :root{
+      --bg:#0b1220; --bg2:#0f172a; --card:#0e1726; --muted:#9fb2c7; --text:#e6f0ff;
+      --line:rgba(96,165,250,.35); --line2:rgba(148,163,184,0.2); --accent:rgba(96,165,250,.15);
+    }
+    body{background:var(--bg);color:var(--text)}
+    .right-info{font-size:12px;opacity:.7;margin-left:auto}
+
+    /* 섹션(아코디언) */
+    details.section{border:1px solid var(--line);border-radius:14px;background:var(--card);margin:12px 0}
+    details.section[open]{box-shadow:0 0 0 1px rgba(125,211,252,.12) inset}
+    details.section > summary{cursor:pointer;list-style:none;padding:12px 16px;font-weight:700;display:flex;align-items:center;gap:10px}
+    details.section > summary::-webkit-details-marker{display:none}
+    .summary-badge{font-size:12px;color:#cfe0f5;background:var(--accent);border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+    .section-body{padding:8px 16px 16px}
+
+    /* 패널 보조 컴포넌트 */
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn + .btn{margin-left:6px}
+    .grid12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+    .span-12{grid-column:span 12}
+    .span-8{grid-column:span 8}
+    .span-6{grid-column:span 6}
+    .span-4{grid-column:span 4}
+    .span-3{grid-column:span 3}
+    small.dim{display:block;opacity:.7;margin-top:4px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:12px;background:rgba(96,165,250,.12);border:1px solid var(--line);font-size:12px;color:#cfe0f5}
+    .chip.inline{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);padding:6px 10px;border-radius:10px;background:rgba(148,163,184,0.08)}
+    .muted{opacity:.75}
+
+    /* 테이블/스크롤 */
+    .scroll-x{overflow:auto}
+    .table{width:100%;border-collapse:separate;border-spacing:0;min-width:720px}
+    .table th, .table td{padding:8px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+    .table thead th{position:sticky;top:0;background:var(--bg2);z-index:1}
+    .table tr:nth-child(even) td{background:rgba(255,255,255,0.02)}
+    .delta.pos{color:#86efac}
+    .delta.neg{color:#fca5a5}
+
+    /* 카드 */
+    .card{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px}
+
+    /* 로딩 */
+    .loading{position:fixed;inset:0;background:rgba(2,6,23,0.35);display:flex;align-items:center;justify-content:center;z-index:50}
     .loading.hidden{display:none}
     .loading .box{background:#0b1220;color:#e6f0ff;border:1px solid rgba(96,165,250,.4);border-radius:12px;padding:14px 18px;font-weight:700}
+
+    /* 알림 */
     .notice{margin:8px 0;padding:8px 12px;border-radius:10px;background:rgba(125,211,252,.08);border:1px solid rgba(125,211,252,.35);color:#cfe0f5}
     .notice.hidden{display:none}
     .notice.error{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.35);color:#fecaca}
-    small.dim{display:block;opacity:.7;margin-top:4px}
-    .panel-header .actions .btn + .btn{margin-left:8px}
-    .toolbar{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
-    .field .inline{display:flex; align-items:center; gap:8px}
-    .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.35);font-size:12px;color:#cfe0f5}
-    .muted{opacity:.75}
-    .table td,.table th{white-space:nowrap}
-    .delta.pos{color:#86efac}
-    .delta.neg{color:#fca5a5}
-    .table.compact td,.table.compact th{padding:6px 8px}
-    .scroll-x{overflow-x:auto}
-    .mono{font-variant-numeric: tabular-nums}
+
+    /* 사이트별 해외출장 입력 */
+    .travel-grid{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px}
+    .travel-item{display:flex;flex-direction:column;gap:4px}
+    .travel-item label{font-size:12px;color:#cfe0f5}
+    .travel-item input{width:100%}
+    @media (max-width:1000px){
+      .grid12{grid-template-columns:repeat(6,minmax(0,1fr))}
+      .travel-grid{grid-template-columns:repeat(2,minmax(140px,1fr))}
+    }
   </style>
 </head>
 <body>
@@ -58,36 +102,35 @@
       <div class="right-info">업데이트: <span id="lastUpdated">-</span></div>
     </header>
 
-    <section class="panel">
-      <div class="panel-header">
-        <div class="filters">
-          <div class="field span-4">
+    <!-- 섹션 1: 설정 -->
+    <details class="section" open>
+      <summary>① 설정 <span class="summary-badge">필터 & 산식</span></summary>
+      <div class="section-body">
+        <div class="grid12">
+          <div class="span-3">
             <label for="freq">집계 단위</label>
-            <select id="freq">
-              <option value="month">월</option>
+            <select id="freq" class="card">
+              <option value="month" selected>월</option>
               <option value="week">주</option>
               <option value="day">일</option>
             </select>
           </div>
-
-          <div class="field span-4">
+          <div class="span-3">
             <label for="horizon">예측 기간</label>
-            <select id="horizon"></select>
+            <select id="horizon" class="card"></select>
           </div>
-
-          <div class="field span-4">
+          <div class="span-3">
             <label for="groupSelect">그룹</label>
-            <select id="groupSelect">
+            <select id="groupSelect" class="card">
               <option value="">전체</option>
               <option>PEE1</option>
               <option>PEE2</option>
               <option>PSKH</option>
             </select>
           </div>
-
-          <div class="field span-4">
+          <div class="span-3">
             <label for="siteSelect">사이트</label>
-            <select id="siteSelect">
+            <select id="siteSelect" class="card">
               <option value="">전체</option>
               <option>PT</option>
               <option>HS</option>
@@ -97,104 +140,109 @@
             </select>
           </div>
 
-          <div class="field span-4">
+          <div class="span-3">
             <label for="hoursPerDay">기준 근로시간(1인·h)</label>
-            <input id="hoursPerDay" type="number" step="0.5" min="1" value="8" />
+            <input id="hoursPerDay" class="card" type="number" step="0.5" min="1" value="8" />
           </div>
-
-          <div class="field span-4">
+          <div class="span-3">
             <label for="daysPerBucket">근무가능일수(d)</label>
-            <input id="daysPerBucket" type="number" step="1" min="1" value="22" />
+            <input id="daysPerBucket" class="card" type="number" step="1" min="1" value="22" />
             <small id="daysHint" class="dim">월 기준 예: 22</small>
           </div>
-
-          <!-- 계획(상향) 옵션 -->
-          <div class="field span-12">
-            <label>계획 모드</label>
-            <div class="grid" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;">
-              <div class="span-4">
-                <div class="field">
-                  <label for="planMode">모드</label>
-                  <select id="planMode">
-                    <option value="baseline">평균 (ŷ)</option>
-                    <option value="upper">상한 95% (ŷᵤ)</option>
-                    <option value="blend" selected>상한 가중(α·ŷᵤ + (1-α)·ŷ)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="span-4" id="alphaWrap">
-                <div class="field">
-                  <label for="alpha">상한 가중치 α <span class="badge" id="alphaVal">0.50</span></label>
-                  <input type="range" id="alpha" min="0" max="1" step="0.05" value="0.5" />
-                </div>
-              </div>
-              <div class="span-4">
-                <div class="field">
-                  <label for="addBuffer">추가 버퍼(%)</label>
-                  <div class="inline">
-                    <input id="addBuffer" type="number" step="1" value="5" />
-                    <span class="muted">× (1 + p/100)</span>
-                  </div>
-                  <small class="dim">운영상 여유(권장 5~15%)</small>
-                </div>
-              </div>
+          <div class="span-3">
+            <label>표시 옵션</label>
+            <div class="chip inline card">
+              <label><input type="checkbox" id="showConf" checked /> 신뢰구간</label>
+            </div>
+            <div class="chip inline card" style="margin-top:6px">
+              <label><input type="checkbox" id="includeMove" checked /> 이동시간 포함</label>
             </div>
           </div>
-
-          <!-- 결원 옵션 -->
-          <div class="field span-4">
-            <label for="absencePct">결원율(휴가/교육, %)</label>
-            <input id="absencePct" type="number" step="1" min="0" value="10" />
-          </div>
-          <div class="field span-4">
-            <label for="travelPerBucket">해외출장(명/구간)</label>
-            <input id="travelPerBucket" type="number" step="1" min="0" value="0" />
-          </div>
-
-          <!-- 인원 반올림 / 표시 -->
-          <div class="field span-4">
+          <div class="span-3">
             <label for="rounding">인원 반올림</label>
-            <select id="rounding">
+            <select id="rounding" class="card">
               <option value="ceil" selected>올림(권장)</option>
               <option value="round">반올림</option>
               <option value="floor">내림</option>
             </select>
           </div>
-          <div class="field span-4">
-            <label for="showConf">표시 옵션</label>
-            <label class="chip input-chip">
-              <input type="checkbox" id="showConf" checked />
-              <span>신뢰구간 표시</span>
-            </label>
+
+          <div class="span-12">
+            <div class="grid12">
+              <div class="span-4">
+                <label for="planMode">계획 모드 (바쁠 때 상향)</label>
+                <select id="planMode" class="card">
+                  <option value="baseline">평균 (ŷ)</option>
+                  <option value="upper">상한 95% (ŷᵤ)</option>
+                  <option value="blend" selected>상한 가중(α·ŷᵤ + (1-α)·ŷ)</option>
+                </select>
+              </div>
+              <div class="span-4" id="alphaWrap">
+                <label for="alpha">상한 가중치 α <span class="badge" id="alphaVal">0.50</span></label>
+                <input type="range" id="alpha" class="card" min="0" max="1" step="0.05" value="0.5" />
+              </div>
+              <div class="span-4">
+                <label for="addBuffer">추가 버퍼(%)</label>
+                <input id="addBuffer" class="card" type="number" step="1" value="5" />
+                <small class="dim">실운영 여지(권장 5~15%)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="span-12">
+            <div class="grid12">
+              <div class="span-4">
+                <label for="absencePct">결원(휴가/교육) 비율(%)</label>
+                <input id="absencePct" class="card" type="number" step="1" min="0" max="50" value="10" />
+                <small class="dim">인원 산출 시 / (1 - 비율) 보정</small>
+              </div>
+              <div class="span-8">
+                <label>사이트별 월 해외출장(명)</label>
+                <div class="travel-grid card" id="travelGrid">
+                  <!-- 7개 페어 고정 -->
+                  <div class="travel-item"><label>PEE1-PT</label><input type="number" step="0.1" min="0" value="0" data-key="PEE1-PT" /></div>
+                  <div class="travel-item"><label>PEE1-HS</label><input type="number" step="0.1" min="0" value="0" data-key="PEE1-HS" /></div>
+                  <div class="travel-item"><label>PEE1-IC</label><input type="number" step="0.1" min="0" value="0" data-key="PEE1-IC" /></div>
+                  <div class="travel-item"><label>PEE1-CJ</label><input type="number" step="0.1" min="0" value="0" data-key="PEE1-CJ" /></div>
+                  <div class="travel-item"><label>PEE2-PT</label><input type="number" step="0.1" min="0" value="0" data-key="PEE2-PT" /></div>
+                  <div class="travel-item"><label>PEE2-HS</label><input type="number" step="0.1" min="0" value="0" data-key="PEE2-HS" /></div>
+                  <div class="travel-item"><label>PSKH-PSKH</label><input type="number" step="0.1" min="0" value="0" data-key="PSKH-PSKH" /></div>
+                </div>
+                <small class="dim">해당 사이트에서 월별로 해외출장으로 빠지는 평균 인원(명)</small>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="actions toolbar">
+        <div class="toolbar" style="margin-top:10px">
           <button id="btnRun" class="btn primary" type="button">예측 실행</button>
           <button id="btnReset" class="btn ghost" type="button">초기화</button>
           <button id="btnCsv" class="btn ghost" type="button">CSV 내보내기</button>
         </div>
       </div>
+    </details>
 
-      <div class="panel-body">
+    <!-- 섹션 2: KPI -->
+    <details class="section" open>
+      <summary>② KPI <span class="summary-badge">요약 지표</span></summary>
+      <div class="section-body">
         <div id="noti" class="notice hidden"></div>
         <div id="err" class="notice error hidden"></div>
 
-        <!-- KPI -->
         <div class="kpis">
           <div class="kpi">
             <div class="label">다음 구간 필요 인원(계획)</div>
-            <div class="value mono" id="kpiNextWorkers">-</div>
+            <div class="value" id="kpiNextWorkers">-</div>
             <div class="sublabel">기본: <span id="kpiNextWorkersBase">-</span> 명</div>
           </div>
           <div class="kpi">
             <div class="label">평균 필요 인원(계획)</div>
-            <div class="value mono" id="kpiAvgWorkers">-</div>
+            <div class="value" id="kpiAvgWorkers">-</div>
             <div class="sublabel">기본: <span id="kpiAvgWorkersBase">-</span> 명</div>
           </div>
           <div class="kpi">
             <div class="label">총 작업시간(계획)</div>
-            <div class="value mono" id="kpiForecastHours">-</div>
+            <div class="value" id="kpiForecastHours">-</div>
             <div class="sublabel">기본: <span id="kpiForecastHoursBase">-</span> h</div>
           </div>
         </div>
@@ -202,30 +250,41 @@
         <div class="kpis">
           <div class="kpi">
             <div class="label">현재 인원(필터 적용)</div>
-            <div class="value mono" id="kpiAvailable">-</div>
+            <div class="value" id="kpiAvailable">-</div>
             <div class="sublabel">userDB 기준</div>
           </div>
           <div class="kpi">
             <div class="label">다음 구간 추가 필요</div>
-            <div class="value"><span id="kpiNextGap" class="delta mono">-</span></div>
+            <div class="value"><span id="kpiNextGap" class="delta">-</span></div>
             <div class="sublabel">계획 − 현재</div>
           </div>
           <div class="kpi">
             <div class="label">평균 추가 필요</div>
-            <div class="value"><span id="kpiAvgGap" class="delta mono">-</span></div>
+            <div class="value"><span id="kpiAvgGap" class="delta">-</span></div>
             <div class="sublabel">예측 구간 평균</div>
           </div>
         </div>
+      </div>
+    </details>
 
-        <div class="chart-card">
+    <!-- 섹션 3: 그래프 -->
+    <details class="section" open>
+      <summary>③ 그래프 <span class="summary-badge">작업시간 & 인원</span></summary>
+      <div class="section-body">
+        <div class="card" style="margin-bottom:8px">
           <canvas id="chartSeries" height="200"></canvas>
         </div>
-        <div class="chart-card">
+        <div class="card">
           <canvas id="chartWorkers" height="180"></canvas>
         </div>
+      </div>
+    </details>
 
-        <div class="chart-card">
-          <h3 class="section-title">예측 표 (일부)</h3>
+    <!-- 섹션 4: 예측표 -->
+    <details class="section">
+      <summary>④ 예측 표 <span class="summary-badge">일부</span></summary>
+      <div class="section-body">
+        <div class="card scroll-x">
           <table id="tblForecast" class="table">
             <thead>
               <tr>
@@ -235,7 +294,7 @@
                 <th>하한</th>
                 <th>상한</th>
                 <th>필요 인원(기본)</th>
-                <th>필요 인원(계획, 단조)</th>
+                <th>필요 인원(계획)</th>
                 <th>현재 인원</th>
                 <th>갭(계획−현재)</th>
               </tr>
@@ -243,21 +302,38 @@
             <tbody></tbody>
           </table>
         </div>
-
-        <!-- ✅ 증원 시점 표 -->
-        <div class="chart-card scroll-x">
-          <h3 class="section-title">증원 시점 표 (월•그룹-사이트별 누적 증원 필요)</h3>
-          <table id="tblIncrements" class="table compact">
-            <thead></thead>
-            <tbody></tbody>
-          </table>
-          <small class="dim">셀 값 예) +2 = 시작 시점 대비 누적 증원 2명 필요 • 마지막 달 셀에는 “(누적)” 표기</small>
-        </div>
       </div>
-    </section>
+    </details>
+
+    <!-- 섹션 5: 증원 시점 표 -->
+    <details class="section" open>
+      <summary>⑤ 증원 시점 표 <span class="summary-badge">사이트별 채용 타이밍</span></summary>
+      <div class="section-body">
+        <div class="toolbar" style="margin-bottom:8px">
+          <label class="chip inline card">
+            표시 월 수
+            <select id="monthsToShow" class="card" style="margin-left:8px">
+              <option value="12" selected>12</option>
+              <option value="24">24</option>
+            </select>
+          </label>
+        </div>
+       <div class="card scroll-x">
+          <table id="tblHiring" class="table">
+            <thead id="tblHiringThead"></thead>
+            <tbody id="tblHiringTbody"></tbody>
+          </table>
+        </div>
+        <small class="dim">숫자는 “해당 월에 추가로 필요한 인원 증가분(명)”; (누적)은 누적 필요치.</small>
+      </div>
+    </details>
   </div>
 
-  <div id="loading" class="loading hidden"><div class="box">예측 계산 중…</div></div>
+  <!-- 로딩 오버레이 -->
+  <div id="loading" class="loading hidden">
+    <div class="box">예측 계산 중…</div>
+  </div>
+
   <script src="./js/analysis.js"></script>
 </body>
 </html>
