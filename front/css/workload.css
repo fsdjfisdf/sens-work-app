@@ -288,3 +288,66 @@ button.menu-item:focus-visible{
 .modal-calc summary{ cursor:pointer; color:#cfe0f5 }
 .modal-calc ol{ margin:8px 0 0 18px }
 .modal-calc code{ background:#0b0f14; padding:1px 6px; border-radius:6px; border:1px solid var(--border) }
+
+/* ===== Modal - 계산식 상세 ===== */
+.calc-box { 
+  margin-top: 12px; 
+  background: rgba(2,6,23,0.5);
+  border: 1px solid rgba(96,165,250,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #dbe7fb;
+}
+
+.calc-box .formula > div { 
+  line-height: 1.6; 
+  margin: 2px 0; 
+}
+
+.calc-box .dim { 
+  opacity: .7; 
+  font-size: .9em; 
+}
+
+.calc-box .note {
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(234,179,8,0.08);
+  border: 1px dashed rgba(234,179,8,0.35);
+  color: #fde68a;
+  margin: 6px 0 4px;
+}
+
+.calc-box .note.excluded{
+  background: rgba(244,63,94,0.08);
+  border-color: rgba(244,63,94,0.35);
+  color: #fecaca;
+}
+
+.calc-box details.workers {
+  margin-top: 10px;
+  background: rgba(15,23,42,0.45);
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.calc-box details.workers summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #cfe0f5;
+  outline: none;
+}
+
+.calc-box details.workers ol {
+  margin: 8px 0 0 16px;
+  padding: 0 0 6px 0;
+}
+
+.calc-box code { 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; 
+  background: rgba(2,6,23,0.55);
+  border: 1px solid rgba(148,163,184,0.18);
+  padding: 1px 6px;
+  border-radius: 6px;
+}

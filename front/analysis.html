@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Predicted Workers (장기 예측)</title>
+  <link rel="stylesheet" href="./css/workload.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned"><a href="./signin.html" class="sign-link">Login</a></div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./workload.html" class="menu-item">Workload</a>
+        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header class="header">
+      <h1 class="title">Predicted Workers</h1>
+      <span class="pill">1~2년 장기 예측</span>
+    </header>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div class="filters">
+          <div class="field span-4">
+            <label for="freq">집계 단위</label>
+            <select id="freq">
+              <option value="month">월</option>
+              <option value="week">주</option>
+              <option value="day">일</option>
+            </select>
+          </div>
+          <div class="field span-4">
+            <label for="horizon">예측 기간</label>
+            <select id="horizon">
+              <option value="365">1년</option>
+              <option value="730" selected>2년</option>
+            </select>
+          </div>
+          <div class="field span-4">
+            <label for="groupSelect">그룹</label>
+            <select id="groupSelect">
+              <option value="">전체</option>
+              <option>PEE1</option>
+              <option>PEE2</option>
+              <option>PSKH</option>
+            </select>
+          </div>
+          <div class="field span-4">
+            <label for="siteSelect">사이트</label>
+            <select id="siteSelect">
+              <option value="">전체</option>
+              <option>PT</option>
+              <option>HS</option>
+              <option>IC</option>
+              <option>CJ</option>
+              <option>PSKH</option>
+            </select>
+          </div>
+
+          <div class="field span-4">
+            <label for="hoursPerDay">기준 근로시간(1인·h)</label>
+            <input id="hoursPerDay" type="number" step="0.5" min="1" value="8" />
+          </div>
+          <div class="field span-4">
+            <label for="daysPerBucket">근무가능일수(d)</label>
+            <input id="daysPerBucket" type="number" step="1" min="1" value="22" />
+            <small class="dim">월 기준 예: 22 / 주 기준 예: 5 / 일 기준: 1</small>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnRun" class="btn primary" type="button">예측 실행</button>
+          <button id="btnReset" class="btn ghost" type="button">초기화</button>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <div class="kpis">
+          <div class="kpi"><div class="label">다음 구간 필요 인원(예측)</div><div class="value" id="kpiNextWorkers">-</div><div class="sublabel">선택 집계 단위 1구간</div></div>
+          <div class="kpi"><div class="label">평균 필요 인원(예측)</div><div class="value" id="kpiAvgWorkers">-</div><div class="sublabel">예측 구간 평균</div></div>
+          <div class="kpi"><div class="label">총 작업시간(예측)</div><div class="value" id="kpiForecastHours">-</div><div class="sublabel">예측 구간 합계(h)</div></div>
+        </div>
+
+        <div class="chart-card">
+          <canvas id="chartSeries" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <canvas id="chartWorkers" height="180"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3 class="section-title">예측 표 (일부)</h3>
+          <table id="tblForecast" class="table">
+            <thead><tr><th>기간</th><th>예측 작업시간(h)</th><th>하한</th><th>상한</th><th>필요 인원</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/analysis.js"></script>
+</body>
+</html>

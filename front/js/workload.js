@@ -61,7 +61,7 @@ const HOLIDAYS = [
   '2024-08-15','2024-09-16','2024-09-17','2024-09-18','2024-10-03',
   '2024-10-09','2024-12-25','2024-10-01','2025-01-01','2025-01-27',
   '2025-01-28','2025-01-29','2025-01-30','2025-03-03','2025-05-01',
-  '2025-05-06','2025-05-05','2025-06-03','2025-06-06'
+  '2025-05-06','2025-05-05','2025-06-03','2025-06-06','2025-08-15'
 ];
 
 // ===============================
@@ -773,11 +773,12 @@ function bindTabs() {
 }
 
 // ✅ 모달: 해당 날짜의 계산과정까지 표기
+// ✅ 모달: 해당 날짜의 계산과정까지 표기
 function openDayModal(dateYMD){
   // 현재 토글/설정 읽기
   const includeTask = document.getElementById("includeTask")?.checked ?? true;
   const includeNone = document.getElementById("includeNone")?.checked ?? false;
-  const includeMove = document.getElementById("includeMove")?.checked ?? true; // 기본값 true
+  const includeMove = document.getElementById("includeMove")?.checked ?? true;
   const toggles = { includeTask, includeNone, includeMove };
 
   const utilMode = (document.getElementById('utilMode')?.value) || 'weekday';
@@ -829,12 +830,12 @@ function openDayModal(dateYMD){
       .join('');
     html = `
       <div class="formula">
-        <div><b>공식</b> : H/Day = Σ(hᵢ²) / Σ(hᵢ)  <span class="dim">(하루는 d = 1)</span></div>
+        <div><b>공식</b> : H/Day = Σ(hᵢ²) / Σ(hᵢ)  <span class="dim">(일 단위이므로 d = 1)</span></div>
         <div><b>Σ(hᵢ)</b> = ${fmtHour(sumH)} h</div>
         <div><b>Σ(hᵢ²)</b> = ${fmtHour(sumH2)} h²</div>
         <div><b>H/Day</b> = ${fmtHour(sumH2)} ÷ ${fmtHour(sumH)} = <b>${fmtHour(hday)} h</b></div>
         <div><b>가동율</b> = H/Day ÷ 기준(${baseHours}h) × 100% = <b>${fmtPct(util)}%</b></div>
-        <div class="hint">* 계산에는 현재 선택된 항목만 포함됨: ${
+        <div class="hint dim">* 포함 항목: ${
           [includeTask?'작업':'', includeMove?'이동':'', includeNone?'대기':''].filter(Boolean).join(', ') || '없음'
         }</div>
       </div>
@@ -848,6 +849,7 @@ function openDayModal(dateYMD){
 
   document.getElementById('dayModal').classList.remove('hidden');
 }
+
 
 function bindModal(){
   document.getElementById('closeModal')?.addEventListener('click',()=>{ document.getElementById('dayModal').classList.add('hidden'); });
