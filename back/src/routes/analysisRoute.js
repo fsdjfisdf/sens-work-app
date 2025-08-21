@@ -4,17 +4,13 @@ const router = express.Router();
 const analysisController = require('../controllers/analysisController');
 const jwtMiddleware = require('../../config/jwtMiddleware');
 
-// 🔎 진단 로그
-router.use((req, res, next) => {
-  console.log('[analysis]', req.method, req.originalUrl, {
-    auth: req.headers.authorization ? 'Authorization' : null,
-    x: req.headers['x-access-token'] ? 'x-access-token' : null
-  });
-  next();
-});
+// 과거 시계열 (집계 단위: day|week|month, 기본 day→주/월로 리샘플)
+router.get('/series', jwtMiddleware, analysisController.getSeries);
 
-// ✅ 서버 살아있고 경로가 맞는지 핑 확인(무인증)
-router.get('/ping', (req, res) => res.json({ ok: true }));
+// 예측 (프런트의 horizon=일 수 기준, day:1, week:7, month:30으로 환산)
+router.get('/forecast', jwtMiddleware, analysisController.getForecast);
 
-// (아래 인증/엔드포인트는 2번에서 수정)
+// 현재 인원 (userDB)
+router.get('/headcount', jwtMiddleware, analysisController.getHeadcount);
+
 module.exports = router;
