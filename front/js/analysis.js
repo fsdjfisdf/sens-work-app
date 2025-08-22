@@ -301,7 +301,7 @@ function collectParams(){
 
   const group  = (val('#groupSelect')||'').trim();
   const site   = (val('#siteSelect')||'').trim();
-  const hpd    = parseFloat(val('#hoursPerDay')) || 8;
+  const hpd    = parseFloat(val('#hoursPerDay')) || 3.5;
   const dpb    = parseInt(val('#daysPerBucket'), 10) || 21;
   const rounding  = val('#rounding');
   const planMode  = val('#planMode');
@@ -781,7 +781,7 @@ function buildPlannedForecast(forecast, params, available){
     const planHours    = normalizeByBizDays ? baseHoursRaw * (effDays / refDays) : baseHoursRaw;
     const baseHours    = normalizeByBizDays ? y            * (effDays / refDays) : y;
 
-    const hpw   = (Number(hoursPerDay)||8) * effDays;
+    const hpw   = (Number(hoursPerDay)||3.5) * effDays;
     const denom = Math.max(0.0001, hpw * availRate);
     const reqBase = baseHours / denom;
 
@@ -1433,7 +1433,7 @@ function applyInitialDefaults(){
   qs('#siteSelect').value = '';
 
   const hpdEl = qs('#hoursPerDay');
-  if (hpdEl) hpdEl.value = 8;
+  if (hpdEl) hpdEl.value = 3.5;
 
   userEditedDaysPerBucket = false;
   suggestDaysPerBucket();
