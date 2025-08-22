@@ -5,47 +5,45 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Predicted Workers</title>
   <link rel="stylesheet" href="./css/analysis.css" />
-    <link rel="stylesheet" href="./css/workload.css" />
+  <link rel="stylesheet" href="./css/workload.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-        <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                    <a href="./signin.html" class="sign-link">Login</a>
-                </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
         </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-                <a href="./PCI.html" class="menu-item">PCI</a>
-                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./workload.html" class="menu-item admin-only">Workload</a>
-                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span><span></span><span></span>
             </div>
+          </button>
         </div>
-    </nav>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Workload</a>
+        <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
 
   <div class="container">
     <header class="header">
@@ -58,6 +56,7 @@
     <details class="section" open>
       <summary>① 설정 <span class="summary-badge">필터</span></summary>
       <div class="section-body">
+
         <!-- 1) 기본 필터 -->
         <div class="card-block">
           <h3 class="block-title">기본</h3>
@@ -70,10 +69,16 @@
                 <option value="day">일</option>
               </select>
             </div>
+
             <div class="span-3">
-              <label for="horizon">예측 기간</label>
-              <select id="horizon" class="card"></select>
+              <label for="horizonCount">예측 기간(숫자)</label>
+              <div class="inline card">
+                <input id="horizonCount" type="number" min="1" step="1" value="12" style="width:90px" />
+                <span id="horizonUnit" class="badge">개월</span>
+              </div>
+              <small class="dim">N개월/주/일 뒤까지</small>
             </div>
+
             <div class="span-3">
               <label for="groupSelect">그룹</label>
               <select id="groupSelect" class="card">
@@ -122,6 +127,10 @@
               <label>표시 옵션</label>
               <div class="chip inline card"><label><input type="checkbox" id="showConf" /> 신뢰구간</label></div>
               <div class="chip inline card" style="margin-top:6px"><label><input type="checkbox" id="includeMove" checked /> 이동시간 포함</label></div>
+              <div class="chip inline card" style="margin-top:6px">
+                <label><input type="checkbox" id="normalizeByBizDays" checked /> 근무일수 기준 작업시간 정규화</label>
+              </div>
+              <small class="dim">예측 h × (해당 달 평일수 / 기준근무일수)</small>
             </div>
           </div>
 
@@ -138,25 +147,58 @@
               <label for="alpha">상한 가중치 α <span class="badge" id="alphaVal">0.50</span></label>
               <input type="range" id="alpha" class="card" min="0" max="1" step="0.05" value="0.5" />
             </div>
-          </div>
-
-          <div class="grid12">
-                        <div class="span-4">
+            <div class="span-4">
               <label for="addBuffer">추가 버퍼(%)</label>
               <input id="addBuffer" class="card" type="number" step="1" value="5" />
               <small class="dim">추가 버퍼 설정(5~15%)</small>
             </div>
+          </div>
+
+          <div class="grid12">
             <div class="span-4">
               <label for="absencePct">결원(휴가/교육) 비율(%)</label>
               <input id="absencePct" class="card" type="number" step="1" min="0" max="50" value="10" />
               <small class="dim">인원 산출 시 / (1 - 비율) 보정</small>
             </div>
-            <div class="span-8">
-            </div>
+            <div class="span-8"></div>
           </div>
         </div>
 
-        <!-- 3) 액션 -->
+        <!-- 3) 보수화 옵션 -->
+        <div class="card-block">
+          <h3 class="block-title">보수화 옵션</h3>
+          <div class="grid12">
+            <div class="span-4">
+              <label class="inline"><input type="checkbox" id="useLower" /> ŷ 대신 하한(ŷₗ) 사용</label>
+              <small class="dim">체크 시 하한 100% 사용</small>
+            </div>
+            <div class="span-4">
+              <label for="lowerAlpha">하한 가중치 β <span class="badge" id="lowerAlphaVal">0.00</span></label>
+              <input type="range" id="lowerAlpha" min="0" max="1" step="0.05" value="0" />
+              <small class="dim">0=사용 안 함, 1=하한 100%</small>
+            </div>
+            <div class="span-4">
+              <label for="smoothWin">스무딩 윈도 W (버킷)</label>
+              <input id="smoothWin" class="card" type="number" min="1" step="1" value="1" />
+              <small class="dim">1=스무딩 없음</small>
+            </div>
+          </div>
+          <div class="grid12">
+            <div class="span-4">
+              <label for="growthCapPct">증가 캡(%)</label>
+              <input id="growthCapPct" class="card" type="number" min="0" step="1" value="0" />
+              <small class="dim">예: 8 → 버킷당 +8% 이내</small>
+            </div>
+            <div class="span-4">
+              <label for="growthCapAbs">증가 캡(명)</label>
+              <input id="growthCapAbs" class="card" type="number" min="0" step="1" value="0" />
+              <small class="dim">예: 2 → 버킷당 +2명 이내</small>
+            </div>
+            <div class="span-4"></div>
+          </div>
+        </div>
+
+        <!-- 4) 액션 -->
         <div class="toolbar">
           <button id="btnRun" class="btn primary" type="button">예측 실행</button>
           <button id="btnReset" class="btn ghost" type="button">초기화</button>
@@ -179,16 +221,15 @@
             <div class="sublabel">기본: <span id="kpiForecastHoursBase">-</span> h</div>
           </div>
           <div class="kpi">
-            <div class="label">최소 필요 인원</div>
+            <div class="label">다음 기간 필요 인원</div>
             <div class="value" id="kpiNextWorkers">-</div>
             <div class="sublabel">기본: <span id="kpiNextWorkersBase">-</span> 명</div>
           </div>
           <div class="kpi">
-            <div class="label">평균 필요 인원</div>
-            <div class="value" id="kpiAvgWorkers">-</div>
-            <div class="sublabel">기본: <span id="kpiAvgWorkersBase">-</span> 명</div>
+            <div class="label">목표 시점 필요 인원</div>
+            <div class="value" id="kpiTargetWorkers">-</div>
+            <div class="sublabel"><span class="badge" id="kpiTargetLabel">-</span> / 기본: <span id="kpiTargetWorkersBase">-</span></div>
           </div>
-
         </div>
 
         <div class="kpis">
@@ -198,29 +239,30 @@
             <div class="sublabel">S-WORKS SECM 기준</div>
           </div>
           <div class="kpi">
-            <div class="label">현재 필요 인원</div>
+            <div class="label">다음 기간 갭</div>
             <div class="value"><span id="kpiNextGap" class="delta">-</span></div>
             <div class="sublabel">계획 − 현재</div>
           </div>
           <div class="kpi">
-            <div class="label">예측 필요 인원</div>
-            <div class="value"><span id="kpiAvgGap" class="delta">-</span></div>
-            <div class="sublabel">예측 구간 평균</div>
+            <div class="label">목표 시점 갭</div>
+            <div class="value"><span id="kpiTargetGap" class="delta">-</span></div>
+            <div class="sublabel">계획 − 현재</div>
           </div>
+        </div>
+
+        <div class="card-block" id="conclusionBox">
+          <h3 class="block-title">결론 요약</h3>
+          <div id="conclusionText" class="narrative"></div>
         </div>
       </div>
     </details>
 
-    <!-- ③ 그래프 (기본: 접힘) -->
+    <!-- ③ 그래프 -->
     <details class="section" id="sec-graphs">
       <summary>③ 그래프 <span class="summary-badge">작업시간 & 인원</span></summary>
       <div class="section-body">
-        <div class="card" style="margin-bottom:8px">
-          <canvas id="chartSeries" height="200"></canvas>
-        </div>
-        <div class="card">
-          <canvas id="chartWorkers" height="180"></canvas>
-        </div>
+        <div class="card" style="margin-bottom:8px"><canvas id="chartSeries" height="200"></canvas></div>
+        <div class="card"><canvas id="chartWorkers" height="180"></canvas></div>
       </div>
     </details>
 
@@ -250,51 +292,43 @@
     </details>
 
     <!-- ⑤ 증원 시점 표 + 월별 해외출장 입력 -->
-<!-- ⑤ 증원 시점 표 + 월별 해외출장 입력 -->
-<!-- ⑤ 증원 시점 표 + 월별 해외출장 입력 -->
-<details class="section" open>
-  <summary>⑤ 충원 시점 표 <span class="summary-badge">사이트별 채용 필요 시점</span></summary>
-  <div class="section-body">
-    <div class="toolbar">
-      <label class="chip inline card">
-        월 수
-        <select id="monthsToShow" class="card" style="margin-left:8px">
-          <option value="12" selected>12</option>
-          <option value="24">24</option>
-        </select>
-      </label>
-      <div class="spacer"></div>
-      <button id="btnApplyTrips" class="btn" type="button" disabled>적용</button>
-      <button id="btnResetTrips" class="btn ghost" type="button">해외출장 입력 초기화</button>
-    </div>
+    <details class="section" open>
+      <summary>⑤ 충원 시점 표 <span class="summary-badge">스코프별 채용 필요 시점</span></summary>
+      <div class="section-body">
+        <div class="toolbar">
+          <label class="chip inline card">
+            월 수
+            <select id="monthsToShow" class="card" style="margin-left:8px">
+              <option value="12" selected>12</option>
+              <option value="24">24</option>
+            </select>
+          </label>
+          <div class="spacer"></div>
+          <button id="btnApplyTrips" class="btn" type="button" disabled>적용</button>
+          <button id="btnResetTrips" class="btn ghost" type="button">해외출장 입력 초기화</button>
+        </div>
 
-    <!-- ⑤-1: 월별 해외출장 입력(로컬 저장) -->
-           <div class="table-title">해외 출장 인원</div>
-    <div class="card scroll-x sync-scroll" data-sync="hiring" style="margin-bottom:12px">
-      <table id="tblTripEdit" class="table table-compact">
-        <thead id="tripEditThead"></thead>
-        <tbody id="tripEditTbody"></tbody>
-      </table>
-    </div>
+        <div class="table-title">해외 출장 인원</div>
+        <div class="card scroll-x sync-scroll" data-sync="hiring" style="margin-bottom:12px">
+          <table id="tblTripEdit" class="table table-compact">
+            <thead id="tripEditThead"></thead>
+            <tbody id="tripEditTbody"></tbody>
+          </table>
+        </div>
 
-    <!-- ⑤-2: 증원 시점 요약 -->
-           <div class="table-title">채용 필요 시점</div>
-    <div class="card scroll-x sync-scroll" data-sync="hiring">
-      <table id="tblHiring" class="table">
-        <thead id="tblHiringThead"></thead>
-        <tbody id="tblHiringTbody"></tbody>
-      </table>
-    </div>
-  </div>
-</details>
-
-
+        <div class="table-title">채용 필요 시점</div>
+        <div class="card scroll-x sync-scroll" data-sync="hiring">
+          <table id="tblHiring" class="table">
+            <thead id="tblHiringThead"></thead>
+            <tbody id="tblHiringTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
   </div>
 
   <!-- 로딩 오버레이 -->
-  <div id="loading" class="loading hidden">
-    <div class="box">예측 계산 중…</div>
-  </div>
+  <div id="loading" class="loading hidden"><div class="box">예측 계산 중…</div></div>
 
   <script src="./js/analysis.js"></script>
 <script>

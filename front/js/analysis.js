@@ -2,14 +2,11 @@
 'use strict';
 
 /* ==========================================================================
-   S-WORKS — analysis.js (Predicted Workers)
-   - Apply 버튼으로 해외출장 입력 반영(서버 호출은 그대로, 프론트에서 월별 +증가분 적용)
-   - 결원(휴가/교육) 비율(%) 보정: /(1 - pct)
-   - 주말·공휴일(대한민국, 2024~2027 + 대체휴일 + 근로자의날) 제외하여 버킷별 근무일수 반영
-   - 그래프 높이 축소(series=160, workers=140)
-   - “월별 해외출장 인원 입력(명)”에는 합계 표시 없음
-   - “증원 시점 요약”에만 그룹별/전체 합계 행 표시
-   - 두 표 열 너비 및 가로 스크롤 동기화
+   S-WORKS — analysis.js (Predicted Workers) — 2025-08-22
+   - UI 필터(PEE1-PT 등) → API 표준 필터(group=PEE1, site=PT) 정규화
+   - 최초 진입 상태와 [초기화] 동일 적용
+   - 빈 파라미터 제거(cleanParams)로 전 엔드포인트 스코프 일치
+   - ✅ 전체/그룹/사이트 보기에서도 per-site 기반 채용표·KPI·차트 정합
    ========================================================================== */
 
 let chartSeries, chartWorkers;
@@ -18,27 +15,24 @@ let hpAbortCtrl = null;      // hiring-plan 전용
 let hpReqSeq = 0;            // 응답 역전 방지 시퀀스
 let isSyncInstalled = false; // 스크롤 동기화 설치 가드
 let userEditedDaysPerBucket = false;
+
+/* ====== 관리자 가드 ====== */
 document.addEventListener('DOMContentLoaded', async () => {
-  // ⬇️ 가장 먼저 실행 (권한 없으면 여기서 redirect 되고 아래 코드들은 실행 안 됨)
   await assertAdmin();
 });
 async function assertAdmin() {
   const token = localStorage.getItem('x-access-token');
   const role  = localStorage.getItem('user-role');
-
-  // 1차: 로그인/권한 로컬 체크
   if (!token) {
     alert('로그인이 필요합니다.');
     window.location.replace('./signin.html');
-    throw new Error('no token'); // 이후 코드 실행 중단
+    throw new Error('no token');
   }
   if (role !== 'admin') {
     alert('접근 권한이 없습니다.');
     window.location.replace('./index.html');
-    throw new Error('not admin (local)'); // 이후 코드 실행 중단
+    throw new Error('not admin (local)');
   }
-
-  // 2차: 서버에서 역할 재검증(조작/만료 대비)
   try {
     const res = await axios.get('http://3.37.73.151:3001/user-info', {
       headers: { 'x-access-token': token }
@@ -50,7 +44,6 @@ async function assertAdmin() {
       throw new Error('not admin (server)');
     }
   } catch (err) {
-    // 토큰 만료/검증 실패 => 로그인으로
     console.error('admin check failed:', err);
     alert('세션이 만료되었거나 권한 확인에 실패했습니다. 다시 로그인해주세요.');
     window.location.replace('./signin.html');
@@ -66,7 +59,7 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-
+/* ===== 상수/로컬스토리지 ===== */
 const LS_TRIP = 'analysis.tripMatrix.v1';
 const LS_TRIP_APPLIED_SNAPSHOT = 'analysis.tripMatrix.applied.snapshot.v1';
 
@@ -98,9 +91,34 @@ function secureGate(){
     qsa('.admin-only').forEach(el => { el.style.display='none'; });
   }
   on('#sign-out','click', ()=>{
-    localStorage.removeItem('x-access-token'); localStorage.removeItem('user-role');
-    alert('로그아웃 되었습니다.'); location.replace('./signin.html');
+    localStorage.removeItem('x-access-token');
+    localStorage.removeItem('user-role');
+    alert('로그아웃 되었습니다.');
+    location.replace('./signin.html');
   });
+}
+
+/* 빈 값/내부 객체 제거하고 서버로 보낼 파라미터만 추림 */
+function cleanParams(o){
+  const out = {};
+  for (const [k,v] of Object.entries(o)){
+    if (v === undefined || v === null || v === '') continue;
+    if (typeof v === 'object' && !Array.isArray(v)) continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/* UI 필터 → API 표준 필터 (site는 단일 코드로) */
+function apiFiltersFromUI(ui){
+  const g = ui.group || null;
+  let s = ui.site || null;
+  if (s) {
+    // 예: "PEE1-PT" → "PT", "PSKH-PSKH" → "PSKH"
+    const parts = String(s).split('-');
+    s = parts[parts.length - 1];
+  }
+  return { group: g || null, site: s || null };
 }
 
 function setLoading(on){
@@ -109,16 +127,11 @@ function setLoading(on){
   if (btn) btn.disabled = !!on;
   ov?.classList.toggle('hidden', !on);
 }
-
 function showNotice(msg){ const el = qs('#noti'); if (!el) return; el.textContent = msg; el.classList.remove('hidden'); }
 function hideNotice(){ qs('#noti')?.classList.add('hidden'); }
 function showError(msg){ const el = qs('#err'); if (!el) return; el.textContent = msg; el.classList.remove('hidden'); }
 function hideError(){ qs('#err')?.classList.add('hidden'); }
-
-function numberFmt(v, d=1){
-  if (!isFinite(v)) return '-';
-  return new Intl.NumberFormat('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
-}
+function numberFmt(v, d=1){ if (!isFinite(v)) return '-'; return new Intl.NumberFormat('ko-KR',{ minimumFractionDigits:d, maximumFractionDigits:d }).format(v); }
 
 /* ===== LocalStorage: 월별 해외출장 입력 ===== */
 function loadTripMatrix(){
@@ -162,22 +175,18 @@ function setTripDirtyState(dirty){
 }
 
 /* ===== 주말/공휴일 제외 유틸 ===== */
-/** 2024~2027 대한민국 공휴일(대체공휴일 포함) + (옵션) 근로자의날 */
 const HOLIDAYS_PUBLIC = [
-  // ---------- 2024 ----------
   '2024-01-01','2024-02-09','2024-02-10','2024-02-11','2024-02-12',
   '2024-03-01','2024-04-10','2024-05-05','2024-05-06','2024-05-15',
   '2024-06-06','2024-08-15',
   '2024-09-16','2024-09-17','2024-09-18',
   '2024-10-03','2024-10-09','2024-12-25',
-  // ---------- 2025 ----------
   '2025-01-01','2025-01-27','2025-01-28','2025-01-29','2025-01-30',
   '2025-03-01','2025-03-03',
   '2025-05-05','2025-05-06',
   '2025-06-06','2025-08-15',
   '2025-10-03','2025-10-05','2025-10-06','2025-10-07',
   '2025-10-09','2025-12-25',
-  // ---------- 2026 ----------
   '2026-01-01','2026-02-16','2026-02-17','2026-02-18',
   '2026-03-01','2026-03-02',
   '2026-05-05','2026-05-24','2026-05-25',
@@ -186,7 +195,6 @@ const HOLIDAYS_PUBLIC = [
   '2026-09-24','2026-09-25','2026-09-26','2026-09-27',
   '2026-10-03','2026-10-05','2026-10-09',
   '2026-12-25',
-  // ---------- 2027 ----------
   '2027-01-01','2027-02-06','2027-02-08','2027-02-09',
   '2027-03-01',
   '2027-05-05','2027-05-13',
@@ -196,8 +204,7 @@ const HOLIDAYS_PUBLIC = [
   '2027-10-03','2027-10-04','2027-10-09',
   '2027-12-25'
 ];
-const INCLUDE_LABOR_DAY = true;
-const EXTRAS_NON_WORKING = INCLUDE_LABOR_DAY ? ['2024-05-01','2025-05-01','2026-05-01','2027-05-01'] : [];
+const EXTRAS_NON_WORKING = ['2024-05-01','2025-05-01','2026-05-01','2027-05-01'];
 const HOLIDAY_SET = new Set([...HOLIDAYS_PUBLIC, ...EXTRAS_NON_WORKING]);
 
 function ymd(d){
@@ -207,7 +214,6 @@ function ymd(d){
 }
 function isWeekend(d){ const k = d.getDay(); return k===0 || k===6; }
 function isHoliday(d){ return HOLIDAY_SET.has(ymd(d)); }
-
 function businessDaysBetween(startDate, endDate){
   const s = new Date(startDate), e = new Date(endDate);
   if (e < s) return 0;
@@ -228,7 +234,6 @@ function businessDaysInMonth(year, month1to12){
 /* ISO 주차 계산 */
 function getISOWeekParts(d){
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  // 목요일 기준
   const dayNum = (date.getUTCDay() || 7);
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
@@ -237,9 +242,9 @@ function getISOWeekParts(d){
 }
 function isoWeekStartUTC(isoYear, isoWeek){
   const jan4 = new Date(Date.UTC(isoYear, 0, 4));
-  const day  = jan4.getUTCDay() || 7; // 1~7
+  const day  = jan4.getUTCDay() || 7;
   const mon1 = new Date(jan4);
-  mon1.setUTCDate(jan4.getUTCDate() - day + 1); // ISO1주 월요일
+  mon1.setUTCDate(jan4.getUTCDate() - day + 1);
   const start = new Date(mon1);
   start.setUTCDate(mon1.getUTCDate() + (isoWeek-1)*7);
   return start; // Monday 00:00 UTC
@@ -251,12 +256,7 @@ function businessDaysInISOWeek(isoYear, isoWeek){
   return businessDaysBetween(start, end);
 }
 
-/** 버킷별 근무가능일수
- * - month: YYYY-MM
- * - week:  YYYY-Www (ISO week)
- * - day:   YYYY-MM-DD
- * - 그 외: fallback(daysPerBucket)
- */
+/** 버킷별 근무가능일수 */
 function workingDaysForBucket(bucket, freq, fallbackDays){
   const s = String(bucket||'').trim();
   try{
@@ -270,36 +270,89 @@ function workingDaysForBucket(bucket, freq, fallbackDays){
       return Math.max(1, businessDaysInISOWeek(Number(yy), ww));
     }
     if (freq==='day' || /^\d{4}-\d{2}-\d{2}$/.test(s)){
-      // 휴일/주말이어도 예측치가 0이 아닐 수 있으므로 최소 1일
       return 1;
     }
-  }catch(e){ /* ignore */ }
+  }catch(e){}
   return Math.max(1, Number(fallbackDays)||1);
 }
 
 /* ===== 파라미터/옵션 ===== */
 function collectParams(){
-  const freq   = val('#freq');                              // day|week|month
-  const horizon= parseInt(val('#horizon'), 10);             // days
+  const freq = val('#freq'); // day|week|month
+
+  let horizonCountInput = parseInt(val('#horizonCount'), 10);
+  const hasNew = !Number.isNaN(horizonCountInput);
+
+  let horizonCount, horizonDays;
+  if (hasNew) {
+    horizonCount = Math.max(1, horizonCountInput || 12);
+    horizonDays =
+      (freq === 'day')  ? horizonCount :
+      (freq === 'week') ? horizonCount * 7 :
+                          horizonCount * 30;
+  } else {
+    const oldHorizonDays = Math.max(1, parseInt(val('#horizon'), 10) || 365);
+    horizonDays = oldHorizonDays;
+    horizonCount =
+      (freq === 'day')  ? oldHorizonDays :
+      (freq === 'week') ? Math.max(1, Math.round(oldHorizonDays/7)) :
+                          Math.max(1, Math.round(oldHorizonDays/30));
+  }
+
   const group  = (val('#groupSelect')||'').trim();
   const site   = (val('#siteSelect')||'').trim();
   const hpd    = parseFloat(val('#hoursPerDay')) || 8;
-  const dpb    = parseInt(val('#daysPerBucket'), 10) || 21; // fallback
+  const dpb    = parseInt(val('#daysPerBucket'), 10) || 21;
   const rounding  = val('#rounding');
   const planMode  = val('#planMode');
   const alpha     = Number(val('#alpha') || 0.5);
   const bufferPct = Number(val('#addBuffer') || 0);
   const absencePct= Number(val('#absencePct') || 0);
   const includeMove = !!qs('#includeMove')?.checked;
+  const normalizeByBizDays = !!qs('#normalizeByBizDays')?.checked;
+
+  const useLower = !!qs('#useLower')?.checked;
+  const lowerBlendAlpha = (()=>{
+    const v = parseFloat(val('#lowerAlpha'));
+    return Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+  })();
+  const smoothWin = (()=>{
+    const v = parseInt(val('#smoothWin'),10);
+    return Number.isFinite(v) ? Math.max(1, v) : 1;
+  })();
+  let growthCapPct = (()=>{
+    const v = parseFloat(val('#growthCapPct'));
+    if (!Number.isFinite(v) || v<=0) return 0;
+    return v > 1 ? v/100 : v;
+  })();
+  const growthCapAbs = (()=>{
+    const v = parseFloat(val('#growthCapAbs'));
+    return Number.isFinite(v) ? Math.max(0, v) : 0;
+  })();
 
   return {
-    freq, horizon,
+    freq, horizonDays, horizonCount,
     group: group || null, site: site || null,
     hoursPerDay: hpd, daysPerBucket: dpb,
-    rounding, planMode, alpha, bufferPct, absencePct, includeMove
+    normalizeByBizDays,
+    rounding, planMode, alpha, bufferPct, absencePct, includeMove,
+    conservative: { useLower, lowerBlendAlpha, smoothWin, growthCapPct, growthCapAbs }
   };
 }
 
+/* 새 입력: 단위 라벨 동기화 */
+function updateHorizonUnit(){
+  const u = document.getElementById('horizonUnit');
+  const freq = val('#freq');
+  if (u) u.textContent = (freq === 'day') ? '일' : (freq === 'week' ? '주' : '개월');
+  const inp = document.getElementById('horizonCount');
+  if (inp){
+    if (freq === 'day'  && Number(inp.value) > 365) inp.value = 365;
+    if (freq === 'week' && Number(inp.value) > 52)  inp.value = 52;
+  }
+}
+
+/* 구형 셀렉트 호환(있을 때만 동작) */
 function updateHorizonOptions(){
   const freq = val('#freq');
   const sel  = qs('#horizon');
@@ -343,6 +396,160 @@ function suggestDaysPerBucket(){
   if (hint) hint.textContent = hintText;
 }
 
+/* ===== 유틸: 목표 시점 인덱스 ===== */
+function indexAtHorizon(planned, params){
+  if (!planned?.length) return -1;
+  const idx = Math.max(0, Math.min(planned.length - 1, (params.horizonCount || 1) - 1));
+  return idx;
+}
+
+/* ===== 버킷 문자열 → 월 Key(YYYY-MM) 변환 ===== */
+function bucketToMonthKey(bucket) {
+  const s = String(bucket || '');
+  if (/^\d{4}-\d{2}$/.test(s)) return s;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s.slice(0,7);
+  if (/^\d{4}-W\d{2}$/i.test(s)) { // ISO 주 → 종료일(일요일) 기준 월
+    const [yy, wwRaw] = s.split('-W');
+    const startUTC = isoWeekStartUTC(Number(yy), Number(wwRaw));
+    const endUTC = new Date(startUTC); endUTC.setUTCDate(endUTC.getUTCDate() + 6);
+    const d = new Date(endUTC.getUTCFullYear(), endUTC.getUTCMonth(), endUTC.getUTCDate());
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    return `${d.getFullYear()}-${mm}`;
+  }
+  if (/^\d{4}-\d{2}/.test(s)) return s.slice(0,7);
+  return s;
+}
+
+/* ===== 예측표(planned) 기준 월별 +증원 타깃 계산 ===== */
+function targetMonthlyIncrementsFromPlanned(monthKeys) {
+  const recon = window._recon;
+  if (!recon?.planned?.length) return null;
+  const { planned, available } = recon;
+
+  const cumByMonth = new Map(); // 'YYYY-MM' -> cum shortage
+  for (const p of planned) {
+    const key = bucketToMonthKey(p.bucket);
+    const cumShort = Math.max(0, Math.round((p.required_plan || 0) - (available || 0)));
+    cumByMonth.set(key, cumShort);
+  }
+
+  const inc = [];
+  let prev = 0;
+  for (const m of monthKeys) {
+    const cur = (cumByMonth.has(m) ? cumByMonth.get(m) : prev);
+    const add = Math.max(0, cur - prev);
+    inc.push(add);
+    prev = cur;
+  }
+  return inc;
+}
+
+/* ===== 사이트별 +값을 타깃 ALL 합계에 맞추도록 재조정 ===== */
+function reconcileSitePlusesToTarget(monthKeys, sitePlusByMonth, rowMap, targetInc) {
+  if (!Array.isArray(targetInc)) return sitePlusByMonth;
+  const siteKeys = Object.keys(sitePlusByMonth);
+
+  for (let i=0; i<monthKeys.length; i++) {
+    const need = targetInc[i] || 0;
+    let curSum = 0;
+    for (const k of siteKeys) curSum += Math.max(0, sitePlusByMonth[k][i] || 0);
+
+    let diff = need - curSum;
+    if (diff === 0) continue;
+
+    const weights = siteKeys.map(k => {
+      const row = rowMap.get(k);
+      const prev = i === 0 ? 0 : (row?.cumGap?.[i-1] || 0);
+      const now  = row?.cumGap?.[i] || 0;
+      return Math.max(0, now - prev);
+    });
+    const totalW = weights.reduce((a,b)=>a+b,0);
+
+    if (diff > 0) {
+      const alloc = new Array(siteKeys.length).fill(0);
+      if (totalW > 0) {
+        const raw = weights.map(w => (w / totalW) * diff);
+        const floors = raw.map(Math.floor);
+        let remain = diff - floors.reduce((a,b)=>a+b,0);
+        for (let j=0;j<siteKeys.length;j++) alloc[j] += floors[j];
+        const order = raw.map((v,idx)=>({idx, frac: v - Math.floor(v)}))
+                         .sort((a,b)=>b.frac - a.frac);
+        for (let k=0; k<remain; k++) {
+          const j = order[k % order.length].idx;
+          alloc[j] += 1;
+        }
+      } else {
+        for (let k=0; k<diff; k++) alloc[k % siteKeys.length] += 1;
+      }
+      for (let j=0;j<siteKeys.length;j++){
+        const key = siteKeys[j];
+        sitePlusByMonth[key][i] = (sitePlusByMonth[key][i] || 0) + alloc[j];
+      }
+    } else {
+      let toRemove = -diff;
+      while (toRemove > 0) {
+        let pick = -1, best = -1;
+        for (let j=0;j<siteKeys.length;j++) {
+          const v = sitePlusByMonth[siteKeys[j]][i] || 0;
+          if (v > best) { best = v; pick = j; }
+        }
+        if (best <= 0) break;
+        sitePlusByMonth[siteKeys[pick]][i] = best - 1;
+        toRemove--;
+      }
+    }
+  }
+  return sitePlusByMonth;
+}
+
+/* ===== NEW: per-site → 전체(합계)로 집계 (KPI/차트/결론에 사용) ===== */
+function aggregateFromPerSite(perSiteList){
+  if (!Array.isArray(perSiteList) || !perSiteList.length) return null;
+
+  // 버킷 순서는 첫 사이트의 planned를 기준으로
+  const order = (perSiteList[0].planned || []).map(p => p.bucket);
+
+  const sumF = new Map();
+  const sumP = new Map();
+
+  for (const s of perSiteList){
+    for (const f of (s.forecast || [])){
+      const o = sumF.get(f.bucket) || { yhat:0, yhat_lower:0, yhat_upper:0 };
+      o.yhat       += Number(f.yhat)||0;
+      o.yhat_lower += Number(f.yhat_lower)||0;
+      o.yhat_upper += Number(f.yhat_upper)||0;
+      sumF.set(f.bucket, o);
+    }
+    for (const p of (s.planned || [])){
+      const o = sumP.get(p.bucket) || { yhat_plan:0, required_plan:0, required_base:0 };
+      o.yhat_plan     += Number(p.yhat_plan)||0;
+      o.required_plan += Number(p.required_plan)||0;  // per-site 반올림 후 정수 합
+      o.required_base += Number(p.required_base)||0;
+      sumP.set(p.bucket, o);
+    }
+  }
+
+  const totalAvailable = perSiteList.reduce((a,b)=> a + (Number(b.available)||0), 0);
+
+  const aggForecast = order.map(b => {
+    const v = sumF.get(b) || { yhat:0, yhat_lower:0, yhat_upper:0 };
+    return { bucket: b, ...v };
+  });
+
+  const aggPlanned = order.map(b => {
+    const v = sumP.get(b) || { yhat_plan:0, required_plan:0, required_base:0 };
+    return {
+      bucket: b,
+      yhat_plan: v.yhat_plan,
+      required_plan: v.required_plan,
+      required_base: v.required_base,
+      gap: (v.required_plan - totalAvailable)
+    };
+  });
+
+  return { aggForecast, aggPlanned, totalAvailable };
+}
+
 /* ===== 데이터 호출 ===== */
 async function runForecast(){
   setLoading(true); hideError(); hideNotice();
@@ -350,13 +557,31 @@ async function runForecast(){
   abortCtrl = new AbortController();
 
   const params = collectParams();
+  const { group: apiGroup, site: apiSite } = apiFiltersFromUI(params);
   const token = localStorage.getItem('x-access-token');
+
+  const baseApiParams = cleanParams({
+    freq: params.freq,
+    horizon: params.horizonDays,
+    group: apiGroup,
+    site: apiSite,
+    hoursPerDay: params.hoursPerDay,
+    daysPerBucket: params.daysPerBucket,
+    rounding: params.rounding,
+    planMode: params.planMode,
+    alpha: params.alpha,
+    bufferPct: params.bufferPct,
+    absencePct: params.absencePct,
+    includeMove: params.includeMove ? 1 : 0,
+    normalizeByBizDays: params.normalizeByBizDays ? 1 : 0,
+    _ts: Date.now()
+  });
 
   try {
     // 1) 과거 시계열
     const seriesRes = await axios.get('http://3.37.73.151:3001/analysis/series', {
       headers: {'x-access-token': token},
-      params: { ...params, _ts: Date.now() },
+      params: baseApiParams,
       signal: abortCtrl.signal
     });
     const series = seriesRes.data?.series || [];
@@ -364,7 +589,7 @@ async function runForecast(){
     // 2) 예측
     const fcRes = await axios.get('http://3.37.73.151:3001/analysis/forecast', {
       headers: {'x-access-token': token},
-      params: { ...params, _ts: Date.now() },
+      params: baseApiParams,
       signal: abortCtrl.signal
     });
     const forecast = fcRes.data?.forecast || [];
@@ -374,7 +599,7 @@ async function runForecast(){
     try {
       const hcRes = await axios.get('http://3.37.73.151:3001/analysis/headcount', {
         headers: {'x-access-token': token},
-        params: { group: params.group, site: params.site, _ts: Date.now() },
+        params: cleanParams({ group: apiGroup, site: apiSite, _ts: Date.now() }),
         signal: abortCtrl.signal
       });
       available = Number(hcRes.data?.count) || 0;
@@ -382,25 +607,61 @@ async function runForecast(){
 
     if (!series.length){ showNotice('표시할 과거 데이터가 없습니다. 필터를 바꿔보세요.'); }
 
-    // 4) 계획(상향) + 갭 계산 — (근무일수/결원 보정 반영)
+    // 4) 계획(상향) + 갭 계산
     const planned = buildPlannedForecast(forecast, params, available);
 
-    // 5) 렌더
-    renderCharts(series, forecast, planned, params, available);
-    renderTable(forecast, planned, available);
-    renderKpis(forecast, planned, available);
+    // 4-1) per-site 상세 수집 (정합성 맞추기 위해)
+    let perSiteData = null;
+    try {
+      if (!apiGroup && !apiSite) {
+        // 전체 보기: 전 사이트 수집
+        perSiteData = await fetchPerSiteForecasts(params);
+      } else if (apiGroup && !apiSite) {
+        // 그룹만 선택: 전 사이트 수집 후 해당 그룹만 사용
+        const all = await fetchPerSiteForecasts(params);
+        perSiteData = all.filter(x => x.key.startsWith(`${apiGroup}-`));
+      } else if (apiGroup && apiSite) {
+        // 단일 사이트 선택: 현재 결과로 구성
+        perSiteData = [{ key: `${apiGroup}-${apiSite}`, forecast, planned, available }];
+      }
+    } catch (e) {
+      console.warn('fetchPerSiteForecasts failed:', e?.message || e);
+      perSiteData = null;
+    }
+    window._perSiteData = perSiteData;
 
-    // 6) 증원표 + 입력표
+    // 4-2) KPI/차트/결론에 사용할 합계 소스 결정
+    let fcForUI = forecast;
+    let plannedForUI = planned;
+    let availableForUI = available;
+
+    if (Array.isArray(perSiteData) && perSiteData.length){
+      const agg = aggregateFromPerSite(perSiteData);
+      if (agg){
+        fcForUI        = agg.aggForecast;
+        plannedForUI   = agg.aggPlanned;
+        availableForUI = agg.totalAvailable;
+      }
+    }
+
+    // ⬇️ 타깃(= 채용표 ALL)과 KPI/차트 정합을 위해 recon은 항상 "합계"로
+    window._recon = { planned: plannedForUI, available: availableForUI, params };
+
+    // 5) 렌더
+    renderCharts(series, fcForUI, plannedForUI, params, availableForUI); // ✅ 합계 기준
+    renderTable(forecast, planned, available, perSiteData);              // 표는 per-site 섹션
+    renderKpis(fcForUI, plannedForUI, availableForUI);                   // ✅ 합계 기준
+    renderConclusion(fcForUI, plannedForUI, availableForUI);             // ✅ 합계 기준
+
+    // 6) 증원표 + 입력표 (항상 전체 데이터 기반으로 받아와 화면 필터만 적용)
     const plan = await fetchHiringPlanOnly(params);
     window._hiringPlan = plan || { months:[], months_fmt:[], rows:[] };
 
-    renderTripEditor(window._hiringPlan);  // (합계 없음)
-    renderHiringTable(window._hiringPlan); // (그룹/전체 합계)
+    renderTripEditor(window._hiringPlan);
+    renderHiringTable(window._hiringPlan, perSiteData);                  // ✅ per-site 기반 + 합계 타깃 재분배
 
-    // 열/스크롤 동기화
     syncHiringTables();
 
-    // 스냅샷 = 적용 상태
     saveAppliedSnapshot(getTripSnapshot());
     setTripDirtyState(false);
 
@@ -415,7 +676,7 @@ async function runForecast(){
   }
 }
 
-/* Apply 버튼: 증원표만 다시 계산 (월별 출장 입력 반영) */
+/* Apply 버튼: 증원표만 재계산 */
 async function applyTrips(){
   await updateHiringPlanOnly();
   saveAppliedSnapshot(getTripSnapshot());
@@ -423,7 +684,7 @@ async function applyTrips(){
   hideNotice();
 }
 
-/* 증원표만 다시 계산 (Apply 시 호출) */
+/* 증원표만 다시 계산 */
 async function updateHiringPlanOnly(){
   const params = collectParams();
 
@@ -436,7 +697,7 @@ async function updateHiringPlanOnly(){
     if (mySeq !== hpReqSeq) return;
 
     window._hiringPlan = plan || { months:[], months_fmt:[], rows:[] };
-    renderHiringTable(window._hiringPlan);
+    renderHiringTable(window._hiringPlan, window._perSiteData);
 
     syncHiringTables();
     showNotice('해외출장 입력값이 적용되었습니다.');
@@ -448,19 +709,19 @@ async function updateHiringPlanOnly(){
   }
 }
 
-/* 백엔드 호출: /analysis/hiring-plan (서버 로직은 변경 없음) */
-async function fetchHiringPlanOnly(params, opts={}){
+/* 백엔드 호출: /analysis/hiring-plan
+   ※ 항상 전체 범위(그룹/사이트 무필터)로 받아온 뒤, 프런트에서 표시만 필터링 */
+async function fetchHiringPlanOnly(params, opts = {}) {
   const token = localStorage.getItem('x-access-token');
   const tripMatrix = loadTripMatrix();
-  const _ts = Date.now();
 
   const hpRes = await axios.get('http://3.37.73.151:3001/analysis/hiring-plan', {
-    headers: {'x-access-token': token},
+    headers: { 'x-access-token': token },
     signal: opts.signal,
-    params: {
-      // 월 기준 고정
+    params: cleanParams({
+      // 표는 월 기준 고정
       freq: 'month',
-      horizon: 24*30,
+      horizon: 24 * 30,
       hoursPerDay: params.hoursPerDay,
       daysPerBucket: params.daysPerBucket,
       rounding: params.rounding,
@@ -469,57 +730,85 @@ async function fetchHiringPlanOnly(params, opts={}){
       bufferPct: params.bufferPct,
       absencePct: params.absencePct,
       includeMove: params.includeMove ? 1 : 0,
-      // 월별 입력 행렬
+      normalizeByBizDays: params.normalizeByBizDays ? 1 : 0,
       tripMatrix: JSON.stringify(tripMatrix),
-      group: params.group,
-      site: params.site,
-      _ts
-    }
+      // group/site는 보내지 않음(항상 전체 데이터)
+      _ts: Date.now()
+    })
   });
   return hpRes.data;
 }
 
-/* ===== 계획(상향) + 갭 (그래프/KPI용)
-   - 버킷별 근무가능일수(주말/공휴일 제외) 반영
-   - 결원(휴가/교육) 보정: /(1 - absencePct)
-========================================================================== */
+
+/* ===== 계획(상향) + 갭 ===== */
 function buildPlannedForecast(forecast, params, available){
-  const mode        = params.planMode; // baseline|upper|blend
-  const alpha       = Number(params.alpha || 0.5);
-  const bufferPct   = Number(params.bufferPct || 0);
-  const rounding    = params.rounding;
-  const hoursPerDay = Number(params.hoursPerDay)||8;
-  const availRate   = Math.max(0.01, 1 - (Number(params.absencePct||0)/100)); // 결원 보정
+  const {
+    planMode:mode, alpha:α, bufferPct, rounding,
+    hoursPerDay, absencePct, freq, daysPerBucket, normalizeByBizDays,
+    conservative
+  } = params;
 
-  const safe = (x)=> Math.max(0.0001, x);
+  const availRate = Math.max(0.01, 1 - (Number(absencePct||0)/100));
 
-  return forecast.map(r => {
+  const pickPlanHours = (y, u, l) => {
+    let base;
+    if (mode==='upper') base = u;
+    else if (mode==='blend') base = (Number(α||0.5)*u + (1-Number(α||0.5))*y);
+    else base = y;
+
+    if (conservative?.useLower) base = l;
+    else if (conservative?.lowerBlendAlpha > 0) {
+      const β = Math.max(0, Math.min(1, conservative.lowerBlendAlpha));
+      base = (1-β)*base + β*l;
+    }
+    return base;
+  };
+
+  let prevAdjReq = null;
+  const W = Math.max(1, conservative?.smoothWin || 1);
+  const capPct = Math.max(0, conservative?.growthCapPct || 0);
+  const capAbs = Math.max(0, conservative?.growthCapAbs || 0);
+
+  return forecast.map((r) => {
     const y = Number(r.yhat)||0;
     const u = Number(r.yhat_upper)||y;
+    const l = Number(r.yhat_lower)||y;
 
-    const baseHours = (mode === 'upper') ? u
-                    : (mode === 'blend') ? (alpha*u + (1-alpha)*y)
-                    : y;
+    const effDays = workingDaysForBucket(r.bucket, freq, daysPerBucket);
+    const refDays = Number(daysPerBucket) || effDays;
 
-    // 버킷별 근무가능일수 적용
-    const effDays = workingDaysForBucket(r.bucket, params.freq, params.daysPerBucket);
-    const hpw     = hoursPerDay * effDays;         // 1인당 버킷 시간
-    const denom   = safe(hpw * availRate);         // 결원 보정
+    const baseHoursRaw = pickPlanHours(y, u, l);
+    const planHours    = normalizeByBizDays ? baseHoursRaw * (effDays / refDays) : baseHoursRaw;
+    const baseHours    = normalizeByBizDays ? y            * (effDays / refDays) : y;
 
-    const reqBase    = y         / denom;
-    const reqPlanRaw = (baseHours * (1 + bufferPct/100)) / denom;
+    const hpw   = (Number(hoursPerDay)||8) * effDays;
+    const denom = Math.max(0.0001, hpw * availRate);
+    const reqBase = baseHours / denom;
 
-    let reqPlan;
-    if (rounding==='ceil')      reqPlan = Math.ceil(reqPlanRaw);
-    else if (rounding==='floor')reqPlan = Math.floor(reqPlanRaw);
-    else                        reqPlan = Math.round(reqPlanRaw);
+    let reqPlan = planHours / denom;
 
-    const gap = reqPlan - (Number(available)||0);
+    if (W > 1) reqPlan = (prevAdjReq==null) ? reqPlan : ((prevAdjReq*(W-1) + reqPlan)/W);
+
+    if (prevAdjReq != null) {
+      let maxAllowed = Infinity;
+      if (capPct > 0) maxAllowed = Math.min(maxAllowed, prevAdjReq*(1+capPct));
+      if (capAbs > 0) maxAllowed = Math.min(maxAllowed, prevAdjReq+capAbs);
+      if (isFinite(maxAllowed)) reqPlan = Math.min(reqPlan, maxAllowed);
+    }
+    prevAdjReq = reqPlan;
+
+    const reqPlanWithBuf = reqPlan * (1 + Number(bufferPct||0)/100);
+    let reqPlanRounded;
+    if (rounding==='ceil') reqPlanRounded = Math.ceil(reqPlanWithBuf);
+    else if (rounding==='floor') reqPlanRounded = Math.floor(reqPlanWithBuf);
+    else reqPlanRounded = Math.round(reqPlanWithBuf);
+
+    const gap = reqPlanRounded - (Number(available)||0);
 
     return {
       bucket: r.bucket,
-      yhat_plan: baseHours * (1 + bufferPct/100), // 계획(상향) 시간 (표시용)
-      required_plan: reqPlan,
+      yhat_plan: planHours * (1 + Number(bufferPct||0)/100),
+      required_plan: reqPlanRounded,
       required_base: reqBase,
       gap
     };
@@ -528,7 +817,6 @@ function buildPlannedForecast(forecast, params, available){
 
 /* ===== 그래프 ===== */
 function renderCharts(series, forecast, planned, params, available){
-  // 높이 축소
   const c1 = qs('#chartSeries');
   const c2 = qs('#chartWorkers');
   if (c1) c1.height = 160;
@@ -608,12 +896,50 @@ function renderCharts(series, forecast, planned, params, available){
   });
 }
 
-/* ===== 예측표(일부) ===== */
-function renderTable(forecast, planned, available){
+/* ===== 예측표(일부) — 전체/그룹/사이트에서 per-site 섹션 렌더 ===== */
+function renderTable(forecast, planned, available, perSiteList){
   const tbody = qs('#tblForecast tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
-  for (let i=0; i<Math.min(30, forecast.length); i++){
+
+  const MAX_ROWS = 30;
+
+  // ✅ per-site 데이터가 있으면: 사이트별 섹션 출력
+  if (Array.isArray(perSiteList) && perSiteList.length){
+    const COLSPAN = 9; // 기간~갭까지 9열(테이블 헤더 기준)
+    for (const site of perSiteList){
+      // 섹션 구분 행
+      const sep = document.createElement('tr');
+      sep.className = 'site-section';
+      sep.innerHTML = `<td colspan="${COLSPAN}"><b>${site.key}</b> — 현재 인원 ${numberFmt(site.available,0)}명</td>`;
+      tbody.appendChild(sep);
+
+      // 해당 사이트 예측표
+      const len = Math.min(MAX_ROWS, site.forecast.length);
+      for (let i=0; i<len; i++){
+        const f = site.forecast[i];
+        const p = site.planned[i];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${f.bucket}</td>
+          <td>${numberFmt(f.yhat,1)}</td>
+          <td>${numberFmt(p.yhat_plan,1)}</td>
+          <td>${numberFmt(f.yhat_lower,1)}</td>
+          <td>${numberFmt(f.yhat_upper,1)}</td>
+          <td>${numberFmt(p.required_base,2)}</td>
+          <td>${numberFmt(p.required_plan,2)}</td>
+          <td>${numberFmt(site.available,0)}</td>
+          <td>${numberFmt(p.gap,2)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+    return;
+  }
+
+  // ✅ per-site 데이터가 없으면 기존 단일 표 렌더
+  const len = Math.min(MAX_ROWS, forecast.length);
+  for (let i=0; i<len; i++){
     const f = forecast[i];
     const p = planned[i];
     const tr = document.createElement('tr');
@@ -634,36 +960,109 @@ function renderTable(forecast, planned, available){
 
 /* ===== KPI ===== */
 function renderKpis(forecast, planned, available){
+  const clearIds = [
+    'kpiNextWorkers','kpiForecastHours','kpiNextWorkersBase','kpiForecastHoursBase',
+    'kpiAvailable','kpiNextGap','kpiTargetWorkers','kpiTargetWorkersBase','kpiTargetGap','kpiTargetLabel'
+  ];
   if (!forecast.length || !planned.length){
-    ['kpiNextWorkers','kpiAvgWorkers','kpiForecastHours','kpiNextWorkersBase','kpiAvgWorkersBase','kpiForecastHoursBase','kpiAvailable','kpiNextGap','kpiAvgGap'].forEach(id=>setText(id,'-'));
-  }else{
-    const nextPlan = planned[0].required_plan;
-    const avgPlan  = planned.reduce((a,b)=>a+b.required_plan,0)/planned.length;
-    const sumPlanH = planned.reduce((a,b)=>a+b.yhat_plan,0);
-
-    const nextBase = planned[0].required_base;
-    const avgBase  = planned.reduce((a,b)=>a+b.required_base,0)/planned.length;
-    const sumBaseH = forecast.reduce((a,b)=>a+b.yhat,0);
-
-    setText('kpiNextWorkers', numberFmt(nextPlan,2));
-    setText('kpiAvgWorkers', numberFmt(avgPlan,2));
-    setText('kpiForecastHours', numberFmt(sumPlanH,1));
-    setText('kpiNextWorkersBase', numberFmt(nextBase,2));
-    setText('kpiAvgWorkersBase', numberFmt(avgBase,2));
-    setText('kpiForecastHoursBase', numberFmt(sumBaseH,1));
-
-    setText('kpiAvailable', numberFmt(available,0));
-    paintDelta('kpiNextGap', nextPlan - available);
-    paintDelta('kpiAvgGap',  avgPlan - available);
+    clearIds.forEach(id=>setText(id,'-'));
+    return;
   }
+
+  const params = collectParams();
+
+  const nextPlan = planned[0].required_plan;
+  const nextBase = planned[0].required_base;
+
+  const sumPlanH = planned.reduce((a,b)=>a+b.yhat_plan,0);
+  const sumBaseH = forecast.reduce((a,b)=>a+b.yhat,0);
+
+  setText('kpiNextWorkers', numberFmt(nextPlan,2));
+  setText('kpiNextWorkersBase', numberFmt(nextBase,2));
+  setText('kpiForecastHours', numberFmt(sumPlanH,1));
+  setText('kpiForecastHoursBase', numberFmt(sumBaseH,1));
+
+  setText('kpiAvailable', numberFmt(available,0));
+  paintDelta('kpiNextGap', nextPlan - available);
+
+  const tIdx = indexAtHorizon(planned, params);
+  const t = planned[tIdx] || planned[planned.length-1];
+
+  setText('kpiTargetWorkers', numberFmt(t.required_plan,2));
+  setText('kpiTargetWorkersBase', numberFmt(t.required_base,2));
+  paintDelta('kpiTargetGap', (t.required_plan - available));
+  setText('kpiTargetLabel', t.bucket || '-');
 }
+
+function labelOfFreq(freq){ return freq==='day' ? '일' : (freq==='week' ? '주' : '월'); }
+function roundingLabel(r){ return r==='ceil' ? '올림' : (r==='floor' ? '내림' : '반올림'); }
+
+/** KPI 값을 바탕으로 줄글 결론 렌더링 */
+function renderConclusion(forecast, planned, available){
+  const el = document.getElementById('conclusionText');
+  if (!el) return;
+
+  if (!planned || !planned.length){
+    el.innerHTML = '<p class="dim">표시할 데이터가 부족합니다. 필터를 조정해 보세요.</p>';
+    return;
+  }
+
+  const params = collectParams();
+
+  const nextBucket = planned[0].bucket;
+  const nextReq    = Number(planned[0].required_plan) || 0;
+  const nextGap    = nextReq - (Number(available)||0);
+
+  const targetIdx  = indexAtHorizon(planned, params);
+  const target     = planned[targetIdx];
+  const targetGap  = (Number(target.required_plan)||0) - (Number(available)||0);
+
+  const firstShortIdx = planned.findIndex(p => (Number(p.required_plan)||0) - (Number(available)||0) > 0);
+  const firstShortBucket = firstShortIdx >= 0 ? planned[firstShortIdx].bucket : null;
+
+  const parts = [];
+  parts.push(`현재 가용 인원은 <b>${numberFmt(available,0)}명</b>입니다.`);
+  parts.push(
+    `다음 ${labelOfFreq(params.freq)}(<b>${nextBucket}</b>) 기준 필요한 인원은 <b>${numberFmt(nextReq,0)}명</b>으로, ` +
+    (nextGap > 0 ? `<b class="neg">부족 ${numberFmt(nextGap,0)}명</b>입니다.` :
+     nextGap < 0 ? `<b class="pos">여유 ${numberFmt(-nextGap,0)}명</b>입니다.` :
+                   `<b>정원과 동일</b>합니다.`)
+  );
+  parts.push(
+    `목표 시점(<b>${target.bucket}</b>) 예상 필요 인원은 <b>${numberFmt(target.required_plan,0)}명</b>이며, ` +
+    (targetGap > 0 ? `<b class="neg">부족 ${numberFmt(targetGap,0)}명</b> 예상입니다.` :
+     targetGap < 0 ? `<b class="pos">여유 ${numberFmt(-targetGap,0)}명</b> 예상입니다.` :
+                     `부족/여유가 없습니다.`)
+  );
+  if (nextGap > 0){
+    parts.push(`→ <b class="neg">결론: 즉시 최소 ${numberFmt(nextGap,0)}명</b> 충원이 필요합니다. (목표 인원 ${numberFmt(nextReq,0)}명)`);
+  } else if (firstShortBucket){
+    parts.push(`→ <b>결론:</b> 당장은 충원 없이 운영 가능하나, <b>${firstShortBucket}</b>부터 부족이 시작되므로 해당 시점에 맞춰 채용 계획을 준비하세요.`);
+  } else {
+    parts.push(`→ <b>결론:</b> 당장 채용은 필요하지 않습니다. 다만 수요 급증 가능성에 대비해 “증원 시점 요약” 표를 주기적으로 확인하세요.`);
+  }
+  parts.push(
+    `<span class="dim">※ 주말·공휴일 제외 근무일수, 결원률 ${Number(params.absencePct||0)}%, 추가 버퍼 ${Number(params.bufferPct||0)}% 반영, ` +
+    `인원 산출은 <b>${roundingLabel(params.rounding)}</b> 기준.</span>`
+  );
+
+  const dirty = (typeof getTripSnapshot==='function' && typeof loadAppliedSnapshot==='function')
+    ? (getTripSnapshot() !== loadAppliedSnapshot())
+    : false;
+  if (dirty){
+    parts.push(`<span class="dim">참고: 해외출장 입력이 아직 <b>미적용</b> 상태입니다. “적용” 버튼을 눌러 증원 시점 요약표에 반영하세요.</span>`);
+  }
+
+  el.innerHTML = parts.map(p => `<p>${p}</p>`).join('');
+}
+
 function paintDelta(id, v){
   const el = qs('#'+id);
   if (!el) return;
   el.textContent = numberFmt(v,2);
   el.classList.remove('pos','neg');
-  if (v > 0) el.classList.add('neg');   // 부족(빨강)
-  else if (v < 0) el.classList.add('pos'); // 여유(초록)
+  if (v > 0) el.classList.add('neg');
+  else if (v < 0) el.classList.add('pos');
 }
 
 /* ===== ⑤-1 월별 해외출장 입력 테이블 (합계 없음) ===== */
@@ -684,14 +1083,16 @@ function renderTripEditor(plan){
   const monthsFmt = plan.months_fmt.slice(0, monthsToShow);
   const tripMatrix = loadTripMatrix();
 
-  // 헤더
   const trH = document.createElement('tr');
   trH.innerHTML = ['<th class="sticky-col">사이트</th>', ...monthsFmt.map(m => `<th>${m}</th>`)].join('');
   thead.appendChild(trH);
 
-  // 사이트 행만 표시(합계 없음)
   for (const g of GROUP_ORDER){
     for (const key of GROUPS[g]){
+      // 서버 rows에 존재하지 않는 사이트는 입력행을 숨김
+      const exists = (plan.rows || []).some(r => r.key === key);
+      if (!exists) continue;
+
       const tr = document.createElement('tr');
       const cells = [`<td class="sticky-col"><b>${key}</b></td>`];
       for (let i=0;i<monthsToShow;i++){
@@ -710,7 +1111,6 @@ function renderTripEditor(plan){
     }
   }
 
-  // 입력 변경: 저장 (Apply는 별도 버튼)
   tbody.oninput = (e)=>{
     const t = e.target;
     if (!t.classList.contains('trip-input')) return;
@@ -731,8 +1131,8 @@ function renderTripEditor(plan){
   };
 }
 
-/* ===== ⑤-2 증원 시점 요약 테이블 (프론트에서 출장 수치 +) ===== */
-function renderHiringTable(plan){
+/* ===== ⑤-2 증원 시점 요약 테이블 (per-site planned 우선 + 합계 타깃 재분배) ===== */
+function renderHiringTable(plan, perSiteList){
   const thead = document.getElementById('tblHiringThead') || qs('#tblHiring thead');
   const tbody = document.getElementById('tblHiringTbody') || qs('#tblHiring tbody');
   if (!thead || !tbody){ console.warn('Hiring table containers not found.'); return; }
@@ -748,41 +1148,106 @@ function renderHiringTable(plan){
   const monthsFmt = plan.months_fmt.slice(0, monthsToShow);
   const tripMatrix = loadTripMatrix();
 
+  // 현재 UI 필터(표시용 필터)
+  const { group: fltGroup, site: fltSite } = apiFiltersFromUI(collectParams());
+  const showSite = (key) => {
+    if (!fltGroup && !fltSite) return true; // 전체 보기
+    const [g,s] = key.split('-');
+    if (fltGroup && g !== fltGroup) return false;
+    if (fltSite  && s !== fltSite)  return false;
+    return true;
+  };
+  const showGroup = (g) => {
+    if (!fltGroup && !fltSite) return true;
+    if (fltGroup && g !== fltGroup) return false;
+    if (fltSite) {
+      const any = GROUPS[g].some(k => showSite(k));
+      return any;
+    }
+    return true;
+  };
+
   // 헤더
   const trH = document.createElement('tr');
   trH.innerHTML = ['<th class="sticky-col">사이트</th>', ...monthsFmt.map(m => `<th>${m}</th>`)].join('');
   thead.appendChild(trH);
 
-  // 사이트별 plusAdj 저장 (그룹/전체 합계 계산에 사용)
-  const sitePlusByMonth = {}; // { key: number[] }
+  // 원본 행 맵(폴백용)
+  const rowMap = new Map(plan.rows.map(r => [r.key, r]));
 
-  // 사이트 순서를 그룹 기준으로 정렬해서 렌더
-  const rowMap = new Map(plan.rows.map(r=>[r.key, r]));
+  // 1) 사이트별 +증원 계산
+  const sitePlusByMonth = {};
+  const usePerSite = Array.isArray(perSiteList) && perSiteList.length > 0;
 
-  for (const g of GROUP_ORDER){
-    for (const key of GROUPS[g]){
-      const row = rowMap.get(key);
-      if (!row) continue;
+  if (usePerSite){
+    // ✅ per-site planned(required_plan) → 월별 누적부족(cum) → 증분(inc) + 출장가산
+    for (const item of perSiteList){
+      const key = item.key;
+      const available = Number(item.available) || 0;
 
-      // 사이트 증가분 계산 (서버 증가분 + 출장 입력)
-      const plusArr = [];
-      for (let i=0;i<monthsToShow;i++){
-        const baseCumPrev = i===0 ? 0 : (row.cumGap[i-1] || 0);
-        const baseCum     = row.cumGap[i] || 0;
-        const basePlus    = Math.max(0, baseCum - baseCumPrev);
-
-        const tripPlus    = Math.max(0, Number(tripMatrix?.[months[i]]?.[key]) || 0);
-        const plusAdj     = basePlus + tripPlus;
-        plusArr[i] = plusAdj;
+      // 월별 누적부족(해당 월의 '마지막 버킷' 값으로 덮어쓰기)
+      const cumByMonth = new Map();
+      for (const p of (item.planned || [])){
+        const mKey = bucketToMonthKey(p.bucket);
+        const cumShort = Math.max(0, Math.round((Number(p.required_plan)||0) - available));
+        cumByMonth.set(mKey, cumShort);
       }
-      sitePlusByMonth[key] = plusArr;
 
-      // 행 렌더
+      const incArr = new Array(monthsToShow).fill(0);
+      let prev = 0;
+      for (let i=0;i<monthsToShow;i++){
+        const mKey = months[i];
+        const cur = cumByMonth.has(mKey) ? cumByMonth.get(mKey) : prev;
+        const add = Math.max(0, cur - prev);
+        incArr[i] = add;
+        prev = cur;
+      }
+
+      // 해외출장 입력 추가(+)
+      for (let i=0;i<monthsToShow;i++){
+        incArr[i] += Math.max(0, Number(tripMatrix?.[months[i]]?.[key]) || 0);
+      }
+
+      sitePlusByMonth[key] = incArr;
+    }
+  } else {
+    // 폴백: 서버 cumGap에서 +증가 추출 (+출장)
+    for (const g of GROUP_ORDER){
+      for (const key of GROUPS[g]){
+        const row = rowMap.get(key);
+        if (!row) continue;
+
+        const plusArr = [];
+        for (let i=0;i<monthsToShow;i++){
+          const baseCumPrev = i===0 ? 0 : (row.cumGap[i-1] || 0);
+          const baseCum     = row.cumGap[i] || 0;
+          const basePlus    = Math.max(0, baseCum - baseCumPrev);
+          const tripPlus    = Math.max(0, Number(tripMatrix?.[months[i]]?.[key]) || 0);
+          plusArr[i] = basePlus + tripPlus;
+        }
+        sitePlusByMonth[key] = plusArr;
+      }
+    }
+  }
+
+  // ✅ 공통: “합계 타깃”(= window._recon의 planned 합계)으로 재분배 → ALL이 KPI/차트와 동일
+  const targetInc = targetMonthlyIncrementsFromPlanned(months); // window._recon 사용(합계 기준)
+  reconcileSitePlusesToTarget(months, sitePlusByMonth, rowMap, targetInc);
+
+  // 2) 사이트 행 렌더 — 🔎 표시만 필터링
+  for (const g of GROUP_ORDER){
+    if (!showGroup(g)) continue;
+
+    for (const key of GROUPS[g]){
+      if (!showSite(key)) continue;
+      const plusArr = sitePlusByMonth[key];
+      if (!plusArr) continue;
+
       const tr = document.createElement('tr');
       const cells = [`<td class="sticky-col"><b>${key}</b></td>`];
       let siteCum = 0;
       for (let i=0;i<monthsToShow;i++){
-        const p = plusArr[i] || 0;
+        const p = Math.max(0, plusArr[i] || 0);
         siteCum += p;
         let text = p > 0 ? `+${p}` : '0';
         if (siteCum > 0) text += ` (${siteCum})`;
@@ -793,30 +1258,33 @@ function renderHiringTable(plan){
       tbody.appendChild(tr);
     }
 
-    // 그룹 합계 행
-    const trSub = document.createElement('tr');
-    trSub.className = 'row-subtotal';
-    const subCells = [`<td class="sticky-col"><b>${g}</b></td>`];
+    // 그룹 합계(표시 중인 사이트만 합산)
+    const shownKeys = GROUPS[g].filter(k => showSite(k));
+    if (shownKeys.length){
+      const trSub = document.createElement('tr');
+      trSub.className = 'row-subtotal';
+      const subCells = [`<td class="sticky-col"><b>${g}</b></td>`];
 
-    let groupCum = 0;
-    for (let i=0;i<monthsToShow;i++){
-      let sumPlus = 0;
-      for (const key of GROUPS[g]) {
-        const arr = sitePlusByMonth[key] || [];
-        sumPlus += Math.max(0, Number(arr[i]) || 0);
+      let groupCum = 0;
+      for (let i=0;i<monthsToShow;i++){
+        let sumPlus = 0;
+        for (const key of shownKeys) {
+          const arr = sitePlusByMonth[key] || [];
+          sumPlus += Math.max(0, Number(arr[i]) || 0);
+        }
+        groupCum += sumPlus;
+
+        let text = sumPlus > 0 ? `+${sumPlus}` : '0';
+        if (groupCum > 0) text += ` (${groupCum})`;
+        const cls = sumPlus > 0 ? 'hi-plus' : 'hi-zero';
+        subCells.push(`<td class="${cls}">${text}</td>`);
       }
-      groupCum += sumPlus;
-
-      let text = sumPlus > 0 ? `+${sumPlus}` : '0';
-      if (groupCum > 0) text += ` (${groupCum})`;
-      const cls = sumPlus > 0 ? 'hi-plus' : 'hi-zero';
-      subCells.push(`<td class="${cls}">${text}</td>`);
+      trSub.innerHTML = subCells.join('');
+      tbody.appendChild(trSub);
     }
-    trSub.innerHTML = subCells.join('');
-    tbody.appendChild(trSub);
   }
 
-  // 전체 합계 행
+  // 3) 전체 합계(ALL) — 🔎 현재 화면에 표시 중인 사이트만 합산
   const trAll = document.createElement('tr');
   trAll.className = 'row-total';
   const totalCells = ['<td class="sticky-col"><b>ALL</b></td>'];
@@ -826,6 +1294,7 @@ function renderHiringTable(plan){
     let totalPlus = 0;
     for (const g of GROUP_ORDER){
       for (const key of GROUPS[g]) {
+        if (!showSite(key)) continue;
         const arr = sitePlusByMonth[key] || [];
         totalPlus += Math.max(0, Number(arr[i]) || 0);
       }
@@ -840,6 +1309,56 @@ function renderHiringTable(plan){
   trAll.innerHTML = totalCells.join('');
   tbody.appendChild(trAll);
 }
+
+/* === per-site 예측/헤드카운트 동시 수집 === */
+async function fetchPerSiteForecasts(params){
+  const token = localStorage.getItem('x-access-token');
+  const headers = { 'x-access-token': token };
+
+  const baseCommon = cleanParams({
+    freq: params.freq,
+    horizon: params.horizonDays,
+    hoursPerDay: params.hoursPerDay,
+    daysPerBucket: params.daysPerBucket,
+    rounding: params.rounding,
+    planMode: params.planMode,
+    alpha: params.alpha,
+    bufferPct: params.bufferPct,
+    absencePct: params.absencePct,
+    includeMove: params.includeMove ? 1 : 0,
+    normalizeByBizDays: params.normalizeByBizDays ? 1 : 0,
+    _ts: Date.now()
+  });
+
+  const results = [];
+  await Promise.all(PAIRS.map(async (key) => {
+    const [grp, st] = key.split('-');
+    try{
+      const [fcRes, hcRes] = await Promise.all([
+        axios.get('http://3.37.73.151:3001/analysis/forecast', {
+          headers, signal: abortCtrl?.signal,
+          params: { ...baseCommon, group: grp, site: st }
+        }),
+        axios.get('http://3.37.73.151:3001/analysis/headcount', {
+          headers, signal: abortCtrl?.signal,
+          params: cleanParams({ group: grp, site: st, _ts: Date.now() })
+        })
+      ]);
+      const forecast = fcRes.data?.forecast || [];
+      if (!forecast.length) return; // 데이터 없으면 스킵
+      const available = Number(hcRes.data?.count) || 0;
+      const planned = buildPlannedForecast(forecast, params, available);
+      results.push({ key, forecast, planned, available });
+    } catch(e){
+      console.warn('per-site fetch failed:', key, e?.message || e);
+    }
+  }));
+
+  // PAIRS 순으로 정렬 보장
+  results.sort((a,b) => PAIRS.indexOf(a.key) - PAIRS.indexOf(b.key));
+  return results;
+}
+
 
 /* ===== 열 너비 동기화 + 스크롤 동기화 ===== */
 function syncHiringTables(){
@@ -905,33 +1424,50 @@ function installScrollSync(group){
   isSyncInstalled = true;
 }
 
-/* ===== 기타 ===== */
-function resetForm(){
+/* ===== 기본값 적용(최초/초기화 동일) ===== */
+function applyInitialDefaults(){
   qs('#freq').value = 'month';
-  updateHorizonOptions();
+  const hc = document.getElementById('horizonCount'); if (hc) hc.value = 12;
+
   qs('#groupSelect').value = '';
   qs('#siteSelect').value = '';
-  qs('#hoursPerDay').value = 8;
+
+  const hpdEl = qs('#hoursPerDay');
+  if (hpdEl) hpdEl.value = 8;
 
   userEditedDaysPerBucket = false;
   suggestDaysPerBucket();
 
   qs('#planMode').value = 'blend';
-  qs('#alpha').value = 0.5;
-  setText('alphaVal', '0.50');
+  qs('#alpha').value = 0.5; setText('alphaVal', '0.50');
   qs('#addBuffer').value = 5;
   qs('#rounding').value = 'ceil';
   qs('#absencePct').value = 10;
-  qs('#includeMove').checked = true;
 
-  qs('#showConf').checked = true;
+  const include = qs('#includeMove'); if (include) include.checked = true;
+  const norm = qs('#normalizeByBizDays'); if (norm) norm.checked = true;
+  const conf = qs('#showConf'); if (conf) conf.checked = true;
 
+  if (qs('#useLower')) qs('#useLower').checked = false;
+  if (qs('#lowerAlpha')) { qs('#lowerAlpha').value = 0; const el=qs('#lowerAlphaVal'); if (el) el.textContent='0.00'; }
+  if (qs('#smoothWin')) qs('#smoothWin').value = 1;
+  if (qs('#growthCapPct')) qs('#growthCapPct').value = 0;
+  if (qs('#growthCapAbs')) qs('#growthCapAbs').value = 0;
+
+  updateHorizonOptions();
+  updateHorizonUnit();
+}
+
+/* ===== 초기화 버튼 ===== */
+function resetForm(){
+  applyInitialDefaults();
   runForecast();
 }
 
-// CSV 내보내기 (예측표 일부)
+/* CSV 내보내기 — 사이트 섹션 행은 제외 */
 function exportCsv(){
-  const rows = qsa('#tblForecast tbody tr').map(tr=> Array.from(tr.querySelectorAll('td')).map(td => td.textContent.replace(/,/g,'')));
+  const trs = qsa('#tblForecast tbody tr').filter(tr => !tr.classList.contains('site-section'));
+  const rows = trs.map(tr=> Array.from(tr.querySelectorAll('td')).map(td => td.textContent.replace(/,/g,'')));
   if (!rows.length){ showNotice('내보낼 예측 행이 없습니다.'); return; }
   const header = ['기간','예측 작업시간(h)','계획 작업시간(h)','하한','상한','필요 인원(기본)','필요 인원(계획)','현재 인원','갭(계획−현재)'];
   const csv = [header, ...rows].map(r => r.join(',')).join('\n');
@@ -946,14 +1482,13 @@ function exportCsv(){
 document.addEventListener('DOMContentLoaded', () => {
   secureGate();
 
-  // 기본 이벤트
   on('#btnRun','click', runForecast);
   on('#btnReset','click', resetForm);
   on('#btnCsv','click', exportCsv);
   on('#showConf','change', runForecast);
   on('#includeMove','change', runForecast);
+  on('#normalizeByBizDays','change', runForecast);
 
-  // Apply & Reset(입력)
   on('#btnApplyTrips', 'click', applyTrips);
   on('#btnResetTrips','click', () => {
     localStorage.removeItem(LS_TRIP);
@@ -962,9 +1497,9 @@ document.addEventListener('DOMContentLoaded', () => {
     showNotice('입력이 초기화되었습니다. [적용]을 눌러 계산에 반영하세요.');
   });
 
-  on('#monthsToShow','change', ()=> {
+  on('#monthsToShow','change', ()=>{
     renderTripEditor(window._hiringPlan);
-    renderHiringTable(window._hiringPlan);
+    renderHiringTable(window._hiringPlan, window._perSiteData);
     syncHiringTables();
   });
 
@@ -984,21 +1519,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  on('#freq','change', () => { updateHorizonOptions(); suggestDaysPerBucket(); });
+  if (qs('#useLower')) on('#useLower','change', runForecast);
+  if (qs('#lowerAlpha')) {
+    on('#lowerAlpha','input', ()=>{ const v=Number(val('#lowerAlpha')); const el=qs('#lowerAlphaVal'); if (el) el.textContent=v.toFixed(2); });
+    on('#lowerAlpha','change', runForecast);
+  }
+  if (qs('#smoothWin')) on('#smoothWin','change', runForecast);
+  if (qs('#growthCapPct')) on('#growthCapPct','change', runForecast);
+  if (qs('#growthCapAbs')) on('#growthCapAbs','change', runForecast);
+
+  on('#freq','change', () => { updateHorizonOptions(); updateHorizonUnit(); suggestDaysPerBucket(); runForecast(); });
+  on('#horizonCount','change', runForecast);
   on('#daysPerBucket','input', () => { userEditedDaysPerBucket = true; });
 
-  // 초기 값/상태
-  updateHorizonOptions();
-  suggestDaysPerBucket();
-  setText('alphaVal', Number(val('#alpha')||0.5).toFixed(2));
-
-  // 그래프 섹션은 기본 접힘
   qs('#sec-graphs')?.removeAttribute('open');
 
-  // 수평 스크롤 동기화 설치
   installScrollSync('hiring');
 
-  // 스냅샷 기준 설정
+  applyInitialDefaults();
+
   if (!loadAppliedSnapshot()) saveAppliedSnapshot(getTripSnapshot());
   setTripDirtyState(getTripSnapshot() !== loadAppliedSnapshot());
 

@@ -4,6 +4,7 @@
    - Column right-align, zebra/hover, scroll shadows, focus rings
    - KPI/controls/notice tweaks, smaller charts
    - Table titles (sticky-left inside scroll container)
+   - Filters: tighter grid, aligned inputs, inline-unit pills, sticky action bar
    ========================================================================== */
 
 /* ===== Theme Tokens ===== */
@@ -142,6 +143,10 @@ nav .inner{max-width:2000px;margin:0 auto;padding:6px 12px}
 .card:hover{background:#0d1520}
 .card:focus-within{ border-color:var(--accent); box-shadow: var(--ring) }
 
+/* inline 컨테이너 (숫자 + 배지 등) */
+.inline{display:inline-flex;align-items:center;gap:8px}
+.inline.card{padding:6px 8px;min-height:38px}
+
 .card-block{
   border:1px solid var(--border);border-radius:var(--radius-md);
   padding:12px;margin-bottom:10px;background:var(--surface)
@@ -159,6 +164,7 @@ input.card::-webkit-outer-spin-button,input.card::-webkit-inner-spin-button{ -we
   display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);
   border:1px solid var(--border);padding:8px 10px;border-radius:999px;font-size:12px
 }
+.chip input[type=checkbox]{transform:translateY(0.5px)}
 .badge{
   display:inline-block;padding:2px 8px;border-radius:10px;
   background:var(--accent-bg);border:1px solid var(--accent-weak);font-weight:700
@@ -232,7 +238,6 @@ canvas{display:block;width:100%}
   margin: 4px 0 10px 0;
   white-space: nowrap;
 }
-/* 카드별 구분 색(지원 브라우저에서만): Trip(파랑), Hiring(스틸) */
 @supports(selector(:has(*))){
   .card.scroll-x:has(#tblTripEdit) > .section-title{ border-color: rgba(96,165,250,.55) }
   .card.scroll-x:has(#tblHiring)   > .section-title{ border-color: rgba(148,163,184,.55) }
@@ -276,12 +281,7 @@ canvas{display:block;width:100%}
 #tblTripEdit .group-divider{ display:none !important }
 
 /* ===== Hiring table (totals & grouping ONLY here) ===== */
-/* 그룹 구분선(옵션): JS가 tr.group-divider 를 넣으면 두 그룹 사이에 도트 라인 */
-#tblHiring tr.group-divider td{
-  border-top:2px dashed rgba(148,163,184,.35) !important;
-}
-
-/* 그룹 합계 */
+#tblHiring tr.group-divider td{ border-top:2px dashed rgba(148,163,184,.35) !important; }
 #tblHiring tr.row-subtotal td{
   background: rgba(148,163,184,0.10) !important;
   border-top:2px solid rgba(148,163,184,.35);
@@ -300,8 +300,6 @@ canvas{display:block;width:100%}
   border:1px solid rgba(148,163,184,.45); border-radius:999px; background:rgba(148,163,184,.12);
   display:inline-block; vertical-align:middle;
 }
-
-/* 전체 합계 */
 #tblHiring tr.row-total td{
   background: rgba(96,165,250,0.12) !important;
   border-top:2px solid rgba(96,165,250,.55);
@@ -320,8 +318,6 @@ canvas{display:block;width:100%}
   border:1px solid rgba(96,165,250,.45); border-radius:999px; background:rgba(37,99,235,.28);
   display:inline-block; vertical-align:middle;
 }
-
-/* 수치 강조: +증원 필요(양수) */
 #tblHiring td.hi-plus{ color:var(--bad); font-weight:700 }
 #tblHiring td.hi-zero{ opacity:.7 }
 
@@ -380,91 +376,72 @@ a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible
 }
 
 /* ===== Utilities ===== */
-.table.align-columns{ table-layout: fixed; } /* (JS colgroup 동기화와 함께 사용) */
+.table.align-columns{ table-layout: fixed; }
+.narrative p { margin: 6px 0; line-height: 1.6; }
 
-/* =========================
-   Titles right above tables
-   ========================= */
-.table-title{
-  margin: 8px 2px 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: .2px;
-  color: var(--text);
-  /* 살짝 카드 느낌 */
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 10px;
-}
-.table-title::before{
-  content:"";
-  width:8px; height:8px; border-radius:2px;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px rgba(96,165,250,.18);
-}
+/* =======================================================================
+   FILTERS POLISH — 첫 번째 섹션(설정)에만 적용되는 디테일
+   ======================================================================= */
+.section.filters .section-body{padding-top:12px}
 
-/* 제목 다음의 스크롤 카드(표) 톤을 조금 다르게 강조 */
-.table-title + .card.scroll-x{
-  border-color: var(--accent-weak);
+/* 블록 간격 및 시각적 구분 강화 */
+.section.filters .card-block{
+  background:linear-gradient(180deg,#0f1722 0%,#0d1520 100%);
+  border:1px solid rgba(96,165,250,.18);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+  margin-bottom:12px;
+}
+.section.filters .block-title{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.section.filters .block-title::before{
+  content:"";width:6px;height:6px;border-radius:2px;background:var(--accent);
+  box-shadow:0 0 0 3px rgba(96,165,250,.18)
 }
 
-/* 지원 브라우저에서만: Hiring 표는 톤 차이를 주어 두 표를 더 구분 */
-@supports(selector(:has(*))){
-  .table-title:has(+ .card.scroll-x #tblHiring)::before{
-    background:#94a3b8;
-    box-shadow: 0 0 0 3px rgba(148,163,184,.22);
-  }
-  .table-title:has(+ .card.scroll-x #tblHiring){
-    border-color: rgba(148,163,184,.45);
-  }
+/* 그리드 정렬: 라벨 길이가 달라도 하단 라인이 맞게 */
+.section.filters .card-block .grid12{ align-items:end }
+
+/* 숫자 + 단위 배지 정렬 (예: 예측기간, 근무일수 힌트) */
+.section.filters .inline.card{ gap:8px }
+.section.filters .inline.card input[type=number]{ width:100px; text-align:right }
+.section.filters .inline.card .badge{ margin-left:2px }
+
+/* Select/Number 입력의 시각적 일관성 */
+.section.filters input.card,
+.section.filters select.card{ height:38px; font-size:14px; }
+.section.filters input[type=number].card{ text-align:right }
+
+/* 체크칩 줄 맞춤 및 간격 */
+.section.filters .chip.inline.card{ padding:8px 12px }
+.section.filters .chip.inline.card + .chip.inline.card{ margin-top:6px }
+
+/* 보수화 옵션: 슬라이더와 값 뱃지 정렬 */
+#alphaWrap, #lowerAlpha{ align-self:end }
+#alphaWrap input[type=range]{ width:100% }
+#lowerAlpha{ width:100% }
+
+/* 액션바(예측 실행/초기화/CSV) — 스크롤시 하단에 살짝 붙는 효과 */
+.section.filters .toolbar{
+  position:sticky; bottom:6px; z-index:3;
+  background: linear-gradient(180deg, rgba(14,21,32,0) 0%, rgba(14,21,32,.85) 30%, rgba(14,21,32,.98) 100%);
+  padding-top:10px; margin-top:12px; border-top:1px dashed rgba(148,163,184,.28);
 }
 
-/* =========================
-   Sync-scroll containers
-   ========================= */
-.card.scroll-x.sync-scroll{
-  /* 이미 .scroll-x 스타일이 있지만, 페이드/보더 보강 */
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
+/* 라벨/도움말 간격 미세 조정 */
+.section.filters label{ margin-bottom:4px }
+.section.filters small.dim{ margin-top:6px }
 
-/* 숫자 컬럼을 일정 폭으로: 둘 다 fixed 레이아웃로 맞춰 보기 좋게 */
-.card.scroll-x.sync-scroll table{
-  table-layout: fixed;
-}
-
-/* sticky 첫 열의 내용 흐름 보정 & 공통 폭 유지 */
-.card.scroll-x.sync-scroll .sticky-col{
-  min-width: var(--table-col0-min);
-  max-width: var(--table-col0-min);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 헤더 하단 분리선 강화(표시감) */
-.card.scroll-x.sync-scroll thead th{
-  box-shadow: 0 1px 0 var(--border);
-}
-
-/* zebra + hover는 기존 규칙을 따르되, hover 대비 조금 강화 */
-.card.scroll-x.sync-scroll tbody tr:hover td{
-  background: rgba(96,165,250,0.10);
-}
-
-/* 모바일 안내 배지(필요시) */
+/* 모바일에서 필터 입력 터치 영역 확대 */
 @media (max-width: 720px){
-  .card.scroll-x.sync-scroll::after{
-    content:"좌우로 스크롤";
-    position:absolute; right:8px; bottom:6px;
-    font-size:11px; color: var(--muted-2);
-    background: rgba(2,6,23,.55);
-    padding:2px 6px; border-radius:6px;
-    border:1px solid rgba(255,255,255,.08)
-  }
+  .section.filters input.card, .section.filters select.card{ min-height:42px; font-size:15px }
+  .section.filters .chip.inline.card{ padding:10px 12px }
+  .section.filters .inline.card input[type=number]{ width:110px }
+}
+
+/* 접근성: 포커스 도우미 */
+.section.filters .card:focus-within,
+.section.filters .chip:has(input:focus-visible){
+  box-shadow: var(--ring);
+  border-color: var(--accent);
 }
