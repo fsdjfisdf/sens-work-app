@@ -1,179 +1,72 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-WORKS</title>
-    <link rel="stylesheet" href="./css/index.css" />
-    <script src="./js/index.js" defer></script>
-    <script defer src="./js/logoutTimer.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S-WORKS</title>
+  <link rel="stylesheet" href="./css/index.css" />
+  <script defer src="./js/index.js"></script>
+  <script defer src="./js/logoutTimer.js"></script>
+
+  <!-- 인라인 SVG 심볼 -->
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;left:-9999px;visibility:hidden;">
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.57-9 5.73A1.27 1.27 0 0 0 4.27 21h15.46A1.27 1.27 0 0 0 21 19.73C21 16.57 17 14 12 14Z"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75Z"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42L17.59 5H14V3ZM5 5h5V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5h-2v5H5Z"/></symbol>
+    <symbol id="i-tools" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.66 0 4 4 0 0 0 0 5.66l-6.35 6.35 1.41 1.41 6.35-6.35a4 4 0 0 0 5.66-5.66Zm-4.24 4.24a2 2 0 1 1 2.83-2.83 2 2 0 0 1-2.83 2.83Z"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3h2v18H3V3Zm4 10h2v8H7v-8Zm4-6h2v14h-2V7Zm4 4h2v10h-2V11Zm4-8h2v18h-2V3Z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41Z"/></symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9L2 14v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5Z"/></symbol>
+    <symbol id="i-pie" viewBox="0 0 24 24"><path d="M11 2v10H1A10 10 0 0 1 11 2Zm2 0a10 10 0 1 1-2 0h2Zm-2 12V4a8 8 0 1 0 8 8h-8Z"/></symbol>
+    <symbol id="i-lab" viewBox="0 0 24 24"><path d="M9 3h6v2h-1v5.59l5.7 9.9A2 2 0 0 1 17.95 23H6.05a2 2 0 0 1-1.75-2.51l5.7-9.9V5H9V3Z"/></symbol>
+    <symbol id="i-warning" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21Zm12-3h-2v2h2v-2Zm0-8h-2v6h2V10Z"/></symbol>
+  </svg>
 </head>
+
 <body>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">Only FS TEAM</a></h1>
-                <div class="auth-container">
-                    <a href="./signin.html" class="sign-link hidden" id="login-btn">Login</a>
-                    <button id="logout-btn" class="sign-link hidden">Logout</button>
-                </div>
-            </div>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html" aria-label="홈으로">Only FS TEAM</a></h1>
+        <div class="auth-container">
+          <a href="./signin.html" class="sign-link hidden" id="login-btn">Login</a>
+          <button id="logout-btn" class="sign-link hidden" type="button">Logout</button>
         </div>
-    </nav>
+      </div>
+    </div>
+  </nav>
 
-    <main>
-        <section class="hero">
-            <div class="hero-content">
-                <h1 class="main-title" id="sworks-title" style="cursor: pointer;">S-WORKS</h1>
-                <p class="click-hint" id="click-hint">S-WORKS 를 클릭하여 기능을 확인하세요</p>
-                
-                <div class="button-container hidden" id="button-container">
-                    <a href="./user_info.html" class="button disabled" data-description="SECM 정보를 확인할 수 있습니다.">
-                        <i class="fas fa-user-circle"></i> SECM
-                    </a>
-                    <a href="./worklog.html" class="button disabled" data-description="작업 이력을 작성할 수 있습니다.">
-                        <i class="fas fa-edit"></i> Create Worklog
-                    </a>
-                    <a href="./loadworklog.html" class="button disabled" data-description="작업 이력을 불러올 수 있습니다.">
-                        <i class="fas fa-folder-open"></i> Load Worklog
-                    </a>
-                    <a href="./equipment_signal.html" class="button disabled" data-description="설비 정보를 확인할 수 있습니다.">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> Equipment
-                    </a>
-                    <a href="./Setupeq.html" class="button disabled" data-description="셋업 설비 정보 및 진행상황을을 확인할 수 있습니다.">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> SET UP EQ
-                    </a>
-                    <a href="./PCI.html" class="button disabled" data-description="Eng'r의 작업별 건 수 및 역량을 확인할 수 있습니다.">
-                        <i class="fas fa-chart-line"></i> PCI
-                    </a>
-                    <a href="./CHECKLIST.html" class="button disabled" data-description="각 설비의 SET UP, MAINTENANCE CHECKLIST를 진행할 수 있습니다.">
-                        <i class="fas fa-check-square"></i> Self Checklist for PCI
-                    </a>
-                    <a href="./business.html" class="button disabled" data-description="해외 출장 관련 DATA를 확인할 수 있습니다.">
-                        <i class="fas fa-plane"></i> Business trip
-                    </a>
-                    <a href="./workload.html" class="button admin-only disabled" data-description="가동율을 확인할 수 있습니다.">
-                        <i class="fas fa-chart-pie"></i> WTM
-                    </a>
-                    <a href="./analysis.html" class="button admin-only disabled" data-description="미래의 Eng'r 인원 수를 예측할 수 있습니다.">
-                        <i class="fas fa-chart-pie"></i> Predicted Workers
-                    </a>
-                    <a href="./test.html" class="button disabled" data-description="Eng'r LEVEL TEST를 진행할 수 있습니다.">
-                        <i class="fas fa-edit"></i> Eng'r LEVEL TEST
-                    </a>
-                    <a href="./update.html" class="button disabled" data-description="update list를 확인할 수 있습니다.">
-                        <i class="fa-solid fa-circle-exclamation"></i> Update
-                    </a>
-                </div>
-                <div id="description-box" class="description-box hidden">
-                    <p id="description-text"></p>
-                </div>
-            </div>
-        </section>
-    </main>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="hero-content">
+        <h1 id="title" class="main-title" tabindex="0">S-WORKS</h1>
+        <p class="click-hint" id="click-hint">S-WORKS를 클릭하여 기능을 확인하세요</p>
 
-    <footer>
-        <div class="inner">
-            <p>Developed via PARAD<span style="color: red;">O</span>X</p>
+        <!-- 런처: 12개 / 4열×3행 -->
+        <div class="button-container hidden" id="button-container" aria-label="애플리케이션 런처">
+          <a class="button disabled" href="./user_info.html"><svg class="ico"><use href="#i-user"/></svg><span>SECM</span></a>
+          <a class="button disabled" href="./worklog.html"><svg class="ico"><use href="#i-edit"/></svg><span>Create Worklog</span></a>
+          <a class="button disabled" href="./loadworklog.html"><svg class="ico"><use href="#i-open"/></svg><span>Load Worklog</span></a>
+          <a class="button disabled" href="./equipment_signal.html"><svg class="ico"><use href="#i-tools"/></svg><span>Equipment</span></a>
+
+          <a class="button disabled" href="./Setupeq.html"><svg class="ico"><use href="#i-tools"/></svg><span>SET UP EQ</span></a>
+          <a class="button disabled" href="./PCI.html"><svg class="ico"><use href="#i-chart"/></svg><span>PCI</span></a>
+          <a class="button disabled" href="./CHECKLIST.html"><svg class="ico"><use href="#i-check"/></svg><span>Self Checklist for PCI</span></a>
+          <a class="button disabled" href="./business.html"><svg class="ico"><use href="#i-plane"/></svg><span>Business trip</span></a>
+
+          <a class="button admin-only disabled" href="./workload.html"><svg class="ico"><use href="#i-pie"/></svg><span>WTM</span></a>
+          <a class="button admin-only disabled" href="./analysis.html"><svg class="ico"><use href="#i-lab"/></svg><span>Predicted Workers</span></a>
+          <a class="button disabled" href="./test.html"><svg class="ico"><use href="#i-edit"/></svg><span>Eng'r LEVEL TEST</span></a>
+          <a class="button disabled" href="./update.html"><svg class="ico"><use href="#i-warning"/></svg><span>Update</span></a>
         </div>
-    </footer>
+      </div>
+    </section>
+  </main>
 
-    <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const token = localStorage.getItem("x-access-token");
-    const userRole = localStorage.getItem("user-role");
-
-    const loginBtn = document.getElementById("login-btn");
-    const logoutBtn = document.getElementById("logout-btn");
-
-    if (token) {
-        loginBtn.classList.add("hidden");
-        logoutBtn.classList.remove("hidden");
-
-        // admin-only 요소 숨기기
-        if (userRole !== 'admin') {
-            document.querySelectorAll('.admin-only').forEach(element => {
-                element.style.display = 'none';
-            });
-        }
-    } else {
-        loginBtn.classList.remove("hidden");
-        logoutBtn.classList.add("hidden");
-
-        // 로그인하지 않은 사용자는 admin-only 요소가 보이지 않도록 보장
-        document.querySelectorAll('.admin-only').forEach(element => {
-            element.style.display = 'none';
-        });
-    }
-
-    logoutBtn.addEventListener("click", function() {
-        localStorage.removeItem("x-access-token");
-        localStorage.removeItem("user-role");
-        alert("로그아웃 되었습니다.");
-        window.location.replace("./signin.html");
-    });
-
-    const sworksTitle = document.getElementById("sworks-title");
-    const buttonContainer = document.getElementById("button-container");
-    const descriptionBox = document.getElementById("description-box");
-    const descriptionText = document.getElementById("description-text");
-    const clickHint = document.getElementById("click-hint");
-    const buttons = document.querySelectorAll(".button");
-    let isOpen = false;
-
-    sworksTitle.addEventListener("click", function() {
-        if (!isOpen) {
-            sworksTitle.classList.add("move-up");
-            sworksTitle.classList.add("shrink");
-            clickHint.classList.add("hidden");
-            buttonContainer.classList.remove("hidden");
-            buttonContainer.classList.add("visible");
-            buttons.forEach(button => {
-                button.classList.remove("disabled");
-            });
-            isOpen = true;
-        } else {
-            buttonContainer.classList.add("hidden");
-            buttonContainer.classList.remove("visible");
-            buttons.forEach(button => {
-                button.classList.add("disabled");
-            });
-            sworksTitle.classList.remove("move-up");
-            sworksTitle.classList.remove("shrink");
-            clickHint.classList.remove("hidden");
-            isOpen = false;
-        }
-    });
-
-    buttons.forEach(button => {
-        button.addEventListener("mouseover", function() {
-            if (!button.classList.contains("disabled")) {
-                descriptionText.textContent = this.getAttribute("data-description");
-                descriptionBox.classList.remove("hidden");
-                descriptionBox.classList.add("visible");
-            }
-        });
-
-        button.addEventListener("mouseout", function() {
-            if (!button.classList.contains("disabled")) {
-                descriptionBox.classList.remove("visible");
-                descriptionBox.classList.add("hidden");
-            }
-        });
-
-        button.addEventListener("click", function(event) {
-            event.preventDefault(); // 기본 링크 이동 방지
-            if (!button.classList.contains("disabled")) {
-                this.classList.add("clicked");
-                setTimeout(() => {
-                    window.location.href = this.getAttribute("href");
-                }, 500); // 애니메이션 후에 페이지 이동
-            }
-        });
-    });
-});
-
-    </script>
+  <footer>
+    <div class="inner">
+      <p>Developed via PARAD<span style="color:#e11d48;">O</span>X</p>
+    </div>
+  </footer>
 </body>
 </html>

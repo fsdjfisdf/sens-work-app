@@ -1,65 +1,98 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const token = localStorage.getItem("x-access-token");
-    const userRole = localStorage.getItem("user-role");
+/* ==========================================================================
+   S-WORKS — index.js (No hover description • Keep 4×3 • Prefetch on hover)
+   Version: 2025-08-22
+   ========================================================================== */
 
-    // 로그인 여부 확인 및 UI 업데이트
-    if (document.querySelector(".unsigned") && document.querySelector(".signed")) {
-        if (!token) {
-            document.querySelector(".unsigned").classList.remove("hidden");
-            document.querySelector(".signed").classList.add("hidden");
-        } else {
-            document.querySelector(".unsigned").classList.add("hidden");
-            document.querySelector(".signed").classList.remove("hidden");
-        }
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  const token = localStorage.getItem("x-access-token");
+  const userRole = localStorage.getItem("user-role");
 
-    // 관리자 권한 확인
-    if (!token || userRole !== "admin") {
-        document.querySelectorAll(".admin-only").forEach((element) => {
-            element.style.display = "none";
-        });
-    }
+  const loginBtn  = document.getElementById("login-btn");
+  const logoutBtn = document.getElementById("logout-btn");
 
-    // 로그아웃 버튼 클릭 이벤트
-    const signOutButton = document.querySelector("#sign-out");
+  // 로그인/로그아웃 토글 + admin-only 숨김
+  if (token) {
+    loginBtn?.classList.add("hidden");
+    logoutBtn?.classList.remove("hidden");
+    if (userRole !== "admin") document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+  } else {
+    loginBtn?.classList.remove("hidden");
+    logoutBtn?.classList.add("hidden");
+    document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+  }
 
-    if (signOutButton) {
-        signOutButton.addEventListener("click", function () {
-            localStorage.removeItem("x-access-token");
-            localStorage.removeItem("user-role");
-            alert("로그아웃 되었습니다.");
-            window.location.replace("./signin.html");
-        });
-    }
+  logoutBtn?.addEventListener("click", () => {
+    localStorage.removeItem("x-access-token");
+    localStorage.removeItem("user-role");
+    alert("로그아웃 되었습니다.");
+    window.location.replace("./signin.html");
+  });
 
-    // 메뉴 버튼 및 애니메이션 이벤트
-    const menuBtn = document.querySelector(".menu-btn");
-    const menuContent = document.querySelector(".menu-content");
+  // 런처 열고 닫기 (4×3 유지)
+  const title = document.getElementById("title");
+  const hint  = document.getElementById("click-hint");
+  const box   = document.getElementById("button-container");
+  let open = false;
 
-    if (menuBtn) {
-        menuBtn.addEventListener("click", function () {
-            menuContent.classList.toggle("show");
-            if (menuContent.classList.contains("show")) {
-                animateMenuItems();
-            }
-        });
-    }
+  function openLauncher(){
+    title.classList.add("move-up","shrink");
+    hint.classList.add("hidden");
+    box.classList.remove("hidden");
+    box.classList.add("visible");
+    document.querySelectorAll(".button").forEach(b => b.classList.remove("disabled"));
+    open = true;
+  }
+  function closeLauncher(){
+    box.classList.add("hidden");
+    box.classList.remove("visible");
+    document.querySelectorAll(".button").forEach(b => b.classList.add("disabled"));
+    title.classList.remove("move-up","shrink");
+    hint.classList.remove("hidden");
+    open = false;
+  }
 
-    document.addEventListener("click", function (event) {
-        if (!menuBtn.contains(event.target) && !menuContent.contains(event.target)) {
-            menuContent.classList.remove("show");
-        }
+  title.addEventListener("click", () => (open ? closeLauncher() : openLauncher()));
+  title.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open ? closeLauncher() : openLauncher(); }
+  });
+
+  /* 퍼포먼스: hover시 프리패치만 (설명 없음) */
+  const head = document.head || document.getElementsByTagName("head")[0];
+  const prefetched = new Set();
+  function prefetch(href){
+    if (!href || prefetched.has(href)) return;
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = href;
+    link.as = "document";
+    head.appendChild(link);
+    prefetched.add(href);
+  }
+  box.addEventListener("pointerover", (e) => {
+    const a = e.target.closest("a.button");
+    if (!a || a.classList.contains("disabled")) return;
+    prefetch(a.getAttribute("href"));
+  }, { passive: true });
+
+  // 클릭 → 200ms 피드백 후 이동
+  box.addEventListener("click", (e) => {
+    const a = e.target.closest("a.button");
+    if (!a || a.classList.contains("disabled")) return;
+    e.preventDefault();
+    a.classList.add("clicked");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setTimeout(() => { window.location.href = a.getAttribute("href"); }, 200);
+      });
     });
+  });
 
-    function animateMenuItems() {
-        const menuItems = document.querySelectorAll(".menu-item");
-        menuItems.forEach((item, index) => {
-            item.style.transform = `translateX(${index % 2 === 0 ? "-" : ""}100px)`;
-            item.style.opacity = "0";
-            setTimeout(() => {
-                item.style.transform = "translateX(0)";
-                item.style.opacity = "1";
-            }, index * 100);
-        });
-    }
+  // 첫 방문 힌트(1회)
+  if (!sessionStorage.getItem("sworks_hint")){
+    setTimeout(() => {
+      title.style.filter = "brightness(1.02) saturate(1.04)";
+      setTimeout(() => { title.style.filter = ""; }, 600);
+    }, 700);
+    sessionStorage.setItem("sworks_hint","1");
+  }
 });

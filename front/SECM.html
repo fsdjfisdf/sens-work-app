@@ -59,70 +59,136 @@
         <section id="dashboard-section" class="section">
             <div class="inner">
                 <h2 class="section-title">SECM</h2>
-                <div class="search-container">
-                    <select id="searchCompany">
-                        <option value="">Company</option>
-                        <option value="SEnS">SEnS</option>
-                        <option value="SEnI">SEnI</option>
-                    </select>
-                    <select id="searchGroup">
-                        <option value="">Group</option>
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="searchSite">
-                        <option value="">Site</option>
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="searchLevel">
-                        <option value="">Level</option>
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
-                    <select id="searchMultiEngr">
-                        <option value="">Multi Eng'r</option>
-                        <option value="O">O</option>
-                        <option value="X">X</option>
-                    </select>
-                    <select id="searchMultiLevel">
-                        <option value="">Multi Level</option>
-                        <option value="0">4</option>
-                        <option value="1">4-1(B)</option>
-                        <option value="2">4-1(A)</option>
-                    </select>
-                    <select id="searchHireDate">
-                        <option value="">Hire date</option>
-                        <option value="before2025">Before 2025</option>
-                        <option value="from2025">After 2025</option>
-                    </select>
-                    <input list="names" id="searchName" placeholder="Enter Name">
-                    <datalist id="names"></datalist>
-                    <button id="searchButton">SEARCH</button>
-                    <button id="resetButton">RESET</button>
-                    <button id="exportButton">Export to Excel</button>
-                </div>
-                <div class="button-container">
-                    <button id="showEngineerGroup" class="active">INFO</button>
-                    <button id="showLevelGroup">LEVEL</button>
-                    <button id="showCapaGroup">CAPA</button>
-                    <button id="showMpiGroup">MPI</button>
-                    <button id="showWorkGroup">WORK</button>
-                </div>
-                <div id="personInfo" class="person-info hidden">
-                    <p><strong>Name:</strong> <span id="personName"></span></p>
-                    <p><strong>Hire Date:</strong> <span id="personHireDate"></span></p>
-                    <p><strong>Group:</strong> <span id="personGroup"></span></p>
-                    <p><strong>Site:</strong> <span id="personSite"></span></p>
-                    <p><strong>ID:</strong> <span id="personID"></span></p>
-                </div>
+<!-- 검색 패널 (교체) -->
+<div class="search-container" role="search" aria-label="Engineer filters">
+  <!-- 1) 기본 정보 -->
+  <section class="filters-row basics">
+    <header class="block-head">
+      <h3 class="block-title">Basics</h3>
+      <p class="block-sub">회사 · 그룹 · 사이트를 선택하세요</p>
+    </header>
+    <div class="fields">
+      <div class="field">
+        <label for="searchCompany">Company</label>
+        <select id="searchCompany">
+          <option value="">All companies</option>
+          <option value="SEnS">SEnS</option>
+          <option value="SEnI">SEnI</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="searchGroup">Group</label>
+        <select id="searchGroup">
+          <option value="">All groups</option>
+          <option value="PEE1">PEE1</option>
+          <option value="PEE2">PEE2</option>
+          <option value="PSKH">PSKH</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="searchSite">Site</label>
+        <select id="searchSite">
+          <option value="">All sites</option>
+          <option value="PT">PT</option>
+          <option value="HS">HS</option>
+          <option value="IC">IC</option>
+          <option value="CJ">CJ</option>
+          <option value="PSKH">PSKH</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2) 속성/조건 -->
+  <section class="filters-row attributes">
+    <header class="block-head">
+      <h3 class="block-title">Attributes</h3>
+      <p class="block-sub">레벨 · 멀티 여부 · 고용일자 범위를 고르세요</p>
+    </header>
+    <div class="fields">
+      <div class="field">
+        <label for="searchLevel">Level</label>
+        <select id="searchLevel">
+          <option value="">All levels</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="searchMultiEngr">Multi Eng'r</label>
+        <select id="searchMultiEngr">
+          <option value="">All</option>
+          <option value="O">O</option>
+          <option value="X">X</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="searchMultiLevel">Multi Level</label>
+        <select id="searchMultiLevel">
+          <option value="">All</option>
+          <option value="0">4</option>
+          <option value="1">4-1(B)</option>
+          <option value="2">4-1(A)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="searchHireDate">Hire date</label>
+        <select id="searchHireDate">
+          <option value="">Any time</option>
+          <option value="before2025">Before 2025</option>
+          <option value="from2025">After 2025</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3) 이름/액션 -->
+  <section class="filters-row name-actions">
+    <header class="block-head">
+      <h3 class="block-title">Search & Actions</h3>
+      <p class="block-sub">이름으로 바로 찾거나 전체 결과를 내보내세요</p>
+    </header>
+    <div class="fields">
+      <div class="field grow">
+        <label for="searchName">Name</label>
+        <input list="names" id="searchName" placeholder="Enter name (partial OK)">
+        <datalist id="names"></datalist>
+      </div>
+
+      <div class="actions">
+        <button id="searchButton" type="button" class="btn primary">SEARCH</button>
+        <button id="resetButton"  type="button" class="btn ghost">RESET</button>
+        <button id="exportButton" type="button" class="btn outline">Export to Excel</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 이 아래 두 블록은 그대로 두면 됩니다 -->
+<div class="button-container">
+  <button id="showEngineerGroup" class="active">INFO</button>
+  <button id="showLevelGroup">LEVEL</button>
+  <button id="showCapaGroup">CAPA</button>
+  <button id="showMpiGroup">MPI</button>
+  <button id="showWorkGroup">WORK</button>
+</div>
+
+<div id="personInfo" class="person-info hidden">
+  <p><strong>Name:</strong> <span id="personName"></span></p>
+  <p><strong>Hire Date:</strong> <span id="personHireDate"></span></p>
+  <p><strong>Group:</strong> <span id="personGroup"></span></p>
+  <p><strong>Site:</strong> <span id="personSite"></span></p>
+  <p><strong>ID:</strong> <span id="personID"></span></p>
+</div>
+
 
                 
                 <div class="graph-container">
@@ -643,5 +709,6 @@
             });
         });
     </script>
+
 </body>
 </html>

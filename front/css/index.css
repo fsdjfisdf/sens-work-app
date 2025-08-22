@@ -1,560 +1,367 @@
-/* General reset and body styles */
-body, h1, h2, h3, h4, p, a, input, select, label, textarea, button {
-    margin: 0;
-    padding: 0;
-    text-decoration: none;
-    color: inherit;
-    box-sizing: border-box;
+/* ==========================================================================
+   S-WORKS — index.css (Light • Strict 4×3 Launcher • Rich Micro-interactions)
+   Version: 2025-08-22
+   Notes:
+   - 데스크톱(≥980px)에서 4열 고정, 12개 버튼 → 4×3 그리드
+   - Hover/Focus micro animations (GPU-friendly: transform/opacity only)
+   - 접근성: focus-visible 링, reduced motion 지원
+   - 성능: composite-only transition, will-change, 낮은 box-shadow 비용
+   ========================================================================== */
+
+/* ---------- Design Tokens ------------------------------------------------ */
+:root{
+  /* Surfaces */
+  --bg:#ffffff;             /* 최상위 배경 */
+  --layer:#f6f8fc;          /* 얕은 구름 배경 */
+  --panel:#ffffff;          /* 버튼/패널 표면 */
+
+  /* Text */
+  --text:#0e1726;
+  --muted:#5b6b80;
+
+  /* Brand / Accent */
+  --accent:#2563eb;                /* S-WORKS 파랑 */
+  --accent-weak: rgba(37,99,235,.12);
+  --accent-weak-2: rgba(37,99,235,.08);
+
+  /* Lines & Shadows */
+  --hairline:#e8edf5;
+  --hairline-2:#e3eaf4;
+  --shadow-xs: 0 1px 1px rgba(8,15,30,.05);
+  --shadow-sm: 0 6px 16px rgba(8,15,30,.08);
+  --shadow:    0 18px 40px rgba(8,15,30,.10);
+
+  /* Shape */
+  --radius:16px; --r-md:14px; --r-sm:12px;
+  --gutter:18px;
+
+  /* Launcher Buttons */
+  --btn-h:60px;
+  --btn-fs:15px;
+  --ico:18px;
+
+  /* Title */
+  --title-size: clamp(42px, 9vw, 104px);
+
+  /* Motion */
+  --ease: cubic-bezier(.22,.63,.23,.99);
+  --ease-out: cubic-bezier(.17,.67,.25,1);
+  --dur-in: .26s;
+  --dur-hvr: .16s;
+
+  /* Gradient Accents (for sheens) */
+  --sheen: linear-gradient(100deg, rgba(255,255,255,.0) 0%, rgba(255,255,255,.55) 20%, rgba(255,255,255,.0) 40%) no-repeat;
+
+  /* Safe area */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
 }
 
-body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #1d1d1d;
-    color: #dcdcdc; /* 밝은 텍스트 */
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+/* ---------- Base / Resets ----------------------------------------------- */
+*,
+*::before,
+*::after{ box-sizing: border-box; }
+
+html, body{ height:100%; }
+
+body{
+  margin:0; color:var(--text);
+  font-family: Inter, Pretendard, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+
+  /* 차분한 라이트 아트 배경 */
+  background:
+    radial-gradient(1200px 480px at 80% -10%, #eef4ff, transparent 70%),
+    radial-gradient(1000px 420px at -10% 18%, #f3f7ff, transparent 70%),
+    linear-gradient(180deg, #fff 0%, var(--layer) 32%, #fff 100%);
 }
 
-.hero {
-    background: #1d1d1d;
-    background-size: 400% 400%;
-    color: #f0f0f0;
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 100px 20px;
-    text-align: center;
-    position: relative;
+::selection{ background: rgba(37,99,235,.18); color:#0b1220; }
+a{ color:inherit; text-decoration:none; }
+
+.hidden{ display:none !important; }
+.visible{ display:block !important; }
+
+.inner{ max-width:1240px; margin:0 auto; padding:0 16px; }
+
+/* 접근성 포커스 링 (마우스/터치 제외) */
+:where(a,button):focus-visible{
+  outline:0;
+  box-shadow:
+    0 0 0 2px rgba(37,99,235,.9),
+    0 0 0 8px rgba(37,99,235,.22);
+  border-color: rgba(37,99,235,.7) !important;
+  transition: box-shadow .18s var(--ease);
 }
 
-.hero-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 50px;
-    position: relative;
-
+/* ---------- Navigation --------------------------------------------------- */
+nav{
+  position: sticky; top: 0; z-index: 1000;
+  background: #fff;
+  border-bottom: 1px solid var(--hairline);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: saturate(112%) blur(0px);
+}
+@supports (backdrop-filter: blur(6px)){
+  nav{ backdrop-filter: blur(6px) saturate(116%); }
 }
 
-/* Navigation bar styles */
-nav {
-    background-color: rgb(20, 20, 20);
-    padding: 10px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 1000;
+.nav-container{
+  min-height: calc(56px + var(--safe-top));
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-top: var(--safe-top);
 }
 
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 1200px;
-    padding: 0 20px;
+.nav-title a{
+  color:#0b1220; font-weight:900; font-size:18px; letter-spacing:.2px;
+  padding:8px 12px; border-radius:12px;
+  border:1px solid var(--hairline);
+  background: linear-gradient(180deg, #fff, rgba(255,255,255,.72));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), var(--shadow-xs);
+  transition: transform var(--dur-hvr) ease, color .18s, border-color .18s, box-shadow .18s;
+  will-change: transform;
+}
+.nav-title a:hover{
+  transform: translateY(-1px);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--hairline));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(8,15,30,.06);
 }
 
-.nav-title {
-    flex-grow: 1;
+.auth-container{ display:flex; gap:10px; }
+.sign-link{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:38px; padding:0 14px; font-size:13px; border-radius:12px; cursor:pointer;
+  color:#0b1220; background:#fff; border:1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 #fff, var(--shadow-xs);
+  transition: transform var(--dur-hvr) ease, border-color .18s, background .18s, box-shadow .18s;
+  will-change: transform;
+}
+.sign-link:hover{
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: inset 0 1px 0 #fff, 0 8px 16px rgba(8,15,30,.06);
 }
 
-.nav-title a {
-    color: #dcdcdc; /* 밝은 색상으로 변경 */
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
+/* ---------- Hero --------------------------------------------------------- */
+main{ padding: 26px 0 calc(44px + var(--safe-bot)); }
+.hero{
+  min-height: calc(100vh - 64px);
+  display: grid; place-items: center; position: relative; isolation: isolate;
 }
 
-.auth-container {
-    position: absolute;
-    top: 10px;
-    right: 20px; /* 화면의 가장 오른쪽 위에 위치하도록 설정 */
-    display: flex;
-    align-items: center;
-    gap: 20px;
+.hero::before{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(7,18,34,.035), rgba(7,18,34,.035) 1px, transparent 1px, transparent 32px),
+    repeating-linear-gradient(0deg, rgba(7,18,34,.03), rgba(7,18,34,.03) 1px, transparent 1px, transparent 32px);
+  mask-image: radial-gradient(1100px 680px at 50% 8%, #000 40%, transparent 75%);
+  opacity:.35;
 }
 
-.auth-container .sign-link {
-    background-color: #9c9c9c48; /* 버튼 배경을 중간 톤 파란색으로 설정 */
-    color: #f5f5f5; /* 텍스트를 흰색으로 설정 */
-    border: 2px solid #5c5c5e; /* 흰색 테두리 */
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1); /* 밝은 그림자 */
+.hero-content{
+  text-align:center; position:relative; z-index:1;
+  padding-block: 6px;
 }
 
-.auth-container .sign-link:hover {
-    background-color: #3c3c3e; /* 호버 시 더 진한 파란색 */
-    color: #f5f5f5;
-    border-color: #8c8c8e;
+.main-title{
+  margin: 10px 0 8px;
+  font-size: var(--title-size);
+  font-weight:1000; letter-spacing:-.02em; line-height:.96; user-select:none;
+  color:#0b1220;
+  text-shadow: 0 1px 0 rgba(255,255,255,.85), 0 18px 36px rgba(7,18,34,.10);
+  transition: transform .32s var(--ease), letter-spacing .25s ease, filter .25s ease;
+  will-change: transform;
+}
+@media (hover:hover){
+  .main-title:hover{ transform: translateY(-2px) scale(1.01); letter-spacing:-.018em; }
+}
+.main-title.move-up{ transform: translateY(-34px); }
+.main-title.shrink{ transform: translateY(-34px) scale(.78); }
+
+.click-hint{
+  color:var(--muted); font-size:14px; letter-spacing:.22px; margin-top:8px;
 }
 
-.sign-link {
-    background-color: #9c9c9c48; /* 버튼 배경을 파란색으로 설정 */
-    color: #f5f5f5; /* 텍스트를 흰색으로 설정 */
-    border-color: #5c5c5e;
-    padding: 10px 20px;
-    border-radius: 20px; /* 모서리를 둥글게 처리 */
-    font-size: 16px;
-    font-weight: bold;
-    border: 2px solid transparent;
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+/* ---------- Launcher Grid (Strict) -------------------------------------- */
+.button-container{
+  margin: 26px auto 0;
+  display: grid; gap: var(--gutter);
+  grid-template-columns: repeat(4, minmax(200px, 1fr)); /* 데스크톱 4열 고정 */
+  max-width:1240px;
+  transition: opacity var(--dur-in) ease, transform var(--dur-in) ease;
+  will-change: opacity, transform;
+}
+.button-container.hidden{ opacity:0; transform: translateY(8px); }
+.button-container.visible{ opacity:1; transform:none; }
+
+/* 4 → 3 → 2 → 1 열 */
+@media (max-width: 980px){
+  .button-container{ grid-template-columns: repeat(3, minmax(200px, 1fr)); }
+}
+@media (max-width: 740px){
+  .button-container{ grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+}
+@media (max-width: 480px){
+  .button-container{ grid-template-columns: 1fr; }
 }
 
-.sign-link:hover {
-    background-color: #001bb38e; /* 호버 시 더 진한 파란색으로 변경 */
-    color: #f5f5f5;
-    border-color: #3c3c3e;
+/* ---------- App Buttons (Cards) ----------------------------------------- */
+.button{
+  position: relative; overflow: hidden;
+  display:flex; align-items:center; justify-content:center; gap:12px;
+  height: var(--btn-h); padding: 0 18px;
+  border-radius: var(--r-md);
+  font-weight:900; font-size: var(--btn-fs); letter-spacing:.22px;
+  color:#0b1220; background:var(--panel);
+  border:1px solid var(--hairline);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 10px 18px rgba(7,18,34,.06),
+    0 22px 44px rgba(7,18,34,.08);
+  transition:
+    transform var(--dur-in) var(--ease),
+    box-shadow .18s ease,
+    border-color .18s ease,
+    background .18s ease,
+    filter .18s ease;
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Hidden and utility classes */
-.hidden {
-    display: none;
+.button .ico{
+  width: var(--ico); height: var(--ico);
+  fill: currentColor; opacity:.96; flex: none;
+  transform: translateZ(0);
 }
 
-.visible {
-    display: flex;
+/* 상단 라이트 라인 */
+.button::after{
+  content:""; position:absolute; left:10%; right:10%; top:10px; height:1px; pointer-events:none;
+  background: linear-gradient(90deg, rgba(255,255,255,.7), rgba(255,255,255,0));
+  opacity:.22;
 }
 
-/* Main content and footer styles */
-.hero {
-    background: #1d1d1d;
-    background-size: 400% 400%;
-    color: #f0f0f0;
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    padding: 100px 20px;
-    text-align: center;
-    position: relative;
+/* 글레이어(광택) */
+.button::before{
+  content:""; position:absolute; inset:-8px; transform: translateX(-120%);
+  background: var(--sheen);
+  transition: transform .6s var(--ease);
+  will-change: transform;
 }
 
-.hero-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 50px;
-    position: relative;
+/* Hover / Active */
+@media (hover:hover){
+  .button:hover{
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.98),
+      0 14px 26px rgba(7,18,34,.08),
+      0 34px 66px rgba(7,18,34,.10);
+  }
+  .button:hover::before{ transform: translateX(120%); }
+}
+.button:active{ transform: translateY(-1px) scale(.996); }
 
+/* Focus ring shadow boost */
+.button:focus-visible{
+  box-shadow:
+    0 0 0 2px rgba(37,99,235,.85),
+    0 0 0 8px rgba(37,99,235,.20),
+    0 14px 26px rgba(7,18,34,.08);
 }
 
-.main-title {
-    font-size: 170px;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color:#dcdcdc;
-    cursor: pointer;
-    position: relative;
-    animation: fadeInSlide 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards,
-               pulse 2.5s infinite,
-               glow 4s infinite;
-    transition: transform 0.8s ease-in-out, font-size 0.8s ease;
+/* Disabled(런처 열리기 전) */
+.button.disabled{
+  pointer-events:none;
+  color: color-mix(in srgb, #0b1220 60%, #9fb1c9);
+  border-color: var(--hairline);
+  filter: grayscale(.12) brightness(.96);
 }
 
-@keyframes fadeInSlide {
-    0% {
-        opacity: 0;
-        transform: translateY(30px) translateX(-20px) scale(0.9);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) translateX(0) scale(1);
-    }
+/* Clicked feedback (JS에서 .clicked 부여 후 200ms 내 이동) */
+.button.clicked{
+  animation: btn-click .22s var(--ease-out) both;
+}
+@keyframes btn-click{
+  0%   { transform: translateY(-2px) scale(1.00); box-shadow: 0 10px 20px rgba(7,18,34,.06); }
+  60%  { transform: translateY(-3px) scale(1.02); box-shadow: 0 22px 50px rgba(7,18,34,.12); }
+  100% { transform: translateY(-2px) scale(1.00); }
 }
 
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
+/* ------- Staggered Reveal (가볍고 짧음) --------------------------------- */
+@keyframes menu-in{
+  from{ opacity:0; transform: translateY(10px) scale(.98); }
+  to{   opacity:1; transform: none; }
+}
+.button-container.visible .button{ animation: menu-in var(--dur-in) var(--ease) both; }
+.button-container.visible .button:nth-child(1)  { animation-delay:   0ms; }
+.button-container.visible .button:nth-child(2)  { animation-delay:  30ms; }
+.button-container.visible .button:nth-child(3)  { animation-delay:  60ms; }
+.button-container.visible .button:nth-child(4)  { animation-delay:  90ms; }
+.button-container.visible .button:nth-child(5)  { animation-delay: 120ms; }
+.button-container.visible .button:nth-child(6)  { animation-delay: 150ms; }
+.button-container.visible .button:nth-child(7)  { animation-delay: 180ms; }
+.button-container.visible .button:nth-child(8)  { animation-delay: 210ms; }
+.button-container.visible .button:nth-child(9)  { animation-delay: 240ms; }
+.button-container.visible .button:nth-child(10) { animation-delay: 270ms; }
+.button-container.visible .button:nth-child(11) { animation-delay: 300ms; }
+.button-container.visible .button:nth-child(12) { animation-delay: 330ms; }
+
+/* ------- Group hover: 은은한 하이라이트 링 ------------------------------ */
+@media (hover:hover){
+  .button-container:has(.button:hover){
+    filter: saturate(1.02);
+  }
 }
 
+/* ---------- Footer ------------------------------------------------------- */
+footer{
+  color: #7a8aa2; text-align:center;
+  padding: 36px 0 calc(54px + var(--safe-bot));
+  border-top: 1px solid var(--hairline);
+  background: linear-gradient(180deg, #fff, var(--layer));
+}
+footer p{ margin:8px 2px 0; font-size:12.5px; letter-spacing:.22px; }
 
-/* Bounce 애니메이션 */
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-20px);
-    }
+/* ---------- Admin-only visibility (safety) ------------------------------- */
+.admin-only{ /* JS가 숨김 처리하지만 FOUC 예방용 */ }
+.admin-only[style*="display: none"]{ display:none !important; }
+
+/* ---------- Dark Mode Fallback (OS) ------------------------------------- */
+/* 라이트 선호이므로 다크는 낮은 대비로만 지원(선택) */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0c1118; --layer:#0e141d; --panel:#0f1720;
+    --text:#e8edf5; --muted:#a7b4c7;
+    --hairline:#1b2533; --hairline-2:#1e2a3a;
+    --shadow-xs: 0 1px 1px rgba(0,0,0,.18);
+    --shadow-sm: 0 6px 16px rgba(0,0,0,.26);
+    --shadow:    0 18px 40px rgba(0,0,0,.34);
+  }
+  body{
+    background:
+      radial-gradient(1000px 420px at 80% -10%, #0f1a2a, transparent 70%),
+      radial-gradient(800px 360px at -10% 18%, #0d1726, transparent 70%),
+      linear-gradient(180deg, #0b1118 0%, #0e141d 32%, #0b1118 100%);
+  }
+  nav, .sign-link, .nav-title a, .button, footer{ background: var(--panel); color: var(--text); }
 }
 
-/* Blur 페이드 애니메이션 */
-@keyframes blur-fade {
-    0% {
-        opacity: 0;
-        filter: blur(10px);
-    }
-    50% {
-        opacity: 1;
-        filter: blur(0px);
-    }
-    100% {
-        opacity: 0;
-        filter: blur(10px);
-    }
+/* ---------- Reduced Motion ---------------------------------------------- */
+@media (prefers-reduced-motion: reduce){
+  *{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
 }
 
-/* Rotate & Scale 애니메이션 */
-@keyframes rotate-scale {
-    0% {
-        transform: scale(1) rotate(0deg);
-    }
-    50% {
-        transform: scale(1.2) rotate(10deg);
-    }
-    100% {
-        transform: scale(1) rotate(0deg);
-    }
-}
-
-/* Skew 애니메이션 */
-@keyframes skew {
-    0%, 100% {
-        transform: skew(0deg);
-    }
-    50% {
-        transform: skew(10deg, 10deg);
-    }
-}
-
-/* Flip 애니메이션 */
-@keyframes flip {
-    0% {
-        transform: rotateX(0deg);
-    }
-    50% {
-        transform: rotateX(180deg);
-    }
-    100% {
-        transform: rotateX(0deg);
-    }
-}
-
-
-/* Slide Horizontal */
-@keyframes slide-horizontal {
-    0% {
-        transform: translateX(-100px);
-    }
-    100% {
-        transform: translateX(100px);
-    }
-}
-
-/* Jelly 애니메이션 */
-@keyframes jelly {
-    0% {
-        transform: scale(1, 1);
-    }
-    25% {
-        transform: scale(0.9, 1.1);
-    }
-    50% {
-        transform: scale(1.1, 0.9);
-    }
-    75% {
-        transform: scale(0.95, 1.05);
-    }
-    100% {
-        transform: scale(1, 1);
-    }
-}
-
-/* 적용 예제 클래스 */
-.main-title.bounce {
-    animation: bounce 2s infinite;
-}
-
-.main-title.blur-fade {
-    animation: blur-fade 3s infinite;
-}
-
-.main-title.rotate-scale {
-    animation: rotate-scale 2s infinite alternate;
-}
-
-.main-title.skew {
-    animation: skew 2s infinite alternate;
-}
-
-.main-title.flip {
-    animation: flip 3s infinite;
-}
-
-.main-title.jelly {
-    animation: jelly 1.5s infinite;
-}
-
-.main-title.shrink {
-    font-size: 90px;
-}
-
-.main-title.move-up {
-    transform: translateY(-300px);
-}
-
-.click-hint {
-    font-size: 30px;
-    color: #fff;
-    margin-top: -20px;
-    animation: fadeInSlide 1.5s ease-out forwards, fadeInOut 3s infinite;
-}
-
-@keyframes fadeInOut {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-}
-
-.button-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    opacity: 0;
-    transform: translateY(50px); /* 아래쪽에서 올라오는 효과 */
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    pointer-events: none; /* 클릭 방지 */
-}
-
-.button-container.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto; /* 클릭 가능 */
-}
-
-.button {
-    background-color: #474747; /* 진한 회색 */
-    color: #f0f0f0; /* 밝은 회색 텍스트 */
-    padding: 12px 24px;
-    border-radius: 4px;
-    font-size: 22px;
-    font-weight: 700;
-    transition: background-color 0.3s, color 0.3s, transform 0.3s ease, opacity 0.3s ease;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    flex-basis: calc(25% - 20px);
-    animation: buttonAppear 0.4s ease forwards;
-    position: relative;
-    overflow: hidden; /* 물결 효과가 버튼 밖으로 넘어가지 않도록 제한 */
-}
-
-.button::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.4);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.4s ease, height 0.4s ease, opacity 0.8s ease;
-    opacity: 0;
-}
-
-.button:hover::after {
-    width: 300%;
-    height: 300%;
-    opacity: 0;
-    transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
-}
-
-.button:hover {
-    background-color: #6d6d6d; /* 조금 더 밝은 회색 */
-    color: #f0f0f0; /* 밝은 회색 텍스트 */
-}
-
-.button.clicked {
-    transform: scale(1.1);
-    opacity: 0;
-}
-
-
-
-
-/* 버튼 순차 애니메이션 (Dynamic) */
-/* 버튼에 애니메이션 적용 (빠르게) */
-.button {
-    opacity: 0;
-    transform: scale(0.9);
-    animation: buttonAppear 0.4s ease forwards, wiggle 2s infinite ease-in-out;
-}
-
-/* 버튼 개별 딜레이 적용 */
-.button:nth-child(1) { animation-delay: 0s; }
-.button:nth-child(2) { animation-delay: 0.1s; }
-.button:nth-child(3) { animation-delay: 0.2s; }
-.button:nth-child(4) { animation-delay: 0.3s; }
-.button:nth-child(5) { animation-delay: 0.4s; }
-.button:nth-child(6) { animation-delay: 0.5s; }
-.button:nth-child(7) { animation-delay: 0.6s; }
-.button:nth-child(8) { animation-delay: 0.7s; }
-.button:nth-child(9) { animation-delay: 0.8s; }
-.button:nth-child(10) { animation-delay: 0.9s; }
-.button:nth-child(11) { animation-delay: 1s; }
-
-/* 버튼 나타나는 애니메이션 */
-@keyframes buttonAppear {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-
-/* 버튼 꿈틀거림 애니메이션 */
-@keyframes buttonWiggle {
-    0% {
-        transform: scale(1) rotate(0deg);
-    }
-    25% {
-        transform: scale(1.05) rotate(1deg); /* 약간 커지고 회전 */
-    }
-    50% {
-        transform: scale(0.95) rotate(-1deg); /* 약간 작아지고 반대 방향 회전 */
-    }
-    75% {
-        transform: scale(1.03) rotate(0.5deg); /* 다시 커짐 */
-    }
-    100% {
-        transform: scale(1) rotate(0deg); /* 원래 상태 */
-    }
-}
-
-
-
-.description-box {
-    padding: 0;
-    background: linear-gradient(135deg, #3a3a3c, #1e1e1f); /* 진한 회색에서 더 어두운 회색으로 그라디언트 */
-    background-size: 200% 200%;
-    color: #e0e0e0; /* 밝은 회색 텍스트 */
-    text-align: center;
-    font-size: 22px;
-    font-weight: 700;
-    margin-top: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 더 어두운 그림자 */
-    width: 100%;
-    height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: 
-        height 0.5s ease, 
-        padding 0.5s ease, 
-        opacity 0.5s ease, 
-        transform 0.5s ease, 
-        box-shadow 0.3s ease,
-        background-position 1s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.description-box.visible {
-    height: 60px;
-    padding: 20px;
-    opacity: 1;
-    transform: translateY(0) scale(1.02);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4); /* 더 강한 그림자 */
-    background-position: 100% 0;
-    animation: fadeInUp 0.5s ease forwards;
-}
-
-@keyframes fadeInUp {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-footer {
-    background-color: rgb(22, 22, 22);
-    color: #dcdcdc; /* 중간 회색 */
-    text-align: center;
-    padding: 15px 0;
-    margin-top: auto;
-    font-weight: bold;
-}
-
-
-/* Media Queries for Responsive Design */
-@media (max-width: 768px) {
-    .main-title {
-        font-size: 48px;
-    }
-
-    .main-title.shrink {
-        font-size: 36px;
-    }
-
-    .button {
-        flex-basis: calc(50% - 20px);
-    }
-}
-
-@media (max-width: 480px) {
-    .button {
-        flex-basis: 100%;
-    }
-}
-
-/* 숨김 클래스 */
-.hidden {
-    display: none;
-}
-
-
-/* Input Group */
-.input-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-
-
-.result-output {
-    background-color: #ffffff;
-    border: 1px solid #0044cc;
-    border-radius: 8px;
-    padding: 15px;
-    font-size: 14px;
-    font-family: 'Courier New', monospace;
-    white-space: pre-wrap;
-    overflow-x: auto;
-    min-height: 100px;
-    color: #333;
+/* ---------- Print -------------------------------------------------------- */
+@media print{
+  nav, .click-hint{ display:none !important; }
+  body{ background:#fff; color:#000; }
+  .button{ box-shadow:none; border-color:#cfd8e3; }
 }
