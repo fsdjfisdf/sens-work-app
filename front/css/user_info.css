@@ -445,3 +445,47 @@ footer p{ margin:6px 2px 0; font-size:12.5px; }
   .chart-wrapper{ break-inside: avoid; box-shadow:none; border-color:#d1d5db; background:#fff; }
   .chart-wrapper canvas{ border:1px solid #e5e7eb; }
 }
+
+/* =========================================================
+   Mobile vertical stack (no horizontal scroll)
+   - <= 900px: 1열 세로배치, 가로 스크롤/스냅/페이드 제거
+   - 작은 기기에서 카드 min-width 제거로 넘침 방지
+   ========================================================= */
+@media (max-width: 900px){
+  /* 3열 → 1열 */
+  .chart-container{
+    grid-template-columns: 1fr;
+    overflow-x: visible;           /* 가로 스크롤 해제 */
+    scroll-snap-type: none;        /* 스냅 해제 */
+    padding: 8px 0 8px;            /* 세로 여백만 */
+    border: 0;                     /* 모바일에서 테두리 박스 제거(가독성↑) */
+    background: none;              /* 그리드 배경 제거 */
+  }
+  /* 페이드 인디케이터/스크롤바 제거 */
+  .chart-container::before,
+  .chart-container::after{ display: none; }
+  .chart-container::-webkit-scrollbar{ display: none; }
+  .chart-container{ scrollbar-width: none; }
+
+  /* 카드가 화면폭에 맞춰 꽉 차도록 */
+  .chart-wrapper{
+    min-width: 0;                  /* 기존 380px/340px 최소폭 무시 */
+    width: 100%;
+    margin: 0 0 var(--gutter);
+    border-radius: var(--radius-md);
+  }
+
+  /* 캔버스는 모바일 높이 변수 사용(이미 정의됨) + 좌우 안전 여백 */
+  .chart-wrapper canvas{
+    block-size: var(--chart-h-tab); /* <=900px용 변수 이미 선언됨 */
+    border-radius: 10px;
+  }
+}
+
+/* ---------------------------------------------------------
+   더 작은 화면(<=560px)에서 안전하게 여유주기
+   - 기존 .chart-wrapper { min-width: 340px } 덮어쓰기
+   --------------------------------------------------------- */
+@media (max-width: 560px){
+  .chart-wrapper{ min-width: 0; }
+}
