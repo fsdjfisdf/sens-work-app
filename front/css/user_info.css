@@ -55,21 +55,6 @@
   --chart-h-tab:320px;
 }
 
-/* Dark fallback (OS 다크 모드) */
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0b0f14; --surface:#0d131d; --panel:#111720; --panel-2:#0f1722;
-    --section-info:#0f1722; --section-charts:#0e1522;
-    --text:#e9eef5; --muted:#b8c2cf; --dim:#8aa0b4;
-    --accent:#60a5fa; --accent-weak: rgba(96,165,250,.18); --accent-soft: rgba(96,165,250,.10);
-    --border:#1e2a3a; --hair:#162130; --inset:rgba(255,255,255,.08);
-    --nav-bg:#111720; --nav-fg:#e9eef5; --nav-border:#1e2a3a;
-    --shadow-xs: 0 1px 1px rgba(0,0,0,.18);
-    --shadow-sm: 0 1px 2px rgba(0,0,0,.22);
-    --shadow:    0 10px 28px rgba(0,0,0,.32);
-    --shadow-lg: 0 18px 48px rgba(0,0,0,.42);
-  }
-}
 
 /* ---------- Base -------------------------------------------------------- */
 *,

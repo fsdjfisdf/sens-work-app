@@ -1,352 +1,335 @@
 /* ==========================================================================
-   S-WORKS — index.css (Light • Strict 4×3 Launcher • Rich Micro-interactions)
-   Version: 2025-08-22
-   Notes:
-   - 데스크톱(≥980px)에서 4열 고정, 12개 버튼 → 4×3 그리드
-   - Hover/Focus micro animations (GPU-friendly: transform/opacity only)
-   - 접근성: focus-visible 링, reduced motion 지원
-   - 성능: composite-only transition, will-change, 낮은 box-shadow 비용
+   S-WORKS · index.css — Editorial Clean v2 (Light-only)
+   - Polished details: typography, spacing rhythm, hover micro-interactions
+   - Launcher: strict 4×3 at desktop, fluid down to 1-col, equal heights
+   - Sticky blurred masthead, soft cards, subtle gloss sweep
+   - Accessible focus rings, reduced motion, print-ready
    ========================================================================== */
 
 /* ---------- Design Tokens ------------------------------------------------ */
 :root{
   /* Surfaces */
-  --bg:#ffffff;             /* 최상위 배경 */
-  --layer:#f6f8fc;          /* 얕은 구름 배경 */
-  --panel:#ffffff;          /* 버튼/패널 표면 */
+  --bg: #f7f8fb;        /* page background */
+  --paper: #ffffff;     /* tiles & panels */
+  --wash: #f2f5fa;      /* pale tint */
+  --line: #e6ecf3;      /* base divider */
+  --line-2:#dfe6ef;     /* stronger divider */
+  --line-strong:#d2dbe7;
 
-  /* Text */
-  --text:#0e1726;
-  --muted:#5b6b80;
+  /* Ink */
+  --ink: #0f172a;
+  --ink-2:#1f2937;      /* headings */
+  --muted:#7688a1;      /* captions */
 
-  /* Brand / Accent */
-  --accent:#2563eb;                /* S-WORKS 파랑 */
+  /* Accent */
+  --accent:#2563eb;
+  --accent-2:#1e4fd8;
   --accent-weak: rgba(37,99,235,.12);
-  --accent-weak-2: rgba(37,99,235,.08);
 
-  /* Lines & Shadows */
-  --hairline:#e8edf5;
-  --hairline-2:#e3eaf4;
-  --shadow-xs: 0 1px 1px rgba(8,15,30,.05);
-  --shadow-sm: 0 6px 16px rgba(8,15,30,.08);
-  --shadow:    0 18px 40px rgba(8,15,30,.10);
+  /* Elevation / Radius */
+  --r-xxl: 26px;
+  --r-xl: 22px;
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 10px;
+  --sh-1: 0 6px 18px rgba(2,6,23,.06);
+  --sh-2: 0 14px 32px rgba(2,6,23,.10);
+  --sh-3: 0 28px 64px rgba(2,6,23,.12);
 
-  /* Shape */
-  --radius:16px; --r-md:14px; --r-sm:12px;
-  --gutter:18px;
+  /* Type scale */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-16: clamp(15px, 1.4vw, 16px);
+  --fs-h2: clamp(22px, 3vw, 28px);
 
-  /* Launcher Buttons */
-  --btn-h:60px;
-  --btn-fs:15px;
-  --ico:18px;
-
-  /* Title */
-  --title-size: clamp(42px, 9vw, 104px);
+  /* Layout rhythm */
+  --container: 1240px;
+  --gutter: 18px;
 
   /* Motion */
-  --ease: cubic-bezier(.22,.63,.23,.99);
-  --ease-out: cubic-bezier(.17,.67,.25,1);
-  --dur-in: .26s;
-  --dur-hvr: .16s;
-
-  /* Gradient Accents (for sheens) */
-  --sheen: linear-gradient(100deg, rgba(255,255,255,.0) 0%, rgba(255,255,255,.55) 20%, rgba(255,255,255,.0) 40%) no-repeat;
-
-  /* Safe area */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bot: env(safe-area-inset-bottom, 0px);
+  --du: .22s;
+  --du-fast: .16s;
+  --ease: cubic-bezier(.2,.7,.25,1);
 }
 
-/* ---------- Base / Resets ----------------------------------------------- */
+/* ---------- Base --------------------------------------------------------- */
 *,
 *::before,
 *::after{ box-sizing: border-box; }
-
 html, body{ height:100%; }
-
 body{
-  margin:0; color:var(--text);
-  font-family: Inter, Pretendard, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
+  margin:0; color:var(--ink);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 
-  /* 차분한 라이트 아트 배경 */
+  /* Soft editorial background */
   background:
-    radial-gradient(1200px 480px at 80% -10%, #eef4ff, transparent 70%),
-    radial-gradient(1000px 420px at -10% 18%, #f3f7ff, transparent 70%),
-    linear-gradient(180deg, #fff 0%, var(--layer) 32%, #fff 100%);
+    radial-gradient(1200px 680px at -14% -10%, #fff 0 44%, transparent 60%),
+    radial-gradient(980px 560px at 118% -8%, #fff 0 42%, transparent 60%),
+    linear-gradient(180deg, #fff 0 240px, var(--bg) 240px 100%);
 }
-
-::selection{ background: rgba(37,99,235,.18); color:#0b1220; }
-a{ color:inherit; text-decoration:none; }
-
+a{ color: inherit; text-decoration: none; }
+img,svg{ display:block; max-width:100%; }
 .hidden{ display:none !important; }
-.visible{ display:block !important; }
+.inner{ max-width: var(--container); margin:0 auto; padding: 0 20px; }
+::selection{ background: rgba(37,99,235,.18); color:#0b1220; }
 
-.inner{ max-width:1240px; margin:0 auto; padding:0 16px; }
+/* Fluid headings baseline */
+.h2{ margin:0; font-size: var(--fs-h2); font-weight: 900; letter-spacing: .2px; color: var(--ink-2); }
 
-/* 접근성 포커스 링 (마우스/터치 제외) */
-:where(a,button):focus-visible{
+/* Focus ring (accessible, consistent) */
+:where(a, button, [role="button"], input, select):focus-visible{
   outline:0;
   box-shadow:
-    0 0 0 2px rgba(37,99,235,.9),
-    0 0 0 8px rgba(37,99,235,.22);
-  border-color: rgba(37,99,235,.7) !important;
-  transition: box-shadow .18s var(--ease);
+    0 0 0 2px rgba(37,99,235,.98),
+    0 0 0 7px rgba(37,99,235,.22);
+  border-radius: 12px;
 }
 
-/* ---------- Navigation --------------------------------------------------- */
-nav{
+/* ---------- Masthead (sticky, blurred) ---------------------------------- */
+.masthead{
   position: sticky; top: 0; z-index: 1000;
-  background: #fff;
-  border-bottom: 1px solid var(--hairline);
-  box-shadow: var(--shadow-xs);
-  backdrop-filter: saturate(112%) blur(0px);
+  background: #ffffffcc; /* light translucency */
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.6) inset, var(--sh-1);
 }
-@supports (backdrop-filter: blur(6px)){
-  nav{ backdrop-filter: blur(6px) saturate(116%); }
+@supports (backdrop-filter: blur(8px)){
+  .masthead{ backdrop-filter: saturate(115%) blur(8px); }
 }
-
-.nav-container{
-  min-height: calc(56px + var(--safe-top));
+.masthead__row{
+  min-height: 76px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding-top: var(--safe-top);
 }
 
-.nav-title a{
-  color:#0b1220; font-weight:900; font-size:18px; letter-spacing:.2px;
-  padding:8px 12px; border-radius:12px;
-  border:1px solid var(--hairline);
-  background: linear-gradient(180deg, #fff, rgba(255,255,255,.72));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), var(--shadow-xs);
-  transition: transform var(--dur-hvr) ease, color .18s, border-color .18s, box-shadow .18s;
-  will-change: transform;
+/* Brand lockup */
+.brand{ display:flex; align-items: baseline; gap: 10px; }
+.brand__logotype{
+  display:inline-block; padding: 6px 10px; border-radius: 12px;
+  font-weight: 900; letter-spacing:.2px; font-size: 18px; color: var(--ink-2);
+  background: linear-gradient(180deg, #fff, #f7faff);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset;
 }
-.nav-title a:hover{
-  transform: translateY(-1px);
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--hairline));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.98), 0 4px 10px rgba(8,15,30,.06);
+.brand__tag{ color: var(--muted); font-size: var(--fs-12); letter-spacing:.2px; transform: translateY(1px); }
+
+/* Auth buttons */
+.auth{ display:flex; gap: 10px; }
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height: 38px; padding: 0 14px; font-weight: 800; font-size: 12.5px; letter-spacing:.2px;
+  border-radius: 12px; transition: all var(--du) var(--ease);
+}
+.btn.ghost{
+  background:#fff; color: var(--ink); border:1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,.85) inset, var(--sh-1);
+}
+.btn.ghost:hover{
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--sh-2);
+}
+.btn.ghost:active{ transform: translateY(-1px) scale(.997); }
+
+/* ---------- Main shell --------------------------------------------------- */
+#content{ padding: 26px 0 30px; }
+
+/* ---------- Launcher Card ------------------------------------------------ */
+.launcher .inner{
+  position: relative; overflow: hidden; isolation: isolate;
+  background: var(--paper);
+  border:1px solid var(--line);
+  border-radius: var(--r-xxl);
+  box-shadow: var(--sh-1);
 }
 
-.auth-container{ display:flex; gap:10px; }
-.sign-link{
-  display:inline-flex; align-items:center; justify-content:center;
-  height:38px; padding:0 14px; font-size:13px; border-radius:12px; cursor:pointer;
-  color:#0b1220; background:#fff; border:1px solid var(--hairline);
-  box-shadow: inset 0 1px 0 #fff, var(--shadow-xs);
-  transition: transform var(--dur-hvr) ease, border-color .18s, background .18s, box-shadow .18s;
-  will-change: transform;
-}
-.sign-link:hover{
-  transform: translateY(-1px);
-  border-color: var(--accent);
-  box-shadow: inset 0 1px 0 #fff, 0 8px 16px rgba(8,15,30,.06);
-}
-
-/* ---------- Hero --------------------------------------------------------- */
-main{ padding: 26px 0 calc(44px + var(--safe-bot)); }
-.hero{
-  min-height: calc(100vh - 64px);
-  display: grid; place-items: center; position: relative; isolation: isolate;
-}
-
-.hero::before{
-  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+/* Launcher header: slim divider + airy padding */
+.launcher__head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding: 18px 18px 8px;
+  border-bottom:1px solid var(--line);
   background:
-    repeating-linear-gradient(90deg, rgba(7,18,34,.035), rgba(7,18,34,.035) 1px, transparent 1px, transparent 32px),
-    repeating-linear-gradient(0deg, rgba(7,18,34,.03), rgba(7,18,34,.03) 1px, transparent 1px, transparent 32px);
-  mask-image: radial-gradient(1100px 680px at 50% 8%, #000 40%, transparent 75%);
-  opacity:.35;
+    linear-gradient(180deg, rgba(37,99,235,.06) 0 1px, transparent 1px),
+    linear-gradient(0deg, #fff, #fff 70%, transparent);
 }
 
-.hero-content{
-  text-align:center; position:relative; z-index:1;
-  padding-block: 6px;
-}
-
-.main-title{
-  margin: 10px 0 8px;
-  font-size: var(--title-size);
-  font-weight:1000; letter-spacing:-.02em; line-height:.96; user-select:none;
-  color:#0b1220;
-  text-shadow: 0 1px 0 rgba(255,255,255,.85), 0 18px 36px rgba(7,18,34,.10);
-  transition: transform .32s var(--ease), letter-spacing .25s ease, filter .25s ease;
-  will-change: transform;
-}
-@media (hover:hover){
-  .main-title:hover{ transform: translateY(-2px) scale(1.01); letter-spacing:-.018em; }
-}
-.main-title.move-up{ transform: translateY(-34px); }
-.main-title.shrink{ transform: translateY(-34px) scale(.78); }
-
-.click-hint{
-  color:var(--muted); font-size:14px; letter-spacing:.22px; margin-top:8px;
-}
-
-/* ---------- Launcher Grid (Strict) -------------------------------------- */
-.button-container{
-  margin: 26px auto 0;
+/* ---------- Grid (4×3 strict on desktop) -------------------------------- */
+.grid{
   display: grid; gap: var(--gutter);
-  grid-template-columns: repeat(4, minmax(200px, 1fr)); /* 데스크톱 4열 고정 */
-  max-width:1240px;
-  transition: opacity var(--dur-in) ease, transform var(--dur-in) ease;
-  will-change: opacity, transform;
-}
-.button-container.hidden{ opacity:0; transform: translateY(8px); }
-.button-container.visible{ opacity:1; transform:none; }
-
-/* 4 → 3 → 2 → 1 열 */
-@media (max-width: 980px){
-  .button-container{ grid-template-columns: repeat(3, minmax(200px, 1fr)); }
-}
-@media (max-width: 740px){
-  .button-container{ grid-template-columns: repeat(2, minmax(180px, 1fr)); }
-}
-@media (max-width: 480px){
-  .button-container{ grid-template-columns: 1fr; }
+  grid-template-columns: repeat(4, minmax(220px,1fr));
+  padding: 18px;
 }
 
-/* ---------- App Buttons (Cards) ----------------------------------------- */
-.button{
-  position: relative; overflow: hidden;
-  display:flex; align-items:center; justify-content:center; gap:12px;
-  height: var(--btn-h); padding: 0 18px;
-  border-radius: var(--r-md);
-  font-weight:900; font-size: var(--btn-fs); letter-spacing:.22px;
-  color:#0b1220; background:var(--panel);
-  border:1px solid var(--hairline);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.92),
-    0 10px 18px rgba(7,18,34,.06),
-    0 22px 44px rgba(7,18,34,.08);
+/* Ensure tiles equal height visually; min-height controls card body */
+.grid > *{ min-height: 132px; }
+
+/* Responsive steps (3 → 2 → 1) */
+@media (max-width: 1160px){
+  .grid{ grid-template-columns: repeat(3, minmax(220px,1fr)); }
+}
+@media (max-width: 860px){
+  .grid{ grid-template-columns: repeat(2, minmax(200px,1fr)); }
+}
+@media (max-width: 520px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+/* ---------- Tiles (Apps) ------------------------------------------------- */
+.tile.app{
+  position: relative; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  padding: 16px 12px; text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--line); border-radius: var(--r-xl);
+  box-shadow: var(--sh-1);
+  color: var(--ink); font-weight: 900; letter-spacing:.2px;
   transition:
-    transform var(--dur-in) var(--ease),
-    box-shadow .18s ease,
-    border-color .18s ease,
-    background .18s ease,
-    filter .18s ease;
-  will-change: transform;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.button .ico{
-  width: var(--ico); height: var(--ico);
-  fill: currentColor; opacity:.96; flex: none;
-  transform: translateZ(0);
-}
-
-/* 상단 라이트 라인 */
-.button::after{
-  content:""; position:absolute; left:10%; right:10%; top:10px; height:1px; pointer-events:none;
-  background: linear-gradient(90deg, rgba(255,255,255,.7), rgba(255,255,255,0));
-  opacity:.22;
-}
-
-/* 글레이어(광택) */
-.button::before{
-  content:""; position:absolute; inset:-8px; transform: translateX(-120%);
-  background: var(--sheen);
-  transition: transform .6s var(--ease);
+    transform var(--du) var(--ease),
+    box-shadow var(--du) var(--ease),
+    border-color var(--du) var(--ease),
+    background-color var(--du) var(--ease),
+    filter var(--du) var(--ease);
   will-change: transform;
 }
 
-/* Hover / Active */
+/* Icon + label sizing */
+.tile.app i{ font-size: 22px; color: var(--accent); line-height:1; }
+.tile.app span{
+  font-size: 13.5px; line-height: 1.25; max-width: 92%;
+  text-wrap: balance; word-break: keep-all;
+}
+
+/* Subtle top gloss sweep */
+.tile.app::before{
+  content:""; position:absolute; inset:-14px; z-index:0; pointer-events:none;
+  background:
+    linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.65) 14%, rgba(255,255,255,0) 34%) no-repeat,
+    conic-gradient(from 180deg at 0% 0%, rgba(37,99,235,.06), transparent 30%, transparent 70%, rgba(37,99,235,.05)) no-repeat;
+  background-size: 180% 100%, 100% 100%;
+  background-position: -120% 0, center;
+  transition: background-position .9s cubic-bezier(.2,.7,.25,1);
+}
+
+/* Faint inner ring for definition */
+.tile.app::after{
+  content:""; position:absolute; inset:0; border-radius: inherit; z-index:0; pointer-events:none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 0 0 1px rgba(2,6,23,.03);
+}
+
+/* Hover / focus lift */
 @media (hover:hover){
-  .button:hover{
-    transform: translateY(-3px);
-    border-color: color-mix(in srgb, var(--accent) 40%, var(--hairline));
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.98),
-      0 14px 26px rgba(7,18,34,.08),
-      0 34px 66px rgba(7,18,34,.10);
+  .tile.app:hover{
+    transform: translateY(-4px);
+    border-color: var(--line-strong);
+    box-shadow: var(--sh-3);
   }
-  .button:hover::before{ transform: translateX(120%); }
+  .tile.app:hover::before{ background-position: 120% 0, center; }
 }
-.button:active{ transform: translateY(-1px) scale(.996); }
+.tile.app:active{ transform: translateY(-2px) scale(.997); }
 
-/* Focus ring shadow boost */
-.button:focus-visible{
-  box-shadow:
-    0 0 0 2px rgba(37,99,235,.85),
-    0 0 0 8px rgba(37,99,235,.20),
-    0 14px 26px rgba(7,18,34,.08);
-}
-
-/* Disabled(런처 열리기 전) */
-.button.disabled{
-  pointer-events:none;
-  color: color-mix(in srgb, #0b1220 60%, #9fb1c9);
-  border-color: var(--hairline);
-  filter: grayscale(.12) brightness(.96);
-}
-
-/* Clicked feedback (JS에서 .clicked 부여 후 200ms 내 이동) */
-.button.clicked{
-  animation: btn-click .22s var(--ease-out) both;
-}
-@keyframes btn-click{
-  0%   { transform: translateY(-2px) scale(1.00); box-shadow: 0 10px 20px rgba(7,18,34,.06); }
-  60%  { transform: translateY(-3px) scale(1.02); box-shadow: 0 22px 50px rgba(7,18,34,.12); }
-  100% { transform: translateY(-2px) scale(1.00); }
-}
-
-/* ------- Staggered Reveal (가볍고 짧음) --------------------------------- */
-@keyframes menu-in{
-  from{ opacity:0; transform: translateY(10px) scale(.98); }
-  to{   opacity:1; transform: none; }
-}
-.button-container.visible .button{ animation: menu-in var(--dur-in) var(--ease) both; }
-.button-container.visible .button:nth-child(1)  { animation-delay:   0ms; }
-.button-container.visible .button:nth-child(2)  { animation-delay:  30ms; }
-.button-container.visible .button:nth-child(3)  { animation-delay:  60ms; }
-.button-container.visible .button:nth-child(4)  { animation-delay:  90ms; }
-.button-container.visible .button:nth-child(5)  { animation-delay: 120ms; }
-.button-container.visible .button:nth-child(6)  { animation-delay: 150ms; }
-.button-container.visible .button:nth-child(7)  { animation-delay: 180ms; }
-.button-container.visible .button:nth-child(8)  { animation-delay: 210ms; }
-.button-container.visible .button:nth-child(9)  { animation-delay: 240ms; }
-.button-container.visible .button:nth-child(10) { animation-delay: 270ms; }
-.button-container.visible .button:nth-child(11) { animation-delay: 300ms; }
-.button-container.visible .button:nth-child(12) { animation-delay: 330ms; }
-
-/* ------- Group hover: 은은한 하이라이트 링 ------------------------------ */
+/* Icon micro-pop & label underline-on-hover */
 @media (hover:hover){
-  .button-container:has(.button:hover){
-    filter: saturate(1.02);
+  .tile.app:hover i{ transform: translateY(-1px) scale(1.03); transition: transform var(--du) var(--ease); }
+  .tile.app:hover span{
+    text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
   }
 }
 
-/* ---------- Footer ------------------------------------------------------- */
-footer{
-  color: #7a8aa2; text-align:center;
-  padding: 36px 0 calc(54px + var(--safe-bot));
-  border-top: 1px solid var(--hairline);
-  background: linear-gradient(180deg, #fff, var(--layer));
+/* Ripple press effect (css-only, light) */
+.tile.app:active .ripple{ display:none; }
+.tile.app:active{
+  filter: saturate(104%);
 }
-footer p{ margin:8px 2px 0; font-size:12.5px; letter-spacing:.22px; }
 
-/* ---------- Admin-only visibility (safety) ------------------------------- */
-.admin-only{ /* JS가 숨김 처리하지만 FOUC 예방용 */ }
+/* Intro fade-up (staggered) */
+.tile.app{
+  opacity: 0; transform: translateY(12px) scale(.985);
+  animation: fadeUp .42s var(--ease) forwards;
+}
+@keyframes fadeUp{ to{ opacity:1; transform: none; } }
+
+/* Stagger programmatically by position (1..12) */
+.grid > *:nth-child(1)  { animation-delay:  40ms; }
+.grid > *:nth-child(2)  { animation-delay:  80ms; }
+.grid > *:nth-child(3)  { animation-delay: 120ms; }
+.grid > *:nth-child(4)  { animation-delay: 160ms; }
+.grid > *:nth-child(5)  { animation-delay: 200ms; }
+.grid > *:nth-child(6)  { animation-delay: 240ms; }
+.grid > *:nth-child(7)  { animation-delay: 280ms; }
+.grid > *:nth-child(8)  { animation-delay: 320ms; }
+.grid > *:nth-child(9)  { animation-delay: 360ms; }
+.grid > *:nth-child(10) { animation-delay: 400ms; }
+.grid > *:nth-child(11) { animation-delay: 440ms; }
+.grid > *:nth-child(12) { animation-delay: 480ms; }
+
+/* Touch ergonomics (larger hit-area on coarse pointers) */
+@media (pointer: coarse){
+  .tile.app{ min-height: 146px; padding: 18px 14px; }
+  .tile.app i{ font-size: 24px; }
+}
+
+/* Admin-only guard (JS may inline display:none; ensure it sticks) */
 .admin-only[style*="display: none"]{ display:none !important; }
 
-/* ---------- Dark Mode Fallback (OS) ------------------------------------- */
-/* 라이트 선호이므로 다크는 낮은 대비로만 지원(선택) */
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0c1118; --layer:#0e141d; --panel:#0f1720;
-    --text:#e8edf5; --muted:#a7b4c7;
-    --hairline:#1b2533; --hairline-2:#1e2a3a;
-    --shadow-xs: 0 1px 1px rgba(0,0,0,.18);
-    --shadow-sm: 0 6px 16px rgba(0,0,0,.26);
-    --shadow:    0 18px 40px rgba(0,0,0,.34);
-  }
-  body{
-    background:
-      radial-gradient(1000px 420px at 80% -10%, #0f1a2a, transparent 70%),
-      radial-gradient(800px 360px at -10% 18%, #0d1726, transparent 70%),
-      linear-gradient(180deg, #0b1118 0%, #0e141d 32%, #0b1118 100%);
-  }
-  nav, .sign-link, .nav-title a, .button, footer{ background: var(--panel); color: var(--text); }
+/* ---------- Footer ------------------------------------------------------- */
+.sitefoot{
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, #fff, var(--bg));
+  color: var(--muted);
+  padding: 26px 0 calc(34px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+}
+.sitefoot .inner{ padding: 0 20px; }
+.sitefoot .accent-o{ color: #e11d48; font-weight: 900; }
+
+/* ---------- Fine-tuning: Rhythm & Micro-details ------------------------- */
+/* Slightly tighter top padding on very tall screens for better balance */
+@media (min-height: 920px){
+  #content{ padding-top: 30px; }
+}
+
+/* Launcher card: subtle corner highlights */
+.launcher .inner::before,
+.launcher .inner::after{
+  content:""; position:absolute; width:10px; height:10px; pointer-events:none;
+  opacity:.85;
+}
+.launcher .inner::before{
+  top:10px; right:10px;
+  border-top:2px solid rgba(37,99,235,.18);
+  border-right:2px solid rgba(37,99,235,.18);
+  border-top-right-radius:4px;
+}
+.launcher .inner::after{
+  bottom:10px; left:10px;
+  border-bottom:2px solid rgba(37,99,235,.18);
+  border-left:2px solid rgba(37,99,235,.18);
+  border-bottom-left-radius:4px;
+}
+
+/* Section title underline for structure */
+.launcher__head .h2{
+  position: relative; padding-bottom: 6px;
+}
+.launcher__head .h2::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background: linear-gradient(90deg, var(--line-2), transparent 70%);
+}
+
+/* Tile shadow refinement on keyboard focus */
+.tile.app:focus-visible{
+  transform: translateY(-3px);
+  border-color: var(--line-strong);
+  box-shadow: var(--sh-3), 0 0 0 2px rgba(37,99,235,.38) inset;
+}
+
+/* Add a faint shadow seam between grid rows for stronger grouping */
+.grid{
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    repeating-linear-gradient(0deg, transparent 0 129px, rgba(2,6,23,.018) 129px 130px) border-box;
+  border-radius: 0 0 var(--r-xxl) var(--r-xxl);
 }
 
 /* ---------- Reduced Motion ---------------------------------------------- */
@@ -359,9 +342,16 @@ footer p{ margin:8px 2px 0; font-size:12.5px; letter-spacing:.22px; }
   }
 }
 
+/* ---------- High Contrast Aid ------------------------------------------- */
+@media (prefers-contrast: more){
+  .masthead{ border-bottom-color: color-mix(in srgb, var(--line) 40%, #000); }
+  .launcher .inner, .tile.app{ border-color: color-mix(in srgb, var(--line) 40%, #000); }
+  .tile.app span{ text-decoration-color: color-mix(in srgb, var(--accent) 60%, #000); }
+}
+
 /* ---------- Print -------------------------------------------------------- */
 @media print{
-  nav, .click-hint{ display:none !important; }
-  body{ background:#fff; color:#000; }
-  .button{ box-shadow:none; border-color:#cfd8e3; }
+  .masthead{ position: static; box-shadow: none; background:#fff; }
+  .launcher .inner, .tile.app{ box-shadow: none; border-color: #d1d9e3; }
+  .grid{ gap: 12px; }
 }
