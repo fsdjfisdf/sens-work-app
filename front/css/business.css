@@ -1,263 +1,493 @@
-/* 전체 배경 어둡게 설정 */
-body {
-    background-color: #f4f4f9; /* 어두운 회색 배경 */
-    color: #000000; /* 텍스트는 밝게 */
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
+/* =============================================================================
+   S-WORKS — business.css
+   wide frame • blue-outline controls • sticky table • charts grid • timeline
+   ========================================================================== */
+
+/* ---------- Design tokens (self-contained; safely override elsewhere) ------- */
+:root{
+  --bg:#ffffff;
+  --surface:#f4f7fb;
+
+  --panel:#ffffff;
+  --panel-2:#f9fbff;
+  --panel-3:#f6f8fc;
+
+  --text:#0f172a;
+  --muted:#475569;
+  --dim:#64748b;
+
+  --accent:#2563eb;           /* 파란 톤(주색) */
+  --accent-600:#1d4ed8;
+  --accent-700:#1e40af;
+  --accent-weak: rgba(37,99,235,.14);
+  --accent-soft: color-mix(in srgb, var(--accent) 7%, #fff 93%);
+
+  --danger:#e11d48;
+
+  --border:#e2e8f0;
+  --hair:#eef2f7;
+  --inset:#eef2f7;
+
+  --shadow-xxs: 0 1px 0 rgba(2,6,23,.04);
+  --shadow-xs:  0 1px 1px rgba(2,6,23,.06);
+  --shadow-sm:  0 1px 2px rgba(2,6,23,.08);
+  --shadow:     0 8px 24px rgba(2,6,23,.10);
+  --shadow-lg:  0 16px 40px rgba(2,6,23,.14);
+
+  --ring-outer:0 0 0 4px rgba(37,99,235,.18);
+  --ring-inner:0 0 0 1px rgba(37,99,235,.55);
+
+  --radius:16px; --radius-md:12px; --radius-sm:10px; --radius-xs:8px;
+  --gutter:18px;
+
+  --control-h:42px;
+  --font-control:14.5px;
+
+  /* 페이지 폭 — 넓게 */
+  --frame-max:1680px;
+
+  /* 표/타임라인 높이 */
+  --table-max-h:72vh;
+
+  /* 표 팔레트 */
+  --table-border:#e6edf5;
+  --thead-bg:#0b3b7a;     /* 딥블루 */
+  --thead-text:#f8fafc;
+  --row-alt:#f8fbff;
+  --row-hover:#eef5ff;
+  --firstcol-bg:#fbfdff;
 }
 
-
-
-main {
-    padding: 20px;
-    max-width: 1600px;
-    margin: auto;
+/* ---------- Base / Reset ---------------------------------------------------- */
+*,
+*::before,
+*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: linear-gradient(180deg, #fff 0 64px, var(--surface) 64px 100%);
+  color:var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color: rgba(37,99,235,.08);
+}
+img,svg,canvas{ display:block; max-width:100%; }
+a{ color:var(--accent); text-decoration:none; text-underline-offset:2px; }
+a:hover{ text-decoration:underline; }
+.hidden{ display:none !important; }
+.inner{ max-width: var(--frame-max); margin:0 auto; padding:0 18px; }
+::selection{ background:var(--accent-weak); color:#0b1220; }
+:where(a,button,input,select,textarea):focus-visible{
+  outline:0; box-shadow: var(--ring-inner), var(--ring-outer);
+  border-color: rgba(37,99,235,.55) !important;
 }
 
-h2 {
-    margin-bottom: 20px;
+/* ---------- Nav (sticky) ---------------------------------------------------- */
+nav{
+  position: sticky; top:0; z-index:8000;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.nav-container{
+  min-height:56px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.nav-title a{
+  color:inherit; font-weight:900; font-size:18px; letter-spacing:-.01em;
+  padding:4px 6px; border-radius:8px; display:inline-block;
+}
+.nav-title a:hover{ color:var(--accent); }
+.sign-container{ display:flex; gap:8px; }
+
+.sign-link,.menu-item,.menu-btn{
+  display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 12px;
+  border-radius:10px; border:1px solid var(--border);
+  background:#fff; color:var(--text); font-size:13px; cursor:pointer;
+  transition: background .18s, border-color .18s, color .18s, transform .06s, box-shadow .18s;
+  box-shadow: var(--shadow-xs);
+}
+.sign-link:hover,.menu-item:hover,.menu-btn:hover{
+  background:#f1f5f9; border-color:var(--accent); color:var(--accent); box-shadow:var(--shadow-sm);
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+.menu-icon{ width:22px; height:14px; position:relative; color:inherit; }
+.menu-icon span{
+  position:absolute; left:0; right:0; height:2px; border-radius:2px; background:currentColor;
+  transform-origin:center; transition: transform .2s, opacity .2s, top .2s;
+}
+.menu-icon span:nth-child(1){ top:0 } .menu-icon span:nth-child(2){ top:6px } .menu-icon span:nth-child(3){ top:12px }
+
+.menu-bar{
+  background:#fff; border-top:1px solid var(--border);
+  overflow:hidden; max-height:0; transition:max-height .28s ease; will-change:max-height;
+  box-shadow: 0 6px 18px rgba(2,6,23,.06) inset;
+}
+.menu-bar.open{ max-height:640px; }
+.menu-bar-content{
+  max-width: var(--frame-max); margin:0 auto; padding:8px 12px;
+  display:flex; flex-wrap:wrap; gap:8px;
 }
 
-th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
+/* ---------- Section Headings ------------------------------------------------ */
+section > h2{
+  text-align:center; margin: 16px 0 8px;
+  color:#0b1220; font-weight:900; letter-spacing:-.01em;
+  font-size: clamp(18px, 1.7vw, 22px);
 }
 
-th {
-    background-color: #f4f4f9;
+/* =============================================================================
+   SEARCH BAR
+   ========================================================================== */
+#search-container{
+  display:grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 10px 12px;
+  align-items:center;
+  margin: 14px auto 18px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border:1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xs);
 }
 
-button {
-    padding: 5px 10px;
-    border: none;
-    cursor: pointer;
+/* Inputs / Selects */
+#search-container input[type="text"],
+#search-container select{
+  height: var(--control-h);
+  border-radius: 12px;
+  border:1px solid var(--border);
+  background:#fff; color:var(--text);
+  padding: 0 12px; font-size: var(--font-control);
+  box-shadow: inset 0 1px 0 rgba(2,6,23,.04);
+  transition: border-color .16s, box-shadow .16s, background .16s;
+}
+#search-container input::placeholder{ color:#8ea0b8; }
+#search-container :where(input,select):hover{ border-color:#d6deea; }
+#search-container :where(input,select)[disabled]{ background:#f8fafc; color:#98a4b5; cursor:not-allowed; }
+
+/* Custom arrow for select */
+#search-container select{
+  -webkit-appearance:none; appearance:none;
+  background-image:
+    linear-gradient(180deg, #fff, #fff),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.2 1.5l4 4 4-4' fill='none' stroke='%23667892' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position: right 12px center, right 12px center;
+  background-size:100% 100%, 12px 8px;
+  padding-right:34px;
 }
 
-.btn-primary {
-    background-color: #cccccc;
-    color: rgb(0, 0, 0);
+/* Grid spans */
+#search-name{ grid-column: span 2; min-width:160px; }
+#search-group, #search-site, #search-country, #search-city,
+#search-customer, #search-equipment{ grid-column: span 2; min-width:140px; }
+
+/* Blue-outline buttons */
+#search-container button{
+  height: var(--control-h);
+  padding: 0 14px; border-radius: 12px;
+  font-weight:800; font-size:13px; letter-spacing:.2px;
+  cursor:pointer;
+  border:1px solid var(--accent);
+  background:#fff; color: var(--accent);
+  box-shadow: var(--shadow-xs);
+  transition: transform .06s, background .16s, color .16s, border-color .16s, box-shadow .16s;
+}
+#search-container button:hover{
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+#search-container button:active{ transform: translateY(1px); }
+
+/* Button variants */
+#search-button{ grid-column: span 1; border-color: var(--accent-600); }
+#reset-button{
+  grid-column: span 1; border-color:#cbd5e1; color:#334155;
+}
+#reset-button:hover{ background:#f3f6fb; color:var(--text); }
+#export-button{ grid-column: span 2; }
+
+/* Responsive collapse */
+@media (max-width: 1200px){
+  #search-container{ grid-template-columns: repeat(8, 1fr); }
+  #export-button{ grid-column: span 3; }
+}
+@media (max-width: 900px){
+  #search-container{ grid-template-columns: repeat(4, 1fr); }
+  #search-name{ grid-column: span 4; }
+  #export-button{ grid-column: span 4; }
+}
+@media (max-width: 640px){
+  #search-container{ grid-template-columns: repeat(2, 1fr); }
+  #search-name{ grid-column: span 2; }
+  #export-button{ grid-column: span 2; }
 }
 
-.btn-primary:hover {
-    background-color: #a1a1a1;
+/* =============================================================================
+   ENGINEER COUNT (chips)
+   ========================================================================== */
+#engineer-count .outer{ background: transparent; padding: 4px 0; }
+#engineer-count .inner{
+  display:flex; gap:10px; align-items:stretch; justify-content:flex-start; flex-wrap:wrap;
+}
+.engineer-summary{
+  flex:1 1 280px;
+  display:grid; place-items:center;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow);
+  min-height: 72px;
+}
+.engineer-summary p{
+  margin:0; font-size: clamp(14px, 1.4vw, 18px);
+  font-weight:900; letter-spacing:.2px;
+  color: var(--accent-700);
 }
 
-#modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.2);
-    z-index: 1000;
+/* =============================================================================
+   GLOBAL HISTORY — Timeline Canvas
+   ========================================================================== */
+#chart-container{
+  position: relative;
+  margin: 8px auto 18px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  overflow-x: auto;     /* 가로 스크롤 보장 */
+  overflow-y: hidden;
+  display:flex; align-items:center; justify-content:center; /* 가운데 배치 */
+}
+#chart-container::-webkit-scrollbar{ height: 12px; }
+#chart-container::-webkit-scrollbar-track{ background:#f1f5f9; border-radius: 10px; }
+#chart-container::-webkit-scrollbar-thumb{ background:#c7d2fe; border-radius:10px; border:2px solid #f1f5f9; }
+#chart-container::-webkit-scrollbar-thumb:hover{ background:#a5b4fc; }
+#chart-container{ scrollbar-width: thin; scrollbar-color:#c7d2fe #f1f5f9; }
+
+/* Canvas width is controlled by JS (zoom). Keep responsive constraints sane. */
+#trip-chart{
+  max-width:none;   /* 가로 스크롤이 가능하도록 제한 해제 */
 }
 
-#trip-modal {
-    display: none;
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1001;
-    width: 400px;
+/* Timeline tooltip from JS */
+.tooltip{
+  position: fixed; z-index: 9100; pointer-events:none;
+  background:#0f172a; color:#f8fafc;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:8px 10px; font-size:12.5px; line-height:1.45;
+  box-shadow:0 10px 26px rgba(2,6,23,.25);
+  transform: translateY(-8px);
+  white-space: nowrap;
 }
 
-.modal-buttons {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
+/* =============================================================================
+   CHARTS GRID (Chart.js cards)
+   ========================================================================== */
+#graphs .inner{ padding-top:6px; }
+#graphs .chart-row{
+  display:grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin:10px 0 6px;
+}
+.chart-container{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow: var(--shadow);
+  padding:10px 12px 14px;
+  min-height:320px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.chart-container h3{
+  margin:2px 2px 6px;
+  font-size:14px; font-weight:900; letter-spacing:.2px; color:#0b1220;
+}
+.chart-container canvas{
+  width:100% !important; height:auto !important;
+  flex:1 1 auto;
 }
 
-#search-container {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
+/* Responsive columns */
+@media (max-width: 1380px){
+  #graphs .chart-row{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px){
+  #graphs .chart-row{ grid-template-columns: 1fr; }
 }
 
-#search-container input, #search-container button {
-    padding: 8px;
-    font-size: 14px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+/* =============================================================================
+   DATA TABLE — Business Trip Data
+   ========================================================================== */
+#data-table .inner{
+  position:relative;
+  margin-top:10px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow: var(--shadow);
+  padding:10px 10px 12px;
+
+  /* 표 스크롤은 컨테이너에서 처리 */
+  max-height: var(--table-max-h);
+  overflow:auto;
 }
 
-#search-container button {
-    background-color: #cccccc;
-    color: rgb(0, 0, 0);
-    border: none;
-    cursor: pointer;
+/* Section title for table */
+#data-table h2{
+  text-align:left; margin: 6px 6px 10px;
+  font-size: clamp(16px, 1.4vw, 20px);
+  font-weight:900; letter-spacing:-.01em; color:#0b1220;
 }
 
-#search-container button:hover {
-    background-color: #a1a1a1;
+/* Table core */
+#business-table{
+  width: max-content;    /* 내용에 맞게 확장 */
+  min-width: 100%;       /* 컨테이너보다 작지 않게 */
+  border-collapse: separate; border-spacing: 0;
+  table-layout: fixed;   /* sticky 안정성 */
+  font-size: 13px;
 }
 
-#business-table {
-    width: 100%;
-    max-width: 1600px; /* 원하는 최대 너비로 설정 */
-    margin: 0 auto;
+/* Head cells */
+#business-table thead th{
+  position: sticky; top: 0; z-index: 2;
+  background: var(--thead-bg);
+  color: var(--thead-text);
+  letter-spacing: .1px; font-weight: 800;
+  border:1px solid color-mix(in srgb, var(--thead-bg) 65%, #ffffff 35%);
+  border-bottom-width:2px;
+  padding:10px 8px;
+  min-width:120px; white-space: nowrap;
+}
+#business-table thead th:first-child{ border-top-left-radius:12px; min-width:80px; }
+#business-table thead th:last-child{ border-top-right-radius:12px; }
+
+/* Body cells */
+#business-table tbody td{
+  border:1px solid var(--table-border);
+  padding:10px 8px;
+  text-align:center; word-break: break-word;
+  min-width:120px; background:#fff;
 }
 
-td, th {
-    text-align: center;
-    padding: 10px;
-    border: 1px solid #ddd;
+/* Narrow/Wide cols */
+#business-table tbody td:nth-child(1){ min-width: 80px; }           /* ID */
+#business-table :is(thead th:nth-child(2), tbody td:nth-child(2)){
+  min-width:160px; text-align:left;                                  /* Name */
+}
+#business-table :is(thead th:nth-child(6), tbody td:nth-child(6)){ min-width:140px; } /* City */
+#business-table :is(thead th:nth-child(7), tbody td:nth-child(7)){ min-width:140px; } /* Customer */
+
+/* Sticky first column for long tables */
+#data-table .inner:not(.no-sticky-first) #business-table thead th:first-child,
+#data-table .inner:not(.no-sticky-first) #business-table tbody td:first-child{
+  position: sticky; left: 0; z-index: 3; background: var(--firstcol-bg);
+  box-shadow: 1px 0 0 0 var(--table-border);
 }
 
-/* 툴팁 기본 스타일 */
-.tooltip {
-    position: absolute;
-    display: none;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-family: Arial, sans-serif;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-    pointer-events: none;
-    z-index: 1000;
-    white-space: nowrap;
+/* Zebra + hover */
+#business-table tbody tr:nth-child(even) td{ background: var(--row-alt); }
+#business-table tbody tr:hover > td{ background: var(--row-hover); }
+
+/* Round corners bottom */
+#business-table tbody tr:last-child td:first-child{ border-bottom-left-radius:12px; }
+#business-table tbody tr:last-child td:last-child{ border-bottom-right-radius:12px; }
+
+/* Keyboard focus aid */
+#business-table tbody tr:focus-within td{
+  outline:2px solid rgba(37,99,235,.35);
+  outline-offset:-2px;
+  background: color-mix(in srgb, var(--row-hover) 60%, #ffffff 40%);
 }
 
-/* #graphs 섹션 */
-#graphs {
-    padding: 40px 20px;
-    background-color: #ffffff; /* 섹션 배경: 밝은 회색 */
-    border-radius: 12px; /* 둥근 모서리 */
-    margin: 20px auto;
-    max-width: 1600px;
-    max-height: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+/* Scrollbars (webkit + firefox) */
+#data-table .inner::-webkit-scrollbar{ height:12px; width:12px; }
+#data-table .inner::-webkit-scrollbar-track{ background:#f1f5f9; border-radius:10px; }
+#data-table .inner::-webkit-scrollbar-thumb{ background:#c7d2fe; border-radius:10px; border:2px solid #f1f5f9; }
+#data-table .inner::-webkit-scrollbar-thumb:hover{ background:#a5b4fc; }
+#data-table .inner{ scrollbar-width: thin; scrollbar-color:#c7d2fe #f1f5f9; }
+
+/* =============================================================================
+   FOOTER
+   ========================================================================== */
+footer{
+  color:#64748b;
+  padding:24px 0 34px; background:transparent;
+}
+footer .inner{ padding:0 18px; }
+footer p{ margin:6px 2px 0; font-size:12.5px; text-align:center; }
+
+/* =============================================================================
+   ACCESSIBILITY / STATES / PREFERENCES
+   ========================================================================== */
+:where(input,select,textarea)[aria-invalid="true"]{
+  border-color:#fca5a5 !important; box-shadow: 0 0 0 1px #fecaca inset;
+}
+input:active, select:active, textarea:active{ transform: translateY(0.5px); }
+
+/* High contrast */
+@media (prefers-contrast: more){
+  :where(a,button,input,select,textarea):focus-visible{
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 65%, white);
+  }
+  #data-table .inner, #chart-container, .chart-container{
+    border-color: color-mix(in srgb, var(--border) 58%, #000);
+  }
 }
 
-#graphs h2 {
-    color: #000000; /* 섹션 제목: 흰색 */
-    text-align: auto;
-    margin-bottom: 20px;
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
 }
 
-/* 각 그래프를 감싸는 컨테이너 */
-#graphs .inner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
+/* Print */
+@media print{
+  nav, .menu-bar, #search-container, #graphs, #chart-container{ display:none !important; }
+  body{ background:#fff; color:#000; }
+  #data-table .inner{
+    max-height:none; overflow:visible; box-shadow:none; border-color:#d1d5db;
+  }
+  #business-table thead th{
+    background: var(--thead-bg) !important; color:#fff !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
 }
 
-#graphs .chart-row {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    width: 100%;
+/* =============================================================================
+   SMALL HELPERS
+   ========================================================================== */
+.sr-only{
+  position:absolute !important; width:1px !important; height:1px !important;
+  padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important;
+  white-space:nowrap !important; border:0 !important;
 }
 
-#graphs .chart-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 30%;
-    min-width: 350px;
-    max-width: 500px;
-    background-color: #ffffffe1; /* 캔버스 배경: 흰색 */
-    border-radius: 8px; /* 둥근 모서리 */
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+/* Optionally mark destructive actions (not used here, but future-safe) */
+.btn-danger{
+  border-color: var(--danger); color: var(--danger); background:#fff;
+}
+.btn-danger:hover{ background: color-mix(in srgb, var(--danger) 6%, #fff 94%); }
+
+/* Visually separate page main content */
+main{ padding: 20px 0 40px; }
+
+/* Ensure links in menu act like buttons visually */
+.menu-item{ user-select:none; }
+
+/* Tighten table on very narrow screens */
+@media (max-width: 520px){
+  #business-table{ font-size:12.5px; }
+  #business-table thead th,
+  #business-table tbody td{ padding:8px 6px; min-width:110px; }
 }
 
-#graphs .chart-container h3 {
-    margin-bottom: 10px;
-    text-align: center;
-    font-size: 16px;
-    color: #333; /* 제목 색상 */
-}
-
-/* 캔버스 스타일 */
-#graphs canvas {
-    width: 100%;
-    height: 300px;
-}
-
-/* 섹션 간격 추가 */
-section {
-    align-items: center;
-    gap: 15px; /* 요소 간격 조정 */
-    margin-top: 10px;
-    padding: 8px 12px;
-    background-color: #e8f4ff; /* 배경색 추가 */
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
-}
-
-/* 섹션 구분을 위한 공통 스타일 */
-section:not(#graphs) {
-    background-color: #ffffff; /* 기본 섹션 배경 */
-    padding: 20px;
-    border-radius: 8px;
-}
-
-/* 엔지니어 섹션 */
-#engineer-count {
-    background-color: #f5f5f5; /* 심플한 배경 */
-    padding: 20px 15px;
-    border-radius: 10px;
-    margin: 20px auto;
-    min-width: 550px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
-}
-
-/* 내부 정렬 */
-#engineer-count .inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* 개별 카드 스타일 */
-.engineer-summary {
-    flex: 1;
-    text-align: center;
-}
-
-/* 제목 스타일 */
-.engineer-summary h3 {
-    font-size: 1rem;
-    color: #666;
-    font-weight: 500;
-}
-
-/* 숫자 스타일 */
-.engineer-summary p {
-    font-size: 1.0rem;
-    color: #333;
-    font-weight: 600;
-    margin: 0;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 600px) {
-    #engineer-count .inner {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .engineer-summary {
-        margin-bottom: 10px;
-    }
+/* Optional: sticky top shadow hint when scrolled */
+#data-table .inner::before{
+  content:""; position:sticky; top:0; left:0; right:0; height:10px; z-index:4; pointer-events:none;
+  background: linear-gradient(180deg, rgba(2,6,23,.06), rgba(2,6,23,0));
+  border-top-left-radius:12px; border-top-right-radius:12px;
+  display:block;
 }
