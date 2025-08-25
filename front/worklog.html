@@ -145,7 +145,7 @@
                             </button>
                         </div>
                         <div class="form-row">
-                            <button id="save-info" type="button">SAVE</button>
+                            <button id="save-info" type="button" class="hidden">SAVE</button>
                         </div>
 
 
@@ -185,7 +185,7 @@
                                 <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
                             </select>
                         </div>
-                        <div id="maintOptions" class="form-row" style="display:none;">
+                        <div id="maintOptions" class="hidden" style="display:none;">
                             <label for="maintOptionSelect">MAINT ITEM</label>
                             <select id="maintOptionSelect" name="maintOption">
                                 <option value="SELECT">SELECT</option>
@@ -336,7 +336,7 @@
 
     <div class="overlay" id="modal-overlay"></div>
     <div class="print-container" id="preview-modal">
-        <h2>작성 내용 확인</h2>
+        <h2>Check</h2>
         <p><strong class="important">Date:</strong> <span id="preview-task_date"></span></p>
         <p><strong class="important">Start Time:</strong> <span id="preview-start_time"></span></p>
         <p><strong class="important">End Time:</strong> <span id="preview-end_time"></span></p>
@@ -345,20 +345,66 @@
         <p><strong>Setup Item:</strong> <span id="preview-setupItem"></span></p>
         <p><strong>Transfer Item:</strong> <span id="preview-transferItem"></span></p>
         <p><strong>Worker:</strong> <span id="preview-task_man"></span></p>
-        <br>
-        <p>내용을 잘 확인하신 후 <strong>SAVE</strong> 버튼을 눌러주세요.</p>
         <div class="modal-buttons">
             <button type="button" id="confirm-save" class="btn-primary">SAVE</button>
             <button type="button" id="cancel-save" class="btn-secondary">CANCEL</button>
         </div>
     </div>
 
-    <div id="popup">
-        <h3>PASTE INFORM</h3>
-        <textarea id="paste-textarea"></textarea>
-        <button id="paste-submit" class="btn-primary">WRITE</button>
-        <button id="paste-cancel" class="btn-secondary">CANCEL</button>
+<div id="popup">
+  <h3>PASTE INFORM</h3>
+
+  <!-- 안내/에디터 래퍼 -->
+  <div class="editor-wrap">
+    <div class="guide">
+      <strong>붙여넣기 안내</strong> — 한 줄에 하나씩 입력하세요.
+      <br />단축키 <kbd>Ctrl</kbd>+<kbd>V</kbd> / <kbd>⌘</kbd>+<kbd>V</kbd>, 붙여넣은 후 <kbd>Enter</kbd>로 줄바꿈.
     </div>
+
+    <textarea id="paste-textarea" placeholder="예) 
+EPAB515 PM1 Wafer Broken  점검
+
+1) STATUS
+-.  EPAB515 PM1 wafer broken 발생 점검건
+
+2) ACTION
+-. Chamber open 후 확인 시 ch1, 2 wafer 있음
+-> 현업 인폼 후 제거 완료
+-. Pin 상태 확인 시 이상없음
+-. PM1 process kit 교체 완료(TDA->TDA)
+-. PM1, 2 door blade 교체 완료
+-> blade 이상없음
+-. Fast/slow valve o-ring 교체 완료
+-> leak trend 양호
+-. PM1 아인스 FCIP교체 연계 완료
+-. PM1 제외 설비 정상화 완료
+
+3) CAUSE 
+-.  EPAB515 PM1 wafer broken 발생 점검 건
+
+4) RESULT
+-. 현업 back up 예정
+
+5) SOP 및 T/S Guide 활용
+-. Not Utilized / Not Utilized (No Need)
+
+작업자 : 정현우, 김동한
+작업 시간 : 14:30 - 17:00(논10 무브 40)"></textarea>
+  </div>
+
+  <!-- 아래 버튼 2개를 툴바로 감싸고, 카운터 표시 추가 -->
+  <div class="toolbar">
+    <div class="left">
+      <button id="paste-submit" class="btn-primary">WRITE</button>
+      <button id="paste-cancel" class="btn-secondary">CANCEL</button>
+    </div>
+    <div class="meta" aria-live="polite">
+      <span class="dot"></span>
+      <span><strong id="paste-lines">0</strong> lines · <strong id="paste-chars">0</strong> chars</span>
+    </div>
+  </div>
+</div>
+
 
 <!-- 설비 추가 모달 -->
 <div id="equipment-add-modal" class="equipment-add-modal">
