@@ -1,444 +1,508 @@
-/* Reset some basic elements */
-body, h1, h2, p, a, input, select, label, textarea, button {
-    margin: 0;
-    padding: 0;
-    text-decoration: none;
-    color: inherit;
-    box-sizing: border-box;
-}
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    max-width: 100%;
-    overflow-x: hidden;
-}
+/* =============================================================================
+   S-WORKS — loadworklog.css (clean-frame • Mobile-first filters)
+   - 공통 테마(밝은 바탕) 유지
+   - 검색 컨테이너: 모바일 1열 → 태블릿 2열 → 데스크톱 3열 자동 적응
+     · 큰 터치 타깃, 레이블 위/컨트롤 아래
+     · 스크롤·표시 유지(고정 X), 접힘 없이 전체 필드 노출
+   - 테이블/모달 디테일 고정(이전 버전 포함) + 소소한 개선
+   ========================================================================== */
 
-/* Navigation styles */
-nav {
-    background-color: #1c1c1e;
-    padding: 10px 0;
-    display: flex;
-    justify-content: center;
-}
+/* ---------- Design Tokens -------------------------------------------------- */
+:root{
+  --bg:#ffffff;
+  --surface:#f4f7fb;     /* 페이지 배경 */
+  --panel:#ffffff;       /* 카드/컨테이너 배경 */
+  --panel-2:#fafcff;     /* 필터/서브카드 배경 */
 
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 1600px; /* 확장된 화면 너비 */
-    padding: 0 20px;
-}
+  --text:#0f172a;
+  --muted:#475569;
+  --dim:#64748b;
 
-.nav-title a {
-    color: #fff;
-    font-size: 24px;
-    font-weight: bold;
-}
+  --accent:#2563eb;
+  --accent-weak: rgba(37,99,235,.14);
+  --accent-soft: color-mix(in srgb, var(--accent) 6%, #fff 94%);
 
+  --border:#e2e8f0;
+  --hair:#eef2f7;
+  --inset:#eef2f7;
 
-footer {
-    background-color: #1c1c1e;
-    color: #fff;
-    text-align: center;
-    padding: 10px 0;
-    margin-top: auto;
-}
+  --shadow-xs: 0 1px 1px rgba(2,6,23,.06);
+  --shadow-sm: 0 1px 2px rgba(2,6,23,.08);
+  --shadow:    0 8px 24px rgba(2,6,23,.10);
+  --shadow-lg: 0 16px 40px rgba(2,6,23,.14);
 
-/* Menu button styles */
-.menu-btn {
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    position: fixed;
-    top: 3%;
-    right: 20px;
-    transform: translateY(-50%);
-    z-index: 1100;
+  --ring-outer:0 0 0 4px rgba(37,99,235,.14);
+  --ring-inner:0 0 0 1px rgba(37,99,235,.55);
+
+  --radius:16px; --radius-md:12px; --radius-sm:10px; --radius-xs:8px;
+  --gutter:20px;
+
+  --control-h:44px;         /* 모바일 터치 타깃 크게 */
+  --font-control:16px;      /* iOS 확대 방지 */
+
+  /* 테이블 컬럼 폭 (고정 테이블 레이아웃) */
+  --col-date:120px;
+  --col-group:100px;
+  --col-site:110px;
+  --col-title:380px;
+  --col-result:220px;
+  --col-worker:160px;
+  --col-time:90px;
 }
 
-.menu-icon {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 25px;
-    height: 18px;
+/* ---------- Base & Nav (공통) --------------------------------------------- */
+*,
+*::before,
+*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: linear-gradient(180deg, #fff 0 72px, var(--surface) 72px 100%);
+  color:var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color: rgba(37,99,235,.06);
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:var(--accent); text-decoration:none; text-underline-offset:2px; }
+a:hover{ text-decoration:underline; }
+.hidden{ display:none !important; }
+.inner{ max-width:1280px; margin:0 auto; padding:0 16px; }
+::selection{ background:var(--accent-weak); color:#0b1220; }
+:where(a,button,input,select,textarea):focus-visible{
+  outline:0; box-shadow: var(--ring-inner), var(--ring-outer);
+  border-color: rgba(37,99,235,.55) !important;
 }
 
-.menu-icon span {
-    height: 5px;
-    background-color: #fff;
-    border-radius: 2px;
-    transition: all 0.3s ease-in-out;
+nav{
+  position:sticky; top:0; z-index:8000;
+  background:#fff; color:var(--text);
+  border-bottom:1px solid var(--border); box-shadow:var(--shadow);
+}
+.nav-container{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:56px;
+}
+.nav-title a{ font-weight:800; font-size:18px; color:inherit; padding:4px 6px; border-radius:8px; }
+.nav-title a:hover{ color:var(--accent); }
+.sign-container{ display:flex; gap:8px; }
+.sign-link,.menu-item,.menu-btn{
+  display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 12px; border-radius:10px;
+  border:1px solid var(--border); background:#fff; color:var(--text); font-size:13px; cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s,transform .06s, box-shadow .2s;
+  box-shadow: var(--shadow-xs);
+}
+.sign-link:hover,.menu-item:hover,.menu-btn:hover{
+  background:#f1f5f9; border-color:var(--accent); color:var(--accent); box-shadow:var(--shadow-sm);
+}
+.menu-bar{
+  background:#fff; border-top:1px solid var(--border);
+  overflow:hidden; max-height:0; transition:max-height .28s ease; will-change:max-height;
+  box-shadow: 0 6px 18px rgba(2,6,23,.06) inset;
+}
+.menu-bar.open{ max-height:640px; }
+.menu-bar-content{ max-width:1280px; margin:0 auto; padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px; }
+
+/* ---------- Page Frame ----------------------------------------------------- */
+main{ padding:28px 0 44px; }
+.container{
+  background: var(--panel);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 16px 22px;
+  max-width:1280px; margin:0 auto;
+}
+.container > h1{
+  margin:0 0 14px; font-size:20px; font-weight:900; letter-spacing:-.01em;
+  color: color-mix(in srgb, var(--text) 94%, black); position:relative;
+}
+.container > h1::after{
+  content:""; position:absolute; left:-2px; right:-2px; bottom:-8px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--hair), transparent);
 }
 
-/* Menu bar styles */
-.menu-bar {
-    position: fixed;
-    top: 0;
-    right: -350px;
-    width: 300px;
-    height: 100%;
-    background-color: #fff;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    transition: right 0.3s ease;
-    z-index: 1001;
+/* =============================================================================
+   FILTERS — Mobile-first
+   • 모바일: 1열 스택(가독성/터치 최적화)
+   • 태블릿: 2열
+   • 데스크톱: 3열
+   ========================================================================== */
+.filter-container{
+  margin-top:16px; background:var(--panel-2);
+  border:1px solid var(--inset); border-radius:var(--radius-md);
+  box-shadow:var(--shadow-sm); padding:14px 12px 10px;
 }
 
-.menu-bar.open {
-    right: 0;
+/* 공통 아이템 */
+.filter-row{
+  display:grid;
+  grid-template-columns: 1fr;     /* 기본(모바일)=1열 */
+  gap:12px; padding:10px 4px 12px; position:relative;
+}
+.filter-row + .filter-row{ margin-top:6px; }
+.filter-row + .filter-row::before{
+  content:""; position:absolute; left:0; right:0; top:-4px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--hair), transparent);
+}
+.filter-item{ display:grid; grid-template-rows:auto auto; gap:8px; }
+.filter-item > label{
+  font-size:13px; letter-spacing:.2px; color:#4b5563; padding-left:2px; font-weight:700;
 }
 
-.menu-bar-content {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+/* 컨트롤 (모바일 크기/접근성 강화) */
+input[type="text"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+select{
+  height: var(--control-h);
+  border-radius: var(--radius-sm);
+  border:1px solid var(--border);
+  background:#fff; color: var(--text);
+  padding: 0 12px;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+  box-shadow: inset 0 1px 0 rgba(2,6,23,.04);
+  width: 100%;
+  font-size: var(--font-control);          /* iOS 확대 방지 */
+  -webkit-appearance: none; appearance: none;
+}
+input::placeholder{ color:#94a3b8; }
+
+/* 셀렉트 기본 화살표 대체(가벼운 SVG) */
+select{
+  background-image:
+    linear-gradient(180deg, #fff, #fff),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.2 1.5l4 4 4-4' fill='none' stroke='%23667892' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center, right 12px center;
+  background-size: 100% 100%, 12px 8px;
+  padding-right: 34px;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator{ filter:opacity(.75); }
+
+/* 버튼 행 — 모바일 1열(풀폭) */
+.filter-row.filter-buttons{
+  grid-template-columns: 1fr; align-items:end;
+}
+#search-btn,#reset-btn,#export-excel-btn{
+  height:48px; border-radius:12px; padding:0 16px;
+  font-weight:800; letter-spacing:.2px; font-size:15px; cursor:pointer;
+  border:1px solid var(--border); box-shadow:var(--shadow-xs);
+  transition:transform .06s, background .16s, border-color .16s, color .16s, box-shadow .16s;
+  touch-action: manipulation;
+}
+#search-btn{
+  background:var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color:#0b1220;
+}
+#search-btn:hover{ filter:brightness(1.02); box-shadow:var(--shadow-sm); }
+#search-btn:active{ transform:translateY(1px); }
+#reset-btn,#export-excel-btn{ background:#fff; color:var(--text); }
+#reset-btn:hover,#export-excel-btn:hover{
+  background:#f1f5f9; color:var(--accent); border-color:var(--accent); box-shadow:var(--shadow-sm);
 }
 
-.menu-item {
-    color: #000000;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    transition: background-color 0.3s, color 0.3s;
+/* 태블릿(>=640) — 2열 */
+@media (min-width:640px){
+  .filter-row{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+  .filter-row.filter-buttons{
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    column-gap:12px;
+  }
+  #search-btn,#reset-btn,#export-excel-btn{ height:44px; font-size:14px; }
 }
 
-.menu-item:hover {
-    background-color: #818181;
-    color: #ffffff;
+/* 데스크톱(>=1024) — 3열 (기존 형태 유지) */
+@media (min-width:1024px){
+  .filter-row{
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
 }
 
-.menu-item:last-child {
-    border-bottom: none;
+/* 촉각 입력 환경에서 라벨 터치 영역 확대 */
+@media (pointer:coarse){
+  .filter-item > label{ padding:4px 2px; }
 }
 
-/* 🌟 컨테이너 */
-.container {
-    width: 85%;
-    margin: 50px auto;
-    background: #ffffff;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    animation: fadeIn 0.5s ease-in-out;
+/* 포커스/에러 */
+:where(.filter-container) :where(input,select){
+  border-color: var(--border);
+}
+:where(.filter-container) :where(input,select):focus{
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  box-shadow: var(--ring-inner), var(--ring-outer), inset 0 1px 0 rgba(2,6,23,.04);
+}
+:where(.filter-container) :where(input,select)[aria-invalid="true"]{
+  border-color:#fca5a5; box-shadow: 0 0 0 1px #fecaca inset;
 }
 
-/* 🌟 제목 */
-h1 {
-    text-align: center;
-    font-size: 30px;
-    font-weight: 700;
-    color: #2c3e50;
-    animation: slideDown 0.6s ease-in-out;
+/* iOS 날짜·시간 키보드 확대 방지 */
+@supports (-webkit-touch-callout: none){
+  input, select{ font-size: 16px; }
 }
 
-/* 🌟 검색 필터 컨테이너 (반응형 6행 배치) */
-.filter-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    margin-bottom: 25px;
-    animation: fadeIn 0.4s ease-in-out;
-    position: sticky;
-        top: 70px;
-    z-index: 900;
+/* =============================================================================
+   TABLE — 작업 이력
+   ========================================================================== */
+#worklog-table{
+  width:100%;
+  border-collapse: separate; border-spacing:0;
+  margin-top:16px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  table-layout: fixed;
+}
+#worklog-table thead th:nth-child(1){ width:var(--col-date);  }
+#worklog-table thead th:nth-child(2){ width:var(--col-group); }
+#worklog-table thead th:nth-child(3){ width:var(--col-site);  }
+#worklog-table thead th:nth-child(4){ width:var(--col-title); }
+#worklog-table thead th:nth-child(5){ width:var(--col-result);}
+#worklog-table thead th:nth-child(6){ width:var(--col-worker);}
+#worklog-table thead th:nth-child(7){ width:var(--col-time);  }
+
+#worklog-table thead th,
+#worklog-table tbody td{
+  padding:12px 12px;
+  vertical-align: middle;
+  text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
 }
 
-/* 🌟 각 필터 행 */
-.filter-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+#worklog-table thead{
+  position: sticky; top: calc(56px + 1px);
+  z-index: 10;
+}
+#worklog-table thead th{
+  background: #f8fafc;
+  font-size:12px; color:#667892; letter-spacing:.2px; font-weight:800;
+  border-bottom:1px solid var(--border);
+}
+#worklog-table tbody tr{
+  background:#fff;
+  transition: background .12s ease, box-shadow .12s ease, transform .06s ease;
+}
+#worklog-table tbody tr:nth-child(odd){ background:#fbfcfe; }
+#worklog-table tbody tr:hover{
+  background:#fff; box-shadow: inset 0 1px 0 rgba(2,6,23,.04);
+}
+#worklog-table tbody td{ border-bottom:1px solid var(--hair); color:#0f172a; font-size:13px; }
+#worklog-table tbody tr:last-child td{ border-bottom:0; }
+
+#worklog-table tbody td:nth-child(1),
+#worklog-table tbody td:nth-child(2),
+#worklog-table tbody td:nth-child(3),
+#worklog-table tbody td:nth-child(7){ text-align:center; }
+#worklog-table tbody td:nth-child(6){ text-align:center; }
+#worklog-table tbody td:nth-child(4),
+#worklog-table tbody td:nth-child(5){ text-align:left; padding-right:16px; }
+
+/* Hover indicator (첫번째 셀 좌측바) */
+#worklog-table tbody tr:hover td:first-child{ position:relative; }
+#worklog-table tbody tr:hover td:first-child::before{
+  content:""; position:absolute; left:0; top:10%; bottom:10%; width:3px; border-radius:3px;
+  background: color-mix(in srgb, var(--accent) 45%, #cfe0ff);
 }
 
-/* 🌟 3개 필드가 있는 행 (GROUP, SITE, LINE) */
-.filter-row:nth-child(2) {
-    grid-template-columns: repeat(3, 1fr);
+/* 선택 행 */
+#worklog-table tbody tr.is-selected{
+  background:#fff; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+#worklog-table tbody tr.is-selected td:first-child::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--accent);
 }
 
-/* 🌟 검색 버튼과 리셋 버튼만 있는 행 */
-.filter-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
+/* 빈 상태 */
+#worklog-body:empty{
+  display:block; position:relative; min-height:120px;
+}
+#worklog-body:empty::before{
+  content:"작업 이력이 없습니다.";
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  color:#7b8aa4; font-size:14px; letter-spacing:.2px;
 }
 
-/* 🌟 필터 요소 공통 스타일 */
-.filter-item {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+/* 테이블 모바일 프렌들리 스크롤 */
+@media (max-width: 900px){
+  #worklog-table thead{ top:56px; }
+  #worklog-table{ display:block; overflow:auto; }
+  #worklog-table thead, #worklog-table tbody, #worklog-table tr, #worklog-table th, #worklog-table td{ display:block; }
+  #worklog-table thead{ display:table; width:max-content; min-width:100%; }
+  #worklog-table tbody{ display:block; width:max-content; min-width:100%; }
+  #worklog-table tr{ display:table-row; }
+  #worklog-table th, #worklog-table td{ display:table-cell; }
 }
 
-/* 🌟 필터 라벨 */
-.filter-container label {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 5px;
-    font-size: 14px;
+.pagination-container{
+  display:flex; align-items:center; justify-content:center; gap:10px; margin:12px auto 0;
+}
+.pagination-container button{
+  height:36px; min-width:40px; padding:0 10px; border-radius:10px; border:1px solid var(--border);
+  background:#fff; color:var(--text); cursor:pointer; box-shadow:var(--shadow-xs);
+  transition:transform .06s, background .16s, border-color .16s, color .16s, box-shadow .16s;
+}
+.pagination-container button:hover:not(:disabled){
+  background:#f1f5f9; border-color:var(--accent); color:var(--accent); box-shadow:var(--shadow-sm);
+}
+.pagination-container button:active:not(:disabled){ transform:translateY(1px); }
+.pagination-container button:disabled{ opacity:.45; cursor:not-allowed; }
+#page-info{ font-size:12.5px; color:#667892; padding:0 10px; }
+
+/* =============================================================================
+   MODAL — 2열 고정(PC) / 1열(모바일) 안정 정렬
+   ========================================================================== */
+.modal{
+  display:none; position:fixed; inset:0; z-index:9000;
+  background: rgba(2,6,23,.35); padding:24px; overflow:auto;
+}
+@supports (backdrop-filter: blur(8px)){ .modal{ backdrop-filter: blur(8px) saturate(112%); } }
+
+.modal-content{
+  margin:auto; width:min(1000px, 96vw);
+  background:#fff; border:1px solid var(--border); border-radius: var(--radius);
+  box-shadow:var(--shadow-lg); padding:0; position:relative;
+  animation: modal-in .16s ease-out;
+}
+@keyframes modal-in{ from{ transform:translateY(6px); opacity:0 } to{ transform:none; opacity:1 } }
+
+/* 상단 스티키 헤더 + 닫기 버튼 */
+.modal-content h2{
+  position: sticky; top:0; z-index:2;
+  margin:0; padding:14px 56px 14px 16px;
+  background:linear-gradient(180deg, #fff, #fdfefe);
+  border-bottom:1px solid var(--border);
+  font-size:18px; font-weight:900; letter-spacing:-.01em;
+  color: color-mix(in srgb, var(--text) 94%, black);
+}
+.modal .close{
+  position:absolute; top:10px; right:12px;
+  font-size:22px; line-height:1; color:#64748b; cursor:pointer; user-select:none;
+  transition: color .15s ease, transform .06s ease;
+}
+.modal .close:hover{ color:#0f172a; transform: scale(1.06); }
+
+/* 폼 — 2열 그리드(PC), 라벨=좌(220px), 컨트롤=우(1fr) */
+#worklog-form{
+  display:grid;
+  grid-template-columns: 220px 1fr;
+  column-gap:14px; row-gap:12px;
+  padding:14px 16px 16px;
+  align-items:center;
+}
+#worklog-form > label{ grid-column:1; align-self:center; font-size:12px; letter-spacing:.2px; color:#667892; padding-left:2px; }
+#worklog-form > :where(input,select,textarea){ grid-column:2; }
+
+#worklog-form input[type="text"],
+#worklog-form input[type="date"],
+#worklog-form input[type="time"],
+#worklog-form input[type="number"],
+#worklog-form select,
+#worklog-form textarea{
+  height: 40px; border-radius: var(--radius-sm);
+  border:1px solid var(--border); background:#fff; color:var(--text);
+  padding:0 12px; transition:border-color .16s, box-shadow .16s, background .16s;
+  box-shadow: inset 0 1px 0 rgba(2,6,23,.04); width:100%;
+  font-size:14px;
+}
+#worklog-form textarea{ min-height:120px; padding:10px 12px; resize:vertical; }
+
+/* 포커스/에러 */
+#worklog-form :where(input,select,textarea):focus{
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  box-shadow: var(--ring-inner), var(--ring-outer), inset 0 1px 0 rgba(2,6,23,.04);
+}
+#worklog-form :where(input,select,textarea)[aria-invalid="true"]{
+  border-color:#fca5a5; box-shadow: 0 0 0 1px #fecaca inset;
 }
 
-/* 🌟 입력 필드 스타일 */
-.filter-container select,
-.filter-container input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #bdc3c7;
-    background: #ffffff;
-    transition: all 0.3s ease-in-out;
-    font-size: 14px;
+/* 구분선 */
+#worklog-form label[for="task_description"],
+#worklog-form label[for="status"]{
+  position:relative; margin-top:2px;
+}
+#worklog-form label[for="task_description"]::before,
+#worklog-form label[for="status"]::before{
+  content:""; position:absolute; left:-16px; right:-16px; top:-8px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--hair), transparent);
+  grid-column:1 / -1;
 }
 
-/* 🌟 포커스 효과 */
-.filter-container select:focus,
-.filter-container input:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+/* 버튼 — 한 행 좌/우 */
+#save-btn, #delete-btn{
+  height:42px; border-radius:10px; padding:0 16px; font-weight:800; letter-spacing:.2px; font-size:13px;
+  cursor:pointer; border:1px solid var(--border); box-shadow:var(--shadow-xs);
+  transition:transform .06s, background .16s, border-color .16s, color .16s, box-shadow .16s;
+  margin-top:6px;
+}
+#save-btn{
+  grid-column:1; justify-self:start;
+  background:var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color:#0b1220;
+}
+#save-btn:hover{ filter:brightness(1.02); box-shadow:var(--shadow-sm); }
+#save-btn:active{ transform:translateY(1px); }
+
+#delete-btn{
+  grid-column:2; justify-self:end;
+  background:#fff; color:#b42318; border-color:#f1c9c9;
+}
+#delete-btn:hover{ background:#fff5f5; border-color:#fecaca; }
+
+/* 모달 내부 맨 아래 그라디언트 */
+.modal-content::after{
+  content:""; position:sticky; bottom:0; display:block; height:12px;
+  background:linear-gradient(180deg, transparent, rgba(2,6,23,.06));
+  pointer-events:none;
 }
 
-/* 🌟 버튼 스타일 */
-#search-btn,
-#reset-btn,
-#export-excel-btn {
-    padding: 14px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 8px;
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
-    width: 180px;
-    text-align: center;
+/* 좁은 화면 모달: 1열(라벨 위 / 입력 아래), 버튼도 1열 */
+@media (max-width: 1080px){
+  #worklog-form{
+    grid-template-columns: 1fr; row-gap:10px;
+  }
+  #worklog-form > label,
+  #worklog-form > :where(input,select,textarea){ grid-column:1; }
+  #save-btn, #delete-btn{ grid-column:1; justify-self:stretch; }
 }
 
-#search-btn {
-    background-color: #5c5c5c;
-    color: #ffffff;
+/* 숫자 입력 스핀 제거 */
+#worklog-form input[type="number"]{ -moz-appearance:textfield; }
+#worklog-form input[type="number"]::-webkit-outer-spin-button,
+#worklog-form input[type="number"]::-webkit-inner-spin-button{ -webkit-appearance: none; margin:0; }
+
+/* =============================================================================
+   A11y & Motion & Print
+   ========================================================================== */
+@media (prefers-contrast: more){
+  :where(a,button,input,select,textarea):focus-visible{
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 65%, white);
+  }
+  .filter-container, #worklog-table, .modal-content{ border-color: color-mix(in srgb, var(--border) 55%, #000); }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+}
+@media print{
+  nav, .menu-bar, .filter-container, .pagination-container, .modal{ display:none !important; }
+  body{ background:#fff; color:#000; }
+  .container{ box-shadow:none; border-color:#d1d5db; background:#fff; padding:0; border:0; }
+  #worklog-table{ border:1px solid #d1d5db; box-shadow:none; border-radius:0; }
+  #worklog-table thead th{ background:#fff; border-bottom:1px solid #d1d5db; }
+  #worklog-table tbody td{ border-bottom:1px solid #eee; }
 }
 
-#search-btn:hover {
-    background-color: #1b1b1b;
-}
-
-#reset-btn {
-    background-color: #bdc3c7;
-    color: white;
-}
-
-#reset-btn:hover {
-    background-color: #7f8c8d;
-}
-
-#export-excel-btn {
-    background-color: #108800;
-    color: white;
-}
-
-#export-excel-btn:hover {
-    background-color: #004d04;
-}
-
-/* 🌟 반응형 디자인 (모바일 최적화) */
-@media (max-width: 768px) {
-    .filter-row {
-        grid-template-columns: 1fr; /* 모바일에서는 한 줄씩 배치 */
-    }
-
-    .filter-buttons {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    #search-btn,
-    #reset-btn {
-        width: 100%;
-    }
-}
-
-
-/* 🌟 테이블 스타일 */
-#worklog-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* 테이블 헤더 */
-#worklog-table thead {
-    background-color: #444444;
-    color: white;
-    font-weight: bold;
-}
-
-#worklog-table th, #worklog-table td {
-    padding: 14px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-}
-
-/* 테이블 홀수 행 색상 변경 */
-#worklog-table tbody tr:nth-child(odd) {
-    background-color: #f9f9f9;
-}
-
-/* 테이블 마우스 호버 효과 */
-#worklog-table tbody tr:hover {
-    background-color: #ecf0f1;
-    transition: background 0.3s ease-in-out;
-    cursor: pointer;
-}
-
-/* 🌟 페이지네이션 */
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-.pagination-container button {
-    padding: 10px 15px;
-    font-size: 16px;
-    background-color: #444444;
-    color: #ffffff;
-    border-radius: 8px;
-}
-
-.pagination-container span {
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-/* 🌟 모달 스타일 */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-/* 모달 콘텐츠 */
-.modal-content {
-    background-color: white;
-    width: 50%;
-    max-height: 80%;
-    margin: 5% auto;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.5s ease-in-out;
-    overflow-y: auto; /* 🌟 스크롤 추가 */
-}
-
-/* 🌟 모달 스크롤 바 스타일 */
-.modal-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-    background: #34495e;
-    border-radius: 4px;
-}
-
-.modal-content::-webkit-scrollbar-track {
-    background: #ecf0f1;
-}
-
-/* 닫기 버튼 */
-.close {
-    float: right;
-    font-size: 24px;
-    cursor: pointer;
-    transition: color 0.3s ease-in-out;
-}
-
-.close:hover {
-    color: rgb(43, 43, 43);
-}
-
-/* 🌟 폼 스타일 */
-form {
-    display: flex;
-    flex-direction: column;
-}
-
-form label {
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-form input, form select, form textarea {
-    padding: 12px;
-    margin-top: 5px;
-    border-radius: 8px;
-    border: 1px solid #bdc3c7;
-    transition: all 0.3s ease-in-out;
-}
-
-form input:focus, form select:focus, form textarea:focus {
-    border-color: #2980b9;
-    box-shadow: 0 0 5px rgba(41, 128, 185, 0.5);
-}
-
-/* 🌟 저장 및 삭제 버튼 */
-#save-btn {
-    background-color: #636363;
-    color: #ffffff;
-    font-size: 16px;
-    padding: 14px;
-    border-radius: 8px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-}
-
-#save-btn:hover {
-    background-color: #272727;
-}
-
-#delete-btn {
-    background-color: #c7c7c7;
-    font-size: 16px;
-    padding: 14px;
-    border-radius: 8px;
-}
-
-#delete-btn:hover {
-    background-color: #afafaf;
-}
-
-/* 🌟 애니메이션 효과 */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
+/* =============================================================================
+   Micro Polish
+   ========================================================================== */
+input:active, select:active, textarea:active{ transform: translateY(0.5px); }
+::placeholder{ color:#94a3b8; }
+#worklog-table tbody tr.is-clickable td{ cursor:pointer; }
+#worklog-table tbody tr.is-clickable:hover{ filter: saturate(1.02); }
+#worklog-table tbody td:nth-child(7){ font-variant-numeric: tabular-nums; }
+#worklog-table::after{ content:""; display:block; height:6px; background:linear-gradient(180deg, var(--hair), transparent); }
