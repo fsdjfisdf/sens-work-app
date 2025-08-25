@@ -1,333 +1,514 @@
-/* 기본 요소 초기화 */
-body, h1, h2, p, ul, li, button, input, select, textarea {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Arial', sans-serif;
+/* =============================================================================
+   S-WORKS — test.css (Knowledge Test)
+   - Unified look & feel across S-WORKS (signal.css 등과 톤 일치)
+   - Deep polish: focus/hover/active, a11y, reduced-motion, dark mode, print,
+     custom radios/checkbox, scrollbars, tables, modals, tooltips, badges,
+     skeletons, empty-states, progress, sticky actions
+   ========================================================================== */
+
+/* ======================= 0) Design Tokens & Scales ======================== */
+:root{
+  /* Palette */
+  --bg:#ffffff;         /* page */
+  --layer:#f7f9fc;      /* subtle surface */
+  --panel:#ffffff;      /* card */
+  --ink:#0f172a;        /* strong text */
+  --text:#1f2937;       /* body text */
+  --muted:#475569;      /* secondary text */
+  --dim:#64748b;        /* dimmer text */
+
+  /* Accent & State */
+  --accent:#2563eb;         /* primary */
+  --accent-weak:rgba(37,99,235,.08);
+  --ok:#16a34a;
+  --warn:#f59e0b;
+  --err:#dc2626;
+  --info:#0ea5e9;
+
+  /* Lines & Shadows */
+  --line:#e2e8f0;
+  --hair:#eef2f7;
+  --shadow-xxs:0 1px 0 rgba(2,6,23,.05);
+  --shadow-xs: 0 1px 2px rgba(2,6,23,.06);
+  --shadow-sm: 0 2px 8px rgba(2,6,23,.08);
+  --shadow-md: 0 8px 18px rgba(2,6,23,.10);
+
+  /* Radii */
+  --r-2xl:22px; --r-xl:18px; --r-lg:14px; --r-md:10px; --r-sm:8px; --r-xs:6px; --r-full:999px;
+
+  /* Controls / Typography */
+  --ctrl-h:44px;
+  --fz-ctrl:15px;
+  --fz-sm:13px;
+  --fz-md:14px;
+  --fz-lg:16px;
+  --lh:1.55;
+
+  /* Layout */
+  --maxw:min(1100px, 96vw);
+
+  /* Table header */
+  --th-bg:#0b3b7a; --th-fg:#ffffff; --th-border:#092c5d;
+
+  /* Scrollbar */
+  --sb-thumb:#c8d1e0; --sb-track:#eff3f8; --sb-thumb-hover:#b5c0d3;
+
+  /* Transitions */
+  --t-fast:120ms; --t-med:180ms;
 }
 
-/* 전체 배경 및 컨테이너 */
-body {
-  background-color: #f4f4f9;
-  color: #333;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* ======================= 1) Base / Reset / Utilities ===================== */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",Arial,"Apple SD Gothic Neo","맑은 고딕",sans-serif;
+  line-height:var(--lh);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+img,svg,canvas,video{ max-width:100%; height:auto; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; }
+.hidden{ display:none !important; }
+.visually-hidden{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
 }
 
-.inner {
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 20px;
+/* Scrollbars */
+*::-webkit-scrollbar{ width:10px; height:10px; }
+*::-webkit-scrollbar-thumb{
+  background:var(--sb-thumb); border-radius:999px; border:2px solid var(--sb-track);
+}
+*::-webkit-scrollbar-thumb:hover{ background:var(--sb-thumb-hover); }
+*::-webkit-scrollbar-track{ background:var(--sb-track); }
+
+/* Focus ring (global) */
+:where(a,button,input,select,textarea,[role="button"]):focus-visible{
+  outline:0; box-shadow:0 0 0 1px rgba(37,99,235,.7), 0 0 0 4px var(--accent-weak);
+  border-radius:10px;
 }
 
-main {
-  flex: 1;
-  padding: 30px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* Selection */
+::selection{ background:rgba(37,99,235,.24); color:#0b1220; }
+
+/* ======================= 2) Navigation (shared tone) ===================== */
+nav{
+  position:sticky; top:0; z-index:50; background:#fff;
+  border-bottom:1px solid var(--line); box-shadow:var(--shadow-xxs);
+}
+nav .inner{ max-width:var(--maxw); margin:0 auto; padding:10px 16px; }
+.nav-container{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.nav-title a{ color:var(--ink); font-weight:900; letter-spacing:-.02em; }
+.sign-link{ color:var(--accent); font-weight:800; }
+
+.menu-btn{ border:0; background:transparent; cursor:pointer; padding:8px; border-radius:10px; }
+.menu-btn:focus-visible{ outline:0; box-shadow:0 0 0 3px var(--accent-weak); }
+.menu-icon{ display:grid; gap:4px; }
+.menu-icon span{ width:22px; height:2px; background:#111827; display:block; }
+
+.menu-bar{
+  background:#fff; border-top:1px solid var(--line); overflow:hidden; max-height:0;
+  transition:max-height var(--t-med) ease;
+}
+.menu-bar.open{ max-height:520px; }
+.menu-bar-content{
+  max-width:var(--maxw); margin:0 auto; padding:8px 16px 14px;
+  display:flex; flex-wrap:wrap; gap:8px;
+}
+.menu-item{
+  border:1px solid var(--line); background:#fff; color:var(--text);
+  border-radius:var(--r-full); padding:6px 10px; font-size:13px; font-weight:700;
+}
+.menu-item:hover{ border-color:#cfd8e5; }
+
+/* ======================= 3) Main wrapper ================================= */
+main .inner{ max-width:var(--maxw); margin:0 auto; padding:18px 16px 40px; }
+
+/* ======================= 4) Selector (EQ / LEVEL / START) ================= */
+.selector{
+  display:grid; grid-template-columns:1fr 1fr 1fr auto auto; gap:10px;
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r-2xl);
+  box-shadow:var(--shadow-md); padding:14px; align-items:center;
+  position:sticky; top:12px; z-index:5;
+}
+.selector label{ font-size:13px; font-weight:900; color:#334155; padding-left:2px; }
+.selector select{
+  height:var(--ctrl-h); border-radius:var(--r-md); border:1px solid var(--line);
+  background:#fff; color:var(--text); padding:0 12px; font-size:var(--fz-ctrl);
+  box-shadow:inset 0 1px 0 rgba(2,6,23,.04);
+  -webkit-appearance:none; appearance:none;
+  background-image:
+    linear-gradient(#fff,#fff),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.2 1.2l4 4 4-4' fill='none' stroke='%23667892' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center, right 12px center;
+  background-size:100% 100%, 12px 8px; padding-right:34px;
+  transition:border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+.selector select:hover{ border-color:#d6deea; }
+.selector select:focus-visible{ outline:0; box-shadow:0 0 0 1px rgba(37,99,235,.6),0 0 0 4px var(--accent-weak); }
+
+#start-test, #open-add-modal, #open-history-modal{
+  height:var(--ctrl-h); border-radius:11px; padding:0 14px;
+  font-weight:800; letter-spacing:.2px; font-size:13.5px; cursor:pointer;
+  border:1px solid var(--line); background:#fff; color:var(--text);
+  box-shadow:var(--shadow-xs);
+  transition:transform 60ms ease, background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+#start-test{ background:var(--accent-weak); border-color:#c8d5ff; color:#0b1220; }
+#open-add-modal, #open-history-modal{ background:#0b3b7a; color:#fff; border-color:#0a2f62; }
+#start-test:hover{ background:#f1f5f9; color:var(--accent); border-color:var(--accent); box-shadow:var(--shadow-sm); }
+#open-add-modal:hover, #open-history-modal:hover{ background:#0a3570; border-color:#0a2f62; }
+#start-test:active, #open-add-modal:active, #open-history-modal:active{ transform:translateY(1px); }
+
+/* ======================= 5) Quiz Containers ============================== */
+#quiz-container{
+  margin-top:18px; background:#fff; border:1px solid var(--line);
+  border-radius:var(--r-2xl); box-shadow:var(--shadow-md); padding:16px;
 }
 
-h2 {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 30px;
-  color: #000000;
+/* Single-question mode (showQuestion/next) */
+#question-box{
+  font-weight:900; color:var(--ink);
+  padding:8px 10px 14px; margin-bottom:12px;
+  border-bottom:1px solid var(--hair);
+}
+#choices{ list-style:none; padding:0; margin:0 0 14px; display:grid; gap:8px; }
+#choices li{
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-md);
+  padding:10px 12px; box-shadow:var(--shadow-xxs);
+}
+#choices label{ display:flex; gap:10px; align-items:center; cursor:pointer; user-select:none; }
+
+/* Custom radio (single-question) */
+#choices input[type="radio"]{
+  appearance:none; width:18px; height:18px; border-radius:50%;
+  border:2px solid #c9d4e6; display:inline-grid; place-content:center;
+  transition:border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+#choices input[type="radio"]::before{
+  content:""; width:10px; height:10px; border-radius:50%; transform:scale(0);
+  transition:transform var(--t-fast) ease; box-shadow:inset 0 0 0 6px var(--accent);
+}
+#choices input[type="radio"]:checked{ border-color:var(--accent); background:#fff; }
+#choices input[type="radio"]:checked::before{ transform:scale(1); }
+#choices input[type="radio"]:focus-visible{ outline:0; box-shadow:0 0 0 3px var(--accent-weak); }
+
+#next-btn{
+  height:42px; border-radius:10px; border:1px solid var(--line);
+  background:#fff; color:var(--text); font-weight:800; cursor:pointer; padding:0 16px;
+  box-shadow:var(--shadow-xs);
+  transition:transform 60ms ease, background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+#next-btn:hover{ background:#f1f5f9; color:var(--accent); border-color:var(--accent); box-shadow:var(--shadow-sm); }
+#next-btn:active{ transform:translateY(1px); }
+
+/* ======================= 6) All-Questions Form =========================== */
+/* JS가 인라인 스타일을 설정하므로 강제 오버라이드 */
+.question-block{
+  margin-bottom:18px !important;
+  padding:14px 16px !important;
+  border:1px solid var(--line) !important;
+  border-radius:var(--r-md) !important;
+  background:#fff !important;
+  box-shadow:var(--shadow-xxs);
+}
+.question-block p strong{ color:var(--ink); }
+.question-block label{ display:flex; gap:10px; align-items:flex-start; cursor:pointer; }
+
+/* 라디오 — 전체폼에서 동일 룩 */
+.question-block input[type="radio"]{
+  appearance:none; width:18px; height:18px; border-radius:50%;
+  border:2px solid #c9d4e6; display:inline-grid; place-content:center;
+  transition:border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+}
+.question-block input[type="radio"]::before{
+  content:""; width:10px; height:10px; border-radius:50%; transform:scale(0);
+  transition:transform var(--t-fast) ease; box-shadow:inset 0 0 0 6px var(--accent);
+}
+.question-block input[type="radio"]:checked{ border-color:var(--accent); background:#fff; }
+.question-block input[type="radio"]:checked::before{ transform:scale(1); }
+.question-block input[type="radio"]:focus-visible{ outline:0; box-shadow:0 0 0 3px var(--accent-weak); }
+
+/* 제출 버튼 (inline override) */
+#test-form button[type="submit"]{
+  height:44px !important; border-radius:11px !important; padding:0 18px !important;
+  font-weight:800 !important; letter-spacing:.2px; font-size:14px !important; cursor:pointer !important;
+  border:1px solid var(--line) !important; background:var(--accent-weak) !important; color:#0b1220 !important;
+  box-shadow:var(--shadow-xs) !important; margin-top:10px !important;
+  transition:transform 60ms ease, background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast) !important;
+}
+#test-form button[type="submit"]:hover{
+  background:#f1f5f9 !important; color:var(--accent) !important; border-color:var(--accent) !important; box-shadow:var(--shadow-sm) !important;
+}
+#test-form button[type="submit"]:active{ transform:translateY(1px) !important; }
+
+/* Sticky submit (있으면 자동 적용) */
+#test-form .sticky-actions{
+  position:sticky; bottom:8px; z-index:3; display:flex; justify-content:flex-end; gap:8px;
+  padding:8px; background:linear-gradient(to top, rgba(255,255,255,.95), rgba(255,255,255,.6) 70%, transparent);
+  border-radius:0 0 var(--r-2xl) var(--r-2xl);
 }
 
-/* 셀렉터 (설비 / 레벨 선택) */
-.selector {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
+/* ======================= 7) Result ======================================= */
+#result-container{
+  margin-top:18px; background:#fff; border:1px solid var(--line);
+  border-radius:var(--r-2xl); box-shadow:var(--shadow-md); padding:16px;
+}
+#result-container h3{
+  margin:0 0 10px; font-weight:900; color:var(--ink);
+  border-bottom:1px solid var(--hair); padding-bottom:10px;
+}
+#score{ font-size:18px; font-weight:900; color:#0b3b7a; }
+
+/* 가벼운 진행도 바(있으면 자동 적용: #result-progress, .bar, .fill) */
+#result-progress{ height:10px; background:var(--hair); border-radius:999px; overflow:hidden; margin:10px 0 14px; }
+#result-progress .fill{ height:100%; background:linear-gradient(90deg,var(--accent),#5b8cff); width:0%; transition:width var(--t-med) ease; }
+
+#result-details{
+  display:grid; gap:14px; max-height:62vh; overflow:auto; padding-right:6px;
+}
+.question-feedback{
+  background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px;
+  box-shadow:var(--shadow-xxs);
+}
+.question-feedback p strong{ color:var(--ink); }
+.question-feedback ul{ list-style:none; margin:8px 0 10px; padding:0; display:grid; gap:6px; }
+.question-feedback li{
+  padding:8px 10px; border-radius:10px; border:1px solid var(--hair);
+  display:flex; align-items:center; gap:10px; background:#fbfdff;
+}
+.question-feedback li .chip{
+  margin-left:auto; padding:2px 8px; border-radius:var(--r-full); font-weight:800; font-size:12px;
+  border:1px solid var(--hair); color:var(--muted); background:#fff;
+}
+.question-feedback li .chip.ok{ color:var(--ok); border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.05); }
+.question-feedback li .chip.err{ color:var(--err); border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.05); }
+
+#result-container button{
+  height:40px; border-radius:10px; border:1px solid var(--line);
+  background:#fff; color:var(--text); font-weight:800; cursor:pointer; padding:0 16px; margin-top:6px;
+  box-shadow:var(--shadow-xs); transition:background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+#result-container button:hover{ background:#f1f5f9; color:var(--accent); border-color:var(--accent); }
+
+/* ======================= 8) Modals (Add / History) ======================= */
+.modal{
+  position:fixed; inset:0; display:none; z-index:70; background:rgba(2,6,23,.35);
+}
+.modal:not(.hidden){ display:flex; align-items:center; justify-content:center; }
+@supports (backdrop-filter:blur(10px)){
+  .modal{ backdrop-filter: blur(10px) saturate(112%); }
+}
+.modal .modal-content{
+  width:min(960px, 94vw);
+  background:#fff; border:1px solid var(--line); border-radius:var(--r-2xl);
+  box-shadow:var(--shadow-md); padding:16px; position:relative; max-height:86vh; overflow:auto;
+  animation:modal-in var(--t-med) ease-out;
+}
+@keyframes modal-in{ from{ transform:translateY(6px); opacity:0 } to{ transform:none; opacity:1 } }
+
+.close-btn{
+  position:absolute; right:10px; top:8px; width:34px; height:34px; border-radius:10px;
+  display:grid; place-items:center; cursor:pointer; font-weight:900; color:#6b7a94;
+}
+.close-btn:hover{ background:#f1f5f9; color:#0b3b7a; }
+
+.modal h3{
+  margin:0 0 12px; font-weight:900; color:var(--ink);
+  border-bottom:1px solid var(--hair); padding-bottom:10px;
 }
 
-.selector label {
-  font-weight: bold;
-  color: #444;
+/* Add Question form */
+#add-form{
+  display:grid; grid-template-columns:1fr 2fr; gap:10px; align-items:center;
+}
+#add-form label{ font-size:13px; font-weight:800; color:#334155; }
+#add-form :where(input,select,textarea){
+  height:var(--ctrl-h); border-radius:var(--r-md);
+  border:1px solid var(--line); background:#fff; color:var(--text); padding:0 12px; font-size:var(--fz-ctrl);
+  box-shadow:inset 0 1px 0 rgba(2,6,23,.04);
+}
+#add-form textarea{ height:110px; padding:10px 12px; resize:vertical; }
+#add-form button[type="submit"]{
+  grid-column:1 / -1; justify-self:end; height:40px; border-radius:10px; border:1px solid var(--line);
+  background:var(--accent-weak); color:#0b1220; font-weight:800; padding:0 16px; cursor:pointer; box-shadow:var(--shadow-xs);
+  transition:background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
+}
+#add-form button[type="submit"]:hover{
+  background:#f1f5f9; color:var(--accent); border-color:var(--accent); box-shadow:var(--shadow-sm);
+}
+#response-message{ font-size:13px; color:var(--muted); }
+
+/* History modal top filters */
+#history-modal .modal-content > div[style*="margin-bottom"]{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+}
+#history-modal input[type="text"], #history-modal select{
+  height:38px; border-radius:10px; border:1px solid var(--line); background:#fff;
+  color:var(--text); padding:0 10px; font-size:14px;
+}
+#filter-results, #reset-results{
+  height:38px; border-radius:10px; border:1px solid var(--line);
+  background:#fff; color:var(--text); font-weight:800; padding:0 14px; cursor:pointer; box-shadow:var(--shadow-xs);
+}
+#filter-results:hover, #reset-results:hover{ background:#f1f5f9; color:var(--accent); border-color:var(--accent); }
+
+/* ======================= 9) Tables (History) ============================= */
+#test-history-table{
+  width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed;
+  font-size:14px; border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  box-shadow:var(--shadow-xxs);
+}
+#test-history-table thead th{
+  position:sticky; top:0; z-index:1;
+  background:var(--th-bg); color:var(--th-fg);
+  font-weight:800; font-size:13px; letter-spacing:.2px;
+  padding:10px; text-align:center; border-bottom:1px solid var(--th-border);
+  white-space:nowrap; user-select:none;
+}
+#test-history-table tbody td{
+  padding:10px; border-bottom:1px solid var(--hair); text-align:left; color:var(--text); background:#fff;
+  word-break:break-word;
+}
+#test-history-table tbody tr:nth-child(odd) td{ background:#fbfdff; }
+#test-history-table tbody tr:hover td{ background:#f6faff; }
+
+/* Score remark badge (자동 적용되도록 클래스 제공) */
+.badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:800; border:1px solid var(--hair); }
+.badge.ok{ color:var(--ok); background:rgba(22,163,74,.06); border-color:rgba(22,163,74,.2); }
+.badge.warn{ color:var(--warn); background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.25); }
+.badge.err{ color:var(--err); background:rgba(220,38,38,.06); border-color:rgba(220,38,38,.2); }
+
+/* ======================= 10) Tooltips (generic) ========================== */
+.tooltip{
+  position:fixed; z-index:80; pointer-events:none;
+  background:#0f172a; color:#e5e7eb; font-size:12.5px; padding:8px 10px; border-radius:8px;
+  box-shadow:0 6px 24px rgba(2,6,23,.28); transform:translateY(-4px);
+  opacity:0; animation:tip-in var(--t-med) ease forwards;
+}
+@keyframes tip-in{ to{ transform:translateY(0); opacity:1; } }
+
+/* ======================= 11) Notifications / Callouts ==================== */
+.callout{
+  display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:12px; border:1px solid var(--hair);
+  background:#fbfdff; color:var(--text); box-shadow:var(--shadow-xxs);
+}
+.callout .icon{ width:18px; height:18px; border-radius:6px; display:inline-block; margin-top:1px; }
+.callout.ok .icon{ background:var(--ok); } .callout.warn .icon{ background:var(--warn); } .callout.err .icon{ background:var(--err); }
+.callout.ok{ background:rgba(22,163,74,.05); border-color:rgba(22,163,74,.22); }
+.callout.warn{ background:rgba(245,158,11,.06); border-color:rgba(245,158,11,.22); }
+.callout.err{ background:rgba(220,38,38,.05); border-color:rgba(220,38,38,.22); }
+
+/* ======================= 12) Skeleton / Loading ========================== */
+.skeleton{
+  position:relative; background:linear-gradient(90deg, #f1f5f9, #eef2f7, #f1f5f9);
+  background-size:200% 100%; animation:skeleton 1.2s ease-in-out infinite;
+  border-radius:8px; min-height:12px;
+}
+@keyframes skeleton{ 0%{ background-position:200% 0 } 100%{ background-position:-200% 0 } }
+
+/* ======================= 13) Empty States ================================ */
+.empty{
+  text-align:center; color:var(--muted); border:1px dashed var(--line); padding:22px; border-radius:16px; background:#fff;
+}
+.empty .title{ font-weight:900; color:var(--ink); margin-bottom:4px; }
+.empty .desc{ font-size:13.5px; }
+
+/* ======================= 14) Footer ====================================== */
+footer{ border-top:1px solid var(--line); background:#fff; }
+footer .inner{ max-width:var(--maxw); margin:0 auto; padding:18px 16px; color:var(--muted); font-size:13.5px; }
+
+/* ======================= 15) Admin-only visibility ======================= */
+.admin-only{ /* 기본은 표시: JS에서 권한 없을 때 display:none 처리 */
+  transition:opacity var(--t-fast) ease;
 }
 
-.selector select, .selector button {
-  padding: 10px 14px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+/* ======================= 16) Responsive ================================= */
+@media (max-width: 920px){
+  .selector{ grid-template-columns:1fr 1fr 1fr; }
+  #open-add-modal{ grid-column:span 1; }
+}
+@media (max-width: 680px){
+  .selector{ grid-template-columns:1fr 1fr; }
+  .selector label{ display:none; } /* placeholder로 대체 */
+  #start-test, #open-add-modal, #open-history-modal{ grid-column:span 1; }
+  #choices{ gap:6px; }
+}
+@media (max-width: 520px){
+  .selector{ grid-template-columns:1fr; }
 }
 
-.selector button {
-  background-color: #0044cc;
-  color: white;
-  font-weight: bold;
-  border: none;
-  transition: background-color 0.3s ease;
-  cursor: pointer;
+/* ======================= 17) Print ======================================= */
+@media print{
+  nav, .menu-bar, .selector, #open-history-modal, .modal, footer{ display:none !important; }
+  #quiz-container, #result-container{ border:0; box-shadow:none; }
+  body{ background:#fff; color:#000; }
 }
 
-.selector button:hover {
-  background-color: #0033aa;
+/* ======================= 18) Reduced Motion ============================== */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
 }
 
-/* 퀴즈 박스 */
-#quiz-container {
-  width: 90%;
-  min-width: 400px;
-  margin-top: 30px;
+/* ======================= 19) Dark Mode =================================== */
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b1020; --panel:#0f172a; --layer:#0b1326;
+    --ink:#f8fafc; --text:#e5e7eb; --muted:#cbd5e1; --dim:#94a3b8;
+    --line:#1e293b; --hair:#142033;
+    --accent:#3b82f6; --accent-weak:rgba(59,130,246,.12);
+    --sb-thumb:#2c3a55; --sb-track:#0f172a; --sb-thumb-hover:#3a4a6d;
+    --th-bg:#0b448f; --th-fg:#eaf2ff; --th-border:#0a3570;
+  }
+
+  nav, .menu-bar{ background:#0f172a; }
+  .menu-item{ background:#0f172a; border-color:#22304a; color:#e5e7eb; }
+  .menu-item:hover{ border-color:#2a3b5a; }
+
+  .selector{ background:#0f172a; border-color:#22304a; }
+  .selector select{ background:#0b1326; border-color:#22304a; color:#e5e7eb; }
+  #start-test{ color:#cfe0ff; background:rgba(59,130,246,.1); border-color:#25437a; }
+  #open-add-modal, #open-history-modal{ background:#12325f; }
+
+  #quiz-container, #result-container{ background:#0f172a; border-color:#22304a; }
+  #question-box{ border-bottom-color:#142033; }
+  #choices li{ background:#0f172a; border-color:#22304a; }
+  #choices input[type="radio"]{ border-color:#34435f; }
+  #next-btn{ background:#0f172a; border-color:#22304a; color:#e5e7eb; }
+
+  .question-block{ background:#0f172a !important; border-color:#22304a !important; }
+  .question-feedback{ background:#0f172a; border-color:#22304a; }
+  .question-feedback li{ background:#0e162e; border-color:#142033; }
+
+  .modal .modal-content{ background:#0f172a; border-color:#22304a; }
+  #add-form :where(input,select,textarea){ background:#0b1326; border-color:#22304a; color:#e5e7eb; }
+  #add-form textarea{ background:#0b1326; }
+
+  #test-history-table{ border-color:#22304a; }
+  #test-history-table thead th{ background:#0b448f; border-bottom-color:#0a3570; }
+  #test-history-table tbody td{ background:#0f172a; border-bottom-color:#142033; color:#e5e7eb; }
+  #test-history-table tbody tr:nth-child(odd) td{ background:#0e162e; }
+
+  footer{ background:#0f172a; border-top-color:#22304a; }
+
+  .tooltip{ background:#0b1326; color:#e5e7eb; }
+  .skeleton{ background:linear-gradient(90deg, #0f172a, #0b1326, #0f172a); }
+  .empty{ background:#0f172a; border-color:#22304a; color:#cbd5e1; }
 }
 
-#question-box {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 15px;
+/* ======================= 20) High Contrast (forced-colors) =============== */
+@media (forced-colors: active){
+  :root{ --accent:Highlight; }
+  *{ forced-color-adjust:auto; }
+  .menu-item, .selector select, #next-btn, #start-test, #open-add-modal, #open-history-modal,
+  #test-form button[type="submit"], #filter-results, #reset-results, #result-container button{
+    border:1px solid ButtonText;
+  }
+  .tooltip{ border:1px solid CanvasText; }
 }
 
-#choices {
-  list-style: none;
-  padding-left: 0;
-  margin-bottom: 20px;
-}
-
-#choices li {
-  margin-bottom: 10px;
-}
-
-#choices input[type="radio"] {
-  margin-right: 8px;
-}
-
-#next-btn {
-  background-color: #28a745;
-  color: white;
-  font-weight: bold;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-#next-btn:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
-/* 결과 */
-#result-container {
-  margin-top: 40px;
-  padding: 20px;
-  border-radius: 12px;
-  background-color: #f9f9fb;
-  border: 1px solid #ddd;
-}
-
-#score {
-  font-size: 20px;
-  font-weight: bold;
-  color: #222;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-#result-details {
-  margin-top: 20px;
-}
-
-#result-details div {
-  margin-bottom: 25px;
-  padding: 15px;
-  background-color: #ffffff;
-  border-left: 4px solid #0044cc;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-#result-details strong {
-  font-size: 16px;
-}
-
-#result-container button {
-  display: block;
-  margin: 30px auto 0;
-  background-color: #0044cc;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-#result-container button:hover {
-  background-color: #0033aa;
-}
-
-/* 모달 */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background-color: rgba(0,0,0,0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #ffffff;
-  padding: 40px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 700px;
-  position: relative;
-  animation: slideUp 0.3s ease-in-out;
-}
-
-.modal-content h3 {
-  font-size: 22px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.modal-content input,
-.modal-content textarea {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-.modal-content textarea {
-  min-height: 120px;
-  resize: none;
-}
-
-/* 모달 버튼 */
-.modal-content button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.modal-content button[type="submit"] {
-  background-color: #28a745;
-  color: white;
-}
-
-.modal-content button[type="submit"]:hover {
-  background-color: #218838;
-}
-
-.close-btn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.close-btn:hover {
-  color: #000;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-#result-details .question-feedback {
-  background: #fff;
-  padding: 20px;
-  border-left: 5px solid #28a745;
-  border-radius: 8px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-}
-
-#result-details li span {
-  font-weight: bold;
-}
-
-#result-details li span.correct {
-  color: green;
-}
-
-#result-details li span.incorrect {
-  color: red;
-}
-
-.question-block {
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-left: 5px solid #0044cc;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-#test-history-container {
-  margin-top: 40px;
-}
-
-#test-history-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-#test-history-table th,
-#test-history-table td {
-  border: 1px solid #ccc;
-  padding: 10px;
-  text-align: center;
-}
-
-#test-history-table th {
-  background-color: #f2f2f2;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0,0,0,0.6);
-  z-index: 9999;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  max-width: 800px;
-  width: 100%;
-  box-shadow: 0 0 10px rgba(19, 19, 19, 0.3);
-}
-
-.close-btn {
-  float: right;
-  cursor: pointer;
-  font-size: 24px;
-}
+/* ======================= 21) Micro Animations ============================ */
+.selector, #quiz-container, #result-container, .modal .modal-content{ animation:cardIn .18s ease-out; }
+@keyframes cardIn{ from{ transform:translateY(4px); opacity:.96 } to{ transform:none; opacity:1 } }
