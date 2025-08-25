@@ -260,18 +260,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (response.status === 201) {
         alert('작업 이력 추가 성공');
         if (typeof loadWorkLogs === 'function') await loadWorkLogs();
-
-        const engineers = taskMans.split(',').map((s) => s.trim().split('(')[0]);
-        for (const engineer of engineers) {
-          try {
-            await axios.post('http://3.37.73.151:3001/api/update-task-count', {
-              task_man: engineer.trim(),
-              transfer_item: transferItem
-            });
-          } catch (err) {
-            console.error(`작업 카운트 업데이트 실패 (${engineer} - ${transferItem}):`, err);
-          }
-        }
       }
     } catch (error) {
       console.error('작업 이력 추가 실패:', error);
@@ -298,18 +286,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.replace('./signin.html');
   });
 
-  const menuBtn = document.querySelector('.menu-btn');
-  const menuBar = document.querySelector('.menu-bar');
-  if (menuBtn && menuBar) {
-    menuBtn.addEventListener('click', function () {
-      menuBar.classList.toggle('open');
-    });
-    document.addEventListener('click', function (event) {
-      if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-        menuBar.classList.remove('open');
-      }
-    });
-  }
+// === Reliable hamburger toggle ===
+// === Reliable hamburger toggle (conflict-proof, height-managed) ===
+(function fixMenuToggle(){
+  const menuBarSel = 'nav .menu-bar';
+  const menuBtnSel = 'nav .menu-btn';
+  const menuBar = document.querySelector(menuBarSel);
+  const oldBtn  = document.querySelector(menuBtnSel);
+  if (!menuBar || !oldBtn) return;
+
+  // 1) 기존에 걸려 있던 모든 클릭 리스너 제거(클론 교체 트릭)
+  const menuBtn = oldBtn.cloneNode(true);
+  oldBtn.parentNode.replaceChild(menuBtn, oldBtn);
+
+  // 2) 초기 상태 보정
+  menuBar.classList.remove('open');
+  menuBar.style.overflow = 'hidden';
+  menuBar.style.maxHeight = '0px';
+  menuBtn.setAttribute('aria-expanded','false');
+  menuBtn.setAttribute('aria-controls','menu-bar');
+
+  // 3) 열고/닫기 함수 (실제 컨텐츠 높이 기반)
+  const setOpen = (open) => {
+    if (open) {
+      menuBar.classList.add('open');
+      menuBar.style.maxHeight = menuBar.scrollHeight + 'px';
+      menuBtn.setAttribute('aria-expanded','true');
+    } else {
+      menuBar.style.maxHeight = '0px';
+      menuBar.classList.remove('open');
+      menuBtn.setAttribute('aria-expanded','false');
+    }
+  };
+
+  // 4) 버튼 클릭: 토글
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menuBar.classList.contains('open');
+    setOpen(!isOpen);                // ← 두 번째 클릭 시 닫힘
+  });
+
+  // 5) 바깥 클릭 / ESC 닫기
+  document.addEventListener('click', (e) => {
+    if (!menuBar.contains(e.target) && !menuBtn.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
+  });
+
+  // 6) 창 크기 변화 시, 열린 상태면 높이 재계산
+  window.addEventListener('resize', () => {
+    if (menuBar.classList.contains('open')) {
+      menuBar.style.maxHeight = menuBar.scrollHeight + 'px';
+    }
+  });
+})();
+
+
 
   if (!window.__worklogStepNavBound) {
     window.__worklogStepNavBound = true;

@@ -1,228 +1,269 @@
-/* Reset some basic elements */
-body, h1, h2, p, a, input, select, label, textarea, button {
-    margin: 0;
-    padding: 0;
-    text-decoration: none;
-    color: inherit;
-    box-sizing: border-box;
+/* =============================================================================
+   S-WORKS — supra_setup.css  (single-column checklist • v1)
+   - 공통 토큰/네비/버튼 톤은 기존 테마와 동일
+   - PC/모바일 모두 1열, 섹션 카드화 + 헤더(ALL CHECK 버튼)
+   - 항목 행: 라벨-체크박스 정렬, 접근성 포커스 링
+   - SAVE 버튼: 폼 맨 아래 중앙, 비고정
+   ========================================================================== */
+
+/* ---------- Tokens ---------------------------------------------------------- */
+:root{
+  --bg:#ffffff;
+  --surface:#f4f7fb;
+
+  --panel:#ffffff;
+  --panel-2:#f9fbff;         /* 카드 옅은 바탕 */
+  --panel-3:#f6f8fc;         /* 구분용 더 옅은 톤 */
+
+  --text:#0f172a;
+  --muted:#475569;
+  --dim:#64748b;
+
+  --accent:#2563eb;
+  --accent-weak: rgba(37,99,235,.14);
+  --accent-soft: color-mix(in srgb, var(--accent) 7%, #fff 93%);
+
+  --border:#e2e8f0;
+  --hair:#eef2f7;
+  --inset:#eef2f7;
+
+  --shadow-xs: 0 1px 1px rgba(2,6,23,.06);
+  --shadow-sm: 0 1px 2px rgba(2,6,23,.08);
+  --shadow:    0 8px 24px rgba(2,6,23,.10);
+  --shadow-lg: 0 16px 40px rgba(2,6,23,.14);
+
+  --ring-outer:0 0 0 4px rgba(37,99,235,.14);
+  --ring-inner:0 0 0 1px rgba(37,99,235,.55);
+
+  --radius:16px; --radius-md:12px; --radius-sm:10px; --radius-xs:8px;
+  --gutter:20px;
+
+  --control-h:44px;
+  --font-control:16px;
+
+  --form-max: 880px;           /* 본 페이지 폼 최대폭(항상 1열) */
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+/* ---------- Base / Reset ---------------------------------------------------- */
+*,
+*::before,
+*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: linear-gradient(180deg, #fff 0 72px, var(--surface) 72px 100%);
+  color:var(--text);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color: rgba(37,99,235,.06);
+}
+img,svg{ display:block; max-width:100%; }
+a{ color:var(--accent); text-decoration:none; text-underline-offset:2px; }
+a:hover{ text-decoration:underline; }
+.hidden{ display:none !important; }
+.inner{ max-width:1280px; margin:0 auto; padding:0 16px; }
+::selection{ background:var(--accent-weak); color:#0b1220; }
+:where(a,button,input,select,textarea):focus-visible{
+  outline:0; box-shadow: var(--ring-inner), var(--ring-outer);
+  border-color: rgba(37,99,235,.55) !important;
 }
 
-/* Navigation styles */
-nav {
-    background-color: #0044cc;
-    padding: 10px 0;
-    display: flex;
-    justify-content: center;
+/* ---------- Nav ------------------------------------------------------------- */
+nav{
+  position:sticky; top:0; z-index:8000;
+  background:#fff; color:var(--text);
+  border-bottom:1px solid var(--border); box-shadow:var(--shadow);
+}
+.nav-container{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:56px;
+}
+.nav-title a{ font-weight:800; font-size:18px; color:inherit; padding:4px 6px; border-radius:8px; }
+.nav-title a:hover{ color:var(--accent); }
+.sign-container{ display:flex; gap:8px; }
+
+.sign-link,.menu-item,.menu-btn{
+  display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 12px; border-radius:10px;
+  border:1px solid var(--border); background:#fff; color:var(--text); font-size:13px; cursor:pointer;
+  transition:background .2s,border-color .2s,color .2s,transform .06s, box-shadow .2s;
+  box-shadow: var(--shadow-xs);
+}
+.sign-link:hover,.menu-item:hover,.menu-btn:hover{
+  background:#f1f5f9; border-color:var(--accent); color:var(--accent); box-shadow:var(--shadow-sm);
+}
+.menu-icon{ width:22px; height:14px; position:relative; color:inherit; }
+.menu-icon span{
+  position:absolute; left:0; right:0; height:2px; border-radius:2px; background:currentColor;
+  transform-origin:center; transition:transform .2s,opacity .2s,top .2s;
+}
+.menu-icon span:nth-child(1){ top:0 } .menu-icon span:nth-child(2){ top:6px } .menu-icon span:nth-child(3){ top:12px }
+
+.menu-bar{
+  background:#fff; border-top:1px solid var(--border);
+  overflow:hidden; max-height:0; transition:max-height .28s ease; will-change:max-height;
+  box-shadow: 0 6px 18px rgba(2,6,23,.06) inset;
+}
+.menu-bar.open{ max-height:640px; }
+.menu-bar-content{ max-width:1280px; margin:0 auto; padding:8px 12px; display:flex; flex-wrap:wrap; gap:8px; }
+
+/* ---------- Page Frame ------------------------------------------------------ */
+main{ padding:28px 0 44px; }
+#checklist-form > .inner{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 16px 22px;
+  max-width: var(--form-max); margin: 0 auto;
+  position:relative;
 }
 
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* ---------- Checklist — Structure ------------------------------------------ */
+#checklistForm{ margin:6px 0 0; }
+#checklist-container{ display:grid; grid-template-columns: 1fr; gap:12px; }
+
+/* 섹션 카드 */
+.category{
+  background: var(--panel-2);
+  border:1px solid var(--inset);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 0 rgba(2,6,23,.04);
+  overflow: clip;
+}
+
+/* 섹션 헤더 */
+.category-header{
+  display:flex; align-items:center; gap:10px; justify-content:space-between;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #fff, #fdfefe);
+  border-bottom:1px solid var(--hair);
+}
+.category-header h2{
+  margin:0; font-size:16px; font-weight:900; letter-spacing:-.01em; color: color-mix(in srgb, var(--text) 94%, black);
+  display:flex; align-items:center; gap:10px;
+}
+.category-header h2::before{
+  content:""; width:6px; height:6px; border-radius:50%;
+  background: #c3d0ea; box-shadow: 0 0 0 4px rgba(195,208,234,.35);
+}
+.all-check-btn{
+  height:32px; padding:0 10px; border-radius:999px; font-weight:800; letter-spacing:.2px; font-size:12.5px;
+  background: var(--accent-soft);
+  border:1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  color:#0b1220; cursor:pointer; box-shadow: var(--shadow-xs);
+  transition:transform .06s, filter .16s, box-shadow .16s;
+}
+.all-check-btn:hover{ filter:brightness(1.02); box-shadow:var(--shadow-sm); }
+.all-check-btn:active{ transform:translateY(1px); }
+.all-check-btn:focus-visible{ outline:0; box-shadow: var(--ring-inner), var(--ring-outer); }
+
+/* 항목 행 (항상 1열) */
+.category .item{
+  display:grid; grid-template-columns: 1fr auto; align-items:start; gap:12px;
+  padding: 10px 12px;
+  background:#fff;
+  border-bottom:1px solid var(--hair);
+}
+.category .item:last-of-type{ border-bottom:0; }
+.category .item label{
+  margin:0; color:#0f172a; font-size:14px; line-height:1.55;
+}
+.category .item[title] label{ cursor:help; text-decoration: underline dotted #cbd5e1; text-underline-offset:2px; }
+.category .item input[type="checkbox"]{
+  width:18px; height:18px; margin-top:2px;
+  accent-color: var(--accent);                 /* 최신 브라우저 */
+  border:1px solid var(--border); border-radius:4px; background:#fff; /* 구형 대비 */
+  cursor:pointer;
+}
+
+/* 항목 행 포커스 하이라이트 (키보드 탐색 가시화) */
+.category .item:focus-within{
+  position:relative;
+  box-shadow: 0 0 0 1px rgba(37,99,235,.14) inset;
+  background: #fff;
+}
+
+/* 그룹 간 여백 */
+.category + .category{ margin-top:2px; }
+
+/* ---------- SAVE 버튼 (폼 맨 아래, 중앙, 비고정) --------------------------- */
+#checklistForm > button[type="submit"]{
+  display:block;
+  margin: 18px auto 6px;       /* 가운데 배치 */
+  min-width: 220px;
+  height: 44px;
+  padding: 0 18px;
+
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: var(--accent-soft);
+  color: #0b1220;
+
+  font-weight: 800;
+  letter-spacing: .2px;
+  cursor: pointer;
+
+  box-shadow: var(--shadow-xs);
+  transition: transform .06s, filter .16s, box-shadow .16s, border-color .16s;
+}
+#checklistForm > button[type="submit"]:hover{
+  filter: brightness(1.02);
+  box-shadow: var(--shadow-sm);
+}
+#checklistForm > button[type="submit"]:active{
+  transform: translateY(1px);
+}
+#checklistForm > button[type="submit"]:disabled{
+  opacity: .5;
+  cursor: not-allowed;
+  filter: grayscale(20%);
+}
+#checklistForm > button[type="submit"]:focus-visible{
+  outline: 0;
+  box-shadow: var(--ring-inner), var(--ring-outer);
+  border-color: rgba(37,99,235,.55);
+}
+/* 모바일에선 풀폭 */
+@media (max-width: 560px){
+  #checklistForm > button[type="submit"]{
     width: 100%;
-    max-width: 1200px;
-    padding: 0 20px;
-}
-
-.nav-title {
-    flex-grow: 1;
-    text-align: center;
-    margin-right: 50px;
-}
-
-.nav-title a {
-    color: #fff;
-    font-size: 24px;
-    font-weight: bold;
-    display: inline-block;
-}
-
-.sign-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-grow: 1;
-}
-
-.sign-container .unsigned,
-.sign-container .signed {
-    display: flex;
-    align-items: center;
-}
-
-.sign-link {
-    color: #fff;
-    padding: 8px 16px;
-    border: 1px solid #fff;
-    border-radius: 4px;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-.sign-link:hover {
-    background-color: #fff;
-    color: #0044cc;
-}
-
-.signed .dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropbtn {
-    background-color: #0044cc;
-    color: #fff;
-    padding: 8px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
-
-.dropbtn:hover {
-    background-color: #003bb5;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #fff;
-    min-width: 160px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    right: 0;
-}
-
-.dropdown-content .dropdown-item {
-    color: #333;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
-
-.dropdown-content .dropdown-item:hover {
-    background-color: #f1f1f1;
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* Utility classes */
-.hidden {
-    display: none;
-}
-
-.inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Main content styles */
-main {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-form {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 900px;
-    margin: 20px auto;
-    text-align: left;
-}
-
-form .category {
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-}
-
-form .category h2 {
-    margin-bottom: 15px;
-    font-size: 18px;
-    color: #0044cc;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 5px;
-}
-
-form .item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-form .item label {
-    flex-grow: 1;
-    font-size: 15px;
-}
-
-form .item input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-}
-
-form button[type="submit"] {
-    width: auto;
-    padding: 10px 20px;
-    background-color: #0044cc;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin-top: 20px;
-}
-
-form button[type="submit"]:hover {
-    background-color: #003bb5;
-}
-
-
-.category {
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 8px;
-    background-color: #f9f9f9;
+    min-width: 0;
   }
-  
-  .category-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+}
+
+/* ---------- Utilities / States --------------------------------------------- */
+.hint{ color:#7890a8; font-size:12px; }
+
+:where(input,select,textarea)[aria-invalid="true"]{
+  border-color:#fca5a5 !important; box-shadow: 0 0 0 1px #fecaca inset;
+}
+
+input:active{ transform: translateY(0.5px); }
+
+/* 대비↑ */
+@media (prefers-contrast: more){
+  :where(a,button,input,select,textarea):focus-visible{
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 65%, white);
   }
-  
-  .all-check-btn {
-    padding: 6px 12px;
-    background-color: #0044cc;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .all-check-btn:hover {
-    background-color: #003bb5;
-  }
-  
+  .category{ border-color: color-mix(in srgb, var(--border) 60%, #000); }
+}
+
+/* 모션↓ */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
+}
+
+/* 프린트 최적화 */
+@media print{
+  nav, .menu-bar{ display:none !important; }
+  body{ background:#fff; color:#000; }
+  #checklist-form > .inner{ box-shadow:none; border-color:#d1d5db; background:#fff; }
+  .category{ break-inside: avoid; }
+}
+
+/* ---------- Small polish ---------------------------------------------------- */
+/* 라벨-체크박스 정렬이 너무 좁아 보일 때 약간의 좌측 패딩 */
+.category .item label{ padding-left: 2px; }
+
+/* 섹션 끝부분 둥근 모서리 보존 */
+.category .item:first-of-type{ border-top-left-radius: 0; border-top-right-radius: 0; }
+.category .item:last-of-type{ border-bottom-left-radius: 0; border-bottom-right-radius: 0; }

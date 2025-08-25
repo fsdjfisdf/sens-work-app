@@ -1,149 +1,139 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPDATE</title>
-    <link rel="stylesheet" href="./css/update.css">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UPDATE</title>
+  <link rel="stylesheet" href="./css/update.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-                <a href="./PCI.html" class="menu-item">PCI</a>
-                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-                <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
-            </div>
-        </div>
-    </nav>
+  <!-- NAV -->
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
 
-    <main>
-        <section id="update-section">
-            <div class="inner">
-                <h2>Update list</h2>
-                <!-- 공지 추가 버튼 -->
-                <div class="button-container">
-                    <button id="open-add-modal">+ Add Update</button>
-                </div>
-                <!-- 업데이트 목록 -->
-                <ul id="update-list"></ul>
-            </div>
-        </section>
-    </main>
+        <div class="sign-container unsigned"></div>
 
-    <!-- 업데이트 상세보기 모달 -->
-    <div id="update-modal" class="modal hidden">
-        <div class="modal-content">
-            <button class="close-btn" id="close-update-modal">×</button>
-            <h3 id="modal-title"></h3>
-            <p id="modal-content"></p>
-            <span id="modal-date"></span>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn" aria-expanded="false" aria-controls="menu-bar" aria-label="메뉴 열기">
+            <div class="menu-icon">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
         </div>
+      </div>
     </div>
-
-    <!-- 공지 추가 모달 -->
-    <div id="add-modal" class="modal hidden">
-        <div class="modal-content">
-            <button class="close-btn" id="close-add-modal">×</button>
-            <h3>Add New Update</h3>
-            <input type="text" id="new-update-title" placeholder="Enter update title" required>
-            <textarea id="new-update-content" placeholder="Enter update content" required></textarea>
-            <div class="modal-buttons">
-                <button id="add-update-btn">Submit</button>
-            </div>
-        </div>
+    <div class="menu-bar" id="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./regression_analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
     </div>
+  </nav>
 
-    <div id="edit-modal" class="modal hidden">
-        <div class="modal-content">
-            <button class="close-btn" id="close-edit-modal">×</button>
-            <h3>Edit Update</h3>
-            <input type="text" id="edit-update-title" placeholder="Enter update title" required>
-            <textarea id="edit-update-content" placeholder="Enter update content" required></textarea>
-            <div class="modal-buttons">
-                <button id="save-update-btn">Save</button>
-            </div>
-        </div>
+  <!-- MAIN -->
+  <main>
+    <section id="update-section">
+      <div class="inner">
+        <header class="page-head">
+          <h2>Update list</h2>
+          <div class="button-container">
+            <button id="open-add-modal" class="btn-primary">+ Add Update</button>
+          </div>
+        </header>
+
+        <ul id="update-list" class="update-list" aria-live="polite"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="inner">
+      <p>
+        제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며,
+        위반 시 법적 조치가 취해질 수 있습니다.
+      </p>
     </div>
+  </footer>
 
-    <footer>
-        <div class="inner">
-            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
-        </div>
-    </footer>
+  <!-- 공통 오버레이 -->
+  <div class="overlay" id="modal-overlay"></div>
 
-    <script src="./js/update.js"></script>
-    <script defer src="./js/logoutTimer.js"></script>
+  <!-- 상세 모달 -->
+  <div id="update-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <button class="close-btn" id="close-update-modal" aria-label="닫기">×</button>
+      <h3 id="modal-title"></h3>
+      <div class="meta-line">
+        <span id="modal-date" class="badge"></span>
+      </div>
+      <div class="modal-body">
+        <p id="modal-content"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 추가 모달 -->
+  <div id="add-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+    <div class="modal-content">
+      <button class="close-btn" id="close-add-modal" aria-label="닫기">×</button>
+      <h3 id="add-title">Add New Update</h3>
+
+      <div class="form-row">
+        <label for="new-update-title">Title</label>
+        <input type="text" id="new-update-title" placeholder="Enter update title" required />
+      </div>
+
+      <div class="form-row">
+        <label for="new-update-content">Content</label>
+        <textarea id="new-update-content" placeholder="Enter update content" required></textarea>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="add-update-btn" class="btn-primary">Submit</button>
+        <button class="btn-secondary" id="cancel-add">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div id="edit-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <div class="modal-content">
+      <button class="close-btn" id="close-edit-modal" aria-label="닫기">×</button>
+      <h3 id="edit-title">Edit Update</h3>
+
+      <div class="form-row">
+        <label for="edit-update-title">Title</label>
+        <input type="text" id="edit-update-title" placeholder="Enter update title" required />
+      </div>
+
+      <div class="form-row">
+        <label for="edit-update-content">Content</label>
+        <textarea id="edit-update-content" placeholder="Enter update content" required></textarea>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="save-update-btn" class="btn-primary">Save</button>
+        <button class="btn-secondary" id="cancel-edit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./js/update.js"></script>
+  <script defer src="./js/logoutTimer.js"></script>
 </body>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const token = localStorage.getItem("x-access-token");
-        const userRole = localStorage.getItem("user-role");
-
-        if (!token) {
-            document.querySelector(".unsigned").classList.remove("hidden");
-            document.querySelector(".signed").classList.add("hidden");
-        } else {
-            document.querySelector(".unsigned").classList.add("hidden");
-            document.querySelector(".signed").classList.remove("hidden");
-        }
-
-        if (!token || userRole !== 'admin') {
-            document.querySelectorAll('.admin-only').forEach(element => {
-                element.style.display = 'none';
-            });
-        }
-
-        const signOutButton = document.querySelector("#sign-out");
-
-        if (signOutButton) {
-            signOutButton.addEventListener("click", function() {
-                localStorage.removeItem("x-access-token");
-                localStorage.removeItem("user-role");
-                alert("로그아웃 되었습니다.");
-                window.location.replace("./signin.html");
-            });
-        }
-
-        const menuBtn = document.querySelector('.menu-btn');
-        const menuBar = document.querySelector('.menu-bar');
-
-        menuBtn.addEventListener('click', function() {
-            menuBar.classList.toggle('open');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                menuBar.classList.remove('open');
-            }
-        });
-    });
-</script>
 </html>

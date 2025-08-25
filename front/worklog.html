@@ -612,18 +612,6 @@ EPAB515 PM1 Wafer Broken  점검
                     window.location.replace("./signin.html");
                 });
             }
-            const menuBtn = document.querySelector('.menu-btn');
-            const menuBar = document.querySelector('.menu-bar');
-
-            menuBtn.addEventListener('click', function() {
-                menuBar.classList.toggle('open');
-            });
-
-            document.addEventListener('click', function(event) {
-                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                    menuBar.classList.remove('open');
-                }
-            });
         });
 
         document.querySelectorAll('.next-step').forEach(button => {
