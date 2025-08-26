@@ -5,23 +5,7 @@
   <title>Worklog Approval</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="./css/worklog.css"/>
-  <style>
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
-    .filters { display: grid; grid-template-columns: 180px 180px auto; gap: 8px; align-items: center; margin: 12px 0 16px; }
-    .approver-badges { display:flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 16px; }
-    .badge { border:1px solid #ddd; border-radius: 999px; padding: 6px 10px; font-size: 13px; background: #f7f7f7; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
-    th { background: #fafafa; text-align: left; }
-    .actions { display:flex; gap: 6px; }
-    .btn { padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-    .btn-primary { background: #2563eb; color:#fff; border-color:#2563eb; }
-    .btn-danger { background: #ef4444; color:#fff; border-color:#ef4444; }
-    .note-input { width:100%; min-width:200px; }
-    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef2ff; border:1px solid #c7d2fe; font-size:12px; }
-    .hint { color:#666; font-size:12px; }
-  </style>
+  <link rel="stylesheet" href="./css/approval.css"/>
 </head>
 <body>
   <nav>
@@ -29,13 +13,13 @@
       <div class="nav-container">
         <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
         <div class="sign-container signed">
-          <button class="menu-btn">
+          <button id="menu-btn" class="menu-btn" aria-expanded="false" aria-controls="menu-bar">
             <div class="menu-icon"><span></span><span></span><span></span></div>
           </button>
         </div>
       </div>
     </div>
-    <div class="menu-bar">
+    <div id="menu-bar" class="menu-bar" aria-hidden="true">
       <div class="menu-bar-content">
         <a href="./user_info.html" class="menu-item">SECM</a>
         <a href="./worklog.html" class="menu-item">Create Worklog</a>
@@ -50,51 +34,215 @@
     <div class="wrap">
       <h2>작업 이력 결재</h2>
 
+      <!-- FILTERS -->
       <div class="filters">
-        <label>
-          GROUP
-          <select id="sel-group">
-            <option value="">ALL</option>
-            <option value="PEE1">PEE1</option>
-            <option value="PEE2">PEE2</option>
-            <option value="PSKH">PSKH</option>
-          </select>
-        </label>
+        <div class="filter-row">
+          <label class="filter-item">
+            <span>GROUP</span>
+            <select id="sel-group">
+              <option value="">ALL</option>
+              <option value="PEE1">PEE1</option>
+              <option value="PEE2">PEE2</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </label>
 
-        <label>
-          SITE
-          <select id="sel-site">
-            <option value="">ALL</option>
-            <option value="PT">PT</option>
-            <option value="HS">HS</option>
-            <option value="IC">IC</option>
-            <option value="CJ">CJ</option>
-          </select>
-        </label>
+          <label class="filter-item">
+            <span>SITE</span>
+            <select id="sel-site">
+              <option value="">ALL</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+            </select>
+          </label>
 
-        <div>
-          <div class="hint">※ PSKH는 SITE 무시</div>
+          <label class="filter-item">
+            <span>날짜 (From)</span>
+            <input type="date" id="date-from"/>
+          </label>
+
+          <label class="filter-item">
+            <span>날짜 (To)</span>
+            <input type="date" id="date-to"/>
+          </label>
+
+          <label class="filter-item">
+            <span>검색</span>
+            <div class="input-with-clear">
+              <input id="q" type="text" placeholder="설비/작업자/전송항목 등 검색" />
+              <button id="q-clear" class="clear-btn" title="검색어 지우기" aria-label="검색어 지우기">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </label>
+
+          <div class="filter-item align-end">
+            <button id="btn-reset" class="btn btn-ghost" title="필터 초기화">
+              <i class="fas fa-undo"></i>&nbsp;필터 초기화
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-foot">
+          <div class="kicker">※ PSKH는 SITE를 사용하지 않습니다.</div>
           <div id="approver-area" class="approver-badges"></div>
         </div>
       </div>
 
-      <table id="tbl-pending">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Date / Time</th>
-            <th>Group / Site</th>
-            <th>EQ / Title</th>
-            <th>Worker</th>
-            <th>Submitted By</th>
-            <th>Note</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody><!-- rows --></tbody>
-      </table>
+      <!-- MODE SWITCH -->
+      <div class="seg">
+        <button class="seg-btn is-active" data-mode="pending"><i class="far fa-clock"></i> 대기</button>
+        <button class="seg-btn" data-mode="rejected"><i class="far fa-times-circle"></i> 반려(내 이력)</button>
+      </div>
+
+      <!-- TABLE (inside scroll container to prevent overflow) -->
+      <div class="table-wrap">
+        <table id="tbl-pending">
+          <thead>
+            <tr>
+              <th style="width:72px">ID</th>
+              <th style="width:260px">Date / Time</th>
+              <th style="width:260px">Group / Site / Line</th>
+              <th style="width:320px">Equipment (Type / Name)</th>
+              <th style="width:220px">Work Type</th>
+              <th style="width:220px">Transfer</th>
+              <th style="width:240px">Worker</th>
+              <th style="width:240px">Submitted (By / At)</th>
+            </tr>
+          </thead>
+          <tbody><!-- rows --></tbody>
+        </table>
+      </div>
+
+      <div class="hint">행을 클릭하면 세부 내용을 확인할 수 있습니다. 결재는 모달에서 수행합니다.</div>
     </div>
   </main>
+
+  <!-- Detail Modal -->
+  <div id="ovl" class="overlay" aria-hidden="true"></div>
+  <div id="mdl" class="modal" aria-hidden="true" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div id="md-title" class="md-title">상세 보기</div>
+          <div id="md-sub" class="muted"></div>
+        </div>
+        <button id="md-close" class="btn">닫기</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 개요 (일부 필드 편집 지원) -->
+        <section class="modal-sec">
+          <h4>개요</h4>
+          <div class="kv">
+            <div class="k">ID</div><div class="v" id="v-id"></div>
+
+            <div class="k">제목</div>
+            <div class="v">
+              <input class="in" id="f-task_name" />
+            </div>
+
+            <div class="k">일시</div>
+            <div class="v flex">
+              <input type="date" class="in" id="f-task_date" />
+              <input type="time" class="in" id="f-start_time" step="1"/>
+              <span style="align-self:center;">~</span>
+              <input type="time" class="in" id="f-end_time" step="1"/>
+            </div>
+
+            <div class="k">그룹/사이트/라인</div>
+            <div class="v flex">
+              <input class="in" id="f-group" />
+              <input class="in" id="f-site" />
+              <input class="in" id="f-line" />
+            </div>
+
+            <div class="k">제출자</div><div class="v" id="v-submitter"></div>
+
+            <div class="k">작업자</div>
+            <div class="v">
+              <input class="in" id="f-task_man" />
+            </div>
+          </div>
+        </section>
+
+        <!-- 설비/문서 -->
+        <section class="modal-sec">
+          <h4>설비 / 문서</h4>
+          <div class="kv">
+            <div class="k">설비</div>
+            <div class="v flex">
+              <input class="in" id="f-equipment_type" placeholder="equipment_type"/>
+              <input class="in" id="f-equipment_name" placeholder="equipment_name"/>
+            </div>
+
+            <div class="k">Warranty</div><div class="v"><input class="in" id="f-warranty"/></div>
+
+            <div class="k">Work Type</div>
+            <div class="v flex">
+              <input class="in" id="f-work_type" placeholder="SET UP / MAINT 등"/>
+              <input class="in" id="f-work_type2" placeholder="REP / TEACHING 등"/>
+            </div>
+
+            <div class="k">Sub Item</div>
+            <div class="v flex">
+              <input class="in" id="f-setup_item" placeholder="SET UP일 때"/>
+              <input class="in" id="f-maint_item" placeholder="MAINT일 때"/>
+            </div>
+
+            <div class="k">Transfer</div><div class="v"><input class="in" id="f-transfer_item"/></div>
+
+            <div class="k">SOP / TS</div>
+            <div class="v flex">
+              <input class="in" id="f-SOP" placeholder="SOP"/>
+              <input class="in" id="f-tsguide" placeholder="TS"/>
+            </div>
+
+            <div class="k">None / Move (min)</div>
+            <div class="v flex">
+              <input type="number" class="in" id="f-none_time" min="0"/>
+              <input type="number" class="in" id="f-move_time" min="0"/>
+            </div>
+
+            <div class="k">예상 소요</div><div class="v" id="v-duration"></div>
+          </div>
+        </section>
+
+        <!-- 세부 내용 -->
+        <section class="modal-sec span-2">
+          <h4>세부 내용</h4>
+          <div class="grid-2">
+            <div>
+              <div class="small label">ACTION (task_description)</div>
+              <textarea id="f-task_description" class="body-block"></textarea>
+            </div>
+            <div>
+              <div class="small label">CAUSE / RESULT</div>
+              <textarea id="f-task_cause" class="body-block" placeholder="CAUSE"></textarea>
+              <textarea id="f-task_result" class="body-block" placeholder="RESULT" style="margin-top:8px;"></textarea>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="modal-foot">
+        <div class="left-tools">
+          <span id="edit-hint" class="muted small">결재자만 편집/승인 가능합니다. 반려 상태의 작성자는 수정 후 재요청할 수 있습니다.</span>
+        </div>
+
+        <input id="md-note" class="w100" placeholder="결재 메모 (선택)" />
+
+        <!-- 결재자 전용 -->
+        <button id="md-approve" class="btn btn-primary"><i class="fas fa-check"></i>&nbsp;수정 반영 + 승인</button>
+        <button id="md-reject" class="btn btn-danger"><i class="fas fa-times"></i>&nbsp;반려</button>
+
+        <!-- 작성자(반려건) 전용 -->
+        <button id="md-resubmit" class="btn btn-primary outline hidden"><i class="fas fa-paper-plane"></i>&nbsp;수정 후 재요청</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script src="./js/approval.js"></script>

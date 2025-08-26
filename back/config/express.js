@@ -132,19 +132,31 @@ const workLogController = require('../src/controllers/workLogController');
 // 권한 가드: DB ENUM에 맞게
 function requireRole(roles = ['admin', 'editor']) {
   return (req, res, next) => {
-    const role = req.user?.role; // JWT에서만 가져옴
+    const role = req.user?.role; // JWT에서만
     if (!role) return res.status(401).json({ message: '인증 필요' });
     if (!roles.includes(role)) return res.status(403).json({ message: '권한 없음' });
     next();
   };
 }
 
-// === 결재 플로우 (한 번만 추가) ===
+// === 결재 플로우 ===
 app.get('/approval/approvers', jwtMiddleware, workLogController.getApproversForGroupSite);
 app.post('/approval/work-log/submit', jwtMiddleware, workLogController.submitWorkLogPending);
 app.get('/approval/work-log/pending', jwtMiddleware, requireRole(), workLogController.listPendingWorkLogs);
 app.post('/approval/work-log/:id/approve', jwtMiddleware, requireRole(), workLogController.approvePendingWorkLog);
 app.post('/approval/work-log/:id/reject', jwtMiddleware, requireRole(), workLogController.rejectPendingWorkLog);
+
+// ★ 추가: 단건 조회(요청자/결재자 모두 볼 수 있게 인증만) 
+app.get('/approval/work-log/pending/:id', jwtMiddleware, workLogController.getPendingWorkLogOne);
+
+// ★ 추가: 대기/반려건 내용 수정(PATCH) — 권한은 컨트롤러에서 세부검사
+app.patch('/approval/work-log/:id', jwtMiddleware, workLogController.updatePendingWorkLog);
+
+// ★ 추가: 내 반려 목록 (요청자 전용)
+app.get('/approval/work-log/rejected/mine', jwtMiddleware, workLogController.listMyRejected);
+
+// ★ 추가: 반려건 재제출 (요청자 전용)
+app.post('/approval/work-log/:id/resubmit', jwtMiddleware, workLogController.resubmitPendingWorkLog);
 
 
 
