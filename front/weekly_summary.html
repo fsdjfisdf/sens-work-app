@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>S-WORKS — 주간 요약</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:Inter,system-ui,'Noto Sans KR',sans-serif;margin:0;background:#faf7ef;color:#231f20}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+    .card{background:#fff;border:1px solid #e5e1d6;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .title{font-size:20px;font-weight:800;margin:0 0 8px}
+    .muted{color:#6f665d}
+    .kpis{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px}
+    .kpis div{background:#fffaf2;border:1px dashed #e5e1d6;border-radius:10px;padding:10px}
+    .issues li{margin-bottom:8px}
+    label{font-size:14px}
+    select,input[type="date"]{padding:6px 8px;border:1px solid #cfc8bb;border-radius:8px;background:#fff}
+    button{padding:8px 12px;border:1px solid #cfc8bb;border-radius:10px;background:#fff;cursor:pointer}
+    button:hover{background:#fff5db}
+    .one{font-size:16px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:8px}
+    @media (max-width:800px){ .kpis{grid-template-columns:1fr} .grid{grid-template-columns:1fr} }
+  </style>
+  <script defer src="./js/weekly_summary.js"></script>
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1 style="margin:8px 0 16px">주간 운영 요약</h1>
+
+    <div class="card toolbar">
+      <div>
+        <label>Group</label><br/>
+        <select id="group">
+          <option>PEE1</option><option>PEE2</option><option>PSKH</option>
+        </select>
+      </div>
+      <div>
+        <label>Site</label><br/>
+        <select id="site">
+          <option>PT</option><option>HS</option><option>IC</option><option>CJ</option>
+        </select>
+      </div>
+      <div>
+        <label>Week (월요일)</label><br/>
+        <input type="date" id="week" />
+      </div>
+      <div style="align-self:end">
+        <button id="run">요약 생성/조회</button>
+      </div>
+    </div>
+
+    <div id="out">
+      <div class="card">
+        <div class="title">이번 주 한 줄 요약</div>
+        <div class="one" id="one">-</div>
+        <div class="muted" id="meta"></div>
+      </div>
+
+      <div class="card">
+        <div class="title">핵심 지표</div>
+        <div class="kpis" id="kpis"></div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="title">이슈 Top3</div>
+          <ol class="issues" id="issues"></ol>
+        </div>
+        <div class="card">
+          <div class="title">다음 액션</div>
+          <ul id="actions"></ul>
+        </div>
+        <div class="card">
+          <div class="title">참고</div>
+          <div class="muted">최초 조회 시 집계/요약 후 캐시 저장, 이후는 캐시 반환.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

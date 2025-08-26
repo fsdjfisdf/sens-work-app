@@ -87,6 +87,8 @@ module.exports = function () {
   app.use('/api', preciaMaintCountRoute);
     const hdwMaintCountRoute = require('../src/routes/hdwMaintCountRoute');
   app.use('/api', hdwMaintCountRoute);
+  const reportsRoute = require('../src/routes/reportsRoute');
+app.use('/api/reports', reportsRoute);
 
   
   require('../src/routes/supraxpMaintCountRoute')(app);  // 추가
