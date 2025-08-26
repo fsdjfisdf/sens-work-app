@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Worklog Approval</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="./css/worklog.css"/>
+  <style>
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .filters { display: grid; grid-template-columns: 180px 180px auto; gap: 8px; align-items: center; margin: 12px 0 16px; }
+    .approver-badges { display:flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 16px; }
+    .badge { border:1px solid #ddd; border-radius: 999px; padding: 6px 10px; font-size: 13px; background: #f7f7f7; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: top; }
+    th { background: #fafafa; text-align: left; }
+    .actions { display:flex; gap: 6px; }
+    .btn { padding: 6px 10px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    .btn-primary { background: #2563eb; color:#fff; border-color:#2563eb; }
+    .btn-danger { background: #ef4444; color:#fff; border-color:#ef4444; }
+    .note-input { width:100%; min-width:200px; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef2ff; border:1px solid #c7d2fe; font-size:12px; }
+    .hint { color:#666; font-size:12px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container signed">
+          <button class="menu-btn">
+            <div class="menu-icon"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./approval.html" class="menu-item">Approval</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="wrap">
+      <h2>작업 이력 결재</h2>
+
+      <div class="filters">
+        <label>
+          GROUP
+          <select id="sel-group">
+            <option value="">ALL</option>
+            <option value="PEE1">PEE1</option>
+            <option value="PEE2">PEE2</option>
+            <option value="PSKH">PSKH</option>
+          </select>
+        </label>
+
+        <label>
+          SITE
+          <select id="sel-site">
+            <option value="">ALL</option>
+            <option value="PT">PT</option>
+            <option value="HS">HS</option>
+            <option value="IC">IC</option>
+            <option value="CJ">CJ</option>
+          </select>
+        </label>
+
+        <div>
+          <div class="hint">※ PSKH는 SITE 무시</div>
+          <div id="approver-area" class="approver-badges"></div>
+        </div>
+      </div>
+
+      <table id="tbl-pending">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Date / Time</th>
+            <th>Group / Site</th>
+            <th>EQ / Title</th>
+            <th>Worker</th>
+            <th>Submitted By</th>
+            <th>Note</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody><!-- rows --></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="./js/approval.js"></script>
+</body>
+</html>

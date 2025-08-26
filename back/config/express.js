@@ -119,22 +119,25 @@ app.use("/api", editRoutes); // 🔹 작업 이력 편집 API 라우트 연결
 const analysisRoute = require('../src/routes/analysisRoute'); // 경로는 프로젝트 구조에 맞게
 app.use('/analysis', analysisRoute);
 
+// (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
 
-// 간단 권한 가드(예시)
-function requireRole(roles = ['admin', 'approver']) {
+// 권한 가드: DB ENUM에 맞게
+function requireRole(roles = ['admin', 'editor']) {
   return (req, res, next) => {
-    const role = req.user?.role || req.headers['user-role']; // jwtMiddleware가 req.user.role을 세팅한다고 가정
+    const role = req.user?.role || req.headers['user-role'];
     if (!roles.includes(role)) return res.status(403).json({ message: '권한 없음' });
     next();
   };
 }
 
-// === 결재 플로우 ===
+// === 결재 플로우 (한 번만 추가) ===
+app.get('/approval/approvers', jwtMiddleware, workLogController.getApproversForGroupSite);
 app.post('/approval/work-log/submit', jwtMiddleware, workLogController.submitWorkLogPending);
 app.get('/approval/work-log/pending', jwtMiddleware, requireRole(), workLogController.listPendingWorkLogs);
 app.post('/approval/work-log/:id/approve', jwtMiddleware, requireRole(), workLogController.approvePendingWorkLog);
 app.post('/approval/work-log/:id/reject', jwtMiddleware, requireRole(), workLogController.rejectPendingWorkLog);
+
 
 
   

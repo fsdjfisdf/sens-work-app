@@ -3,9 +3,39 @@ const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 
-/* -------------------------------
- * 기본: 조회
- * ------------------------------- */
+/** ─────────────────────────────────────────────────────────
+ *  그룹/사이트별 결재자 닉네임 매핑
+ *  키: `${group}:${site}` / PSKH는 site 무시 → 'PSKH:*'
+ *  닉네임은 Users.nickname 과 정확히 일치해야 함
+ *  ───────────────────────────────────────────────────────── */
+const APPROVER_MAP = {
+  'PEE1:PT': ['조지훈', '전대영', '손석현'],
+  'PEE1:HS': ['진덕장', '한정훈', '정대환'],
+  'PEE1:IC': ['강문호', '배한훈', '최원준'],
+  'PEE1:CJ': ['강문호', '배한훈', '최원준'],
+  'PEE2:PT': ['이지웅', '송왕근', '정현우'],
+  'PEE2:HS': ['안재영', '김건희'],
+  'PSKH:*':  ['유정현', '문순현'],
+};
+
+function approverKey(g, s) {
+  if (g === 'PSKH') return 'PSKH:*';
+  return `${g}:${s}`;
+}
+function getApproverNicknames(g, s) {
+  const key = approverKey(g, s);
+  return APPROVER_MAP[key] || [];
+}
+function isUserAllowedApprover(user, g, s) {
+  // DB ENUM: ('admin','worker','editor') → admin/editor 는 항상 허용
+  if (user?.role === 'admin' || user?.role === 'editor') return true;
+  const names = getApproverNicknames(g, s);
+  return !!names.find(n => n === user?.nickname);
+}
+
+/* ────────────────────────────────────────────────
+ * 기본 조회/추가/수정/삭제/엑셀
+ * ──────────────────────────────────────────────── */
 exports.getWorkLogs = async (req, res) => {
   try {
     const logs = await workLogDao.getWorkLogs();
@@ -15,10 +45,6 @@ exports.getWorkLogs = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 기본: 직접 저장 (관리자 등 우회 저장)
- *  - task_duration을 계산하여 저장
- * ------------------------------- */
 exports.addWorkLog = async (req, res) => {
   const {
     task_name, task_result, task_cause, task_man, task_description,
@@ -42,9 +68,6 @@ exports.addWorkLog = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 기본: 삭제
- * ------------------------------- */
 exports.deleteWorkLog = async (req, res) => {
   const { id } = req.params;
   try {
@@ -55,9 +78,6 @@ exports.deleteWorkLog = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 기본: 엑셀 Export
- * ------------------------------- */
 exports.exportWorkLogs = async (req, res) => {
   try {
     const logs = await workLogDao.getWorkLogs();
@@ -78,18 +98,12 @@ exports.exportWorkLogs = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 기본: 수정
- * ------------------------------- */
 exports.updateWorkLog = async (req, res) => {
   const { id } = req.params;
   const {
     task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time,
     group, site, line, warranty, equipment_type, equipment_name, status
   } = req.body;
-
-  console.log(`Received update request for ID: ${id}`);
-  console.log('Updated log data:', req.body);
 
   try {
     const existingLog = await workLogDao.getWorkLogById(id);
@@ -122,18 +136,11 @@ exports.updateWorkLog = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 부가: 작업 카운트 증가
- * ------------------------------- */
 exports.updateTaskCount = async (req, res) => {
   const { task_man, transfer_item } = req.body;
-
-  console.log('Received task count update request for:', task_man, transfer_item);
-
   try {
     const engineers = task_man.split(',').map(engineer => engineer.trim().split('(')[0].trim());
     for (const engineer of engineers) {
-      console.log(`Updating task count for engineer: ${engineer}, task: ${transfer_item}`);
       await workLogDao.incrementTaskCount(engineer, transfer_item);
     }
     res.status(200).json({ message: 'Task count updated successfully' });
@@ -143,9 +150,6 @@ exports.updateTaskCount = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 필터: SUPRA XP 전용
- * ------------------------------- */
 exports.getSupraXPWorkLogs = async (req, res) => {
   try {
     const logs = await workLogDao.getSupraXPWorkLogs('SUPRA XP');
@@ -155,9 +159,34 @@ exports.getSupraXPWorkLogs = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 결재: 제출(대기 저장)
- * ------------------------------- */
+/* ────────────────────────────────────────────────
+ * 결재: 결재자 목록 API (Users.nickname 매칭)
+ * GET /approval/approvers?group=PEE1&site=PT
+ * ──────────────────────────────────────────────── */
+exports.getApproversForGroupSite = async (req, res) => {
+  const g = req.query.group || '';
+  const s = req.query.site || '';
+  if (!g) return res.status(400).json({ error: 'group is required' });
+
+  const names = getApproverNicknames(g, s);
+  if (!names.length) return res.json({ approvers: [] });
+
+  try {
+    const users = await workLogDao.getUsersByNicknames(names);
+    // 원래 이름 순서 유지
+    const order = new Map(names.map((n,i)=>[n,i]));
+    users.sort((a,b)=> (order.get(a.nickname) ?? 999) - (order.get(b.nickname) ?? 999));
+    res.json({ approvers: users });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'approver fetch failed' });
+  }
+};
+
+/* ────────────────────────────────────────────────
+ * 결재: 제출(대기 테이블 저장)
+ * POST /approval/work-log/submit
+ * ──────────────────────────────────────────────── */
 exports.submitWorkLogPending = async (req, res) => {
   try {
     const payload = req.body || {};
@@ -197,27 +226,36 @@ exports.submitWorkLogPending = async (req, res) => {
   }
 };
 
-/* -------------------------------
- * 결재: 대기 목록
- * ------------------------------- */
+/* ────────────────────────────────────────────────
+ * 결재: 대기 목록 (group/site 필터 지원)
+ * GET /approval/work-log/pending?group=..&site=..
+ * ──────────────────────────────────────────────── */
 exports.listPendingWorkLogs = async (req, res) => {
   try {
-    const rows = await workLogDao.listPendingWorkLogs();
+    const g = req.query.group || '';
+    const s = req.query.site || '';
+    const rows = await workLogDao.listPendingWorkLogs(g, s);
     res.status(200).json(rows);
   } catch (err) {
     res.status(500).json({ error: '대기 목록 조회 오류' });
   }
 };
 
-/* -------------------------------
- * 결재: 승인 (본 테이블로 이관 + duration 계산)
- * ------------------------------- */
+/* ────────────────────────────────────────────────
+ * 결재: 승인
+ * POST /approval/work-log/:id/approve
+ * ──────────────────────────────────────────────── */
 exports.approvePendingWorkLog = async (req, res) => {
   const { id } = req.params;
-  const { note } = (req.body || {});
+  const { note } = req.body || {};
   try {
     const pending = await workLogDao.getPendingById(id);
     if (!pending) return res.status(404).json({ error: '대기 데이터 없음' });
+
+    // 권한 체크
+    if (!isUserAllowedApprover(req.user, pending.group, pending.site)) {
+      return res.status(403).json({ error: '해당 그룹/사이트의 결재 권한이 없습니다.' });
+    }
 
     const approver = req.user?.nickname || 'admin';
     await workLogDao.approvePendingWorkLog(id, approver, note || '');
@@ -241,13 +279,22 @@ exports.approvePendingWorkLog = async (req, res) => {
   }
 };
 
-/* -------------------------------
+/* ────────────────────────────────────────────────
  * 결재: 반려
- * ------------------------------- */
+ * POST /approval/work-log/:id/reject
+ * ──────────────────────────────────────────────── */
 exports.rejectPendingWorkLog = async (req, res) => {
   const { id } = req.params;
-  const { note } = (req.body || {});
+  const { note } = req.body || {};
   try {
+    const pending = await workLogDao.getPendingById(id);
+    if (!pending) return res.status(404).json({ error: '대기 데이터 없음' });
+
+    // 권한 체크
+    if (!isUserAllowedApprover(req.user, pending.group, pending.site)) {
+      return res.status(403).json({ error: '해당 그룹/사이트의 결재 권한이 없습니다.' });
+    }
+
     const approver = req.user?.nickname || 'admin';
     await workLogDao.rejectPendingWorkLog(id, approver, note || '');
     res.status(200).json({ message: '반려 처리 완료' });
