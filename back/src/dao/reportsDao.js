@@ -14,8 +14,8 @@ function addDaysISO(iso, n) {
   return fmtYMD(d);
 }
 function getKstMondayISO(base = new Date()) {
-  const kst = new Date(base.getTime() + 9 * 3600 * 1000); // +9h
-  const dow = kst.getUTCDay(); // 0=일,1=월,...6=토
+  const kst = new Date(base.getTime() + 9 * 3600 * 1000);
+  const dow = kst.getUTCDay();
   const diff = (dow === 0 ? -6 : 1 - dow);
   const mon = new Date(kst);
   mon.setUTCDate(kst.getUTCDate() + diff);

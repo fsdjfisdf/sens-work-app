@@ -87,9 +87,12 @@ module.exports = function () {
   app.use('/api', preciaMaintCountRoute);
     const hdwMaintCountRoute = require('../src/routes/hdwMaintCountRoute');
   app.use('/api', hdwMaintCountRoute);
+// ... (상단 생략)
 const reportsRoute = require('../src/routes/reportsRoute');
-app.use('/reports', reportsRoute);
-require('../src/routes/reportsRoute')(app);
+app.use('/reports', reportsRoute);           // ✅ 이 줄만 추가
+
+// ❌ 아래처럼 “함수 호출” 방식은 쓰지 마세요 (혼용하면 이번 오류 재발)
+// require('../src/routes/reportsRoute')(app);
 
 
   
