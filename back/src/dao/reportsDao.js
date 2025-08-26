@@ -204,7 +204,7 @@ function buildRuleSummary({ kpis, topEqByCnt = [], topCause = [], incidents = []
   const h = kpis?.sum_total_hours ?? 0;
   const w = kpis?.weekend_tasks ?? 0;
   const f = kpis?.failed_tasks ?? 0;
-  const eq = (topEqByCnt[0]?.equipment_name || '주요 장비 미도출');
+  const eq = (topEqByCnt[0]?.equipment_name || '주요 장비 미도출').toUpperCase();
 
   const one_liner = `총 ${t}건 / ${h}h 처리, 주말 ${w}건, 실패/미해결 ${f}건. 이슈 집중 장비: ${eq}`;
 
@@ -266,9 +266,10 @@ exports.getOrCreateWeeklySummary = async ({ group, site, weekStart, force = fals
   ]);
 
   let summary;
+  let usedAI = false;
 
-  // 1) AI 요약 시도 (summarizer.js가 있고, SUMMARIZER_ENABLED=true일 때)
-  if (typeof summarizeWeekly === 'function') {
+  if (typeof summarizeWeekly === 'function' &&
+      (process.env.SUMMARIZER_ENABLED || 'false').toLowerCase() === 'true') {
     try {
       summary = await summarizeWeekly({
         group, site, weekStart: wkStart,
@@ -278,15 +279,26 @@ exports.getOrCreateWeeklySummary = async ({ group, site, weekStart, force = fals
       if (!summary?.one_liner || !Array.isArray(summary?.top_issues)) {
         throw new Error('summarizer returned invalid shape');
       }
+      usedAI = true;
     } catch (e) {
-      // 실패 시 로그만 남기고 룰 기반으로 폴백
-      console.warn('[summarizer] failed, fallback to rule-based:', e.message);
+      console.warn('[summarizer] failed, fallback:', e.message);
       summary = buildRuleSummary({ kpis, topEqByCnt, topCause, incidents });
     }
   } else {
-    // 2) summarizer 미사용 → 룰 기반
     summary = buildRuleSummary({ kpis, topEqByCnt, topCause, incidents });
   }
+
+  // ✅ 요약 출처/모델 정보를 메타에 저장 (캐시에도 함께 저장됨)
+  const model =
+    process.env.OLLAMA_MODEL ||
+    process.env.OPENAI_MODEL ||
+    process.env.CLAUDE_MODEL ||
+    '';
+  summary.__meta = {
+    source: usedAI ? 'ai' : 'rule',
+    provider: usedAI ? (process.env.AI_PROVIDER || '') : '',
+    model: usedAI ? model : ''
+  };
 
   await upsertCache({ weekStart: wkStart, group, site, kpis, summary });
 
