@@ -1,7 +1,22 @@
 // src/dao/reportsDao.js
+'use strict';
+
 const { pool } = require('../../config/database');
 
-/* ===== KST 기준 주(월~일) 유틸 ===== */
+/* =========================
+ *  Optional AI summarizer
+ * ========================= */
+let summarizeWeekly = null;
+try {
+  // 존재하지 않아도 됨. 있으면 사용, 없으면 폴백.
+  ({ summarizeWeekly } = require('../services/summarizer'));
+} catch (_e) {
+  summarizeWeekly = null;
+}
+
+/* =========================
+ *  Date & util helpers
+ * ========================= */
 function fmtYMD(d) {
   const y = d.getUTCFullYear();
   const m = String(d.getUTCMonth() + 1).padStart(2, '0');
@@ -15,21 +30,45 @@ function addDaysISO(iso, n) {
 }
 function getKstMondayISO(base = new Date()) {
   const kst = new Date(base.getTime() + 9 * 3600 * 1000);
-  const dow = kst.getUTCDay();
+  const dow = kst.getUTCDay(); // 0=Sun .. 6=Sat
   const diff = (dow === 0 ? -6 : 1 - dow);
   const mon = new Date(kst);
   mon.setUTCDate(kst.getUTCDate() + diff);
   return fmtYMD(mon);
 }
-
-/* ===== LIMIT 안전 인라인 ===== */
 function safeLimit(n, def = 5, max = 200) {
   const v = parseInt(n, 10);
   if (!Number.isFinite(v) || v <= 0) return def;
   return Math.min(v, max);
 }
 
-/* ===== 집계 쿼리 ===== */
+/* =========================
+ *  Ensure cache table
+ * ========================= */
+async function ensureCacheTable() {
+  const sql = `
+    CREATE TABLE IF NOT EXISTS weekly_summaries (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      week_start DATE NOT NULL,
+      \`group\` VARCHAR(255) NOT NULL,
+      site VARCHAR(255) NOT NULL,
+      kpis_json JSON NOT NULL,
+      llm_summary_json JSON NOT NULL,
+      generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY uk_week_group_site (week_start, \`group\`, site)
+    );
+  `;
+  try {
+    await pool.execute(sql);
+  } catch (e) {
+    // JSON 미지원(MySQL 5.6 이하) 등으로 실패할 수 있음. 에러만 알리고 진행.
+    console.warn('[weekly_summaries] ensure table failed:', e.message);
+  }
+}
+
+/* =========================
+ *  Aggregations
+ * ========================= */
 async function fetchKpis({ weekStart, weekEnd, group, site }) {
   const sql = `
     SELECT
@@ -48,7 +87,15 @@ async function fetchKpis({ weekStart, weekEnd, group, site }) {
       AND site = ?
   `;
   const [rows] = await pool.execute(sql, [weekStart, weekEnd, group, site]);
-  return rows[0] || null;
+  return rows[0] || {
+    total_tasks: 0,
+    sum_task_hours: 0,
+    sum_move_hours: 0,
+    sum_total_hours: 0,
+    avg_task_hours: 0,
+    weekend_tasks: 0,
+    failed_tasks: 0
+  };
 }
 
 async function fetchTopEqByCount({ weekStart, weekEnd, group, site, limit = 5 }) {
@@ -103,7 +150,9 @@ async function fetchIncidents({ weekStart, weekEnd, group, site, limit = 50 }) {
   return rows;
 }
 
-/* ===== 캐시 ===== */
+/* =========================
+ *  Cache helpers
+ * ========================= */
 async function getCached({ weekStart, group, site }) {
   const [rows] = await pool.execute(
     `SELECT * FROM weekly_summaries WHERE week_start=? AND \`group\`=? AND site=?`,
@@ -112,8 +161,15 @@ async function getCached({ weekStart, group, site }) {
   const r = rows[0];
   if (!r) return null;
 
-  const kpis = typeof r.kpis_json === 'string' ? JSON.parse(r.kpis_json) : r.kpis_json;
-  const summary = typeof r.llm_summary_json === 'string' ? JSON.parse(r.llm_summary_json) : r.llm_summary_json;
+  let kpis = r.kpis_json;
+  let summary = r.llm_summary_json;
+  // JSON 컬럼이 아닌 TEXT 환경 대비
+  if (typeof kpis === 'string') {
+    try { kpis = JSON.parse(kpis); } catch (_e) {}
+  }
+  if (typeof summary === 'string') {
+    try { summary = JSON.parse(summary); } catch (_e) {}
+  }
 
   return {
     week_start: r.week_start,
@@ -140,22 +196,17 @@ async function upsertCache({ weekStart, group, site, kpis, summary }) {
   ]);
 }
 
-/* ===== 규칙 기반 요약 ===== */
+/* =========================
+ *  Rule-based summary
+ * ========================= */
 function buildRuleSummary({ kpis, topEqByCnt = [], topCause = [], incidents = [] }) {
   const t = kpis?.total_tasks ?? 0;
   const h = kpis?.sum_total_hours ?? 0;
   const w = kpis?.weekend_tasks ?? 0;
   const f = kpis?.failed_tasks ?? 0;
-  const eq = topEqByCnt[0]?.equipment_name || '주요 장비 미도출';
+  const eq = (topEqByCnt[0]?.equipment_name || '주요 장비 미도출');
 
   const one_liner = `총 ${t}건 / ${h}h 처리, 주말 ${w}건, 실패/미해결 ${f}건. 이슈 집중 장비: ${eq}`;
-  const kpi_highlights = [
-    `총 작업시간: ${kpis?.sum_total_hours ?? 0}h`,
-    `작업:${kpis?.sum_task_hours ?? 0}h + 이동:${kpis?.sum_move_hours ?? 0}h`,
-    `평균/건: ${kpis?.avg_task_hours ?? 0}h`,
-    `주말 작업: ${kpis?.weekend_tasks ?? 0}건`,
-    `실패/미해결: ${kpis?.failed_tasks ?? 0}건`,
-  ];
 
   const top_issues = [];
   if (topCause[0]) {
@@ -180,7 +231,9 @@ function buildRuleSummary({ kpis, topEqByCnt = [], topCause = [], incidents = []
       recommendation: `경과 분석 및 재발 방지 대책`
     });
   }
-  while (top_issues.length < 3) top_issues.push({ title: '추가 이슈 없음', evidence: '-', recommendation: '-' });
+  while (top_issues.length < 3) {
+    top_issues.push({ title: '추가 이슈 없음', evidence: '-', recommendation: '-' });
+  }
 
   const next_actions = [
     '반복 원인 상위 1건 CAPA 회의',
@@ -188,11 +241,15 @@ function buildRuleSummary({ kpis, topEqByCnt = [], topCause = [], incidents = []
     '미해결 리스트 48h 내 클로징 계획'
   ];
 
-  return { one_liner, kpi_highlights, top_issues, next_actions };
+  return { one_liner, top_issues, next_actions };
 }
 
-/* ===== 외부 공개 API ===== */
+/* =========================
+ *  Public API
+ * ========================= */
 exports.getOrCreateWeeklySummary = async ({ group, site, weekStart, force = false }) => {
+  await ensureCacheTable();
+
   const wkStart = weekStart || getKstMondayISO();
   const wkEnd = addDaysISO(wkStart, 6);
 
@@ -208,7 +265,28 @@ exports.getOrCreateWeeklySummary = async ({ group, site, weekStart, force = fals
     fetchIncidents({ weekStart: wkStart, weekEnd: wkEnd, group, site, limit: 50 })
   ]);
 
-  const summary = buildRuleSummary({ kpis, topEqByCnt, topCause, incidents });
+  let summary;
+
+  // 1) AI 요약 시도 (summarizer.js가 있고, SUMMARIZER_ENABLED=true일 때)
+  if (typeof summarizeWeekly === 'function') {
+    try {
+      summary = await summarizeWeekly({
+        group, site, weekStart: wkStart,
+        kpis, topCause, topEq: topEqByCnt, incidents
+      });
+      // 최소 스키마 체크
+      if (!summary?.one_liner || !Array.isArray(summary?.top_issues)) {
+        throw new Error('summarizer returned invalid shape');
+      }
+    } catch (e) {
+      // 실패 시 로그만 남기고 룰 기반으로 폴백
+      console.warn('[summarizer] failed, fallback to rule-based:', e.message);
+      summary = buildRuleSummary({ kpis, topEqByCnt, topCause, incidents });
+    }
+  } else {
+    // 2) summarizer 미사용 → 룰 기반
+    summary = buildRuleSummary({ kpis, topEqByCnt, topCause, incidents });
+  }
 
   await upsertCache({ weekStart: wkStart, group, site, kpis, summary });
 
@@ -220,3 +298,6 @@ exports.getOrCreateWeeklySummary = async ({ group, site, weekStart, force = fals
     llm_summary_json: summary
   };
 };
+
+/* (선택) 테스트/디버깅을 위해 내부 함수도 필요하면 export 하세요 */
+// exports._internal = { fetchKpis, fetchTopEqByCount, fetchTopCause, fetchIncidents, buildRuleSummary };

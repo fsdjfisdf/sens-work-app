@@ -13,8 +13,14 @@
     .title{font-size:20px;font-weight:800;margin:0 0 8px}
     .muted{color:#6f665d}
     .kpis{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px}
-    .kpis div{background:#fffaf2;border:1px dashed #e5e1d6;border-radius:10px;padding:10px}
-    .issues li{margin-bottom:8px}
+    .kpi-item{background:#fffaf2;border:1px dashed #e5e1d6;border-radius:10px;padding:10px}
+    .kpi-item .label{color:#6f665d;font-size:13px}
+    .kpi-item .value{font-weight:800;font-size:16px}
+    .issues{counter-reset:item;margin:0;padding-left:18px}
+    .issues li{margin:0 0 12px}
+    .issues li .issue-title{font-weight:800}
+    .issues li .evd{color:#6f665d;font-size:13px;margin-top:2px}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#fff4cf;border:1px solid #f2d98d;font-size:12px;margin-left:8px}
     label{font-size:14px}
     select,input[type="date"]{padding:6px 8px;border:1px solid #cfc8bb;border-radius:8px;background:#fff}
     button{padding:8px 12px;border:1px solid #cfc8bb;border-radius:10px;background:#fff;cursor:pointer}
@@ -62,6 +68,7 @@
         <div class="title">이번 주 한 줄 요약</div>
         <div class="row">
           <div class="one" id="one">-</div>
+          <span id="meta-pill" class="pill" style="display:none"></span>
           <button id="copy-one" title="클립보드 복사">복사</button>
         </div>
         <div class="muted" id="meta"></div>
