@@ -146,16 +146,12 @@ app.get('/approval/work-log/pending', jwtMiddleware, requireRole(), workLogContr
 app.post('/approval/work-log/:id/approve', jwtMiddleware, requireRole(), workLogController.approvePendingWorkLog);
 app.post('/approval/work-log/:id/reject', jwtMiddleware, requireRole(), workLogController.rejectPendingWorkLog);
 
-// ★ 추가: 단건 조회(요청자/결재자 모두 볼 수 있게 인증만) 
-app.get('/approval/work-log/pending/:id', jwtMiddleware, workLogController.getPendingWorkLogOne);
+// ✅ 반려(내 이력) 조회 (프런트: /approval/work-log/rejected?mine=1)
+app.get('/approval/work-log/rejected', jwtMiddleware, workLogController.listMyRejected);
 
-// ★ 추가: 대기/반려건 내용 수정(PATCH) — 권한은 컨트롤러에서 세부검사
+// (선택/이미 구현했다면 생략 가능) — 상세조회/수정/재제출
+app.get('/approval/work-log/:id', jwtMiddleware, workLogController.getPendingWorkLogOne);
 app.patch('/approval/work-log/:id', jwtMiddleware, workLogController.updatePendingWorkLog);
-
-// ★ 추가: 내 반려 목록 (요청자 전용)
-app.get('/approval/work-log/rejected/mine', jwtMiddleware, workLogController.listMyRejected);
-
-// ★ 추가: 반려건 재제출 (요청자 전용)
 app.post('/approval/work-log/:id/resubmit', jwtMiddleware, workLogController.resubmitPendingWorkLog);
 
 

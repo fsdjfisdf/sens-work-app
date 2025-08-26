@@ -255,51 +255,54 @@ exports.getPendingById = async (id) => {
 };
 
 /* 대기/반려건 동적 수정 */
+// 대기/반려건 특정 필드만 부분 수정
 exports.updatePendingWorkLogFields = async (id, patch) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
     const allowed = [
-      'task_name','task_result','task_cause','task_man','task_description','task_date',
-      'start_time','end_time','none_time','move_time',
+      'task_name','task_result','task_cause','task_man','task_description',
+      'task_date','start_time','end_time','none_time','move_time',
       'group','site','SOP','tsguide','line','warranty',
       'equipment_type','equipment_name','work_type','work_type2',
       'setup_item','maint_item','transfer_item','task_maint','status'
     ];
+
     const sets = [];
     const vals = [];
-    for (const k of allowed) {
-      if (patch[k] !== undefined) {
-        const col = (k === 'group' || k === 'line') ? `\`${k}\`` : k;
-        sets.push(`${col} = ?`);
-        if (k === 'none_time' || k === 'move_time') vals.push(Number(patch[k]) || 0);
-        else vals.push(patch[k]);
-      }
+    for (const k of Object.keys(patch || {})) {
+      if (!allowed.includes(k)) continue;
+      sets.push(`\`${k}\` = ?`);
+      vals.push(patch[k]);
     }
-    if (!sets.length) return 0;
+    if (!sets.length) return; // 변경 없음
+
+    const sql = `UPDATE work_log_pending SET ${sets.join(', ')} WHERE id = ?`;
     vals.push(id);
-    const sql = `UPDATE work_log_pending SET ${sets.join(', ')} WHERE id=?`;
-    const [r] = await connection.query(sql, vals);
-    return r.affectedRows;
+    await connection.query(sql, vals);
   } finally {
     connection.release();
   }
 };
 
+
 /* 반려 목록(제출자 기준) */
 exports.listRejectedByUser = async (nickname) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const [rows] = await connection.query(
-      `SELECT * FROM work_log_pending
-       WHERE approval_status='rejected' AND submitted_by=? 
-       ORDER BY approved_at DESC, submitted_at DESC`,
-      [nickname]
-    );
+    const sql = `
+      SELECT *
+      FROM work_log_pending
+      WHERE approval_status='rejected'
+        AND submitted_by = ?
+      ORDER BY approved_at DESC, submitted_at DESC
+    `;
+    const [rows] = await connection.query(sql, [nickname]);
     return rows;
   } finally {
     connection.release();
   }
 };
+
 
 /* 반려건 재제출 */
 exports.resubmitPendingWorkLog = async (id, nickname) => {
@@ -372,6 +375,26 @@ exports.rejectPendingWorkLog = async (id, approver, note) => {
       WHERE id=?
     `;
     await connection.query(query, [approver || '', note || '', id]);
+  } finally {
+    connection.release();
+  }
+};
+
+// 반려건 재제출 -> 상태를 'pending'으로 돌리고 submitted_at 갱신
+exports.resubmitPendingWorkLog = async (id, submitted_by) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const sql = `
+      UPDATE work_log_pending
+      SET approval_status='pending',
+          approver = NULL,
+          approval_note = NULL,
+          approved_at = NULL,
+          submitted_by = ?,
+          submitted_at = NOW()
+      WHERE id = ?
+    `;
+    await connection.query(sql, [submitted_by, id]);
   } finally {
     connection.release();
   }
