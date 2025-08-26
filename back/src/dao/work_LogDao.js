@@ -261,16 +261,13 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
         equipment_type, warranty, equipment_name, status,
         task_description, task_cause, task_result, SOP, tsguide,
         work_type, work_type2, setup_item, maint_item, transfer_item,
-        task_duration, start_time, end_time, none_time, move_time, task_maint
+        start_time, end_time, none_time, move_time, task_maint
       )
       SELECT
         p.task_name, p.task_date, p.task_man, p.\`group\`, p.site, p.\`line\`,
         p.equipment_type, p.warranty, p.equipment_name, p.status,
         p.task_description, p.task_cause, p.task_result, p.SOP, p.tsguide,
         p.work_type, p.work_type2, p.setup_item, p.maint_item, p.transfer_item,
-        SEC_TO_TIME(GREATEST(0,
-          TIME_TO_SEC(TIMEDIFF(p.end_time, p.start_time)) - ((IFNULL(p.none_time,0) + IFNULL(p.move_time,0)) * 60)
-        )),
         p.start_time, p.end_time, p.none_time, p.move_time, p.task_maint
       FROM work_log_pending p
       WHERE p.id = ?
