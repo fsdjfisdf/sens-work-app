@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>S-WORKS — 주간 요약</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:,">
   <style>
     body{font-family:Inter,system-ui,'Noto Sans KR',sans-serif;margin:0;background:#faf7ef;color:#231f20}
     .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
@@ -20,8 +21,11 @@
     button:hover{background:#fff5db}
     .one{font-size:16px;font-weight:700}
     .grid{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:8px}
-    @media (max-width:800px){ .kpis{grid-template-columns:1fr} .grid{grid-template-columns:1fr} }
+    .row{display:flex;gap:8px;align-items:center}
+    .status{font-size:13px}
+    @media (max-width:800px){ .kpis{grid-template-columns:1fr} .grid{grid-template-columns:1fr} .row{flex-wrap:wrap} }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
   <script defer src="./js/weekly_summary.js"></script>
   <script defer src="./js/logoutTimer.js"></script>
 </head>
@@ -46,15 +50,20 @@
         <label>Week (월요일)</label><br/>
         <input type="date" id="week" />
       </div>
-      <div style="align-self:end">
+      <div class="row" style="align-self:end">
         <button id="run">요약 생성/조회</button>
+        <button id="force">재생성(force)</button>
+        <span id="status" class="muted status"></span>
       </div>
     </div>
 
     <div id="out">
       <div class="card">
         <div class="title">이번 주 한 줄 요약</div>
-        <div class="one" id="one">-</div>
+        <div class="row">
+          <div class="one" id="one">-</div>
+          <button id="copy-one" title="클립보드 복사">복사</button>
+        </div>
         <div class="muted" id="meta"></div>
       </div>
 
@@ -74,7 +83,7 @@
         </div>
         <div class="card">
           <div class="title">참고</div>
-          <div class="muted">최초 조회 시 집계/요약 후 캐시 저장, 이후는 캐시 반환.</div>
+          <div class="muted">최초 조회 시 집계/요약 후 캐시 저장, 이후는 캐시 반환. “재생성(force)”은 캐시 무시.</div>
         </div>
       </div>
     </div>

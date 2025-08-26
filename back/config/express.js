@@ -89,6 +89,7 @@ module.exports = function () {
   app.use('/api', hdwMaintCountRoute);
 const reportsRoute = require('../src/routes/reportsRoute');
 app.use('/reports', reportsRoute);
+require('../src/routes/reportsRoute')(app);
 
 
   

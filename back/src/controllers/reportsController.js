@@ -1,10 +1,14 @@
+// src/controllers/reportsController.js
 const reportsDao = require('../dao/reportsDao');
 
 exports.getWeeklySummary = async (req, res) => {
   try {
     const { group = 'PEE1', site = 'PT', week, force = '0' } = req.query;
     const data = await reportsDao.getOrCreateWeeklySummary({
-      group, site, weekStart: week, force: force === '1'
+      group,
+      site,
+      weekStart: week,
+      force: force === '1'
     });
     res.status(200).json(data);
   } catch (err) {
