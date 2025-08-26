@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("./config/express");
 const { logger, setupWebSocket } = require("./config/winston"); // 로거 및 WebSocket
 const http = require("http");
