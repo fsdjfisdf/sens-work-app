@@ -28,12 +28,19 @@ module.exports = function () {
   app.use(methodOverride());
 
   // CORS 설정
-  const corsOptions = {
-    origin: '*', // 모든 도메인에서의 요청을 허용
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token']
-  };
-  app.use(cors(corsOptions));
+const corsOptions = {
+  // 필요시 허용 오리진을 구체화 (예: 개발용)
+  // origin: ['http://localhost:3000', 'http://localhost:3001', 'http://3.37.73.151:3001'],
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-access-token', 'user-role'],
+  // 만약 axios에 withCredentials를 쓰면 아래 두 줄도 필요하고, origin에 '*'를 쓰면 안 됩니다.
+  // credentials: true,
+  // origin: 'http://localhost:3001',
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // (선택) 명시적 프리플라이트 허용
+
 
   // 정적 파일 경로 설정
   app.use(express.static(path.join(__dirname, '../../front')));
@@ -125,7 +132,8 @@ const workLogController = require('../src/controllers/workLogController');
 // 권한 가드: DB ENUM에 맞게
 function requireRole(roles = ['admin', 'editor']) {
   return (req, res, next) => {
-    const role = req.user?.role || req.headers['user-role'];
+    const role = req.user?.role; // JWT에서만 가져옴
+    if (!role) return res.status(401).json({ message: '인증 필요' });
     if (!roles.includes(role)) return res.status(403).json({ message: '권한 없음' });
     next();
   };
