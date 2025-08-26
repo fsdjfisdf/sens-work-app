@@ -250,16 +250,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_maint    = maintItem;
 
     try {
-      const response = await axios.post(`http://3.37.73.151:3001/log`, {
-        task_name, task_result: taskResults, task_cause: taskCauses, task_man: taskMans,
-        task_description: taskDescriptions, task_date, start_time, end_time, none_time: noneTime, move_time: moveTime,
-        group, site, SOP, tsguide, warranty, line, equipment_type, equipment_name, workType, workType2,
-        setupItem, maintItem, transferItem, task_maint, status
-      }, { headers: { 'Content-Type': 'application/json' } });
+      const response = await axios.post(`http://3.37.73.151:3001/approval/work-log/submit`, {
+    task_name, task_result: taskResults, task_cause: taskCauses, task_man: taskMans,
+    task_description: taskDescriptions, task_date, start_time, end_time, none_time: noneTime, move_time: moveTime,
+    group, site, SOP, tsguide, warranty, line, equipment_type, equipment_name, workType, workType2,
+    setupItem, maintItem, transferItem, task_maint, status
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+      'x-access-token': localStorage.getItem('x-access-token')
+    }
+  });
 
       if (response.status === 201) {
-        alert('작업 이력 추가 성공');
-        if (typeof loadWorkLogs === 'function') await loadWorkLogs();
+        alert('결재 대기 등록 완료(승인 후 저장됩니다).');
       }
     } catch (error) {
       console.error('작업 이력 추가 실패:', error);

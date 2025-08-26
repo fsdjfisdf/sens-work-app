@@ -142,3 +142,98 @@ exports.getSupraXPWorkLogs = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// ===== 결재: 제출 =====
+exports.submitWorkLogPending = async (req, res) => {
+  try {
+    const payload = req.body || {};
+    // 토큰에서 닉네임/아이디 꺼내면 더 좋음(예: req.user.nickname)
+    payload.submitted_by = req.user?.nickname || req.body.submitted_by || 'unknown';
+
+    // 기본값 보정 (기존 /log 로직과 동일)
+    payload.task_result   = payload.task_result || '';
+    payload.task_cause    = payload.task_cause  || '';
+    payload.task_man      = payload.task_man    || '';
+    payload.task_description = payload.task_description || '';
+    payload.task_date     = payload.task_date   || '1970-01-01';
+    payload.start_time    = payload.start_time  || '00:00:00';
+    payload.end_time      = payload.end_time    || '00:00:00';
+    payload.none_time     = payload.none_time   || 0;
+    payload.move_time     = payload.move_time   || 0;
+    payload.group         = payload.group       || 'SELECT';
+    payload.site          = payload.site        || 'SELECT';
+    payload.SOP           = payload.SOP         || 'SELECT';
+    payload.tsguide       = payload.tsguide     || 'SELECT';
+    payload.line          = payload.line        || 'SELECT';
+    payload.warranty      = payload.warranty    || 'SELECT';
+    payload.equipment_type= payload.equipment_type || 'SELECT';
+    payload.equipment_name= payload.equipment_name || '';
+    payload.workType      = payload.workType    || 'SELECT';
+    payload.workType2     = payload.workType2   || 'SELECT';
+    payload.setupItem     = payload.setupItem   || 'SELECT';
+    payload.maintItem     = payload.maintItem   || 'SELECT';
+    payload.transferItem  = payload.transferItem|| 'SELECT';
+    payload.status        = payload.status      || 'active';
+    payload.task_maint    = payload.task_maint  || 'SELECT';
+
+    const pendingId = await workLogDao.submitPendingWorkLog(payload);
+    res.status(201).json({ message: '결재 대기 등록 완료', pending_id: pendingId });
+  } catch (err) {
+    console.error('submit pending error:', err);
+    res.status(500).json({ error: '결재 대기 등록 중 오류' });
+  }
+};
+
+// ===== 결재: 목록 =====
+exports.listPendingWorkLogs = async (req, res) => {
+  try {
+    const rows = await workLogDao.listPendingWorkLogs();
+    res.status(200).json(rows);
+  } catch (err) {
+    res.status(500).json({ error: '대기 목록 조회 오류' });
+  }
+};
+
+// ===== 결재: 승인 =====
+exports.approvePendingWorkLog = async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body || {};
+  try {
+    // 결재 전 원본을 읽어와서 카운트 증가 등에 활용
+    const pending = await workLogDao.getPendingById(id);
+    if (!pending) return res.status(404).json({ error: '대기 데이터 없음' });
+
+    const approver = req.user?.nickname || 'admin';
+    await workLogDao.approvePendingWorkLog(id, approver, note || '');
+
+    // (선택) 승인 시 작업 카운트 증가
+    if (pending.transfer_item && pending.transfer_item !== 'SELECT' && pending.task_man) {
+      const engineers = pending.task_man.split(',').map(x => x.trim().split('(')[0].trim()).filter(Boolean);
+      for (const eng of engineers) {
+        try {
+          await workLogDao.incrementTaskCount(eng, pending.transfer_item);
+        } catch (e) {
+          console.warn('incrementTaskCount fail (ignored):', e.message);
+        }
+      }
+    }
+
+    res.status(200).json({ message: '승인 및 저장 완료' });
+  } catch (err) {
+    console.error('approve error:', err);
+    res.status(500).json({ error: '승인 처리 오류' });
+  }
+};
+
+// ===== 결재: 반려 =====
+exports.rejectPendingWorkLog = async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body || {};
+  try {
+    const approver = req.user?.nickname || 'admin';
+    await workLogDao.rejectPendingWorkLog(id, approver, note || '');
+    res.status(200).json({ message: '반려 처리 완료' });
+  } catch (err) {
+    res.status(500).json({ error: '반려 처리 오류' });
+  }
+};

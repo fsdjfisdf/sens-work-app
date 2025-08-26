@@ -2,43 +2,64 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>S-WORKS — 주간 요약</title>
+  <title>S-WORKS — 주간 운영 요약</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- 파비콘 404 방지 -->
   <link rel="icon" href="data:,">
-  <style>
-    body{font-family:Inter,system-ui,'Noto Sans KR',sans-serif;margin:0;background:#faf7ef;color:#231f20}
-    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-    .card{background:#fff;border:1px solid #e5e1d6;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-    .title{font-size:20px;font-weight:800;margin:0 0 8px}
-    .muted{color:#6f665d}
-    .kpis{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px}
-    .kpi-item{background:#fffaf2;border:1px dashed #e5e1d6;border-radius:10px;padding:10px}
-    .kpi-item .label{color:#6f665d;font-size:13px}
-    .kpi-item .value{font-weight:800;font-size:16px}
-    .issues{counter-reset:item;margin:0;padding-left:18px}
-    .issues li{margin:0 0 12px}
-    .issues li .issue-title{font-weight:800}
-    .issues li .evd{color:#6f665d;font-size:13px;margin-top:2px}
-    .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#fff4cf;border:1px solid #f2d98d;font-size:12px;margin-left:8px}
-    label{font-size:14px}
-    select,input[type="date"]{padding:6px 8px;border:1px solid #cfc8bb;border-radius:8px;background:#fff}
-    button{padding:8px 12px;border:1px solid #cfc8bb;border-radius:10px;background:#fff;cursor:pointer}
-    button:hover{background:#fff5db}
-    .one{font-size:16px;font-weight:700}
-    .grid{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:8px}
-    .row{display:flex;gap:8px;align-items:center}
-    .status{font-size:13px}
-    @media (max-width:800px){ .kpis{grid-template-columns:1fr} .grid{grid-template-columns:1fr} .row{flex-wrap:wrap} }
-  </style>
+
+  <!-- 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
-  <script defer src="./js/weekly_summary.js"></script>
-  <script defer src="./js/logoutTimer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+  <style>
+    :root{
+      --ink:#1f2937; --muted:#6b7280; --bg:#faf7ef; --card:#fff;
+      --line:#e5e1d6; --hair:#eee7d6; --accent:#2563eb;
+      --good:#059669; --bad:#dc2626;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,'Noto Sans KR',sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+    .wrap{max-width:1200px;margin:28px auto;padding:0 16px}
+    h1{margin:8px 0 16px}
+    .toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:16px}
+    label{font-size:14px;color:var(--muted)}
+    select,input[type="date"]{padding:8px 10px;border:1px solid #cfc8bb;border-radius:10px;background:#fff;min-width:120px}
+    button{padding:10px 14px;border:1px solid #cfc8bb;border-radius:12px;background:#fff;cursor:pointer;font-weight:600}
+    button:hover{background:#fff5db}
+    .btn-primary{border-color:#93c5fd;background:#eff6ff}
+    .btn-ghost{background:transparent}
+    .row{display:grid;gap:12px}
+    .row-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .row-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (max-width:760px){ .row-2,.row-3{grid-template-columns:1fr} }
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .title{font-size:18px;font-weight:800;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:13px}
+    .one{font-size:16px;font-weight:700}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .kpi{background:#fffaf2;border:1px dashed var(--line);border-radius:10px;padding:10px}
+    .kpi .lbl{color:var(--muted);font-size:12px}
+    .kpi .val{font-size:18px;font-weight:800;margin-top:2px}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;font-size:12px;border:1px solid #d1d5db;border-radius:999px;padding:4px 10px}
+    .pill.rule{background:#f3f4f6}
+    .pill.ai{background:#eaffea;border-color:#86efac}
+    .status{margin-top:6px;font-size:12px;color:var(--muted)}
+    .ok{color:var(--good)} .err{color:var(--bad)}
+    .foot{color:#80786d;font-size:12px;margin-top:12px}
+    .empty{color:var(--muted);font-size:13px}
+    @media print{ .toolbar,.no-print{display:none!important} .wrap{max-width:none} body{background:#fff} }
+  </style>
 </head>
+
 <body>
   <div class="wrap">
-    <h1 style="margin:8px 0 16px">주간 운영 요약</h1>
+    <h1>주간 운영 요약</h1>
 
+    <!-- 컨트롤 바 -->
     <div class="card toolbar">
       <div>
         <label>Group</label><br/>
@@ -56,45 +77,129 @@
         <label>Week (월요일)</label><br/>
         <input type="date" id="week" />
       </div>
-      <div class="row" style="align-self:end">
-        <button id="run">요약 생성/조회</button>
-        <button id="force">재생성(force)</button>
-        <span id="status" class="muted status"></span>
+
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button id="run" class="btn-primary">요약 생성/조회</button>
+        <button id="force" class="btn-ghost">재생성(force)</button>
+        <button id="copy-one" class="btn-ghost">한 줄 요약 복사</button>
+        <button id="copy-url" class="btn-ghost">현재 조건 링크 복사</button>
+        <button id="export" class="btn-ghost">CSV 내보내기</button>
+        <button id="print" class="btn-ghost">인쇄/저장(PDF)</button>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+
+    <!-- 상단 요약 -->
+    <div class="card">
+      <div style="display:flex; gap:8px; align-items:center; justify-content:space-between;">
+        <div>
+          <div class="title" style="margin-bottom:6px;">이번 주 한 줄 요약</div>
+          <div class="one" id="one">-</div>
+          <div id="meta" class="sub" style="margin-top:6px;"></div>
+        </div>
+        <div class="no-print" style="text-align:right;">
+          <span id="src-pill" class="pill rule" title="요약 엔진">룰 요약</span>
+          <div class="sub" id="range-pill" style="margin-top:6px;"></div>
+        </div>
       </div>
     </div>
 
-    <div id="out">
-      <div class="card">
-        <div class="title">이번 주 한 줄 요약</div>
-        <div class="row">
-          <div class="one" id="one">-</div>
-          <span id="meta-pill" class="pill" style="display:none"></span>
-          <span id="src-pill" class="pill" style="display:none"></span>
-          <button id="copy-one" title="클립보드 복사">복사</button>
-        </div>
-        <div class="muted" id="meta"></div>
+    <!-- KPI + 차트 캔버스(필수) -->
+    <div class="card">
+      <div class="title">핵심 지표</div>
+      <div id="kpis" class="kpis"></div>
+      <!-- ✅ 캔버스: 없으면 getContext 에러 -->
+      <canvas id="kpi-chart" height="160"></canvas>
+      <div class="sub" style="margin-top:8px;">
+        * 총합=작업시간+이동시간 · 평균/건=작업시간÷총 작업수 · 주말 작업=토/일 집계
+      </div>
+    </div>
+
+    <!-- 추가 분석(있으면 자동 표시 / 폴백 계산) -->
+    <div class="row row-3">
+      <div class="card" id="card-top-issues">
+        <div class="title">이슈 Top3</div>
+        <ol id="issues" style="margin:0 0 8px 18px;"></ol>
+        <div id="issues-empty" class="empty" style="display:none;">표시할 이슈가 없습니다.</div>
       </div>
 
-      <div class="card">
-        <div class="title">핵심 지표</div>
-        <div class="kpis" id="kpis"></div>
+      <div class="card" id="card-top-equip">
+        <div class="title">상위 장비 (시간 기준)</div>
+        <table class="table" id="top-equip-table">
+          <thead><tr><th>장비</th><th class="num">시간(h)</th><th class="num">건수</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="top-equip-empty" class="empty" style="display:none;">데이터 없음</div>
       </div>
 
-      <div class="grid">
-        <div class="card">
-          <div class="title">이슈 Top3</div>
-          <ol class="issues" id="issues"></ol>
-        </div>
-        <div class="card">
-          <div class="title">다음 액션</div>
-          <ul id="actions"></ul>
-        </div>
-        <div class="card">
-          <div class="title">참고</div>
-          <div class="muted">최초 조회 시 집계/요약 후 캐시 저장, 이후는 캐시 반환. “재생성(force)”은 캐시 무시.</div>
-        </div>
+      <div class="card" id="card-top-causes">
+        <div class="title">상위 원인</div>
+        <table class="table" id="top-causes-table">
+          <thead><tr><th>원인</th><th class="num">건수</th><th class="num">시간(h)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="top-causes-empty" class="empty" style="display:none;">데이터 없음</div>
       </div>
+    </div>
+
+    <div class="row row-3">
+      <div class="card" id="card-by-day">
+        <div class="title">요일별 작업 분포</div>
+        <canvas id="by-day-chart" height="140"></canvas>
+        <div id="by-day-empty" class="empty" style="display:none;">데이터 없음</div>
+      </div>
+      <div class="card" id="card-by-hour">
+        <div class="title">시간대별 시작 분포</div>
+        <canvas id="by-hour-chart" height="140"></canvas>
+        <div id="by-hour-empty" class="empty" style="display:none;">데이터 없음</div>
+      </div>
+      <div class="card" id="card-sop-ts">
+        <div class="title">SOP / TS Guide 사용률</div>
+        <div class="row row-2">
+          <canvas id="sop-chart" height="160"></canvas>
+          <canvas id="ts-chart" height="160"></canvas>
+        </div>
+        <div id="sop-ts-empty" class="empty" style="display:none;">데이터 없음</div>
+      </div>
+    </div>
+
+    <div class="row row-2">
+      <div class="card" id="card-open">
+        <div class="title">미해결/오픈 작업</div>
+        <table class="table" id="open-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>일자</th><th>장비</th><th>작업</th><th class="num">시간(h)</th><th>상태</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div id="open-empty" class="empty" style="display:none;">미해결 작업이 없습니다.</div>
+      </div>
+
+      <div class="card" id="card-top-eng">
+        <div class="title">상위 작업 공헌 (시간 기준)</div>
+        <table class="table" id="top-eng-table">
+          <thead><tr><th>엔지니어</th><th class="num">시간(h)</th><th class="num">건수</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="top-eng-empty" class="empty" style="display:none;">데이터 없음</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="title">보기/공유</div>
+      <div class="sub">원본 데이터(JSON)는 필요할 때만 열어 보세요.</div>
+      <button id="toggle-raw" class="btn-ghost" style="margin-top:8px;">원 데이터 토글</button>
+      <pre id="raw" class="muted" style="display:none; white-space:pre-wrap; margin-top:8px; max-height:240px; overflow:auto;"></pre>
+    </div>
+
+    <div class="foot">
+      제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단 유출·복사·배포를 금지합니다.
     </div>
   </div>
+
+  <script src="./js/weekly_summary.js" defer></script>
+  <script src="./js/logoutTimer.js" defer></script>
 </body>
 </html>

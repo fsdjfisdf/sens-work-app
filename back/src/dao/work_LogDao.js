@@ -169,3 +169,111 @@ exports.getSupraXPWorkLogs = async (equipment_type) => {
       throw new Error(`Error retrieving work logs: ${err.message}`);
   }
 };
+
+// ===== 승인 대기 제출 =====
+exports.submitPendingWorkLog = async (payload) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `
+      INSERT INTO work_log_pending (
+        task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+        \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2,
+        setup_item, maint_item, transfer_item, task_maint, status,
+        submitted_by
+      )
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `;
+    const values = [
+      payload.task_name, payload.task_result, payload.task_cause, payload.task_man, payload.task_description,
+      payload.task_date, payload.start_time, payload.end_time, payload.none_time, payload.move_time,
+      payload.group, payload.site, payload.SOP, payload.tsguide, payload.line, payload.warranty,
+      payload.equipment_type, payload.equipment_name, payload.workType, payload.workType2,
+      payload.setupItem, payload.maintItem, payload.transferItem, payload.task_maint, payload.status,
+      payload.submitted_by
+    ];
+    const [result] = await connection.query(query, values);
+    return result.insertId;
+  } finally {
+    connection.release();
+  }
+};
+
+// ===== 대기 목록 조회 =====
+exports.listPendingWorkLogs = async () => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const [rows] = await connection.query(
+      `SELECT * FROM work_log_pending WHERE approval_status='pending' ORDER BY submitted_at DESC`
+    );
+    return rows;
+  } finally {
+    connection.release();
+  }
+};
+
+// ===== 단건 조회 =====
+exports.getPendingById = async (id) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const [rows] = await connection.query(`SELECT * FROM work_log_pending WHERE id=?`, [id]);
+    return rows[0];
+  } finally {
+    connection.release();
+  }
+};
+
+// ===== 승인(본 테이블로 이관) =====
+exports.approvePendingWorkLog = async (id, approver, note) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    await connection.beginTransaction();
+
+    // 1) 본 테이블로 INSERT ... SELECT
+    const insertQuery = `
+      INSERT INTO work_log (
+        task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+        \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2,
+        setup_item, maint_item, transfer_item, task_maint, status
+      )
+      SELECT
+        task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
+        \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2,
+        setup_item, maint_item, transfer_item, task_maint, status
+      FROM work_log_pending WHERE id = ?
+    `;
+    await connection.query(insertQuery, [id]);
+
+    // 2) pending 상태 업데이트(감사 로그 보존용)
+    const updQuery = `
+      UPDATE work_log_pending
+      SET approval_status='approved', approver=?, approval_note=?, approved_at=NOW()
+      WHERE id=?
+    `;
+    await connection.query(updQuery, [approver || '', note || '', id]);
+
+    // 3) (선택) pending 삭제를 원하면 주석 해제
+    // await connection.query(`DELETE FROM work_log_pending WHERE id=?`, [id]);
+
+    await connection.commit();
+  } catch (e) {
+    await connection.rollback();
+    throw e;
+  } finally {
+    connection.release();
+  }
+};
+
+// ===== 반려 =====
+exports.rejectPendingWorkLog = async (id, approver, note) => {
+  const connection = await pool.getConnection(async conn => conn);
+  try {
+    const query = `
+      UPDATE work_log_pending
+      SET approval_status='rejected', approver=?, approval_note=?, approved_at=NOW()
+      WHERE id=?
+    `;
+    await connection.query(query, [approver || '', note || '', id]);
+  } finally {
+    connection.release();
+  }
+};
