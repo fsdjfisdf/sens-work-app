@@ -1,3 +1,4 @@
+// ./js/approval.js
 (function () {
   const API = 'http://3.37.73.151:3001';
   const token = localStorage.getItem('x-access-token');
@@ -19,7 +20,8 @@
   // 현재 사용자 파싱(닉네임/권한)
   const currentUser = parseJwt(token);
   const myNickname = currentUser?.nickname || '';
-  const myRole = currentUser?.role || '';
+  const myRole     = currentUser?.role || '';
+  const isApprover = (myRole === 'admin'); // 관리자만 결재 권한
 
   // --- Elements
   const selGroup = document.getElementById('sel-group');
@@ -31,6 +33,14 @@
   const btnReset = document.getElementById('btn-reset');
   const dateFrom = document.getElementById('date-from');
   const dateTo = document.getElementById('date-to');
+
+  // 체크박스/일괄 결재 UI
+  const headerChkAll = document.getElementById('chk-all');
+  const bulkBar      = document.getElementById('bulk-bar');
+  const selCountEl   = document.getElementById('sel-count');
+  const bulkNote     = document.getElementById('bulk-note');
+  const bulkApprove  = document.getElementById('bulk-approve');
+  const bulkReject   = document.getElementById('bulk-reject');
 
   // 모드 스위치(대기 / 반려 내 이력)
   const segBtns = document.querySelectorAll('.seg-btn');
@@ -62,7 +72,6 @@
   const f_work_type = document.getElementById('f-work_type');
   const f_work_type2= document.getElementById('f-work_type2');
   const f_setup_item= document.getElementById('f-setup_item');
-  const f_maint_item= document.getElementById('f-maint_item');
   const f_transfer_item = document.getElementById('f-transfer_item');
   const f_SOP = document.getElementById('f-SOP');
   const f_tsguide = document.getElementById('f-tsguide');
@@ -77,13 +86,16 @@
   const mdApprove = document.getElementById('md-approve');
   const mdReject  = document.getElementById('md-reject');
   const mdResubmit= document.getElementById('md-resubmit');
-  const editHint = document.getElementById('edit-hint');
+  const editHint  = document.getElementById('edit-hint');
 
   // State
   let rowsCache = [];
   let filtered = [];
   let currentRow = null;
-  let mode = 'pending';  // 'pending' | 'rejected'
+  let selectedIds = new Set(); // 일괄 결재 선택 상태
+
+  // 권한에 따라 초기 탭: admin=대기, 그 외=반려
+  let mode = isApprover ? 'pending' : 'rejected';
 
   function hdr() {
     return {
@@ -94,7 +106,10 @@
 
   // --- Utils
   function parseJwt(t){
-    try { return JSON.parse(atob(t.split('.')[1] || '')) } catch(e){ return null; }
+    try {
+      const b = (t.split('.')[1] || '').replace(/-/g,'+').replace(/_/g,'/');
+      return JSON.parse(atob(b));
+    } catch(e){ return null; }
   }
   const safe = (s) => (s ?? '');
 
@@ -149,7 +164,6 @@
     const hh = +m[1], mm = +m[2], ss = m[3] ? +m[3] : 0;
     return hh*3600 + mm*60 + ss;
   }
-  // 요구: none/move 제외하지 않고 end - start만
   function computeDuration(row) {
     const start = pickTime(row.start_time, row.startTime);
     const end   = pickTime(row.end_time,   row.endTime);
@@ -163,8 +177,9 @@
     return `${pad(hh)}:${pad(mm)}:${pad(ss)}`;
   }
 
-  // --- Approvers
+  // --- Approvers (대기 탭에서만)
   async function fetchApprovers() {
+    if (mode !== 'pending') { areaApprover.innerHTML = ''; return; }
     const g = selGroup.value;
     const s = selSite.value;
     if (!g) { areaApprover.innerHTML = ''; return; }
@@ -187,20 +202,24 @@
   async function fetchRows() {
     const g = selGroup.value;
     const s = selSite.value;
-    tbody.innerHTML = '<tr><td colspan="8">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
     try {
       const url = (mode === 'pending')
         ? `${API}/approval/work-log/pending`
-        : `${API}/approval/work-log/rejected?mine=1`; // 내 반려 이력
+        : `${API}/approval/work-log/rejected?mine=1`;
       const { data } = await axios.get(url, {
         headers: hdr(),
         params: (mode === 'pending') ? { group: g || '', site: s || '' } : {}
       });
       rowsCache = Array.isArray(data) ? data : [];
+      // 모드가 바뀌었거나 필터 바뀌면 현재 선택 초기화
+      selectedIds.clear();
       redraw();
     } catch (e) {
       console.error(e);
-      tbody.innerHTML = '<tr><td colspan="8">목록 조회 실패</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9">목록 조회 실패</td></tr>';
+      selectedIds.clear();
+      updateBulkUI();
     }
   }
 
@@ -244,24 +263,61 @@
   function redraw() {
     applyFilters();
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="8">데이터가 없습니다.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9">데이터가 없습니다.</td></tr>';
+      toggleSelectColumn(); // 열 감춤/표시 갱신
       return;
     }
     tbody.innerHTML = filtered.map(r => `
       <tr data-id="${r.id}">
-        <td class="nowrap center">${r.id}</td>
-        <td class="wrap center">${fmtDT(r)}</td>
-        <td class="wrap center">${fmtGS(r)}</td>
-        <td class="wrap">${fmtEQ(r)}</td>
-        <td class="wrap">
-          ${fmtWorkType(r)}
-          ${pickSubItem(r) ? `<div class="muted">${pickSubItem(r)}</div>` : ''}
+        <!-- ▼ 선택 체크박스 (관리자+대기탭에서만 보임) -->
+        <td class="center sel-col">
+          <input type="checkbox" class="row-chk" data-id="${r.id}" ${selectedIds.has(Number(r.id)) ? 'checked' : ''} aria-label="선택">
         </td>
-        <td class="wrap"><b>${displayTransfer(r)}</b></td>
-        <td class="wrap">${safe(r.task_man)}</td>
-        <td class="wrap">${fmtSubmitted(r)}</td>
+
+        <td class="nowrap center">${r.id}</td>
+        <td class="wrap-text center">${fmtDT(r)}</td>
+        <td class="wrap-text center">${fmtGS(r)}</td>
+        <td class="wrap-text">${fmtEQ(r)}</td>
+        <td class="wrap-text">
+          ${fmtWorkType(r)}
+          ${safe(r.setup_item) ? `<div class="muted">${safe(r.setup_item)}</div>` : ''}
+        </td>
+        <td class="wrap-text"><b>${displayTransfer(r)}</b></td>
+        <td class="wrap-text">${safe(r.task_man)}</td>
+        <td class="wrap-text">${fmtSubmitted(r)}</td>
       </tr>
     `).join('');
+
+    toggleSelectColumn();
+  }
+
+  // 체크박스 컬럼/바 표시 제어
+  function canSelect(){ return isApprover && mode === 'pending'; }
+
+  function toggleSelectColumn(){
+    const show = canSelect();
+    document.querySelectorAll('.sel-col').forEach(el => el.classList.toggle('hidden', !show));
+    updateBulkUI();
+  }
+
+  function updateBulkUI(){
+    const count = selectedIds.size;
+    selCountEl.textContent = String(count);
+    bulkApprove.disabled = !count;
+    bulkReject.disabled  = !count;
+    // 바 표시
+    bulkBar.classList.toggle('show', canSelect() && count > 0);
+
+    // 헤더 전체선택 체크 상태 동기화
+    if (!headerChkAll) return;
+    const visIds = filtered.map(r => Number(r.id));
+    const selectedVisible = visIds.filter(id => selectedIds.has(id));
+    headerChkAll.indeterminate = selectedVisible.length > 0 && selectedVisible.length < visIds.length;
+    headerChkAll.checked = visIds.length > 0 && selectedVisible.length === visIds.length;
+    if (!canSelect()){
+      headerChkAll.checked = false;
+      headerChkAll.indeterminate = false;
+    }
   }
 
   // --- Modal content binding
@@ -273,8 +329,8 @@
 
     f_task_name.value = safe(row.task_name);
     f_task_date.value = fmtISODateOnly(row.task_date);
-    f_start_time.value= pickTime(row.start_time, row.startTime).slice(0,8);
-    f_end_time.value  = pickTime(row.end_time, row.endTime).slice(0,8);
+    f_start_time.value= (pickTime(row.start_time, row.startTime) || '').slice(0,8);
+    f_end_time.value  = (pickTime(row.end_time, row.endTime)   || '').slice(0,8);
 
     f_group.value = safe(row.group);
     f_site.value  = safe(row.site);
@@ -287,7 +343,6 @@
     f_work_type.value = safe(row.work_type);
     f_work_type2.value= safe(row.work_type2);
     f_setup_item.value= safe(row.setup_item);
-    f_maint_item.value= safe(row.maint_item);
     f_transfer_item.value = safe(row.transfer_item);
     f_SOP.value = safe(row.SOP);
     f_tsguide.value = safe(row.tsguide);
@@ -300,27 +355,35 @@
 
     vDuration.textContent = computeDuration(row);
 
-    // 권한에 따른 버튼 표시
-    const isApprover = (myRole === 'admin' || myRole === 'approver');
-    const isRejected = (row.approval_status === 'rejected');
-    const isOwner    = (myNickname && (row.submitted_by === myNickname || String(row.task_man||'').includes(myNickname)));
+    const status = String(row.approval_status || '').toLowerCase();
+    const isOwner = !!myNickname && (
+      row.submitted_by === myNickname ||
+      String(row.task_man || '').includes(myNickname)
+    );
 
-    mdApprove.classList.toggle('hidden', !isApprover || mode !== 'pending');
-    mdReject.classList.toggle('hidden',  !isApprover || mode !== 'pending');
+    // 단건 승인/반려는 관리자 + 대기 탭
+    mdApprove.classList.toggle('hidden', !(isApprover && mode === 'pending'));
+    mdReject.classList.toggle('hidden',  !(isApprover && mode === 'pending'));
 
-    // 반려건 + 작성자만 재요청 가능
-    mdResubmit.classList.toggle('hidden', !(isRejected && isOwner));
-    editHint.textContent = mdApprove.classList.contains('hidden')
-      ? '반려 상태의 작성자는 수정 후 재요청할 수 있습니다.'
-      : '결재자는 필요한 내용을 수정한 뒤 승인/반려할 수 있습니다.';
+    // 재요청 버튼: 반려 탭에서 본인 소유일 때만
+    const canResubmit = (mode === 'rejected') && isOwner && (status === '' || status === 'rejected' || status === 'reject');
+    mdResubmit.classList.toggle('hidden', !canResubmit);
+
+    editHint.textContent = (!mdApprove.classList.contains('hidden'))
+      ? '결재자는 필요한 내용을 수정한 뒤 승인/반려할 수 있습니다.'
+      : '반려 상태의 작성자는 수정 후 재요청할 수 있습니다.';
   }
 
   function readForm(){
+    const ensureSeconds = (v) => {
+      if (!v) return null;
+      return /^\d{2}:\d{2}$/.test(v) ? `${v}:00` : v;
+    };
     return {
       task_name: f_task_name.value.trim(),
       task_date: f_task_date.value || null,
-      start_time: f_start_time.value || null,
-      end_time: f_end_time.value || null,
+      start_time: ensureSeconds(f_start_time.value),
+      end_time: ensureSeconds(f_end_time.value),
       group: f_group.value.trim(),
       site:  f_site.value.trim(),
       line:  f_line.value.trim(),
@@ -332,7 +395,6 @@
       work_type: f_work_type.value.trim(),
       work_type2: f_work_type2.value.trim(),
       setup_item: f_setup_item.value.trim(),
-      maint_item: f_maint_item.value.trim(),
       transfer_item: f_transfer_item.value.trim(),
       SOP: f_SOP.value.trim(),
       tsguide: f_tsguide.value.trim(),
@@ -368,16 +430,17 @@
     await axios.post(url, { note: note || '' }, { headers: hdr() });
   }
   async function resubmit(id, patch){
-    await axios.post(`${API}/approval/work-log/${id}/resubmit`, patch, { headers: hdr() });
+    await axios.post(`${API}/approval/work-log/${id}/resubmit`, { patch }, { headers: hdr() });
   }
 
-  // --- Events
+  // --- Events (mode switch)
   segBtns.forEach(btn=>{
+    btn.classList.toggle('is-active', btn.dataset.mode === mode);
     btn.addEventListener('click', async ()=>{
       segBtns.forEach(b=>b.classList.remove('is-active'));
       btn.classList.add('is-active');
       mode = btn.dataset.mode;
-      await fetchApprovers(); // pending 기준으로 표시, rejected에도 유지
+      await fetchApprovers();
       await fetchRows();
     });
   });
@@ -389,10 +452,13 @@
     } else {
       selSite.disabled = false;
     }
-    if (mode === 'pending') await fetchApprovers();
+    await fetchApprovers();
     await fetchRows();
   });
-  selSite.addEventListener('change', fetchRows);
+  selSite.addEventListener('change', async ()=>{
+    await fetchApprovers();
+    await fetchRows();
+  });
 
   q.addEventListener('input', redraw);
   qClear.addEventListener('click', () => { q.value=''; redraw(); });
@@ -410,8 +476,21 @@
     await fetchRows();
   });
 
-  // 행 클릭 -> 상세 보기
+  // --- Row interactions
+  // 체크박스 클릭 시: 선택 토글 (모달 열기 방지)
+  tbody.addEventListener('change', (e) => {
+    const cb = e.target.closest('.row-chk');
+    if (!cb) return;
+    const id = Number(cb.dataset.id);
+    if (cb.checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+    updateBulkUI();
+    e.stopPropagation();
+  });
+
+  // 행 클릭 -> 상세 보기 (체크박스 누를 땐 열지 않음)
   tbody.addEventListener('click', (e) => {
+    if (e.target.closest('.row-chk')) return;
     const tr = e.target.closest('tr[data-id]');
     if (!tr) return;
     const id = tr.dataset.id;
@@ -419,11 +498,32 @@
     if (row) openModal(row);
   });
 
+  // 헤더 전체선택
+  if (headerChkAll){
+    headerChkAll.addEventListener('change', () => {
+      if (!canSelect()) {
+        headerChkAll.checked = false;
+        headerChkAll.indeterminate = false;
+        return;
+      }
+      const visIds = filtered.map(r => Number(r.id));
+      if (headerChkAll.checked) { visIds.forEach(id => selectedIds.add(id)); }
+      else { visIds.forEach(id => selectedIds.delete(id)); }
+
+      // 현재 페이지 DOM 체크박스 반영
+      document.querySelectorAll('.row-chk').forEach(cb => {
+        const id = Number(cb.dataset.id);
+        cb.checked = selectedIds.has(id);
+      });
+      updateBulkUI();
+    });
+  }
+
   ovl.addEventListener('click', closeModal);
   mdClose.addEventListener('click', closeModal);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-  // 결재자: 수정 반영 + 승인 / 반려
+  // 결재자: 단건 승인/반려
   mdApprove.addEventListener('click', async () => {
     if (!currentRow) return;
     if (!confirm('수정 내용을 반영하고 승인하시겠습니까?')) return;
@@ -443,7 +543,6 @@
     const note = mdNote.value.trim();
     if (!confirm('반려하시겠습니까?')) return;
     try {
-      // 결재자는 필요시 수정 반영 후 반려도 가능
       await patchPending(currentRow.id, readForm());
       await postAction(currentRow.id, 'reject', note);
       alert('반려 완료');
@@ -463,13 +562,43 @@
       await resubmit(currentRow.id, readForm());
       alert('재요청 완료');
       closeModal();
-      // 반려 → 재요청하면 대기로 가므로 대기 탭으로 전환
       document.querySelector('.seg-btn[data-mode="pending"]').click();
     } catch (err) {
       console.error(err);
       alert(`재요청 실패: ${err?.response?.data?.error || err?.response?.data?.message || '오류'}`);
     }
   });
+
+  // 일괄 승인/반려
+  async function bulkAction(act){
+    if (!canSelect()) return;
+    const ids = Array.from(selectedIds);
+    if (!ids.length) return;
+    if (!confirm(`선택된 ${ids.length}건을 ${act === 'approve' ? '승인' : '반려'}하시겠습니까?`)) return;
+
+    bulkApprove.disabled = true;
+    bulkReject.disabled  = true;
+
+    let ok = 0;
+    const fail = [];
+    for (const id of ids){
+      try{
+        await postAction(id, act, bulkNote.value.trim());
+        ok++;
+        selectedIds.delete(id);
+      }catch(e){
+        fail.push(id);
+      }
+    }
+    await fetchRows();
+    updateBulkUI();
+
+    const msg = [`완료: ${ok}건`];
+    if (fail.length) msg.push(`실패: ${fail.join(', ')}`);
+    alert(msg.join('\n'));
+  }
+  bulkApprove.addEventListener('click', ()=>bulkAction('approve'));
+  bulkReject .addEventListener('click', ()=>bulkAction('reject'));
 
   // 초기 로딩
   (async () => {

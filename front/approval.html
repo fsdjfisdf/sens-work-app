@@ -20,13 +20,22 @@
       </div>
     </div>
     <div id="menu-bar" class="menu-bar" aria-hidden="true">
-      <div class="menu-bar-content">
-        <a href="./user_info.html" class="menu-item">SECM</a>
-        <a href="./worklog.html" class="menu-item">Create Worklog</a>
-        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-        <a href="./approval.html" class="menu-item">Approval</a>
-        <button id="sign-out" class="menu-item">Logout</button>
-      </div>
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./approval.html" class="menu-item">Worklog Approval</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
     </div>
   </nav>
 
@@ -97,23 +106,43 @@
         <button class="seg-btn" data-mode="rejected"><i class="far fa-times-circle"></i> 반려(내 이력)</button>
       </div>
 
-      <!-- TABLE (inside scroll container to prevent overflow) -->
+      <!-- TABLE -->
       <div class="table-wrap">
-        <table id="tbl-pending">
-          <thead>
-            <tr>
-              <th style="width:72px">ID</th>
-              <th style="width:260px">Date / Time</th>
-              <th style="width:260px">Group / Site / Line</th>
-              <th style="width:320px">Equipment (Type / Name)</th>
-              <th style="width:220px">Work Type</th>
-              <th style="width:220px">Transfer</th>
-              <th style="width:240px">Worker</th>
-              <th style="width:240px">Submitted (By / At)</th>
-            </tr>
-          </thead>
-          <tbody><!-- rows --></tbody>
-        </table>
+<table id="tbl-pending">
+  <thead>
+    <tr>
+      <!-- ▼ 추가: 전체 선택 -->
+      <th class="center sel-col" style="width:48px">
+        <input type="checkbox" id="chk-all" aria-label="전체 선택">
+      </th>
+
+      <th style="width:72px">ID</th>
+      <th style="width:260px">Date / Time</th>
+      <th style="width:260px">Group / Site / Line</th>
+      <th style="width:320px">Equipment (Type / Name)</th>
+      <th style="width:220px">Work Type</th>
+      <th style="width:220px">Transfer</th>
+      <th style="width:240px">Worker</th>
+      <th style="width:240px">Submitted (By / At)</th>
+    </tr>
+  </thead>
+  <tbody><!-- rows --></tbody>
+</table>
+<!-- Bulk action bar -->
+<div id="bulk-bar" class="bulk-bar" aria-live="polite">
+  <div class="bulk-left">
+    <strong class="mono"><span id="sel-count">0</span></strong> 건 선택됨
+  </div>
+  <input id="bulk-note" class="bulk-note" placeholder="결재 메모 (선택)" />
+  <button id="bulk-approve" class="btn btn-primary">
+    <i class="fas fa-check"></i>&nbsp;선택 승인
+  </button>
+  <button id="bulk-reject" class="btn btn-danger">
+    <i class="fas fa-times"></i>&nbsp;선택 반려
+  </button>
+</div>
+
+
       </div>
 
       <div class="hint">행을 클릭하면 세부 내용을 확인할 수 있습니다. 결재는 모달에서 수행합니다.</div>
@@ -121,8 +150,8 @@
   </main>
 
   <!-- Detail Modal -->
-  <div id="ovl" class="overlay" aria-hidden="true"></div>
-  <div id="mdl" class="modal" aria-hidden="true" aria-modal="true" role="dialog">
+  <div id="ovl" class="overlay" style="z-index:9000" aria-hidden="true"></div>
+  <div id="mdl" class="modal" style="z-index:9001" aria-hidden="true" aria-modal="true" role="dialog">
     <div class="modal-card">
       <div class="modal-head">
         <div>
@@ -133,16 +162,14 @@
       </div>
 
       <div class="modal-body">
-        <!-- 개요 (일부 필드 편집 지원) -->
+        <!-- 개요 -->
         <section class="modal-sec">
           <h4>개요</h4>
           <div class="kv">
             <div class="k">ID</div><div class="v" id="v-id"></div>
 
             <div class="k">제목</div>
-            <div class="v">
-              <input class="in" id="f-task_name" />
-            </div>
+            <div class="v"><input class="in" id="f-task_name" /></div>
 
             <div class="k">일시</div>
             <div class="v flex">
@@ -162,9 +189,7 @@
             <div class="k">제출자</div><div class="v" id="v-submitter"></div>
 
             <div class="k">작업자</div>
-            <div class="v">
-              <input class="in" id="f-task_man" />
-            </div>
+            <div class="v"><input class="in" id="f-task_man" /></div>
           </div>
         </section>
 
@@ -178,7 +203,8 @@
               <input class="in" id="f-equipment_name" placeholder="equipment_name"/>
             </div>
 
-            <div class="k">Warranty</div><div class="v"><input class="in" id="f-warranty"/></div>
+            <div class="k">Warranty</div>
+            <div class="v"><input class="in" id="f-warranty"/></div>
 
             <div class="k">Work Type</div>
             <div class="v flex">
@@ -186,13 +212,14 @@
               <input class="in" id="f-work_type2" placeholder="REP / TEACHING 등"/>
             </div>
 
-            <div class="k">Sub Item</div>
-            <div class="v flex">
-              <input class="in" id="f-setup_item" placeholder="SET UP일 때"/>
-              <input class="in" id="f-maint_item" placeholder="MAINT일 때"/>
+            <!-- ✅ Sub Item 제거, setup_item만 남기고 Transfer 위로 이동 -->
+            <div class="k">Setup Item</div>
+            <div class="v">
+              <input class="in" id="f-setup_item" placeholder="필요 시 입력"/>
             </div>
 
-            <div class="k">Transfer</div><div class="v"><input class="in" id="f-transfer_item"/></div>
+            <div class="k">Transfer</div>
+            <div class="v"><input class="in" id="f-transfer_item"/></div>
 
             <div class="k">SOP / TS</div>
             <div class="v flex">
@@ -239,12 +266,61 @@
         <button id="md-reject" class="btn btn-danger"><i class="fas fa-times"></i>&nbsp;반려</button>
 
         <!-- 작성자(반려건) 전용 -->
-        <button id="md-resubmit" class="btn btn-primary outline hidden"><i class="fas fa-paper-plane"></i>&nbsp;수정 후 재요청</button>
+        <button id="md-resubmit" class="btn btn-primary outline hidden">
+          <i class="fas fa-paper-plane"></i>&nbsp;수정 후 재요청
+        </button>
       </div>
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
   <script src="./js/approval.js"></script>
+
+  <script>
+/** 관리자 접근 가드: 토큰/로컬스토리지 1차 체크 + 서버 재검증 */
+async function assertAdmin() {
+  const token = localStorage.getItem('x-access-token');
+  const role  = localStorage.getItem('user-role');
+
+  // 1차: 로그인/권한 로컬 체크
+  if (!token) {
+    alert('로그인이 필요합니다.');
+    window.location.replace('./signin.html');
+    throw new Error('no token'); // 이후 코드 실행 중단
+  }
+  if (role !== 'admin') {
+    alert('접근 권한이 없습니다.');
+    window.location.replace('./index.html');
+    throw new Error('not admin (local)'); // 이후 코드 실행 중단
+  }
+
+  // 2차: 서버에서 역할 재검증(조작/만료 대비)
+  try {
+    const res = await axios.get('http://3.37.73.151:3001/user-info', {
+      headers: { 'x-access-token': token }
+    });
+    const serverRole = res.data?.result?.ROLE || res.data?.result?.role || res.data?.result?.UserRole;
+    if (serverRole && serverRole !== 'admin') {
+      alert('접근 권한이 없습니다.');
+      window.location.replace('./index.html');
+      throw new Error('not admin (server)');
+    }
+  } catch (err) {
+    // 토큰 만료/검증 실패 => 로그인으로
+    console.error('admin check failed:', err);
+    alert('세션이 만료되었거나 권한 확인에 실패했습니다. 다시 로그인해주세요.');
+    window.location.replace('./signin.html');
+    throw err;
+  }
+}
+
+// 다른 탭에서 로그아웃된 경우 즉시 차단
+window.addEventListener('storage', (e) => {
+  if (e.key === 'x-access-token' && !e.newValue) {
+    alert('로그아웃되었습니다.');
+    window.location.replace('./signin.html');
+  }
+});
+</script>
 </body>
 </html>
