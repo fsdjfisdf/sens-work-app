@@ -16,7 +16,7 @@ let stackedChart = null;
 // 매트릭스 상태
 let matrixItems = [];         // 모든 항목
 let matrixWorkers = [];       // 모든 작업자
-let matrixData = {};          // data[item][worker] = {pci, work, self, baseline, ...}
+let matrixData = {};          // data[item][worker] = {pci, work, self, baseline, main_count, support_count, add_count, total_count}
 let workerAvgMap = {};        // worker -> avg pci
 
 // 개인 보기 상태
@@ -56,6 +56,13 @@ const el = {
   searchItem: $("searchItem"),
   sortBy: $("sortBy"),
   tbody: $("pciTbody"),
+
+  // modal
+  overlay: $("overlay"),
+  modal: $("modal"),
+  modalTitle: $("modalTitle"),
+  modalBody: $("modalBody"),
+  modalClose: $("modalClose"),
 };
 
 // ===== 중분류 정의 =====
@@ -88,7 +95,7 @@ const ITEM_TO_CAT = (() => {
 })();
 
 function getCategory(item){ return ITEM_TO_CAT[item] || "-"; }
-function esc(s=""){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function esc(s=""){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
 function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
 
@@ -97,8 +104,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindTabs();
   bindMatrixEvents();
   bindPersonEvents();
-  renderCategoryChips();
 
+  // 모달 close
+  el.modalClose.addEventListener("click", hideModal);
+  el.overlay.addEventListener("click", hideModal);
+  window.addEventListener("keydown",(e)=>{ if(e.key==="Escape") hideModal(); });
+
+  renderCategoryChips();
   await loadWorkerList();
   await buildMatrix();
 
@@ -180,7 +192,6 @@ function sortMatrixWorkers(){
 }
 
 function visibleCategories(){
-  // chips에서 active만
   const act = Array.from(el.catChips.querySelectorAll(".chip.active")).map(c=>c.dataset.cat);
   return new Set(act.length ? act : CATEGORIES.map(c=>c.category));
 }
@@ -225,11 +236,10 @@ function renderMatrix(){
   // ===== 바디 =====
   const frag = document.createDocumentFragment();
 
-  // 카테고리 순서대로 섹션 렌더
   for (const grp of CATEGORIES){
     if (!cats.has(grp.category)) continue;
 
-    // 해당 카테고리 항목 중 필터와 매칭되는 것만
+    // 필터 후 항목
     const its = grp.items.filter(it => matrixItems.includes(it))
                          .filter(it => !qItem || it.toLowerCase().includes(qItem));
     if (!its.length) continue;
@@ -254,7 +264,7 @@ function renderMatrix(){
       tdItem.className = "item-col";
       tdItem.innerHTML = `<strong>${esc(item)}</strong>`;
       const tdBase = document.createElement("td");
-      tdBase.className = "base-col";
+      tdBase.className = "base-col center";
       tdBase.textContent = getBaseline(item);
 
       tr.appendChild(tdCat); tr.appendChild(tdItem); tr.appendChild(tdBase);
@@ -263,15 +273,14 @@ function renderMatrix(){
         const d = (matrixData[item]||{})[w] || null;
         const val = d?.pci ?? 0;
         const cls = `cell ${heatClass(val)}`;
-        const title = d ? `작업자: ${w}\n항목: ${item}\nPCI: ${pct(d.pci)}%\n작업이력(80): ${pct(d.work)}%\n자가(20): ${pct(d.self)}%\n기준: ${d.baseline}\n총횟수: ${d.total_count} (main ${d.main_count}, support ${d.support_count}, 가산 ${d.add_count})` : "";
         const td = document.createElement("td");
         td.className = "worker-col";
-        // 클릭 가능한 셀(산출 근거)
         td.innerHTML = `
           <div class="${cls}" role="button" tabindex="0"
                data-w="${esc(w)}" data-item="${esc(item)}"
-               title="${esc(title)}">
+               title="산출 근거 보기">
             <span class="pct">${pct(val)}%</span>
+            <span class="view">보기</span>
           </div>`;
         tr.appendChild(td);
       }
@@ -288,7 +297,7 @@ function toggleDensity(){
 }
 
 function applyColumnWidth(){
-  const px = Math.max(40, Math.min(140, Number(el.colWidth.value || 64)));
+  const px = Math.max(40, Math.min(140, Number(el.colWidth.value || 72)));
   Array.from(document.querySelectorAll(".worker-col")).forEach(th => th.style.minWidth = px + "px");
 }
 
@@ -329,6 +338,15 @@ function bindPersonEvents(){
   el.btnCsv.addEventListener("click", exportPersonXlsx); // Excel
   el.searchItem.addEventListener("input", renderPersonTable);
   el.sortBy.addEventListener("change", ()=>{ sortPersonRows(); renderPersonTable(); });
+
+  // 행 클릭 → 상세
+  el.tbody.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".view-btn");
+    const tr = e.target.closest("tr[data-item]");
+    const item = tr?.getAttribute("data-item");
+    const worker = currentSummary?.worker;
+    if (btn && worker && item) openBreakdown(worker, item);
+  });
 }
 
 async function onFetchPerson(){
@@ -416,7 +434,7 @@ function renderPersonTable(){
       tr.setAttribute("data-item", r.item);
       tr.innerHTML = `
         <td><span class="badge">${esc(cat)}</span></td>
-        <td>${esc(r.item)}</td>
+        <td class="item-title"><span>${esc(r.item)}</span><button class="view-btn" title="산출 근거 보기">보기</button></td>
         <td>${r.baseline}</td>
         <td>${r.main_count}</td>
         <td>${r.support_count}</td>
@@ -431,15 +449,6 @@ function renderPersonTable(){
   }
   el.tbody.innerHTML = ""; el.tbody.appendChild(frag);
 }
-
-// 개인 보기 행 클릭 → 산출 근거
-el.tbody.addEventListener("click", (e)=>{
-  const tr = e.target.closest("tr");
-  if (!tr) return;
-  const it = tr.getAttribute("data-item");
-  const w = currentSummary?.worker;
-  if (w && it) openBreakdown(w, it);
-});
 
 // Excel(개인)
 function exportPersonXlsx(){
@@ -493,7 +502,7 @@ async function openBreakdown(worker, item){
           <h4>요약</h4>
           <div class="kv">
             <div class="k">작업자</div><div class="v"><strong>${esc(worker)}</strong></div>
-            <div class="k">항목</div><div class="v"><strong>${esc(data.item)}</strong> <span class="pill">${esc(getCategory(data.item))}</span></div>
+            <div class="k">항목</div><div class="v"><strong>${esc(data.item)}</strong> <span class="badge">${esc(getCategory(data.item))}</span></div>
             <div class="k">기준 작업 수</div><div class="v">${data.baseline}</div>
             <div class="k">카운트</div>
             <div class="v">main ${data.totals.main_count}, support ${data.totals.support_count}, 가산 ${data.totals.add_count} → <strong>총 ${data.totals.total_count}</strong></div>
@@ -518,38 +527,15 @@ async function openBreakdown(worker, item){
   }
 }
 
-// 가벼운 모달(approval.css 톤과 어울림)
 function showModal(title, bodyHtml){
-  let overlay = document.querySelector(".overlay");
-  let modal = document.querySelector(".modal");
-  if (!overlay){
-    overlay = document.createElement("div");
-    overlay.className = "overlay";
-    document.body.appendChild(overlay);
-  }
-  if (!modal){
-    modal = document.createElement("div");
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modal-card">
-        <div class="modal-head">
-          <div class="md-title"></div>
-          <button class="btn" id="md-close">닫기</button>
-        </div>
-        <div class="modal-box"></div>
-      </div>`;
-    document.body.appendChild(modal);
-    modal.querySelector("#md-close").addEventListener("click", hideModal);
-    overlay.addEventListener("click", hideModal);
-  }
-  modal.querySelector(".md-title").textContent = title;
-  modal.querySelector(".modal-box").innerHTML = bodyHtml;
+  el.modalTitle.textContent = title;
+  el.modalBody.innerHTML = bodyHtml;
   document.body.classList.add("modal-open");
-  overlay.classList.add("show");
-  modal.classList.add("show");
+  el.overlay.classList.add("show");
+  el.modal.classList.add("show");
 }
 function hideModal(){
   document.body.classList.remove("modal-open");
-  document.querySelector(".overlay")?.classList.remove("show");
-  document.querySelector(".modal")?.classList.remove("show");
+  el.overlay.classList.remove("show");
+  el.modal.classList.remove("show");
 }

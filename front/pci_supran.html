@@ -32,7 +32,7 @@
     <section id="tab-matrix" class="panel tab-pane active">
       <div class="panel-header">
         <h2>전체 인원 매트릭스 (세로: 작업 항목, 가로: 작업자)</h2>
-        <div class="hint">셀 값=PCI(%). 좌측 고정열: 중분류/항목/기준 작업 수</div>
+        <div class="hint">셀의 <b>🔎 보기</b>를 클릭하면 산출 근거 모달이 열립니다. 좌측 고정열: <b>중분류 / 항목 / 기준</b>.</div>
       </div>
 
       <div class="filters">
@@ -62,7 +62,7 @@
 
         <div class="field">
           <label>열 너비(픽셀)</label>
-          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="64"/>
+          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="72"/>
         </div>
 
         <div class="field actions">
@@ -95,7 +95,7 @@
     <section id="tab-person" class="panel tab-pane">
       <div class="panel-header">
         <h2>개인 보기</h2>
-        <div class="hint">한 사람의 항목별 PCI 분해(작업이력 80 + 자가 20)</div>
+        <div class="hint"><b>항목명 옆 🔎 보기</b>를 클릭하면 산출 근거 모달이 열립니다. (작업이력 80 + 자가 20)</div>
       </div>
 
       <div class="filters">
@@ -136,7 +136,7 @@
           <div class="hint">막대가 100%면 기준작업수 도달 + 자가체크 완료</div>
         </div>
         <div class="chart-wrap">
-          <canvas id="stackedChart" height="220"></canvas>
+          <canvas id="stackedChart" height="220" aria-label="개인 항목별 PCI 스택 바 차트"></canvas>
         </div>
       </section>
 
@@ -182,6 +182,18 @@
       <span>© S-WORKS · SUPRA N PCI</span>
     </div>
   </footer>
+
+  <!-- 모달 -->
+  <div class="overlay" id="overlay"></div>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="md-title" id="modalTitle">상세</div>
+        <button class="btn" id="modalClose" aria-label="모달 닫기">닫기</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
 
   <script src="./js/pci_supran.js" defer></script>
 </body>
