@@ -23,13 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 설비와 작업 종류에 따른 URL 매핑
     const urlMapping = {
-        "SUPRA N": { "SET UP": "supra_setup_total.html", "MAINTENANCE": "worklog-table.html" },
-        "SUPRA XP": { "SET UP": "supra_xp_setup_total.html", "MAINTENANCE": "supra_xp-table.html" },
-        "INTEGER": { "SET UP": "integer_setup_total.html", "MAINTENANCE": "integer-table.html" },
-        "PRECIA": { "SET UP": "precia_setup_total.html", "MAINTENANCE": "precia-table.html" },
-        "ECOLITE": { "SET UP": "ecolite_setup_total.html", "MAINTENANCE": "ecolite-table.html" },
-        "GENEVA": { "SET UP": "geneva_setup_total.html", "MAINTENANCE": "geneva-table.html" },
-        "HDW": { "SET UP": "hdw_setup_total.html", "MAINTENANCE": "hdw-table.html" }
+        "SUPRA N": { "SET UP": "pci_supra_setup.html", "MAINTENANCE": "pci_supran.html" },
+        "SUPRA XP": { "SET UP": "pci_supra_xp_setup.html", "MAINTENANCE": "pci_supraxp.html" },
+        "INTEGER": { "SET UP": "pci_integer_setup.html", "MAINTENANCE": "pci_integer.html" },
+        "PRECIA": { "SET UP": "pci_precia_setup.html", "MAINTENANCE": "pci_precia.html" },
+        "ECOLITE": { "SET UP": "pci_ecolite_setup.html", "MAINTENANCE": "pci_ecolite.html" },
+        "GENEVA": { "SET UP": "pci_geneva_setup.html", "MAINTENANCE": "pci_geneva.html" },
+        "HDW": { "SET UP": "pci_hdw_setup.html", "MAINTENANCE": "pci_hdw.html" }
     };
 
     // 그룹 선택 시 설비 필드 업데이트
