@@ -93,7 +93,12 @@ const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it o
 const getCategory = (item)=> ITEM_TO_CAT[item] || "-";
 
 // ===== Utils =====
-function esc(s=""){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]); }
+function esc(s) {
+  s = (s == null) ? '' : String(s);
+  return s.replace(ESC_RE, function (ch) {
+    return ESC_MAP[ch] || ch;
+  });
+}
 function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
 function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
 
