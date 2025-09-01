@@ -1,10 +1,6 @@
 /* ==========================================================================
    SUPRA N PCI (정돈된 매트릭스 / 기준-서브텍스트 / 가로 스크롤 차트 / 버튼 스타일)
-   서버 API:
-     GET /api/pci/supra-n/workers
-     GET /api/pci/supra-n/matrix
-     GET /api/pci/supra-n/worker/:name
-     GET /api/pci/supra-n/worker/:name/item/:item
+   + 헤더 겹침(z-index) 수정 + 모달 아코디언 로그
    ========================================================================== */
 
 const API_BASE = "";
@@ -210,6 +206,7 @@ async function loadWorkerList(){
   try{
     const res = await axios.get(`/api/pci/supra-n/workers`);
     workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    // 개인 보기 자동완성
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
@@ -247,7 +244,7 @@ function renderMatrixSkeleton(rowCount=10, workerCount=12){
   el.matrixTbody.innerHTML = ""; el.matrixTbody.appendChild(frag);
 }
 
-async function buildMatrix(firstLoad){
+async function buildMatrix(){
   el.matrixLoading.classList.remove("hidden");
   startLine(el.matrixWrap);
   renderMatrixSkeleton(12, 15);
@@ -297,9 +294,9 @@ function renderMatrix(){
   shownWorkers.forEach((w,i)=>{
     const th = document.createElement("th");
     th.className = "worker-col";
-    th.dataset.col = 2+i;             // 전체 열 index
-    th.dataset.wi = 1+i;              // worker 열 index(1부터)
-    if (i>0 && ((i % 5)===0)) th.classList.add("block-start"); // 5열 단위 구분
+    th.dataset.col = 2+i;
+    th.dataset.wi = 1+i;
+    if (i>0 && ((i % 5)===0)) th.classList.add("block-start");
     th.innerHTML = `<div class="wname" title="avg ${pct(workerAvgMap[w]||0)}%">${esc(w)}</div>`;
     theadTr.appendChild(th);
   });
@@ -571,30 +568,42 @@ function exportPersonXlsx(){
   XLSX.writeFile(wb, name);
 }
 
-// ===== 산출 근거 모달 =====
+// ===== 산출 근거 모달 (아코디언) =====
 async function openBreakdown(worker, item){
   try{
     const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
     const { data } = await axios.get(url);
 
     const logsHtml = (data.logs && data.logs.length)
-      ? `<div class="table-scroll">
-           <table class="table" style="min-width:820px">
-             <thead>
-               <tr><th>일자</th><th>ID</th><th>장비타입</th><th>역할</th><th>가중치</th><th>원본 작업자기재</th></tr>
-             </thead>
-             <tbody>
-               ${data.logs.map(l=>`
-                 <tr>
-                   <td>${esc(l.task_date||"-")}</td>
-                   <td>${l.id}</td>
-                   <td>${esc(l.equipment_type||"-")}</td>
-                   <td>${esc(l.role)}</td>
-                   <td>${l.weight}</td>
-                   <td>${esc(l.task_man_raw||"")}</td>
-                 </tr>`).join("")}
-             </tbody>
-           </table>
+      ? `
+         <div class="log-tools">
+           <button class="btn ghost sm" id="btnExpandAll">모두 펼치기</button>
+           <button class="btn ghost sm" id="btnCollapseAll">모두 접기</button>
+         </div>
+         <div class="log-accordion">
+           ${data.logs.map(l=>`
+             <details class="acc">
+               <summary>
+                 <span class="chev" aria-hidden="true"></span>
+                 <span class="sum-date">${esc(l.task_date||"-")}</span>
+                 <span class="sum-id">#${l.id}</span>
+                 <span class="sum-eq">${esc(l.equipment_type||"-")}</span>
+                 <span class="sum-role">${esc(l.role)}</span>
+                 <span class="sum-weight">w:${l.weight}</span>
+               </summary>
+               <div class="acc-body">
+                 <div class="kv6">
+                   <div class="k">일자</div><div class="v">${esc(l.task_date||"-")}</div>
+                   <div class="k">ID</div><div class="v">${l.id}</div>
+                   <div class="k">장비타입</div><div class="v">${esc(l.equipment_type||"-")}</div>
+                   <div class="k">역할</div><div class="v">${esc(l.role)}</div>
+                   <div class="k">가중치</div><div class="v">${l.weight}</div>
+                   <div class="k">원본 작업자기재</div><div class="v">${esc(l.task_man_raw||"")}</div>
+                 </div>
+                 <pre class="prejson">${esc(JSON.stringify(l,null,2))}</pre>
+               </div>
+             </details>
+           `).join("")}
          </div>`
       : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
@@ -623,6 +632,18 @@ async function openBreakdown(worker, item){
       </div>
     `;
     showModal(`산출 근거 — ${esc(worker)} / ${esc(item)}`, box);
+
+    // 아코디언 컨트롤 바인딩
+    const btnExpand = document.getElementById("btnExpandAll");
+    const btnCollapse = document.getElementById("btnCollapseAll");
+    if (btnExpand && btnCollapse){
+      btnExpand.addEventListener("click", ()=>{
+        el.modalBody.querySelectorAll("details.acc").forEach(d=>d.setAttribute("open",""));
+      });
+      btnCollapse.addEventListener("click", ()=>{
+        el.modalBody.querySelectorAll("details.acc").forEach(d=>d.removeAttribute("open"));
+      });
+    }
   }catch(e){
     console.error("상세 조회 실패:", e);
     alert("상세를 불러오지 못했습니다.");

@@ -92,13 +92,15 @@
         <div class="hint"><b>행을 클릭</b>하면 해당 항목의 산출 근거 모달이 열립니다.</div>
       </div>
 
-      <div class="filters">
-        <div class="field">
+      <div class="filters person">
+        <div class="field field-inline">
           <label for="worker">작업자</label>
-          <input id="worker" list="worker-list" placeholder="예: 정현우" autocomplete="off"/>
-          <datalist id="worker-list"></datalist>
+          <div class="inline-input">
+            <input id="worker" list="worker-list" placeholder="예: 정현우" autocomplete="off"/>
+            <datalist id="worker-list"></datalist>
+          </div>
         </div>
-        <div class="field actions">
+        <div class="field actions actions-inline">
           <button id="btnFetch" class="btn primary">조회</button>
           <button id="btnCsv" class="btn">Excel 다운로드</button>
         </div>
@@ -186,6 +188,9 @@
     <div class="modal-card">
       <div class="modal-head">
         <div class="md-title" id="modalTitle">상세</div>
+        <div class="modal-tools">
+          <!-- 펼침/접기 버튼은 JS에서 필요 시 주입 -->
+        </div>
         <button class="btn ghost" id="modalClose" aria-label="모달 닫기">닫기</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
