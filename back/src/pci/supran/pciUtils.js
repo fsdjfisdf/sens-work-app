@@ -8,7 +8,7 @@ exports.parseTaskMen = (taskManRaw) => {
   return tokens.map(t => {
     const isSupport = /\(support\)/i.test(t);
     const name = workerAliases(t.replace(/\(.*?\)/g, "").trim());
-    return { name, weight: isSupport ? 0.2 : 1.0, raw: t };
+    return { name, weight: isSupport ? 0.1 : 1.0, raw: t };
   });
 };
 

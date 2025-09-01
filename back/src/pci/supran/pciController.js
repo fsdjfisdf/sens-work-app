@@ -302,12 +302,12 @@ exports.getWorkerItemBreakdown = async (req, res) => {
       for (const p of people) {
         if (workerAliases(p.name) !== worker) continue;
         const role = p.weight >= 1 ? "main" : "support";
-        if (role === "main") mainSum += 1.0; else supportSum += 0.2;
+        if (role === "main") mainSum += 1.0; else supportSum += 0.1;
         logRows.push({
           id: r.id,
           task_date: r.task_date,
           equipment_type: r.equipment_type,
-          equipment_name: r.equipment_name,   // 새 컬럼 그대로
+        equipment_name: r.equipment_name,   // 새 컬럼 그대로
           task_name: r.task_name,             // 새 컬럼 그대로
           task_man: r.task_man,               // 프론트에선 task_man 우선 사용
           task_man_raw: r.task_man,           // 하위 호환 유지
