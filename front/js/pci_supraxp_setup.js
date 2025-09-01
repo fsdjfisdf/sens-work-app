@@ -5,7 +5,7 @@
    - 매트릭스/개인 보기 모두 "0% 항목 포함" 평균
    ========================================================================== */
 
-const API_BASE = "/api/pci/supran-setup";
+const API_BASE = "/api/pci/supraxp-setup";
 
 // ==== 상수/맵 ====
 const DISPLAY_BASELINE = {
@@ -597,7 +597,7 @@ function exportPersonXlsx(){
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   const sheetName = (currentSummary?.worker || "PERSON").slice(0, 31);
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  const name = (currentSummary?.worker || "worker") + "_SUPRA_N_SETUP_PCI.xlsx";
+  const name = (currentSummary?.worker || "worker") + "_SUPRA_XP_SETUP_PCI.xlsx";
   XLSX.writeFile(wb, name);
 }
 
@@ -634,8 +634,8 @@ function exportMatrixXlsx(){
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  XLSX.utils.book_append_sheet(wb, ws, "SUPRA N SETUP PCI");
-  XLSX.writeFile(wb, "SUPRA_N_SETUP_PCI_MATRIX.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "SUPRA XP SETUP PCI");
+  XLSX.writeFile(wb, "SUPRA_XP_SETUP_PCI_MATRIX.xlsx");
 }
 
 function findGroup(item){
