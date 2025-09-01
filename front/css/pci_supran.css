@@ -133,7 +133,7 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 
 /* ---------- Matrix = Table-like ------------------------------------------- */
 .matrix-wrap{ overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff; position:relative; }
-.matrix{ width:100%; min-width:1120px; border-collapse:separate; border-spacing:0; }
+.matrix{ width:100%; min-width:1000px; border-collapse:separate; border-spacing:0; }
 
 /* thead 2단(헤더 + 요약행) sticky */
 .matrix thead th{
@@ -152,7 +152,7 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 .matrix thead .item-col{ z-index:8; }
 .matrix tbody .item-col{ z-index:4; }
 .matrix .item-col:nth-child(1){ left:0;  width:160px; }
-.matrix .item-col:nth-child(2){ left:160px; width:260px; }
+.matrix .item-col:nth-child(2){ left:160px; width:200px; }
 
 /* 작업자 열 */
 .matrix .worker-col{ min-width:68px; text-align:center; }
@@ -329,5 +329,5 @@ body.modal-open{ overflow:hidden; }
   .filters.person{ grid-template-columns: 1fr; }
   .cards{ grid-template-columns: 1fr; }
   .matrix .item-col:nth-child(1){ width:150px; }
-  .matrix .item-col:nth-child(2){ left:150px; width:230px; }
+  .matrix .item-col:nth-child(2){ left:150px; width:180px; }
 }

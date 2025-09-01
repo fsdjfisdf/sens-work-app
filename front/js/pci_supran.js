@@ -448,7 +448,7 @@ function exportMatrixXlsx(){
   const aoa = [header];
 
   // 요약행(엑셀 첫줄)
-  const sumRow = ["-","평균(가시 항목)","-",
+  const sumRow = ["-","","-",
     ...workers.map(w => Number.isFinite(perWorker[w]) ? Number(pct(perWorker[w])) : "")
   ];
   aoa.push(sumRow);
@@ -637,29 +637,24 @@ async function openBreakdown(worker, item){
            <button class="btn ghost sm" id="btnCollapseAll">모두 접기</button>
          </div>
          <div class="log-accordion">
-           ${data.logs.map(l=>`
-             <details class="acc">
-               <summary>
-                 <span class="chev" aria-hidden="true"></span>
-                 <span class="sum-date">${esc(l.task_date||"-")}</span>
-                 <span class="sum-id">#${l.id}</span>
-                 <span class="sum-eq">${esc(l.equipment_type||"-")}</span>
-                 <span class="sum-role">${esc(l.role)}</span>
-                 <span class="sum-weight">w:${l.weight}</span>
-               </summary>
-               <div class="acc-body">
-                 <div class="kv6">
-                   <div class="k">일자</div><div class="v">${esc(l.task_date||"-")}</div>
-                   <div class="k">ID</div><div class="v">${l.id}</div>
-                   <div class="k">장비타입</div><div class="v">${esc(l.equipment_type||"-")}</div>
-                   <div class="k">역할</div><div class="v">${esc(l.role)}</div>
-                   <div class="k">가중치</div><div class="v">${l.weight}</div>
-                   <div class="k">원본 작업자기재</div><div class="v">${esc(l.task_man_raw||"")}</div>
+           ${data.logs.map(l=>{
+             const d = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
+             return `
+               <details class="acc">
+                 <summary>
+                   <span class="chev" aria-hidden="true"></span>
+                   <span class="sum-date">${esc(d)}</span>
+                   <span class="sum-id">#${l.id}</span>
+                   <span class="sum-eq">${esc(l.equipment_type||"-")}</span>
+                   <span class="sum-role">${esc(l.role)}</span>
+                   <span class="sum-weight">w:${l.weight}</span>
+                 </summary>
+                 <div class="acc-body">
+                   <pre class="prejson">${esc(JSON.stringify(l,null,2))}</pre>
                  </div>
-                 <pre class="prejson">${esc(JSON.stringify(l,null,2))}</pre>
-               </div>
-             </details>
-           `).join("")}
+               </details>
+             `;
+           }).join("")}
          </div>`
       : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
