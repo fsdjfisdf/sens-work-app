@@ -250,10 +250,10 @@ exports.getMatrix = async (req, res) => {
           baseline: base,
         };
 
-        if (pci > 0) {
-          const acc = workerAvg[w] || { s:0, n:0 };
-          acc.s += pci; acc.n += 1; workerAvg[w] = acc;
-        }
+            const acc = workerAvg[w] || { s:0, n:0 };
+            acc.s += pci;        // ✅ 0%도 합산
+            acc.n += 1;          // ✅ 0%도 분모 포함
+            workerAvg[w] = acc;
       }
     }
 

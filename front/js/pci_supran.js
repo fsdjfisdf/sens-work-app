@@ -345,7 +345,8 @@ function renderMatrix(){
     th.dataset.col = 2+i;
     th.dataset.wi = 1+i;
     if (i>0 && ((i % 5)===0)) th.classList.add("block-start");
-    th.innerHTML = `<div class="wname" title="서버 평균 ${pct(workerAvgMap[w]||0)}%">${esc(w)}</div>`;
+    const tip = Number.isFinite(perWorker[w]) ? `현재 보기 평균 ${pct(perWorker[w])}%` : `데이터 없음`;
+    th.innerHTML = `<div class="wname" title="${esc(tip)}">${esc(w)}</div>`;
     headRow.appendChild(th);
   });
 
