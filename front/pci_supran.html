@@ -32,7 +32,7 @@
     <section id="tab-matrix" class="panel tab-pane active">
       <div class="panel-header">
         <h2>전체 인원 매트릭스 (세로: 작업 항목, 가로: 작업자)</h2>
-        <div class="hint">셀의 <b>🔎 보기</b>를 클릭하면 산출 근거 모달이 열립니다. 좌측 고정열: <b>중분류 / 항목 / 기준</b>.</div>
+        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거 모달이 열려요. 좌측 고정열: <b>중분류 / 항목 / 기준</b>.</div>
       </div>
 
       <div class="filters">
@@ -62,7 +62,7 @@
 
         <div class="field">
           <label>열 너비(픽셀)</label>
-          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="72"/>
+          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="68"/>
         </div>
 
         <div class="field actions">
@@ -74,6 +74,10 @@
       <div class="cat-filter">
         <div class="label">중분류 필터</div>
         <div id="catChips" class="chips"></div>
+        <div class="chip-tools">
+          <button id="btnCollapseAll" class="chip ghost">모두 접기</button>
+          <button id="btnExpandAll" class="chip ghost">모두 펼치기</button>
+        </div>
       </div>
 
       <div id="matrixInfo" class="matrix-info"></div>
@@ -95,7 +99,7 @@
     <section id="tab-person" class="panel tab-pane">
       <div class="panel-header">
         <h2>개인 보기</h2>
-        <div class="hint"><b>항목명 옆 🔎 보기</b>를 클릭하면 산출 근거 모달이 열립니다. (작업이력 80 + 자가 20)</div>
+        <div class="hint"><b>행을 클릭</b>하면 해당 항목의 산출 근거 모달이 열립니다.</div>
       </div>
 
       <div class="filters">
