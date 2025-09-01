@@ -11,11 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-
-  <!-- (선택) 사이트 공통 자동 로그아웃 타이머 -->
-  <!-- <script defer src="./js/logoutTimer.js"></script> -->
 </head>
-<body>
+<body class="wide">
   <nav class="nav">
     <div class="inner">
       <a class="brand" href="./index.html">S-WORKS</a>
@@ -23,7 +20,7 @@
     </div>
   </nav>
 
-  <main class="container">
+  <main class="container wide">
     <!-- 탭 -->
     <section class="tabs">
       <button class="tab active" data-tab="tab-matrix">전체 인원 매트릭스</button>
@@ -34,35 +31,54 @@
     <section id="tab-matrix" class="panel tab-pane active">
       <div class="panel-header">
         <h2>전체 인원 매트릭스 (세로: 작업 항목, 가로: 작업자)</h2>
-        <div class="hint">셀 값은 PCI(%) — 자가 20% + 작업이력 80%</div>
+        <div class="hint">셀 값=PCI(%). 좌측 고정열: 중분류/항목/기준 작업 수</div>
       </div>
 
       <div class="filters">
         <div class="field">
-          <label for="filterItem">작업 항목 필터</label>
+          <label>작업 항목 검색</label>
           <input id="filterItem" class="input" placeholder="예: ESCORT, VALVE, CHUCK ..."/>
         </div>
         <div class="field">
-          <label for="filterWorker">작업자 필터</label>
+          <label>작업자 검색</label>
           <input id="filterWorker" class="input" placeholder="예: 정현우, 김동한 ..."/>
         </div>
         <div class="field">
-          <label for="sortWorkers">작업자 열 정렬</label>
+          <label>작업자 정렬</label>
           <select id="sortWorkers" class="input">
             <option value="avg_desc">평균 PCI 높은순</option>
             <option value="name_asc">이름 A→Z</option>
           </select>
         </div>
+
+        <div class="field">
+          <label>보기 밀도</label>
+          <select id="density" class="input">
+            <option value="compact">컴팩트(많이 보기)</option>
+            <option value="comfortable">보통</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>열 너비(픽셀)</label>
+          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="64"/>
+        </div>
+
         <div class="field actions">
           <button id="btnReloadMatrix" class="btn primary">새로고침</button>
-          <button id="btnMatrixCsv" class="btn">CSV 다운로드</button>
+          <button id="btnMatrixCsv" class="btn">CSV 내보내기</button>
         </div>
+      </div>
+
+      <div class="cat-filter">
+        <div class="label">중분류 필터</div>
+        <div id="catChips" class="chips"></div>
       </div>
 
       <div id="matrixInfo" class="matrix-info"></div>
 
       <div class="matrix-wrap">
-        <table id="matrixTable" class="matrix">
+        <table id="matrixTable" class="matrix dense">
           <thead id="matrixThead"></thead>
           <tbody id="matrixTbody"></tbody>
         </table>
@@ -141,7 +157,7 @@
           <table class="table" id="pciTable">
             <thead>
               <tr>
-                <th>카테고리</th>
+                <th>중분류</th>
                 <th>항목</th>
                 <th>기준</th>
                 <th>main</th>
