@@ -1,248 +1,376 @@
-/* ========================================================================
-   S-WORKS — SUPRA N PCI (Front)
-   - 자가체크 20% + 작업이력(현장+교육) 80%
+/* ==========================================================================
+   S-WORKS — SUPRA N PCI (Front, no date filters)
+   - 기본 탭: 전체 인원 매트릭스(세로: 작업 항목, 가로: 작업자)
+   - 개인 보기: 1명 선택 시 차트/상세 표
    - API:
-     GET /api/pci/supra-n/summary
-     GET /api/pci/supra-n/worker/:name?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
-   ======================================================================== */
+     GET /api/pci/supra-n/summary                -> worker 목록(요약)
+     GET /api/pci/supra-n/worker/:name           -> 한 명의 rows (전체 기간)
+   ========================================================================== */
 
-const API_BASE = ""; // 같은 오리진(3001)에서 서빙되므로 상대 경로 사용
+const API_BASE = ""; // 같은 오리진(3001)에서 제공 → 상대경로
 
-// 상태
-let currentRows = [];
-let currentSummary = null;
-let stackedChart = null;
+// ===== 전역 상태 =====
+let workerNames = [];                  // 작업자 이름 배열
+let currentRows = [];                  // 개인 rows
+let currentSummary = null;             // 개인 summary
+let stackedChart = null;               // 개인 차트
 
-// 엘리먼트
+// 매트릭스 상태
+let matrixItems = [];                  // 모든 항목(행 라벨)
+let matrixWorkers = [];                // 모든 작업자(열 라벨)
+let matrixData = {};                   // matrixData[item][worker] = { pci, work, self }
+let workerAvgMap = {};                 // worker → 평균 PCI
+
+// ===== 엘리먼트 =====
+const $ = (id) => document.getElementById(id);
+
 const el = {
-  worker: document.getElementById("worker"),
-  workerList: document.getElementById("worker-list"),
-  dateFrom: document.getElementById("dateFrom"),
-  dateTo: document.getElementById("dateTo"),
-  btnRangeAll: document.getElementById("btnRangeAll"),
-  btnRangeYTD: document.getElementById("btnRangeYTD"),
-  btnRange90: document.getElementById("btnRange90"),
-  btnFetch: document.getElementById("btnFetch"),
-  btnCsv: document.getElementById("btnCsv"),
-  avgWork: document.getElementById("avgWork"),
-  avgPci: document.getElementById("avgPci"),
-  itemsCnt: document.getElementById("itemsCnt"),
-  periodText: document.getElementById("periodText"),
-  stackedCanvas: document.getElementById("stackedChart"),
-  tbody: document.getElementById("pciTbody"),
-  searchItem: document.getElementById("searchItem"),
-  sortBy: document.getElementById("sortBy"),
+  // 탭
+  tabs: document.querySelectorAll(".tab"),
+  panes: document.querySelectorAll(".tab-pane"),
+
+  // 매트릭스
+  filterItem: $("filterItem"),
+  filterWorker: $("filterWorker"),
+  sortWorkers: $("sortWorkers"),
+  btnReloadMatrix: $("btnReloadMatrix"),
+  btnMatrixCsv: $("btnMatrixCsv"),
+  matrixInfo: $("matrixInfo"),
+  matrixThead: $("matrixThead"),
+  matrixTbody: $("matrixTbody"),
+  matrixLoading: $("matrixLoading"),
+
+  // 개인
+  worker: $("worker"),
+  workerList: $("worker-list"),
+  btnFetch: $("btnFetch"),
+  btnCsv: $("btnCsv"),
+  avgWork: $("avgWork"),
+  avgPci: $("avgPci"),
+  itemsCnt: $("itemsCnt"),
+  stackedCanvas: $("stackedChart"),
+  searchItem: $("searchItem"),
+  sortBy: $("sortBy"),
+  tbody: $("pciTbody"),
 };
 
-// ===== 공통 유틸 =====
-function ymd(d) { return dayjs(d).format("YYYY-MM-DD"); }
-function today() { return ymd(new Date()); }
-function startOfYear() { return ymd(dayjs().startOf("year")); }
-function daysAgo(n) { return ymd(dayjs().subtract(n, "day")); }
-
-function round1(x) { return Math.round(x * 10) / 10; }
+// ===== 유틸 =====
 function pct(n) { return (Number.isFinite(n) ? n : 0).toFixed(1); }
+function round1(x) { return Math.round(x * 10) / 10; }
+function esc(s=""){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-function ensureLogin() {
-  const token = localStorage.getItem('x-access-token');
-  if (!token) {
-    alert("로그인이 필요합니다.");
-    window.location.replace("./signin.html");
-    return false;
-  }
-  return true;
+// 카테고리(보조 라벨): 단순 규칙
+function guessCategory(item){
+  if (/ESCORT/i.test(item)) return "ESCORT";
+  if (/EFEM|SR82/i.test(item)) return "EFEM ROBOT";
+  if (/TM|PASSIVE/i.test(item)) return "TM ROBOT";
+  if (/MICRO|APPLICATOR|GENERATOR/i.test(item)) return "MICROWAVE";
+  if (/CHUCK/i.test(item)) return "CHUCK";
+  if (/PROCESS/i.test(item)) return "PROCESS KIT";
+  if (/HELIUM|LEAK/i.test(item)) return "LEAK";
+  if (/PIN|BELLOWS|LM GUIDE/i.test(item)) return "PIN";
+  if (/EPD/i.test(item)) return "EPD";
+  if (/BOARD|POWER|SENSOR|MODULE|IO BOX|D-NET/i.test(item)) return "BOARD";
+  if (/MFC|IGS|VALVE/i.test(item)) return "IGS/VALVE";
+  if (/SLIT DOOR|APC|SHUTOFF|FAST VAC|SLOW VAC|SOLENOID/i.test(item)) return "VALVE";
+  if (/CTR|CTC|PMC|EDA|CONTROLLER/i.test(item)) return "CTR";
+  if (/S\/W|PATCH/i.test(item)) return "S/W";
+  if (/FFU|FAN|MOTOR/i.test(item)) return "FFU";
+  if (/BM|DRT|IB FLOW|PUSHER|CYLINDER/i.test(item)) return "BM MODULE";
+  if (/MONITOR|KEYBOARD|MOUSE|CERAMIC|MANOMETER|FLOW SWITCH|VIEW PORT|BARATRON|PIRANI|WATER LEAK|HEATING JACKET/i.test(item)) return "ETC";
+  return "-";
+}
+
+function heatClass(p){ // 0~100 → h0~h10
+  if (!Number.isFinite(p)) return "h0";
+  const b = Math.max(0, Math.min(10, Math.round(p/10)));
+  return `h${b}`;
+}
+
+// 간단 동시성 제한
+async function mapLimit(arr, limit, iter){
+  let i=0;
+  const out = new Array(arr.length);
+  const workers = Array.from({length: Math.max(1, limit)}, () => (async function run(){
+    while(i < arr.length){
+      const idx = i++;
+      try { out[idx] = await iter(arr[idx], idx); }
+      catch(e){ out[idx] = null; console.error("mapLimit err:", e); }
+    }
+  })());
+  await Promise.all(workers);
+  return out;
 }
 
 // ===== 초기화 =====
 document.addEventListener("DOMContentLoaded", async () => {
-  // (선택) 로그인 강제 시 사용
-  // if (!ensureLogin()) return;
+  bindTabs();
+  bindMatrixEvents();
+  bindPersonEvents();
 
-  // 기본 날짜: YTD
-  el.dateFrom.value = startOfYear();
-  el.dateTo.value = today();
-
-  bindEvents();
-  await loadWorkerList(); // datalist 채우기
+  await loadWorkerList();       // datalist + workerNames 세팅
+  await buildMatrix();          // 기본 뷰: 전체 매트릭스 로드
 });
 
-/** 워커 후보 로드 (요약 API로부터 이름만 추출) */
-async function loadWorkerList() {
-  try {
-    const url = `${API_BASE}/api/pci/supra-n/summary?limit=500`;
+// ===== 탭 =====
+function bindTabs(){
+  el.tabs.forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      el.tabs.forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const target = btn.dataset.tab;
+      el.panes.forEach(p=>p.classList.remove("active"));
+      document.getElementById(target).classList.add("active");
+    });
+  });
+}
+
+// ===== 매트릭스 =====
+function bindMatrixEvents(){
+  el.btnReloadMatrix.addEventListener("click", buildMatrix);
+  el.btnMatrixCsv.addEventListener("click", downloadMatrixCsv);
+  el.filterItem.addEventListener("input", renderMatrix);
+  el.filterWorker.addEventListener("input", renderMatrix);
+  el.sortWorkers.addEventListener("change", ()=>{ sortMatrixWorkers(); renderMatrix(); });
+}
+
+async function loadWorkerList(){
+  const url = `${API_BASE}/api/pci/supra-n/summary?limit=9999`;
+  try{
     const res = await axios.get(url);
-    const arr = (res.data?.workers || []).map(w => w.worker).filter(Boolean);
-    arr.sort((a,b) => a.localeCompare(b, 'ko'));
-    el.workerList.innerHTML = arr.map(name => `<option value="${escapeHtml(name)}"></option>`).join("");
-  } catch (err) {
+    const arr = (res.data?.workers || []).map(w=>w.worker).filter(Boolean);
+    arr.sort((a,b)=>a.localeCompare(b,'ko'));
+    workerNames = arr;
+    el.workerList.innerHTML = arr.map(n=>`<option value="${esc(n)}"></option>`).join("");
+  }catch(err){
     console.error("작업자 목록 로드 실패:", err);
+    workerNames = [];
   }
 }
 
-function escapeHtml(s=''){
-  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+async function buildMatrix(){
+  el.matrixLoading.classList.remove("hidden");
+  el.matrixInfo.textContent = "";
+
+  // 1) 모든 작업자에 대해 rows 불러오기
+  const names = workerNames.slice(); // 복사
+  const results = await mapLimit(names, 6, async (name)=>{
+    const url = `${API_BASE}/api/pci/supra-n/worker/${encodeURIComponent(name)}`;
+    const res = await axios.get(url);
+    return { name, rows: res.data?.rows || [], summary: res.data?.summary || null };
+  });
+
+  // 2) 항목 set / 데이터 생성
+  const itemSet = new Set();
+  const data = {};    // item → worker → {pci, work, self}
+  const avgMap = {};  // worker → 평균
+
+  for (const r of results){
+    if (!r) continue;
+    const { name, rows, summary } = r;
+    if (!rows) continue;
+
+    let sum=0, cnt=0;
+    for (const row of rows){
+      itemSet.add(row.item);
+      data[row.item] = data[row.item] || {};
+      data[row.item][name] = { pci: row.pci_pct, work: row.work_pct, self: row.self_pct };
+
+      // 평균용(참여 항목만)
+      if ((row.pci_pct ?? 0) > 0){
+        sum += Number(row.pci_pct);
+        cnt += 1;
+      }
+    }
+    avgMap[name] = cnt ? round1(sum/cnt) : 0;
+  }
+
+  matrixItems = Array.from(itemSet).sort((a,b)=>a.localeCompare(b,'ko'));
+  matrixWorkers = names.slice();
+  matrixData = data;
+  workerAvgMap = avgMap;
+
+  sortMatrixWorkers(); // 기본: 평균 높은순
+  renderMatrix();
+
+  const kItems = matrixItems.length;
+  const kWorkers = matrixWorkers.length;
+  el.matrixInfo.textContent = `총 항목 ${kItems}개 × 작업자 ${kWorkers}명 = ${kItems*kWorkers} 셀`;
+  el.matrixLoading.classList.add("hidden");
 }
 
-function bindEvents() {
-  el.btnRangeAll.addEventListener("click", () => {
-    el.dateFrom.value = ""; el.dateTo.value = "";
-  });
-  el.btnRangeYTD.addEventListener("click", () => {
-    el.dateFrom.value = startOfYear(); el.dateTo.value = today();
-  });
-  el.btnRange90.addEventListener("click", () => {
-    el.dateFrom.value = daysAgo(90); el.dateTo.value = today();
-  });
-
-  el.btnFetch.addEventListener("click", onFetch);
-  el.btnCsv.addEventListener("click", onCsv);
-
-  el.searchItem.addEventListener("input", renderTable);
-  el.sortBy.addEventListener("change", () => { sortRows(); renderTable(); });
+function sortMatrixWorkers(){
+  const mode = el.sortWorkers.value;
+  if (mode === "name_asc"){
+    matrixWorkers.sort((a,b)=>a.localeCompare(b,'ko'));
+  }else{ // avg_desc
+    matrixWorkers.sort((a,b)=>(workerAvgMap[b]??0)-(workerAvgMap[a]??0) || a.localeCompare(b,'ko'));
+  }
 }
 
-async function onFetch() {
+function renderMatrix(){
+  const qItem = el.filterItem.value.trim().toLowerCase();
+  const qWorker = el.filterWorker.value.trim().toLowerCase();
+
+  // 헤더
+  const theadTr = document.createElement("tr");
+  const th0 = document.createElement("th");
+  th0.className = "item-col";
+  th0.textContent = "작업 항목";
+  theadTr.appendChild(th0);
+
+  for (const w of matrixWorkers){
+    if (qWorker && !w.toLowerCase().includes(qWorker)) continue;
+    const th = document.createElement("th");
+    th.className = "worker-col";
+    th.innerHTML = `<div>${esc(w)}</div><div style="font-size:11px;color:#756d69">avg ${pct(workerAvgMap[w]||0)}%</div>`;
+    theadTr.appendChild(th);
+  }
+  el.matrixThead.innerHTML = "";
+  el.matrixThead.appendChild(theadTr);
+
+  // 바디
+  const frag = document.createDocumentFragment();
+  for (const item of matrixItems){
+    if (qItem && !item.toLowerCase().includes(qItem)) continue;
+
+    const tr = document.createElement("tr");
+    const tdItem = document.createElement("td");
+    tdItem.className="item-col";
+    tdItem.innerHTML = `<div><strong>${esc(item)}</strong> <span class="badge" style="margin-left:6px">${esc(guessCategory(item))}</span></div>`;
+    tr.appendChild(tdItem);
+
+    for (const w of matrixWorkers){
+      if (qWorker && !w.toLowerCase().includes(qWorker)) continue;
+      const d = (matrixData[item] || {})[w] || null;
+      const val = d?.pci ?? 0;
+      const cls = `cell ${heatClass(val)}`;
+      const td = document.createElement("td");
+      td.className = "worker-col";
+      td.innerHTML = `<div class="${cls}"><span class="pct">${pct(val)}%</span><span class="hint">${d?`${pct(d.work)}/${pct(d.self)}`:"-"}</span></div>`;
+      tr.appendChild(td);
+    }
+
+    frag.appendChild(tr);
+  }
+  el.matrixTbody.innerHTML = "";
+  el.matrixTbody.appendChild(frag);
+}
+
+function downloadMatrixCsv(){
+  if (!matrixItems.length || !matrixWorkers.length){
+    alert("내보낼 데이터가 없습니다.");
+    return;
+  }
+  const qItem = el.filterItem.value.trim().toLowerCase();
+  const qWorker = el.filterWorker.value.trim().toLowerCase();
+  const workers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
+
+  const header = ["작업 항목", ...workers];
+  const lines = [header.map(s=>`"${s.replace(/"/g,'""')}"`).join(",")];
+
+  for (const item of matrixItems){
+    if (qItem && !item.toLowerCase().includes(qItem)) continue;
+    const row = [item];
+    for (const w of workers){
+      const d = (matrixData[item]||{})[w] || null;
+      row.push(Number.isFinite(d?.pci) ? pct(d.pci) : "");
+    }
+    lines.push(row.map(s=>`"${String(s).replace(/"/g,'""')}"`).join(","));
+  }
+
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SUPRAN_PCI_MATRIX.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ===== 개인 보기 =====
+function bindPersonEvents(){
+  $("btnFetch").addEventListener("click", onFetchPerson);
+  $("btnCsv").addEventListener("click", onCsvPerson);
+  $("searchItem").addEventListener("input", renderPersonTable);
+  $("sortBy").addEventListener("change", ()=>{ sortPersonRows(); renderPersonTable(); });
+}
+
+async function onFetchPerson(){
   const name = el.worker.value.trim();
-  if (!name) return alert("작업자를 입력해주세요.");
+  if (!name) return alert("작업자를 입력하세요.");
 
-  const qs = new URLSearchParams();
-  if (el.dateFrom.value) qs.set("start_date", el.dateFrom.value);
-  if (el.dateTo.value) qs.set("end_date", el.dateTo.value);
-
-  const url = `${API_BASE}/api/pci/supra-n/worker/${encodeURIComponent(name)}?${qs.toString()}`;
-  try {
+  const url = `${API_BASE}/api/pci/supra-n/worker/${encodeURIComponent(name)}`;
+  try{
     const res = await axios.get(url);
     currentSummary = res.data?.summary || null;
     currentRows = res.data?.rows || [];
 
     updateCards();
-    sortRows();
-    renderChart();
-    renderTable();
-  } catch (err) {
-    console.error("조회 실패:", err);
+    sortPersonRows();
+    renderPersonChart();
+    renderPersonTable();
+  }catch(err){
+    console.error("개인 조회 실패:", err);
     alert("조회 중 오류가 발생했습니다.");
   }
 }
 
-function updateCards() {
+function updateCards(){
   const s = currentSummary;
-  if (!s) {
+  if (!s){
     el.avgWork.textContent = "-";
     el.avgPci.textContent = "-";
     el.itemsCnt.textContent = "-";
-    el.periodText.textContent = "기간: -";
     return;
   }
   el.avgWork.textContent = pct(s.avg_work_pct);
   el.avgPci.textContent = pct(s.avg_pci_pct);
   el.itemsCnt.textContent = s.items_considered ?? 0;
-
-  const { startDate, endDate } = s.period || {};
-  const period = (startDate || endDate) ? `${startDate || '시작일 없음'} ~ ${endDate || '종료일 없음'}` : "전체";
-  el.periodText.textContent = `기간: ${period}`;
 }
 
-// ===== 차트 =====
-function renderChart() {
-  const rows = (currentRows || []).slice().filter(r => r.pci_pct > 0 || r.self_pct > 0 || r.work_pct > 0);
+function renderPersonChart(){
+  const rows = (currentRows||[]).slice().filter(r => (r.pci_pct>0)||(r.self_pct>0)||(r.work_pct>0));
+  rows.sort((a,b)=>b.pci_pct - a.pci_pct);
+  const top = rows.slice(0,15);
 
-  // 상위 15개만 (PCI 높은 순)
-  rows.sort((a,b) => b.pci_pct - a.pci_pct);
-  const top = rows.slice(0, 15);
+  const labels = top.map(r=>r.item);
+  const work = top.map(r=>r.work_pct);
+  const self = top.map(r=>r.self_pct);
 
-  const labels = top.map(r => r.item);
-  const work = top.map(r => r.work_pct);
-  const self = top.map(r => r.self_pct);
-
-  if (stackedChart) {
-    stackedChart.destroy();
-  }
-
+  if (stackedChart){ stackedChart.destroy(); }
   stackedChart = new Chart(el.stackedCanvas.getContext("2d"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { label: "작업이력(최대 80)", data: work, stack: "pci" },
-        { label: "자가체크(최대 20)", data: self, stack: "pci" },
-      ]
+    type:"bar",
+    data:{ labels, datasets:[ {label:"작업이력(최대 80)", data:work, stack:"pci"}, {label:"자가체크(최대 20)", data:self, stack:"pci"} ] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:"top"}, tooltip:{enabled:true}, datalabels:{ anchor:"end", align:"end", formatter:(v)=>`${pct(v)}%`, color:"#333", clamp:true } },
+      scales:{ x:{stacked:true}, y:{stacked:true, min:0, max:100, ticks:{callback:v=>v+"%"} } }
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: "top" },
-        tooltip: { enabled: true },
-        datalabels: {
-          anchor: "end",
-          align: "end",
-          formatter: (v) => `${pct(v)}%`,
-          color: "#333",
-          clamp: true,
-        }
-      },
-      scales: {
-        x: { stacked: true, ticks: { maxRotation: 45, minRotation: 0 } },
-        y: {
-          stacked: true,
-          min: 0, max: 100,
-          ticks: {
-            callback: (v) => v + '%'
-          }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
+    plugins:[ChartDataLabels]
   });
 }
 
-// ===== 테이블 =====
-function sortRows() {
+function sortPersonRows(){
   const mode = el.sortBy.value;
   const rows = currentRows || [];
-  if (mode === "pci_desc") rows.sort((a,b) => b.pci_pct - a.pci_pct || b.total_count - a.total_count);
-  else if (mode === "work_desc") rows.sort((a,b) => b.work_pct - a.work_pct || b.total_count - a.total_count);
-  else if (mode === "count_desc") rows.sort((a,b) => b.total_count - a.total_count || b.pci_pct - a.pci_pct);
-  else if (mode === "item_asc") rows.sort((a,b) => a.item.localeCompare(b.item, 'ko'));
+  if (mode === "pci_desc") rows.sort((a,b)=>b.pci_pct - a.pci_pct || b.total_count - a.total_count);
+  else if (mode === "work_desc") rows.sort((a,b)=>b.work_pct - a.work_pct || b.total_count - a.total_count);
+  else if (mode === "count_desc") rows.sort((a,b)=>b.total_count - a.total_count || b.pci_pct - a.pci_pct);
+  else if (mode === "item_asc") rows.sort((a,b)=>a.item.localeCompare(b.item,'ko'));
 }
 
-function renderTable() {
+function renderPersonTable(){
   const q = el.searchItem.value.trim().toLowerCase();
-  const rows = (currentRows || []).filter(r => !q || r.item.toLowerCase().includes(q));
-
-  // 카테고리 추정(단어군 기반 간단 맵핑)
-  const toCategory = (item) => {
-    if (/ESCORT/i.test(item)) return "ESCORT";
-    if (/EFEM|SR82/i.test(item)) return "EFEM ROBOT";
-    if (/TM|PASSIVE/i.test(item)) return "TM ROBOT";
-    if (/MICRO|APPLICATOR|GENERATOR/i.test(item)) return "MICROWAVE";
-    if (/CHUCK/i.test(item)) return "CHUCK";
-    if (/PROCESS/i.test(item)) return "PROCESS KIT";
-    if (/HELIUM|LEAK/i.test(item)) return "LEAK";
-    if (/PIN|BELLOWS|LM GUIDE/i.test(item)) return "PIN";
-    if (/EPD/i.test(item)) return "EPD";
-    if (/BOARD|POWER|SENSOR|MODULE|IO BOX|D-NET/i.test(item)) return "BOARD";
-    if (/MFC|IGS|VALVE/i.test(item)) return "IGS/VALVE";
-    if (/SLIT DOOR|APC|SHUTOFF|FAST VAC|SLOW VAC|SOLENOID/i.test(item)) return "VALVE";
-    if (/CTR|CTC|PMC|EDA|CONTROLLER/i.test(item)) return "CTR";
-    if (/S\/W|PATCH/i.test(item)) return "S/W";
-    if (/FFU|FAN|MOTOR/i.test(item)) return "FFU";
-    if (/BM|DRT|IB FLOW|PUSHER|CYLINDER/i.test(item)) return "BM MODULE";
-    if (/MONITOR|KEYBOARD|MOUSE|CERAMIC|MANOMETER|FLOW SWITCH|VIEW PORT|BARATRON|PIRANI|WATER LEAK|HEATING JACKET/i.test(item)) return "ETC";
-    return "-";
-  };
+  const rows = (currentRows||[]).filter(r=>!q || r.item.toLowerCase().includes(q));
 
   const frag = document.createDocumentFragment();
-  for (const r of rows) {
-    const tr = document.createElement("tr");
-
-    const cat = toCategory(r.item);
+  for (const r of rows){
+    const cat = guessCategory(r.item);
     const badgeClass = r.pci_pct >= 80 ? "ok" : (r.pci_pct >= 50 ? "mid" : "bad");
-
+    const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><span class="badge">${cat}</span></td>
-      <td>${escapeHtml(r.item)}</td>
+      <td><span class="badge">${esc(cat)}</span></td>
+      <td>${esc(r.item)}</td>
       <td>${r.baseline}</td>
       <td>${r.main_count}</td>
       <td>${r.support_count}</td>
@@ -258,53 +386,18 @@ function renderTable() {
   el.tbody.appendChild(frag);
 }
 
-// ===== CSV =====
-function onCsv() {
-  if (!currentRows?.length) return alert("내보낼 데이터가 없습니다. 먼저 조회해주세요.");
-
-  const header = [
-    "항목","카테고리","기준","main","support","가산","총횟수","작업이력(80)","자가(20)","PCI(%)"
-  ];
-  const toCategory = (item) => {
-    // 테이블과 동일한 간단 매핑
-    if (/ESCORT/i.test(item)) return "ESCORT";
-    if (/EFEM|SR82/i.test(item)) return "EFEM ROBOT";
-    if (/TM|PASSIVE/i.test(item)) return "TM ROBOT";
-    if (/MICRO|APPLICATOR|GENERATOR/i.test(item)) return "MICROWAVE";
-    if (/CHUCK/i.test(item)) return "CHUCK";
-    if (/PROCESS/i.test(item)) return "PROCESS KIT";
-    if (/HELIUM|LEAK/i.test(item)) return "LEAK";
-    if (/PIN|BELLOWS|LM GUIDE/i.test(item)) return "PIN";
-    if (/EPD/i.test(item)) return "EPD";
-    if (/BOARD|POWER|SENSOR|MODULE|IO BOX|D-NET/i.test(item)) return "BOARD";
-    if (/MFC|IGS|VALVE/i.test(item)) return "IGS/VALVE";
-    if (/SLIT DOOR|APC|SHUTOFF|FAST VAC|SLOW VAC|SOLENOID/i.test(item)) return "VALVE";
-    if (/CTR|CTC|PMC|EDA|CONTROLLER/i.test(item)) return "CTR";
-    if (/S\/W|PATCH/i.test(item)) return "S/W";
-    if (/FFU|FAN|MOTOR/i.test(item)) return "FFU";
-    if (/BM|DRT|IB FLOW|PUSHER|CYLINDER/i.test(item)) return "BM MODULE";
-    if (/MONITOR|KEYBOARD|MOUSE|CERAMIC|MANOMETER|FLOW SWITCH|VIEW PORT|BARATRON|PIRANI|WATER LEAK|HEATING JACKET/i.test(item)) return "ETC";
-    return "-";
-  };
-
-  const lines = [];
-  lines.push(header.join(","));
-  for (const r of currentRows) {
+function onCsvPerson(){
+  if (!currentRows?.length) return alert("내보낼 데이터가 없습니다. 먼저 조회하세요.");
+  const header = ["항목","카테고리","기준","main","support","가산","총횟수","작업이력(80)","자가(20)","PCI(%)"];
+  const lines = [header.join(",")];
+  for (const r of currentRows){
     const row = [
-      r.item,
-      toCategory(r.item),
-      r.baseline,
-      r.main_count,
-      r.support_count,
-      r.add_count,
-      r.total_count,
-      pct(r.work_pct),
-      pct(r.self_pct),
-      pct(r.pci_pct),
-    ].map(v => `"${String(v).replace(/"/g,'""')}"`);
+      r.item, guessCategory(r.item), r.baseline, r.main_count, r.support_count, r.add_count, r.total_count,
+      pct(r.work_pct), pct(r.self_pct), pct(r.pci_pct)
+    ].map(v=>`"${String(v).replace(/"/g,'""')}"`);
     lines.push(row.join(","));
   }
-  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
   const a = document.createElement("a");
   const name = (currentSummary?.worker || "worker") + "_SUPRAN_PCI.csv";
   a.href = URL.createObjectURL(blob);
