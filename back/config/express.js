@@ -172,6 +172,9 @@ app.use('/api/pci/geneva', pciGenevaRoute);
 const pciEcoliteRoute = require('../src/routes/pciEcoliteRoute');
 app.use('/api/pci/ecolite', pciEcoliteRoute);
 
+const pciHdwRoute = require('../src/routes/pciHdwRoute');
+app.use('/api/pci/hdw', pciHdwRoute);
+
 
 
 

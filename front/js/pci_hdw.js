@@ -69,63 +69,20 @@ const el = {
 };
 
 const CATEGORIES = [
-  { category: "Escort", items: [
-    "LP ESCORT","ROBOT ESCORT"
+  { category: "전장부", items: [
+    "OD REP","RELAY REP","FAN REP","NTC / NTU REP","SSR REP","MC REP",
+    "FUSE REP","CT REP","HBD REP","SMPS REP","PLC (main unit 제외) REP","ELB REP"
   ]},
-  { category: "EFEM Robot", items: [
-    "SR8240 TEACHING","GENMARK ROBOT TEACHING",
-    "SR8240 ROBOT REP","GENMARK ROBOT REP","ROBOT CONTROLLER REP"
+  { category: "배관부", items: [
+    "HEATER REP (HALOGEN LAMP)","Q'TZ TANK REP","LEAK TROUBLESHOOTING","FLOW METER REP",
+    "AIR VALVE REP","SHUT OFF VALVE REP","SOL VALVE REP","ELBOW FITTING REP (QTZ)",
+    "LEAK TRAY","TC SENSOR"
   ]},
-  { category: "FFU", items: [
-    "FFU CONTROLLER","FAN","MOTOR DRIVER"
-  ]},
-  { category: "Heater", items: [
-    "ELBOW HEATER","INSULATION HEATER","CHUCK HEATER"
-  ]},
-  { category: "Disc", items: [
-    "HARMONIC DRIVER","AMPLIFIER","DISC BEARING"
-  ]},
-  { category: "PM 후", items: [
-    "CHUCK LEVELING","WAFER SUPPORT PIN ALIGNMENT",
-    "TEMP PROFILE","O2 LEAK TEST","CHUCK UP & DOWN STATUS"
-  ]},
-  { category: "Sealing", items: [
-    "RING SEAL","DOOR SEAL"
-  ]},
-  { category: "LL O-RING", items: [
-    "RING SEAL ORING","DOOR SEAL ORING"
-  ]},
-  { category: "Board", items: [
-    "GAS BOX BOARD","TEMP CONTROLLER BOARD","POWER DISTRIBUTION BOARD",
-    "DC POWER SUPPLY","FACILITY BOARD","STATION BOARD","BUBBLER BOARD","D-NET"
-  ]},
-  { category: "Gas box", items: [
-    "MFC","VALVE"
-  ]},
-  { category: "O2 analyzer", items: [
-    "O2 ANALYZER","O2 CONTROLLER","O2 PUMP","O2 CELL"
-  ]},
-  { category: "Valve", items: [
-    "O2 SAMPLE VALVE","FEED & DELIVERY VALVE","FILL & VENT VALVE",
-    "DRAIN VALVE","APC VALVE","BYPASS VALVE","SHUTOFF VALVE",
-    "VAC SOL VALVE","VAC CDA VALVE"
-  ]},
-  { category: "Bubbler", items: [
-    "BUBBLER LEVEL SENSOR","BUBBLER FLEXIBLE HOSE"
-  ]},
-  { category: "ETC", items: [
-    "BARATRON ASS'Y","VIEW PORT","FLOW SWITCH",
-    "LL DOOR CYLINDER","CHUCK CYLINDER",
-    "MONITOR","KEYBOARD","MOUSE",
-    "WATER LEAK DETECTOR","FORMIC DETECTOR","EXHAUST GAUGE"
-  ]},
-  { category: "CTR", items: [
-    "CTC","EDA","TEMP LIMIT CONTROLLER","TEMP CONTROLLER"
-  ]},
-  { category: "S/W", items: [
-    "S/W PATCH"
+  { category: "SW", items: [
+    "TOUCH PANEL PATCH","PLC PATCH","TOUCH PANEL REP","PLC REP"
   ]},
 ];
+
 
 
 const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it of g.items) m[it]=g.category; return m; })();
