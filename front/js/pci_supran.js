@@ -289,6 +289,27 @@ function computeVisibleAverages(shownItems, shownWorkers){
   return { perWorker, overall };
 }
 
+// 헤더 높이/고정열 폭을 실제 치수로 CSS 변수 동기화
+function syncStickyOffsets(){
+  // 1) 헤더 1행 실제 높이 → --thead-h
+  const headRow = el.matrixThead.querySelector("tr.header-row");
+  if (headRow) {
+    const h = Math.ceil(headRow.getBoundingClientRect().height);
+    el.matrixTable.style.setProperty("--thead-h", h + "px");
+  }
+
+  // 2) 좌측 고정열 실제 폭 → --w-cat / --w-item (픽셀 라운딩 차이 흡수)
+  const th1 = el.matrixThead.querySelector("tr.header-row th.item-col:nth-child(1)");
+  const th2 = el.matrixThead.querySelector("tr.header-row th.item-col:nth-child(2)");
+  if (th1 && th2) {
+    const w1 = Math.ceil(th1.getBoundingClientRect().width);
+    const w2 = Math.ceil(th2.getBoundingClientRect().width);
+    el.matrixTable.style.setProperty("--w-cat",  w1 + "px");
+    el.matrixTable.style.setProperty("--w-item", w2 + "px");
+  }
+}
+
+
 function renderMatrix(){
   clearColHighlight();
 
@@ -415,17 +436,21 @@ function renderMatrix(){
   // 렌더 후 스타일 반영
   toggleDensity();
   applyColumnWidth();
+  toggleDensity();
 }
 
 function toggleDensity(){
   const dense = el.density.value === "compact";
   el.matrixTable.classList.toggle("dense", dense);
+  syncStickyOffsets();
 }
 
 function applyColumnWidth(){
   const px = Math.max(40, Math.min(140, Number(el.colWidth.value || 68)));
   Array.from(document.querySelectorAll(".worker-col")).forEach(c => { c.style.minWidth = px + "px"; });
+  syncStickyOffsets();
 }
+window.addEventListener("resize", debounce(syncStickyOffsets, 120));
 
 // ===== Excel (중분류/기준 + 요약행 포함) =====
 function exportMatrixXlsx(){

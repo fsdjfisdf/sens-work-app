@@ -31,7 +31,9 @@
   --control-h:42px; --font-control:15px;
 
   /* thead 1행 높이(요약행 sticky offset 계산용) */
-  --thead-h: 36px;
+  --thead-h: 36px;        /* thead 1행(헤더) 실제 높이 값은 JS에서 덮어씀 */
+  --w-cat: 150px;         /* 1열: 중분류 고정 너비 */
+  --w-item: 170px;        /* 2열: 작업 항목 고정 너비 (좁힘) */
 }
 
 /* ---------- Base ----------------------------------------------------------- */
@@ -154,11 +156,12 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 /* 헤더의 '작업자 열'이 왼쪽 고정열보다 위에 오도록 변경 */
 .matrix thead .item-col{ z-index:7; }
 .matrix thead .worker-col{ z-index:8; }  /* ← 올림 */
+.matrix tbody td.worker-col:first-of-type{ position:relative; z-index:4; }
 /* 바디의 왼쪽 고정열은 헤더보다 아래 */
 .matrix tbody .item-col{ z-index:3; }
 
-.matrix .item-col:nth-child(1){ left:0;  width:150px; }
-.matrix .item-col:nth-child(2){ left:150px; width:165px; }
+.matrix .item-col:nth-child(1){ left:0;           width: var(--w-cat); }
+.matrix .item-col:nth-child(2){ left:var(--w-cat); width: var(--w-item); }
 
 .matrix thead th.worker-col:first-of-type,
 .matrix tbody td.worker-col:first-of-type{ padding-left:12px; }
@@ -350,6 +353,8 @@ body.modal-open{ overflow:hidden; }
   .filters{ grid-template-columns: repeat(2, minmax(180px,1fr)); }
   .filters.person{ grid-template-columns: 1fr; }
   .cards{ grid-template-columns: 1fr; }
-  .matrix .item-col:nth-child(1){ width:140px; }
-  .matrix .item-col:nth-child(2){ left:140px; width:160px; }
+  :root{
+    --w-cat: 140px;
+    --w-item: 160px;
+  }
 }
