@@ -175,6 +175,9 @@ app.use('/api/pci/ecolite', pciEcoliteRoute);
 const pciHdwRoute = require('../src/routes/pciHdwRoute');
 app.use('/api/pci/hdw', pciHdwRoute);
 
+const pciPreciaSetupRoute = require("./routes/pciPreciaSetupRoute");
+app.use("/api/pci/precia-setup", pciPreciaSetupRoute);
+
 
 
 
