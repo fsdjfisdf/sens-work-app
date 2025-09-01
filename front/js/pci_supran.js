@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SUPRA N PCI (클릭 가능한 셀, 담백한 표, 대규모 데이터 최적화 + 애니메이션)
+   SUPRA N PCI (정돈된 매트릭스 / 기준-서브텍스트 / 가로 스크롤 차트 / 버튼 스타일)
    서버 API:
      GET /api/pci/supra-n/workers
      GET /api/pci/supra-n/matrix
@@ -18,7 +18,7 @@ let matrixItems = [];
 let matrixWorkers = [];
 let matrixData = {};   // data[item][worker] = {pci, work, self, baseline, ...}
 let workerAvgMap = {}; // worker -> avg pci
-let collapsedCats = new Set(); // 접힘 상태
+let collapsedCats = new Set(); // 카테고리 접힘 상태
 
 // 개인 보기 상태
 let currentRows = [];
@@ -38,15 +38,11 @@ const el = {
   colWidth: $("colWidth"),
   btnReloadMatrix: $("btnReloadMatrix"),
   btnMatrixCsv: $("btnMatrixCsv"),
-  matrixInfo: $("matrixInfo"),
   matrixThead: $("matrixThead"),
   matrixTbody: $("matrixTbody"),
   matrixLoading: $("matrixLoading"),
-  catChips: $("catChips"),
   matrixTable: $("matrixTable"),
   matrixWrap: $("matrixWrap"),
-  btnCollapseAll: $("btnCollapseAll"),
-  btnExpandAll: $("btnExpandAll"),
 
   // person
   worker: $("worker"),
@@ -57,6 +53,8 @@ const el = {
   avgPci: $("avgPci"),
   itemsCnt: $("itemsCnt"),
   stackedCanvas: $("stackedChart"),
+  chartScroll: $("chartScroll"),
+  chartInner: $("chartInner"),
   searchItem: $("searchItem"),
   sortBy: $("sortBy"),
   tbody: $("pciTbody"),
@@ -113,11 +111,10 @@ function showBusy(container, work){
 }
 
 // Fade-in helper
-function fadeInTable(tableWrap){
-  tableWrap?.classList.remove("fade-in");
-  // reflow to restart animation
-  void tableWrap?.offsetWidth;
-  tableWrap?.classList.add("fade-in");
+function fadeInBox(box){
+  box?.classList.remove("fade-in");
+  void box?.offsetWidth; // reflow
+  box?.classList.add("fade-in");
 }
 
 // Column highlight
@@ -144,7 +141,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   el.overlay.addEventListener("click", hideModal);
   window.addEventListener("keydown",(e)=>{ if(e.key==="Escape") hideModal(); });
 
-  renderCategoryChips();
   await loadWorkerList();
   await buildMatrix(true);
 
@@ -166,19 +162,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (w && it) openBreakdown(w, it);
   });
 
-  // 카테고리 토글 (접기/펼치기)
+  // 카테고리 접기/펼치기 (행 클릭)
   el.matrixTbody.addEventListener("click", (e)=>{
     const row = e.target.closest("tr.cat-row");
     if (!row) return;
     const cat = row.getAttribute("data-cat");
     if (!cat) return;
     if (collapsedCats.has(cat)) collapsedCats.delete(cat); else collapsedCats.add(cat);
-    showBusy(el.matrixWrap, ()=>renderMatrix()); // 빠른 재그리기 + 라인
+    showBusy(el.matrixWrap, ()=>renderMatrix());
   });
 
   // 열 하이라이트
   el.matrixTable.addEventListener("mouseover",(e)=>{
-    const td = e.target.closest("td.worker-col");
+    const td = e.target.closest("td.worker-col, th.worker-col");
     if (!td) return;
     highlightColumn(td.dataset.col);
   });
@@ -194,9 +190,7 @@ function bindTabs(){
       const target = btn.dataset.tab;
       el.panes.forEach(p=>p.classList.remove("active"));
       document.getElementById(target).classList.add("active");
-      // 시각적 전환
-      if (target === "tab-matrix") fadeInTable(el.matrixWrap);
-      else fadeInTable(el.personTableScroll);
+      fadeInBox(target === "tab-matrix" ? el.matrixWrap : el.personTableScroll);
     });
   });
 }
@@ -210,8 +204,6 @@ function bindMatrixEvents(){
   el.sortWorkers.addEventListener("change", ()=>{ sortMatrixWorkers(); showBusy(el.matrixWrap, renderMatrix); });
   el.density.addEventListener("change", ()=> toggleDensity());
   el.colWidth.addEventListener("input", ()=> applyColumnWidth());
-  el.btnCollapseAll.addEventListener("click", ()=>{ collapsedCats = new Set(CATEGORIES.map(c=>c.category)); showBusy(el.matrixWrap, renderMatrix); });
-  el.btnExpandAll.addEventListener("click", ()=>{ collapsedCats.clear(); showBusy(el.matrixWrap, renderMatrix); });
 }
 
 async function loadWorkerList(){
@@ -225,26 +217,30 @@ async function loadWorkerList(){
   }
 }
 
+// baseline 추출(어떤 작업자든 동일하다고 가정; 데이터에서 첫 개체 사용)
+function getBaseline(item){
+  const d = matrixData[item] || {};
+  const first = Object.values(d)[0];
+  return first?.baseline ?? "";
+}
+
 function renderMatrixSkeleton(rowCount=10, workerCount=12){
-  // 헤더
+  // 헤더 (중분류 / 항목 + 기준 서브)
   const tr = document.createElement("tr");
   tr.innerHTML = `
     <th class="item-col">중분류</th>
     <th class="item-col">작업 항목</th>
-    <th class="base-col">기준</th>
-    ${Array.from({length: workerCount}).map((_,i)=>`<th class="worker-col" data-col="${3+i}" data-wi="${i+1}"><div class="sk sk-line"></div></th>`).join("")}
+    ${Array.from({length: workerCount}).map((_,i)=>`<th class="worker-col" data-col="${2+i}" data-wi="${i+1}"><div class="sk sk-line"></div></th>`).join("")}
   `;
   el.matrixThead.innerHTML = ""; el.matrixThead.appendChild(tr);
 
-  // 바디
   const frag = document.createDocumentFragment();
   for (let r=0;r<rowCount;r++){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="item-col"><div class="sk sk-tag"></div></td>
-      <td class="item-col"><div class="sk sk-text"></div></td>
-      <td class="base-col"><div class="sk sk-dot"></div></td>
-      ${Array.from({length: workerCount}).map((_,i)=>`<td class="worker-col" data-col="${3+i}" data-wi="${i+1}"><div class="sk sk-cell"></div></td>`).join("")}
+      <td class="item-col"><div class="sk sk-text"></div><div class="sk sk-tiny"></div></td>
+      ${Array.from({length: workerCount}).map((_,i)=>`<td class="worker-col" data-col="${2+i}" data-wi="${i+1}"><div class="sk sk-cell"></div></td>`).join("")}
     `;
     frag.appendChild(tr);
   }
@@ -252,7 +248,6 @@ function renderMatrixSkeleton(rowCount=10, workerCount=12){
 }
 
 async function buildMatrix(firstLoad){
-  // 로딩 표시 + 스켈레톤
   el.matrixLoading.classList.remove("hidden");
   startLine(el.matrixWrap);
   renderMatrixSkeleton(12, 15);
@@ -265,10 +260,9 @@ async function buildMatrix(firstLoad){
     workerAvgMap = worker_avg_pci || {};
     sortMatrixWorkers();
     renderMatrix();
-    el.matrixInfo.textContent = `총 항목 ${matrixItems.length}개 × 작업자 ${matrixWorkers.length}명 = ${matrixItems.length * matrixWorkers.length} 셀`;
     toggleDensity();
     applyColumnWidth();
-    fadeInTable(el.matrixWrap);
+    fadeInBox(el.matrixWrap);
   }catch(e){
     console.error("매트릭스 로드 실패:", e);
     alert("매트릭스 로드 중 오류가 발생했습니다.");
@@ -287,46 +281,23 @@ function sortMatrixWorkers(){
   }
 }
 
-function renderCategoryChips(){
-  el.catChips.innerHTML = CATEGORIES.map(c=>`<button class="chip active" data-cat="${esc(c.category)}">${esc(c.category)}</button>`).join("");
-  el.catChips.addEventListener("click",(e)=>{
-    if(!e.target.classList.contains("chip")) return;
-    e.target.classList.toggle("active");
-    showBusy(el.matrixWrap, renderMatrix);
-  });
-}
-
-function visibleCategories(){
-  const act = Array.from(el.catChips.querySelectorAll(".chip.active")).map(c=>c.dataset.cat);
-  return new Set(act.length ? act : CATEGORIES.map(c=>c.category));
-}
-
-function getBaseline(item){
-  if (!matrixWorkers.length) return "";
-  const w0 = matrixWorkers[0];
-  const d = (matrixData[item]||{})[w0] || null;
-  return d?.baseline ?? "";
-}
-
 function renderMatrix(){
   clearColHighlight();
 
   const qItem = el.filterItem.value.trim().toLowerCase();
   const qWorker = el.filterWorker.value.trim().toLowerCase();
-  const cats = visibleCategories();
 
   // 헤더
   const theadTr = document.createElement("tr");
   const thCat = document.createElement("th"); thCat.textContent = "중분류"; thCat.className="item-col"; thCat.dataset.col = 0;
   const thItem = document.createElement("th"); thItem.textContent = "작업 항목"; thItem.className="item-col"; thItem.dataset.col = 1;
-  const thBase = document.createElement("th"); thBase.textContent = "기준"; thBase.className="base-col"; thBase.dataset.col = 2;
-  theadTr.appendChild(thCat); theadTr.appendChild(thItem); theadTr.appendChild(thBase);
+  theadTr.appendChild(thCat); theadTr.appendChild(thItem);
 
   const shownWorkers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
   shownWorkers.forEach((w,i)=>{
     const th = document.createElement("th");
     th.className = "worker-col";
-    th.dataset.col = 3+i;             // 전체 열 index
+    th.dataset.col = 2+i;             // 전체 열 index
     th.dataset.wi = 1+i;              // worker 열 index(1부터)
     if (i>0 && ((i % 5)===0)) th.classList.add("block-start"); // 5열 단위 구분
     th.innerHTML = `<div class="wname" title="avg ${pct(workerAvgMap[w]||0)}%">${esc(w)}</div>`;
@@ -334,30 +305,28 @@ function renderMatrix(){
   });
   el.matrixThead.innerHTML = ""; el.matrixThead.appendChild(theadTr);
 
-  // 바디 (Fragment로 대량 렌더 튜닝)
+  // 바디
   const frag = document.createDocumentFragment();
 
   for (const grp of CATEGORIES){
-    if (!cats.has(grp.category)) continue;
-
     const its = grp.items
       .filter(it => matrixItems.includes(it))
       .filter(it => !qItem || it.toLowerCase().includes(qItem));
     if (!its.length) continue;
 
-    // 그룹 헤더 (접기/펼치기)
+    // 그룹 헤더
     const catTr = document.createElement("tr");
     catTr.className = "cat-row" + (collapsedCats.has(grp.category) ? " collapsed" : "");
     catTr.setAttribute("data-cat", grp.category);
     const catTd = document.createElement("td");
-    catTd.colSpan = 3 + shownWorkers.length;
+    catTd.colSpan = 2 + shownWorkers.length;
     catTd.innerHTML = `<span class="caret">▶</span>${esc(grp.category)}`;
     catTr.appendChild(catTd);
     frag.appendChild(catTr);
 
     if (collapsedCats.has(grp.category)) continue;
 
-    // 항목 행들
+    // 항목 행
     for (const item of its){
       const tr = document.createElement("tr");
 
@@ -366,28 +335,22 @@ function renderMatrix(){
       tdCat.dataset.col = 0;
       tdCat.innerHTML = `<span class="badge">${esc(grp.category)}</span>`;
 
+      const base = getBaseline(item);
       const tdItem = document.createElement("td");
       tdItem.className = "item-col";
       tdItem.dataset.col = 1;
-      tdItem.innerHTML = `<strong>${esc(item)}</strong>`;
+      tdItem.innerHTML = `<div class="item-cell"><strong>${esc(item)}</strong>${base!==""?`<div class="meta">기준 ${esc(base)}</div>`:""}</div>`;
 
-      const tdBase = document.createElement("td");
-      tdBase.className = "base-col";
-      tdBase.dataset.col = 2;
-      tdBase.style.textAlign = "center";
-      tdBase.textContent = getBaseline(item);
-
-      tr.appendChild(tdCat); tr.appendChild(tdItem); tr.appendChild(tdBase);
+      tr.appendChild(tdCat); tr.appendChild(tdItem);
 
       shownWorkers.forEach((w,i)=>{
         const d = (matrixData[item]||{})[w] || null;
         const val = d?.pci ?? 0;
         const td = document.createElement("td");
         td.className = "worker-col";
-        td.dataset.col = 3+i;
+        td.dataset.col = 2+i;
         td.dataset.wi = 1+i;
-        if (i>0 && ((i % 5)===0)) td.classList.add("block-start"); // 5열 단위 구분
-
+        if (i>0 && ((i % 5)===0)) td.classList.add("block-start");
         td.innerHTML = `
           <div class="cell ${heatClass(val)}" role="button" tabindex="0"
                data-w="${esc(w)}" data-item="${esc(item)}"
@@ -422,14 +385,12 @@ function applyColumnWidth(){
 function exportMatrixXlsx(){
   const qItem = el.filterItem.value.trim().toLowerCase();
   const qWorker = el.filterWorker.value.trim().toLowerCase();
-  const cats = visibleCategories();
 
   const workers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
   const header = ["중분류","작업 항목","기준", ...workers];
 
   const aoa = [header];
   for (const grp of CATEGORIES){
-    if (!cats.has(grp.category)) continue;
     const its = grp.items.filter(it => matrixItems.includes(it))
                          .filter(it => !qItem || it.toLowerCase().includes(qItem));
     for (const item of its){
@@ -456,7 +417,7 @@ function bindPersonEvents(){
   el.searchItem.addEventListener("input", debounce(()=> showBusy(el.personTableScroll, renderPersonTable), 120));
   el.sortBy.addEventListener("change", ()=>{ sortPersonRows(); showBusy(el.personTableScroll, renderPersonTable); });
 
-  // 행 클릭 → 상세 (보기 버튼 제거, 행 전체 클릭)
+  // 행 클릭 → 상세
   el.tbody.addEventListener("click", (e)=>{
     const tr = e.target.closest("tr[data-item]");
     const item = tr?.getAttribute("data-item");
@@ -477,7 +438,7 @@ async function onFetchPerson(){
     sortPersonRows();
     renderPersonChart();
     renderPersonTable();
-    fadeInTable(el.personTableScroll);
+    fadeInBox(el.personTableScroll);
   }catch(err){
     console.error("개인 조회 실패:", err);
     alert("조회 중 오류가 발생했습니다.");
@@ -496,19 +457,39 @@ function updateCards(){
 
 function renderPersonChart(){
   const rows = (currentRows||[]).slice().filter(r => (r.pci_pct>0)||(r.self_pct>0)||(r.work_pct>0));
-  rows.sort((a,b)=>b.pci_pct - a.pci_pct);
-  const top = rows.slice(0,15);
-  const labels = top.map(r=>r.item);
-  const work = top.map(r=>r.work_pct);
-  const self = top.map(r=>r.self_pct);
+  rows.sort((a,b)=> b.pci_pct - a.pci_pct || b.total_count - a.total_count);
+
+  // 너무 많을 경우 적당히 제한 (가로 스크롤로 충분히 보되 성능 보호)
+  const MAX_BARS = 80;
+  const list = rows.slice(0, MAX_BARS);
+  const labels = list.map(r=>r.item);
+  const work = list.map(r=>r.work_pct);
+  const self = list.map(r=>r.self_pct);
+
+  // 가로 스크롤: 바 1개당 폭
+  const PX_PER_BAR = 56;
+  const targetWidth = Math.max(el.chartScroll.clientWidth, Math.ceil(labels.length * PX_PER_BAR));
+  el.chartInner.style.width = targetWidth + "px";
 
   if (stackedChart) stackedChart.destroy();
   stackedChart = new Chart(el.stackedCanvas.getContext("2d"), {
     type:"bar",
-    data:{ labels, datasets:[ {label:"작업이력(최대 80)", data:work, stack:"pci"}, {label:"자가체크(최대 20)", data:self, stack:"pci"} ] },
+    data:{ labels, datasets:[
+      {label:"작업이력(최대 80)", data:work, stack:"pci"},
+      {label:"자가체크(최대 20)", data:self, stack:"pci"}
+    ] },
     options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{position:"top"}, tooltip:{enabled:true}, datalabels:{ anchor:"end", align:"end", formatter:v=>`${pct(v)}%`, color:"#333", clamp:true } },
+      responsive:false, // 캔버스 폭은 부모에서 제어
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{position:"top"},
+        tooltip:{enabled:true},
+        datalabels:{
+          display: labels.length <= 30, // 많으면 자동 숨김
+          anchor:"end", align:"end",
+          formatter:v=>`${pct(v)}%`, color:"#333", clamp:true
+        }
+      },
       scales:{ x:{stacked:true}, y:{stacked:true, min:0, max:100, ticks:{callback:v=>v+"%"} } }
     },
     plugins:[ChartDataLabels]

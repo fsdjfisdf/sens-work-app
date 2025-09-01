@@ -29,10 +29,10 @@
     </section>
 
     <!-- ===== 전체 인원 매트릭스 ===== -->
-    <section id="tab-matrix" class="panel tab-pane active" role="tabpanel" aria-labelledby="전체 인원 매트릭스">
+    <section id="tab-matrix" class="panel tab-pane active" role="tabpanel">
       <div class="panel-header">
         <h2>전체 인원 매트릭스 (세로: 작업 항목, 가로: 작업자)</h2>
-        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거 모달이 열려요. 좌측 고정열: <b>중분류 / 항목 / 기준</b>.</div>
+        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거 모달이 열려요. 좌측 고정열: <b>중분류 / 항목(기준)</b>.</div>
       </div>
 
       <div class="filters">
@@ -71,17 +71,6 @@
         </div>
       </div>
 
-      <div class="cat-filter">
-        <div class="label">중분류 필터</div>
-        <div id="catChips" class="chips"></div>
-        <div class="chip-tools">
-          <button id="btnCollapseAll" class="chip ghost">모두 접기</button>
-          <button id="btnExpandAll" class="chip ghost">모두 펼치기</button>
-        </div>
-      </div>
-
-      <div id="matrixInfo" class="matrix-info" aria-live="polite"></div>
-
       <div class="matrix-wrap" id="matrixWrap">
         <div class="loading-line" aria-hidden="true"></div>
         <table id="matrixTable" class="matrix dense">
@@ -97,7 +86,7 @@
     </section>
 
     <!-- ===== 개인 보기 ===== -->
-    <section id="tab-person" class="panel tab-pane" role="tabpanel" aria-labelledby="개인 보기">
+    <section id="tab-person" class="panel tab-pane" role="tabpanel">
       <div class="panel-header">
         <h2>개인 보기</h2>
         <div class="hint"><b>행을 클릭</b>하면 해당 항목의 산출 근거 모달이 열립니다.</div>
@@ -138,10 +127,12 @@
       <section class="panel">
         <div class="panel-header">
           <h2>항목별 PCI 분해</h2>
-          <div class="hint">막대가 100%면 기준작업수 도달 + 자가체크 완료</div>
+          <div class="hint">가로 스크롤로 더 많은 항목을 볼 수 있어요.</div>
         </div>
-        <div class="chart-wrap">
-          <canvas id="stackedChart" height="220" aria-label="개인 항목별 PCI 스택 바 차트"></canvas>
+        <div id="chartScroll" class="chart-scroll">
+          <div id="chartInner" class="chart-inner">
+            <canvas id="stackedChart" height="260" aria-label="개인 항목별 PCI 스택 바 차트"></canvas>
+          </div>
         </div>
       </section>
 
@@ -195,7 +186,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <div class="md-title" id="modalTitle">상세</div>
-        <button class="btn" id="modalClose" aria-label="모달 닫기">닫기</button>
+        <button class="btn ghost" id="modalClose" aria-label="모달 닫기">닫기</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
     </div>

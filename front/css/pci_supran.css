@@ -1,6 +1,7 @@
 /* =============================================================================
-   S-WORKS — pci_supran.css (dense grid, sticky cols, click-anywhere cell)
-   + Loading/Searching animations + refined matrix details
+   S-WORKS — pci_supran.css
+   - 정돈된 매트릭스(기준=서브텍스트), 버튼 스타일, 가로 스크롤 차트
+   - Loading/Searching animations + refined matrix details
    ========================================================================== */
 
 /* ---------- Tokens --------------------------------------------------------- */
@@ -46,14 +47,41 @@ a:hover{ text-decoration:underline; }
 
 .hidden{ display:none!important; }
 
+/* Tab panes */
+.tab-pane{ display:none; }
+.tab-pane.active{ display:block; }
+
 /* Mono tabular numbers for large tables */
 .mono, .matrix .pct, .table td, .table th{
   font-variant-numeric: tabular-nums;
 }
 
-/* Tab panes */
-.tab-pane{ display:none; }
-.tab-pane.active{ display:block; }
+/* ---------- Buttons -------------------------------------------------------- */
+.btn{
+  --btn-bg:#fff;
+  --btn-bd:var(--border);
+  --btn-fg:#0f172a;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  height: var(--control-h); padding:0 14px;
+  border:1px solid var(--btn-bd); background:var(--btn-bg); color:var(--btn-fg);
+  border-radius:12px; font-weight:800; font-size:14px; cursor:pointer;
+  box-shadow: var(--shadow-xs); transition: transform .06s, box-shadow .12s, border-color .12s, background .12s;
+}
+.btn:hover{ transform: translateY(-1px); box-shadow: 0 3px 10px rgba(2,6,23,.08); }
+.btn:active{ transform: translateY(0); }
+.btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(37,99,235,.22); border-color: var(--accent); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.btn.primary{
+  --btn-bg: color-mix(in srgb, var(--accent) 14%, #fff);
+  --btn-bd: color-mix(in srgb, var(--accent) 36%, var(--border));
+  --btn-fg:#0b216b;
+}
+.btn.ghost{
+  --btn-bg:#f8fafc;
+  --btn-bd:var(--border);
+  --btn-fg:#1f2a3a;
+}
 
 /* ---------- Nav ------------------------------------------------------------ */
 .nav{
@@ -92,22 +120,11 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 .input{
   height: var(--control-h);
   border-radius: var(--radius-sm);
-  border:1px solid var(--border); background:#fff; color:var(--text);
+  border:1px solid var(--border); background:#fff; color:#0f172a;
   padding:0 12px; box-shadow: inset 0 1px 0 rgba(2,6,23,.02);
   font-size: var(--font-control);
 }
 .actions{ display:flex; align-items:end; gap:8px; }
-
-/* ---------- Chips ---------------------------------------------------------- */
-.cat-filter{ display:flex; align-items:center; gap:10px; margin:6px 0 8px; flex-wrap:wrap; }
-.cat-filter .label{ font-size:12.5px; color:#4b5563; font-weight:800; }
-.chips{ display:flex; flex-wrap:wrap; gap:6px; }
-.chip{
-  height:30px; padding:0 10px; border-radius:999px; border:1px solid var(--border);
-  background:#fff; cursor:pointer; font-weight:800; font-size:12px; color:#1f2a3a;
-}
-.chip.active{ border-color:var(--accent); background:rgba(37,99,235,.06); }
-.chip.ghost{ background:#f8fafc; }
 
 /* ---------- Cards ---------------------------------------------------------- */
 .cards{ display:grid; grid-template-columns: repeat(3, minmax(200px, 1fr)); gap:10px; margin-bottom:12px; }
@@ -127,7 +144,7 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
   position:relative;
 }
 .matrix{
-  width:100%; min-width:1200px; border-collapse:separate; border-spacing:0;
+  width:100%; min-width:1100px; border-collapse:separate; border-spacing:0;
 }
 .matrix thead th{
   position:sticky; top:0; z-index:5;
@@ -141,14 +158,12 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
   background:#fff;
 }
 
-/* Sticky first 3 cols with subtle separators */
-.matrix .item-col, .matrix .base-col{
-  position:sticky; left:0; z-index:3; background:#fff;
-  box-shadow: 1px 0 0 var(--grid);
+/* Sticky first 2 cols with subtle separators */
+.matrix .item-col{
+  position:sticky; left:0; z-index:3; background:#fff; box-shadow: 1px 0 0 var(--grid);
 }
-.matrix .item-col:nth-child(1){ left:0;  width:150px; }
-.matrix .item-col:nth-child(2){ left:150px; width:220px; }
-.matrix .base-col{ left:370px; width:60px; text-align:center; }
+.matrix .item-col:nth-child(1){ left:0;  width:160px; }
+.matrix .item-col:nth-child(2){ left:160px; width:260px; }
 
 /* Worker columns */
 .matrix .worker-col{ min-width:68px; text-align:center; }
@@ -183,9 +198,14 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 .cell .pct{ font-weight:900; }
 
 /* column hover highlight */
-td.worker-col.col-hl{ background:#f7fbff; }
+td.worker-col.col-hl, th.worker-col.col-hl{ background:#f7fbff; }
 
-/* heat scale 0~10: subtler, clean */
+/* item sub meta (baseline) */
+.item-cell .meta{
+  margin-top:2px; font-size:12px; color:#6b7280;
+}
+
+/* heat scale 0~10: subtle */
 .h0{ background:linear-gradient(180deg, #fff, #fff); }
 .h1{ background:linear-gradient(180deg, #fff, #fff4f5); }
 .h2{ background:linear-gradient(180deg, #fff, #ffeef0); }
@@ -223,14 +243,13 @@ td.worker-col.col-hl{ background:#f7fbff; }
   transform: translateX(-100%); animation: shimmer 1.25s infinite;
 }
 @keyframes shimmer{ 100%{ transform: translateX(100%); } }
-
 .sk-line{ height:10px; width:70%; margin:8px auto; border-radius:999px; }
 .sk-tag{ height:18px; width:80px; margin:6px; }
 .sk-text{ height:16px; width:160px; margin:6px; }
-.sk-dot{ height:12px; width:28px; margin:6px auto; border-radius:999px; }
+.sk-tiny{ height:12px; width:70px; margin:4px 6px 6px; }
 .sk-cell{ height:36px; width:90%; margin:4px auto; border-radius:10px; }
 
-/* spinner overlay (existing) */
+/* spinner text (existing) */
 .loading{
   display:flex; align-items:center; gap:10px; padding:10px 12px; margin-top:8px;
   color:#334155; font-size:13px;
@@ -240,6 +259,11 @@ td.worker-col.col-hl{ background:#f7fbff; }
   border:2px solid #cbd5e1; border-top-color: var(--accent); animation: spin .8s linear infinite;
 }
 @keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* ---------- Person: Chart -------------------------------------------------- */
+.chart-scroll{ overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff; }
+.chart-inner{ min-width: 680px; }
+#stackedChart{ display:block; width: 100%; height: 260px; }
 
 /* ---------- Person Table --------------------------------------------------- */
 .table-scroll{ overflow:auto; border:1px solid var(--border); border-radius:12px; background:#fff; position:relative; }
@@ -320,7 +344,6 @@ body.modal-open{ overflow:hidden; }
 @media (max-width:960px){
   .filters{ grid-template-columns: repeat(2, minmax(180px,1fr)); }
   .cards{ grid-template-columns: 1fr; }
-  .matrix .item-col:nth-child(1){ width:140px; }
-  .matrix .item-col:nth-child(2){ left:140px; width:200px; }
-  .matrix .base-col{ left:340px; }
+  .matrix .item-col:nth-child(1){ width:150px; }
+  .matrix .item-col:nth-child(2){ left:150px; width:230px; }
 }
