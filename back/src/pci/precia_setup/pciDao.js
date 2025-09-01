@@ -1,27 +1,17 @@
 // src/pci/precia_setup/pciDao.js
 const { pool } = require("../../../config/database");
-const {
-  ALLOWED_EQUIP_TYPES,
-  itemToCategory,
-  normalizeCategory,
-  toSelfCol,
-} = require("./pciConfig");
+const { ALLOWED_EQUIP_TYPES, toDisplayCategory, getChecklistKeysForCategory } = require("./pciConfig");
 
-/** 기간 필터 포함 — PRECIA Setup 로그 */
-exports.fetchWorkLogsForPreciaSetup = async ({ startDate, endDate } = {}) => {
+/** 기간 필터 포함: SETUP 관련 로그 (setup_item 기준) */
+exports.fetchSetupLogsForPrecia = async ({ startDate, endDate } = {}) => {
   const eq = ALLOWED_EQUIP_TYPES;
   const placeholders = eq.map(() => "?").join(",");
   const params = [...eq];
 
   let where = `setup_item IS NOT NULL AND equipment_type IN (${placeholders})`;
-  if (startDate) {
-    where += ` AND task_date >= ?`;
-    params.push(startDate);
-  }
-  if (endDate) {
-    where += ` AND task_date <= ?`;
-    params.push(endDate);
-  }
+  if (startDate) { where += ` AND task_date >= ?`; params.push(startDate); }
+  if (endDate)   { where += ` AND task_date <= ?`; params.push(endDate); }
+
   const sql = `
     SELECT
       id, task_date, task_man,
@@ -32,52 +22,71 @@ exports.fetchWorkLogsForPreciaSetup = async ({ startDate, endDate } = {}) => {
   `;
   const [rows] = await pool.query(sql, params);
 
-  // 카테고리 매핑(세부 → 카테고리)
-  for (const r of rows) {
-    const cat = itemToCategory(r.setup_item);
-    r.setup_category = cat; // 없으면 normalizeCategory가 원문을 카테고리처럼 돌려줌
-  }
+  // 카테고리 정규화
+  for (const r of rows) r.setup_item = toDisplayCategory(r.setup_item);
   return rows;
 };
 
 /** 자가체크 1행 (PRECIA_SETUP) */
-exports.fetchSelfCheckRow = async (workerName) => {
+exports.fetchSelfRow = async (workerName) => {
   const [rows] = await pool.query(`SELECT * FROM PRECIA_SETUP WHERE name = ? LIMIT 1`, [workerName]);
   return rows[0] || null;
 };
 
-/** 자가체크 전체 */
-exports.fetchSelfCheckAll = async () => {
+/** 자가체크 전체 (매트릭스용) */
+exports.fetchSelfAll = async () => {
   const [rows] = await pool.query(`SELECT * FROM PRECIA_SETUP`);
   return rows;
 };
 
-/** Self 테이블의 이름만 빠르게 로드 */
-exports.fetchSelfCheckNames = async () => {
-  const [rows] = await pool.query(`SELECT name FROM PRECIA_SETUP WHERE name IS NOT NULL AND name <> ''`);
-  return rows.map((r) => r.name);
-};
-
-/** 교육/가산 카운트 피벗 (PRECIA_SETUP_COUNT)
- *  → { "INSTALLATION_PREPARATION": { "홍길동": 2, ... }, ... }
- *  - INSTALLATION_PREPERATION (오탈자) → INSTALLATION_PREPARATION 로 보정
- */
+/** 교육/가산 카운트 피벗 (PRECIA_SETUP_COUNT) → { "INSTALLATION PREPARATION": { "홍길동": n, ... } } */
 exports.fetchAdditionalCountsPivot = async () => {
   const [rows] = await pool.query(`SELECT * FROM PRECIA_SETUP_COUNT`);
   if (!rows.length) return {};
+
+  // 컬럼명을 표시명으로 보정(오탈자 포함)
   const pivot = {};
   for (const row of rows) {
-    for (const key of Object.keys(row)) {
-      if (key === "name" || key === "updated_at") continue;
-      const fixedKey = (key === "INSTALLATION_PREPERATION") ? "INSTALLATION_PREPARATION" : key;
-      const cat = normalizeCategory(fixedKey);
+    for (const col of Object.keys(row)) {
+      if (col === "name" || col === "updated_at") continue;
+      const cat = toDisplayCategory(col); // INSTALLATION_PREPERATION 등 보정
       pivot[cat] = pivot[cat] || {};
-      const v = Number(row[key] ?? 0);
+      const v = Number(row[col] ?? 0);
       if (Number.isFinite(v) && v > 0) {
-        const who = String(row.name || "").trim();
-        if (who) pivot[cat][who] = (pivot[cat][who] || 0) + v;
+        const worker = String(row.name || "").trim();
+        if (worker) pivot[cat][worker] = v;
       }
     }
   }
   return pivot;
+};
+
+/** 카테고리 하나에 대한 자가체크 합산 계산 */
+exports.computeSelfForCategory = (selfRow, catDisplay) => {
+  const keys = getChecklistKeysForCategory(catDisplay);
+  if (!selfRow || !keys.length) {
+    return {
+      total_items: keys.length,
+      total_checked: 0,
+      ratio: 0,
+      self_pct: 0,
+      checklist: keys.map(k => ({ key: k, value: Number(selfRow?.[k] ?? 0) }))
+    };
+  }
+  let checked = 0;
+  const detail = [];
+  for (const k of keys) {
+    const v = Number(selfRow[k] ?? 0);
+    if (Number.isFinite(v) && v > 0) checked += 1;
+    detail.push({ key: k, value: v });
+  }
+  const ratio = keys.length > 0 ? Math.min(1, checked / keys.length) : 0;
+  const self_pct = Math.round(ratio * 20 * 10) / 10; // 최대 20%
+  return {
+    total_items: keys.length,
+    total_checked: checked,
+    ratio,
+    self_pct,
+    checklist: detail
+  };
 };

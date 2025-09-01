@@ -1,147 +1,104 @@
 // src/pci/precia_setup/pciController.js
+const { BASELINE, normalizeItem, toDisplayCategory, workerAliases, CHECK_TITLES } = require("./pciConfig");
+const { parseTaskMen, round1, clamp } = require("../precia/pciUtils"); // 기존 utils 재사용 경로 확인
 const {
-  CATEGORY_BASELINE,
-  CATEGORY_ITEMS,
-  CATEGORY_WEIGHTS,
-  normalizeCategory,
-  toSelfCol,
-  workerAliases,
-  prettyCat,
-} = require("./pciConfig");
-const { parseTaskMen, round1, clamp } = require("./pciUtils");
-const {
-  fetchWorkLogsForPreciaSetup,
-  fetchSelfCheckRow,
-  fetchSelfCheckAll,
-  fetchSelfCheckNames,
+  fetchSetupLogsForPrecia,
+  fetchSelfRow,
+  fetchSelfAll,
   fetchAdditionalCountsPivot,
+  computeSelfForCategory,
 } = require("./pciDao");
 
-/** ====== 공통: 카테고리 리스트 ====== */
-const CAT_LIST = Object.keys(CATEGORY_BASELINE);
-
-/** ====== 개인 PCI (카테고리별) ====== */
+/** 1명 계산 */
 exports.getWorkerPci = async (req, res) => {
   try {
     const rawName = req.params.name || req.query.name || req.query.worker;
     if (!rawName) return res.status(400).json({ message: "name(작업자) 파라미터 필요" });
+
     const worker = workerAliases(rawName);
     const { start_date: startDate, end_date: endDate } = req.query;
 
     const [logs, addPivot, selfRow] = await Promise.all([
-      fetchWorkLogsForPreciaSetup({ startDate, endDate }),
+      fetchSetupLogsForPrecia({ startDate, endDate }),
       fetchAdditionalCountsPivot(),
-      fetchSelfCheckRow(worker),
+      fetchSelfRow(worker),
     ]);
 
-    // 1) 작업 이력 카운트 (카테고리: main/support)
-    const counts = {}; // { CAT: { main: num, support: num } }
+    // 로그 카운트 집계 (카테고리)
+    const counts = {}; // { item: { main, support } }
     for (const r of logs) {
-      const cat = normalizeCategory(r.setup_category);
-      if (!CATEGORY_BASELINE[cat]) continue;
+      const item = normalizeItem(r.setup_item);
+      if (!BASELINE[item]) continue;
+
       for (const p of parseTaskMen(r.task_man)) {
         if (workerAliases(p.name) !== worker) continue;
         const role = p.weight >= 1 ? "main" : "support";
-        counts[cat] = counts[cat] || { main: 0, support: 0 };
-        counts[cat][role] += p.weight; // 1.0 / 0.1
+        counts[item] = counts[item] || { main: 0, support: 0 };
+        counts[item][role] += p.weight; // main=1.0, support=0.1
       }
     }
 
-    // 2) 교육/가산 카운트 합산
-    const addCounts = {}; // { CAT: number }
+    // 교육/가산 합산
+    const addCounts = {}; // { item: number }
     for (const cat of Object.keys(addPivot)) {
-      if (!CATEGORY_BASELINE[cat]) continue;
+      const dic = addPivot[cat];
       let sum = 0;
-      for (const col of Object.keys(addPivot[cat])) {
-        if (workerAliases(col) === worker) sum += Number(addPivot[cat][col] || 0);
+      for (const col of Object.keys(dic)) {
+        if (workerAliases(col) === worker) sum += Number(dic[col] || 0);
       }
       if (sum > 0) addCounts[cat] = (addCounts[cat] || 0) + sum;
     }
 
-    // 3) 자가(20%) — 카테고리 가중치 × (세부항목 완료율)
-    //    각 카테고리 self_pct는 "가중치에 따른 부분점수" (최대 20 * weight%)
-    function calcSelfPct(cat) {
-      const items = CATEGORY_ITEMS[cat] || [];
-      if (!items.length || !selfRow) return 0;
-      let checked = 0;
-      for (const it of items) {
-        const col = toSelfCol(it);
-        const v = Number(selfRow[col] ?? 0);
-        if (Number.isFinite(v) && v > 0) checked += 1;
-      }
-      const ratio = checked / items.length; // 0..1
-      const w = Number(CATEGORY_WEIGHTS[prettyCat(cat)] || 0) / 100; // 0..1
-      const self = 20 * w * ratio; // 가중 부분점수
-      return round1(self);
-    }
-
-    // 4) 카테고리별 행 구성
+    // 항목별 PCI 계산
     const rows = [];
-    let sumWork = 0;
-    let sumSelfWeighted = 0;
+    let usedItems = 0, accWork = 0, accTotal = 0;
 
-    for (const cat of CAT_LIST) {
-      const base = CATEGORY_BASELINE[cat] || 0;
-      const c = counts[cat] || { main: 0, support: 0 };
-      const add = addCounts[cat] || 0;
+    for (const item of Object.keys(BASELINE)) {
+      const base = BASELINE[item];
+      const c = counts[item] || { main: 0, support: 0 };
+      const add = addCounts[item] || 0;
       const totalCnt = c.main + c.support + add;
 
-      const workPct = base > 0 ? round1(Math.min(1, totalCnt / base) * 80) : 0;
-      const selfPct = calcSelfPct(cat);
+      const workRatio = base > 0 ? Math.min(1, totalCnt / base) : 0;
+      const workPct = round1(workRatio * 80);
+
+      // 자가체크 20% = 소항목 비율 * 20
+      const selfAgg = computeSelfForCategory(selfRow, item);
+      const selfPct = round1(selfAgg.self_pct);
+
       const pciPct = clamp(workPct + selfPct, 0, 100);
 
-      sumWork += workPct;
-      sumSelfWeighted += selfPct;
+      usedItems += 1; // 0% 포함
+      accWork += workPct;
+      accTotal += pciPct;
 
       rows.push({
-        category: cat,               // 내부 키
-        category_label: prettyCat(cat), // 표시용
+        item,
         baseline: base,
         main_count: round1(c.main),
         support_count: round1(c.support),
         add_count: add,
         total_count: round1(totalCnt),
-        work_pct: workPct,           // 0..80
-        self_pct: selfPct,           // 0..(20*가중치)
-        pci_pct: pciPct,             // work + self(가중)
-        self_detail: {
-          items_total: (CATEGORY_ITEMS[cat] || []).length,
-          // selfRow가 없으면 0
-          checked: (() => {
-            if (!selfRow) return 0;
-            let n = 0;
-            for (const it of (CATEGORY_ITEMS[cat] || [])) {
-              const val = Number(selfRow[toSelfCol(it)] ?? 0);
-              if (Number.isFinite(val) && val > 0) n++;
-            }
-            return n;
-          })(),
-          weight_percent: Number(CATEGORY_WEIGHTS[prettyCat(cat)] || 0), // 가중치(%)
-        },
+        work_pct: workPct,
+        self_pct: selfPct,
+        pci_pct: pciPct,
       });
     }
 
-    // 5) 요약 — 평균 작업(0..80) + 자가 총합(0..20) → 총합 0..100
-    const n = CAT_LIST.length || 1;
-    const avgWork = round1(sumWork / n);
-    const selfTotal = clamp(round1(sumSelfWeighted), 0, 20);
-    const avgPciTotal = clamp(round1(avgWork + selfTotal), 0, 100);
-
-    // 보기 좋게: 수행횟수 ↘ / 카테고리명
-    rows.sort((a, b) => b.total_count - a.total_count || a.category.localeCompare(b.category, "ko"));
+    // 수행횟수 많은 순 → 항목명
+    rows.sort((a, b) => b.total_count - a.total_count || a.item.localeCompare(b.item, "ko"));
 
     const summary = {
       worker,
       period: { startDate: startDate || null, endDate: endDate || null },
-      items_considered: n,
-      avg_work_pct: avgWork,          // 0..80
-      self_total_pct: selfTotal,      // 0..20 (가중치 합계)
-      avg_pci_pct: avgPciTotal,       // 0..100 (= avg_work_pct + self_total_pct)
+      items_considered: usedItems,
+      avg_work_pct: usedItems ? round1(accWork / usedItems) : 0,
+      avg_pci_pct: usedItems ? round1(accTotal / usedItems) : 0,
     };
 
     return res.json({ summary, rows });
   } catch (err) {
-    console.error("[PCI PRECIA-SETUP] getWorkerPci error:", err);
+    console.error("[PCI PRECIA SETUP] getWorkerPci error:", err);
     return res.status(500).json({ message: "internal_error", detail: String(err?.message || err) });
   }
 };
@@ -152,7 +109,7 @@ exports.getAllSummary = async (req, res) => {
     const { start_date: startDate, end_date: endDate, limit = 200 } = req.query;
 
     const [logs, addPivot] = await Promise.all([
-      fetchWorkLogsForPreciaSetup({ startDate, endDate }),
+      fetchSetupLogsForPrecia({ startDate, endDate }),
       fetchAdditionalCountsPivot(),
     ]);
 
@@ -165,13 +122,15 @@ exports.getAllSummary = async (req, res) => {
     const list = [];
     for (const w of workers) {
       const fakeReq = { query: { start_date: startDate, end_date: endDate }, params: { name: w } };
-      const result = await new Promise((resolve) => { exports.getWorkerPci(fakeReq, { json: resolve }); });
+      const result = await new Promise((resolve) => {
+        exports.getWorkerPci(fakeReq, { json: resolve });
+      });
       list.push(result.summary);
     }
 
     return res.json({ count: list.length, workers: list });
   } catch (err) {
-    console.error("[PCI PRECIA-SETUP] getAllSummary error:", err);
+    console.error("[PCI PRECIA SETUP] getAllSummary error:", err);
     return res.status(500).json({ message: "internal_error", detail: String(err?.message || err) });
   }
 };
@@ -179,53 +138,55 @@ exports.getAllSummary = async (req, res) => {
 /** 작업자 이름 리스트 */
 exports.getWorkerNames = async (_req, res) => {
   try {
-    const [logs, addPivot, selfNames] = await Promise.all([
-      fetchWorkLogsForPreciaSetup({}),
+    const [logs, addPivot, selfRows] = await Promise.all([
+      fetchSetupLogsForPrecia({}),
       fetchAdditionalCountsPivot(),
-      fetchSelfCheckNames(),
+      fetchSelfAll(),
     ]);
-    const set = new Set(selfNames.map(workerAliases));
+
+    const set = new Set();
     for (const r of logs) for (const p of parseTaskMen(r.task_man)) set.add(workerAliases(p.name));
     for (const cat of Object.keys(addPivot)) for (const col of Object.keys(addPivot[cat])) set.add(workerAliases(col));
+    for (const row of selfRows) if (row?.name) set.add(workerAliases(row.name));
+
     const workers = [...set].sort((a, b) => a.localeCompare(b, "ko"));
     res.json({ workers });
   } catch (e) {
-    console.error("[PCI PRECIA-SETUP] getWorkerNames error:", e);
+    console.error("[PCI PRECIA SETUP] getWorkerNames error:", e);
     res.status(500).json({ message: "internal_error" });
   }
 };
 
-/** 매트릭스 (카테고리 × 작업자) */
+/** 매트릭스 (한 방에) */
 exports.getMatrix = async (_req, res) => {
   try {
     const [logs, addPivot, selfRows] = await Promise.all([
-      fetchWorkLogsForPreciaSetup({}),
+      fetchSetupLogsForPrecia({}),
       fetchAdditionalCountsPivot(),
-      fetchSelfCheckAll(),
+      fetchSelfAll(),
     ]);
 
-    // self 맵
     const selfMap = {};
     for (const row of selfRows) selfMap[workerAliases(row.name)] = row;
 
-    // 로그 카운트
-    const counts = {}; // counts[w][cat] = {main, support}
+    // 로그 카운트: counts[worker][item] = {main, support}
+    const counts = {};
     for (const r of logs) {
-      const cat = normalizeCategory(r.setup_category);
-      if (!CATEGORY_BASELINE[cat]) continue;
-      for (const p of parseTaskMen(r.task_man)) {
+      const item = normalizeItem(r.setup_item);
+      if (!BASELINE[item]) continue;
+      const people = parseTaskMen(r.task_man);
+      for (const p of people) {
         const w = workerAliases(p.name);
         counts[w] = counts[w] || {};
-        counts[w][cat] = counts[w][cat] || { main: 0, support: 0 };
+        counts[w][item] = counts[w][item] || { main: 0, support: 0 };
         const role = p.weight >= 1 ? "main" : "support";
-        counts[w][cat][role] += p.weight;
+        counts[w][item][role] += p.weight;
       }
     }
 
-    // 교육/가산
-    const addCounts = {}; // addCounts[w][cat] = num
+    // 교육/가산: addCounts[worker][item] = number
+    const addCounts = {};
     for (const cat of Object.keys(addPivot)) {
-      if (!CATEGORY_BASELINE[cat]) continue;
       for (const col of Object.keys(addPivot[cat])) {
         const w = workerAliases(col);
         addCounts[w] = addCounts[w] || {};
@@ -233,100 +194,84 @@ exports.getMatrix = async (_req, res) => {
       }
     }
 
-    // 축
+    const itemList = Object.keys(BASELINE).slice().sort((a, b) => a.localeCompare(b, "ko"));
+
     const workerSet = new Set([...Object.keys(counts), ...Object.keys(addCounts), ...Object.keys(selfMap)]);
-    const items = CAT_LIST.slice().sort((a, b) => a.localeCompare(b, "ko"));
     const workers = [...workerSet].sort((a, b) => a.localeCompare(b, "ko"));
 
-    // 카테고리 self 계산 헬퍼
-    const catSelf = (w, cat) => {
-      const row = selfMap[w];
-      const itemsArr = CATEGORY_ITEMS[cat] || [];
-      if (!row || !itemsArr.length) return 0;
-      let checked = 0;
-      for (const it of itemsArr) {
-        const val = Number(row[toSelfCol(it)] ?? 0);
-        if (Number.isFinite(val) && val > 0) checked++;
-      }
-      const ratio = checked / itemsArr.length;
-      const wgt = (Number(CATEGORY_WEIGHTS[prettyCat(cat)] || 0) / 100);
-      return Math.round((20 * wgt * ratio) * 10) / 10;
-    };
+    const data = {};      // data[item][worker] = { pci, work, self, ... , baseline }
+    const workerAvg = {}; // worker -> 합계/개수
 
-    // 계산
-    const data = {};       // data[cat][w] = { pci, work, self, ... }
-    const workerAvg = {};  // w -> {workSum, selfSum}
-
-    for (const cat of items) {
-      data[cat] = {};
+    for (const item of itemList) {
+      data[item] = {};
       for (const w of workers) {
-        const c = (counts[w] && counts[w][cat]) || { main: 0, support: 0 };
-        const add = (addCounts[w] && addCounts[w][cat]) || 0;
-        const tot = c.main + c.support + add;
+        const c = (counts[w] && counts[w][item]) || { main: 0, support: 0 };
+        const add = (addCounts[w] && addCounts[w][item]) || 0;
+        const total = c.main + c.support + add;
 
-        const base = CATEGORY_BASELINE[cat];
-        const workPct = base > 0 ? Math.round(Math.min(1, tot / base) * 80 * 10) / 10 : 0;
-        const selfPct = catSelf(w, cat);
+        const base = BASELINE[item];
+        const workPct = base > 0 ? Math.round(Math.min(1, total / base) * 80 * 10) / 10 : 0;
+
+        // self 20%: 소항목 비율 환산
+        const selfAgg = computeSelfForCategory(selfMap[w], item);
+        const selfPct = Math.round((selfAgg.self_pct || 0) * 10) / 10;
+
         const pci = Math.max(0, Math.min(100, workPct + selfPct));
-
-        data[cat][w] = {
-          pci, work: workPct, self: selfPct,
-          total_count: Math.round(tot * 10) / 10,
+        data[item][w] = {
+          pci,
+          work: workPct,
+          self: selfPct,
+          total_count: Math.round(total * 10) / 10,
           main_count: Math.round((c.main || 0) * 10) / 10,
           support_count: Math.round((c.support || 0) * 10) / 10,
           add_count: add,
           baseline: base,
         };
 
-        const acc = workerAvg[w] || { workSum: 0, selfSum: 0 };
-        acc.workSum += workPct;
-        acc.selfSum += selfPct; // self는 카테고리 가중 분
+        const acc = workerAvg[w] || { s: 0, n: 0 };
+        acc.s += pci; acc.n += 1;
         workerAvg[w] = acc;
       }
     }
 
     const worker_avg_pci = {};
-    const n = items.length || 1;
     for (const w of workers) {
-      const acc = workerAvg[w] || { workSum: 0, selfSum: 0 };
-      const avgWork = acc.workSum / n;
-      // self는 카테고리별 가중분을 더한 총합(최대 20) — 행 평균과 달리 총합을 사용
-      const selfTotal = Math.max(0, Math.min(20, acc.selfSum));
-      worker_avg_pci[w] = Math.round((avgWork + selfTotal) * 10) / 10;
+      const acc = workerAvg[w];
+      worker_avg_pci[w] = acc ? Math.round((acc.s / acc.n) * 10) / 10 : 0;
     }
 
-    res.json({ workers, items, data, worker_avg_pci });
+    res.json({ workers, items: itemList, data, worker_avg_pci });
   } catch (e) {
-    console.error("[PCI PRECIA-SETUP] getMatrix error:", e);
+    console.error("[PCI PRECIA SETUP] getMatrix error:", e);
     res.status(500).json({ message: "internal_error" });
   }
 };
 
-/** 산출 근거 (한 사람 + 한 카테고리) */
+/** 항목(카테고리) 단위 상세 */
 exports.getWorkerItemBreakdown = async (req, res) => {
   try {
     const rawName = req.params.name || req.query.name;
-    const rawCat = req.params.item || req.query.item;
-    if (!rawName || !rawCat) return res.status(400).json({ message: "name, item 파라미터 필요" });
+    const rawItem = req.params.item || req.query.item;
+    if (!rawName || !rawItem) return res.status(400).json({ message: "name, item 파라미터 필요" });
 
     const worker = workerAliases(rawName);
-    const cat = normalizeCategory(rawCat);
-    if (!CATEGORY_BASELINE[cat]) return res.status(404).json({ message: `기준에 없는 카테고리: ${rawCat}` });
-
-    const baseline = CATEGORY_BASELINE[cat];
+    const itemNorm = normalizeItem(rawItem);
+    if (!itemNorm || !BASELINE[itemNorm]) {
+      return res.status(404).json({ message: `기준에 없는 항목: ${rawItem}` });
+    }
+    const baseline = BASELINE[itemNorm];
 
     const [logs, addPivot, selfRow] = await Promise.all([
-      fetchWorkLogsForPreciaSetup({}),
+      fetchSetupLogsForPrecia({}),
       fetchAdditionalCountsPivot(),
-      fetchSelfCheckRow(worker),
+      fetchSelfRow(worker),
     ]);
 
-    // 로그(역할/가중치)
+    // 1) 로그
     const logRows = [];
     let mainSum = 0, supportSum = 0;
     for (const r of logs) {
-      const c = normalizeCategory(r.setup_category);
-      if (c !== cat) continue;
+      if (normalizeItem(r.setup_item) !== itemNorm) continue;
       const people = parseTaskMen(r.task_man);
       for (const p of people) {
         if (workerAliases(p.name) !== worker) continue;
@@ -340,61 +285,64 @@ exports.getWorkerItemBreakdown = async (req, res) => {
           equipment_name: r.equipment_name,
           task_name: r.task_name,
           task_man: r.task_man,
+          task_man_raw: r.task_man,
           task_description: r.task_description,
           role,
           weight: p.weight,
         });
       }
     }
-    mainSum = round1(mainSum);
-    supportSum = round1(supportSum);
+    mainSum = Math.round(mainSum * 10) / 10;
+    supportSum = Math.round(supportSum * 10) / 10;
 
-    // 교육/가산
+    // 2) 교육/가산
     let addCount = 0;
-    for (const key of Object.keys(addPivot)) {
-      if (key !== cat) continue;
-      for (const col of Object.keys(addPivot[key] || {})) {
-        if (workerAliases(col) === worker) addCount += Number(addPivot[key][col] || 0);
-      }
+    const addDic = addPivot[itemNorm] || {};
+    for (const col of Object.keys(addDic)) {
+      if (workerAliases(col) === worker) addCount += Number(addDic[col] || 0);
     }
 
-    // 자가 (가중)
-    const items = CATEGORY_ITEMS[cat] || [];
-    let checked = 0;
-    for (const it of items) {
-      const v = Number(selfRow?.[toSelfCol(it)] || 0);
-      if (Number.isFinite(v) && v > 0) checked++;
-    }
-    const ratio = items.length ? checked / items.length : 0;
-    const w = (Number(CATEGORY_WEIGHTS[prettyCat(cat)] || 0) / 100);
-    const selfPct = round1(20 * w * ratio);
+    // 3) 자가체크 합산
+    const selfAgg = computeSelfForCategory(selfRow, itemNorm);
+    // 체크리스트 상세(제목 붙이기)
+    const checklist = (selfAgg.checklist || []).map(c => ({
+      key: c.key,
+      title: CHECK_TITLES[c.key] || "",
+      value: Number(c.value || 0),
+    }));
 
-    // 퍼센트 산출
-    const totalCount = round1(mainSum + supportSum + addCount);
-    const workPct = baseline > 0 ? round1(Math.min(1, totalCount / baseline) * 80) : 0;
+    // 4) 퍼센트
+    const totalCount = Math.round((mainSum + supportSum + addCount) * 10) / 10;
+    const workPct = baseline > 0 ? Math.round(Math.min(1, totalCount / baseline) * 80 * 10) / 10 : 0;
+    const selfPct = Math.round((selfAgg.self_pct || 0) * 10) / 10;
     const pciPct = clamp(workPct + selfPct, 0, 100);
 
     return res.json({
       worker,
-      item: cat,
+      item: itemNorm,
       baseline,
-      totals: { main_count: mainSum, support_count: supportSum, add_count: addCount, total_count: totalCount },
+      totals: {
+        main_count: mainSum,
+        support_count: supportSum,
+        add_count: addCount,
+        total_count: totalCount,
+      },
       percentages: {
         work_pct: workPct,
         self_pct: selfPct,
         pci_pct: pciPct,
-        formula: `PCI = min(총횟수/기준,1)*80 + (20 × 가중 ${w*100}% × 완료율 ${Math.round(ratio*100)}%) = ${workPct} + ${selfPct}`,
+        formula: `PCI = min(총횟수/기준,1)*80 + (체크비율*20) = ${workPct} + ${selfPct}`,
       },
-      self_check: {
-        weight_percent: w * 100,
-        items_total: items.length,
-        checked,
-        items,
+      self_detail: {
+        total_items: selfAgg.total_items,
+        total_checked: selfAgg.total_checked,
+        ratio: Math.round((selfAgg.ratio || 0) * 1000) / 1000,
+        checklist,
       },
       logs: logRows.sort((a, b) => String(a.task_date || "").localeCompare(String(b.task_date || ""))),
     });
   } catch (err) {
-    console.error("[PCI PRECIA-SETUP] getWorkerItemBreakdown error:", err);
+    console.error("[PCI PRECIA SETUP] getWorkerItemBreakdown error:", err);
     return res.status(500).json({ message: "internal_error", detail: String(err?.message || err) });
   }
 };
