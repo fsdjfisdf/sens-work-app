@@ -69,39 +69,15 @@ const el = {
 };
 
 const CATEGORIES = [
-  { category: "Swap Kit", items: [
-    "SWAP KIT","GAS LINE & GAS FILTER","TOP FEED THROUGH","GAS FEED THROUGH",
-    "CERAMIC PARTS","MATCHER","PM BAFFLE","AM BAFFLE","FLANGE ADAPTOR"
+  { category: "PM", items: [
+    "PM CENTERING","PM CLN","PM SLOT VALVE REP","PM PEEK PLATE REP",
+    "PM RF MATCHER REP","PM PIN HOLDER REP","PM GAP SENSOR ADJUST","PM PROCESS KIT REP"
   ]},
-  { category: "Slot Valve", items: [
-    "SLOT VALVE ASSY(HOUSING)","SLOT VALVE","DOOR VALVE"
+    { category: "ROBOT", items: [
+    "EFEM ROBOT TEACHING", "TM ROBOT TEACHING"
   ]},
-  { category: "Pendulum Valve", items: ["PENDULUM VALVE"] },
-  { category: "Pin Motor & CTR", items: [
-    "PIN ASSY MODIFY","MOTOR & CONTROLLER","PIN 구동부 ASSY","PIN BELLOWS","SENSOR"
-  ]},
-  { category: "Step Motor & CTR", items: [
-    "STEP MOTOR & CONTROLLER","CASSETTE & HOLDER PAD","BALL SCREW ASSY",
-    "BUSH","MAIN SHAFT","BELLOWS"
-  ]},
-  { category: "Robot", items: [
-    "EFEM ROBOT REP","TM ROBOT REP","EFEM ROBOT TEACHING","TM ROBOT TEACHING","TM ROBOT SERVO PACK"
-  ]},
-  { category: "Vac. Line", items: [
-    "UNDER COVER","VAC. LINE","BARATRON GAUGE","PIRANI GAUGE","CONVACTRON GAUGE",
-    "MANUAL VALVE","PNEUMATIC VALVE","ISOLATION VALVE","VACUUM BLOCK","CHECK VALVE","EPC","PURGE LINE REGULATOR"
-  ]},
-  { category: "Chuck", items: ["COOLING CHUCK","HEATER CHUCK"] },
-  { category: "Rack", items: ["GENERATOR"] },
-  { category: "Board", items: [
-    "D-NET BOARD","SOURCE BOX BOARD","INTERFACE BOARD","SENSOR BOARD",
-    "PIO SENSOR BOARD","AIO CALIBRATION[PSK BOARD]","AIO CALIBRATION[TOS BOARD]"
-  ]},
-  { category: "Sensor", items: [
-    "CODED SENSOR","GAS BOX DOOR SENSOR","LASER SENSOR AMP"
-  ]},
-  { category: "ETC", items: [
-    "HE LEAK CHECK","DIFFUSER","LOT 조사","GAS SPRING"
+      { category: "ETC", items: [
+    "LOT 조사", "LP ESCORT"
   ]},
 ];
 
