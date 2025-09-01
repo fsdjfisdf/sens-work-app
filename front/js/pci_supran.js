@@ -1,6 +1,9 @@
 /* ==========================================================================
-   SUPRA N PCI (정돈된 매트릭스 / 기준-서브텍스트 / 가로 스크롤 차트 / 버튼 스타일)
-   + 헤더 겹침(z-index) 수정 + 모달 아코디언 로그
+   SUPRA N PCI — 전체 보기 요약행(평균) + 개인 보기 테이블 룩&필 적용
+   - Thead 2단: ① 헤더 ② 요약(평균) 행
+   - 요약(평균) 행은 현재 필터에 노출된 항목/작업자 기준으로 즉시 재계산
+   - 전체 평균(가시 항목 기준) 배지 제공
+   - 모달 아코디언/버튼/차트/엑셀 유지
    ========================================================================== */
 
 const API_BASE = "";
@@ -13,7 +16,7 @@ let stackedChart = null;
 let matrixItems = [];
 let matrixWorkers = [];
 let matrixData = {};   // data[item][worker] = {pci, work, self, baseline, ...}
-let workerAvgMap = {}; // worker -> avg pci
+let workerAvgMap = {}; // worker -> avg pci(서버 제공; 정렬 기본값에 사용)
 let collapsedCats = new Set(); // 카테고리 접힘 상태
 
 // 개인 보기 상태
@@ -89,8 +92,8 @@ const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it o
 const getCategory = (item)=> ITEM_TO_CAT[item] || "-";
 
 // ===== Utils =====
-var ESC_RE  = /[&<>"']/g;
-var ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+const ESC_RE  = /[&<>"']/g;
+const ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
 function esc(s) { s = (s == null) ? '' : String(s); return s.replace(ESC_RE, ch => ESC_MAP[ch] || ch); }
 function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
 function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
@@ -101,15 +104,13 @@ function startLine(container){ container?.classList.add("is-loading"); }
 function stopLine(container){ container?.classList.remove("is-loading"); }
 function showBusy(container, work){
   startLine(container);
-  requestAnimationFrame(()=>{
-    try{ work(); } finally{ setTimeout(()=>stopLine(container), 280); }
-  });
+  requestAnimationFrame(()=>{ try{ work(); } finally{ setTimeout(()=>stopLine(container), 280); } });
 }
 
 // Fade-in helper
 function fadeInBox(box){
   box?.classList.remove("fade-in");
-  void box?.offsetWidth; // reflow
+  void box?.offsetWidth;
   box?.classList.add("fade-in");
 }
 
@@ -138,9 +139,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("keydown",(e)=>{ if(e.key==="Escape") hideModal(); });
 
   await loadWorkerList();
-  await buildMatrix(true);
+  await buildMatrix();
 
-  // 매트릭스 셀 상세(이벤트 위임; 셀 어디든 클릭 + 키보드)
+  // 매트릭스 셀 상세(이벤트 위임)
   el.matrixTbody.addEventListener("click", (e)=>{
     const c = e.target.closest(".cell");
     if (!c) return;
@@ -158,7 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (w && it) openBreakdown(w, it);
   });
 
-  // 카테고리 접기/펼치기 (행 클릭)
+  // 카테고리 접기/펼치기
   el.matrixTbody.addEventListener("click", (e)=>{
     const row = e.target.closest("tr.cat-row");
     if (!row) return;
@@ -193,7 +194,7 @@ function bindTabs(){
 
 // ===== 매트릭스 =====
 function bindMatrixEvents(){
-  el.btnReloadMatrix.addEventListener("click", ()=>buildMatrix(false));
+  el.btnReloadMatrix.addEventListener("click", ()=>buildMatrix());
   el.btnMatrixCsv.addEventListener("click", exportMatrixXlsx);
   el.filterItem.addEventListener("input", debounce(()=> showBusy(el.matrixWrap, renderMatrix), 120));
   el.filterWorker.addEventListener("input", debounce(()=> showBusy(el.matrixWrap, renderMatrix), 120));
@@ -206,7 +207,6 @@ async function loadWorkerList(){
   try{
     const res = await axios.get(`/api/pci/supra-n/workers`);
     workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
-    // 개인 보기 자동완성
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
@@ -214,16 +214,9 @@ async function loadWorkerList(){
   }
 }
 
-// baseline 추출(어떤 작업자든 동일하다고 가정; 데이터에서 첫 개체 사용)
-function getBaseline(item){
-  const d = matrixData[item] || {};
-  const first = Object.values(d)[0];
-  return first?.baseline ?? "";
-}
-
 function renderMatrixSkeleton(rowCount=10, workerCount=12){
-  // 헤더 (중분류 / 항목 + 기준 서브)
   const tr = document.createElement("tr");
+  tr.className = "header-row";
   tr.innerHTML = `
     <th class="item-col">중분류</th>
     <th class="item-col">작업 항목</th>
@@ -274,8 +267,26 @@ function sortMatrixWorkers(){
   if (mode === "name_asc"){
     matrixWorkers.sort((a,b)=>a.localeCompare(b,'ko'));
   } else {
+    // 서버 제공 평균 PCI 기준(전역) → 동률은 이름순
     matrixWorkers.sort((a,b)=>(workerAvgMap[b]??0)-(workerAvgMap[a]??0) || a.localeCompare(b,'ko'));
   }
+}
+
+// 요약(평균) 계산: 현재 표시되는 항목/작업자에 한정
+function computeVisibleAverages(shownItems, shownWorkers){
+  const perWorker = {};
+  let sumAll = 0, cntAll = 0;
+
+  for (const w of shownWorkers){
+    let s=0, c=0;
+    for (const it of shownItems){
+      const v = (matrixData[it]?.[w]?.pci);
+      if (Number.isFinite(v)){ s+=v; c++; sumAll+=v; cntAll++; }
+    }
+    perWorker[w] = c>0 ? (s/c) : null;
+  }
+  const overall = cntAll>0 ? (sumAll/cntAll) : null;
+  return { perWorker, overall };
 }
 
 function renderMatrix(){
@@ -284,25 +295,64 @@ function renderMatrix(){
   const qItem = el.filterItem.value.trim().toLowerCase();
   const qWorker = el.filterWorker.value.trim().toLowerCase();
 
-  // 헤더
-  const theadTr = document.createElement("tr");
+  const shownWorkers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
+  const shownItems = [];
+  for (const grp of CATEGORIES){
+    for (const it of grp.items){
+      if (!matrixItems.includes(it)) continue;
+      if (qItem && !it.toLowerCase().includes(qItem)) continue;
+      shownItems.push(it);
+    }
+  }
+
+  // 평균 계산(가시 항목 기준)
+  const { perWorker, overall } = computeVisibleAverages(shownItems, shownWorkers);
+
+  // ===== thead (헤더 + 요약행) =====
+  const headRow = document.createElement("tr");
+  headRow.className = "header-row";
   const thCat = document.createElement("th"); thCat.textContent = "중분류"; thCat.className="item-col"; thCat.dataset.col = 0;
   const thItem = document.createElement("th"); thItem.textContent = "작업 항목"; thItem.className="item-col"; thItem.dataset.col = 1;
-  theadTr.appendChild(thCat); theadTr.appendChild(thItem);
-
-  const shownWorkers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
+  headRow.appendChild(thCat); headRow.appendChild(thItem);
   shownWorkers.forEach((w,i)=>{
     const th = document.createElement("th");
     th.className = "worker-col";
     th.dataset.col = 2+i;
     th.dataset.wi = 1+i;
     if (i>0 && ((i % 5)===0)) th.classList.add("block-start");
-    th.innerHTML = `<div class="wname" title="avg ${pct(workerAvgMap[w]||0)}%">${esc(w)}</div>`;
-    theadTr.appendChild(th);
+    th.innerHTML = `<div class="wname" title="서버 평균 ${pct(workerAvgMap[w]||0)}%">${esc(w)}</div>`;
+    headRow.appendChild(th);
   });
-  el.matrixThead.innerHTML = ""; el.matrixThead.appendChild(theadTr);
 
-  // 바디
+  // 요약(평균) 행
+  const sumRow = document.createElement("tr");
+  sumRow.className = "summary-row";
+  const sumThCat = document.createElement("th");
+  sumThCat.className = "item-col sum-col"; sumThCat.dataset.col = 0; sumThCat.textContent = ""; // 빈칸
+  const sumThItem = document.createElement("th");
+  sumThItem.className = "item-col sum-col"; sumThItem.dataset.col = 1;
+  sumThItem.innerHTML = `평균(가시 항목) ${Number.isFinite(overall) ? `<span class="badge b-total">전체 평균 ${pct(overall)}%</span>` : `<span class="badge">데이터 없음</span>`}`;
+  sumRow.appendChild(sumThCat); sumRow.appendChild(sumThItem);
+
+  shownWorkers.forEach((w,i)=>{
+    const v = perWorker[w];
+    const cls = Number.isFinite(v) ? (v>=80?"ok":(v>=50?"mid":"bad")) : "";
+    const th = document.createElement("th");
+    th.className = "worker-col sum-col";
+    th.dataset.col = 2+i;
+    th.dataset.wi = 1+i;
+    if (i>0 && ((i % 5)===0)) th.classList.add("block-start");
+    th.innerHTML = Number.isFinite(v)
+      ? `<span class="badge ${cls}">${pct(v)}%</span>`
+      : `<span class="badge">-</span>`;
+    sumRow.appendChild(th);
+  });
+
+  el.matrixThead.innerHTML = "";
+  el.matrixThead.appendChild(headRow);
+  el.matrixThead.appendChild(sumRow);
+
+  // ===== tbody =====
   const frag = document.createDocumentFragment();
 
   for (const grp of CATEGORIES){
@@ -350,8 +400,7 @@ function renderMatrix(){
         if (i>0 && ((i % 5)===0)) td.classList.add("block-start");
         td.innerHTML = `
           <div class="cell ${heatClass(val)}" role="button" tabindex="0"
-               data-w="${esc(w)}" data-item="${esc(item)}"
-               title="클릭하여 상세 보기">
+               data-w="${esc(w)}" data-item="${esc(item)}" title="클릭하여 상세 보기">
             <span class="pct">${pct(val)}%</span>
           </div>`;
         tr.appendChild(td);
@@ -378,27 +427,40 @@ function applyColumnWidth(){
   Array.from(document.querySelectorAll(".worker-col")).forEach(c => { c.style.minWidth = px + "px"; });
 }
 
-// ===== Excel (중분류/기준 포함) =====
+// ===== Excel (중분류/기준 + 요약행 포함) =====
 function exportMatrixXlsx(){
   const qItem = el.filterItem.value.trim().toLowerCase();
   const qWorker = el.filterWorker.value.trim().toLowerCase();
 
   const workers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
-  const header = ["중분류","작업 항목","기준", ...workers];
-
-  const aoa = [header];
+  const items = [];
   for (const grp of CATEGORIES){
-    const its = grp.items.filter(it => matrixItems.includes(it))
-                         .filter(it => !qItem || it.toLowerCase().includes(qItem));
-    for (const item of its){
-      const base = getBaseline(item);
-      const row = [grp.category, item, base];
-      for (const w of workers){
-        const d = (matrixData[item]||{})[w] || null;
-        row.push(Number.isFinite(d?.pci) ? Number(pct(d.pci)) : "");
-      }
-      aoa.push(row);
+    for (const it of grp.items){
+      if (!matrixItems.includes(it)) continue;
+      if (qItem && !it.toLowerCase().includes(qItem)) continue;
+      items.push({cat: grp.category, item: it});
     }
+  }
+
+  const { perWorker, overall } = computeVisibleAverages(items.map(r=>r.item), workers);
+
+  const header = ["중분류","작업 항목","기준", ...workers];
+  const aoa = [header];
+
+  // 요약행(엑셀 첫줄)
+  const sumRow = ["-","평균(가시 항목)","-",
+    ...workers.map(w => Number.isFinite(perWorker[w]) ? Number(pct(perWorker[w])) : "")
+  ];
+  aoa.push(sumRow);
+
+  for (const {cat, item} of items){
+    const base = getBaseline(item);
+    const row = [cat, item, base];
+    for (const w of workers){
+      const d = (matrixData[item]||{})[w] || null;
+      row.push(Number.isFinite(d?.pci) ? Number(pct(d.pci)) : "");
+    }
+    aoa.push(row);
   }
 
   const wb = XLSX.utils.book_new();
@@ -456,14 +518,12 @@ function renderPersonChart(){
   const rows = (currentRows||[]).slice().filter(r => (r.pci_pct>0)||(r.self_pct>0)||(r.work_pct>0));
   rows.sort((a,b)=> b.pci_pct - a.pci_pct || b.total_count - a.total_count);
 
-  // 너무 많을 경우 적당히 제한 (가로 스크롤로 충분히 보되 성능 보호)
   const MAX_BARS = 80;
   const list = rows.slice(0, MAX_BARS);
   const labels = list.map(r=>r.item);
   const work = list.map(r=>r.work_pct);
   const self = list.map(r=>r.self_pct);
 
-  // 가로 스크롤: 바 1개당 폭
   const PX_PER_BAR = 56;
   const targetWidth = Math.max(el.chartScroll.clientWidth, Math.ceil(labels.length * PX_PER_BAR));
   el.chartInner.style.width = targetWidth + "px";
@@ -476,13 +536,13 @@ function renderPersonChart(){
       {label:"자가체크(최대 20)", data:self, stack:"pci"}
     ] },
     options:{
-      responsive:false, // 캔버스 폭은 부모에서 제어
+      responsive:false,
       maintainAspectRatio:false,
       plugins:{
         legend:{position:"top"},
         tooltip:{enabled:true},
         datalabels:{
-          display: labels.length <= 30, // 많으면 자동 숨김
+          display: labels.length <= 30,
           anchor:"end", align:"end",
           formatter:v=>`${pct(v)}%`, color:"#333", clamp:true
         }
@@ -506,7 +566,6 @@ function renderPersonTable(){
   const q = el.searchItem.value.trim().toLowerCase();
   const rows = (currentRows||[]).filter(r=>!q || r.item.toLowerCase().includes(q));
 
-  // 중분류별 그룹핑
   const groups = new Map();
   for (const r of rows){
     const cat = getCategory(r.item);
@@ -516,7 +575,6 @@ function renderPersonTable(){
 
   const frag = document.createDocumentFragment();
   for (const [cat, list] of groups){
-    // 섹션 헤더
     const hr = document.createElement("tr");
     hr.className = "cat-row";
     const td = document.createElement("td");
@@ -525,7 +583,6 @@ function renderPersonTable(){
     hr.appendChild(td);
     frag.appendChild(hr);
 
-    // 항목 행
     for (const r of list){
       const badgeClass = r.pci_pct >= 80 ? "ok" : (r.pci_pct >= 50 ? "mid" : "bad");
       const tr = document.createElement("tr");
@@ -549,7 +606,6 @@ function renderPersonTable(){
   el.tbody.innerHTML = ""; el.tbody.appendChild(frag);
 }
 
-// Excel(개인)
 function exportPersonXlsx(){
   if (!currentRows?.length) return alert("내보낼 데이터가 없습니다.");
 
@@ -633,16 +689,11 @@ async function openBreakdown(worker, item){
     `;
     showModal(`산출 근거 — ${esc(worker)} / ${esc(item)}`, box);
 
-    // 아코디언 컨트롤 바인딩
     const btnExpand = document.getElementById("btnExpandAll");
     const btnCollapse = document.getElementById("btnCollapseAll");
     if (btnExpand && btnCollapse){
-      btnExpand.addEventListener("click", ()=>{
-        el.modalBody.querySelectorAll("details.acc").forEach(d=>d.setAttribute("open",""));
-      });
-      btnCollapse.addEventListener("click", ()=>{
-        el.modalBody.querySelectorAll("details.acc").forEach(d=>d.removeAttribute("open"));
-      });
+      btnExpand.addEventListener("click", ()=>{ el.modalBody.querySelectorAll("details.acc").forEach(d=>d.setAttribute("open","")); });
+      btnCollapse.addEventListener("click", ()=>{ el.modalBody.querySelectorAll("details.acc").forEach(d=>d.removeAttribute("open")); });
     }
   }catch(e){
     console.error("상세 조회 실패:", e);
@@ -661,4 +712,11 @@ function hideModal(){
   document.body.classList.remove("modal-open");
   el.overlay.classList.remove("show");
   el.modal.classList.remove("show");
+}
+
+// baseline 추출(데이터에서 첫 개체 사용)
+function getBaseline(item){
+  const d = matrixData[item] || {};
+  const first = Object.values(d)[0];
+  return first?.baseline ?? "";
 }

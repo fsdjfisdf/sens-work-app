@@ -24,15 +24,15 @@
   <main class="container wide">
     <!-- 탭 -->
     <section class="tabs">
-      <button class="tab active" data-tab="tab-matrix" aria-controls="tab-matrix" aria-selected="true">전체 인원 매트릭스</button>
+      <button class="tab active" data-tab="tab-matrix" aria-controls="tab-matrix" aria-selected="true">전체 인원 보기</button>
       <button class="tab" data-tab="tab-person" aria-controls="tab-person" aria-selected="false">개인 보기</button>
     </section>
 
-    <!-- ===== 전체 인원 매트릭스 ===== -->
+    <!-- ===== 전체 인원 보기 ===== -->
     <section id="tab-matrix" class="panel tab-pane active" role="tabpanel">
       <div class="panel-header">
-        <h2>전체 인원 매트릭스 (세로: 작업 항목, 가로: 작업자)</h2>
-        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거 모달이 열려요. 좌측 고정열: <b>중분류 / 항목(기준)</b>.</div>
+        <h2>전체 인원 매트릭스</h2>
+        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거를 확인할 수 있어요.</div>
       </div>
 
       <div class="filters">
@@ -55,7 +55,7 @@
         <div class="field">
           <label for="density">보기 밀도</label>
           <select id="density" class="input">
-            <option value="compact">컴팩트(많이 보기)</option>
+            <option value="compact">많이 보기</option>
             <option value="comfortable">보통</option>
           </select>
         </div>
@@ -73,7 +73,8 @@
 
       <div class="matrix-wrap" id="matrixWrap">
         <div class="loading-line" aria-hidden="true"></div>
-        <table id="matrixTable" class="matrix dense">
+        <!-- 개인 보기 테이블 룩 & 필에 맞춘 매트릭스 -->
+        <table id="matrixTable" class="matrix table-like dense">
           <thead id="matrixThead"></thead>
           <tbody id="matrixTbody"></tbody>
         </table>
@@ -188,9 +189,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <div class="md-title" id="modalTitle">상세</div>
-        <div class="modal-tools">
-          <!-- 펼침/접기 버튼은 JS에서 필요 시 주입 -->
-        </div>
+        <div class="modal-tools"></div>
         <button class="btn ghost" id="modalClose" aria-label="모달 닫기">닫기</button>
       </div>
       <div class="modal-body" id="modalBody"></div>
