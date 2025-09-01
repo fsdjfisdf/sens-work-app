@@ -558,43 +558,77 @@ function updateCards(){
 }
 
 function renderPersonChart(){
-  const rows = (currentRows||[]).slice().filter(r => (r.pci_pct>0)||(r.self_pct>0)||(r.work_pct>0));
+  // ✅ 0%도 포함: 필터 제거
+  const rows = (currentRows || []).slice();
+
+  // 보기 좋게: PCI 내림차순 → 같은 값이면 수행횟수 많은 순
   rows.sort((a,b)=> b.pci_pct - a.pci_pct || b.total_count - a.total_count);
 
-  const MAX_BARS = 80;
-  const list = rows.slice(0, MAX_BARS);
-  const labels = list.map(r=>r.item);
-  const work = list.map(r=>r.work_pct);
-  const self = list.map(r=>r.self_pct);
+  const labels = rows.map(r => r.item);
+  const work   = rows.map(r => Number(r.work_pct) || 0);
+  const self   = rows.map(r => Number(r.self_pct) || 0);
 
-  const PX_PER_BAR = 56;
-  const targetWidth = Math.max(el.chartScroll.clientWidth, Math.ceil(labels.length * PX_PER_BAR));
+  // 가로 폭 계산 (막대당 고정 px)
+  const PX_PER_BAR = 56; // 필요하면 48~60 사이로 조절 가능
+  const minWidth   = el.chartScroll.clientWidth; // 컨테이너 가시 폭
+  const targetWidth = Math.max(minWidth, Math.ceil(labels.length * PX_PER_BAR));
+
+  // 스크롤 영역의 내부 래퍼 폭을 먼저 늘려줌
   el.chartInner.style.width = targetWidth + "px";
 
-  if (stackedChart) stackedChart.destroy();
+  // ✅ Chart.js는 responsive:false 이므로 캔버스 '속성' 폭/높이를 매번 동기화해야 함
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const cssH = 260; // CSS 높이
+  // CSS 크기
+  el.stackedCanvas.style.width  = targetWidth + "px";
+  el.stackedCanvas.style.height = cssH + "px";
+  // 실제 픽셀 크기(레티나 대응)
+  el.stackedCanvas.width  = Math.floor(targetWidth * dpr);
+  el.stackedCanvas.height = Math.floor(cssH * dpr);
+
+  // 기존 차트 정리
+  if (stackedChart) { stackedChart.destroy(); stackedChart = null; }
+
+  // 새 차트 렌더
   stackedChart = new Chart(el.stackedCanvas.getContext("2d"), {
-    type:"bar",
-    data:{ labels, datasets:[
-      {label:"작업이력(최대 80)", data:work, stack:"pci"},
-      {label:"자가체크(최대 20)", data:self, stack:"pci"}
-    ] },
-    options:{
-      responsive:false,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{position:"top"},
-        tooltip:{enabled:true},
-        datalabels:{
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "작업이력(최대 80)", data: work, stack: "pci" },
+        { label: "자가체크(최대 20)", data: self, stack: "pci" }
+      ]
+    },
+    options: {
+      // ❗ responsive:false 이므로 위에서 width/height를 직접 맞춰줌
+      responsive: false,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top" },
+        tooltip: { enabled: true },
+        datalabels: {
+          // 항목이 너무 많으면 라벨은 자동 감춤
           display: labels.length <= 30,
-          anchor:"end", align:"end",
-          formatter:v=>`${pct(v)}%`, color:"#333", clamp:true
+          anchor: "end",
+          align: "end",
+          formatter: v => `${(Number.isFinite(v) ? v : 0).toFixed(1)}%`,
+          color: "#333",
+          clamp: true
         }
       },
-      scales:{ x:{stacked:true}, y:{stacked:true, min:0, max:100, ticks:{callback:v=>v+"%"} } }
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          min: 0, max: 100,
+          ticks: { callback: v => v + "%" }
+        }
+      }
     },
-    plugins:[ChartDataLabels]
+    plugins: [ChartDataLabels]
   });
 }
+
 
 function sortPersonRows(){
   const mode = el.sortBy.value;
