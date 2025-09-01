@@ -630,37 +630,41 @@ async function openBreakdown(worker, item){
     const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
     const { data } = await axios.get(url);
 
-    const logsHtml = (data.logs && data.logs.length)
-      ? `
-         <div class="table-scroll">
-           <table class="table" style="min-width: 860px">
-             <thead>
-               <tr>
-                 <th>일자</th>
-                 <th>ID</th>
-                 <th>장비타입</th>
-                 <th>역할</th>
-                 <th>가중치</th>
-                 <th>원본 작업자기재</th>
-               </tr>
-             </thead>
-             <tbody>
-               ${data.logs.map(l=>{
-                 const d = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
-                 return `
-                   <tr>
-                     <td>${d}</td>
-                     <td>${l.id}</td>
-                     <td>${esc(l.equipment_type||"-")}</td>
-                     <td>${esc(l.role||"-")}</td>
-                     <td>${l.weight ?? "-"}</td>
-                     <td>${esc(l.task_man_raw||"")}</td>
-                   </tr>`;
-               }).join("")}
-             </tbody>
-           </table>
-         </div>`
-      : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
+const logsHtml = (data.logs && data.logs.length)
+    ? `
+       <div class="table-scroll">
+         <table class="table" style="min-width: 860px">
+           <thead>
+             <tr>
+               <th>일자</th>
+               <th>ID</th>
+               <th>설비명</th>
+               <th>역할</th>
+               <th>가중치</th>
+               <th>원본 작업자기재</th>
+             </tr>
+           </thead>
+           <tbody>
+             ${data.logs.map(l=>{
+               const d = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
+               // 설비명 우선순위: equipment_name → (없으면) task_name → (없으면) "-"
+               const equipName = (l.equipment_name && String(l.equipment_name).trim())
+                 || (l.task_name && String(l.task_name).trim())
+                 || "-";
+               return `
+                 <tr>
+                   <td>${d}</td>
+                   <td>${l.id}</td>
+                   <td>${esc(equipName)}</td>
+                   <td>${esc(l.role||"-")}</td>
+                   <td>${l.weight ?? "-"}</td>
+                   <td>${esc(l.task_man_raw||"")}</td>
+                 </tr>`;
+             }).join("")}
+           </tbody>
+         </table>
+       </div>`
+    : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
     const box = `
       <div class="modal-body">

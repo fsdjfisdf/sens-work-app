@@ -307,6 +307,8 @@ exports.getWorkerItemBreakdown = async (req, res) => {
           id: r.id,
           task_date: r.task_date,
           equipment_type: r.equipment_type,
+          equipment_name: r.equipment_name,   // 추가
+          task_name: r.task_name,             // 추가
           task_man_raw: r.task_man,
           role,
           weight: p.weight,
