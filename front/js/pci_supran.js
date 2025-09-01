@@ -7,7 +7,7 @@
      GET /api/pci/supra-n/worker/:name           -> 한 명의 rows (전체 기간)
    ========================================================================== */
 
-const API_BASE = ""; // 같은 오리진(3001)에서 제공 → 상대경로
+const API_BASE = "http://3.37.73.151:3001"; // 같은 오리진(3001)에서 제공 → 상대경로
 
 // ===== 전역 상태 =====
 let workerNames = [];                  // 작업자 이름 배열
@@ -135,69 +135,39 @@ function bindMatrixEvents(){
 }
 
 async function loadWorkerList(){
-  const url = `${API_BASE}/api/pci/supra-n/summary?limit=9999`;
   try{
-    const res = await axios.get(url);
-    const arr = (res.data?.workers || []).map(w=>w.worker).filter(Boolean);
-    arr.sort((a,b)=>a.localeCompare(b,'ko'));
-    workerNames = arr;
-    el.workerList.innerHTML = arr.map(n=>`<option value="${esc(n)}"></option>`).join("");
+    const res = await axios.get(`/api/pci/supra-n/workers`);
+    workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
     workerNames = [];
   }
 }
 
+
 async function buildMatrix(){
   el.matrixLoading.classList.remove("hidden");
   el.matrixInfo.textContent = "";
 
-  // 1) 모든 작업자에 대해 rows 불러오기
-  const names = workerNames.slice(); // 복사
-  const results = await mapLimit(names, 6, async (name)=>{
-    const url = `${API_BASE}/api/pci/supra-n/worker/${encodeURIComponent(name)}`;
-    const res = await axios.get(url);
-    return { name, rows: res.data?.rows || [], summary: res.data?.summary || null };
-  });
-
-  // 2) 항목 set / 데이터 생성
-  const itemSet = new Set();
-  const data = {};    // item → worker → {pci, work, self}
-  const avgMap = {};  // worker → 평균
-
-  for (const r of results){
-    if (!r) continue;
-    const { name, rows, summary } = r;
-    if (!rows) continue;
-
-    let sum=0, cnt=0;
-    for (const row of rows){
-      itemSet.add(row.item);
-      data[row.item] = data[row.item] || {};
-      data[row.item][name] = { pci: row.pci_pct, work: row.work_pct, self: row.self_pct };
-
-      // 평균용(참여 항목만)
-      if ((row.pci_pct ?? 0) > 0){
-        sum += Number(row.pci_pct);
-        cnt += 1;
-      }
-    }
-    avgMap[name] = cnt ? round1(sum/cnt) : 0;
+  try{
+    const res = await axios.get(`/api/pci/supra-n/matrix`);
+    const { workers, items, data, worker_avg_pci } = res.data || {};
+    matrixWorkers = workers || [];
+    matrixItems = items || [];
+    matrixData = data || {};
+    workerAvgMap = worker_avg_pci || {};
+    sortMatrixWorkers();
+    renderMatrix();
+    el.matrixInfo.textContent = `총 항목 ${matrixItems.length}개 × 작업자 ${matrixWorkers.length}명 = ${matrixItems.length * matrixWorkers.length} 셀`;
+  }catch(e){
+    console.error("매트릭스 로드 실패:", e);
+    alert("매트릭스 로드 중 오류가 발생했습니다.");
+  }finally{
+    el.matrixLoading.classList.add("hidden");
   }
-
-  matrixItems = Array.from(itemSet).sort((a,b)=>a.localeCompare(b,'ko'));
-  matrixWorkers = names.slice();
-  matrixData = data;
-  workerAvgMap = avgMap;
-
-  sortMatrixWorkers(); // 기본: 평균 높은순
-  renderMatrix();
-
-  const kItems = matrixItems.length;
-  const kWorkers = matrixWorkers.length;
-  el.matrixInfo.textContent = `총 항목 ${kItems}개 × 작업자 ${kWorkers}명 = ${kItems*kWorkers} 셀`;
-  el.matrixLoading.classList.add("hidden");
 }
+
 
 function sortMatrixWorkers(){
   const mode = el.sortWorkers.value;

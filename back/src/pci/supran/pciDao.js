@@ -50,3 +50,15 @@ exports.fetchAdditionalCountsPivot = async () => {
   }
   return pivot;
 };
+
+// 추가: 모든 Self 체크 행 로드(이름 포함)
+exports.fetchSelfCheckAll = async () => {
+  const [rows] = await pool.query(`SELECT * FROM SUPRA_N_MAINT_SELF`);
+  return rows;
+};
+
+// 추가: Self 테이블의 이름만 빠르게 로드
+exports.fetchSelfCheckNames = async () => {
+  const [rows] = await pool.query(`SELECT name FROM SUPRA_N_MAINT_SELF WHERE name IS NOT NULL AND name <> ''`);
+  return rows.map(r => r.name);
+};

@@ -2,6 +2,7 @@
 const { BASELINE, normalizeItem, toSelfCol, workerAliases } = require("./pciConfig");
 const { parseTaskMen, round1, clamp } = require("./pciUtils");
 const { fetchWorkLogsForSupraN, fetchSelfCheckRow, fetchAdditionalCountsPivot } = require("./pciDao");
+const { fetchSelfCheckAll, fetchSelfCheckNames } = require("./pciDao");
 
 /** 1명 계산 */
 exports.getWorkerPci = async (req, res) => {
@@ -136,5 +137,138 @@ exports.getAllSummary = async (req, res) => {
   } catch (err) {
     console.error("[PCI SUPRA N] getAllSummary error:", err);
     return res.status(500).json({ message: "internal_error", detail: String(err?.message || err) });
+  }
+};
+
+// (A) 초경량: 작업자 이름 리스트만 반환
+exports.getWorkerNames = async (req, res) => {
+  try {
+    const [logs, addPivot, selfNames] = await Promise.all([
+      fetchWorkLogsForSupraN({}),              // 전체 기간
+      fetchAdditionalCountsPivot(),
+      fetchSelfCheckNames(),
+    ]);
+
+    const set = new Set(selfNames.map(workerAliases));
+
+    // work_log에서 추출
+    for (const r of logs) {
+      for (const p of parseTaskMen(r.task_man)) set.add(workerAliases(p.name));
+    }
+    // 교육/가산 테이블에서 추출
+    for (const item of Object.keys(addPivot)) {
+      for (const col of Object.keys(addPivot[item])) set.add(workerAliases(col));
+    }
+
+    const workers = [...set].sort((a,b)=>a.localeCompare(b,'ko'));
+    res.json({ workers });
+  } catch (e) {
+    console.error("[PCI SUPRA N] getWorkerNames error:", e);
+    res.status(500).json({ message: "internal_error" });
+  }
+};
+
+// (B) 한 방에 매트릭스 계산
+exports.getMatrix = async (req, res) => {
+  try {
+    const [logs, addPivot, selfRows] = await Promise.all([
+      fetchWorkLogsForSupraN({}),
+      fetchAdditionalCountsPivot(),
+      fetchSelfCheckAll(),
+    ]);
+
+    // self 체크 맵: worker -> {COL: number}
+    const selfMap = {};
+    for (const row of selfRows) {
+      const w = workerAliases(row.name);
+      selfMap[w] = row;
+    }
+
+    // 로그 카운트: counts[worker][item] = {main, support}
+    const counts = {};
+    for (const r of logs) {
+      const item = normalizeItem(r.transfer_item);
+      if (!BASELINE[item]) continue;
+      const people = parseTaskMen(r.task_man);
+      for (const p of people) {
+        const w = workerAliases(p.name);
+        counts[w] = counts[w] || {};
+        counts[w][item] = counts[w][item] || { main: 0, support: 0 };
+        const role = p.weight >= 1 ? "main" : "support";
+        counts[w][item][role] += p.weight; // main=1.0 / support=0.2
+      }
+    }
+
+    // 교육/가산 합산: addCounts[worker][item] = number
+    const addCounts = {};
+    for (const itemRaw of Object.keys(addPivot)) {
+      const norm = normalizeItem(itemRaw);
+      if (!BASELINE[norm]) continue;
+      for (const col of Object.keys(addPivot[itemRaw])) {
+        const w = workerAliases(col);
+        addCounts[w] = addCounts[w] || {};
+        addCounts[w][norm] = (addCounts[w][norm] || 0) + Number(addPivot[itemRaw][col] || 0);
+      }
+    }
+
+    // 모든 작업자 / 항목 축
+    const workerSet = new Set([
+      ...Object.keys(counts),
+      ...Object.keys(addCounts),
+      ...Object.keys(selfMap),
+    ]);
+    const itemList = Object.keys(BASELINE).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    const workers = [...workerSet].sort((a,b)=>a.localeCompare(b,'ko'));
+
+    // 계산
+    const data = {};                 // data[item][worker] = {pci, work, self, total_count, main_count, support_count, add_count, baseline}
+    const workerAvg = {};            // worker -> avg pci (참여 항목만)
+
+    for (const item of itemList) {
+      data[item] = {};
+      for (const w of workers) {
+        const c = (counts[w] && counts[w][item]) || { main:0, support:0 };
+        const add = (addCounts[w] && addCounts[w][item]) || 0;
+        const total = c.main + c.support + add;
+
+        const base = BASELINE[item];
+        const workPct = base > 0 ? Math.round((Math.min(1, total / base) * 80) * 10) / 10 : 0;
+
+        // self 20%
+        let selfPct = 0;
+        const row = selfMap[w];
+        if (row) {
+          const col = toSelfCol(item); // 예: LP_ESCORT
+          const val = Number(row[col] ?? 0);
+          if (Number.isFinite(val) && val > 0) selfPct = 20;
+        }
+
+        const pci = Math.max(0, Math.min(100, workPct + selfPct));
+        data[item][w] = {
+          pci, work: workPct, self: selfPct,
+          total_count: Math.round(total * 10) / 10,
+          main_count: Math.round((c.main||0) * 10)/10,
+          support_count: Math.round((c.support||0) * 10)/10,
+          add_count: add,
+          baseline: base,
+        };
+
+        if (pci > 0) {
+          const acc = workerAvg[w] || { s:0, n:0 };
+          acc.s += pci; acc.n += 1; workerAvg[w] = acc;
+        }
+      }
+    }
+
+    const worker_avg_pci = {};
+    for (const w of workers) {
+      const acc = workerAvg[w];
+      worker_avg_pci[w] = acc ? Math.round((acc.s/acc.n)*10)/10 : 0;
+    }
+
+    res.json({ workers, items: itemList, data, worker_avg_pci });
+  } catch (e) {
+    console.error("[PCI SUPRA N] getMatrix error:", e);
+    res.status(500).json({ message: "internal_error" });
   }
 };
