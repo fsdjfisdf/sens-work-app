@@ -190,6 +190,8 @@ app.use("/api/pci/integer-setup", pciIntegerSetupRoute);
 const pciEcoliteSetupRoute = require("../src/routes/pciEcoliteSetupRoute");
 app.use("/api/pci/ecolite-setup", pciEcoliteSetupRoute);
 
+const pciGenevaSetupRoute = require("../src/routes/pciGenevaSetupRoute");
+app.use("/api/pci/geneva-setup", pciGenevaSetupRoute);
 
 
 
