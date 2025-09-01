@@ -326,7 +326,12 @@ exports.getWorkerItemBreakdown = async (req, res) => {
     for (const key of Object.keys(addPivot)) {
       const norm = normalizeItem(key);
       if (norm !== itemNorm) continue;
-      addCount += Number(addPivot[key]?.[worker] || 0);
+      // addPivot의 열 이름(사람 이름)에도 별칭 통일 적용
+      for (const col of Object.keys(addPivot[key] || {})) {
+        if (workerAliases(col) === worker) {
+          addCount += Number(addPivot[key][col] || 0);
+        }
+      }
     }
 
     // 3) 자가(20%)

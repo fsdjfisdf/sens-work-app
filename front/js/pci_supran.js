@@ -280,8 +280,12 @@ function computeVisibleAverages(shownItems, shownWorkers){
   for (const w of shownWorkers){
     let s=0, c=0;
     for (const it of shownItems){
-      const v = (matrixData[it]?.[w]?.pci);
-      if (Number.isFinite(v)){ s+=v; c++; sumAll+=v; cntAll++; }
+      const d = matrixData[it]?.[w];
+      // 개인 보기와 동일: '참여/자가체크가 하나라도 있으면(=pci>0)'만 포함
+      if (d && Number.isFinite(d.pci) && ((d.work ?? 0) > 0 || (d.self ?? 0) > 0)) {
+        s += d.pci; c++;
+        sumAll += d.pci; cntAll++;
+      }
     }
     perWorker[w] = c>0 ? (s/c) : null;
   }
