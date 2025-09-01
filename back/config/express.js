@@ -166,11 +166,12 @@ app.use('/api/pci/integer', pciIntegerRoute);
 const pciPreciaRoute = require('../src/routes/pciPreciaRoute');
 app.use('/api/pci/precia', pciPreciaRoute);
 
+const pciGenevaRoute = require('../src/routes/pciGenevaRoute');
+app.use('/api/pci/geneva', pciGenevaRoute);
+
 const pciEcoliteRoute = require('../src/routes/pciEcoliteRoute');
 app.use('/api/pci/ecolite', pciEcoliteRoute);
 
-const pciGenevaRoute = require('../src/routes/pciGenevaRoute');
-app.use('/api/pci/geneva', pciGenevaRoute);
 
 
 
