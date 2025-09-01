@@ -1,6 +1,6 @@
 // src/pci/integer_setup/pciController.js
 const { BASELINE, normalizeItem, toDisplayCategory, workerAliases, CHECK_TITLES } = require("./pciConfig");
-const { parseTaskMen, round1, clamp } = require("../integer/pciUtils"); // 기존 utils 재사용 경로 확인
+const { parseTaskMen, round1, clamp } = require("../precia_setup/pciUtils");
 const {
   fetchSetupLogsForInteger,
   fetchSelfRow,

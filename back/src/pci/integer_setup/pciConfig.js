@@ -7,11 +7,8 @@ exports.ALLOWED_EQUIP_TYPES = [
   "INTEGER XP"
 ];
 
-/** 공통 유틸 */
 const strip = (s) => (s ?? "").toString().trim();
 const upper = (s) => strip(s).toUpperCase();
-
-/** Canon (카테고리/키 매칭용) */
 const canon = (s) =>
   upper(s)
     .replace(/ASS'Y/g, "ASSY")
@@ -22,7 +19,7 @@ const canon = (s) =>
     .trim();
 exports.canon = canon;
 
-/** 기준 작업 수(카테고리) — INTEGER 전용 */
+/** 기준 작업 수 */
 exports.BASELINE = {
   "INSTALLATION PREPARATION": 5,
   "FAB IN": 5,
@@ -39,21 +36,12 @@ exports.BASELINE = {
   "PROCESS CONFIRM": 3,
 };
 
-/** 표기 차이 보정(카테고리/소항목) */
+/** 표기 보정 */
 const ALIASES = {
-  // 카테고리 표기
   "INSTALLATION PREPERATION": "INSTALLATION PREPARATION",
   "FABIN": "FAB IN",
   "CABLE HOOKUP": "CABLE HOOK UP",
-  "POWER TURN ON": "POWER TURN ON",
-  "UTILITY TURN ON": "UTILITY TURN ON",
-  "GAS TURN ON": "GAS TURN ON",
-  "PART INSTALLATION": "PART INSTALLATION",
-  "LEAK CHECK": "LEAK CHECK",
-  "CUSTOMER CERTIFICATION": "CUSTOMER CERTIFICATION",
-  "PROCESS CONFIRM": "PROCESS CONFIRM",
-
-  // 소항목 흔한 표기
+  // 소항목 보정(대표 예)
   "EQUIPMENT CLEARANCE CHECK": "EQUIPMENT_CLEARANCE_CHECK",
   "GRATING OPENING CHECK": "GRATING_OPENING_CHECK",
   "PACKING LIST VERIFICATION": "PACKING_LIST_VERIFICATION",
@@ -63,16 +51,13 @@ const ALIASES = {
   "RACK ELCB MCB UNDERSTANDING": "RACK_ELCB_MCB_UNDERSTANDING",
   "MODULE MCB TURN ON": "MODULE_MCB_TURN_ON",
   "SYCON TROUBLESHOOTING": "SYCON_TROUBLESHOOTING",
-  "CHECKLIST COMPLETION": "CHECKLIST_COMPLETION",
   "IP ADDRESS CHANGE": "IP_ADDRESS_CHANGE",
-  "UTILITY TURN ON PRECHECK": "UTILITY_TURN_ON_PRECHECK",
   "SETUP INI MODIFICATION": "SETUP_INI_MODIFICATION",
   "DILLUTION SIGNAL CHECK": "DILLUTION_SIGNAL_CHECK",
   "CHILLER HEAT EXCHANGER TURN ON": "CHILLER_HEAT_EXCHANGER_TURN_ON",
   "CHILLER HEAT EXCHANGER CHECK": "CHILLER_HEAT_EXCHANGER_CHECK",
 };
 
-/** 카테고리(표시명) 정규화 */
 exports.toDisplayCategory = (raw) => {
   const s = upper(raw).replace(/_/g, " ").trim();
   const via = ALIASES[s] || s;
@@ -81,7 +66,10 @@ exports.toDisplayCategory = (raw) => {
   return hit || via;
 };
 
-/** 항목 키 정규화 (DB 컬럼명 기준으로 매칭) */
+/** 컨트롤러 호환용: 카테고리 정규화 */
+exports.normalizeItem = (raw) => exports.toDisplayCategory(raw);
+
+/** 컬럼 키 정규화(소항목) */
 exports.normalizeKey = (raw) => {
   if (!raw) return "";
   const s = upper(raw).replace(/\s+/g, " ").trim();
@@ -89,15 +77,10 @@ exports.normalizeKey = (raw) => {
   return via.replace(/ /g, "_");
 };
 
-/** 작업자 별칭(동일인 취급) */
-exports.workerAliases = (name) => {
-  if (!name) return "";
-  return name.replace(/\(.*?\)/g, "").trim().replace(/\s+/g, " ");
-};
+exports.workerAliases = (name) =>
+  (name || "").replace(/\(.*?\)/g, "").trim().replace(/\s+/g, " ");
 
-/** 카테고리 → (DB) 소항목 배열
- *  - INTEGER_SETUP 테이블의 실제 컬럼명들만 포함
- */
+/** 카테고리 → 소항목(=INTEGER_SETUP 컬럼들) */
 exports.CATEGORY_ITEMS = {
   INSTALLATION_PREPARATION: [
     "CUSTOMER_OHT_LINE_CHECK",
@@ -245,10 +228,16 @@ exports.CATEGORY_ITEMS = {
     "ENVIRONMENTAL_QUAL_TEST",
     "OHT_AUTO_TRANSFER_CERTIFICATION",
   ],
-  PROCESS_CONFIRM: [
-    "PARTICLE_TEST",
-    "EA_TEST",
-  ],
+  PROCESS_CONFIRM: ["PARTICLE_TEST", "EA_TEST"],
+};
+
+/** DAO에서 쓰는: 카테고리로 체크리스트 키 배열 얻기 */
+exports.getChecklistKeysForCategory = (catDisplay) => {
+  const disp = exports.toDisplayCategory(catDisplay);
+  const key = Object.keys(exports.CATEGORY_ITEMS).find(
+    (k) => canon(k) === canon(disp)
+  );
+  return key ? exports.CATEGORY_ITEMS[key] : [];
 };
 
 /** 소항목 → 설명(프런트 툴팁/모달에 활용) */
