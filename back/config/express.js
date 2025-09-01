@@ -157,6 +157,8 @@ app.post('/approval/work-log/:id/resubmit', jwtMiddleware, workLogController.res
 const pciSupraNRoute = require('../src/routes/pciSupraNRoute');
 app.use('/api/pci/supra-n', pciSupraNRoute);
 
+const pciSupraXPRoute = require('../src/routes/pciSupraXPRoute');
+app.use('/api/pci/supra-xp', pciSupraXPRoute);
 
 
   

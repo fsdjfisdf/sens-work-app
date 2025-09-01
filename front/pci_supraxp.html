@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>S-WORKS | SUPRA N PCI</title>
+  <title>S-WORKS | SUPRA XP PCI</title>
 
+  <!-- 기존 CSS 재사용 -->
   <link rel="stylesheet" href="./css/pci_supran.css"/>
 
   <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
@@ -151,7 +152,7 @@
         <div class="card stat">
           <div class="label">평균에 포함된 항목수</div>
           <div class="value"><span id="itemsCnt">-</span><span class="unit">개</span></div>
-          <div class="sub">참여/자가체크 0인 항목 제외</div>
+          <div class="sub">모든 항목 포함(0% 포함)</div>
         </div>
       </section>
 
@@ -208,7 +209,7 @@
 
   <footer class="footer">
     <div class="inner">
-      <span>© S-WORKS · SUPRA N PCI</span>
+      <span>© S-WORKS · SUPRA XP PCI</span>
     </div>
   </footer>
 
@@ -225,7 +226,7 @@
     </div>
   </div>
 
-  <script src="./js/pci_supran.js" defer></script>
+  <script src="./js/pci_supraxp.js" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", function() {
         const token = localStorage.getItem("x-access-token");
@@ -246,7 +247,6 @@
         }
 
         const signOutButton = document.querySelector("#sign-out");
-
         if (signOutButton) {
             signOutButton.addEventListener("click", function() {
                 localStorage.removeItem("x-access-token");
@@ -255,6 +255,7 @@
                 window.location.replace("./signin.html");
             });
         }
+
         const menuBtn = document.querySelector('.menu-btn');
         const menuBar = document.querySelector('.menu-bar');
 
@@ -268,16 +269,15 @@
             }
         });
     });
+
     document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('x-access-token');
-            if (!token) {
-                alert('로그인이 필요합니다.');
-                window.location.replace('./signin.html');
-                return;
-            }
-    }
-)
-    
-</script>
+      const token = localStorage.getItem('x-access-token');
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+      }
+    });
+  </script>
 </body>
 </html>

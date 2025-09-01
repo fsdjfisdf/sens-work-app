@@ -1,9 +1,10 @@
 /* ==========================================================================
-   SUPRA N PCI — 전체 보기 요약행(평균) + 개인 보기 테이블 룩&필 적용
+   SUPRA XP/XQ PCI — 전체 보기 요약행(평균) + 개인 보기 테이블 룩&필 적용
    - Thead 2단: ① 헤더 ② 요약(평균) 행
    - 요약(평균) 행은 현재 필터에 노출된 항목/작업자 기준으로 즉시 재계산
    - 전체 평균(가시 항목 기준) 배지 제공
-   - 모달 아코디언/버튼/차트/엑셀 유지
+   - 차트 축소 문제 해결(캔버스 크기 고정 + destroy/recreate)
+   - 0% 항목도 모두 포함 (매트릭스/개인 보기 공통)
    ========================================================================== */
 
 const API_BASE = "";
@@ -67,27 +68,66 @@ const el = {
   modalClose: $("modalClose"),
 };
 
-// ===== 카테고리 정의 =====
+// ===== 카테고리 정의 (SUPRA XP/XQ) =====
 const CATEGORIES = [
-  { category: "ESCORT",             items: ["LP ESCORT","ROBOT ESCORT"] },
-  { category: "EFEM ROBOT",         items: ["SR8241 TEACHING","SR8240 TEACHING","M124 TEACHING","EFEM FIXTURE","EFEM ROBOT REP","EFEM ROBOT CONTROLLER REP"] },
-  { category: "TM ROBOT",           items: ["SR8250 TEACHING","SR8232 TEACHING","TM FIXTURE", "TM ROBOT REP","TM ROBOT CONTROLLER REP","PASSIVE PAD REP"] },
-  { category: "BM MODULE",          items: ["PIN CYLINDER","PUSHER CYLINDER","IB FLOW","DRT"] },
-  { category: "FFU (EFEM, TM)",     items: ["FFU CONTROLLER","FAN","MOTOR DRIVER"] },
-  { category: "FCIP",               items: ["R1","R3","R5","R3 TO R5","PRISM"] },
-  { category: "MICROWAVE",          items: ["MICROWAVE","APPLICATOR","GENERATOR"] },
-  { category: "CHUCK",              items: ["CHUCK"] },
-  { category: "PROCESS KIT",        items: ["PROCESS KIT"] },
-  { category: "LEAK",               items: ["HELIUM DETECTOR"] },
-  { category: "PIN",                items: ["HOOK LIFT PIN","BELLOWS","PIN SENSOR","LM GUIDE","PIN MOTOR CONTROLLER"] },
-  { category: "EPD",                items: ["SINGLE EPD","DUAL EPD"] },
-  { category: "BOARD",              items: ["GAS BOX BOARD","TEMP CONTROLLER BOARD","POWER DISTRIBUTION BOARD","DC POWER SUPPLY","BM SENSOR","PIO SENSOR","SAFETY MODULE","IO BOX","FPS BOARD","D-NET"] },
-  { category: "IGS BLOCK",          items: ["MFC","VALVE"] },
-  { category: "VALVE",              items: ["SOLENOID","FAST VAC VALVE","SLOW VAC VALVE","SLIT DOOR","APC VALVE","SHUTOFF VALVE"] },
-  { category: "ETC",                items: ["BARATRON ASS'Y","PIRANI ASS'Y","VIEW PORT QUARTZ","FLOW SWITCH","CERAMIC PLATE","MONITOR","KEYBOARD","MOUSE","HEATING JACKET","WATER LEAK DETECTOR","MANOMETER"] },
-  { category: "CTR",                items: ["CTC","PMC","EDA","EFEM CONTROLLER","TEMP LIMIT CONTROLLER","TEMP CONTROLLER"] },
-  { category: "S/W",                items: ["S/W PATCH"] },
+  { category: "Escort", items: ["LP ESCORT","ROBOT ESCORT"] },
+
+  { category: "EFEM Robot", items: [
+    "SR8241 TEACHING","ROBOT REP","ROBOT CONTROLLER REP","END EFFECTOR REP"
+  ]},
+
+  { category: "TM Robot", items: [
+    "PERSIMMON TEACHING","END EFFECTOR PAD REP"
+  ]},
+
+  { category: "L/L", items: [
+    "L L PIN","L L SENSOR","L L DSA","GAS LINE","L L ISOLATION VV"
+  ]},
+
+  { category: "EFEM FFU", items: [
+    "FFU CONTROLLER","FAN","MOTOR DRIVER"
+  ]},
+
+  { category: "SOURCE", items: [
+    "MATCHER","3000QC","3100QC"
+  ]},
+
+  { category: "Chuck", items: ["CHUCK"] },
+
+  { category: "Preventive Maintenance", items: [
+    "PROCESS KIT","SLOT VALVE BLADE","TEFLON ALIGN PIN","O RING"
+  ]},
+
+  { category: "Leak", items: ["HELIUM DETECTOR"] },
+
+  { category: "Pin", items: [
+    "HOOK LIFT PIN","BELLOWS","PIN BOARD","LM GUIDE","PIN MOTOR CONTROLLER","LASER PIN SENSOR"
+  ]},
+
+  { category: "EPD", items: ["DUAL"] },
+
+  { category: "Board", items: [
+    "DC POWER SUPPLY","PIO SENSOR","D NET","SIM BOARD"
+  ]},
+
+  { category: "IGS Block", items: ["MFC","VALVE"] },
+
+  { category: "Valve", items: [
+    "SOLENOID","PENDULUM VALVE","SLOT VALVE DOOR VALVE","SHUTOFF VALVE"
+  ]},
+
+  { category: "Rack", items: ["RF GENERATOR"] },
+
+  { category: "ETC", items: [
+    "BARATRON ASSY","PIRANI ASSY","VIEW PORT QUARTZ","FLOW SWITCH","CERAMIC PLATE",
+    "MONITOR","KEYBOARD","SIDE STORAGE","MULTI PORT 32","MINI8","TM EPC MFC"
+  ]},
+
+  { category: "CTR", items: ["CTC","EFEM CONTROLLER"] },
+
+  { category: "S/W", items: ["SW PATCH"] },
 ];
+
 const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it of g.items) m[it]=g.category; return m; })();
 const getCategory = (item)=> ITEM_TO_CAT[item] || "-";
 
@@ -205,7 +245,7 @@ function bindMatrixEvents(){
 
 async function loadWorkerList(){
   try{
-    const res = await axios.get(`/api/pci/supra-n/workers`);
+    const res = await axios.get(`/api/pci/supra-xp/workers`);
     workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
@@ -242,7 +282,7 @@ async function buildMatrix(){
   startLine(el.matrixWrap);
   renderMatrixSkeleton(12, 15);
   try{
-    const res = await axios.get(`/api/pci/supra-n/matrix`);
+    const res = await axios.get(`/api/pci/supra-xp/matrix`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
     matrixWorkers = workers || [];
     matrixItems = items || [];
@@ -303,7 +343,7 @@ function syncStickyOffsets(){
     el.matrixTable.style.setProperty("--thead-h", h + "px");
   }
 
-  // 2) 좌측 고정열 실제 폭 → --w-cat / --w-item (픽셀 라운딩 차이 흡수)
+  // 2) 좌측 고정열 실제 폭 → --w-cat / --w-item
   const th1 = el.matrixThead.querySelector("tr.header-row th.item-col:nth-child(1)");
   const th2 = el.matrixThead.querySelector("tr.header-row th.item-col:nth-child(2)");
   if (th1 && th2) {
@@ -313,7 +353,6 @@ function syncStickyOffsets(){
     el.matrixTable.style.setProperty("--w-item", w2 + "px");
   }
 }
-
 
 function renderMatrix(){
   clearColHighlight();
@@ -355,7 +394,7 @@ function renderMatrix(){
   const sumRow = document.createElement("tr");
   sumRow.className = "summary-row";
   const sumThCat = document.createElement("th");
-  sumThCat.className = "item-col sum-col"; sumThCat.dataset.col = 0; sumThCat.textContent = ""; // 빈칸
+  sumThCat.className = "item-col sum-col"; sumThCat.dataset.col = 0; sumThCat.textContent = "";
   const sumThItem = document.createElement("th");
   sumThItem.className = "item-col sum-col"; sumThItem.dataset.col = 1;
   sumThItem.innerHTML = `${Number.isFinite(overall) ? `<span class="badge b-total">전체 평균 ${pct(overall)}%</span>` : `<span class="badge">데이터 없음</span>`}`;
@@ -496,8 +535,8 @@ function exportMatrixXlsx(){
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  XLSX.utils.book_append_sheet(wb, ws, "SUPRA N PCI");
-  XLSX.writeFile(wb, "SUPRAN_PCI_MATRIX.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "SUPRA XP PCI");
+  XLSX.writeFile(wb, "SUPRA_XP_PCI_MATRIX.xlsx");
 }
 
 // ===== 개인 보기 =====
@@ -521,7 +560,7 @@ async function onFetchPerson(){
   if (!name) return alert("작업자를 입력하세요.");
   startLine(el.personTableScroll);
   try{
-    const res = await axios.get(`/api/pci/supra-n/worker/${encodeURIComponent(name)}`);
+    const res = await axios.get(`/api/pci/supra-xp/worker/${encodeURIComponent(name)}`);
     currentSummary = res.data?.summary || null;
     currentRows = res.data?.rows || [];
     updateCards();
@@ -552,13 +591,13 @@ function updateCards(){
   el.avgPci.textContent  = pct(sumPci  / n);
   el.itemsCnt.textContent = n;
 
-  // 카드 보조 문구도 실제 규칙과 일치시키기
+  // 카드 보조 문구 보정
   const cntSub = document.querySelector('.cards .card.stat:nth-child(3) .sub');
   if (cntSub) cntSub.textContent = '모든 항목 포함(0% 포함)';
 }
 
 function renderPersonChart(){
-  // ✅ 0%도 포함: 필터 제거
+  // ✅ 0%도 포함
   const rows = (currentRows || []).slice();
 
   // 보기 좋게: PCI 내림차순 → 같은 값이면 수행횟수 많은 순
@@ -568,28 +607,24 @@ function renderPersonChart(){
   const work   = rows.map(r => Number(r.work_pct) || 0);
   const self   = rows.map(r => Number(r.self_pct) || 0);
 
-  // 가로 폭 계산 (막대당 고정 px)
-  const PX_PER_BAR = 56; // 필요하면 48~60 사이로 조절 가능
-  const minWidth   = el.chartScroll.clientWidth; // 컨테이너 가시 폭
+  // 가로 폭 계산 (막대당 px)
+  const PX_PER_BAR = 56;
+  const minWidth   = el.chartScroll.clientWidth;
   const targetWidth = Math.max(minWidth, Math.ceil(labels.length * PX_PER_BAR));
 
-  // 스크롤 영역의 내부 래퍼 폭을 먼저 늘려줌
+  // 스크롤 래퍼 폭 확장
   el.chartInner.style.width = targetWidth + "px";
 
-  // ✅ Chart.js는 responsive:false 이므로 캔버스 '속성' 폭/높이를 매번 동기화해야 함
+  // 캔버스 CSS/픽셀 크기 동기화(차트 축소 이슈 해결)
   const dpr = Math.max(1, window.devicePixelRatio || 1);
-  const cssH = 260; // CSS 높이
-  // CSS 크기
+  const cssH = 260;
   el.stackedCanvas.style.width  = targetWidth + "px";
   el.stackedCanvas.style.height = cssH + "px";
-  // 실제 픽셀 크기(레티나 대응)
   el.stackedCanvas.width  = Math.floor(targetWidth * dpr);
   el.stackedCanvas.height = Math.floor(cssH * dpr);
 
-  // 기존 차트 정리
   if (stackedChart) { stackedChart.destroy(); stackedChart = null; }
 
-  // 새 차트 렌더
   stackedChart = new Chart(el.stackedCanvas.getContext("2d"), {
     type: "bar",
     data: {
@@ -600,14 +635,12 @@ function renderPersonChart(){
       ]
     },
     options: {
-      // ❗ responsive:false 이므로 위에서 width/height를 직접 맞춰줌
       responsive: false,
       maintainAspectRatio: false,
       plugins: {
         legend: { position: "top" },
         tooltip: { enabled: true },
         datalabels: {
-          // 항목이 너무 많으면 라벨은 자동 감춤
           display: labels.length <= 30,
           anchor: "end",
           align: "end",
@@ -628,7 +661,6 @@ function renderPersonChart(){
     plugins: [ChartDataLabels]
   });
 }
-
 
 function sortPersonRows(){
   const mode = el.sortBy.value;
@@ -697,68 +729,67 @@ function exportPersonXlsx(){
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   XLSX.utils.book_append_sheet(wb, ws, currentSummary?.worker || "PERSON");
-  const name = (currentSummary?.worker || "worker") + "_SUPRAN_PCI.xlsx";
+  const name = (currentSummary?.worker || "worker") + "_SUPRA_XP_PCI.xlsx";
   XLSX.writeFile(wb, name);
 }
 
 // ===== 산출 근거 모달 (아코디언) =====
 async function openBreakdown(worker, item){
   try{
-    const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
+    const url = `/api/pci/supra-xp/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
     const { data } = await axios.get(url);
 
-// <br>만 통과시키고 나머지는 escape (XSS 방지)
-function escapeAllowBr(html){
-  const s = String(html ?? "");
-  // 임시 치환으로 <br> 허용
-  const token = "__BR__TOKEN__";
-  return s
-    .replace(/<br\s*\/?>/gi, token)
-    .replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
-    .replaceAll(token, "<br>");
-}
+    // <br>만 통과시키고 나머지는 escape
+    function escapeAllowBr(html){
+      const s = String(html ?? "");
+      const token = "__BR__TOKEN__";
+      return s
+        .replace(/<br\s*\/?>/gi, token)
+        .replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
+        .replaceAll(token, "<br>");
+    }
 
-const logsHtml = (data.logs && data.logs.length)
-  ? `
-     <div class="table-scroll">
-       <table class="table" style="min-width: 980px">
-         <thead>
-           <tr>
-             <th>작업한 날짜</th>
-             <th>설비 이름</th>
-             <th>설비 종류</th>
-             <th>작업명</th>
-             <th>작업자</th>
-             <th style="width:240px">작업 내용</th>
-           </tr>
-         </thead>
-         <tbody>
-           ${data.logs.map(l=>{
-             const dateStr = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
-             const eqName  = l.equipment_name ? String(l.equipment_name).trim() : "-";
-             const eqType  = l.equipment_type ? String(l.equipment_type).trim() : "-";
-             const tName   = l.task_name ? String(l.task_name).trim() : "-";
-             const tMen    = l.task_man ?? l.task_man_raw ?? "";
-             const descHtml= escapeAllowBr(l.task_description ?? "");
-             return `
+    const logsHtml = (data.logs && data.logs.length)
+      ? `
+         <div class="table-scroll">
+           <table class="table" style="min-width: 980px">
+             <thead>
                <tr>
-                 <td>${dateStr}</td>
-                 <td>${esc(eqName)}</td>
-                 <td>${esc(eqType)}</td>
-                 <td>${esc(tName)}</td>
-                 <td>${esc(tMen)}</td>
-                 <td>
-                   <details class="desc">
-                     <summary>펼쳐보기</summary>
-                     <div class="desc-body">${descHtml || "-"}</div>
-                   </details>
-                 </td>
-               </tr>`;
-           }).join("")}
-         </tbody>
-       </table>
-     </div>`
-  : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
+                 <th>작업한 날짜</th>
+                 <th>설비 이름</th>
+                 <th>설비 종류</th>
+                 <th>작업명</th>
+                 <th>작업자</th>
+                 <th style="width:240px">작업 내용</th>
+               </tr>
+             </thead>
+             <tbody>
+               ${data.logs.map(l=>{
+                 const dateStr = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
+                 const eqName  = l.equipment_name ? String(l.equipment_name).trim() : "-";
+                 const eqType  = l.equipment_type ? String(l.equipment_type).trim() : "-";
+                 const tName   = l.task_name ? String(l.task_name).trim() : "-";
+                 const tMen    = l.task_man ?? l.task_man_raw ?? "";
+                 const descHtml= escapeAllowBr(l.task_description ?? "");
+                 return `
+                   <tr>
+                     <td>${dateStr}</td>
+                     <td>${esc(eqName)}</td>
+                     <td>${esc(eqType)}</td>
+                     <td>${esc(tName)}</td>
+                     <td>${esc(tMen)}</td>
+                     <td>
+                       <details class="desc">
+                         <summary>펼쳐보기</summary>
+                         <div class="desc-body">${descHtml || "-"}</div>
+                       </details>
+                     </td>
+                   </tr>`;
+               }).join("")}
+             </tbody>
+           </table>
+         </div>`
+      : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
     const box = `
       <div class="modal-body">
