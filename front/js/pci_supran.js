@@ -532,11 +532,21 @@ async function onFetchPerson(){
 }
 
 function updateCards(){
-  const s = currentSummary;
-  if (!s){ el.avgWork.textContent="-"; el.avgPci.textContent="-"; el.itemsCnt.textContent="-"; return; }
-  el.avgWork.textContent = pct(s.avg_work_pct);
-  el.avgPci.textContent = pct(s.avg_pci_pct);
-  el.itemsCnt.textContent = s.items_considered ?? 0;
+  const rows = currentRows || [];
+  if (!rows.length){
+    el.avgWork.textContent="-"; el.avgPci.textContent="-"; el.itemsCnt.textContent="-";
+    return;
+  }
+  // 매트릭스와 동일: work>0 또는 self>0(=PCI>0) 만 평균 포함
+  const included = rows.filter(r => (r.work_pct > 0) || (r.self_pct > 0));
+  const n = included.length;
+  const sumWork = included.reduce((s,r)=> s + (Number(r.work_pct)||0), 0);
+  const sumPci  = included.reduce((s,r)=> s + (Number(r.pci_pct)||0), 0);
+  const avgWork = n ? sumWork / n : 0;
+  const avgPci  = n ? sumPci  / n : 0;
+  el.avgWork.textContent = pct(avgWork);
+  el.avgPci.textContent  = pct(avgPci);
+  el.itemsCnt.textContent = n;
 }
 
 function renderPersonChart(){
