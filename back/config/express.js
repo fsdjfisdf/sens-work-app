@@ -184,6 +184,9 @@ app.use("/api/pci/supran-setup", pciSupraNSetupRoute);
 const pciSupraXPSetupRoute = require("../src/routes/pciSupraxpSetupRoute");
 app.use("/api/pci/supraxp-setup", pciSupraXPSetupRoute);
 
+const pciIntegerSetupRoute = require("../src/routes/pciIntegerSetupRoute");
+app.use("/api/pci/integer-setup", pciIntegerSetupRoute);
+
 
 
 
