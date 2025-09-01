@@ -11,9 +11,16 @@ exports.fetchWorkLogsForSupraN = async ({ startDate, endDate } = {}) => {
   let where = `transfer_item IS NOT NULL AND equipment_type IN (${placeholders})`;
   if (startDate) { where += ` AND task_date >= ?`; params.push(startDate); }
   if (endDate)   { where += ` AND task_date <= ?`; params.push(endDate);   }
-
   const sql = `
-    SELECT id, task_date, task_man, equipment_type, transfer_item
+    SELECT
+      id,
+      task_date,
+      task_man,
+      equipment_type,
+      equipment_name,     -- 추가
+      task_name,          -- 추가
+      task_description,   -- 추가 (HTML <br> 포함)
+      transfer_item
     FROM work_log
     WHERE ${where}
   `;

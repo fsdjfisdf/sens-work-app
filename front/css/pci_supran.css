@@ -151,15 +151,17 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 }
 /* 헤더 전체가 바디보다 위 */
 .matrix thead th{ z-index:5; }
-/* 왼쪽 고정 헤더가 가장 위(헤더 내) */
+/* 헤더의 '작업자 열'이 왼쪽 고정열보다 위에 오도록 변경 */
 .matrix thead .item-col{ z-index:7; }
-/* 작업자 헤더(th.worker-col)는 바디의 고정열(td.item-col)보다 위 */
-.matrix thead .worker-col{ z-index:6; }
+.matrix thead .worker-col{ z-index:8; }  /* ← 올림 */
 /* 바디의 왼쪽 고정열은 헤더보다 아래 */
 .matrix tbody .item-col{ z-index:3; }
 
-.matrix .item-col:nth-child(1){ left:0;  width:160px; }
-.matrix .item-col:nth-child(2){ left:160px; width:180px; }
+.matrix .item-col:nth-child(1){ left:0;  width:150px; }
+.matrix .item-col:nth-child(2){ left:150px; width:165px; }
+
+.matrix thead th.worker-col:first-of-type,
+.matrix tbody td.worker-col:first-of-type{ padding-left:12px; }
 
 /* 작업자 열 */
 .matrix .worker-col{ min-width:68px; text-align:center; }
@@ -326,6 +328,19 @@ body.modal-open{ overflow:hidden; }
 .kv6 .v{ font-size:13.5px; color:#0f172a; word-break:break-word; }
 .prejson{ margin:0; padding:10px 12px; background:#0f172a; color:#e5e7eb; font-size:12.5px; border-radius:8px; overflow:auto; max-height:240px; }
 
+
+/* 긴 작업 내용 펼쳐보기 */
+.desc > summary{
+  cursor:pointer; user-select:none; font-weight:800; color:#1f2937;
+  padding:6px 8px; border-radius:8px; background:#f8fafc; border:1px solid var(--grid);
+}
+.desc[open] > summary{ background:#eef2f7; }
+.desc .desc-body{
+  margin-top:8px; padding:8px; border:1px solid var(--grid); border-radius:8px; background:#fff;
+  font-size:13px; color:#0f172a; max-height:260px; overflow:auto;
+}
+
+
 /* ---------- Responsive ----------------------------------------------------- */
 @media (max-width:1200px){
   .acc > summary{ grid-template-columns: 18px 110px 1fr 90px 50px; }
@@ -335,6 +350,6 @@ body.modal-open{ overflow:hidden; }
   .filters{ grid-template-columns: repeat(2, minmax(180px,1fr)); }
   .filters.person{ grid-template-columns: 1fr; }
   .cards{ grid-template-columns: 1fr; }
-  .matrix .item-col:nth-child(1){ width:150px; }
-  .matrix .item-col:nth-child(2){ left:150px; width:170px; }
+  .matrix .item-col:nth-child(1){ width:140px; }
+  .matrix .item-col:nth-child(2){ left:140px; width:160px; }
 }

@@ -630,41 +630,58 @@ async function openBreakdown(worker, item){
     const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
     const { data } = await axios.get(url);
 
+// <br>만 통과시키고 나머지는 escape (XSS 방지)
+function escapeAllowBr(html){
+  const s = String(html ?? "");
+  // 임시 치환으로 <br> 허용
+  const token = "__BR__TOKEN__";
+  return s
+    .replace(/<br\s*\/?>/gi, token)
+    .replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
+    .replaceAll(token, "<br>");
+}
+
 const logsHtml = (data.logs && data.logs.length)
-    ? `
-       <div class="table-scroll">
-         <table class="table" style="min-width: 860px">
-           <thead>
-             <tr>
-               <th>일자</th>
-               <th>ID</th>
-               <th>설비명</th>
-               <th>역할</th>
-               <th>가중치</th>
-               <th>원본 작업자기재</th>
-             </tr>
-           </thead>
-           <tbody>
-             ${data.logs.map(l=>{
-               const d = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
-               // 설비명 우선순위: equipment_name → (없으면) task_name → (없으면) "-"
-               const equipName = (l.equipment_name && String(l.equipment_name).trim())
-                 || (l.task_name && String(l.task_name).trim())
-                 || "-";
-               return `
-                 <tr>
-                   <td>${d}</td>
-                   <td>${l.id}</td>
-                   <td>${esc(equipName)}</td>
-                   <td>${esc(l.role||"-")}</td>
-                   <td>${l.weight ?? "-"}</td>
-                   <td>${esc(l.task_man_raw||"")}</td>
-                 </tr>`;
-             }).join("")}
-           </tbody>
-         </table>
-       </div>`
-    : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
+  ? `
+     <div class="table-scroll">
+       <table class="table" style="min-width: 980px">
+         <thead>
+           <tr>
+             <th>작업한 날짜</th>
+             <th>설비 이름</th>
+             <th>설비 종류</th>
+             <th>작업명</th>
+             <th>작업자</th>
+             <th style="width:240px">작업 내용</th>
+           </tr>
+         </thead>
+         <tbody>
+           ${data.logs.map(l=>{
+             const dateStr = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
+             const eqName  = l.equipment_name ? String(l.equipment_name).trim() : "-";
+             const eqType  = l.equipment_type ? String(l.equipment_type).trim() : "-";
+             const tName   = l.task_name ? String(l.task_name).trim() : "-";
+             const tMen    = l.task_man ?? l.task_man_raw ?? "";
+             const descHtml= escapeAllowBr(l.task_description ?? "");
+             return `
+               <tr>
+                 <td>${dateStr}</td>
+                 <td>${esc(eqName)}</td>
+                 <td>${esc(eqType)}</td>
+                 <td>${esc(tName)}</td>
+                 <td>${esc(tMen)}</td>
+                 <td>
+                   <details class="desc">
+                     <summary>펼쳐보기</summary>
+                     <div class="desc-body">${descHtml || "-"}</div>
+                   </details>
+                 </td>
+               </tr>`;
+           }).join("")}
+         </tbody>
+       </table>
+     </div>`
+  : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
     const box = `
       <div class="modal-body">

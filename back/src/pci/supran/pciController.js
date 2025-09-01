@@ -307,9 +307,12 @@ exports.getWorkerItemBreakdown = async (req, res) => {
           id: r.id,
           task_date: r.task_date,
           equipment_type: r.equipment_type,
-          equipment_name: r.equipment_name,   // 추가
-          task_name: r.task_name,             // 추가
-          task_man_raw: r.task_man,
+          equipment_name: r.equipment_name,   // 새 컬럼 그대로
+          task_name: r.task_name,             // 새 컬럼 그대로
+          task_man: r.task_man,               // 프론트에선 task_man 우선 사용
+          task_man_raw: r.task_man,           // 하위 호환 유지
+          task_description: r.task_description, // 새 컬럼 그대로
+
           role,
           weight: p.weight,
         });
