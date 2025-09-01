@@ -69,7 +69,7 @@ exports.getWorkerPci = async (req, res) => {
 
       const pciPct = clamp(workPct + selfPct, 0, 100);
 
-      const participated = (totalCnt > 0) || (selfPct > 0);
+      const participated = (workPct > 0) || (selfPct > 0);
       if (participated) {
         usedItems += 1;
         accWork += workPct;
