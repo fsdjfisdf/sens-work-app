@@ -178,6 +178,10 @@ app.use('/api/pci/hdw', pciHdwRoute);
 const pciPreciaSetupRoute = require("../src/routes/pciPreciaSetupRoute");
 app.use("/api/pci/precia-setup", pciPreciaSetupRoute);
 
+const pciSupraNSetupRoute = require("../src/routes/pciSupranSetupRoute");
+app.use("/api/pci/supran-setup", pciSupraNSetupRoute);
+
+
 
 
 
