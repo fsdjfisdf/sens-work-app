@@ -93,6 +93,15 @@ const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it o
 const getCategory = (item)=> ITEM_TO_CAT[item] || "-";
 
 // ===== Utils =====
+var ESC_RE  = /[&<>"']/g;
+var ESC_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+};
+
 function esc(s) {
   s = (s == null) ? '' : String(s);
   return s.replace(ESC_RE, function (ch) {
