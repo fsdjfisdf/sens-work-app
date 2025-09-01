@@ -14,30 +14,28 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="wide">
+  <!-- NAV -->
   <nav class="nav">
     <div class="inner">
       <a class="brand" href="./index.html">S-WORKS</a>
-      <div class="nav-right"><span class="page-title">SUPRA N PCI</span></div>
+      <div class="tabs">
+        <button class="tab active" data-tab="tab-matrix" aria-selected="true">전체 매트릭스</button>
+        <button class="tab" data-tab="tab-person" aria-selected="false">개인 보기</button>
+      </div>
     </div>
   </nav>
 
-  <main class="container wide">
-    <!-- 탭 -->
-    <section class="tabs">
-      <button class="tab active" data-tab="tab-matrix">전체 인원 매트릭스</button>
-      <button class="tab" data-tab="tab-person">개인 보기</button>
-    </section>
+  <main class="container">
+    <!-- ===== 매트릭스 ===== -->
+    <section id="tab-matrix" class="panel tab-pane active" role="tabpanel" aria-labelledby="tab-matrix-btn">
+      <header class="panel-header">
+        <h1>SUPRA N PCI — 전체 매트릭스</h1>
+        <p class="hint">셀을 클릭하면 상세 이력/계산 근거가 열립니다.</p>
+      </header>
 
-    <!-- ===== 전체 인원 매트릭스 ===== -->
-    <section id="tab-matrix" class="panel tab-pane active">
-      <div class="panel-header">
-        <h2>전체 인원 매트릭스 (세로: 작업 항목, 가로: 작업자)</h2>
-        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거 모달이 열려요. 좌측 고정열: <b>중분류 / 항목 / 기준</b>.</div>
-      </div>
-
-      <div class="filters">
+      <div class="toolbar">
         <div class="field">
-          <label>작업 항목 검색</label>
+          <label>항목 검색</label>
           <input id="filterItem" class="input" placeholder="예: ESCORT, VALVE, CHUCK ..."/>
         </div>
         <div class="field">
@@ -51,102 +49,73 @@
             <option value="name_asc">이름 A→Z</option>
           </select>
         </div>
-
-        <div class="field">
-          <label>보기 밀도</label>
-          <select id="density" class="input">
-            <option value="compact">컴팩트(많이 보기)</option>
-            <option value="comfortable">보통</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label>열 너비(픽셀)</label>
-          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="68"/>
-        </div>
-
         <div class="field actions">
-          <button id="btnReloadMatrix" class="btn primary">새로고침</button>
-          <button id="btnMatrixCsv" class="btn">Excel 내보내기</button>
+          <button id="btnReloadMatrix" class="btn">새로고침</button>
+          <button id="btnMatrixXlsx" class="btn primary">엑셀로 내보내기</button>
         </div>
       </div>
 
-      <div class="cat-filter">
-        <div class="label">중분류 필터</div>
-        <div id="catChips" class="chips"></div>
-        <div class="chip-tools">
-          <button id="btnCollapseAll" class="chip ghost">모두 접기</button>
-          <button id="btnExpandAll" class="chip ghost">모두 펼치기</button>
-        </div>
-      </div>
-
-      <div id="matrixInfo" class="matrix-info"></div>
-
-      <div class="matrix-wrap">
-        <table id="matrixTable" class="matrix dense">
+      <div class="matrix-scroll">
+        <table id="matrixTable" class="table-matrix">
           <thead id="matrixThead"></thead>
           <tbody id="matrixTbody"></tbody>
         </table>
       </div>
 
-      <div id="matrixLoading" class="loading hidden">
+      <div id="matrixLoading" class="loading hidden" role="status" aria-live="polite">
         <div class="spinner"></div>
-        <div class="txt">전체 데이터를 수집/계산 중...</div>
+        <div class="txt">데이터 로드 중...</div>
       </div>
     </section>
 
     <!-- ===== 개인 보기 ===== -->
-    <section id="tab-person" class="panel tab-pane">
-      <div class="panel-header">
-        <h2>개인 보기</h2>
-        <div class="hint"><b>행을 클릭</b>하면 해당 항목의 산출 근거 모달이 열립니다.</div>
-      </div>
+    <section id="tab-person" class="panel tab-pane" role="tabpanel" aria-labelledby="tab-person-btn">
+      <header class="panel-header">
+        <h1>개인 보기</h1>
+        <p class="hint">한 사람의 항목별 PCI 분해(작업이력 80 + 자가 20)</p>
+      </header>
 
-      <div class="filters">
-        <div class="field">
+      <div class="toolbar">
+        <div class="field grow">
           <label for="worker">작업자</label>
           <input id="worker" list="worker-list" placeholder="예: 정현우" autocomplete="off"/>
           <datalist id="worker-list"></datalist>
         </div>
         <div class="field actions">
           <button id="btnFetch" class="btn primary">조회</button>
-          <button id="btnCsv" class="btn">Excel 다운로드</button>
+          <button id="btnXlsx" class="btn">엑셀로 내보내기</button>
         </div>
       </div>
 
-      <!-- 요약 카드 -->
+      <!-- 카드 -->
       <section class="cards">
         <div class="card stat">
           <div class="label">평균 작업이력(80%)</div>
           <div class="value"><span id="avgWork">-</span><span class="unit">%</span></div>
-          <div class="sub">기간: 전체</div>
         </div>
         <div class="card stat">
           <div class="label">평균 PCI(총합)</div>
           <div class="value"><span id="avgPci">-</span><span class="unit">%</span></div>
-          <div class="sub">자가체크 20% 포함</div>
         </div>
         <div class="card stat">
           <div class="label">평균에 포함된 항목수</div>
           <div class="value"><span id="itemsCnt">-</span><span class="unit">개</span></div>
-          <div class="sub">참여/자가체크 0인 항목 제외</div>
         </div>
       </section>
 
       <!-- 차트 -->
       <section class="panel">
-        <div class="panel-header">
+        <header class="panel-sub">
           <h2>항목별 PCI 분해</h2>
-          <div class="hint">막대가 100%면 기준작업수 도달 + 자가체크 완료</div>
-        </div>
+        </header>
         <div class="chart-wrap">
-          <canvas id="stackedChart" height="220" aria-label="개인 항목별 PCI 스택 바 차트"></canvas>
+          <canvas id="stackedChart" height="220"></canvas>
         </div>
       </section>
 
       <!-- 테이블 -->
       <section class="panel">
-        <div class="panel-header">
+        <header class="panel-sub">
           <h2>상세 테이블</h2>
           <div class="table-actions">
             <input id="searchItem" class="input" placeholder="항목명 검색"/>
@@ -157,21 +126,21 @@
               <option value="item_asc">정렬: 항목명 A→Z</option>
             </select>
           </div>
-        </div>
+        </header>
         <div class="table-scroll">
-          <table class="table" id="pciTable">
+          <table class="table detail" id="pciTable">
             <thead>
               <tr>
-                <th>중분류</th>
-                <th>항목</th>
-                <th>기준</th>
-                <th>main</th>
-                <th>support</th>
-                <th>가산</th>
-                <th>총횟수</th>
-                <th>작업이력(80)</th>
-                <th>자가(20)</th>
-                <th>PCI(%)</th>
+                <th class="sticky-l1">중분류</th>
+                <th class="sticky-l2">항목</th>
+                <th class="sticky-l3 num">기준</th>
+                <th class="num">main</th>
+                <th class="num">support</th>
+                <th class="num">가산</th>
+                <th class="num">총횟수</th>
+                <th class="num">작업이력(80)</th>
+                <th class="num">자가(20)</th>
+                <th class="num">PCI(%)</th>
               </tr>
             </thead>
             <tbody id="pciTbody"></tbody>
@@ -181,21 +150,19 @@
     </section>
   </main>
 
-  <footer class="footer">
-    <div class="inner">
-      <span>© S-WORKS · SUPRA N PCI</span>
-    </div>
-  </footer>
-
-  <!-- 모달 -->
-  <div class="overlay" id="overlay"></div>
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-card">
-      <div class="modal-head">
-        <div class="md-title" id="modalTitle">상세</div>
-        <button class="btn" id="modalClose" aria-label="모달 닫기">닫기</button>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
+  <!-- MODAL -->
+  <div id="detailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3 id="modalTitle">상세</h3>
+        <button id="modalClose" class="icon-btn" aria-label="닫기">✕</button>
+      </header>
+      <div id="modalBody" class="modal-body"></div>
+      <footer class="modal-footer">
+        <button id="modalGotoPerson" class="btn ghost">개인 보기로 이동</button>
+        <button id="modalOk" class="btn primary">닫기</button>
+      </footer>
     </div>
   </div>
 
