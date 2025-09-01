@@ -144,15 +144,22 @@ main.container{ max-width:1600px; margin:0 auto; padding:20px 14px 40px; }
 .matrix thead tr.header-row th{ top:0; }
 .matrix thead tr.summary-row th{ top:var(--thead-h); background:#ffffff; border-bottom:1px solid var(--grid); }
 
-/* 첫 2열 고정 (개인 보기 표와 톤 맞춤) */
+/* 첫 2열(중분류/작업항목) 고정 + 레이어 순서(헤더 > 작업자헤더 > 바디고정열) */
 .matrix .item-col{
   position:sticky; left:0; background:#fff; box-shadow: 1px 0 0 var(--grid);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.matrix thead .item-col{ z-index:8; }
-.matrix tbody .item-col{ z-index:4; }
+/* 헤더 전체가 바디보다 위 */
+.matrix thead th{ z-index:5; }
+/* 왼쪽 고정 헤더가 가장 위(헤더 내) */
+.matrix thead .item-col{ z-index:7; }
+/* 작업자 헤더(th.worker-col)는 바디의 고정열(td.item-col)보다 위 */
+.matrix thead .worker-col{ z-index:6; }
+/* 바디의 왼쪽 고정열은 헤더보다 아래 */
+.matrix tbody .item-col{ z-index:3; }
+
 .matrix .item-col:nth-child(1){ left:0;  width:160px; }
-.matrix .item-col:nth-child(2){ left:160px; width:200px; }
+.matrix .item-col:nth-child(2){ left:160px; width:180px; }
 
 /* 작업자 열 */
 .matrix .worker-col{ min-width:68px; text-align:center; }
@@ -329,5 +336,5 @@ body.modal-open{ overflow:hidden; }
   .filters.person{ grid-template-columns: 1fr; }
   .cards{ grid-template-columns: 1fr; }
   .matrix .item-col:nth-child(1){ width:150px; }
-  .matrix .item-col:nth-child(2){ left:150px; width:180px; }
+  .matrix .item-col:nth-child(2){ left:150px; width:170px; }
 }

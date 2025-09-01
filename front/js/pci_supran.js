@@ -70,7 +70,7 @@ const el = {
 // ===== 카테고리 정의 =====
 const CATEGORIES = [
   { category: "ESCORT",             items: ["LP ESCORT","ROBOT ESCORT"] },
-  { category: "EFEM ROBOT",         items: ["SR8241 TEACHING","SR8240 TEACHING","M124 TEACHING","EFEM FIXTURE","EFEM ROBOT REP","EFEM ROBOT CONTROLLER REP"] },
+  { category: "EFEM ROBOT",         items: ["SR8241 TEACHING","SR8240 TEACHING","M124 TEACHING","EFEM FIXTURE","EFEM ROBOT REP","EFEM ROBOT"<br>"CONTROLLER REP"] },
   { category: "TM ROBOT",           items: ["SR8250 TEACHING","SR8232 TEACHING","TM ROBOT REP","TM ROBOT CONTROLLER REP","PASSIVE PAD REP"] },
   { category: "BM MODULE",          items: ["PIN CYLINDER","PUSHER CYLINDER","IB FLOW","DRT"] },
   { category: "FFU (EFEM, TM)",     items: ["FFU CONTROLLER","FAN","MOTOR DRIVER"] },
@@ -331,7 +331,7 @@ function renderMatrix(){
   sumThCat.className = "item-col sum-col"; sumThCat.dataset.col = 0; sumThCat.textContent = ""; // 빈칸
   const sumThItem = document.createElement("th");
   sumThItem.className = "item-col sum-col"; sumThItem.dataset.col = 1;
-  sumThItem.innerHTML = `평균(가시 항목) ${Number.isFinite(overall) ? `<span class="badge b-total">전체 평균 ${pct(overall)}%</span>` : `<span class="badge">데이터 없음</span>`}`;
+  sumThItem.innerHTML = `${Number.isFinite(overall) ? `<span class="badge b-total">전체 평균 ${pct(overall)}%</span>` : `<span class="badge">데이터 없음</span>`}`;
   sumRow.appendChild(sumThCat); sumRow.appendChild(sumThItem);
 
   shownWorkers.forEach((w,i)=>{
@@ -632,29 +632,33 @@ async function openBreakdown(worker, item){
 
     const logsHtml = (data.logs && data.logs.length)
       ? `
-         <div class="log-tools">
-           <button class="btn ghost sm" id="btnExpandAll">모두 펼치기</button>
-           <button class="btn ghost sm" id="btnCollapseAll">모두 접기</button>
-         </div>
-         <div class="log-accordion">
-           ${data.logs.map(l=>{
-             const d = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
-             return `
-               <details class="acc">
-                 <summary>
-                   <span class="chev" aria-hidden="true"></span>
-                   <span class="sum-date">${esc(d)}</span>
-                   <span class="sum-id">#${l.id}</span>
-                   <span class="sum-eq">${esc(l.equipment_type||"-")}</span>
-                   <span class="sum-role">${esc(l.role)}</span>
-                   <span class="sum-weight">w:${l.weight}</span>
-                 </summary>
-                 <div class="acc-body">
-                   <pre class="prejson">${esc(JSON.stringify(l,null,2))}</pre>
-                 </div>
-               </details>
-             `;
-           }).join("")}
+         <div class="table-scroll">
+           <table class="table" style="min-width: 860px">
+             <thead>
+               <tr>
+                 <th>일자</th>
+                 <th>ID</th>
+                 <th>장비타입</th>
+                 <th>역할</th>
+                 <th>가중치</th>
+                 <th>원본 작업자기재</th>
+               </tr>
+             </thead>
+             <tbody>
+               ${data.logs.map(l=>{
+                 const d = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
+                 return `
+                   <tr>
+                     <td>${d}</td>
+                     <td>${l.id}</td>
+                     <td>${esc(l.equipment_type||"-")}</td>
+                     <td>${esc(l.role||"-")}</td>
+                     <td>${l.weight ?? "-"}</td>
+                     <td>${esc(l.task_man_raw||"")}</td>
+                   </tr>`;
+               }).join("")}
+             </tbody>
+           </table>
          </div>`
       : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
@@ -684,12 +688,6 @@ async function openBreakdown(worker, item){
     `;
     showModal(`산출 근거 — ${esc(worker)} / ${esc(item)}`, box);
 
-    const btnExpand = document.getElementById("btnExpandAll");
-    const btnCollapse = document.getElementById("btnCollapseAll");
-    if (btnExpand && btnCollapse){
-      btnExpand.addEventListener("click", ()=>{ el.modalBody.querySelectorAll("details.acc").forEach(d=>d.setAttribute("open","")); });
-      btnCollapse.addEventListener("click", ()=>{ el.modalBody.querySelectorAll("details.acc").forEach(d=>d.removeAttribute("open")); });
-    }
   }catch(e){
     console.error("상세 조회 실패:", e);
     alert("상세를 불러오지 못했습니다.");
