@@ -1,5 +1,6 @@
 // src/pci/hdw/pciController.js
 const { BASELINE, normalizeItem, toSelfCol, workerAliases } = require("./pciConfig");
+// 👇 이 부분이 '../precia/pciUtils' 같은 잘못된 경로가 아니어야 합니다.
 const { parseTaskMen, round1, clamp } = require("./pciUtils");
 const {
   fetchWorkLogsForHdw,
