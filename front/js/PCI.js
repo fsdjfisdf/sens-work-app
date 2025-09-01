@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 설비와 작업 종류에 따른 URL 매핑
     const urlMapping = {
-        "SUPRA N": { "SET UP": "pci_supra_setup.html", "MAINTENANCE": "pci_supran.html" },
-        "SUPRA XP": { "SET UP": "pci_supra_xp_setup.html", "MAINTENANCE": "pci_supraxp.html" },
+        "SUPRA N": { "SET UP": "pci_supran_setup.html", "MAINTENANCE": "pci_supran.html" },
+        "SUPRA XP": { "SET UP": "pci_supraxp_setup.html", "MAINTENANCE": "pci_supraxp.html" },
         "INTEGER": { "SET UP": "pci_integer_setup.html", "MAINTENANCE": "pci_integer.html" },
         "PRECIA": { "SET UP": "pci_precia_setup.html", "MAINTENANCE": "pci_precia.html" },
         "ECOLITE": { "SET UP": "pci_ecolite_setup.html", "MAINTENANCE": "pci_ecolite.html" },
