@@ -1,6 +1,11 @@
 // src/pci/integer_setup/pciController.js
-const { BASELINE, normalizeItem, toDisplayCategory, workerAliases, CHECK_TITLES } = require("./pciConfig");
-const { parseTaskMen, round1, clamp } = require("../precia_setup/pciUtils");
+const cfg = require("./pciConfig");
+const { BASELINE, toDisplayCategory, workerAliases, CHECK_TITLES } = cfg;
+// normalizeItem이 없으면 toDisplayCategory로 대체
+const normalizeItem = (s) =>
+  (typeof cfg.normalizeItem === "function" ? cfg.normalizeItem(s) : toDisplayCategory(s));
+// 같은 폴더 utils 사용 (폴더 혼동 방지)
+const { parseTaskMen, round1, clamp } = require("./pciUtils");
 const {
   fetchSetupLogsForInteger,
   fetchSelfRow,
