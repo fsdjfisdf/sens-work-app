@@ -14,12 +14,43 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="wide">
-  <nav class="nav">
-    <div class="inner">
-      <a class="brand" href="./index.html">S-WORKS</a>
-      <div class="nav-right"><span class="page-title">SUPRA N PCI</span></div>
-    </div>
-  </nav>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./approval.html" class="menu-item">Worklog Approval</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
 
   <main class="container wide">
     <!-- 탭 -->
@@ -32,7 +63,6 @@
     <section id="tab-matrix" class="panel tab-pane active" role="tabpanel">
       <div class="panel-header">
         <h2>전체 인원 매트릭스</h2>
-        <div class="hint">셀의 <b>퍼센트</b>를 <b>클릭</b>하면 산출 근거를 확인할 수 있어요.</div>
       </div>
 
       <div class="filters">
@@ -42,7 +72,7 @@
         </div>
         <div class="field">
           <label for="filterWorker">작업자 검색</label>
-          <input id="filterWorker" class="input" placeholder="예: 정현우, 김동한 ..." autocomplete="off"/>
+          <input id="filterWorker" class="input" placeholder="예: 정현우" autocomplete="off"/>
         </div>
         <div class="field">
           <label for="sortWorkers">작업자 정렬</label>
@@ -197,5 +227,58 @@
   </div>
 
   <script src="./js/pci_supran.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const token = localStorage.getItem("x-access-token");
+        const userRole = localStorage.getItem("user-role");
+
+        if (!token) {
+            document.querySelector(".unsigned").classList.remove("hidden");
+            document.querySelector(".signed").classList.add("hidden");
+        } else {
+            document.querySelector(".unsigned").classList.add("hidden");
+            document.querySelector(".signed").classList.remove("hidden");
+        }
+
+        if (!token || userRole !== 'admin') {
+            document.querySelectorAll('.admin-only').forEach(element => {
+                element.style.display = 'none';
+            });
+        }
+
+        const signOutButton = document.querySelector("#sign-out");
+
+        if (signOutButton) {
+            signOutButton.addEventListener("click", function() {
+                localStorage.removeItem("x-access-token");
+                localStorage.removeItem("user-role");
+                alert("로그아웃 되었습니다.");
+                window.location.replace("./signin.html");
+            });
+        }
+        const menuBtn = document.querySelector('.menu-btn');
+        const menuBar = document.querySelector('.menu-bar');
+
+        menuBtn.addEventListener('click', function() {
+            menuBar.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                menuBar.classList.remove('open');
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('x-access-token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.replace('./signin.html');
+                return;
+            }
+    }
+)
+    
+</script>
 </body>
 </html>
