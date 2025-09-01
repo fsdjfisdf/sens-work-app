@@ -69,12 +69,9 @@ exports.getWorkerPci = async (req, res) => {
 
       const pciPct = clamp(workPct + selfPct, 0, 100);
 
-      const participated = (workPct > 0) || (selfPct > 0);
-      if (participated) {
-        usedItems += 1;
-        accWork += workPct;
+        usedItems += 1;          // ✅ 항상 카운트 (0% 포함)
+        accWork  += workPct;     // ✅ 전부 누적
         accTotal += pciPct;
-      }
 
       rows.push({
         item,

@@ -541,16 +541,18 @@ function updateCards(){
     el.avgWork.textContent="-"; el.avgPci.textContent="-"; el.itemsCnt.textContent="-";
     return;
   }
-  // 매트릭스와 동일: work>0 또는 self>0(=PCI>0) 만 평균 포함
-  const included = rows.filter(r => (r.work_pct > 0) || (r.self_pct > 0));
-  const n = included.length;
-  const sumWork = included.reduce((s,r)=> s + (Number(r.work_pct)||0), 0);
-  const sumPci  = included.reduce((s,r)=> s + (Number(r.pci_pct)||0), 0);
-  const avgWork = n ? sumWork / n : 0;
-  const avgPci  = n ? sumPci  / n : 0;
-  el.avgWork.textContent = pct(avgWork);
-  el.avgPci.textContent  = pct(avgPci);
+  // ✅ 0% 포함: 전체 행으로 평균
+  const n = rows.length;
+  const sumWork = rows.reduce((s,r)=> s + (Number(r.work_pct)||0), 0);
+  const sumPci  = rows.reduce((s,r)=> s + (Number(r.pci_pct)||0),  0);
+
+  el.avgWork.textContent = pct(sumWork / n);
+  el.avgPci.textContent  = pct(sumPci  / n);
   el.itemsCnt.textContent = n;
+
+  // 카드 보조 문구도 실제 규칙과 일치시키기
+  const cntSub = document.querySelector('.cards .card.stat:nth-child(3) .sub');
+  if (cntSub) cntSub.textContent = '모든 항목 포함(0% 포함)';
 }
 
 function renderPersonChart(){
