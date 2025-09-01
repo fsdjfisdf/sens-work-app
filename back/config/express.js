@@ -163,7 +163,6 @@ app.use('/api/pci/supra-xp', pciSupraXPRoute);
 const pciIntegerRoute = require('../src/routes/pciIntegerRoute');
 app.use('/api/pci/integer', pciIntegerRoute);
 
-
   
 
 
