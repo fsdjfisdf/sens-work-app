@@ -1,13 +1,11 @@
 // src/pci/ecolite_setup/pciController.js
 const cfg = require("./pciConfig");
 const { BASELINE, toDisplayCategory, workerAliases, CHECK_TITLES } = cfg;
-// normalizeItem 안전 Fallback
+// normalizeItem이 없으면 toDisplayCategory로 대체
 const normalizeItem = (s) =>
   (typeof cfg.normalizeItem === "function" ? cfg.normalizeItem(s) : toDisplayCategory(s));
-
-// utils 재사용(이미 존재하는 integer_setup 유틸을 활용)
-const { parseTaskMen, round1, clamp } = require("../integer_setup/pciUtils");
-
+// 같은 폴더 utils 사용 (폴더 혼동 방지)
+const { parseTaskMen, round1, clamp } = require("./pciUtils");
 const {
   fetchSetupLogsForEcolite,
   fetchSelfRow,
@@ -312,7 +310,7 @@ exports.getWorkerItemBreakdown = async (req, res) => {
     // 3) 자가체크 합산
     const selfAgg = computeSelfForCategory(selfRow, itemNorm);
     // 체크리스트 상세(제목 붙이기)
-    const checklist = (selfAgg.checklist || []).map((c) => ({
+    const checklist = (selfAgg.checklist || []).map(c => ({
       key: c.key,
       title: CHECK_TITLES[c.key] || "",
       value: Number(c.value || 0),
