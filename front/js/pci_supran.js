@@ -275,21 +275,22 @@ function sortMatrixWorkers(){
 // 요약(평균) 계산: 현재 표시되는 항목/작업자에 한정
 function computeVisibleAverages(shownItems, shownWorkers){
   const perWorker = {};
-  let sumAll = 0, cntAll = 0;
+  const totalItems = shownItems.length;
+
+  let sumAll = 0;
 
   for (const w of shownWorkers){
-    let s=0, c=0;
+    let s = 0;
     for (const it of shownItems){
-      const d = matrixData[it]?.[w];
-      // 개인 보기와 동일: '참여/자가체크가 하나라도 있으면(=pci>0)'만 포함
-      if (d && Number.isFinite(d.pci) && ((d.work ?? 0) > 0 || (d.self ?? 0) > 0)) {
-        s += d.pci; c++;
-        sumAll += d.pci; cntAll++;
-      }
+      const v = Number(matrixData[it]?.[w]?.pci);
+      s += Number.isFinite(v) ? v : 0; // 값이 없으면 0으로 취급
     }
-    perWorker[w] = c>0 ? (s/c) : null;
+    perWorker[w] = totalItems > 0 ? (s / totalItems) : null;
+    sumAll += s;
   }
-  const overall = cntAll>0 ? (sumAll/cntAll) : null;
+
+  const denom = totalItems * shownWorkers.length;
+  const overall = denom > 0 ? (sumAll / denom) : null;
   return { perWorker, overall };
 }
 
