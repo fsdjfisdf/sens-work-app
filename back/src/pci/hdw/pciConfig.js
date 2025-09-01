@@ -88,15 +88,15 @@ exports.normalizeItem = (raw) => {
 };
 
 /** Self-check 컬럼 고정 매핑 (DB 스키마와 1:1) */
-const SELF_COLS = {
+const SELF_COL_MAP = {
   // 전장부
   "OD REP": "OD_REP",
-  "RELAY REP": "Relay_REP",
-  "FAN REP": "Fan_REP",
+  "Relay REP": "RELAY_REP",
+  "Fan REP": "FAN_REP",
   "NTC / NTU REP": "NTC_NTU_REP",
   "SSR REP": "SSR_REP",
   "MC REP": "MC_REP",
-  "FUSE REP": "Fuse_REP",
+  "Fuse REP": "FUSE_REP",
   "CT REP": "CT_REP",
   "HBD REP": "HBD_REP",
   "SMPS REP": "SMPS_REP",
@@ -104,33 +104,38 @@ const SELF_COLS = {
   "ELB REP": "ELB_REP",
 
   // 배관부
-  "HEATER REP (HALOGEN LAMP)": "Heater_REP",
-  "Q'TZ TANK REP": "Qtz_tank_REP",
-  "LEAK TROUBLESHOOTING": "Leak_troubleshooting",
-  "FLOW METER REP": "Flow_meter_REP",
-  "AIR VALVE REP": "Air_valve_REP",
-  "SHUT OFF VALVE REP": "Shut_off_valve_REP",
-  "SOL VALVE REP": "Sol_valve_REP",
-  "ELBOW FITTING REP (QTZ)": "Elbow_fitting_REP",
-  "LEAK TRAY": "Leak_tray",
-  "TC SENSOR": "TC_Sensor",
+  "Heater REP (Halogen lamp)": "HEATER_REP",
+  "Q'tz tank REP": "QTZ_TANK_REP",
+  "Leak troubleshooting": "LEAK_TROUBLESHOOTING",
+  "Flow meter REP": "FLOW_METER_REP",
+  "Air valve REP": "AIR_VALVE_REP",
+  "Shut off valve REP": "SHUT_OFF_VALVE_REP",
+  "Sol valve REP": "SOL_VALVE_REP",
+  "Elbow fitting REP (Qtz)": "ELBOW_FITTING_REP",
+  "Leak tray": "LEAK_TRAY",
+  "TC Sensor": "TC_SENSOR",
 
   // SW
-  "TOUCH PANEL PATCH": "Touch_panel_patch",
-  "PLC PATCH": "PLC_patch",
-  "TOUCH PANEL REP": "Touch_panel_REP",
-  // ⚠️ SW의 PLC REP은 전장부의 PLC_REP와 다른 컬럼(PLC_REP_SW)
+  "Touch panel patch": "TOUCH_PANEL_PATCH",
+  "PLC patch": "PLC_PATCH",
+  "Touch panel REP": "TOUCH_PANEL_REP",
+  // SW 쪽의 "PLC REP"은 테이블 컬럼이 별도로 존재(PLC_REP_SW)
   "PLC REP": "PLC_REP_SW",
 };
 
 exports.toSelfCol = (item) => {
-  const up = upper(item);
-  if (SELF_COL_MAP[up]) return SELF_COL_MAP[up];
-  // 기본 규칙
-  return up
-    .replace(/[^\p{L}\p{N}_ &]/gu, "")   // 한글/영문/숫자/_/&만 유지
+  const key = (item ?? "").toString().trim();
+  if (SELF_COL_MAP[key]) return SELF_COL_MAP[key].toUpperCase();
+
+  // fallback: 일반 규칙 (컬럼명이 정확히 일치하지 않을 수 있으므로 가급적 위 매핑을 채우세요)
+  return key
+    .replace(/ASS'Y/gi, "ASSY")
+    .replace(/\u2019/g, "'")        // 스마트 따옴표 → 일반 따옴표
+    .replace(/[^\p{L}\p{N}_ &'-]/gu, "") // 허용 문자만 유지
+    .replace(/&/g, " AND ")
+    .replace(/['()-]/g, " ")
     .replace(/\s+/g, "_")
-    .trim();
+    .toUpperCase();
 };
 
 /** item → self-check 컬럼명 */
