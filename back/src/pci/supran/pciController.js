@@ -272,3 +272,93 @@ exports.getMatrix = async (req, res) => {
     res.status(500).json({ message: "internal_error" });
   }
 };
+
+// ====== 항목 단위 상세: 한 사람 + 한 항목의 산출 근거 ======
+exports.getWorkerItemBreakdown = async (req, res) => {
+  try {
+    const rawName = req.params.name || req.query.name;
+    const rawItem = req.params.item || req.query.item;
+    if (!rawName || !rawItem) return res.status(400).json({ message: "name, item 파라미터 필요" });
+
+    const worker = workerAliases(rawName);
+    const itemNorm = normalizeItem(rawItem);
+    if (!itemNorm || !BASELINE[itemNorm]) {
+      return res.status(404).json({ message: `기준에 없는 항목: ${rawItem}` });
+    }
+    const baseline = BASELINE[itemNorm];
+
+    const [logs, addPivot, selfRow] = await Promise.all([
+      fetchWorkLogsForSupraN({}),         // 전체기간
+      fetchAdditionalCountsPivot(),
+      fetchSelfCheckRow(worker),
+    ]);
+
+    // 1) 이 항목 관련 로그 중, 해당 작업자가 참여한 건만 추출(역할/가중치 포함)
+    const logRows = [];
+    let mainSum = 0, supportSum = 0;
+    for (const r of logs) {
+      if (normalizeItem(r.transfer_item) !== itemNorm) continue;
+      const people = parseTaskMen(r.task_man);
+      for (const p of people) {
+        if (workerAliases(p.name) !== worker) continue;
+        const role = p.weight >= 1 ? "main" : "support";
+        if (role === "main") mainSum += 1.0; else supportSum += 0.2;
+        logRows.push({
+          id: r.id,
+          task_date: r.task_date,
+          equipment_type: r.equipment_type,
+          task_man_raw: r.task_man,
+          role,
+          weight: p.weight,
+        });
+      }
+    }
+    mainSum = Math.round(mainSum * 10) / 10;
+    supportSum = Math.round(supportSum * 10) / 10;
+
+    // 2) 가산(교육)
+    let addCount = 0;
+    for (const key of Object.keys(addPivot)) {
+      const norm = normalizeItem(key);
+      if (norm !== itemNorm) continue;
+      addCount += Number(addPivot[key]?.[worker] || 0);
+    }
+
+    // 3) 자가(20%)
+    const selfCol = toSelfCol(itemNorm);     // 예: "LP_ESCORT"
+    const selfVal = Number(selfRow?.[selfCol] || 0);
+    const selfPct = selfVal > 0 ? 20 : 0;
+
+    // 4) 퍼센트 산출
+    const totalCount = Math.round((mainSum + supportSum + addCount) * 10) / 10;
+    const workPct = baseline > 0 ? Math.round((Math.min(1, totalCount / baseline) * 80) * 10) / 10 : 0;
+    const pciPct  = clamp(workPct + selfPct, 0, 100);
+
+    return res.json({
+      worker,
+      item: itemNorm,
+      baseline,
+      totals: {
+        main_count: mainSum,
+        support_count: supportSum,
+        add_count: addCount,
+        total_count: totalCount,
+      },
+      percentages: {
+        work_pct: workPct,
+        self_pct: selfPct,
+        pci_pct: pciPct,
+        formula: `PCI = min(총횟수/기준,1)*80 + (자가>0?20:0) = ${workPct} + ${selfPct}`,
+      },
+      self_check: {
+        column: selfCol,
+        value: selfVal,
+        granted20: selfPct === 20,
+      },
+      logs: logRows.sort((a,b)=> String(a.task_date||"").localeCompare(String(b.task_date||"")) ),
+    });
+  } catch (err) {
+    console.error("[PCI SUPRA N] getWorkerItemBreakdown error:", err);
+    return res.status(500).json({ message: "internal_error", detail: String(err?.message || err) });
+  }
+};

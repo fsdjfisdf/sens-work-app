@@ -118,10 +118,5 @@ exports.normalizeItem = (raw) => {
 /** 작업자 별칭(동일인 취급) — (main)/(support), A/B 표기 통합 */
 exports.workerAliases = (name) => {
   if (!name) return "";
-  let base = name.replace(/\(.*?\)/g, "").trim();
-  // 프로젝트 룰: 김민제A/B, 강태영(main/support), 김동한(main/support) 통합
-  if (base.startsWith("김민제")) base = "김민제";
-  if (base.startsWith("강태영")) base = "강태영";
-  if (base.startsWith("김동한")) base = "김동한";
-  return base;
+  return name.replace(/\(.*?\)/g, "").trim().replace(/\s+/g, " ");
 };

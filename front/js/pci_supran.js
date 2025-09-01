@@ -1,9 +1,10 @@
 /* ==========================================================================
    SUPRA N PCI (전체 데이터, 중분류 그룹/기준 출력, 와이드 매트릭스)
    서버 API:
-     GET /api/pci/supra-n/workers         -> { workers: [name...] }
-     GET /api/pci/supra-n/matrix          -> { workers, items, data, worker_avg_pci }
-     GET /api/pci/supra-n/worker/:name    -> { summary, rows }
+     GET /api/pci/supra-n/workers              -> { workers: [name...] }
+     GET /api/pci/supra-n/matrix               -> { workers, items, data, worker_avg_pci }
+     GET /api/pci/supra-n/worker/:name         -> { summary, rows }
+     GET /api/pci/supra-n/worker/:name/item/:item -> 산출근거 상세
    ========================================================================== */
 
 const API_BASE = "";
@@ -57,7 +58,7 @@ const el = {
   tbody: $("pciTbody"),
 };
 
-// ===== 중분류 정의(네가 준 구조 반영) =====
+// ===== 중분류 정의 =====
 const CATEGORIES = [
   { category: "ESCORT",             items: ["LP ESCORT","ROBOT ESCORT"] },
   { category: "EFEM ROBOT",         items: ["SR8241 TEACHING","SR8240 TEACHING","M124 TEACHING","EFEM FIXTURE","EFEM ROBOT REP","EFEM ROBOT CONTROLLER REP"] },
@@ -87,7 +88,7 @@ const ITEM_TO_CAT = (() => {
 })();
 
 function getCategory(item){ return ITEM_TO_CAT[item] || "-"; }
-function esc(s=""){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&gt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function esc(s=""){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
 function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
 
@@ -100,6 +101,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadWorkerList();
   await buildMatrix();
+
+  // 매트릭스 셀 상세(이벤트 위임)
+  el.matrixTbody.addEventListener("click", (e)=>{
+    const cell = e.target.closest(".cell");
+    if (!cell) return;
+    const w = cell.getAttribute("data-w");
+    const it = cell.getAttribute("data-item");
+    if (w && it) openBreakdown(w, it);
+  });
 });
 
 // ===== 탭 =====
@@ -118,7 +128,7 @@ function bindTabs(){
 // ===== 매트릭스 =====
 function bindMatrixEvents(){
   el.btnReloadMatrix.addEventListener("click", buildMatrix);
-  el.btnMatrixCsv.addEventListener("click", downloadMatrixCsv);
+  el.btnMatrixCsv.addEventListener("click", exportMatrixXlsx); // Excel
   el.filterItem.addEventListener("input", renderMatrix);
   el.filterWorker.addEventListener("input", renderMatrix);
   el.sortWorkers.addEventListener("change", ()=>{ sortMatrixWorkers(); renderMatrix(); });
@@ -185,7 +195,7 @@ function renderCategoryChips(){
 }
 
 function getBaseline(item){
-  // 어떤 작업자 셀이라도 baseline 동일 → 첫 번째 작업자의 baseline 사용
+  if (!matrixWorkers.length) return "";
   const w0 = matrixWorkers[0];
   const d = (matrixData[item]||{})[w0] || null;
   return d?.baseline ?? "";
@@ -256,7 +266,13 @@ function renderMatrix(){
         const title = d ? `작업자: ${w}\n항목: ${item}\nPCI: ${pct(d.pci)}%\n작업이력(80): ${pct(d.work)}%\n자가(20): ${pct(d.self)}%\n기준: ${d.baseline}\n총횟수: ${d.total_count} (main ${d.main_count}, support ${d.support_count}, 가산 ${d.add_count})` : "";
         const td = document.createElement("td");
         td.className = "worker-col";
-        td.innerHTML = `<div class="${cls}" title="${esc(title)}"><span class="pct">${pct(val)}%</span></div>`;
+        // 클릭 가능한 셀(산출 근거)
+        td.innerHTML = `
+          <div class="${cls}" role="button" tabindex="0"
+               data-w="${esc(w)}" data-item="${esc(item)}"
+               title="${esc(title)}">
+            <span class="pct">${pct(val)}%</span>
+          </div>`;
         tr.appendChild(td);
       }
       frag.appendChild(tr);
@@ -273,21 +289,19 @@ function toggleDensity(){
 
 function applyColumnWidth(){
   const px = Math.max(40, Math.min(140, Number(el.colWidth.value || 64)));
-  const css = document.documentElement.style;
-  // 간단히 .worker-col min-width 조절
   Array.from(document.querySelectorAll(".worker-col")).forEach(th => th.style.minWidth = px + "px");
 }
 
-// ===== CSV (중분류/기준 포함) =====
-function downloadMatrixCsv(){
+// ===== Excel (중분류/기준 포함) =====
+function exportMatrixXlsx(){
   const qItem = el.filterItem.value.trim().toLowerCase();
   const qWorker = el.filterWorker.value.trim().toLowerCase();
   const cats = visibleCategories();
 
   const workers = matrixWorkers.filter(w => !qWorker || w.toLowerCase().includes(qWorker));
   const header = ["중분류","작업 항목","기준", ...workers];
-  const lines = [header.map(s=>`"${s.replace(/"/g,'""')}"`).join(",")];
 
+  const aoa = [header];
   for (const grp of CATEGORIES){
     if (!cats.has(grp.category)) continue;
     const its = grp.items.filter(it => matrixItems.includes(it))
@@ -297,24 +311,22 @@ function downloadMatrixCsv(){
       const row = [grp.category, item, base];
       for (const w of workers){
         const d = (matrixData[item]||{})[w] || null;
-        row.push(Number.isFinite(d?.pci) ? pct(d.pci) : "");
+        row.push(Number.isFinite(d?.pci) ? Number(pct(d.pci)) : "");
       }
-      lines.push(row.map(s=>`"${String(s).replace(/"/g,'""')}"`).join(","));
+      aoa.push(row);
     }
   }
 
-  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "SUPRAN_PCI_MATRIX.csv";
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.utils.book_append_sheet(wb, ws, "SUPRA N PCI");
+  XLSX.writeFile(wb, "SUPRAN_PCI_MATRIX.xlsx");
 }
 
 // ===== 개인 보기 =====
 function bindPersonEvents(){
   el.btnFetch.addEventListener("click", onFetchPerson);
-  el.btnCsv.addEventListener("click", onCsvPerson);
+  el.btnCsv.addEventListener("click", exportPersonXlsx); // Excel
   el.searchItem.addEventListener("input", renderPersonTable);
   el.sortBy.addEventListener("change", ()=>{ sortPersonRows(); renderPersonTable(); });
 }
@@ -377,42 +389,167 @@ function sortPersonRows(){
 function renderPersonTable(){
   const q = el.searchItem.value.trim().toLowerCase();
   const rows = (currentRows||[]).filter(r=>!q || r.item.toLowerCase().includes(q));
-  const frag = document.createDocumentFragment();
+
+  // 중분류별 그룹핑
+  const groups = new Map(); // cat -> rows[]
   for (const r of rows){
     const cat = getCategory(r.item);
-    const badgeClass = r.pci_pct >= 80 ? "ok" : (r.pci_pct >= 50 ? "mid" : "bad");
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><span class="badge">${esc(cat)}</span></td>
-      <td>${esc(r.item)}</td>
-      <td>${r.baseline}</td>
-      <td>${r.main_count}</td>
-      <td>${r.support_count}</td>
-      <td>${r.add_count}</td>
-      <td>${r.total_count}</td>
-      <td>${pct(r.work_pct)}%</td>
-      <td>${pct(r.self_pct)}%</td>
-      <td><span class="badge ${badgeClass}">${pct(r.pci_pct)}%</span></td>
-    `;
-    frag.appendChild(tr);
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat).push(r);
+  }
+
+  const frag = document.createDocumentFragment();
+  for (const [cat, list] of groups){
+    // 섹션 헤더 행
+    const hr = document.createElement("tr");
+    hr.className = "cat-row";
+    const td = document.createElement("td");
+    td.colSpan = 10;
+    td.innerHTML = `<strong>${esc(cat)}</strong>`;
+    hr.appendChild(td);
+    frag.appendChild(hr);
+
+    // 항목 행
+    for (const r of list){
+      const badgeClass = r.pci_pct >= 80 ? "ok" : (r.pci_pct >= 50 ? "mid" : "bad");
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-item", r.item);
+      tr.innerHTML = `
+        <td><span class="badge">${esc(cat)}</span></td>
+        <td>${esc(r.item)}</td>
+        <td>${r.baseline}</td>
+        <td>${r.main_count}</td>
+        <td>${r.support_count}</td>
+        <td>${r.add_count}</td>
+        <td>${r.total_count}</td>
+        <td>${pct(r.work_pct)}%</td>
+        <td>${pct(r.self_pct)}%</td>
+        <td><span class="badge ${badgeClass}">${pct(r.pci_pct)}%</span></td>
+      `;
+      frag.appendChild(tr);
+    }
   }
   el.tbody.innerHTML = ""; el.tbody.appendChild(frag);
 }
 
-function onCsvPerson(){
+// 개인 보기 행 클릭 → 산출 근거
+el.tbody.addEventListener("click", (e)=>{
+  const tr = e.target.closest("tr");
+  if (!tr) return;
+  const it = tr.getAttribute("data-item");
+  const w = currentSummary?.worker;
+  if (w && it) openBreakdown(w, it);
+});
+
+// Excel(개인)
+function exportPersonXlsx(){
   if (!currentRows?.length) return alert("내보낼 데이터가 없습니다.");
-  const header = ["중분류","항목","기준","main","support","가산","총횟수","작업이력(80)","자가(20)","PCI(%)"];
-  const lines = [header.join(",")];
+
+  const aoa = [["중분류","항목","기준","main","support","가산","총횟수","작업이력(80)","자가(20)","PCI(%)"]];
   for (const r of currentRows){
-    const row = [ getCategory(r.item), r.item, r.baseline, r.main_count, r.support_count, r.add_count, r.total_count, pct(r.work_pct), pct(r.self_pct), pct(r.pci_pct) ]
-      .map(v=>`"${String(v).replace(/"/g,'""')}"`);
-    lines.push(row.join(","));
+    aoa.push([
+      getCategory(r.item), r.item, r.baseline,
+      r.main_count, r.support_count, r.add_count, r.total_count,
+      Number(pct(r.work_pct)), Number(pct(r.self_pct)), Number(pct(r.pci_pct))
+    ]);
   }
-  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  const name = (currentSummary?.worker || "worker") + "_SUPRAN_PCI.csv";
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.utils.book_append_sheet(wb, ws, currentSummary?.worker || "PERSON");
+  const name = (currentSummary?.worker || "worker") + "_SUPRAN_PCI.xlsx";
+  XLSX.writeFile(wb, name);
+}
+
+// ===== 산출 근거 모달 =====
+async function openBreakdown(worker, item){
+  try{
+    const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
+    const { data } = await axios.get(url);
+
+    const logsHtml = (data.logs && data.logs.length)
+      ? `<div class="table-scroll">
+           <table class="table" style="min-width:820px">
+             <thead>
+               <tr><th>일자</th><th>ID</th><th>장비타입</th><th>역할</th><th>가중치</th><th>원본 작업자기재</th></tr>
+             </thead>
+             <tbody>
+               ${data.logs.map(l=>`
+                 <tr>
+                   <td>${esc(l.task_date||"-")}</td>
+                   <td>${l.id}</td>
+                   <td>${esc(l.equipment_type||"-")}</td>
+                   <td>${esc(l.role)}</td>
+                   <td>${l.weight}</td>
+                   <td class="wrap-text">${esc(l.task_man_raw||"")}</td>
+                 </tr>`).join("")}
+             </tbody>
+           </table>
+         </div>`
+      : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
+
+    const box = `
+      <div class="modal-body">
+        <div class="modal-sec">
+          <h4>요약</h4>
+          <div class="kv">
+            <div class="k">작업자</div><div class="v"><strong>${esc(worker)}</strong></div>
+            <div class="k">항목</div><div class="v"><strong>${esc(data.item)}</strong> <span class="pill">${esc(getCategory(data.item))}</span></div>
+            <div class="k">기준 작업 수</div><div class="v">${data.baseline}</div>
+            <div class="k">카운트</div>
+            <div class="v">main ${data.totals.main_count}, support ${data.totals.support_count}, 가산 ${data.totals.add_count} → <strong>총 ${data.totals.total_count}</strong></div>
+            <div class="k">자가체크</div>
+            <div class="v">컬럼 <code class="mono">${esc(data.self_check.column)}</code> 값 <strong>${data.self_check.value}</strong> → ${data.self_check.granted20? "20% 부여":"0%"}</div>
+            <div class="k">계산식</div>
+            <div class="v mono">${esc(data.percentages.formula)}</div>
+            <div class="k">결과</div>
+            <div class="v">작업이력 <strong>${pct(data.percentages.work_pct)}%</strong> + 자가 <strong>${pct(data.percentages.self_pct)}%</strong> = <strong>${pct(data.percentages.pci_pct)}%</strong></div>
+          </div>
+        </div>
+        <div class="modal-sec span-2">
+          <h4>참여 작업 로그</h4>
+          ${logsHtml}
+        </div>
+      </div>
+    `;
+    showModal(`산출 근거 — ${esc(worker)} / ${esc(item)}`, box);
+  }catch(e){
+    console.error("상세 조회 실패:", e);
+    alert("상세를 불러오지 못했습니다.");
+  }
+}
+
+// 가벼운 모달(approval.css 톤과 어울림)
+function showModal(title, bodyHtml){
+  let overlay = document.querySelector(".overlay");
+  let modal = document.querySelector(".modal");
+  if (!overlay){
+    overlay = document.createElement("div");
+    overlay.className = "overlay";
+    document.body.appendChild(overlay);
+  }
+  if (!modal){
+    modal = document.createElement("div");
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-card">
+        <div class="modal-head">
+          <div class="md-title"></div>
+          <button class="btn" id="md-close">닫기</button>
+        </div>
+        <div class="modal-box"></div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector("#md-close").addEventListener("click", hideModal);
+    overlay.addEventListener("click", hideModal);
+  }
+  modal.querySelector(".md-title").textContent = title;
+  modal.querySelector(".modal-box").innerHTML = bodyHtml;
+  document.body.classList.add("modal-open");
+  overlay.classList.add("show");
+  modal.classList.add("show");
+}
+function hideModal(){
+  document.body.classList.remove("modal-open");
+  document.querySelector(".overlay")?.classList.remove("show");
+  document.querySelector(".modal")?.classList.remove("show");
 }
