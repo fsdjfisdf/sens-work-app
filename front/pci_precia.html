@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>S-WORKS | PRECIA PCI</title>
+
+  <link rel="stylesheet" href="./css/pci_supran.css"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="wide">
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./approval.html" class="menu-item">Worklog Approval</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+  <main class="container wide">
+    <!-- 탭 -->
+    <section class="tabs">
+      <button class="tab active" data-tab="tab-matrix" aria-controls="tab-matrix" aria-selected="true">전체 인원 보기</button>
+      <button class="tab" data-tab="tab-person" aria-controls="tab-person" aria-selected="false">개인 보기</button>
+    </section>
+
+    <!-- ===== 전체 인원 보기 ===== -->
+    <section id="tab-matrix" class="panel tab-pane active" role="tabpanel">
+      <div class="panel-header">
+        <h2>전체 인원 매트릭스</h2>
+      </div>
+
+      <div class="filters">
+        <div class="field">
+          <label for="filterItem">작업 항목 검색</label>
+          <input id="filterItem" class="input" placeholder="예: ESCORT, VALVE, CHUCK ..." autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label for="filterWorker">작업자 검색</label>
+          <input id="filterWorker" class="input" placeholder="예: 정현우" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label for="sortWorkers">작업자 정렬</label>
+          <select id="sortWorkers" class="input">
+            <option value="avg_desc">평균 PCI 높은순</option>
+            <option value="name_asc">이름 A→Z</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="density">보기 밀도</label>
+          <select id="density" class="input">
+            <option value="compact">많이 보기</option>
+            <option value="comfortable">보통</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="colWidth">열 너비(픽셀)</label>
+          <input id="colWidth" class="input" type="number" min="40" max="140" step="2" value="68"/>
+        </div>
+
+        <div class="field actions">
+          <button id="btnReloadMatrix" class="btn primary">새로고침</button>
+          <button id="btnMatrixCsv" class="btn">Excel 내보내기</button>
+        </div>
+      </div>
+
+      <div class="matrix-wrap" id="matrixWrap">
+        <div class="loading-line" aria-hidden="true"></div>
+        <!-- 개인 보기 테이블 룩 & 필에 맞춘 매트릭스 -->
+        <table id="matrixTable" class="matrix table-like dense">
+          <thead id="matrixThead"></thead>
+          <tbody id="matrixTbody"></tbody>
+        </table>
+      </div>
+
+      <div id="matrixLoading" class="loading hidden" aria-live="polite">
+        <div class="spinner"></div>
+        <div class="txt">전체 데이터를 수집/계산 중...</div>
+      </div>
+    </section>
+
+    <!-- ===== 개인 보기 ===== -->
+    <section id="tab-person" class="panel tab-pane" role="tabpanel">
+      <div class="panel-header">
+        <h2>개인 보기</h2>
+      </div>
+
+      <div class="filters person">
+        <div class="field field-inline">
+          <label for="worker">작업자</label>
+          <div class="inline-input">
+            <input id="worker" list="worker-list" placeholder="예: 정현우" autocomplete="off"/>
+            <datalist id="worker-list"></datalist>
+          </div>
+        </div>
+        <div class="field actions actions-inline">
+          <button id="btnFetch" class="btn primary">조회</button>
+          <button id="btnCsv" class="btn">Excel 다운로드</button>
+        </div>
+      </div>
+
+      <!-- 요약 카드 -->
+      <section class="cards">
+        <div class="card stat">
+          <div class="label">평균 작업이력(80%)</div>
+          <div class="value"><span id="avgWork">-</span><span class="unit">%</span></div>
+          <div class="sub">기간: 전체</div>
+        </div>
+        <div class="card stat">
+          <div class="label">평균 PCI(총합)</div>
+          <div class="value"><span id="avgPci">-</span><span class="unit">%</span></div>
+          <div class="sub">자가체크 20% 포함</div>
+        </div>
+        <div class="card stat">
+          <div class="label">평균에 포함된 항목수</div>
+          <div class="value"><span id="itemsCnt">-</span><span class="unit">개</span></div>
+          <div class="sub">참여/자가체크 0인 항목 제외</div>
+        </div>
+      </section>
+
+      <!-- 차트 -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>항목별 PCI 분해</h2>
+          <div class="hint">가로 스크롤로 더 많은 항목을 볼 수 있어요.</div>
+        </div>
+        <div id="chartScroll" class="chart-scroll">
+          <div id="chartInner" class="chart-inner">
+            <canvas id="stackedChart" height="260" aria-label="개인 항목별 PCI 스택 바 차트"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- 테이블 -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>상세 테이블</h2>
+          <div class="table-actions">
+            <input id="searchItem" class="input" placeholder="항목명 검색" autocomplete="off"/>
+            <select id="sortBy" class="input">
+              <option value="pci_desc">정렬: PCI 높은순</option>
+              <option value="work_desc">정렬: 작업이력 높은순</option>
+              <option value="count_desc">정렬: 수행횟수 많은순</option>
+              <option value="item_asc">정렬: 항목명 A→Z</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll" id="personTableScroll">
+          <div class="loading-line" aria-hidden="true"></div>
+          <table class="table" id="pciTable">
+            <thead>
+              <tr>
+                <th>중분류</th>
+                <th>항목</th>
+                <th>기준</th>
+                <th>main</th>
+                <th>support</th>
+                <th>교육</th>
+                <th>총횟수</th>
+                <th>작업이력(80)</th>
+                <th>자가(20)</th>
+                <th>PCI(%)</th>
+              </tr>
+            </thead>
+            <tbody id="pciTbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="inner">
+      <span>© S-WORKS · PRECIA PCI</span>
+    </div>
+  </footer>
+
+  <!-- 모달 -->
+  <div class="overlay" id="overlay"></div>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="md-title" id="modalTitle">상세</div>
+        <div class="modal-tools"></div>
+        <button class="btn ghost" id="modalClose" aria-label="모달 닫기">닫기</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="./js/pci_precia.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const token = localStorage.getItem("x-access-token");
+        const userRole = localStorage.getItem("user-role");
+
+        if (!token) {
+            document.querySelector(".unsigned").classList.remove("hidden");
+            document.querySelector(".signed").classList.add("hidden");
+        } else {
+            document.querySelector(".unsigned").classList.add("hidden");
+            document.querySelector(".signed").classList.remove("hidden");
+        }
+
+        if (!token || userRole !== 'admin') {
+            document.querySelectorAll('.admin-only').forEach(element => {
+                element.style.display = 'none';
+            });
+        }
+
+        const signOutButton = document.querySelector("#sign-out");
+
+        if (signOutButton) {
+            signOutButton.addEventListener("click", function() {
+                localStorage.removeItem("x-access-token");
+                localStorage.removeItem("user-role");
+                alert("로그아웃 되었습니다.");
+                window.location.replace("./signin.html");
+            });
+        }
+        const menuBtn = document.querySelector('.menu-btn');
+        const menuBar = document.querySelector('.menu-bar');
+
+        menuBtn.addEventListener('click', function() {
+            menuBar.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                menuBar.classList.remove('open');
+            }
+        });
+    });
+    document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('x-access-token');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.replace('./signin.html');
+                return;
+            }
+    }
+)
+    
+</script>
+</body>
+</html>
