@@ -154,6 +154,9 @@ app.get('/approval/work-log/:id', jwtMiddleware, workLogController.getPendingWor
 app.patch('/approval/work-log/:id', jwtMiddleware, workLogController.updatePendingWorkLog);
 app.post('/approval/work-log/:id/resubmit', jwtMiddleware, workLogController.resubmitPendingWorkLog);
 
+const pciSupraNRoute = require('../src/routes/pciSupraNRoute');
+app.use('/api/pci/supra-n', pciSupraNRoute);
+
 
 
   

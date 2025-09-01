@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>S-WORKS | SUPRA N PCI</title>
+
+  <!-- 기본 스타일 -->
+  <link rel="stylesheet" href="./css/pci_supran.css"/>
+
+  <!-- 외부 라이브러리 (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+  <!-- (선택) 사이트 공통 자동 로그아웃 타이머 사용 시 -->
+  <script defer src="./js/logoutTimer.js"></script>
+</head>
+<body>
+  <nav class="nav">
+    <div class="inner">
+      <a class="brand" href="./index.html">S-WORKS</a>
+      <div class="nav-right">
+        <span class="page-title">SUPRA N PCI</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- 필터 -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>조회 조건</h2>
+        <div class="hint">자가체크 20% + 작업이력 80% (main=1.0, support=0.2, 교육가산 포함)</div>
+      </div>
+      <div class="filters">
+        <div class="field">
+          <label for="worker">작업자</label>
+          <input id="worker" list="worker-list" placeholder="예: 정현우" autocomplete="off"/>
+          <datalist id="worker-list"></datalist>
+        </div>
+
+        <div class="field">
+          <label for="dateFrom">시작일</label>
+          <input id="dateFrom" type="date"/>
+        </div>
+        <div class="field">
+          <label for="dateTo">종료일</label>
+          <input id="dateTo" type="date"/>
+        </div>
+
+        <div class="field actions">
+          <button id="btnRangeAll" class="btn ghost">전체</button>
+          <button id="btnRangeYTD" class="btn ghost">YTD</button>
+          <button id="btnRange90" class="btn ghost">최근 90일</button>
+        </div>
+
+        <div class="field actions">
+          <button id="btnFetch" class="btn primary">조회</button>
+          <button id="btnCsv" class="btn">CSV 다운로드</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 요약 카드 -->
+    <section class="cards">
+      <div class="card stat">
+        <div class="label">평균 작업이력(80%)</div>
+        <div class="value"><span id="avgWork">-</span><span class="unit">%</span></div>
+        <div class="sub" id="periodText">기간: -</div>
+      </div>
+      <div class="card stat">
+        <div class="label">평균 PCI(총합)</div>
+        <div class="value"><span id="avgPci">-</span><span class="unit">%</span></div>
+        <div class="sub">자가체크 20% 포함</div>
+      </div>
+      <div class="card stat">
+        <div class="label">평균에 포함된 항목수</div>
+        <div class="value"><span id="itemsCnt">-</span><span class="unit">개</span></div>
+        <div class="sub">참여/자가체크가 0인 항목 제외</div>
+      </div>
+    </section>
+
+    <!-- 차트 -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>항목별 PCI 분해(작업이력 80 + 자가 20)</h2>
+        <div class="hint">막대가 100%면 해당 항목은 기준작업수 도달 + 자가체크 수행</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="stackedChart" height="220"></canvas>
+      </div>
+    </section>
+
+    <!-- 테이블 -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>상세 테이블</h2>
+        <div class="table-actions">
+          <input id="searchItem" class="input" placeholder="항목명 검색 (예: ESCORT, VALVE…)"/>
+          <select id="sortBy" class="input">
+            <option value="pci_desc">정렬: PCI 높은순</option>
+            <option value="work_desc">정렬: 작업이력 높은순</option>
+            <option value="count_desc">정렬: 수행횟수 많은순</option>
+            <option value="item_asc">정렬: 항목명 A→Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table" id="pciTable">
+          <thead>
+            <tr>
+              <th>카테고리</th>
+              <th>항목</th>
+              <th title="기준 작업 수">기준</th>
+              <th title="main 합계(1.0씩)">main</th>
+              <th title="support 합계(0.2씩)">support</th>
+              <th title="교육/가산 카운트">가산</th>
+              <th title="main+support+가산">총횟수</th>
+              <th>작업이력(80)</th>
+              <th>자가(20)</th>
+              <th>PCI(%)</th>
+            </tr>
+          </thead>
+          <tbody id="pciTbody">
+            <!-- rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="inner">
+      <span>© S-WORKS · SUPRA N PCI</span>
+    </div>
+  </footer>
+
+  <script src="./js/pci_supran.js" defer></script>
+</body>
+</html>
