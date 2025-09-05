@@ -230,7 +230,9 @@ exports.listPendingWorkLogs = async (req, res) => {
   try {
     const g = req.query.group || '';
     const s = req.query.site || '';
-    const rows = await workLogDao.listPendingWorkLogs(g, s);
+    const mine = String(req.query.mine || '') === '1' || String(req.query.mine || '').toLowerCase() === 'true';
+    const me = mine ? (req.user?.nickname || null) : null;
+    const rows = await workLogDao.listPendingWorkLogs(g, s, me);
     res.status(200).json(rows);
   } catch (err) {
     res.status(500).json({ error: '대기 목록 조회 오류' });
@@ -262,7 +264,8 @@ exports.updatePendingWorkLog = async (req, res) => {
     const isApprover = isUserAllowedApprover(req.user, row.group, row.site);
     const isSubmitter = (req.user?.nickname === row.submitted_by);
 
-    if (row.approval_status === 'pending' && !isApprover) {
+    const isPending = !row.approval_status || row.approval_status === 'pending';
+    if (isPending && !isApprover) {
       return res.status(403).json({ error: '대기 상태 수정 권한 없음(결재자만 가능)' });
     }
     if (row.approval_status === 'rejected' && !isSubmitter && req.user?.role!=='admin') {

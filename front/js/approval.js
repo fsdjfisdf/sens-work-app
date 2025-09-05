@@ -213,15 +213,15 @@ function isMine(row) {
     tbody.innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
     try {
 
-   const url = (mode === 'pending' || mode === 'mypending')
-     ? `${API}/approval/work-log/pending`
-     : `${API}/approval/work-log/rejected`;
-   const params =
-     mode === 'pending'
-       ? { group: g || '', site: s || '' }
-       : mode === 'mypending'
-         ? { mine: 1, group: g || '', site: s || '' } // ★ 내 대기만
-         : { mine: 1 }; // 반려는 내 것만
+ const url = (mode === 'pending' || mode === 'mypending')
+   ? `${API}/approval/work-log/pending`
+   : `${API}/approval/work-log/rejected/mine`; // 라우트와 일치
+ const params =
+   mode === 'pending'
+     ? { group: g || '', site: s || '' }
+     : mode === 'mypending'
+       ? { mine: 1, group: g || '', site: s || '' }
+       : {}; // /rejected/mine는 파라미터 불필요
    const { data } = await axios.get(url, { headers: hdr(), params });
 
       rowsCache = Array.isArray(data) ? data : [];

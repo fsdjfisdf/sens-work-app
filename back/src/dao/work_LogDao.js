@@ -207,9 +207,9 @@ exports.submitPendingWorkLog = async (payload) => {
         task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
         \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2,
         setup_item, maint_item, transfer_item, task_maint, status,
-        submitted_by
+        submitted_by, approval_status
       )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending')
     `;
     const values = [
       payload.task_name, payload.task_result, payload.task_cause, payload.task_man, payload.task_description,
@@ -228,13 +228,17 @@ exports.submitPendingWorkLog = async (payload) => {
 };
 
 /* 대기 목록 (필터 지원) */
-exports.listPendingWorkLogs = async (group, site) => {
+exports.listPendingWorkLogs = async (group, site, mineNickname) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const cond = [`approval_status='pending'`];
+    const cond = ["(approval_status='pending' OR approval_status IS NULL OR approval_status='')"];
     const vals = [];
     if (group) { cond.push('`group` = ?'); vals.push(group); }
     if (site && group !== 'PSKH') { cond.push('site = ?'); vals.push(site); } // PSKH는 site 무시
+    if (mineNickname) {
+      cond.push('(submitted_by = ? OR LOWER(task_man) LIKE ?)');
+      vals.push(mineNickname, `%${mineNickname.toLowerCase()}%`);
+    }
     const sql = `SELECT * FROM work_log_pending WHERE ${cond.join(' AND ')} ORDER BY submitted_at DESC`;
     const [rows] = await connection.query(sql, vals);
     return rows;
