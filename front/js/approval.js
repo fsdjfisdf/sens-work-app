@@ -95,7 +95,7 @@
   let selectedIds = new Set(); // 일괄 결재 선택 상태
 
   // 권한에 따라 초기 탭: admin=대기, 그 외=반려
-  let mode = isApprover ? 'pending' : 'rejected';
+  let mode = isApprover ? 'pending' : 'mypending';
 
   function hdr() {
     return {
@@ -137,6 +137,14 @@
     const pad = (n)=> String(n).padStart(2,'0');
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
+
+  // 내가 올린(또는 작업자로 포함된) 항목인지
+function isMine(row) {
+  const me = (myNickname || '').toLowerCase();
+  return (String(row.submitted_by || '').toLowerCase() === me) ||
+         (String(row.task_man || '').toLowerCase().includes(me));
+}
+
 
   const fmtGS = (r) => `${safe(r.group)} / ${safe(r.site)}${r.line ? ' / ' + r.line : ''}`;
   const fmtDT = (r) => {
@@ -204,13 +212,18 @@
     const s = selSite.value;
     tbody.innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
     try {
-      const url = (mode === 'pending')
-        ? `${API}/approval/work-log/pending`
-        : `${API}/approval/work-log/rejected?mine=1`;
-      const { data } = await axios.get(url, {
-        headers: hdr(),
-        params: (mode === 'pending') ? { group: g || '', site: s || '' } : {}
-      });
+
+   const url = (mode === 'pending' || mode === 'mypending')
+     ? `${API}/approval/work-log/pending`
+     : `${API}/approval/work-log/rejected`;
+   const params =
+     mode === 'pending'
+       ? { group: g || '', site: s || '' }
+       : mode === 'mypending'
+         ? { mine: 1, group: g || '', site: s || '' } // ★ 내 대기만
+         : { mine: 1 }; // 반려는 내 것만
+   const { data } = await axios.get(url, { headers: hdr(), params });
+
       rowsCache = Array.isArray(data) ? data : [];
       // 모드가 바뀌었거나 필터 바뀌면 현재 선택 초기화
       selectedIds.clear();
@@ -251,6 +264,10 @@
       }
       return true;
     });
+
+      if (mode === 'mypending') {
+        filtered = filtered.filter(isMine);
+      }
 
     filtered.sort((a,b) => {
       const ad = fmtISODateOnly(a.task_date);
