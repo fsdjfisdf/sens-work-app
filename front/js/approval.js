@@ -139,11 +139,23 @@
   }
 
   // 내가 올린(또는 작업자로 포함된) 항목인지
-function isMine(row) {
-  const me = (myNickname || '').toLowerCase();
-  return (String(row.submitted_by || '').toLowerCase() === me) ||
-         (String(row.task_man || '').toLowerCase().includes(me));
-}
+ function normalizeName(s){
+   return String(s || '')
+     .trim()
+     .toLowerCase()
+     .replace(/\s+/g, '')      // 공백 제거
+     .replace(/[()]/g, '');    // 괄호 제거
+ }
+ function isMine(row){
+   const me = normalizeName(myNickname);
+   if (!me) return true; // 토큰에 닉네임 없으면 필터 패스
+   const sub = normalizeName(row.submitted_by);
+   if (sub === me) return true;
+   const mans = String(row.task_man || '')
+     .split(',')
+     .map(x => normalizeName(x));
+   return mans.includes(me) || mans.some(x => x.includes(me));
+ }
 
 
   const fmtGS = (r) => `${safe(r.group)} / ${safe(r.site)}${r.line ? ' / ' + r.line : ''}`;

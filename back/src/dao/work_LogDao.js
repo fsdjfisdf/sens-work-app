@@ -231,13 +231,19 @@ exports.submitPendingWorkLog = async (payload) => {
 exports.listPendingWorkLogs = async (group, site, mineNickname) => {
   const connection = await pool.getConnection(async conn => conn);
   try {
-    const cond = ["(approval_status='pending' OR approval_status IS NULL OR approval_status='')"];
+    const cond = ["LOWER(COALESCE(approval_status,'')) IN ('pending','')"];
     const vals = [];
     if (group) { cond.push('`group` = ?'); vals.push(group); }
     if (site && group !== 'PSKH') { cond.push('site = ?'); vals.push(site); } // PSKH는 site 무시
     if (mineNickname) {
-      cond.push('(submitted_by = ? OR LOWER(task_man) LIKE ?)');
-      vals.push(mineNickname, `%${mineNickname.toLowerCase()}%`);
+      const me = mineNickname.trim().toLowerCase();
+      const meFlat = me.replace(/\s+/g,'').replace(/[()]/g,'');
+      cond.push(`(
+        TRIM(submitted_by) = ?
+        OR LOWER(REPLACE(REPLACE(REPLACE(task_man,' ',''),'(',''),')','')) LIKE ?
+        OR LOWER(task_man) LIKE ?
+      )`);
+      vals.push(me, `%${meFlat}%`, `%${me}%`);
     }
     const sql = `SELECT * FROM work_log_pending WHERE ${cond.join(' AND ')} ORDER BY submitted_at DESC`;
     const [rows] = await connection.query(sql, vals);
