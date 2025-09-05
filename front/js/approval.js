@@ -241,10 +241,12 @@
       selectedIds.clear();
       redraw();
     } catch (e) {
-      console.error(e);
-      tbody.innerHTML = '<tr><td colspan="9">목록 조회 실패</td></tr>';
-      selectedIds.clear();
-      updateBulkUI();
+  console.error(e);
+  const status = e?.response?.status;
+  const msg = e?.response?.data?.error || e?.response?.data?.message || e.message || '오류';
+  tbody.innerHTML = `<tr><td colspan="9">목록 조회 실패 (${status}) — ${msg}</td></tr>`;
+  selectedIds.clear();
+  updateBulkUI();
     }
   }
 

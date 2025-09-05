@@ -140,19 +140,47 @@ function requireRole(roles = ['admin', 'editor']) {
 }
 
 // === 결재 플로우 ===
+// === 결재 플로우 ===
+const workLogController = require('../src/controllers/workLogController');
+
+// 결재자 목록
 app.get('/approval/approvers', jwtMiddleware, workLogController.getApproversForGroupSite);
+
+// 제출
 app.post('/approval/work-log/submit', jwtMiddleware, workLogController.submitWorkLogPending);
-app.get('/approval/work-log/pending', jwtMiddleware, requireRole(), workLogController.listPendingWorkLogs);
-app.post('/approval/work-log/:id/approve', jwtMiddleware, requireRole(), workLogController.approvePendingWorkLog);
-app.post('/approval/work-log/:id/reject', jwtMiddleware, requireRole(), workLogController.rejectPendingWorkLog);
 
-// ✅ 반려(내 이력) 조회 (프런트: /approval/work-log/rejected?mine=1)
-app.get('/approval/work-log/rejected', jwtMiddleware, workLogController.listMyRejected);
+// ✅ 목록: 전원 접근(인증만). mine=1일 때 서버에서 본인 것만 필터링
+app.get('/approval/work-log/pending', jwtMiddleware, workLogController.listPendingWorkLogs);
 
-// (선택/이미 구현했다면 생략 가능) — 상세조회/수정/재제출
+// ✅ 반려(내 이력): 프런트가 호출하는 정확한 경로 추가
+app.get('/approval/work-log/rejected/mine', jwtMiddleware, workLogController.listMyRejected);
+
+// (옵션) 하위호환: /rejected?mine=1 -> /rejected/mine로 라우팅
+app.get('/approval/work-log/rejected', jwtMiddleware, (req, res) => {
+  const mine = String(req.query.mine || '').toLowerCase();
+  if (mine === '1' || mine === 'true') {
+    return workLogController.listMyRejected(req, res);
+  }
+  return res.status(400).json({ error: '지원하지 않는 쿼리입니다. /rejected/mine 사용' });
+});
+
+// 상세/수정/재제출
 app.get('/approval/work-log/:id', jwtMiddleware, workLogController.getPendingWorkLogOne);
 app.patch('/approval/work-log/:id', jwtMiddleware, workLogController.updatePendingWorkLog);
 app.post('/approval/work-log/:id/resubmit', jwtMiddleware, workLogController.resubmitPendingWorkLog);
+
+// 승인/반려: ✅ 여기만 결재 권한 필요
+function requireRole(roles = ['admin', 'editor']) {
+  return (req, res, next) => {
+    const role = req.user?.role;
+    if (!role) return res.status(401).json({ message: '인증 필요' });
+    if (!roles.includes(role)) return res.status(403).json({ message: '권한 없음' });
+    next();
+  };
+}
+app.post('/approval/work-log/:id/approve', jwtMiddleware, requireRole(), workLogController.approvePendingWorkLog);
+app.post('/approval/work-log/:id/reject',  jwtMiddleware, requireRole(), workLogController.rejectPendingWorkLog);
+
 
 const pciSupraNRoute = require('../src/routes/pciSupraNRoute');
 app.use('/api/pci/supra-n', pciSupraNRoute);
