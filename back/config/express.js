@@ -141,7 +141,6 @@ function requireRole(roles = ['admin', 'editor']) {
 
 // === 결재 플로우 ===
 // === 결재 플로우 ===
-const workLogController = require('../src/controllers/workLogController');
 
 // 결재자 목록
 app.get('/approval/approvers', jwtMiddleware, workLogController.getApproversForGroupSite);
