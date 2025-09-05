@@ -4,7 +4,7 @@ const { pool } = require('../../config/database');
  * 기존 work_log CRUD 유지
  * ──────────────────────────────────────────────── */
 exports.getWorkLogs = async (equipment_name) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     let query = 'SELECT * FROM work_log';
     const values = [];
@@ -25,12 +25,33 @@ exports.getWorkLogs = async (equipment_name) => {
 /* addWorkLog: task_duration은 컬럼 정의(생성/일반)에 맞게 DB가 처리하도록
    → 여기선 기존 로직 유지(요청 주신 기존 코드 보존). */
 exports.addWorkLog = async (
-  task_name, task_result, task_cause, task_man, task_description,
-  task_date, start_time, end_time, none_time, move_time,
-  group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name,
-  work_type, work_type2, setup_item, maint_item, transfer_item, task_maint, status
+  task_name,
+  task_result,
+  task_cause,
+  task_man,
+  task_description,
+  task_date,
+  start_time,
+  end_time,
+  none_time,
+  move_time,
+  group,
+  site,
+  SOP,
+  tsguide,
+  line,
+  warranty,
+  equipment_type,
+  equipment_name,
+  work_type,
+  work_type2,
+  setup_item,
+  maint_item,
+  transfer_item,
+  task_maint,
+  status
 ) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `
       INSERT INTO work_log (
@@ -49,14 +70,35 @@ exports.addWorkLog = async (
       )
     `;
     const values = [
-      task_name, task_date, task_man, group, site, line,
-      equipment_type, warranty, equipment_name, (status || 'active'),
-      task_description, task_cause, task_result, SOP, tsguide,
-      work_type, work_type2, setup_item, maint_item, transfer_item,
-      start_time || '00:00:00', end_time || '00:00:00',
-      Number(none_time) || 0, Number(move_time) || 0,
-      start_time || '00:00:00', end_time || '00:00:00',
-      Number(none_time) || 0, Number(move_time) || 0, task_maint || 'SELECT'
+      task_name,
+      task_date,
+      task_man,
+      group,
+      site,
+      line,
+      equipment_type,
+      warranty,
+      equipment_name,
+      status || 'active',
+      task_description,
+      task_cause,
+      task_result,
+      SOP,
+      tsguide,
+      work_type,
+      work_type2,
+      setup_item,
+      maint_item,
+      transfer_item,
+      start_time || '00:00:00',
+      end_time || '00:00:00',
+      Number(none_time) || 0,
+      Number(move_time) || 0,
+      start_time || '00:00:00',
+      end_time || '00:00:00',
+      Number(none_time) || 0,
+      Number(move_time) || 0,
+      task_maint || 'SELECT',
     ];
     await connection.query(query, values);
   } catch (err) {
@@ -68,7 +110,7 @@ exports.addWorkLog = async (
 };
 
 exports.deleteWorkLog = async (id) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     await connection.query('DELETE FROM work_log WHERE id = ?', [id]);
   } catch (err) {
@@ -79,7 +121,7 @@ exports.deleteWorkLog = async (id) => {
 };
 
 exports.getWorkLogById = async (id) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const [rows] = await connection.query('SELECT * FROM work_log WHERE id = ?', [id]);
     return rows[0];
@@ -91,30 +133,89 @@ exports.getWorkLogById = async (id) => {
 };
 
 exports.updateWorkLog = async (
-  id, task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time,
-  group, site, line, warranty, equipment_type, equipment_name, status
+  id,
+  task_name,
+  task_result,
+  task_cause,
+  task_man,
+  task_description,
+  task_date,
+  start_time,
+  end_time,
+  group,
+  site,
+  line,
+  warranty,
+  equipment_type,
+  equipment_name,
+  status
 ) => {
   const fields = [];
   const values = [];
 
-  if (task_name !== undefined) { fields.push("task_name = ?"); values.push(task_name); }
-  if (task_result !== undefined) { fields.push("task_result = ?"); values.push(task_result); }
-  if (task_cause !== undefined) { fields.push("task_cause = ?"); values.push(task_cause); }
-  if (task_man !== undefined) { fields.push("task_man = ?"); values.push(task_man); }
-  if (task_description !== undefined) { fields.push("task_description = ?"); values.push(task_description); }
-  if (task_date !== undefined) { fields.push("task_date = ?"); values.push(task_date); }
-  if (start_time !== undefined) { fields.push("start_time = ?"); values.push(start_time); }
-  if (end_time !== undefined) { fields.push("end_time = ?"); values.push(end_time); }
-  if (group !== undefined) { fields.push("`group` = ?"); values.push(group); }
-  if (site !== undefined) { fields.push("site = ?"); values.push(site); }
-  if (line !== undefined) { fields.push("`line` = ?"); values.push(line); }
-  if (warranty !== undefined) { fields.push("warranty = ?"); values.push(warranty); }
-  if (equipment_type !== undefined) { fields.push("equipment_type = ?"); values.push(equipment_type); }
-  if (equipment_name !== undefined) { fields.push("equipment_name = ?"); values.push(equipment_name); }
-  if (status !== undefined) { fields.push("status = ?"); values.push(status); }
+  if (task_name !== undefined) {
+    fields.push('task_name = ?');
+    values.push(task_name);
+  }
+  if (task_result !== undefined) {
+    fields.push('task_result = ?');
+    values.push(task_result);
+  }
+  if (task_cause !== undefined) {
+    fields.push('task_cause = ?');
+    values.push(task_cause);
+  }
+  if (task_man !== undefined) {
+    fields.push('task_man = ?');
+    values.push(task_man);
+  }
+  if (task_description !== undefined) {
+    fields.push('task_description = ?');
+    values.push(task_description);
+  }
+  if (task_date !== undefined) {
+    fields.push('task_date = ?');
+    values.push(task_date);
+  }
+  if (start_time !== undefined) {
+    fields.push('start_time = ?');
+    values.push(start_time);
+  }
+  if (end_time !== undefined) {
+    fields.push('end_time = ?');
+    values.push(end_time);
+  }
+  if (group !== undefined) {
+    fields.push('`group` = ?');
+    values.push(group);
+  }
+  if (site !== undefined) {
+    fields.push('site = ?');
+    values.push(site);
+  }
+  if (line !== undefined) {
+    fields.push('`line` = ?');
+    values.push(line);
+  }
+  if (warranty !== undefined) {
+    fields.push('warranty = ?');
+    values.push(warranty);
+  }
+  if (equipment_type !== undefined) {
+    fields.push('equipment_type = ?');
+    values.push(equipment_type);
+  }
+  if (equipment_name !== undefined) {
+    fields.push('equipment_name = ?');
+    values.push(equipment_name);
+  }
+  if (status !== undefined) {
+    fields.push('status = ?');
+    values.push(status);
+  }
 
   values.push(id);
-  if (fields.length === 0) throw new Error("No fields to update");
+  if (fields.length === 0) throw new Error('No fields to update');
 
   const query = `UPDATE work_log SET ${fields.join(', ')} WHERE id = ?`;
 
@@ -131,22 +232,73 @@ exports.updateWorkLog = async (
  * ──────────────────────────────────────────────── */
 exports.incrementTaskCount = async (engineer_name, transfer_item) => {
   const validColumns = [
-    'LP ESCORT', 'EFEM ROBOT TEACHING', 'EFEM ROBOT REP', 'EFEM ROBOT CONTROLLER', 'TM ROBOT TEACHING',
-    'TM ROBOT REP', 'TM ROBOT CONTROLLER', 'PASSIVE PAD REP', 'PIN CYLINDER', 'PUSHER CYLINDER',
-    'IB FLOW', 'DRT', 'FFU CONTROLLER', 'FAN', 'MOTOR DRIVER', 'R1', 'R3', 'R5', 'R3 TO R5',
-    'MICROWAVE', 'APPLICATOR', 'GENERATOR', 'CHUCK', 'PROCESS KIT', 'HELIUM DETECTOR', 'HOOK LIFT PIN',
-    'BELLOWS', 'PIN SENSOR', 'LM GUIDE', 'PIN MOTOR CONTROLLER', 'SINGLE EPD', 'DUAL EPD', 'GAS BOX BOARD',
-    'TEMP CONTROLLER BOARD', 'POWER DISTRIBUTION BOARD', 'DC POWER SUPPLY', 'BM SENSOR', 'PIO SENSOR',
-    'SAFETY MODULE', 'D-NET', 'MFC', 'VALVE', 'SOLENOID', 'FAST VAC VALVE', 'SLOW VAC VALVE',
-    'SLIT DOOR', 'APC VALVE', 'SHUTOFF VALVE', 'BARATRON ASS\'Y', 'PIRANI ASS\'Y', 'VIEW PORT QUARTZ',
-    'FLOW SWITCH', 'CERAMIC PLATE', 'MONITOR', 'KEYBOARD', 'MOUSE', 'CTC', 'PMC', 'EDA',
-    'EFEM CONTROLLER', 'S/W PATCH'
+    'LP ESCORT',
+    'EFEM ROBOT TEACHING',
+    'EFEM ROBOT REP',
+    'EFEM ROBOT CONTROLLER',
+    'TM ROBOT TEACHING',
+    'TM ROBOT REP',
+    'TM ROBOT CONTROLLER',
+    'PASSIVE PAD REP',
+    'PIN CYLINDER',
+    'PUSHER CYLINDER',
+    'IB FLOW',
+    'DRT',
+    'FFU CONTROLLER',
+    'FAN',
+    'MOTOR DRIVER',
+    'R1',
+    'R3',
+    'R5',
+    'R3 TO R5',
+    'MICROWAVE',
+    'APPLICATOR',
+    'GENERATOR',
+    'CHUCK',
+    'PROCESS KIT',
+    'HELIUM DETECTOR',
+    'HOOK LIFT PIN',
+    'BELLOWS',
+    'PIN SENSOR',
+    'LM GUIDE',
+    'PIN MOTOR CONTROLLER',
+    'SINGLE EPD',
+    'DUAL EPD',
+    'GAS BOX BOARD',
+    'TEMP CONTROLLER BOARD',
+    'POWER DISTRIBUTION BOARD',
+    'DC POWER SUPPLY',
+    'BM SENSOR',
+    'PIO SENSOR',
+    'SAFETY MODULE',
+    'D-NET',
+    'MFC',
+    'VALVE',
+    'SOLENOID',
+    'FAST VAC VALVE',
+    'SLOW VAC VALVE',
+    'SLIT DOOR',
+    'APC VALVE',
+    'SHUTOFF VALVE',
+    "BARATRON ASS'Y",
+    "PIRANI ASS'Y",
+    'VIEW PORT QUARTZ',
+    'FLOW SWITCH',
+    'CERAMIC PLATE',
+    'MONITOR',
+    'KEYBOARD',
+    'MOUSE',
+    'CTC',
+    'PMC',
+    'EDA',
+    'EFEM CONTROLLER',
+    'S/W PATCH',
   ];
   if (!validColumns.includes(transfer_item)) {
     throw new Error(`Invalid task name: ${transfer_item}`);
   }
 
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `
       INSERT INTO task_count (engineer_name, \`${transfer_item}\`)
@@ -163,7 +315,7 @@ exports.incrementTaskCount = async (engineer_name, transfer_item) => {
 
 /* 타입 필터 */
 exports.getSupraXPWorkLogs = async (equipment_type) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const [rows] = await connection.query(
       'SELECT * FROM work_log WHERE equipment_type = ? ORDER BY task_date DESC, id DESC',
@@ -182,7 +334,7 @@ exports.getSupraXPWorkLogs = async (equipment_type) => {
  * ──────────────────────────────────────────────── */
 exports.getUsersByNicknames = async (nicknames) => {
   if (!Array.isArray(nicknames) || !nicknames.length) return [];
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const [rows] = await connection.query(
       `SELECT userIdx, nickname, userID, role, \`group\`, site
@@ -200,7 +352,7 @@ exports.getUsersByNicknames = async (nicknames) => {
  * 승인 대기 제출
  * ──────────────────────────────────────────────── */
 exports.submitPendingWorkLog = async (payload) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `
       INSERT INTO work_log_pending (
@@ -212,12 +364,32 @@ exports.submitPendingWorkLog = async (payload) => {
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending')
     `;
     const values = [
-      payload.task_name, payload.task_result, payload.task_cause, payload.task_man, payload.task_description,
-      payload.task_date, payload.start_time, payload.end_time, Number(payload.none_time) || 0, Number(payload.move_time) || 0,
-      payload.group, payload.site, payload.SOP, payload.tsguide, payload.line, payload.warranty,
-      payload.equipment_type, payload.equipment_name, payload.workType, payload.workType2,
-      payload.setupItem, payload.maintItem, payload.transferItem, payload.task_maint, payload.status,
-      payload.submitted_by
+      payload.task_name,
+      payload.task_result,
+      payload.task_cause,
+      payload.task_man,
+      payload.task_description,
+      payload.task_date,
+      payload.start_time,
+      payload.end_time,
+      Number(payload.none_time) || 0,
+      Number(payload.move_time) || 0,
+      payload.group,
+      payload.site,
+      payload.SOP,
+      payload.tsguide,
+      payload.line,
+      payload.warranty,
+      payload.equipment_type,
+      payload.equipment_name,
+      payload.workType,
+      payload.workType2,
+      payload.setupItem,
+      payload.maintItem,
+      payload.transferItem,
+      payload.task_maint,
+      payload.status,
+      payload.submitted_by,
     ];
     if (values.length !== 26) throw new Error(`submitPendingWorkLog placeholder mismatch: ${values.length}`);
     const [result] = await connection.query(query, values);
@@ -227,27 +399,42 @@ exports.submitPendingWorkLog = async (payload) => {
   }
 };
 
-/* 대기 목록 (필터 지원) */
+/* 대기 목록 (필터 지원) — 한글/컬레이션 안전 처리 포함 */
 exports.listPendingWorkLogs = async (group, site, mineNickname) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
+  let sql;
+  let vals;
   try {
     const cond = ["LOWER(COALESCE(approval_status,'')) IN ('pending','')"];
-    const vals = [];
-    if (group) { cond.push('`group` = ?'); vals.push(group); }
-    if (site && group !== 'PSKH') { cond.push('site = ?'); vals.push(site); } // PSKH는 site 무시
+    vals = [];
+    if (group) {
+      cond.push('`group` = ?');
+      vals.push(group);
+    }
+    // PSKH는 site 무시
+    if (site && group !== 'PSKH') {
+      cond.push('site = ?');
+      vals.push(site);
+    }
+    // mine: 제출자 본인 또는 task_man에 본인 포함
     if (mineNickname) {
-      const me = mineNickname.trim().toLowerCase();
-      const meFlat = me.replace(/\s+/g,'').replace(/[()]/g,'');
+      const me = mineNickname.trim();
+      const meFlat = me.toLowerCase().replace(/\s+/g, '').replace(/[()]/g, '');
       cond.push(`(
         TRIM(submitted_by) = ?
-        OR LOWER(REPLACE(REPLACE(REPLACE(task_man,' ',''),'(',''),')','')) LIKE ?
-        OR LOWER(task_man) LIKE ?
+        OR REPLACE(REPLACE(REPLACE(COALESCE(task_man,''),' ',''),'(',''),')','')
+             COLLATE utf8mb4_general_ci LIKE ?
+        OR COALESCE(task_man,'') COLLATE utf8mb4_general_ci LIKE ?
       )`);
       vals.push(me, `%${meFlat}%`, `%${me}%`);
     }
-    const sql = `SELECT * FROM work_log_pending WHERE ${cond.join(' AND ')} ORDER BY submitted_at DESC`;
+
+    sql = `SELECT * FROM work_log_pending WHERE ${cond.join(' AND ')} ORDER BY submitted_at DESC`;
     const [rows] = await connection.query(sql, vals);
     return rows;
+  } catch (err) {
+    console.error('listPendingWorkLogs SQL error:', err?.sqlMessage || err?.message, { sql, vals });
+    throw err;
   } finally {
     connection.release();
   }
@@ -255,7 +442,7 @@ exports.listPendingWorkLogs = async (group, site, mineNickname) => {
 
 /* 단건 조회 */
 exports.getPendingById = async (id) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const [rows] = await connection.query(`SELECT * FROM work_log_pending WHERE id=?`, [id]);
     return rows[0];
@@ -265,16 +452,35 @@ exports.getPendingById = async (id) => {
 };
 
 /* 대기/반려건 동적 수정 */
-// 대기/반려건 특정 필드만 부분 수정
 exports.updatePendingWorkLogFields = async (id, patch) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const allowed = [
-      'task_name','task_result','task_cause','task_man','task_description',
-      'task_date','start_time','end_time','none_time','move_time',
-      'group','site','SOP','tsguide','line','warranty',
-      'equipment_type','equipment_name','work_type','work_type2',
-      'setup_item','maint_item','transfer_item','task_maint','status'
+      'task_name',
+      'task_result',
+      'task_cause',
+      'task_man',
+      'task_description',
+      'task_date',
+      'start_time',
+      'end_time',
+      'none_time',
+      'move_time',
+      'group',
+      'site',
+      'SOP',
+      'tsguide',
+      'line',
+      'warranty',
+      'equipment_type',
+      'equipment_name',
+      'work_type',
+      'work_type2',
+      'setup_item',
+      'maint_item',
+      'transfer_item',
+      'task_maint',
+      'status',
     ];
 
     const sets = [];
@@ -294,10 +500,9 @@ exports.updatePendingWorkLogFields = async (id, patch) => {
   }
 };
 
-
 /* 반려 목록(제출자 기준) */
 exports.listRejectedByUser = async (nickname) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const sql = `
       SELECT *
@@ -313,22 +518,21 @@ exports.listRejectedByUser = async (nickname) => {
   }
 };
 
-
-/* 반려건 재제출 */
-exports.resubmitPendingWorkLog = async (id, nickname) => {
-  const connection = await pool.getConnection(async conn => conn);
+/* 반려건 재제출 -> 상태를 'pending'으로 돌리고 submitted_at 갱신 */
+exports.resubmitPendingWorkLog = async (id, submitted_by) => {
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const sql = `
       UPDATE work_log_pending
       SET approval_status='pending',
-          approver=NULL,
-          approval_note=NULL,
-          approved_at=NULL,
-          submitted_at=NOW(),
-          submitted_by=?
-      WHERE id=?
+          approver = NULL,
+          approval_note = NULL,
+          approved_at = NULL,
+          submitted_by = ?,
+          submitted_at = NOW()
+      WHERE id = ?
     `;
-    await connection.query(sql, [nickname, id]);
+    await connection.query(sql, [submitted_by, id]);
   } finally {
     connection.release();
   }
@@ -336,7 +540,7 @@ exports.resubmitPendingWorkLog = async (id, nickname) => {
 
 /* 승인 (본 테이블로 이관) — task_duration 은 삽입하지 않음(생성칼럼/트리거 호환) */
 exports.approvePendingWorkLog = async (id, approver, note) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     await connection.beginTransaction();
 
@@ -377,7 +581,7 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
 
 /* 반려 */
 exports.rejectPendingWorkLog = async (id, approver, note) => {
-  const connection = await pool.getConnection(async conn => conn);
+  const connection = await pool.getConnection(async (conn) => conn);
   try {
     const query = `
       UPDATE work_log_pending
@@ -385,26 +589,6 @@ exports.rejectPendingWorkLog = async (id, approver, note) => {
       WHERE id=?
     `;
     await connection.query(query, [approver || '', note || '', id]);
-  } finally {
-    connection.release();
-  }
-};
-
-// 반려건 재제출 -> 상태를 'pending'으로 돌리고 submitted_at 갱신
-exports.resubmitPendingWorkLog = async (id, submitted_by) => {
-  const connection = await pool.getConnection(async conn => conn);
-  try {
-    const sql = `
-      UPDATE work_log_pending
-      SET approval_status='pending',
-          approver = NULL,
-          approval_note = NULL,
-          approved_at = NULL,
-          submitted_by = ?,
-          submitted_at = NOW()
-      WHERE id = ?
-    `;
-    await connection.query(sql, [submitted_by, id]);
   } finally {
     connection.release();
   }
