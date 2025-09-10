@@ -506,3 +506,30 @@ input:active, select:active, textarea:active{ transform: translateY(0.5px); }
 #worklog-table tbody tr.is-clickable:hover{ filter: saturate(1.02); }
 #worklog-table tbody td:nth-child(7){ font-variant-numeric: tabular-nums; }
 #worklog-table::after{ content:""; display:block; height:6px; background:linear-gradient(180deg, var(--hair), transparent); }
+
+/* === Fix: sticky thead가 첫 행을 가리는 문제 해결 ===================== */
+/* 헤더 높이 토큰(필요하면 조절) */
+:root{ --table-thead-h: 48px; } /* thead의 실제 높이에 맞게 40~48px 사이로 조정 가능 */
+
+/* thead를 네비 바로 아래에 고정하되, 명시적 높이 부여 */
+#worklog-table thead{
+  position: sticky;
+  top: 56px;           /* 네비 높이만큼(페이지에 맞게 유지) */
+  z-index: 10;
+}
+#worklog-table thead th{
+  height: var(--table-thead-h);
+  background: #f8fafc; /* 이미 지정돼 있어도 안전하게 덮어쓰기 */
+}
+
+/* 첫 번째 데이터 행에 헤더 높이만큼 여유 패딩 추가 → 가림 현상 방지 */
+#worklog-table tbody tr:first-child td{
+  padding-top: calc(12px + var(--table-thead-h));
+}
+
+/* 모바일 뷰(테이블 블록 변환)에서는 여유 패딩을 줄여 과한 공백 방지 */
+@media (max-width: 900px){
+  #worklog-table tbody tr:first-child td{
+    padding-top: 16px;
+  }
+}
