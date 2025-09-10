@@ -636,3 +636,52 @@ input:active, select:active, textarea:active{ transform: translateY(0.5px); }
 
 /* 버튼 아이콘 간격 예비 (아이콘 쓰면) */
 button i{ margin-right:6px; }
+
+/* ===== Error UX (inline + step flag + toast) ===== */
+.field-error-msg{
+  margin-top:6px; padding:8px 10px; border:1px solid #fecaca; background:#fff5f5;
+  color:#9f1239; border-radius:10px; font-size:12.5px; line-height:1.45;
+}
+.form-row.error{ border-color:#fca5a5; background:#fff; }
+.form-row.error::before{ background: linear-gradient(180deg, #fecaca, #fecaca); }
+
+/* 스텝 헤더에 에러 플래그 */
+.form-step.has-error > h3::before{
+  background:#fff5f5;
+  border-color:#fca5a5;
+  color:#9f1239;
+}
+
+/* 상단 토스트 */
+.toast{
+  position:fixed; right:14px; top:14px; z-index:10000;
+  min-width:260px; max-width:420px;
+  background:#0b1220; color:#fff;
+  border:1px solid rgba(255,255,255,.14);
+  box-shadow: var(--shadow-lg); border-radius:14px; overflow:hidden;
+  animation: toast-in .14s ease-out;
+}
+.toast .toast-head{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 12px; font-weight:800; border-bottom:1px solid rgba(255,255,255,.08);
+}
+.toast .toast-body{ padding:10px 12px; font-size:13px; line-height:1.5; }
+.toast.error{ background:#7f1d1d; }
+.toast.warn{ background:#92400e; }
+.toast.ok{ background:#065f46; }
+@keyframes toast-in{ from{ opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none} }
+
+/* 작은 배지 */
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  height:22px; padding:0 8px; border-radius:999px; font-size:12px; font-weight:800;
+  background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.22);
+}
+
+/* 선택값이 "SELECT"일 때 시각 강조 (JS가 aria-invalid=true도 셋팅) */
+select.option-select[aria-invalid="true"]{
+  background-image:
+    linear-gradient(180deg, #fff, #fff),
+    url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.2 1.5l4 4 4-4' fill='none' stroke='%23b42318' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+  border-color:#fca5a5 !important; box-shadow: 0 0 0 1px #fecaca inset;
+}
