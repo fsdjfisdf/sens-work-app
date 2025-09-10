@@ -526,10 +526,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 요구4: 오전 10시 이전이고 작업일이 오늘이면 확인
     try{
       const now = new Date();
-      const before10 = now.getHours() < 18
+      const before10 = now.getHours() < 11
       const isToday = (getV('task_date') || '') === getTodayDate();
       if (before10 && isToday){
-        const yes = confirm('현재 시간이 오전 10시 이전인데, 작업 날짜를 오늘로 선택하셨습니다. 오늘 진행한 작업이 맞으신가요?');
+        const yes = confirm('현재 시간이 오전 11시 이전인데, 작업 날짜를 오늘로 선택하셨습니다. 오늘 진행한 작업이 맞으신가요?');
         if (!yes){
           e.preventDefault();
           e.stopImmediatePropagation();
