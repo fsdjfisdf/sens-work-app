@@ -221,7 +221,7 @@ function getFormattedMultiLevel(level) {
         };
   
         const currentMonthIndex = new Date().getMonth();
-        const monthlyCapaLabels = ['24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN', '25YFEB', '25YMAR', '25YAPR', '25YMAY', '25YJUN', '25YJUL'].slice(0,);
+        const monthlyCapaLabels = ['24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN', '25YFEB', '25YMAR', '25YAPR', '25YMAY', '25YJUN', '25YJUL', '25YAUG'].slice(0,);
         const monthlyCapaData = monthlyCapaLabels.map(label => userInfo[label] ? (userInfo[label] * 100).toFixed(1) : 0);
   
         // 그래프 생성
@@ -577,71 +577,75 @@ async function renderLevelChangeChart(levelChangeData, allQuarters) {
 
 // 월별 작업 시간 계산 함수
 function calculateMonthlyWorkHoursByMonth(workLogs) {
-  const monthlyHours = Array(24).fill(0); // 2024년 6월 ~ 2025년 5월까지 24개월 배열
+  const monthlyHours = Array(14).fill(0); // 2024년 8월 ~ 2025년 9월까지 14개월
 
   workLogs.forEach(log => {
-      const logDate = new Date(log.task_date);
-      const logYear = logDate.getFullYear();
-      const logMonth = logDate.getMonth();
+    const logDate = new Date(log.task_date);
+    const logYear = logDate.getFullYear();
+    const logMonth = logDate.getMonth(); // 0-based (1월=0)
 
-      if (logYear === 2024) {
-          monthlyHours[logMonth - 5] += log.task_duration ? parseFloat(log.task_duration) : 0;
-      } else if (logYear === 2025) {
-          monthlyHours[logMonth + 7] += log.task_duration ? parseFloat(log.task_duration) : 0;
-      }
+    if (logYear === 2024 && logMonth >= 7 && logMonth <= 11) {
+      // 2024-08(7) ~ 2024-12(11) → index 0~4
+      monthlyHours[logMonth - 7] += parseFloat(log.task_duration || 0);
+    } else if (logYear === 2025 && logMonth >= 0 && logMonth <= 8) {
+      // 2025-01(0) ~ 2025-09(8) → index 5~13
+      monthlyHours[logMonth + 5] += parseFloat(log.task_duration || 0);
+    }
   });
 
   console.log("Monthly Hours Data:", monthlyHours); // 디버깅용
   return monthlyHours;
 }
 
-// 월별 작업 시간 그래프 생성 함수
+
 function renderMonthlyWorkHoursChart(monthlyHours) {
-  const maxHours = Math.max(...monthlyHours) * 1.2; // 최대값의 1.2배로 설정
+  const maxHours = Math.max(...monthlyHours) * 1.2;
   const labels = [
-    '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', '2024-11',
-    '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06', '2025-07', '2025-08'
-  ];
+    '2024-08', '2024-09', '2024-10', '2024-11',
+    '2024-12', '2025-01', '2025-02', '2025-03',
+    '2025-04', '2025-05', '2025-06', '2025-07',
+    '2025-08', '2025-09'
+  ]; // ← 총 14개
 
   const ctx = document.getElementById('monthlyWorkHoursChart').getContext('2d');
   new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,  // 새로운 X축 레이블 적용
-        datasets: [{
-            label: 'Monthly Working time (hrs)',
-            data: monthlyHours.slice(0, 14), // 6월부터 다음 해 5월까지 데이터 추출
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-        }]
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Monthly Working time (hrs)',
+        data: monthlyHours, // 더 이상 slice 필요 없음
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
     },
-      options: {
-          scales: {
-              y: {
-                  beginAtZero: true,
-                  max: maxHours, // y축 최대값 설정
-                  title: {
-                      display: true,
-                      text: 'Working Hours'
-                  }
-              }
-          },
-          plugins: {
-              tooltip: {
-                  callbacks: {
-                      label: (context) => `${context.raw.toFixed(1)}h`
-                  }
-              },
-              datalabels: {
-                  formatter: (value) => `${value.toFixed(1)}h`, // 소수점 첫째 자리까지 표시
-                  color: 'black',
-                  anchor: 'end',
-                  align: 'end'
-              }
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: maxHours,
+          title: {
+            display: true,
+            text: 'Working Hours'
           }
+        }
       },
-      plugins: [ChartDataLabels]
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.raw.toFixed(1)}h`
+          }
+        },
+        datalabels: {
+          formatter: (value) => `${value.toFixed(1)}h`,
+          color: 'black',
+          anchor: 'end',
+          align: 'end'
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
   });
 }
 

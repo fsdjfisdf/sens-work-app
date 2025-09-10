@@ -1059,7 +1059,7 @@ function calculateMonthlyEngineerCount(data) {
 
 // Monthly CAPA Graph 데이터 처리
 const currentMonth = new Date().getMonth();
-const monthlyCapaLabels = ['24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN','25YFEB','25YMAR','25YAPR','25YMAY','25YJUN', '25YJUL'].slice(0,);
+const monthlyCapaLabels = ['24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN','25YFEB','25YMAR','25YAPR','25YMAY','25YJUN', '25YJUL', '25YAUG'].slice(0,);
 const monthlyCapaData = monthlyCapaLabels.map(label => {
     const capaValues = data.map(row => row[label]).filter(value => value !== null);
     return capaValues.reduce((sum, value) => sum + value, 0) / capaValues.length;
