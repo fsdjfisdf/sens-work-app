@@ -440,7 +440,7 @@ function renderMainAnalysis(u){
     gapEl.innerHTML = `다음 목표 <b>Lv.${nextKey}</b> 까지 <b>${gap.toFixed(1)}%p</b> 부족`;
     setProgress('prog-main', 'prog-main-text', Number(pct(avg)), Number(pct(target)));
   } else {
-    gapEl.innerHTML = `<b>트랙 내 모든 기준 충족</b> (부족도 0%p)`;
+    gapEl.innerHTML = `<b>역량 내 모든 기준 충족</b> (부족도 0%p)`;
     const target = t[ track[track.length-1] ];
     setProgress('prog-main', 'prog-main-text', Number(pct(avg)), Number(pct(target)));
   }
