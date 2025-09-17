@@ -1,7 +1,7 @@
 /* ==========================================================================
    S-WORKS — skill_levels.js
-   - /api/skill/levels 목록 → 필터/표시/CSV 저장
-   - /api/skill/levels/:id 상세 → 모달 + 차트
+   - /api/skill/levels 목록 → 필터/표시/엑셀 저장
+   - /api/skill/levels/:id 상세 → 모달 + 차트 + 분석
    ========================================================================== */
 
 const API_BASE = "http://3.37.73.151:3001/api";
@@ -13,9 +13,9 @@ let chartMulti = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   bindUI();
-  await loadList();                 // 목록 최초 로드
-  hydrateFilters(rawList);          // 그룹/사이트 옵션 생성
-  applyFilterAndRender();           // 표 렌더
+  await loadList();
+  hydrateFilters(rawList);
+  applyFilterAndRender();
 });
 
 function bindUI() {
@@ -28,16 +28,30 @@ function bindUI() {
     $('f-site').value = '';
     $('f-eq').value = '';
     $('f-report').value = '';
-    $('f-main-only').checked = false;
-    $('f-multi-only').checked = false;
     applyFilterAndRender();
   });
-  $('btn-export').addEventListener('click', exportTableToCSV);
+  $('btn-export').addEventListener('click', exportToExcel);
 
   // 상세 모달
   $('detail-close').addEventListener('click', closeDetail);
   document.getElementById('detail-modal').addEventListener('click', (e) => {
     if (e.target.id === 'detail-modal') closeDetail();
+  });
+
+  // 설명 모달
+  $('btn-guide').addEventListener('click', () => {
+    const m = document.getElementById('guide-modal');
+    m.classList.add('open'); m.setAttribute('aria-hidden','false');
+  });
+  $('guide-close').addEventListener('click', () => {
+    const m = document.getElementById('guide-modal');
+    m.classList.remove('open'); m.setAttribute('aria-hidden','true');
+  });
+  document.getElementById('guide-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'guide-modal') {
+      e.currentTarget.classList.remove('open');
+      e.currentTarget.setAttribute('aria-hidden','true');
+    }
   });
 }
 
@@ -51,11 +65,6 @@ async function loadList() {
     });
     if (!res.data?.isSuccess) throw new Error('API 실패');
     rawList = res.data.result || [];
-    document.getElementById('m-total').textContent = rawList.length;
-    const mainCnt = rawList.filter(r => r.main_level !== null).length;
-    const multiCnt = rawList.filter(r => r.multi_level !== null).length;
-    document.getElementById('m-main').textContent = mainCnt;
-    document.getElementById('m-multi').textContent = multiCnt;
   } catch (err) {
     console.error('[loadList]', err);
     showError(true);
@@ -90,8 +99,6 @@ function applyFilterAndRender() {
   const site    = document.getElementById('f-site').value;
   const eq      = document.getElementById('f-eq').value;
   const report  = document.getElementById('f-report').value;
-  const mainOnly  = document.getElementById('f-main-only').checked;
-  const multiOnly = document.getElementById('f-multi-only').checked;
 
   filtered = rawList.filter(r => {
     if (name && !String(r.NAME).includes(name)) return false;
@@ -104,10 +111,6 @@ function applyFilterAndRender() {
       const inMulti = r['MULTI EQ'] === eq;
       if (!inMain && !inMulti) return false;
     }
-
-    if (mainOnly && r.main_level === null) return false;
-    if (multiOnly && r.multi_level === null) return false;
-
     return true;
   });
 
@@ -145,7 +148,6 @@ function renderTable() {
       <td><button class="btn tiny" data-open="${r.ID}">보기</button></td>
     `;
 
-    // 상세 버튼
     tr.querySelector('[data-open]')?.addEventListener('click', () => openDetail(r.ID));
     tbody.appendChild(tr);
   }
@@ -215,14 +217,14 @@ function drawMainChart(u) {
       labels: labels,
       datasets: [
         {
-          label: `${eq || 'MAIN'} 임계값(%)`,
+          label: `${eq || 'MAIN'} 기준 역량(%)`,
           data: tvals,
           backgroundColor: 'rgba(153,102,255,0.2)',
           borderColor: 'rgba(153,102,255,1)',
           borderWidth: 1
         },
         {
-          label: '내 평균(SETUP+MAINT)',
+          label: '내 평균(SET UP+MAINT)',
           data: labels.map(() => avgVal),
           type: 'line',
           borderColor: 'rgba(75,192,192,1)',
@@ -245,7 +247,7 @@ function drawMainChart(u) {
       plugins: {
         legend: { position: 'top' },
         datalabels: {
-          formatter: (value, ctx) => `${value}%`,
+          formatter: (value) => `${value}%`,
           color: 'black',
           anchor: 'end',
           align: 'end',
@@ -272,7 +274,7 @@ function drawMultiChart(u) {
       labels: ['Lv 2-2'],
       datasets: [
         {
-          label: `${eq || 'MULTI'} 임계값(2-2, %)`,
+          label: `${eq || 'MULTI'} 기준 역량(2-2, %)`,
           data: [ (th*100).toFixed(1) ],
           backgroundColor: 'rgba(255,159,64,0.2)',
           borderColor: 'rgba(255,159,64,1)',
@@ -309,6 +311,34 @@ function drawMultiChart(u) {
   });
 }
 
+/* --------------------- Export (Excel) --------------------- */
+function exportToExcel() {
+  const headers = [
+    'Name','Group','Site','LEVEL(report)',
+    'MAIN EQ','MAIN Avg','MAIN Level',
+    'MULTI EQ','MULTI SET UP','MULTI Level'
+  ];
+  const rows = filtered.map(r => ({
+    Name: r.NAME ?? '',
+    Group: r.GROUP ?? '',
+    Site: r.SITE ?? '',
+    'LEVEL(report)': r['LEVEL(report)'] ?? '',
+    'MAIN EQ': r['MAIN EQ'] ?? '',
+    'MAIN Avg': Number.isFinite(r.main_avg) ? (r.main_avg*100).toFixed(1)+'%' : '-',
+    'MAIN Level': r.main_level ?? '',
+    'MULTI EQ': r['MULTI EQ'] ?? '',
+    'MULTI SET UP': Number.isFinite(r.multi_setup) ? (r.multi_setup*100).toFixed(1)+'%' : '-',
+    'MULTI Level': r.multi_level ?? ''
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Skill Levels');
+
+  const fname = `skill_levels_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+}
+
 /* --------------------- Utils --------------------- */
 function setLoading(on) {
   document.getElementById('loading').classList.toggle('hidden', !on);
@@ -330,7 +360,7 @@ function setTag(id, prefix, lvl) {
   el.className = 'tag ' + (lvl === '2' || lvl === '2-2' ? 'ok' : lvl === '1-3' ? 'good' : lvl === '1-2' ? 'mid' : lvl === '1-1' ? 'low' : 'zero');
   el.textContent = `${prefix}: ${lvl}`;
 }
-function badgeLevel(lvl, kind) {
+function badgeLevel(lvl) {
   if (lvl === null || lvl === undefined) return `<span class="pill">-</span>`;
   const cls =
     (lvl === '2' || lvl === '2-2') ? 'ok' :
@@ -348,31 +378,7 @@ function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* CSV 내보내기 */
-function exportTableToCSV() {
-  const headers = ['Name','Group','Site','LEVEL(report)','MAIN EQ','MAIN Avg','MAIN Level','MULTI EQ','MULTI SET UP','MULTI Level'];
-  const rows = filtered.map(r => [
-    r.NAME, r.GROUP, r.SITE, r['LEVEL(report)'], r['MAIN EQ'], (r.main_avg??0), r.main_level??'',
-    r['MULTI EQ'], (r.multi_setup??0), r.multi_level??''
-  ]);
-
-  const csv = [headers, ...rows].map(r =>
-    r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')
-  ).join('\n');
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `skill_levels_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 /* ===================== Analysis (Criteria & Gaps) ===================== */
-
 function pct(x){ return isFinite(x) ? (x*100).toFixed(1) : '0.0'; }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 function setProgress(barId, textId, currentPct, targetPct){
@@ -397,7 +403,6 @@ function renderMainAnalysis(u){
   const gapEl  = document.getElementById('gap-main');
   const weakEl = document.getElementById('weak-main');
 
-  // 데이터 없을 때
   if (!eq || !t){
     critEl.innerHTML = `<em>해당 MAIN EQ의 기준표가 없습니다.</em>`;
     gapEl.textContent = '';
@@ -406,10 +411,10 @@ function renderMainAnalysis(u){
     return;
   }
 
-  // 트랙 결정: '1' → (1-1,1-2,1-3), '2' 또는 '2-2' → (2)
+  // 트랙: '1' → (1-1,1-2,1-3), '2' 또는 '2-2' → (2)
   const track = (report === '1') ? ['1-1','1-2','1-3'] : ['2'];
 
-  // 합격 기준 표기(충족 여부 함께)
+  // 합격 기준 표기(충족 여부)
   const critLis = track.map(k=>{
     const need = t[k];
     const ok = avg >= need;
@@ -421,7 +426,7 @@ function renderMainAnalysis(u){
     <div style="margin-top:4px;color:#666;">* MAIN은 <b>SET UP</b>과 <b>MAINT</b>의 평균으로 판정합니다.</div>
   `;
 
-  // 다음 목표(현재 평균보다 높은 최초 임계값)
+  // 다음 목표(현재 평균보다 높은 최초 기준 역량)
   const nextKey = track.find(k => avg < t[k]);
   if (nextKey){
     const target = t[nextKey];
@@ -430,7 +435,6 @@ function renderMainAnalysis(u){
     setProgress('prog-main', 'prog-main-text', Number(pct(avg)), Number(pct(target)));
   } else {
     gapEl.innerHTML = `<b>트랙 내 모든 기준 충족</b> (부족도 0%p)`;
-    // 가장 높은 트랙 기준으로 표시
     const target = t[ track[track.length-1] ];
     setProgress('prog-main', 'prog-main-text', Number(pct(avg)), Number(pct(target)));
   }

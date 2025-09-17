@@ -11,6 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <!-- Excel(xlsx) 내보내기 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <!-- NAV -->
@@ -53,12 +55,7 @@
   <main class="inner">
     <header class="page-head">
       <h2>역량 레벨 (MAIN / MULTI)</h2>
-      <p class="help">
-        <strong>설명</strong> :  
-        <span>LEVEL(report) = 0/1/2/2-2 로 저장된 필기 통과 레벨을 기준으로,</span>
-        <span>MAIN EQ(SET UP+MAINT 평균) 또는 MULTI EQ(SET UP 단독) 값을 설비별 임계값에 매칭하여 </span>
-        <span>실제 역량 레벨(0, 1-1, 1-2, 1-3, 2, 2-2)을 산출합니다.</span>
-      </p>
+      <button id="btn-guide" class="btn ghost" aria-haspopup="dialog" aria-controls="guide-modal">설명 ?</button>
     </header>
 
     <!-- Filters -->
@@ -105,36 +102,10 @@
         </label>
       </div>
       <div class="row">
-        <label class="check">
-          <input type="checkbox" id="f-main-only" />
-          <span>MAIN 레벨 산정 가능만</span>
-        </label>
-        <label class="check">
-          <input type="checkbox" id="f-multi-only" />
-          <span>MULTI 레벨 산정 가능만</span>
-        </label>
         <div class="actions">
           <button id="btn-search" class="btn primary">검색</button>
           <button id="btn-reset" class="btn">초기화</button>
-          <button id="btn-export" class="btn ghost">표 CSV 저장</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Summary -->
-    <section class="summary">
-      <div class="card">
-        <div class="metric">
-          <span class="label">총 인원</span>
-          <span id="m-total" class="value">0</span>
-        </div>
-        <div class="metric">
-          <span class="label">MAIN 레벨 산정</span>
-          <span id="m-main" class="value">0</span>
-        </div>
-        <div class="metric">
-          <span class="label">MULTI 레벨 산정</span>
-          <span id="m-multi" class="value">0</span>
+          <button id="btn-export" class="btn ghost">엑셀 저장</button>
         </div>
       </div>
     </section>
@@ -194,36 +165,102 @@
 
         <div class="charts">
           <div class="chart-card">
-            <h4>MAIN — 평균 vs 임계값</h4>
+            <h4>MAIN — 평균 vs 기준 역량</h4>
             <canvas id="chart-main"></canvas>
           </div>
           <div class="chart-card">
-            <h4>MULTI — SET UP vs 임계값(2-2)</h4>
+            <h4>MULTI — SET UP vs 기준 역량(2-2)</h4>
             <canvas id="chart-multi"></canvas>
           </div>
         </div>
-                <!-- (기존) detail-grid 내부의 charts 블럭 아래에 추가 -->
+
         <div class="analysis-grid">
-        <div class="analysis-card">
-            <h4>MAIN — 합격 기준 & 부족도</h4>
-            <div id="crit-main" class="criteria"></div>
-            <div class="progress-wrap">
-            <div id="prog-main" class="progress-bar"><span id="prog-main-text"></span></div>
-            </div>
-            <div id="gap-main" class="gap"></div>
-            <div id="weak-main" class="weak"></div>
+          <div class="analysis-card">
+              <h4>MAIN — 합격 기준 & 부족도</h4>
+              <div id="crit-main" class="criteria"></div>
+              <div class="progress-wrap">
+                <div id="prog-main" class="progress-bar"><span id="prog-main-text"></span></div>
+              </div>
+              <div id="gap-main" class="gap"></div>
+              <div id="weak-main" class="weak"></div>
+          </div>
+
+          <div class="analysis-card">
+              <h4>MULTI — 합격 기준 & 부족도</h4>
+              <div id="crit-multi" class="criteria"></div>
+              <div class="progress-wrap">
+                <div id="prog-multi" class="progress-bar"><span id="prog-multi-text"></span></div>
+              </div>
+              <div id="gap-multi" class="gap"></div>
+          </div>
         </div>
 
-        <div class="analysis-card">
-            <h4>MULTI — 합격 기준 & 부족도</h4>
-            <div id="crit-multi" class="criteria"></div>
-            <div class="progress-wrap">
-            <div id="prog-multi" class="progress-bar"><span id="prog-multi-text"></span></div>
-            </div>
-            <div id="gap-multi" class="gap"></div>
-        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guide Modal -->
+  <div id="guide-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="guide-title">
+    <div class="modal-content wide">
+      <button class="close" id="guide-close" aria-label="닫기">×</button>
+      <h3 id="guide-title">레벨 산정 방법 (상세 설명)</h3>
+
+      <div class="guide-body">
+        <h4>1) 용어</h4>
+        <ul>
+          <li><b>LEVEL(report)</b>: 필기시험 합격 레벨 (0, 1, 2, 2-2)</li>
+          <li><b>MAIN EQ</b>: 주력 설비 — <u>SET UP</u>과 <u>MAINT</u>의 <b>평균</b>으로 평가</li>
+          <li><b>MULTI EQ</b>: 보조 설비 — <b>SET UP 단독</b>으로 평가 (2-2 트랙)</li>
+          <li><b>기준 역량</b>: 설비별 레벨 판정 기준 퍼센트(아래 표)</li>
+        </ul>
+
+        <h4>2) 평가 규칙</h4>
+        <ol>
+          <li><b>LEVEL(report)=0</b>: MAIN/MULTI 레벨 산정하지 않음(0으로 간주)</li>
+          <li><b>LEVEL(report)=1</b>:
+            <ul>
+              <li>MAIN: (SET UP+MAINT)/2 평균값을 <b>기준 역량</b>과 비교하여
+                <code>1-1 / 1-2 / 1-3</code> 중 최고 레벨을 부여 (미달 시 0)</li>
+              <li>MULTI: 산정하지 않음</li>
+            </ul>
+          </li>
+          <li><b>LEVEL(report)=2</b>:
+            <ul>
+              <li>MAIN: 평균값이 Lv.2 기준 역량을 충족하면 <b>2</b>, 아니면 1-3/1-2/1-1/0 중 최고</li>
+              <li>MULTI: 산정하지 않음</li>
+            </ul>
+          </li>
+          <li><b>LEVEL(report)=2-2</b>:
+            <ul>
+              <li><u>MAIN</u>: <b>레벨2 트랙</b>으로 평가(최대 2). <b>2-2는 2 이후에 취득하는 상위 레벨</b>이므로 MAIN은 최소 2까지 산정 가능</li>
+              <li><u>MULTI</u>: 해당 설비의 <b>SET UP</b>만으로 <b>Lv.2-2</b> 기준 역량 충족 여부 판정</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h4>3) 설비별 기준 역량(%)</h4>
+        <div class="table-wrap small">
+          <table class="mini">
+            <thead>
+              <tr><th>EQ</th><th>Lv.1-1</th><th>Lv.1-2</th><th>Lv.1-3</th><th>Lv.2</th><th>Lv.2-2(SET UP)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>SUPRA N</td><td>10</td><td>25</td><td>46</td><td>61</td><td>70</td></tr>
+              <tr><td>SUPRA XP</td><td>10</td><td>25</td><td>46</td><td>61</td><td>70</td></tr>
+              <tr><td>INTEGER</td><td>12</td><td>31</td><td>52</td><td>63</td><td>70</td></tr>
+              <tr><td>PRECIA</td><td>12</td><td>31</td><td>52</td><td>63</td><td>70</td></tr>
+              <tr><td>ECOLITE</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
+              <tr><td>GENEVA</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
+              <tr><td>HDW</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
+            </tbody>
+          </table>
         </div>
 
+        <h4>4) 산출 예시</h4>
+        <p class="muted">
+          예) LEVEL(report)=2-2, MAIN EQ=SUPRA N, (SET UP 92.0%, MAINT 95.6%) → 평균 93.8% ⇒ MAIN은 Lv.2 트랙 충족으로 <b>2</b> 표기.<br/>
+          MULTI EQ=SUPRA XP, SET UP 89.1% ⇒ Lv.2-2 기준 역량(70%) 충족 ⇒ MULTI <b>2-2</b> 표기.
+        </p>
       </div>
     </div>
   </div>
