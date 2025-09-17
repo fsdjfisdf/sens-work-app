@@ -399,3 +399,44 @@ table.mini tbody tr:nth-child(even) td{ background:#f8fbff; }
   *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
 }
 .menu-item{ user-select:none; }
+
+/* =============================================================================
+   BUTTONS (공용)
+   ========================================================================== */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:8px; height: var(--control-h); padding:0 14px;
+  border-radius: 12px; border:1px solid var(--accent);
+  background:#fff; color: var(--accent);
+  font-weight:800; font-size:13px; letter-spacing:.2px; cursor:pointer;
+  box-shadow: var(--shadow-xs);
+  transition: transform .06s, background .16s, color .16s, border-color .16s, box-shadow .16s;
+}
+.btn:hover{
+  background: var(--accent-soft);
+  box-shadow: var(--shadow-sm);
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn.primary{
+  background: var(--accent); color:#fff; border-color: var(--accent-600);
+}
+.btn.primary:hover{
+  background: color-mix(in srgb, var(--accent) 92%, #fff 8%);
+  box-shadow: var(--shadow-sm);
+}
+.btn.ghost{
+  background:#fff; color: var(--accent); border-color: var(--accent);
+}
+.btn.tiny{
+  height:28px; padding:0 10px; border-radius:10px;
+  font-size:12px; font-weight:800;
+}
+
+/* 작은 배지/태그 스타일(이미 있는 경우 무시됨) */
+.tag{ display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px;
+  border-radius:999px; background:#f1f5f9; color:#0b1220; font-size:12px; border:1px solid #e2e8f0; }
+.tag.ok{ background:#ecfdf5; color:#065f46; border-color:#a7f3d0; }
+.tag.good{ background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+.tag.mid{ background:#fff7ed; color:#9a3412; border-color:#fed7aa; }
+.tag.low{ background:#fff1f2; color:#9f1239; border-color:#fecdd3; }

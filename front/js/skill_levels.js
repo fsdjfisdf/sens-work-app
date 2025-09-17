@@ -1,9 +1,9 @@
 /* ==========================================================================
    S-WORKS — skill_levels.js (전체)
-   - /api/skill/levels 목록 → 필터/표시/엑셀 저장
+   - /api/skill/levels 목록 → 필터/표시/엑셀 저장(클라이언트 생성)
    - /api/skill/levels/:id 상세 → 모달 + 차트 + 기준 역량/부족도
    - 승급 계산: DB 저장값(LEVEL, MULTI LEVEL) vs 현재 산정값 비교
-   - "설명 ?" 모달 / "승급 추천만" 필터 구현
+   - "설명 ?" 모달
    ========================================================================== */
 
 const API_BASE = "http://3.37.73.151:3001/api";
@@ -18,58 +18,34 @@ const SHOW_NUMERIC_PROMO = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   bindUI();
-  await loadList();                 // 목록 최초 로드
-  hydrateFilters(rawList);          // 그룹/사이트 옵션 생성
-  applyFilterAndRender();           // 표 렌더
+  await loadList();
+  hydrateFilters(rawList);
+  applyFilterAndRender();
 });
 
-/* --------------------- 공용 DOM Helper --------------------- */
+/* --------------------- DOM Helper --------------------- */
 function $(id) { return document.getElementById(id); }
-function q(sel, root=document){ return root.querySelector(sel); }
 
+/* --------------------- Bind UI ------------------------ */
 function bindUI() {
   $('btn-search')?.addEventListener('click', applyFilterAndRender);
+
   $('btn-reset')?.addEventListener('click', () => {
     $('f-name').value = '';
     $('f-group').value = '';
     $('f-site').value = '';
     $('f-eq').value = '';
     $('f-report').value = '';
-    $('f-promo-only').checked = false;
     applyFilterAndRender();
   });
 
-  // "승급 추천만" 실시간 필터
-  $('f-promo-only')?.addEventListener('change', applyFilterAndRender);
-
-  // 엑셀: 백엔드에서 내려주는 완성본 사용
-  $('btn-export')?.addEventListener('click', async () => {
+  // 엑셀: 클라이언트에서 생성 (XLSX)
+  $('btn-export')?.addEventListener('click', () => {
     try {
-      const token = localStorage.getItem('x-access-token');
-      const params = new URLSearchParams({
-        name: $('f-name').value.trim(),
-        group: $('f-group').value,
-        site: $('f-site').value,
-        eq: $('f-eq').value,
-        report: $('f-report').value,
-        promoOnly: $('f-promo-only').checked ? '1' : '',
-      });
-      const url = `${API_BASE}/skill/levels/export?${params.toString()}`;
-      const res = await axios.get(url, {
-        headers: { 'x-access-token': token },
-        responseType: 'blob'
-      });
-      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `skill_levels_${new Date().toISOString().slice(0,10)}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
+      exportToXLSX();
     } catch (e) {
       console.error('[export]', e);
-      alert('엑셀 다운로드 중 오류가 발생했습니다.');
+      alert('엑셀 저장 중 오류가 발생했습니다.');
     }
   });
 
@@ -79,7 +55,7 @@ function bindUI() {
     if (e.target.id === 'detail-modal') closeDetail();
   });
 
-  // 설명 모달 ("설명 ?" 버튼)
+  // 설명 모달
   $('btn-guide')?.addEventListener('click', () => openModal('guide-modal'));
   $('guide-close')?.addEventListener('click', () => closeModal('guide-modal'));
   $('guide-modal')?.addEventListener('click', (e) => {
@@ -98,7 +74,7 @@ function bindUI() {
   });
 }
 
-/* --------------------- Modal helpers --------------------- */
+/* --------------------- Modal helpers ------------------ */
 function openModal(id){
   const m = $(id);
   if (!m) return;
@@ -118,7 +94,7 @@ function updateBodyScroll(){
   document.body.classList.toggle('no-scroll', anyOpen);
 }
 
-/* --------------------- Data Load --------------------- */
+/* --------------------- Data Load ---------------------- */
 async function loadList() {
   setLoading(true);
   try {
@@ -136,7 +112,7 @@ async function loadList() {
   }
 }
 
-/* --------------------- Filters --------------------- */
+/* --------------------- Filters ------------------------ */
 function hydrateFilters(list) {
   const groupSel = $('f-group');
   const siteSel  = $('f-site');
@@ -162,7 +138,6 @@ function applyFilterAndRender() {
   const site    = $('f-site').value;
   const eq      = $('f-eq').value;
   const report  = $('f-report').value;
-  const promoOnly = $('f-promo-only').checked;
 
   filtered = rawList.filter(r => {
     if (name && !String(r.NAME).includes(name)) return false;
@@ -174,17 +149,13 @@ function applyFilterAndRender() {
       const inMulti = r['MULTI EQ'] === eq;
       if (!inMain && !inMulti) return false;
     }
-    if (promoOnly) {
-      const parts = getPromotionParts(r);
-      if (parts.length === 0) return false;
-    }
     return true;
   });
 
   renderTable();
 }
 
-/* --------------------- Table --------------------- */
+/* --------------------- Table -------------------------- */
 function renderTable() {
   const tbody = $('tbody');
   tbody.innerHTML = '';
@@ -194,7 +165,7 @@ function renderTable() {
   for (const r of filtered) {
     const tr = document.createElement('tr');
 
-    const promo = computePromotionString(r); // <- 승급 계산
+    const promo = computePromotionString(r);
 
     tr.innerHTML = `
       <td class="name">${escapeHtml(r.NAME ?? '')}</td>
@@ -204,11 +175,11 @@ function renderTable() {
 
       <td>${escapeHtml(r['MAIN EQ'] ?? '-')}</td>
       <td class="mono">${fmtPct(r.main_avg)}</td>
-      <td>${badgeLevel(r.main_level, 'main')}</td>
+      <td>${badgeLevel(r.main_level)}</td>
 
       <td>${escapeHtml(r['MULTI EQ'] ?? '-')}</td>
       <td class="mono">${fmtPct(r.multi_setup)}</td>
-      <td>${badgeLevel(r.multi_level, 'multi')}</td>
+      <td>${badgeLevel(r.multi_level)}</td>
 
       <td class="promo">${promo}</td>
       <td><button class="btn tiny" data-open="${r.ID}">보기</button></td>
@@ -219,7 +190,7 @@ function renderTable() {
   }
 }
 
-/* --------------------- Promotion Logic --------------------- */
+/* --------------------- Promotion Logic ---------------- */
 // 문자열↔정수 매핑 (DB LEVEL: 1..4 | 표시: 1-1/1-2/1-3/2)
 function mainIntToStr(n) {
   switch (Number(n) || 0) {
@@ -240,7 +211,6 @@ function mainStrToInt(s) {
   }
 }
 
-// 승급 파츠(배열) 반환 → 필터/표시 공용 사용
 function getPromotionParts(r){
   const calcMainStr = r.main_level;                     // '1-2' 등
   const calcMainInt = mainStrToInt(calcMainStr);        // 2 등
@@ -276,7 +246,7 @@ function computePromotionString(r) {
   return parts.length ? parts.join(' / ') : '-';
 }
 
-/* --------------------- Detail --------------------- */
+/* --------------------- Detail ------------------------ */
 async function openDetail(id) {
   const token = localStorage.getItem('x-access-token');
   try {
@@ -319,7 +289,7 @@ function closeDetail() {
   if (chartMulti) { chartMulti.destroy(); chartMulti = null; }
 }
 
-/* --------------------- Charts --------------------- */
+/* --------------------- Charts ------------------------ */
 function drawMainChart(u) {
   const ctx = $('chart-main').getContext('2d');
   const eq = u['MAIN EQ'];
@@ -419,7 +389,7 @@ function drawMultiChart(u) {
   });
 }
 
-/* --------------------- Analysis (기준 & 부족도) --------------------- */
+/* --------------------- Analysis ----------------------- */
 function pct(x){ return Number.isFinite(Number(x)) ? (Number(x)*100).toFixed(1) : '0.0'; }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 function setProgress(barId, textId, currentPct, targetPct){
@@ -525,7 +495,35 @@ function renderMultiAnalysis(u){
   setProgress('prog-multi','prog-multi-text', suPct, thPct);
 }
 
-/* --------------------- Utils --------------------- */
+/* --------------------- Excel Export ------------------- */
+function exportToXLSX(){
+  if (!Array.isArray(filtered) || filtered.length === 0){
+    alert('내보낼 데이터가 없습니다. 검색 조건을 확인해 주세요.');
+    return;
+  }
+  const rows = filtered.map(r => ({
+    'Name': r.NAME ?? '',
+    'Group': r.GROUP ?? '',
+    'Site': r.SITE ?? '',
+    '필기 LEVEL': String(r['LEVEL(report)'] ?? ''),
+    'MAIN EQ': r['MAIN EQ'] ?? '',
+    'MAIN Avg': fmtPct(r.main_avg),
+    'MAIN Level': r.main_level ?? '-',
+    'MULTI EQ': r['MULTI EQ'] ?? '',
+    'MULTI SET UP': fmtPct(r.multi_setup),
+    'MULTI Level': r.multi_level ?? '-',
+    '승급': computePromotionString(r)
+  }));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, '역량 레벨');
+
+  const filename = `skill_levels_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, filename);
+}
+
+/* --------------------- Utils -------------------------- */
 function setLoading(on) { $('loading').classList.toggle('hidden', !on); }
 function showError(on) { $('error').classList.toggle('hidden', !on); }
 function setText(id, val) { $(id).textContent = val ?? '-'; }
