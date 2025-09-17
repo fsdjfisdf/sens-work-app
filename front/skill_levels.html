@@ -101,17 +101,12 @@
         </label>
       </div>
       <div class="row">
-        <label class="check">
-          <input type="checkbox" id="f-promo-only" />
-          <span>승급 추천만</span>
-        </label>
-        <div class="row">
-        <div class="actions">
-            <button id="btn-search" class="btn primary">검색</button>
-            <button id="btn-reset" class="btn">초기화</button>
-            <button id="btn-export" class="btn ghost">엑셀 저장</button>
-        </div>
-        </div>
+    <div class="actions">
+        <button id="btn-search" class="btn primary">검색</button>
+        <button id="btn-reset" class="btn">초기화</button>
+        <button id="btn-export" class="btn ghost">엑셀 저장</button>
+    </div>
+    </div>
       </div>
     </section>
 
@@ -214,67 +209,91 @@
       <button class="close" id="guide-close" aria-label="닫기">×</button>
       <h3 id="guide-title">레벨 산정 방법 (상세 설명)</h3>
 
-      <div class="guide-body">
-        <h4>1) 용어</h4>
-        <ul>
-          <li><b>LEVEL(report)</b>: 필기시험 합격 레벨 (0, 1, 2, 2-2)</li>
-          <li><b>MAIN EQ</b>: 주력 설비 — <u>SET UP</u>과 <u>MAINT</u>의 <b>평균</b>으로 평가</li>
-          <li><b>MULTI EQ</b>: 보조 설비 — <b>SET UP 단독</b>으로 평가 (2-2 트랙)</li>
-          <li><b>기준 역량</b>: 설비별 레벨 판정 기준 퍼센트(아래 표)</li>
-          <li><b>DB 저장 규칙</b>:
-            <ul>
-              <li>MAIN: <code>LEVEL(int)</code> → 1=1-1, 2=1-2, 3=1-3, 4=2 (UI는 1-1/1-2/1-3/2로 표기)</li>
-              <li>MULTI: <code>MULTI LEVEL(int)</code> → 0=미취득, 1=2-2 취득</li>
-            </ul>
-          </li>
-        </ul>
+<div class="guide-body">
+  <h4>📌 30초 핵심 요약</h4>
+  <ul>
+    <li><b>LEVEL(report)</b>는 필기 합격 레벨(0, 1, 2, 2-2)입니다.</li>
+    <li><b>MAIN EQ</b>는 <u>SET UP</u>과 <u>MAINT</u>의 <b>평균</b>으로 레벨을 산정합니다. (표시: 1-1 / 1-2 / 1-3 / 2)</li>
+    <li><b>MULTI EQ</b>는 <b>SET UP 단독</b>으로 <b>Lv.2-2</b> 달성 여부만 봅니다. (표시: 2-2 또는 0)</li>
+    <li>화면의 “승급”은 <b>현재 산정 결과</b>가 <b>DB에 저장된 값</b>보다 높을 때만 표기됩니다.</li>
+  </ul>
 
-        <h4>2) 평가 규칙</h4>
-        <ol>
-          <li><b>LEVEL(report)=0</b>: MAIN/MULTI 레벨 산정하지 않음(0으로 간주)</li>
-          <li><b>LEVEL(report)=1</b>:
-            <ul>
-              <li>MAIN 평균값으로 <code>1-1 / 1-2 / 1-3</code> 산정</li>
-              <li>MULTI: 산정하지 않음</li>
-            </ul>
-          </li>
-          <li><b>LEVEL(report)=2</b>:
-            <ul>
-              <li>MAIN 평균값이 Lv.2 기준 역량 도달 시 <b>2</b> (미달 시 1-3/1-2/1-1)</li>
-              <li>MULTI: 산정하지 않음</li>
-            </ul>
-          </li>
-          <li><b>LEVEL(report)=2-2</b>:
-            <ul>
-              <li><u>MAIN</u>: 여전히 <b>Lv.2 트랙</b>(최대 2)으로 산정 — <b>2-2는 2 이후 상위 레벨</b>이므로 MAIN은 최소 2까지 표기</li>
-              <li><u>MULTI</u>: 해당 설비의 <b>SET UP</b>만으로 <b>Lv.2-2</b> 충족 여부 판정(충족 시 DB의 MULTI LEVEL=1)</li>
-            </ul>
-          </li>
-        </ol>
+  <h4>🧭 어떻게 산정하나요? (흐름)</h4>
+  <ol>
+    <li><b>LEVEL(report)=0</b> → 레벨 산정하지 않음(모두 0 취급)</li>
+    <li><b>LEVEL(report)=1</b> → MAIN 평균을 설비별 기준과 비교해 <b>1-1 / 1-2 / 1-3</b> 중 하나로 산정
+      <div class="muted">* MULTI는 이 구간에서 산정하지 않음</div>
+    </li>
+    <li><b>LEVEL(report)=2</b> → MAIN 평균이 Lv.2 기준을 넘으면 <b>2</b>, 못 넘으면 <b>1-3/1-2/1-1</b>로 산정
+      <div class="muted">* MULTI는 이 구간에서 산정하지 않음</div>
+    </li>
+    <li><b>LEVEL(report)=2-2</b>
+      <ul>
+        <li><u>MAIN</u>은 위와 똑같이 <b>Lv.2 트랙(최대 2)</b>으로 산정합니다. <span class="muted">2-2는 MAIN의 상위단계가 아니라 MULTI 전용 트랙이에요.</span></li>
+        <li><u>MULTI</u>는 해당 설비의 <b>SET UP</b>만으로 <b>Lv.2-2 기준</b> 충족 여부를 봅니다. (충족 시 <b>2-2</b>, 미충족 시 <b>0</b>)</li>
+      </ul>
+    </li>
+  </ol>
 
-        <h4>3) 설비별 기준 역량(%)</h4>
-        <div class="table-wrap small">
-          <table class="mini">
-            <thead>
-              <tr><th>EQ</th><th>Lv.1-1</th><th>Lv.1-2</th><th>Lv.1-3</th><th>Lv.2</th><th>Lv.2-2(SET UP)</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>SUPRA N</td><td>10</td><td>25</td><td>46</td><td>61</td><td>70</td></tr>
-              <tr><td>SUPRA XP</td><td>10</td><td>25</td><td>46</td><td>61</td><td>70</td></tr>
-              <tr><td>INTEGER</td><td>12</td><td>31</td><td>52</td><td>63</td><td>70</td></tr>
-              <tr><td>PRECIA</td><td>12</td><td>31</td><td>52</td><td>63</td><td>70</td></tr>
-              <tr><td>ECOLITE</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
-              <tr><td>GENEVA</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
-              <tr><td>HDW</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
-            </tbody>
-          </table>
-        </div>
+  <h4>📊 설비별 기준 역량(%)</h4>
+  <div class="table-wrap small">
+    <table class="mini">
+      <thead>
+        <tr><th>EQ</th><th>Lv.1-1</th><th>Lv.1-2</th><th>Lv.1-3</th><th>Lv.2</th><th>Lv.2-2(SET UP)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SUPRA N</td><td>10</td><td>25</td><td>46</td><td>61</td><td>70</td></tr>
+        <tr><td>SUPRA XP</td><td>10</td><td>25</td><td>46</td><td>61</td><td>70</td></tr>
+        <tr><td>INTEGER</td><td>12</td><td>31</td><td>52</td><td>63</td><td>70</td></tr>
+        <tr><td>PRECIA</td><td>12</td><td>31</td><td>52</td><td>63</td><td>70</td></tr>
+        <tr><td>ECOLITE</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
+        <tr><td>GENEVA</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
+        <tr><td>HDW</td><td>6</td><td>23</td><td>43</td><td>59</td><td>70</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-        <h4>4) 승급 추천 로직</h4>
-        <ul class="muted">
-          <li>MAIN: 실제 산정 레벨(1-1/1-2/1-3/2)을 DB(LEVEL=1~4)와 비교해 <b>산정 &gt; DB</b>이면 승급 추천</li>
-          <li>MULTI(2-2): 산정=2-2인데 DB(<code>MULTI LEVEL</code>)가 0이면 승급 추천</li>
-        </ul>
+  <h4>🧪 예시로 이해하기</h4>
+  <ol>
+    <li><b>예시 A — report=1, MAIN만 평가</b><br>
+      <span class="muted">조건:</span> MAIN EQ = SUPRA N, SET UP 35%, MAINT 27% → 평균 <b>31%</b><br>
+      <span class="muted">비교:</span> SUPRA N 기준(1-1:10 / 1-2:25 / 1-3:46)<br>
+      <span class="muted">결과:</span> 평균 31%는 <b>1-2</b> 이상, <b>1-3</b> 미달 → <b>MAIN Level=1-2</b><br>
+      <span class="muted">메모:</span> MULTI는 report=1이라 평가하지 않음
+    </li>
+    <li><b>예시 B — report=2, MAIN이 2 가능</b><br>
+      <span class="muted">조건:</span> MAIN EQ = PRECIA, 평균 <b>64%</b><br>
+      <span class="muted">비교:</span> PRECIA Lv.2 기준 63%<br>
+      <span class="muted">결과:</span> 평균이 Lv.2 기준을 넘으므로 <b>MAIN Level=2</b> (최대치)
+    </li>
+    <li><b>예시 C — report=2-2, MAIN은 2 트랙 / MULTI는 2-2 판정</b><br>
+      <span class="muted">조건:</span> MAIN EQ = SUPRA XP (평균 62%), MULTI EQ = SUPRA XP (SET UP 71%)<br>
+      <span class="muted">MAIN:</span> Lv.2 기준 61% → 평균 62% ≥ 61% ⇒ <b>MAIN Level=2</b><br>
+      <span class="muted">MULTI:</span> 2-2 기준 70% → SET UP 71% ≥ 70% ⇒ <b>MULTI Level=2-2</b>
+    </li>
+    <li><b>예시 D — 승급 추천 표시</b><br>
+      <span class="muted">조건:</span> DB 저장값 LEVEL=0(=표시 0), 현재 산정 <b>MAIN=1-2</b><br>
+      <span class="muted">결과:</span> 산정이 더 높으므로 <b>승급: MAIN 0 → 1-2</b> 로 표시<br>
+      <span class="muted">또는:</span> DB MULTI LEVEL=0, 현재 산정 <b>MULTI=2-2</b> → <b>승급: MULTI 0 → 2-2</b>
+    </li>
+  </ol>
+
+  <h4>💾 DB 컬럼과 화면 표기의 대응</h4>
+  <ul>
+    <li><b>MAIN 저장</b>: <code>LEVEL(int)</code> = <code>1=1-1, 2=1-2, 3=1-3, 4=2</code> <span class="muted">(화면은 1-1/1-2/1-3/2로 표기)</span></li>
+    <li><b>MULTI 저장</b>: <code>MULTI LEVEL(int)</code> = <code>0=미취득, 1=2-2 취득</code></li>
+    <li><b>LEVEL(report)</b>: 필기 합격 값(0, 1, 2, 2-2) — <span class="muted">산정 “가능 범위”를 정합니다.</span></li>
+  </ul>
+
+  <h4>❓자주 묻는 질문</h4>
+  <ul class="muted">
+    <li><b>Q. report가 2-2면 MAIN도 2-2인가요?</b><br>A. 아니요. <b>MAIN은 최대 2</b>까지입니다. 2-2는 <b>MULTI 전용</b> 판정입니다.</li>
+    <li><b>Q. MULTI는 언제 계산되나요?</b><br>A. <b>report=2-2</b>일 때만, 해당 설비의 <b>SET UP</b>으로 <b>2-2</b> 충족 여부를 봅니다.</li>
+    <li><b>Q. 평균은 어떻게 계산하나요?</b><br>A. MAIN은 <b>(SET UP + MAINT) ÷ 2</b> 입니다.</li>
+    <li><b>Q. 기준 퍼센트 값은 어디서 오나요?</b><br>A. 설비별 <b>기준 역량 표</b> 값을 사용합니다(위 표 참고).</li>
+  </ul>
+</div>
+
       </div>
     </div>
   </div>
