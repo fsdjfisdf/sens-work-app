@@ -252,46 +252,6 @@
       </tbody>
     </table>
   </div>
-
-  <h4>🧪 예시로 이해하기</h4>
-  <ol>
-    <li><b>예시 A — report=1, MAIN만 평가</b><br>
-      <span class="muted">조건:</span> MAIN EQ = SUPRA N, SET UP 35%, MAINT 27% → 평균 <b>31%</b><br>
-      <span class="muted">비교:</span> SUPRA N 기준(1-1:10 / 1-2:25 / 1-3:46)<br>
-      <span class="muted">결과:</span> 평균 31%는 <b>1-2</b> 이상, <b>1-3</b> 미달 → <b>MAIN Level=1-2</b><br>
-      <span class="muted">메모:</span> MULTI는 report=1이라 평가하지 않음
-    </li>
-    <li><b>예시 B — report=2, MAIN이 2 가능</b><br>
-      <span class="muted">조건:</span> MAIN EQ = PRECIA, 평균 <b>64%</b><br>
-      <span class="muted">비교:</span> PRECIA Lv.2 기준 63%<br>
-      <span class="muted">결과:</span> 평균이 Lv.2 기준을 넘으므로 <b>MAIN Level=2</b> (최대치)
-    </li>
-    <li><b>예시 C — report=2-2, MAIN은 2 트랙 / MULTI는 2-2 판정</b><br>
-      <span class="muted">조건:</span> MAIN EQ = SUPRA XP (평균 62%), MULTI EQ = SUPRA XP (SET UP 71%)<br>
-      <span class="muted">MAIN:</span> Lv.2 기준 61% → 평균 62% ≥ 61% ⇒ <b>MAIN Level=2</b><br>
-      <span class="muted">MULTI:</span> 2-2 기준 70% → SET UP 71% ≥ 70% ⇒ <b>MULTI Level=2-2</b>
-    </li>
-    <li><b>예시 D — 승급 추천 표시</b><br>
-      <span class="muted">조건:</span> DB 저장값 LEVEL=0(=표시 0), 현재 산정 <b>MAIN=1-2</b><br>
-      <span class="muted">결과:</span> 산정이 더 높으므로 <b>승급: MAIN 0 → 1-2</b> 로 표시<br>
-      <span class="muted">또는:</span> DB MULTI LEVEL=0, 현재 산정 <b>MULTI=2-2</b> → <b>승급: MULTI 0 → 2-2</b>
-    </li>
-  </ol>
-
-  <h4>💾 DB 컬럼과 화면 표기의 대응</h4>
-  <ul>
-    <li><b>MAIN 저장</b>: <code>LEVEL(int)</code> = <code>1=1-1, 2=1-2, 3=1-3, 4=2</code> <span class="muted">(화면은 1-1/1-2/1-3/2로 표기)</span></li>
-    <li><b>MULTI 저장</b>: <code>MULTI LEVEL(int)</code> = <code>0=미취득, 1=2-2 취득</code></li>
-    <li><b>LEVEL(report)</b>: 필기 합격 값(0, 1, 2, 2-2) — <span class="muted">산정 “가능 범위”를 정합니다.</span></li>
-  </ul>
-
-  <h4>❓자주 묻는 질문</h4>
-  <ul class="muted">
-    <li><b>Q. report가 2-2면 MAIN도 2-2인가요?</b><br>A. 아니요. <b>MAIN은 최대 2</b>까지입니다. 2-2는 <b>MULTI 전용</b> 판정입니다.</li>
-    <li><b>Q. MULTI는 언제 계산되나요?</b><br>A. <b>report=2-2</b>일 때만, 해당 설비의 <b>SET UP</b>으로 <b>2-2</b> 충족 여부를 봅니다.</li>
-    <li><b>Q. 평균은 어떻게 계산하나요?</b><br>A. MAIN은 <b>(SET UP + MAINT) ÷ 2</b> 입니다.</li>
-    <li><b>Q. 기준 퍼센트 값은 어디서 오나요?</b><br>A. 설비별 <b>기준 역량 표</b> 값을 사용합니다(위 표 참고).</li>
-  </ul>
 </div>
 
       </div>
