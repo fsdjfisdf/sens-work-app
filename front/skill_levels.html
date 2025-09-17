@@ -300,12 +300,19 @@
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
       }
 
-      const menuBtn = document.querySelector('.menu-btn');
-      const menuBar = document.querySelector('.menu-bar');
-      menuBtn?.addEventListener('click', () => menuBar.classList.toggle('open'));
-      document.addEventListener('click', (e) => {
-        if (!menuBtn?.contains(e.target) && !menuBar.contains(e.target)) menuBar.classList.remove('open');
-      });
+const menuBtn = document.querySelector('.menu-btn');
+const menuBar = document.querySelector('.menu-bar');
+menuBtn?.addEventListener('click', () => {
+  menuBar.classList.toggle('open');
+  menuBtn.classList.toggle('active');   // ← 추가: 아이콘을 X로
+});
+document.addEventListener('click', (e) => {
+  if (!menuBtn?.contains(e.target) && !menuBar.contains(e.target)) {
+    menuBar.classList.remove('open');
+    menuBtn.classList.remove('active'); // ← 추가: 바깥 클릭 시 원복
+  }
+});
+
 
       document.getElementById('sign-out')?.addEventListener('click', function() {
         localStorage.removeItem("x-access-token");
