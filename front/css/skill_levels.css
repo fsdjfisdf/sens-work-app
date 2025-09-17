@@ -197,6 +197,7 @@ nav{
   max-height: var(--table-max-h);
   overflow-y:auto;            /* 세로만 스크롤 */
   overflow-x:hidden;          /* 가로 스크롤 제거 */
+  -webkit-overflow-scrolling: touch;
 }
 
 #tbl{
@@ -206,7 +207,7 @@ nav{
   font-size:13px;
 }
 #tbl thead th{
-  position:sticky; top:0; z-index:2;
+  position:sticky; top:0; z-index:3;
   background: var(--thead-bg);
   color: var(--thead-text);
   letter-spacing: .1px; font-weight: 800;
@@ -225,8 +226,21 @@ nav{
   background:#fff;
   word-break: break-word;     /* 내용 줄바꿈 */
   white-space: normal;
+  position: relative; 
+  z-index: 1;
 }
 #tbl tbody td.name{ text-align:left; font-weight:700; }
+
+#tbl tbody td:last-child .btn{
+  position: relative;
+  z-index: 5;            /* 버튼이 헤더보다 높음 */
+  touch-action: manipulation; /* 모바일 탭 지연 방지 */
+}
+
+/* (선택) 상단 근처 행이 헤더에 가려 보이는 느낌 줄이기 */
+.table-wrap{
+  scroll-padding-top: 44px; /* 헤더 높이만큼 여유 */
+}
 
 /* Zebra + hover */
 #tbl tbody tr:nth-child(even) td{ background: var(--row-alt); }
