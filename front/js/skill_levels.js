@@ -175,6 +175,8 @@ async function openDetail(id) {
     // 차트 준비
     drawMainChart(u);
     drawMultiChart(u);
+    renderMainAnalysis(u);
+    renderMultiAnalysis(u);
 
     // 모달 열기
     const modal = document.getElementById('detail-modal');
@@ -367,4 +369,121 @@ function exportTableToCSV() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/* ===================== Analysis (Criteria & Gaps) ===================== */
+
+function pct(x){ return isFinite(x) ? (x*100).toFixed(1) : '0.0'; }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function setProgress(barId, textId, currentPct, targetPct){
+  const bar = document.getElementById(barId);
+  const txt = document.getElementById(textId);
+  const width = clamp(currentPct, 0, 100);
+  bar.style.width = width + '%';
+  if (currentPct >= targetPct) bar.classList.add('reached'); else bar.classList.remove('reached');
+  txt.textContent = `현재 ${currentPct.toFixed(1)}% / 목표 ${targetPct.toFixed(1)}%`;
+}
+
+/** MAIN 분석: 합격 기준, 부족도, 약점(SET UP vs MAINT) */
+function renderMainAnalysis(u){
+  const report = String(u['LEVEL(report)'] ?? '0');
+  const eq = u['MAIN EQ'];
+  const t = u.thresholds?.main || null;
+  const avg = Number(u.metrics?.main?.average ?? 0);
+  const su  = Number(u.metrics?.main?.setup ?? 0);
+  const mt  = Number(u.metrics?.main?.maint ?? 0);
+
+  const critEl = document.getElementById('crit-main');
+  const gapEl  = document.getElementById('gap-main');
+  const weakEl = document.getElementById('weak-main');
+
+  // 데이터 없을 때
+  if (!eq || !t){
+    critEl.innerHTML = `<em>해당 MAIN EQ의 기준표가 없습니다.</em>`;
+    gapEl.textContent = '';
+    weakEl.textContent = '';
+    setProgress('prog-main','prog-main-text', 0, 0);
+    return;
+  }
+
+  // 트랙 결정: '1' → (1-1,1-2,1-3), '2' 또는 '2-2' → (2)
+  const track = (report === '1') ? ['1-1','1-2','1-3'] : ['2'];
+
+  // 합격 기준 표기(충족 여부 함께)
+  const critLis = track.map(k=>{
+    const need = t[k];
+    const ok = avg >= need;
+    return `<li>Lv.${k} ≥ <strong>${pct(need)}%</strong> — <span class="${ok?'pass':'fail'}">${ok?'충족':'미충족'}</span></li>`;
+  }).join('');
+  critEl.innerHTML = `
+    <div><strong>설비:</strong> ${escapeHtml(eq)} / <strong>평균:</strong> ${pct(avg)}%</div>
+    <ul style="margin:6px 0 0 18px;">${critLis}</ul>
+    <div style="margin-top:4px;color:#666;">* MAIN은 <b>SET UP</b>과 <b>MAINT</b>의 평균으로 판정합니다.</div>
+  `;
+
+  // 다음 목표(현재 평균보다 높은 최초 임계값)
+  const nextKey = track.find(k => avg < t[k]);
+  if (nextKey){
+    const target = t[nextKey];
+    const gap = (target - avg) * 100;
+    gapEl.innerHTML = `다음 목표 <b>Lv.${nextKey}</b> 까지 <b>${gap.toFixed(1)}%p</b> 부족`;
+    setProgress('prog-main', 'prog-main-text', Number(pct(avg)), Number(pct(target)));
+  } else {
+    gapEl.innerHTML = `<b>트랙 내 모든 기준 충족</b> (부족도 0%p)`;
+    // 가장 높은 트랙 기준으로 표시
+    const target = t[ track[track.length-1] ];
+    setProgress('prog-main', 'prog-main-text', Number(pct(avg)), Number(pct(target)));
+  }
+
+  // 약점(SET UP vs MAINT)
+  const suPct = Number(pct(su));
+  const mtPct = Number(pct(mt));
+  const weakIs = (suPct === mtPct) ? '동일' : (suPct < mtPct ? 'SET UP' : 'MAINT');
+  const diff = Math.abs(suPct - mtPct).toFixed(1);
+  weakEl.innerHTML =
+    (weakIs === '동일')
+      ? `SET UP와 MAINT가 동일 수준입니다.`
+      : `상대적으로 <b>${weakIs}</b> 역량이 낮습니다. (차이 <b>${diff}%p</b>)`;
+}
+
+/** MULTI 분석: 2-2 트랙만 */
+function renderMultiAnalysis(u){
+  const report = String(u['LEVEL(report)'] ?? '0');
+  const eq = u['MULTI EQ'];
+  const th = u.thresholds_multi?.multi?.['2-2'] ?? null;
+  const su = Number(u.metrics?.multi?.setupOnly ?? 0);
+
+  const critEl = document.getElementById('crit-multi');
+  const gapEl  = document.getElementById('gap-multi');
+
+  // 2-2 트랙만 평가
+  if (report !== '2-2'){
+    critEl.innerHTML = `<em>MULTI는 <b>LEVEL(report)=2-2</b>일 때만 SET UP으로 평가합니다.</em>`;
+    gapEl.textContent = '';
+    setProgress('prog-multi','prog-multi-text', 0, 0);
+    return;
+  }
+  if (!eq || th == null){
+    critEl.innerHTML = `<em>해당 MULTI EQ의 기준표(2-2)가 없습니다.</em>`;
+    gapEl.textContent = '';
+    setProgress('prog-multi','prog-multi-text', 0, 0);
+    return;
+  }
+
+  const suPct = Number(pct(su));
+  const thPct = Number(pct(th));
+
+  const ok = su >= th;
+  critEl.innerHTML = `
+    <div><strong>설비:</strong> ${escapeHtml(eq)} / <strong>SET UP:</strong> ${suPct.toFixed(1)}%</div>
+    <div>Lv.<b>2-2</b> 합격 기준: <b>${thPct.toFixed(1)}%</b> (SET UP 단독)</div>
+  `;
+
+  if (ok){
+    gapEl.innerHTML = `<b>합격 기준 충족</b> (부족도 0%p)`;
+  } else {
+    const gap = (th - su) * 100;
+    gapEl.innerHTML = `Lv.2-2 까지 <b>${gap.toFixed(1)}%p</b> 부족`;
+  }
+  setProgress('prog-multi','prog-multi-text', suPct, thPct);
 }

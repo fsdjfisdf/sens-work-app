@@ -141,3 +141,18 @@ td.mono{ font-variant-numeric: tabular-nums; }
   .field{ min-width:140px; }
   .field input, .field select{ width:180px; }
 }
+
+/* --- skill analysis --- */
+.analysis-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px; }
+.analysis-card{ background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; }
+.criteria{ font-size:.94rem; color:var(--ink-2); line-height:1.5; }
+.criteria .pass{ color: var(--ok); font-weight:600; }
+.criteria .fail{ color: var(--zero); font-weight:600; }
+.progress-wrap{ background:#f4efe5; border-radius:999px; height:16px; margin:10px 0 6px; overflow:hidden; }
+.progress-bar{ background:var(--good); height:100%; width:0%; position:relative; transition:width .4s ease; }
+.progress-bar.reached{ background: var(--ok); }
+.progress-bar span{ position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:.8rem; color:#083; }
+.gap{ font-size:.95rem; color:var(--ink); }
+.weak{ font-size:.95rem; color:#7a3e14; }
+.weak .tag{ margin-left:6px; }
+@media (max-width: 900px){ .analysis-grid{ grid-template-columns:1fr; } }

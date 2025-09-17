@@ -148,7 +148,7 @@
               <th style="min-width:120px;">Name</th>
               <th>Group</th>
               <th>Site</th>
-              <th>LEVEL(report)</th>
+              <th>필기 LEVEL</th>
               <th>MAIN EQ</th>
               <th>MAIN Avg</th>
               <th>MAIN Level</th>
@@ -202,6 +202,28 @@
             <canvas id="chart-multi"></canvas>
           </div>
         </div>
+                <!-- (기존) detail-grid 내부의 charts 블럭 아래에 추가 -->
+        <div class="analysis-grid">
+        <div class="analysis-card">
+            <h4>MAIN — 합격 기준 & 부족도</h4>
+            <div id="crit-main" class="criteria"></div>
+            <div class="progress-wrap">
+            <div id="prog-main" class="progress-bar"><span id="prog-main-text"></span></div>
+            </div>
+            <div id="gap-main" class="gap"></div>
+            <div id="weak-main" class="weak"></div>
+        </div>
+
+        <div class="analysis-card">
+            <h4>MULTI — 합격 기준 & 부족도</h4>
+            <div id="crit-multi" class="criteria"></div>
+            <div class="progress-wrap">
+            <div id="prog-multi" class="progress-bar"><span id="prog-multi-text"></span></div>
+            </div>
+            <div id="gap-multi" class="gap"></div>
+        </div>
+        </div>
+
       </div>
     </div>
   </div>
