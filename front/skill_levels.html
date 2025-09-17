@@ -45,7 +45,6 @@
         <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
         <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
         <a href="./update.html" class="menu-item">Update</a>
-        <!-- 새 메뉴 -->
         <a href="./skill_levels.html" class="menu-item active">역량 레벨</a>
         <button id="sign-out" class="menu-item">Logout</button>
       </div>
@@ -102,6 +101,10 @@
         </label>
       </div>
       <div class="row">
+        <label class="check">
+          <input type="checkbox" id="f-promo-only" />
+          <span>승급 추천만</span>
+        </label>
         <div class="actions">
           <button id="btn-search" class="btn primary">검색</button>
           <button id="btn-reset" class="btn">초기화</button>
@@ -126,12 +129,11 @@
               <th>MULTI EQ</th>
               <th>MULTI SET UP</th>
               <th>MULTI Level</th>
+              <th>승급</th>
               <th>상세</th>
             </tr>
           </thead>
-          <tbody id="tbody">
-            <!-- rows -->
-          </tbody>
+          <tbody id="tbody"></tbody>
         </table>
       </div>
 
@@ -160,6 +162,11 @@
           <div class="tags">
             <span id="d-main-lvl" class="tag">MAIN:-</span>
             <span id="d-multi-lvl" class="tag">MULTI:-</span>
+          </div>
+          <div class="tags">
+            <span id="d-db-main" class="tag subtle"></span>
+            <span id="d-db-multi" class="tag subtle"></span>
+            <span id="d-promo" class="tag promote"></span>
           </div>
         </div>
 
@@ -212,6 +219,12 @@
           <li><b>MAIN EQ</b>: 주력 설비 — <u>SET UP</u>과 <u>MAINT</u>의 <b>평균</b>으로 평가</li>
           <li><b>MULTI EQ</b>: 보조 설비 — <b>SET UP 단독</b>으로 평가 (2-2 트랙)</li>
           <li><b>기준 역량</b>: 설비별 레벨 판정 기준 퍼센트(아래 표)</li>
+          <li><b>DB 저장 규칙</b>:
+            <ul>
+              <li>MAIN: <code>LEVEL(int)</code> → 1=1-1, 2=1-2, 3=1-3, 4=2 (UI는 1-1/1-2/1-3/2로 표기)</li>
+              <li>MULTI: <code>MULTI LEVEL(int)</code> → 0=미취득, 1=2-2 취득</li>
+            </ul>
+          </li>
         </ul>
 
         <h4>2) 평가 규칙</h4>
@@ -219,21 +232,20 @@
           <li><b>LEVEL(report)=0</b>: MAIN/MULTI 레벨 산정하지 않음(0으로 간주)</li>
           <li><b>LEVEL(report)=1</b>:
             <ul>
-              <li>MAIN: (SET UP+MAINT)/2 평균값을 <b>기준 역량</b>과 비교하여
-                <code>1-1 / 1-2 / 1-3</code> 중 최고 레벨을 부여 (미달 시 0)</li>
+              <li>MAIN 평균값으로 <code>1-1 / 1-2 / 1-3</code> 산정</li>
               <li>MULTI: 산정하지 않음</li>
             </ul>
           </li>
           <li><b>LEVEL(report)=2</b>:
             <ul>
-              <li>MAIN: 평균값이 Lv.2 기준 역량을 충족하면 <b>2</b>, 아니면 1-3/1-2/1-1/0 중 최고</li>
+              <li>MAIN 평균값이 Lv.2 기준 역량 도달 시 <b>2</b> (미달 시 1-3/1-2/1-1)</li>
               <li>MULTI: 산정하지 않음</li>
             </ul>
           </li>
           <li><b>LEVEL(report)=2-2</b>:
             <ul>
-              <li><u>MAIN</u>: <b>레벨2 트랙</b>으로 평가(최대 2). <b>2-2는 2 이후에 취득하는 상위 레벨</b>이므로 MAIN은 최소 2까지 산정 가능</li>
-              <li><u>MULTI</u>: 해당 설비의 <b>SET UP</b>만으로 <b>Lv.2-2</b> 기준 역량 충족 여부 판정</li>
+              <li><u>MAIN</u>: 여전히 <b>Lv.2 트랙</b>(최대 2)으로 산정 — <b>2-2는 2 이후 상위 레벨</b>이므로 MAIN은 최소 2까지 표기</li>
+              <li><u>MULTI</u>: 해당 설비의 <b>SET UP</b>만으로 <b>Lv.2-2</b> 충족 여부 판정(충족 시 DB의 MULTI LEVEL=1)</li>
             </ul>
           </li>
         </ol>
@@ -256,11 +268,11 @@
           </table>
         </div>
 
-        <h4>4) 산출 예시</h4>
-        <p class="muted">
-          예) LEVEL(report)=2-2, MAIN EQ=SUPRA N, (SET UP 92.0%, MAINT 95.6%) → 평균 93.8% ⇒ MAIN은 Lv.2 트랙 충족으로 <b>2</b> 표기.<br/>
-          MULTI EQ=SUPRA XP, SET UP 89.1% ⇒ Lv.2-2 기준 역량(70%) 충족 ⇒ MULTI <b>2-2</b> 표기.
-        </p>
+        <h4>4) 승급 추천 로직</h4>
+        <ul class="muted">
+          <li>MAIN: 실제 산정 레벨(1-1/1-2/1-3/2)을 DB(LEVEL=1~4)와 비교해 <b>산정 &gt; DB</b>이면 승급 추천</li>
+          <li>MULTI(2-2): 산정=2-2인데 DB(<code>MULTI LEVEL</code>)가 0이면 승급 추천</li>
+        </ul>
       </div>
     </div>
   </div>

@@ -10,6 +10,7 @@
   --zero:#c62828;
   --pill:#eef2ff;
   --card:#ffffff;
+  --promote:#7b1fa2;
 }
 
 *{box-sizing:border-box}
@@ -49,6 +50,7 @@ nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-
 .field{display:grid;gap:6px}
 .field input,.field select{height:36px;border:1px solid var(--line);border-radius:10px;padding:0 10px;min-width:180px;background:#fff}
 .actions{margin-left:auto;display:flex;gap:8px}
+.check{display:flex;align-items:center;gap:8px}
 
 /* list/table */
 .list .table-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}
@@ -59,12 +61,13 @@ tbody tr:hover{background:#fcfcff}
 .mono{font-variant-numeric:tabular-nums}
 
 .badge{display:inline-block;background:#f1f5f9;border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:12px}
-.pill{display:inline-block;background:var(--pill);padding:3px 10px;border-radius:999px;border:1px solid #e0e7ff}
+.pill{display:inline-inline;background:var(--pill);padding:3px 10px;border-radius:999px;border:1px solid #e0e7ff}
 .pill.ok{background:#e8f5e9;border-color:#c8e6c9}
 .pill.good{background:#e3f2fd;border-color:#bbdefb}
 .pill.mid{background:#fff8e1;border-color:#ffe082}
 .pill.low{background:#fff3e0;border-color:#ffcc80}
 .pill.zero{background:#ffebee;border-color:#ffcdd2}
+.pill.promote{background:#f3e5f5;border-color:#e1bee7;color:#4a148c;font-weight:600}
 
 .empty,.loading,.error{padding:16px;color:var(--ink-2)}
 .error{color:var(--zero)}
@@ -85,6 +88,7 @@ tbody tr:hover{background:#fcfcff}
 .info dd{margin:0;color:#222}
 .tags{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
 .tag{display:inline-block;background:#f3f4f6;border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+.tag.subtle{background:#fafafa;color:#666}
 
 .charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .chart-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
