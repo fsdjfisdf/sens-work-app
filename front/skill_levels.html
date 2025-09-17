@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>S-WORKS | 역량 레벨 뷰어</title>
+
+  <link rel="stylesheet" href="./css/skill_levels.css"/>
+
+  <!-- libs -->
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+</head>
+<body>
+  <!-- NAV -->
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
+        </div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn" aria-label="메뉴 열기">
+            <div class="menu-icon"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./approval.html" class="menu-item">Worklog Approval</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <!-- 새 메뉴 -->
+        <a href="./skill_levels.html" class="menu-item active">역량 레벨</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="inner">
+    <header class="page-head">
+      <h2>역량 레벨 (MAIN / MULTI)</h2>
+      <p class="help">
+        <strong>설명</strong> :  
+        <span>LEVEL(report) = 0/1/2/2-2 로 저장된 필기 통과 레벨을 기준으로,</span>
+        <span>MAIN EQ(SET UP+MAINT 평균) 또는 MULTI EQ(SET UP 단독) 값을 설비별 임계값에 매칭하여 </span>
+        <span>실제 역량 레벨(0, 1-1, 1-2, 1-3, 2, 2-2)을 산출합니다.</span>
+      </p>
+    </header>
+
+    <!-- Filters -->
+    <section class="filters" aria-label="검색 필터">
+      <div class="row">
+        <label class="field">
+          <span>이름</span>
+          <input id="f-name" type="text" placeholder="이름 검색(부분 일치)" />
+        </label>
+        <label class="field">
+          <span>Group</span>
+          <select id="f-group">
+            <option value="">전체</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Site</span>
+          <select id="f-site">
+            <option value="">전체</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>EQ</span>
+          <select id="f-eq">
+            <option value="">전체</option>
+            <option>SUPRA N</option>
+            <option>SUPRA XP</option>
+            <option>INTEGER</option>
+            <option>PRECIA</option>
+            <option>ECOLITE</option>
+            <option>GENEVA</option>
+            <option>HDW</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>LEVEL(report)</span>
+          <select id="f-report">
+            <option value="">전체</option>
+            <option>0</option>
+            <option>1</option>
+            <option>2</option>
+            <option>2-2</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label class="check">
+          <input type="checkbox" id="f-main-only" />
+          <span>MAIN 레벨 산정 가능만</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="f-multi-only" />
+          <span>MULTI 레벨 산정 가능만</span>
+        </label>
+        <div class="actions">
+          <button id="btn-search" class="btn primary">검색</button>
+          <button id="btn-reset" class="btn">초기화</button>
+          <button id="btn-export" class="btn ghost">표 CSV 저장</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Summary -->
+    <section class="summary">
+      <div class="card">
+        <div class="metric">
+          <span class="label">총 인원</span>
+          <span id="m-total" class="value">0</span>
+        </div>
+        <div class="metric">
+          <span class="label">MAIN 레벨 산정</span>
+          <span id="m-main" class="value">0</span>
+        </div>
+        <div class="metric">
+          <span class="label">MULTI 레벨 산정</span>
+          <span id="m-multi" class="value">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section class="list">
+      <div class="table-wrap">
+        <table id="tbl" aria-label="역량 레벨 표">
+          <thead>
+            <tr>
+              <th style="min-width:120px;">Name</th>
+              <th>Group</th>
+              <th>Site</th>
+              <th>LEVEL(report)</th>
+              <th>MAIN EQ</th>
+              <th>MAIN Avg</th>
+              <th>MAIN Level</th>
+              <th>MULTI EQ</th>
+              <th>MULTI SET UP</th>
+              <th>MULTI Level</th>
+              <th>상세</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <!-- rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="empty" class="empty hidden">검색 결과가 없습니다.</div>
+      <div id="loading" class="loading hidden" role="status" aria-live="polite">로딩 중…</div>
+      <div id="error" class="error hidden">데이터를 불러오는 중 오류가 발생했습니다.</div>
+    </section>
+  </main>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="detail-title">
+    <div class="modal-content">
+      <button class="close" id="detail-close" aria-label="닫기">×</button>
+      <h3 id="detail-title">상세</h3>
+
+      <div class="detail-grid">
+        <div class="info">
+          <dl>
+            <div><dt>Name</dt><dd id="d-name">-</dd></div>
+            <div><dt>Group</dt><dd id="d-group">-</dd></div>
+            <div><dt>Site</dt><dd id="d-site">-</dd></div>
+            <div><dt>LEVEL(report)</dt><dd id="d-report">-</dd></div>
+            <div><dt>MAIN EQ</dt><dd id="d-main-eq">-</dd></div>
+            <div><dt>MULTI EQ</dt><dd id="d-multi-eq">-</dd></div>
+          </dl>
+          <div class="tags">
+            <span id="d-main-lvl" class="tag">MAIN:-</span>
+            <span id="d-multi-lvl" class="tag">MULTI:-</span>
+          </div>
+        </div>
+
+        <div class="charts">
+          <div class="chart-card">
+            <h4>MAIN — 평균 vs 임계값</h4>
+            <canvas id="chart-main"></canvas>
+          </div>
+          <div class="chart-card">
+            <h4>MULTI — SET UP vs 임계값(2-2)</h4>
+            <canvas id="chart-multi"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- scripts -->
+  <script src="./js/logoutTimer.js" defer></script>
+  <script src="./js/skill_levels.js"></script>
+  <script>
+    // 공통 헤더/메뉴/로그인 토글
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+        document.querySelector(".unsigned")?.classList.remove("hidden");
+        document.querySelector(".signed")?.classList.add("hidden");
+        alert('로그인이 필요합니다.');
+        window.location.replace('./signin.html');
+        return;
+      } else {
+        document.querySelector(".unsigned")?.classList.add("hidden");
+        document.querySelector(".signed")?.classList.remove("hidden");
+      }
+      if (!token || userRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      }
+
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+      menuBtn?.addEventListener('click', () => menuBar.classList.toggle('open'));
+      document.addEventListener('click', (e) => {
+        if (!menuBtn?.contains(e.target) && !menuBar.contains(e.target)) menuBar.classList.remove('open');
+      });
+
+      document.getElementById('sign-out')?.addEventListener('click', function() {
+        localStorage.removeItem("x-access-token");
+        localStorage.removeItem("user-role");
+        alert("로그아웃 되었습니다.");
+        window.location.replace("./signin.html");
+      });
+    });
+  </script>
+</body>
+</html>
