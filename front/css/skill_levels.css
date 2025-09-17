@@ -441,3 +441,37 @@ body.no-scroll{ overflow:hidden; }
   *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
 }
 .menu-item{ user-select:none; }
+
+/* =========================
+   [PATCH] 상세 열 sticky-right 해제
+   ========================= */
+
+/* 1) 더 이상 오른쪽 고정하지 않음 */
+#tbl thead th:last-child,
+#tbl tbody td:last-child{
+  position: static;   /* ← sticky 해제 */
+  right: auto;
+  z-index: 1;
+  box-shadow: none;
+  min-width: 96px;    /* 버튼 공간은 유지(원하면 지워도 OK) */
+}
+
+/* 2) 각 영역 배경을 기본값으로 복원 */
+#tbl thead th:last-child{ 
+  background: var(--thead-bg); 
+}
+#tbl tbody td:last-child{ 
+  background: #fff; 
+}
+
+/* 3) 버튼 z-index 복원 (특별 취급 X) */
+#tbl tbody td:last-child .btn{
+  z-index: auto;
+}
+
+/* 4) 모바일용 스크롤 패딩 삭제 (sticky-right 여백 불필요) */
+@media (max-width: 980px){
+  .table-wrap{
+    scroll-padding-right: 0;
+  }
+}
