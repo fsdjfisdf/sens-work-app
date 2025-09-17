@@ -49,26 +49,27 @@ function computeMainCapabilityLevel(reportLevel, eq, avg) {
   const t = THRESHOLDS[eq];
 
   if (reportLevel === '0') return '0';
+
+  // '1'이면 1-1/1-2/1-3 중에서 최대(부족하면 0)
   if (reportLevel === '1') {
     if (avg >= t['1-3']) return '1-3';
     if (avg >= t['1-2']) return '1-2';
     if (avg >= t['1-1']) return '1-1';
     return '0';
   }
-  if (reportLevel === '2') {
+
+  // '2' 또는 '2-2'인 경우, MAIN은 레벨2 트랙 규칙으로 산정 (최대 '2')
+  if (reportLevel === '2' || reportLevel === '2-2') {
     if (avg >= t['2'])   return '2';
     if (avg >= t['1-3']) return '1-3';
     if (avg >= t['1-2']) return '1-2';
     if (avg >= t['1-1']) return '1-1';
     return '0';
   }
-  if (reportLevel === '2-2') {
-    // Report가 MULTI 검증 트랙이므로 MAIN은 계산 제외
-    return null;
-  }
-  // 예외 입력 방어
+
   return null;
 }
+
 
 /**
  * MULTI 역량 레벨 산정
