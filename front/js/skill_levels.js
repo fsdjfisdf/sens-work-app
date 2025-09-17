@@ -3,6 +3,7 @@
    - /api/skill/levels 목록 → 필터/표시/엑셀 저장
    - /api/skill/levels/:id 상세 → 모달 + 차트 + 기준 역량/부족도
    - 승급 계산: DB 저장값(LEVEL, MULTI LEVEL) vs 현재 산정값 비교
+   - "설명 ?" 모달 / "승급 추천만" 필터 구현
    ========================================================================== */
 
 const API_BASE = "http://3.37.73.151:3001/api";
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /* --------------------- 공용 DOM Helper --------------------- */
 function $(id) { return document.getElementById(id); }
+function q(sel, root=document){ return root.querySelector(sel); }
 
 function bindUI() {
   $('btn-search')?.addEventListener('click', applyFilterAndRender);
@@ -33,8 +35,12 @@ function bindUI() {
     $('f-site').value = '';
     $('f-eq').value = '';
     $('f-report').value = '';
+    $('f-promo-only').checked = false;
     applyFilterAndRender();
   });
+
+  // "승급 추천만" 실시간 필터
+  $('f-promo-only')?.addEventListener('change', applyFilterAndRender);
 
   // 엑셀: 백엔드에서 내려주는 완성본 사용
   $('btn-export')?.addEventListener('click', async () => {
@@ -46,6 +52,7 @@ function bindUI() {
         site: $('f-site').value,
         eq: $('f-eq').value,
         report: $('f-report').value,
+        promoOnly: $('f-promo-only').checked ? '1' : '',
       });
       const url = `${API_BASE}/skill/levels/export?${params.toString()}`;
       const res = await axios.get(url, {
@@ -72,19 +79,43 @@ function bindUI() {
     if (e.target.id === 'detail-modal') closeDetail();
   });
 
-  // “설명 ?” 버튼(있다면)
-  document.querySelectorAll('.help button[data-help]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      alert([
-        '• LEVEL(report): 필기 통과 레벨(0/1/2/2-2)',
-        '• MAIN 레벨 산정: MAIN EQ의 SET UP과 MAINT 평균을 설비별 기준 역량에 매칭',
-        '   - report=1: 1-1 / 1-2 / 1-3 트랙',
-        '   - report=2 또는 2-2: 최대 2까지 트랙',
-        '• MULTI 레벨 산정: report=2-2일 때 MULTI EQ의 SET UP 단독으로 Lv.2-2 충족 여부 평가',
-        '• 승급: DB 저장값(LEVEL, MULTI LEVEL)보다 새 산정값이 더 높으면 승급 후보로 표시'
-      ].join('\n'));
-    });
+  // 설명 모달 ("설명 ?" 버튼)
+  $('btn-guide')?.addEventListener('click', () => openModal('guide-modal'));
+  $('guide-close')?.addEventListener('click', () => closeModal('guide-modal'));
+  $('guide-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'guide-modal') closeModal('guide-modal');
   });
+
+  // ESC로 가장 위 모달 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const open = document.querySelectorAll('.modal.open');
+      if (open.length) {
+        open[open.length - 1].classList.remove('open');
+        updateBodyScroll();
+      }
+    }
+  });
+}
+
+/* --------------------- Modal helpers --------------------- */
+function openModal(id){
+  const m = $(id);
+  if (!m) return;
+  m.classList.add('open');
+  m.setAttribute('aria-hidden','false');
+  updateBodyScroll();
+}
+function closeModal(id){
+  const m = $(id);
+  if (!m) return;
+  m.classList.remove('open');
+  m.setAttribute('aria-hidden','true');
+  updateBodyScroll();
+}
+function updateBodyScroll(){
+  const anyOpen = !!document.querySelector('.modal.open');
+  document.body.classList.toggle('no-scroll', anyOpen);
 }
 
 /* --------------------- Data Load --------------------- */
@@ -131,6 +162,7 @@ function applyFilterAndRender() {
   const site    = $('f-site').value;
   const eq      = $('f-eq').value;
   const report  = $('f-report').value;
+  const promoOnly = $('f-promo-only').checked;
 
   filtered = rawList.filter(r => {
     if (name && !String(r.NAME).includes(name)) return false;
@@ -141,6 +173,10 @@ function applyFilterAndRender() {
       const inMain  = r['MAIN EQ'] === eq;
       const inMulti = r['MULTI EQ'] === eq;
       if (!inMain && !inMulti) return false;
+    }
+    if (promoOnly) {
+      const parts = getPromotionParts(r);
+      if (parts.length === 0) return false;
     }
     return true;
   });
@@ -153,11 +189,7 @@ function renderTable() {
   const tbody = $('tbody');
   tbody.innerHTML = '';
 
-  if (filtered.length === 0) {
-    $('empty').classList.remove('hidden');
-  } else {
-    $('empty').classList.add('hidden');
-  }
+  $('empty').classList.toggle('hidden', filtered.length !== 0);
 
   for (const r of filtered) {
     const tr = document.createElement('tr');
@@ -208,25 +240,19 @@ function mainStrToInt(s) {
   }
 }
 
-function computePromotionString(r) {
-  // 백엔드가 꼭 내려줘야 하는 필드:
-  // r.level_int (DB LEVEL), r.multi_level_int (DB MULTI LEVEL)
+// 승급 파츠(배열) 반환 → 필터/표시 공용 사용
+function getPromotionParts(r){
   const calcMainStr = r.main_level;                     // '1-2' 등
   const calcMainInt = mainStrToInt(calcMainStr);        // 2 등
-  // 저장값이 0이어도 "있다"로 보고 비교 (null/undefined만 “없음”)
   const savedMainInt = (r.level_int === null || r.level_int === undefined)
-    ? null
-    : Number(r.level_int);
+    ? null : Number(r.level_int);
 
-  // MULTI: '2-2'→1, 그 외→0 (report가 2-2가 아니면 보통 null로 내려옴)
   const calcMultiInt = (r.multi_level === '2-2') ? 1 : 0;
   const savedMultiInt = (r.multi_level_int === null || r.multi_level_int === undefined)
-    ? null
-    : Number(r.multi_level_int);
+    ? null : Number(r.multi_level_int);
 
   const parts = [];
 
-  // MAIN 승급: 저장값이 없으면 기준 0으로 간주하고 비교
   const baseMain = (savedMainInt === null ? 0 : savedMainInt);
   if (calcMainInt > baseMain) {
     const fromLabel = SHOW_NUMERIC_PROMO ? String(baseMain) : mainIntToStr(baseMain);
@@ -234,7 +260,6 @@ function computePromotionString(r) {
     parts.push(`MAIN: ${fromLabel} → ${toLabel}`);
   }
 
-  // MULTI 승급: report=2-2 케이스에서 0→1만 의미 있음
   if (r['LEVEL(report)'] === '2-2') {
     const baseMulti = (savedMultiInt === null ? 0 : savedMultiInt);
     if (calcMultiInt > baseMulti) {
@@ -243,7 +268,11 @@ function computePromotionString(r) {
       parts.push(`MULTI: ${fromLabel} → ${toLabel}`);
     }
   }
+  return parts;
+}
 
+function computePromotionString(r) {
+  const parts = getPromotionParts(r);
   return parts.length ? parts.join(' / ') : '-';
 }
 
@@ -275,9 +304,7 @@ async function openDetail(id) {
     renderMultiAnalysis(u);
 
     // 모달 열기
-    const modal = $('detail-modal');
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
+    openModal('detail-modal');
   } catch (err) {
     console.error('[openDetail]', err);
     alert('상세 조회 중 오류가 발생했습니다.');
@@ -287,9 +314,7 @@ async function openDetail(id) {
 }
 
 function closeDetail() {
-  const modal = $('detail-modal');
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden', 'true');
+  closeModal('detail-modal');
   if (chartMain)  { chartMain.destroy(); chartMain = null; }
   if (chartMulti) { chartMulti.destroy(); chartMulti = null; }
 }
@@ -332,9 +357,7 @@ function drawMainChart(u) {
     },
     options: {
       responsive: true,
-      scales: {
-        y: { beginAtZero: true, ticks: { callback: (v) => `${v}%` } }
-      },
+      scales: { y: { beginAtZero: true, ticks: { callback: (v) => `${v}%` } } },
       plugins: {
         legend: { position: 'top' },
         datalabels: {
@@ -380,9 +403,7 @@ function drawMultiChart(u) {
     },
     options: {
       responsive: true,
-      scales: {
-        y: { beginAtZero: true, ticks: { callback: (v) => `${v}%` } }
-      },
+      scales: { y: { beginAtZero: true, ticks: { callback: (v) => `${v}%` } } },
       plugins: {
         datalabels: {
           formatter: (v) => `${v}%`,
