@@ -166,8 +166,8 @@ function buildUserCapability(user) {
     } : null,
 
     // DB 원본 저장 레벨(승급 비교용으로 같이 내려줌)
-    level_int: dbMainInt,          // 1..4 (표시는 1-1/1-2/1-3/2로 변환)
-    multi_level_int: dbMultiInt,   // 0/1 (표시는 '-' 또는 2-2)
+    level_int: dbMainInt,
+    multi_level_int: dbMultiInt,
   };
 }
 
@@ -176,21 +176,22 @@ exports.getAllCapabilities = async (req, res) => {
   try {
     const rows = await dao.fetchAllUsers();
     const result = rows.map(buildUserCapability).map(r => ({
-      ID: r.ID,
-      NAME: r.NAME,
-      GROUP: r.GROUP,
-      SITE: r.SITE,
-      'LEVEL(report)': r['LEVEL(report)'],
-      'MAIN EQ': r['MAIN EQ'],
-      'MULTI EQ': r['MULTI EQ'],
-      main_level: r.capability.main_level,
-      multi_level: r.capability.multi_level,
-      main_avg: r.metrics.main.average,
-      multi_setup: r.metrics.multi.setupOnly,
-      // 승급 비교용(프론트에서 필요 시 사용)
-      level_int: r.level_int,
-      multi_level_int: r.multi_level_int,
+    ID: r.ID,
+    NAME: r.NAME,
+    GROUP: r.GROUP,
+    SITE: r.SITE,
+    'LEVEL(report)': r['LEVEL(report)'],
+    'MAIN EQ': r['MAIN EQ'],
+    'MULTI EQ': r['MULTI EQ'],
+    main_level: r.capability.main_level,
+    multi_level: r.capability.multi_level,
+    main_avg: r.metrics.main.average,
+    multi_setup: r.metrics.multi.setupOnly,
+    // ✅ 승급 비교용(프런트에서 사용)
+    level_int: r.level_int,               // DB의 LEVEL (정수 0..4)
+    multi_level_int: r.multi_level_int,   // DB의 MULTI LEVEL (정수 0/1)
     }));
+
     res.json({ isSuccess: true, count: result.length, result });
   } catch (err) {
     console.error('[getAllCapabilities] error:', err);

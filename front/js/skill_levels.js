@@ -1,11 +1,8 @@
 /* ==========================================================================
-   S-WORKS — 역량 레벨 뷰어 (skill_levels.js)
-   - 목록:   GET  /api/skill/levels
-   - 상세:   GET  /api/skill/levels/:id
-   - 엑셀:   (1) window.XLSX 있으면 프론트 생성
-            (2) 없으면 GET /api/skill/levels/export (필터 적용) 다운로드
-   - 승급:   DB 저장값(LEVEL=1..4, MULTI LEVEL=0/1) vs 산정값 비교
-             * DB 키 대소문자/공백 변형 허용
+   S-WORKS — skill_levels.js (전체)
+   - /api/skill/levels 목록 → 필터/표시/엑셀 저장
+   - /api/skill/levels/:id 상세 → 모달 + 차트 + 기준 역량/부족도
+   - 승급 계산: DB 저장값(LEVEL, MULTI LEVEL) vs 현재 산정값 비교
    ========================================================================== */
 
 const API_BASE = "http://3.37.73.151:3001/api";
@@ -15,40 +12,79 @@ let filtered = [];
 let chartMain = null;
 let chartMulti = null;
 
-/* --------------------- Boot --------------------- */
+// 승급 표기 스타일: true면 숫자(0→2), false면 라벨(0→1-2)
+const SHOW_NUMERIC_PROMO = false;
+
 document.addEventListener('DOMContentLoaded', async () => {
   bindUI();
-  await loadList();
-  hydrateFilters(rawList);
-  applyFilterAndRender();
+  await loadList();                 // 목록 최초 로드
+  hydrateFilters(rawList);          // 그룹/사이트 옵션 생성
+  applyFilterAndRender();           // 표 렌더
 });
 
-/* --------------------- UI Bindings --------------------- */
-function bindUI() {
-  const $ = (id) => document.getElementById(id);
+/* --------------------- 공용 DOM Helper --------------------- */
+function $(id) { return document.getElementById(id); }
 
+function bindUI() {
   $('btn-search')?.addEventListener('click', applyFilterAndRender);
   $('btn-reset')?.addEventListener('click', () => {
-    $('f-name') && ( $('f-name').value = '' );
-    $('f-group') && ( $('f-group').value = '' );
-    $('f-site') && ( $('f-site').value = '' );
-    $('f-eq') && ( $('f-eq').value = '' );
-    $('f-report') && ( $('f-report').value = '' );
+    $('f-name').value = '';
+    $('f-group').value = '';
+    $('f-site').value = '';
+    $('f-eq').value = '';
+    $('f-report').value = '';
     applyFilterAndRender();
   });
-  $('btn-export')?.addEventListener('click', exportTableToExcel);
 
-  // 상세 모달 닫기
-  const closeBtn = document.getElementById('detail-close');
-  closeBtn?.addEventListener('click', closeDetail);
-  const modal = document.getElementById('detail-modal');
-  modal?.addEventListener('click', (e) => {
+  // 엑셀: 백엔드에서 내려주는 완성본 사용
+  $('btn-export')?.addEventListener('click', async () => {
+    try {
+      const token = localStorage.getItem('x-access-token');
+      const params = new URLSearchParams({
+        name: $('f-name').value.trim(),
+        group: $('f-group').value,
+        site: $('f-site').value,
+        eq: $('f-eq').value,
+        report: $('f-report').value,
+      });
+      const url = `${API_BASE}/skill/levels/export?${params.toString()}`;
+      const res = await axios.get(url, {
+        headers: { 'x-access-token': token },
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `skill_levels_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    } catch (e) {
+      console.error('[export]', e);
+      alert('엑셀 다운로드 중 오류가 발생했습니다.');
+    }
+  });
+
+  // 상세 모달
+  $('detail-close')?.addEventListener('click', closeDetail);
+  $('detail-modal')?.addEventListener('click', (e) => {
     if (e.target.id === 'detail-modal') closeDetail();
   });
 
-  // “설명(도움말)” 버튼(있으면)
-  const helpBtn = document.getElementById('btn-help');
-  helpBtn?.addEventListener('click', showHowItWorks);
+  // “설명 ?” 버튼(있다면)
+  document.querySelectorAll('.help button[data-help]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      alert([
+        '• LEVEL(report): 필기 통과 레벨(0/1/2/2-2)',
+        '• MAIN 레벨 산정: MAIN EQ의 SET UP과 MAINT 평균을 설비별 기준 역량에 매칭',
+        '   - report=1: 1-1 / 1-2 / 1-3 트랙',
+        '   - report=2 또는 2-2: 최대 2까지 트랙',
+        '• MULTI 레벨 산정: report=2-2일 때 MULTI EQ의 SET UP 단독으로 Lv.2-2 충족 여부 평가',
+        '• 승급: DB 저장값(LEVEL, MULTI LEVEL)보다 새 산정값이 더 높으면 승급 후보로 표시'
+      ].join('\n'));
+    });
+  });
 }
 
 /* --------------------- Data Load --------------------- */
@@ -60,7 +96,7 @@ async function loadList() {
       headers: { 'x-access-token': token }
     });
     if (!res.data?.isSuccess) throw new Error('API 실패');
-    rawList = (res.data.result || []).map(enrichWithPromotion);
+    rawList = res.data.result || [];
   } catch (err) {
     console.error('[loadList]', err);
     showError(true);
@@ -71,10 +107,8 @@ async function loadList() {
 
 /* --------------------- Filters --------------------- */
 function hydrateFilters(list) {
-  const groupSel = document.getElementById('f-group');
-  const siteSel  = document.getElementById('f-site');
-
-  if (!groupSel || !siteSel) return;
+  const groupSel = $('f-group');
+  const siteSel  = $('f-site');
 
   const groups = [...new Set(list.map(r => r.GROUP).filter(Boolean))].sort();
   const sites  = [...new Set(list.map(r => r.SITE).filter(Boolean))].sort();
@@ -92,18 +126,17 @@ function hydrateFilters(list) {
 }
 
 function applyFilterAndRender() {
-  const name    = document.getElementById('f-name')?.value.trim() || '';
-  const group   = document.getElementById('f-group')?.value || '';
-  const site    = document.getElementById('f-site')?.value || '';
-  const eq      = document.getElementById('f-eq')?.value || '';
-  const report  = document.getElementById('f-report')?.value || '';
+  const name    = $('f-name').value.trim();
+  const group   = $('f-group').value;
+  const site    = $('f-site').value;
+  const eq      = $('f-eq').value;
+  const report  = $('f-report').value;
 
   filtered = rawList.filter(r => {
-    if (name && !String(r.NAME ?? '').includes(name)) return false;
+    if (name && !String(r.NAME).includes(name)) return false;
     if (group && r.GROUP !== group) return false;
     if (site && r.SITE !== site) return false;
     if (report && String(r['LEVEL(report)']) !== report) return false;
-
     if (eq) {
       const inMain  = r['MAIN EQ'] === eq;
       const inMulti = r['MULTI EQ'] === eq;
@@ -117,21 +150,19 @@ function applyFilterAndRender() {
 
 /* --------------------- Table --------------------- */
 function renderTable() {
-  const tbody = document.getElementById('tbody');
-  if (!tbody) return;
+  const tbody = $('tbody');
   tbody.innerHTML = '';
 
-  const empty = document.getElementById('empty');
-  if (empty) empty.classList.toggle('hidden', filtered.length > 0);
+  if (filtered.length === 0) {
+    $('empty').classList.remove('hidden');
+  } else {
+    $('empty').classList.add('hidden');
+  }
 
   for (const r of filtered) {
     const tr = document.createElement('tr');
 
-    // 승급 문구 조합
-    const promos = [];
-    if (r._promotion?.mainMsg) promos.push(r._promotion.mainMsg);
-    if (r._promotion?.multiMsg) promos.push(r._promotion.multiMsg);
-    const promoText = promos.join(' / ') || '-';
+    const promo = computePromotionString(r); // <- 승급 계산
 
     tr.innerHTML = `
       <td class="name">${escapeHtml(r.NAME ?? '')}</td>
@@ -147,13 +178,73 @@ function renderTable() {
       <td class="mono">${fmtPct(r.multi_setup)}</td>
       <td>${badgeLevel(r.multi_level, 'multi')}</td>
 
-      <td class="promo">${escapeHtml(promoText)}</td>
+      <td class="promo">${promo}</td>
       <td><button class="btn tiny" data-open="${r.ID}">보기</button></td>
     `;
 
     tr.querySelector('[data-open]')?.addEventListener('click', () => openDetail(r.ID));
     tbody.appendChild(tr);
   }
+}
+
+/* --------------------- Promotion Logic --------------------- */
+// 문자열↔정수 매핑 (DB LEVEL: 1..4 | 표시: 1-1/1-2/1-3/2)
+function mainIntToStr(n) {
+  switch (Number(n) || 0) {
+    case 1: return '1-1';
+    case 2: return '1-2';
+    case 3: return '1-3';
+    case 4: return '2';
+    default: return '0';
+  }
+}
+function mainStrToInt(s) {
+  switch (String(s || '')) {
+    case '1-1': return 1;
+    case '1-2': return 2;
+    case '1-3': return 3;
+    case '2':   return 4;
+    default:    return 0;
+  }
+}
+
+function computePromotionString(r) {
+  // 백엔드가 꼭 내려줘야 하는 필드:
+  // r.level_int (DB LEVEL), r.multi_level_int (DB MULTI LEVEL)
+  const calcMainStr = r.main_level;                     // '1-2' 등
+  const calcMainInt = mainStrToInt(calcMainStr);        // 2 등
+  // 저장값이 0이어도 "있다"로 보고 비교 (null/undefined만 “없음”)
+  const savedMainInt = (r.level_int === null || r.level_int === undefined)
+    ? null
+    : Number(r.level_int);
+
+  // MULTI: '2-2'→1, 그 외→0 (report가 2-2가 아니면 보통 null로 내려옴)
+  const calcMultiInt = (r.multi_level === '2-2') ? 1 : 0;
+  const savedMultiInt = (r.multi_level_int === null || r.multi_level_int === undefined)
+    ? null
+    : Number(r.multi_level_int);
+
+  const parts = [];
+
+  // MAIN 승급: 저장값이 없으면 기준 0으로 간주하고 비교
+  const baseMain = (savedMainInt === null ? 0 : savedMainInt);
+  if (calcMainInt > baseMain) {
+    const fromLabel = SHOW_NUMERIC_PROMO ? String(baseMain) : mainIntToStr(baseMain);
+    const toLabel   = SHOW_NUMERIC_PROMO ? String(calcMainInt) : calcMainStr;
+    parts.push(`MAIN: ${fromLabel} → ${toLabel}`);
+  }
+
+  // MULTI 승급: report=2-2 케이스에서 0→1만 의미 있음
+  if (r['LEVEL(report)'] === '2-2') {
+    const baseMulti = (savedMultiInt === null ? 0 : savedMultiInt);
+    if (calcMultiInt > baseMulti) {
+      const fromLabel = baseMulti === 1 ? '2-2' : '0';
+      const toLabel   = '2-2';
+      parts.push(`MULTI: ${fromLabel} → ${toLabel}`);
+    }
+  }
+
+  return parts.length ? parts.join(' / ') : '-';
 }
 
 /* --------------------- Detail --------------------- */
@@ -167,10 +258,6 @@ async function openDetail(id) {
     if (!data?.isSuccess) throw new Error('상세 실패');
 
     const u = data.result;
-
-    // DB 저장값도 안전하게 읽어 승급 태그/표시용으로 사용
-    const promoPack = enrichWithPromotion(u)._promotion || {};
-
     // 텍스트 채우기
     setText('d-name', u.NAME);
     setText('d-group', u.GROUP);
@@ -178,9 +265,8 @@ async function openDetail(id) {
     setText('d-report', u['LEVEL(report)']);
     setText('d-main-eq', u['MAIN EQ'] ?? '-');
     setText('d-multi-eq', u['MULTI EQ'] ?? '-');
-
-    setTag('d-main-lvl', 'MAIN', u.capability?.main_level ?? u.main_level);
-    setTag('d-multi-lvl', 'MULTI', u.capability?.multi_level ?? u.multi_level);
+    setTag('d-main-lvl', 'MAIN', u.capability.main_level);
+    setTag('d-multi-lvl', 'MULTI', u.capability.multi_level);
 
     // 차트 + 분석
     drawMainChart(u);
@@ -188,18 +274,10 @@ async function openDetail(id) {
     renderMainAnalysis(u);
     renderMultiAnalysis(u);
 
-    // (선택) 승급 제안 텍스트 박스가 있다면 갱신
-    const promoEl = document.getElementById('d-promo');
-    if (promoEl) {
-      promoEl.textContent = promoPack.hasPromotion
-        ? `승급 제안 — ${[promoPack.mainMsg, promoPack.multiMsg].filter(Boolean).join(' / ')}`
-        : '승급 제안 없음';
-    }
-
     // 모달 열기
-    const modal = document.getElementById('detail-modal');
-    modal?.classList.add('open');
-    modal?.setAttribute('aria-hidden', 'false');
+    const modal = $('detail-modal');
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
   } catch (err) {
     console.error('[openDetail]', err);
     alert('상세 조회 중 오류가 발생했습니다.');
@@ -209,22 +287,19 @@ async function openDetail(id) {
 }
 
 function closeDetail() {
-  const modal = document.getElementById('detail-modal');
-  modal?.classList.remove('open');
-  modal?.setAttribute('aria-hidden', 'true');
+  const modal = $('detail-modal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
   if (chartMain)  { chartMain.destroy(); chartMain = null; }
   if (chartMulti) { chartMulti.destroy(); chartMulti = null; }
 }
 
 /* --------------------- Charts --------------------- */
 function drawMainChart(u) {
-  const ctx = document.getElementById('chart-main')?.getContext('2d');
-  if (!ctx) return;
-
+  const ctx = $('chart-main').getContext('2d');
   const eq = u['MAIN EQ'];
   const avg = u.metrics?.main?.average ?? 0;
 
-  // 기준 역량(=임계값) 표
   const t = u.thresholds?.main || null; // {'1-1','1-2','1-3','2'}
   const labels = ['1-1','1-2','1-3','2'];
   const tvals  = labels.map(k => t ? (t[k]*100).toFixed(1) : 0);
@@ -243,7 +318,7 @@ function drawMainChart(u) {
           borderWidth: 1
         },
         {
-          label: '내 평균(SET UP+MAINT)',
+          label: '내 평균(SET UP + MAINT)',
           data: labels.map(() => avgVal),
           type: 'line',
           borderColor: 'rgba(75,192,192,1)',
@@ -277,9 +352,7 @@ function drawMainChart(u) {
 }
 
 function drawMultiChart(u) {
-  const ctx = document.getElementById('chart-multi')?.getContext('2d');
-  if (!ctx) return;
-
+  const ctx = $('chart-multi').getContext('2d');
   const eq = u['MULTI EQ'];
   const setupOnly = u.metrics?.multi?.setupOnly ?? 0;
   const th = u.thresholds_multi?.multi?.['2-2'] ?? 0;
@@ -290,7 +363,7 @@ function drawMultiChart(u) {
       labels: ['Lv 2-2'],
       datasets: [
         {
-          label: `${eq || 'MULTI'} 기준 역량(2-2, %)`,
+          label: `${eq || 'MULTI'} 기준 역량(2-2, % )`,
           data: [ (th*100).toFixed(1) ],
           backgroundColor: 'rgba(255,159,64,0.2)',
           borderColor: 'rgba(255,159,64,1)',
@@ -307,7 +380,9 @@ function drawMultiChart(u) {
     },
     options: {
       responsive: true,
-      scales: { y: { beginAtZero: true, ticks: { callback: (v) => `${v}%` } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: (v) => `${v}%` } }
+      },
       plugins: {
         datalabels: {
           formatter: (v) => `${v}%`,
@@ -324,12 +399,11 @@ function drawMultiChart(u) {
 }
 
 /* --------------------- Analysis (기준 & 부족도) --------------------- */
-function pct(x){ return isFinite(x) ? (x*100).toFixed(1) : '0.0'; }
+function pct(x){ return Number.isFinite(Number(x)) ? (Number(x)*100).toFixed(1) : '0.0'; }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 function setProgress(barId, textId, currentPct, targetPct){
-  const bar = document.getElementById(barId);
-  const txt = document.getElementById(textId);
-  if (!bar || !txt) return;
+  const bar = $(barId);
+  const txt = $(textId);
   const width = clamp(currentPct, 0, 100);
   bar.style.width = width + '%';
   if (currentPct >= targetPct) bar.classList.add('reached'); else bar.classList.remove('reached');
@@ -344,11 +418,9 @@ function renderMainAnalysis(u){
   const su  = Number(u.metrics?.main?.setup ?? 0);
   const mt  = Number(u.metrics?.main?.maint ?? 0);
 
-  const critEl = document.getElementById('crit-main');
-  const gapEl  = document.getElementById('gap-main');
-  const weakEl = document.getElementById('weak-main');
-
-  if (!critEl || !gapEl || !weakEl) return;
+  const critEl = $('crit-main');
+  const gapEl  = $('gap-main');
+  const weakEl = $('weak-main');
 
   if (!eq || !t){
     critEl.innerHTML = `<em>해당 MAIN EQ의 기준표가 없습니다.</em>`;
@@ -358,9 +430,7 @@ function renderMainAnalysis(u){
     return;
   }
 
-  // 트랙: report=1 → 1-1/1-2/1-3, report=2 또는 2-2 → 2
   const track = (report === '1') ? ['1-1','1-2','1-3'] : ['2'];
-
   const critLis = track.map(k=>{
     const need = t[k];
     const ok = avg >= need;
@@ -400,9 +470,8 @@ function renderMultiAnalysis(u){
   const th = u.thresholds_multi?.multi?.['2-2'] ?? null;
   const su = Number(u.metrics?.multi?.setupOnly ?? 0);
 
-  const critEl = document.getElementById('crit-multi');
-  const gapEl  = document.getElementById('gap-multi');
-  if (!critEl || !gapEl) return;
+  const critEl = $('crit-multi');
+  const gapEl  = $('gap-multi');
 
   if (report !== '2-2'){
     critEl.innerHTML = `<em>MULTI는 <b>LEVEL(report)=2-2</b>일 때만 SET UP으로 평가합니다.</em>`;
@@ -435,188 +504,12 @@ function renderMultiAnalysis(u){
   setProgress('prog-multi','prog-multi-text', suPct, thPct);
 }
 
-/* --------------------- Promotion (승급) --------------------- */
-// 공백/대소문자 무시 키 탐색
-function pickKey(obj, target) {
-  const norm = (s) => String(s).replace(/\s+/g,'').toUpperCase();
-  const want = norm(target);
-  return Object.keys(obj || {}).find(k => norm(k) === want);
-}
-
-// DB 저장값 읽기
-function readDbMainLevelInt(r) {
-  const key = pickKey(r, 'LEVEL'); // 1..4 저장
-  const raw = key ? r[key] : undefined;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null; // null이면 비교 스킵
-}
-function readDbMultiLevelInt(r) {
-  const key = pickKey(r, 'MULTI LEVEL'); // 0/1 저장
-  const raw = key ? r[key] : undefined;
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : null; // null이면 비교 스킵
-}
-
-function mainStrToInt(s){
-  if (!s) return 0;
-  switch(String(s)){
-    case '1-1': return 1;
-    case '1-2': return 2;
-    case '1-3': return 3;
-    case '2':   return 4;
-    default:    return 0;
-  }
-}
-function mainIntToStr(n){
-  switch(Number(n)||0){
-    case 1: return '1-1';
-    case 2: return '1-2';
-    case 3: return '1-3';
-    case 4: return '2';
-    default:return '0';
-  }
-}
-
-// 목록/상세 공용: 승급 정보 부가
-function enrichWithPromotion(r){
-  // DB 값
-  const dbMainInt   = readDbMainLevelInt(r);      // null | 1..4
-  const dbMultiInt  = readDbMultiLevelInt(r);     // null | 0/1
-
-  // 산정값 (백엔드가 계산해 준 문자열 레벨)
-  const calcMainInt  = mainStrToInt(r.main_level || r.capability?.main_level);
-  const calcMultiInt = ((r.multi_level || r.capability?.multi_level) === '2-2') ? 1 : 0;
-
-  // DB 값이 없으면 승급 비교 스킵
-  const mainUp  = (dbMainInt !== null)  ? (calcMainInt  > dbMainInt ) : false;
-  const multiUp = (dbMultiInt !== null) ? (calcMultiInt > dbMultiInt) : false;
-
-  const mainMsg  = mainUp
-    ? `MAIN: ${mainIntToStr(dbMainInt)} → ${mainIntToStr(calcMainInt)}`
-    : '';
-
-  const multiMsg = multiUp
-    ? `MULTI: ${dbMultiInt===0 ? '0' : '2-2'} → 2-2`
-    : '';
-
-  return {
-    ...r,
-    _promotion: {
-      hasPromotion: mainUp || multiUp,
-      mainUp, multiUp,
-      mainMsg, multiMsg,
-      dbMainInt, dbMultiInt,
-      calcMainInt, calcMultiInt
-    }
-  };
-}
-
-/* --------------------- Export to Excel --------------------- */
-async function exportTableToExcel() {
-  try {
-    // 수집
-    const rows = filtered.map(r => {
-      const promos = [];
-      if (r._promotion?.mainMsg) promos.push(r._promotion.mainMsg);
-      if (r._promotion?.multiMsg) promos.push(r._promotion.multiMsg);
-      const promoText = promos.join(' / ') || '-';
-
-      return {
-        'Name': r.NAME ?? '',
-        'Group': r.GROUP ?? '',
-        'Site': r.SITE ?? '',
-        '필기 LEVEL': r['LEVEL(report)'] ?? '',
-        'MAIN EQ': r['MAIN EQ'] ?? '',
-        'MAIN Avg': fmtPctNum(r.main_avg),
-        'MAIN Level': r.main_level ?? '',
-        'MULTI EQ': r['MULTI EQ'] ?? '',
-        'MULTI SET UP': fmtPctNum(r.multi_setup),
-        'MULTI Level': r.multi_level ?? '',
-        '승급': promoText
-      };
-    });
-
-    // 1) 프론트에서 생성 (SheetJS가 있으면)
-    if (window.XLSX && typeof XLSX.utils?.json_to_sheet === 'function') {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(rows);
-      XLSX.utils.book_append_sheet(wb, ws, 'Skill Levels');
-      XLSX.writeFile(wb, `skill_levels_${new Date().toISOString().slice(0,10)}.xlsx`);
-      return;
-    }
-
-    // 2) 백엔드에서 생성 (필터 전달)
-    const token = localStorage.getItem('x-access-token');
-    const params = collectFilterParams();
-    const res = await axios.get(`${API_BASE}/skill/levels/export`, {
-      headers: { 'x-access-token': token },
-      params,
-      responseType: 'blob'
-    });
-
-    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url  = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `skill_levels_${new Date().toISOString().slice(0,10)}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error('[exportTableToExcel]', err);
-    alert('엑셀 저장 중 오류가 발생했습니다.');
-  }
-}
-function collectFilterParams(){
-  return {
-    name   : document.getElementById('f-name')?.value.trim() || '',
-    group  : document.getElementById('f-group')?.value || '',
-    site   : document.getElementById('f-site')?.value || '',
-    eq     : document.getElementById('f-eq')?.value || '',
-    report : document.getElementById('f-report')?.value || ''
-  };
-}
-
-/* --------------------- Help (설명) --------------------- */
-function showHowItWorks(){
-  const text = [
-    '🔎 역량 레벨 산정 방식',
-    '',
-    '1) DB의 LEVEL(report)은 필기 통과 레벨입니다.',
-    '   - 0, 1, 2, 2-2로 저장됩니다.',
-    '',
-    '2) 실제 역량 평가는 장비별 “기준 역량(%)”을 기준으로 합니다.',
-    '   - MAIN: (SET UP + MAINT) 평균으로 판정',
-    '   - MULTI(2-2): SET UP 단독으로 판정',
-    '',
-    '3) 레벨 매핑',
-    '   - MAIN → 0, 1-1, 1-2, 1-3, 2',
-    '   - MULTI → 2-2 (해당 EQ의 SET UP만 반영)',
-    '',
-    '4) 2-2는 레벨2보다 상위입니다.',
-    '   - 예) report가 2-2여도 MAIN 평균이 2에 도달하면 MAIN 레벨은 2로 보여줍니다.',
-    '',
-    '5) 승급 제안',
-    '   - DB에 저장된 레벨(LEVEL=1~4, MULTI LEVEL=0/1)과 산정 레벨을 비교해 상향이 필요한 경우 “승급”에 표시합니다.',
-  ].join('\n');
-  alert(text);
-}
-
 /* --------------------- Utils --------------------- */
-function setLoading(on) {
-  document.getElementById('loading')?.classList.toggle('hidden', !on);
-}
-function showError(on) {
-  document.getElementById('error')?.classList.toggle('hidden', !on);
-}
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val ?? '-';
-}
+function setLoading(on) { $('loading').classList.toggle('hidden', !on); }
+function showError(on) { $('error').classList.toggle('hidden', !on); }
+function setText(id, val) { $(id).textContent = val ?? '-'; }
 function setTag(id, prefix, lvl) {
-  const el = document.getElementById(id);
-  if (!el) return;
+  const el = $(id);
   if (lvl === null || lvl === undefined) {
     el.className = 'tag';
     el.textContent = `${prefix}: -`;
@@ -626,7 +519,7 @@ function setTag(id, prefix, lvl) {
   el.textContent = `${prefix}: ${lvl}`;
 }
 function badgeLevel(lvl) {
-  if (lvl === null || lvl === undefined || lvl === '-') return `<span class="pill">-</span>`;
+  if (lvl === null || lvl === undefined) return `<span class="pill">-</span>`;
   const cls =
     (lvl === '2' || lvl === '2-2') ? 'ok' :
     (lvl === '1-3') ? 'good' :
@@ -638,11 +531,6 @@ function fmtPct(x) {
   const v = Number(x);
   if (!isFinite(v)) return '-';
   return `${(v*100).toFixed(1)}%`;
-}
-function fmtPctNum(x) {
-  const v = Number(x);
-  if (!isFinite(v)) return '';
-  return (v*100).toFixed(1) + '%';
 }
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
