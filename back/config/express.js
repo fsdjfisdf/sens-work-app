@@ -98,8 +98,7 @@ app.options('*', cors(corsOptions)); // (선택) 명시적 프리플라이트 �
 const reportsRoute = require('../src/routes/reportsRoute');
 app.use('/reports', reportsRoute);           // ✅ 이 줄만 추가
 
-const skillRoute = require('./src/routes/skillRoute');
-skillRoute(app);
+require('../src/routes/skillRoute')(app);
 
 // ❌ 아래처럼 “함수 호출” 방식은 쓰지 마세요 (혼용하면 이번 오류 재발)
 // require('../src/routes/reportsRoute')(app);
