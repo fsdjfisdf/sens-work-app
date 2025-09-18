@@ -16,11 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
           "USA-Texas": ["TEXAS INSTRUMENT", "Training"],
           "Ireland": ["INTEL", "Training"],
           "Japan-Hiroshima": ["MICRON", "Training"],
-          "China-Wuxi": ["HYNIX", "Training"],
-          "China-Xian": ["HYNIX", "SAMSUNG", "Training"],
-          "China-Shanghai": ["GTX", "Training"],
+          "China-Wuxi": ["MICRON", "HYNIX", "Training"],
+          "China-Xian": ["MICRON", "HYNIX", "SAMSUNG", "Training"],
+          "China-Shanghai": ["MICRON", "GTX", "Training"],
           "China-Beijing": ["JIDIAN", "Training"],
           "Taiwan-Taichoung": ["MICRON", "Training"],
+          "Taiwan-Linkou": ["MICRON", "Training"],
           "SINGAPORE": ["MICRON", "Training"],
           "Training": ["Training", "TRAINING"]
       };
