@@ -83,6 +83,7 @@ exports.BASELINE = {
   "DIFFUSER": 2,
   "LOT 조사": 2,
   "GAS SPRING": 1,
+  "LP ESCORT": 1
 };
 
 /** 인정 설비 타입 (INTEGER 계열) */
@@ -208,6 +209,7 @@ const SELF_COL_MAP = {
   "DIFFUSER": "DIFFUSER",
   "LOT 조사": "LOT_조사",
   "GAS SPRING": "GAS_SPRING",
+  "LP ESCORT": "LP_ESCORT"
 };
 
 /** transfer_item → self-check 정확 컬럼명 */

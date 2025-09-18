@@ -103,7 +103,7 @@ const CATEGORIES = [
     "CODED SENSOR","GAS BOX DOOR SENSOR","LASER SENSOR AMP"
   ]},
   { category: "ETC", items: [
-    "HE LEAK CHECK","DIFFUSER","LOT 조사","GAS SPRING"
+    "HE LEAK CHECK","DIFFUSER","LOT 조사","GAS SPRING", "LP ESCORT"
   ]},
 ];
 
