@@ -82,7 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "HE LEAK CHECK",
         "DIFFUSER",
         "LOT 조사",
-        "GAS SPRING"
+        "GAS SPRING",
+        "LP ESCORT"
     ],
         "PRECIA": [
             "SELECT",
