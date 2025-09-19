@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
         "China-Shanghai": ["GTX"],
         "China-Beijing": ["JIDIAN"],
         "Taiwan-Taichoung": ["MICRON"],
-        "Taiwan-Linkou": ["MICRON"],
+        "Taiwan-Linkou": ["select", "MICRON"],
         "Singapore": ["MICRON"],
         "Training": ["Training"]
     };
@@ -250,15 +250,27 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // 라인 옵션 업데이트
-    function updateLineOptions(siteSelection) {
-        const lineOptions = {
-            PT: ["P1F", "P1D", "P2F", "P2D", "P2-S5", "P3F", "P3D", "P3-S5", "P4F", "P4D", "P4-S5"],
-            HS: ["12L", "13L", "15L", "16L", "17L", "S1", "S3", "S4", "S3V", "NRD", "NRDK", "NRD-V", "U4", "M1", "5L"],
-            IC: ["M10", "M14", "M16", "R3"],
-            CJ: ["M11", "M12", "M15"],
-            PSKH: ["PSKH", "C1", "C2", "C3", "C5"],
-            Training: ["Training"]
-        };
+function updateLineOptions(siteSelection) {
+  const LINE_OPTIONS = {
+    "PT": ["P1F","P1D","P2F","P2D","P2-S5","P3F","P3D","P3-S5","P4F","P4D","P4-S5","Training"],
+    "HS": ["1L","12L","13L","15L","16L","17L","S1","S3","S4","S3V","NRD","NRDK","NRD-V","U4","M1","5L","G1L","Training"],
+    "IC": ["M10","M14","M16","R3","Training"],
+    "CJ": ["M11","M12","M15","Training"],
+    "PSKH": ["PSKH","C1","C2","C3","C5","Training"],
+    "USA-Portland": ["INTEL","Training"],
+    "USA-Arizona": ["INTEL","Training"],
+    "USA-Texas": ["Texas Instrument","Training"], // 셀렉트 값과 정확히 일치 필요
+    "Ireland": ["INTEL","Training"],
+    "Japan-Hiroshima": ["MICRON","Training"],
+    "China-Wuxi": ["MICRON","HYNIX","Training"],
+    "China-Xian": ["MICRON","HYNIX","SAMSUNG","Training"],
+    "China-Shanghai": ["MICRON","GTX","Training"],
+    "China-Beijing": ["JIDIAN","Training"],
+    "Taiwan-Taichoung": ["MICRON","Training"],      // 셀렉트에 'Taichoung'로 표기되어 있음
+    "Taiwan-Linkou": ["MICRON","Training"],         // ★ 누락되어있던 문제의 핵심
+    "Singapore": ["MICRON","Training"],             // 셀렉트는 'Singapore' (대소문자 맞춤)
+    "Training": ["Training","TRAINING"]
+  };
 
         lineSelect.innerHTML = '<option value="SELECT">SELECT</option>';
         if (lineOptions[siteSelection]) {
