@@ -144,10 +144,10 @@
                         <div class="ems-wrap">
                             <div class="ems-seg">
                             <input type="radio" id="ems-paid" name="emsChoice" value="1">
-                            <label for="ems-paid">유상</label>
+                            <label for="ems-paid">유상(ems, WO)</label>
 
                             <input type="radio" id="ems-free" name="emsChoice" value="0">
-                            <label for="ems-free">무상</label>
+                            <label for="ems-free">무상(WI)</label>
                             </div>
 
                             <div class="ems-tools">
@@ -578,7 +578,6 @@ EPAB515 PM1 Wafer Broken  점검
                 <option value="WO">WO</option>
             </select>
         </div>
-                <!-- EMS (유상/무상) 판단 + 수동 오버라이드 -->
 
 
         <div class="form-row">
@@ -641,29 +640,7 @@ EPAB515 PM1 Wafer Broken  점검
             }
         });
 
-        document.querySelectorAll('.next-step').forEach(button => {
-            button.addEventListener('click', () => {
-                const currentStep = document.querySelector('.form-step.active');
-                const nextStep = document.querySelector(`.form-step[data-step="${parseInt(currentStep.dataset.step) + 1}"]`);
-                currentStep.classList.add('fade-out');
-                setTimeout(() => {
-                    currentStep.classList.remove('active', 'fade-out');
-                    nextStep.classList.add('active', 'fade-in');
-                }, 150);
-            });
-        });
 
-        document.querySelectorAll('.prev-step').forEach(button => {
-            button.addEventListener('click', () => {
-                const currentStep = document.querySelector('.form-step.active');
-                const prevStep = document.querySelector(`.form-step[data-step="${parseInt(currentStep.dataset.step) - 1}"]`);
-                currentStep.classList.add('fade-out');
-                setTimeout(() => {
-                    currentStep.classList.remove('active', 'fade-out');
-                    prevStep.classList.add('active', 'fade-in');
-                }, 150);
-            });
-        });
 
         function setupDynamicFields(containerId, inputClass, template) {
             const container = document.getElementById(containerId);
