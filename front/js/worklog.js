@@ -1,4 +1,4 @@
-// worklog.js — end-to-end validation, step-guard, better error anchors, preview/submit flow + EMS(유/무상) 자동권고/수동오버라이드
+// worklog.js — end-to-end validation, step-guard, better error anchors, preview/submit flow + EMS(유/무상) 자동권고/수동오버라이드 (미결정 제거/필수화)
 document.addEventListener('DOMContentLoaded', async () => {
   /* ========== Helpers ========== */
   const $  = (sel, root=document) => root.querySelector(sel);
@@ -134,10 +134,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       step.classList.toggle('has-error', !!hasErr);
     });
   }
-  function scrollToFirstError(){
-    const first = $('.form-row.error') || $('.form-step.has-error');
-    if (first) first.scrollIntoView({behavior:'smooth', block:'center'});
-  }
 
   /* ========== Show/hide by Work Type ========== */
   const workTypeSel = document.getElementById('workType');
@@ -171,42 +167,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  /* ========== EMS (유/무상) 권고/오버라이드 로직 ========== */
-  const warrantySel = document.getElementById('warranty');
-  const emsPaid = document.getElementById('ems-paid');
-  const emsFree = document.getElementById('ems-free');
-  const emsNull = document.getElementById('ems-null');
-  const emsHint = document.getElementById('ems-hint');
-  const emsAutoBtn = document.getElementById('ems-auto-btn');
-  const emsResetBtn = document.getElementById('ems-reset-btn');
+  /* ========== EMS (유/무상) 권고/오버라이드 로직 [미결정 제거] ========== */
+  const warrantySel   = document.getElementById('warranty');
+  const emsPaid       = document.getElementById('ems-paid');
+  const emsFree       = document.getElementById('ems-free');
+  const emsHint       = document.getElementById('ems-hint');
+  const emsAutoBtn    = document.getElementById('ems-auto-btn');
   const checkWarrantyBtn = document.getElementById('check-warranty');
 
   let emsAutoFollow = true;  // true면 warranty 변경 시 권고값 자동 반영
 
   function suggestedEmsFromWarranty(w){
-    if (w === 'WO') return 1;         // 유상 권고 (단, 예외가 있으므로 오버라이드 가능)
-    if (w === 'WI') return 0;         // 무상 권고
-    return null;                      // 미결정 권고
+    if (w === 'WO') return 1;  // 유상 권고
+    if (w === 'WI') return 0;  // 무상 권고
+    return null;               // 권고 없음
   }
   function setEmsUI(value){
-    if (!emsPaid || !emsFree || !emsNull) return;
-    if (value === 1){ emsPaid.checked = true; }
-    else if (value === 0){ emsFree.checked = true; }
-    else { emsNull.checked = true; }
+    if (!emsPaid || !emsFree) return;
+    // 모두 해제
+    emsPaid.checked = false;
+    emsFree.checked = false;
+    // 권고값이 명확하면 선택
+    if (value === 1) emsPaid.checked = true;
+    if (value === 0) emsFree.checked = true;
+
     if (emsHint){
-      const txt = (value===1) ? '권고: 유상' : (value===0) ? '권고: 무상' : '권고: 미결정';
+      const txt = (value===1) ? '권고: 유상' : (value===0) ? '권고: 무상' : '권고: -';
       emsHint.textContent = txt;
     }
   }
   function currentEmsValue(){
-    const v = document.querySelector('input[name="emsChoice"]:checked')?.value ?? 'null';
-    if (v === '1') return 1;
-    if (v === '0') return 0;
-    return null;
+    const checked = document.querySelector('input[name="emsChoice"]:checked');
+    if (!checked) return null;
+    return checked.value === '1' ? 1 : 0;
   }
   function applyEmsSuggestion(){
-    if (!warrantySel) return;
-    const sug = suggestedEmsFromWarranty(warrantySel.value || '');
+    const sug = suggestedEmsFromWarranty(warrantySel?.value || '');
     setEmsUI(sug);
   }
   function setAuto(on){
@@ -228,22 +224,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => { if (emsAutoFollow) applyEmsSuggestion(); }, 0);
   });
 
-  // 수동으로 EMS 라디오를 건드리면 AUTO 해제
+  // 수동 선택 → AUTO 해제 + 에러 제거
   document.querySelectorAll('input[name="emsChoice"]').forEach(r => {
     r.addEventListener('change', () => {
       setAuto(false);
+      clearFieldError(rowOf('ems-row'));
+      refreshStepFlags();
     });
   });
 
   // AUTO 버튼: 다시 워런티를 따라가며 권고값 반영
-  emsAutoBtn?.addEventListener('click', () => {
-    setAuto(true);
-  });
-
-  // 권고로 되돌리기: AUTO 상태와 무관하게 권고값만 한 번 반영
-  emsResetBtn?.addEventListener('click', () => {
-    applyEmsSuggestion();
-  });
+  emsAutoBtn?.addEventListener('click', () => setAuto(true));
 
   /* ========== Preview / Paste Modals (class .show) ========== */
   const overlay = document.getElementById('modal-overlay');
@@ -270,7 +261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (previewBtn){
     previewBtn.addEventListener('click', () => {
-      // 미리보기는 입력값 그대로 표시(검증/제출은 confirm에서)
       setText('preview-task_date', getVal('task_date'));
       setText('preview-start_time', getVal('start_time'));
       setText('preview-end_time',   getVal('end_time'));
@@ -291,7 +281,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       setText('preview-task_man', uniqueWorkers);
 
       // EMS 표시
-      const emsTxt = (currentEmsValue()===1) ? '유상' : (currentEmsValue()===0) ? '무상' : '미결정';
+      const cv = currentEmsValue();
+      const emsTxt = (cv===1) ? '유상' : (cv===0) ? '무상' : '미선택';
       setText('preview-ems', emsTxt);
 
       openPreview();
@@ -401,6 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearFieldError(rowOf('line'));
     clearFieldError(rowOf('equipment_type'));
     clearFieldError(rowOf('warranty'));
+    clearFieldError(rowOf('ems-row'));
 
     if (!getV('equipment_name').trim()){
       const wrap = rowOf('equipment_name');
@@ -413,6 +405,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (invalidSelectValue('line'))           { setFieldError(rowOf('line'),'LINE을 선택하세요.', document.getElementById('line')); errors.push(['line']); }
     if (invalidSelectValue('equipment_type')) { setFieldError(rowOf('equipment_type'),'EQ TYPE을 선택하세요.', document.getElementById('equipment_type')); errors.push(['equipment_type']); }
     if (invalidSelectValue('warranty'))       { setFieldError(rowOf('warranty'),'WARRANTY를 선택하세요.', document.getElementById('warranty')); errors.push(['warranty']); }
+
+    // EMS 필수: 유상/무상 둘 중 하나 선택 필요
+    if (currentEmsValue() === null){
+      const row = rowOf('ems-row');
+      const anchor = document.querySelector('#ems-row .ems-seg') || row;
+      setFieldError(row, 'EMS(유상/무상)을 선택하세요.', anchor);
+      errors.push(['ems']);
+    }
 
     return errors.length === 0;
   }
@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try{
       const now = new Date();
-      const before11 = now.getHours() < 11; // 기존 로직: 11시 이전 경고
+      const before11 = now.getHours() < 11;
       const isToday = (getV('task_date') || '') === getTodayDate();
       if (before11 && isToday){
         const yes = confirm('현재 시간이 오전 11시 이전인데, 작업 날짜를 오늘로 선택하셨습니다. 오늘 진행한 작업이 맞으신가요?');
@@ -669,9 +669,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const transferItem  = (workType === 'MAINT') ? (document.getElementById('transferOptionSelect')?.value || 'SELECT') : 'SELECT';
     const task_maint    = maintItem;
 
-    // EMS 경고(선택): 미결정으로 올리면 안내만 띄움(저장은 허용)
-    if (currentEmsValue() === null) {
-      showToast('warn','EMS 미결정','워런티 기준 권고와 다를 수 있습니다. 필요 시 유상/무상을 명시 선택하세요.');
+    const emsVal = currentEmsValue(); // 1 or 0 (미결정 없음)
+    if (emsVal === null){
+      // 이 지점엔 거의 못 오지만(스텝1에서 막음), 이중안전장치
+      setFieldError(rowOf('ems-row'), 'EMS(유상/무상)을 선택하세요.', document.querySelector('#ems-row .ems-seg'));
+      refreshStepFlags();
+      goStep(1);
+      return;
     }
 
     try{
@@ -680,7 +684,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         task_description: taskDescriptions, task_date, start_time, end_time, none_time: noneTime, move_time: moveTime,
         group, site, SOP, tsguide, warranty, line, equipment_type, equipment_name, workType, workType2,
         setupItem, maintItem, transferItem, task_maint, status,
-        ems: currentEmsValue() // 1(유상) | 0(무상) | null(미결정)
+        ems: emsVal // 1(유상) | 0(무상)
       }, {
         headers: {
           'Content-Type': 'application/json',
