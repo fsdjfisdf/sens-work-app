@@ -686,13 +686,95 @@ select.option-select[aria-invalid="true"]{
   border-color:#fca5a5 !important; box-shadow: 0 0 0 1px #fecaca inset;
 }
 
-.ems-wrap{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-.ems-seg{ display:inline-flex; border:1px solid #d0d7de; border-radius:8px; overflow:hidden; }
-.ems-seg input{ display:none; }
-.ems-seg label{ padding:6px 10px; cursor:pointer; user-select:none; }
-.ems-seg input:checked + label{ background:#0ea5e9; color:white; }
-.ems-tools{ display:inline-flex; align-items:center; gap:8px; }
-.btn-chip{ padding:4px 10px; border:1px solid #d0d7de; background:white; border-radius:999px; cursor:pointer; }
-.btn-chip.active{ background:#0ea5e9; color:#fff; border-color:#0ea5e9; }
-.btn-text{ background:none; border:none; color:#0ea5e9; cursor:pointer; padding:0 4px; }
-.ems-hint{ font-size:12.5px; color:#475569; padding:2px 6px; border:1px dashed #cbd5e1; border-radius:6px; }
+/* =============================================================================
+   EMS — Warranty 기반 권고 + 수동 오버라이드 (worklog.css tone)
+   ========================================================================== */
+
+/* 필드 하단 설명(HTML에 class="help"를 쓴 경우를 위해 .hint 톤으로 매핑) */
+.help{ color:#7890a8; font-size:12px; }
+
+/* EMS 컨테이너 (한 줄 정렬 + 래핑) */
+#ems-row .ems-wrap{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+}
+
+/* 선택 스위치(라디오+라벨 pill) */
+#ems-row .ems-seg{
+  display:inline-flex; align-items:center; gap:0;
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius: 999px;
+  box-shadow: var(--shadow-xs);
+  overflow:hidden;
+}
+
+/* 라디오는 시각만 숨기고 접근성 유지 */
+#ems-row .ems-seg input[type="radio"]{
+  position:absolute; inline-size:1px; block-size:1px;
+  padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* 라벨 버튼 */
+#ems-row .ems-seg label{
+  padding:6px 12px; cursor:pointer; user-select:none;
+  font-size:13px; color:#0f172a; line-height:1;
+  transition: background .16s, color .16s, border-color .16s, box-shadow .16s;
+  border-right:1px solid var(--border);
+}
+#ems-row .ems-seg label:last-of-type{ border-right:0; }
+
+/* 체크 상태(토큰 톤) */
+#ems-row .ems-seg input[type="radio"]:checked + label{
+  background: var(--accent-soft);
+  color:#0b1220;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+  border-right-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+/* 키보드 포커스 링 */
+#ems-row .ems-seg input[type="radio"]:focus-visible + label{
+  box-shadow: var(--ring-inner), var(--ring-outer);
+}
+
+/* 권고/버튼 영역 */
+#ems-row .ems-tools{
+  display:inline-flex; align-items:center; gap:8px;
+}
+
+/* 권고 힌트 배지 (기존 배지 톤과 폼 톤 중간) */
+#ems-row .ems-hint{
+  font-size:12.5px; color:#475569;
+  padding:2px 8px; border-radius:8px;
+  background: var(--panel-3);
+  border:1px dashed var(--inset);
+}
+
+/* 보조 버튼(칩) — 기존 버튼 톤에 맞춘 경량형 */
+#ems-row .btn-chip{
+  height:32px; padding:0 12px; border-radius:999px;
+  border:1px solid var(--border); background:#fff; color:#0b1220; font-weight:800; font-size:12.5px;
+  cursor:pointer; box-shadow: var(--shadow-xs);
+  transition: transform .06s, background .16s, color .16s, border-color .16s, box-shadow .16s;
+}
+#ems-row .btn-chip:hover{ background:#f8fafc; color:var(--accent); border-color:var(--accent); box-shadow:var(--shadow-sm); }
+#ems-row .btn-chip:active{ transform:translateY(1px); }
+
+/* 칩의 활성 상태(AUTO on) 표시 */
+#ems-row .btn-chip.active{
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color:#0b1220;
+}
+
+/* 텍스트형 보조 버튼 */
+#ems-row .btn-text{
+  background:transparent; border:0; color:var(--accent); font-size:12.5px; cursor:pointer; padding:0 4px;
+}
+#ems-row .btn-text:hover{ text-decoration:underline; }
+
+/* 모바일 간격/적응 */
+@media (max-width: 560px){
+  #ems-row .ems-wrap{ gap:8px; }
+  #ems-row .ems-seg label{ padding:8px 12px; }
+  #ems-row .btn-chip{ flex:0 0 auto; }
+}
