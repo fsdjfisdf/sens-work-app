@@ -249,11 +249,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         return cleanedNames;
     }
 
+    // 전역 유틸 (파일 최상단 근처 추천)
     function emsLabel(v) {
     return (v === 1 || v === '1') ? '유상'
         : (v === 0 || v === '0') ? '무상'
         : '—';
     }
+
+    // YYYY-MM-DD 문자열 기반 범위 얻기
+    function getSelectedDateRange() {
+    const start = document.getElementById('start-date')?.value || null; // 'YYYY-MM-DD' or null
+    const end   = document.getElementById('end-date')?.value   || null;
+    return { start, end };
+    }
+
+    // task_date(ISO 또는 'YYYY-MM-DD')가 주어진 범위에 포함되는지 검사 (양끝 포함)
+    function inDateRange(taskDateISO, start, end) {
+    const d = (taskDateISO || '').split('T')[0]; // 'YYYY-MM-DD'로 정규화
+    if (start && d < start) return false;
+    if (end   && d > end)   return false;
+    return true;
+    }
+
 
     
 
@@ -615,14 +632,20 @@ document.getElementById('export-paid-excel-btn')?.addEventListener('click', asyn
   }
 
   try {
-    // 1) 사용자 역할 확인
+    // 0) 기간 읽기 + 검증
+    let { start, end } = getSelectedDateRange();
+    if (start && end && start > end) {
+      alert('END DATE가 START DATE보다 이릅니다. 기간을 확인해주세요.');
+      return;
+    }
+
+    // 1) admin 확인
     const userResponse = await fetch('http://3.37.73.151:3001/user-info', {
       headers: { 'x-access-token': token }
     });
     if (!userResponse.ok) throw new Error('사용자 정보를 가져오지 못했습니다.');
     const userData = await userResponse.json();
     const userRole = userData?.result?.role;
-
     if (userRole !== 'admin') {
       alert('엑셀 다운로드 권한이 없습니다.');
       return;
@@ -633,22 +656,25 @@ document.getElementById('export-paid-excel-btn')?.addEventListener('click', asyn
     if (!response.ok) throw new Error('작업 이력을 가져오지 못했습니다.');
     const workLogs = await response.json();
 
-    // 3) 유상(EMS=1)만 필터
-    const paidLogs = workLogs.filter(log => (log.ems === 1 || log.ems === '1'));
-    if (paidLogs.length === 0) {
-      alert('유상(EMS=1) 데이터가 없습니다.');
+    // 3) 유상(EMS=1) + 기간 필터
+    const paidInRange = workLogs
+      .filter(log => (log.ems === 1 || log.ems === '1'))
+      .filter(log => inDateRange(log.task_date, start, end));
+
+    if (paidInRange.length === 0) {
+      alert('선택한 기간에 유상(EMS=1) 데이터가 없습니다.');
       return;
     }
 
-    // 4) 시간 문자열(HH:MM:SS) → 분 단위 변환
+    // 4) 시간(HH:MM:SS) → 분
     function convertToMinutes(timeStr) {
       if (!timeStr) return 0;
       const [hh, mm] = timeStr.split(':').map(Number);
       return (hh * 60) + (mm || 0);
     }
 
-    // 5) 엑셀 데이터 매핑 (기존 포맷 유지)
-    const formattedData = paidLogs.map(log => ({
+    // 5) JSON → 시트 데이터
+    const formattedData = paidInRange.map(log => ({
       "id": log.id,
       "task_name": log.task_name,
       "task_date": log.task_date ? log.task_date.split('T')[0] : '',
@@ -677,13 +703,15 @@ document.getElementById('export-paid-excel-btn')?.addEventListener('click', asyn
       "move": log.move_time,
     }));
 
-    // 6) 엑셀 생성 및 다운로드
+    // 6) 파일명에 기간 반영
+    const today = new Date().toISOString().split('T')[0];
+    const rangeSuffix = (start || end) ? `_${start || 'ALL'}~${end || 'ALL'}` : '';
     const ws = XLSX.utils.json_to_sheet(formattedData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "PaidOnly");
-    XLSX.writeFile(wb, `workLogs_paid_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(wb, `workLogs_paid${rangeSuffix}_${today}.xlsx`);
 
-    alert("유상(EMS=1)만 엑셀로 다운로드했습니다.");
+    alert('유상(EMS=1) 데이터(선택 기간) 엑셀로 다운로드했습니다.');
   } catch (err) {
     console.error('유상만 엑셀 다운로드 오류:', err);
     alert('엑셀 다운로드 중 오류가 발생했습니다.');
