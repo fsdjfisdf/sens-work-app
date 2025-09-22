@@ -49,6 +49,14 @@
   --col-worker:160px;
   --col-ems:76px;
   --col-time:90px;
+    --success:#16a34a;                 /* EXCEL */
+  --success-weak: rgba(22,163,74,.14);
+  --success-soft: color-mix(in srgb, var(--success) 6%, #fff 94%);
+  --warning:#f59e0b;                 /* EXCEL (ems) */
+  --warning-weak: rgba(245,158,11,.14);
+  --warning-soft: color-mix(in srgb, var(--warning) 6%, #fff 94%);
+  --neutral:#334155;                 /* RESET */
+  --neutral-soft: color-mix(in srgb, var(--neutral) 4%, #fff 96%);
 }
 
 /* ---------- Base & Nav (공통) --------------------------------------------- */
@@ -186,20 +194,68 @@ input[type="time"]::-webkit-calendar-picker-indicator{ filter:opacity(.75); }
 .filter-row.filter-buttons{
   grid-template-columns: 1fr; align-items:end;
 }
-#search-btn,#reset-btn,#export-excel-btn{
+#search-btn, #reset-btn, #export-excel-btn, #export-paid-excel-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
   height:48px; border-radius:12px; padding:0 16px;
   font-weight:800; letter-spacing:.2px; font-size:15px; cursor:pointer;
   border:1px solid var(--border); box-shadow:var(--shadow-xs);
   transition:transform .06s, background .16s, border-color .16s, color .16s, box-shadow .16s;
-  touch-action: manipulation;
+  touch-action: manipulation; user-select:none;
 }
+/* SEARCH — 파란 톤 (기존과 동일한 느낌 유지) */
 #search-btn{
-  background:var(--accent-soft);
+  background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
   color:#0b1220;
 }
+#search-btn:hover{
+  filter:brightness(1.02); box-shadow:var(--shadow-sm);
+}
+
+/* RESET — 뉴트럴 아웃라인 */
+#reset-btn{
+  background:#fff; color: var(--text);
+  border-color: var(--border);
+}
+#reset-btn:hover{
+  background: var(--neutral-soft);
+  border-color: color-mix(in srgb, var(--neutral) 35%, var(--border));
+  color: color-mix(in srgb, var(--neutral) 85%, black);
+  box-shadow: var(--shadow-sm);
+}
+
+/* EXCEL — 성공(녹색) 톤 */
+#export-excel-btn{
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+  color:#0b1220;
+}
+#export-excel-btn:hover{
+  background: color-mix(in srgb, var(--success) 10%, #fff 90%);
+  box-shadow: var(--shadow-sm);
+}
+
+/* EXCEL(ems) — 경고(주황) 톤 */
+#export-paid-excel-btn{
+  background: var(--warning-soft);
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--border));
+  color:#0b1220;
+}
+#export-paid-excel-btn:hover{
+  background: color-mix(in srgb, var(--warning) 10%, #fff 90%);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-row.filter-buttons .admin-only{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0,1fr));
+  gap: 8px;
+}
+
 #search-btn:hover{ filter:brightness(1.02); box-shadow:var(--shadow-sm); }
-#search-btn:active{ transform:translateY(1px); }
+#search-btn:active, #reset-btn:active, #export-excel-btn:active, #export-paid-excel-btn:active{
+  transform: translateY(1px);
+}
 #reset-btn,#export-excel-btn{ background:#fff; color:var(--text); }
 #reset-btn:hover,#export-excel-btn:hover{
   background:#f1f5f9; color:var(--accent); border-color:var(--accent); box-shadow:var(--shadow-sm);
@@ -214,7 +270,9 @@ input[type="time"]::-webkit-calendar-picker-indicator{ filter:opacity(.75); }
     grid-template-columns: repeat(3, minmax(0,1fr));
     column-gap:12px;
   }
-  #search-btn,#reset-btn,#export-excel-btn{ height:44px; font-size:14px; }
+    #search-btn, #reset-btn, #export-excel-btn, #export-paid-excel-btn{
+    height:44px; font-size:14px;
+  }
 }
 
 /* 데스크톱(>=1024) — 3열 (기존 형태 유지) */
