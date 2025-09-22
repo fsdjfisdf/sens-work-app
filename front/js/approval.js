@@ -81,6 +81,8 @@
   const f_task_description = document.getElementById('f-task_description');
   const f_task_cause = document.getElementById('f-task_cause');
   const f_task_result = document.getElementById('f-task_result');
+  const f_ems = document.getElementById('f-ems');   // ✅ 추가
+
 
   const mdNote = document.getElementById('md-note');
   const mdApprove = document.getElementById('md-approve');
@@ -159,6 +161,13 @@
 
 
   const fmtGS = (r) => `${safe(r.group)} / ${safe(r.site)}${r.line ? ' / ' + r.line : ''}`;
+  const fmtEMS = (r) => {
+    if (r.ems === 1 || r.ems === '1') return '<span class="badge ems-paid">유상</span>';
+    if (r.ems === 0 || r.ems === '0') return '<span class="badge ems-free">무상</span>';
+    return '—';
+  };
+
+
   const fmtDT = (r) => {
     const date = fmtISODateOnly(r.task_date);
     const start = pickTime(r.start_time, r.startTime) || '—';
@@ -222,7 +231,7 @@
   async function fetchRows() {
     const g = selGroup.value;
     const s = selSite.value;
-    tbody.innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${tableColspan()}">Loading...</td></tr>`;
     try {
 
  const url = (mode === 'pending' || mode === 'mypending')
@@ -244,7 +253,7 @@
   console.error(e);
   const status = e?.response?.status;
   const msg = e?.response?.data?.error || e?.response?.data?.message || e.message || '오류';
-  tbody.innerHTML = `<tr><td colspan="9">목록 조회 실패 (${status}) — ${msg}</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="${tableColspan()}">목록 조회 실패 (${status}) — ${msg}</td></tr>`;
   selectedIds.clear();
   updateBulkUI();
     }
@@ -258,11 +267,16 @@
 
     filtered = rowsCache.filter(r => {
       if (text) {
+        const emsText =
+        (r.ems === 1 || r.ems === '1') ? '유상 paid 1 wo' :
+        (r.ems === 0 || r.ems === '0') ? '무상 free 0 wi' : '';
+
         const hay = [
           safe(r.equipment_type), safe(r.equipment_name),
           safe(r.task_man), safe(r.work_type), safe(r.work_type2),
           safe(r.transfer_item), safe(r.task_description), safe(r.task_cause), safe(r.task_result),
-          safe(r.task_name)
+          safe(r.task_name),
+          emsText
         ].join(' ').toLowerCase();
         if (!hay.includes(text)) return false;
       }
@@ -294,7 +308,7 @@
   function redraw() {
     applyFilters();
     if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="9">데이터가 없습니다.</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="${tableColspan()}">데이터가 없습니다.</td></tr>`;
       toggleSelectColumn(); // 열 감춤/표시 갱신
       return;
     }
@@ -313,6 +327,7 @@
           ${fmtWorkType(r)}
           ${safe(r.setup_item) ? `<div class="muted">${safe(r.setup_item)}</div>` : ''}
         </td>
+        <td class="center">${fmtEMS(r)}</td>
         <td class="wrap-text"><b>${displayTransfer(r)}</b></td>
         <td class="wrap-text">${safe(r.task_man)}</td>
         <td class="wrap-text">${fmtSubmitted(r)}</td>
@@ -330,6 +345,13 @@
     document.querySelectorAll('.sel-col').forEach(el => el.classList.toggle('hidden', !show));
     updateBulkUI();
   }
+
+  function tableColspan() {
+  // EMS 컬럼 추가로 기본(선택 컬럼 제외) 9개
+  const base = 9; // ID/Date/GS/EQ/WorkType/EMS/Transfer/Worker/Submitted
+  return canSelect() ? base + 1 : base; // 선택 컬럼(체크박스) 포함 여부
+  }
+
 
   function updateBulkUI(){
     const count = selectedIds.size;
@@ -383,6 +405,12 @@
     f_task_description.value = safe(row.task_description).replace(/<br\s*\/?>/gi, '\n');
     f_task_cause.value = safe(row.task_cause).replace(/<br\s*\/?>/gi, '\n');
     f_task_result.value= safe(row.task_result).replace(/<br\s*\/?>/gi, '\n');
+    if (f_ems) {
+  f_ems.value = (row.ems === 1 || row.ems === '1') ? '1'
+              : (row.ems === 0 || row.ems === '0') ? '0'
+              : '';
+}
+
 
     vDuration.textContent = computeDuration(row);
 
@@ -435,6 +463,8 @@
       task_description: f_task_description.value.trim(),
       task_cause: f_task_cause.value.trim(),
       task_result: f_task_result.value.trim(),
+      ems: (f_ems && f_ems.value !== '' ? Number(f_ems.value) : null),
+
     };
   }
 
