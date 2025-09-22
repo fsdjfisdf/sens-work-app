@@ -640,7 +640,29 @@ EPAB515 PM1 Wafer Broken  점검
             }
         });
 
+        document.querySelectorAll('.next-step').forEach(button => {
+            button.addEventListener('click', () => {
+                const currentStep = document.querySelector('.form-step.active');
+                const nextStep = document.querySelector(`.form-step[data-step="${parseInt(currentStep.dataset.step) + 1}"]`);
+                currentStep.classList.add('fade-out');
+                setTimeout(() => {
+                    currentStep.classList.remove('active', 'fade-out');
+                    nextStep.classList.add('active', 'fade-in');
+                }, 150);
+            });
+        });
 
+        document.querySelectorAll('.prev-step').forEach(button => {
+            button.addEventListener('click', () => {
+                const currentStep = document.querySelector('.form-step.active');
+                const prevStep = document.querySelector(`.form-step[data-step="${parseInt(currentStep.dataset.step) - 1}"]`);
+                currentStep.classList.add('fade-out');
+                setTimeout(() => {
+                    currentStep.classList.remove('active', 'fade-out');
+                    prevStep.classList.add('active', 'fade-in');
+                }, 150);
+            });
+        });
 
         function setupDynamicFields(containerId, inputClass, template) {
             const container = document.getElementById(containerId);

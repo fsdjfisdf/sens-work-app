@@ -561,29 +561,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /* ========== Guard step navigation ========== */
-  $$('.next-step').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const cur = activeStepEl();
-      if (!cur) return;
-      const step = cur.getAttribute('data-step');
-      if (!validateByStep(step)){
-        e.stopImmediatePropagation();
-        e.preventDefault();
-        refreshStepFlags();
-        goFirstErrorStep();
-      } else {
-        const next = Number(step) + 1;
-        goStep(next);
-      }
-    }, { capture:true });
-  });
-  $$('.prev-step').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const cur = activeStepEl(); if (!cur) return;
-      const step = Number(cur.getAttribute('data-step'));
-      goStep(step-1);
-    });
-  });
+// next
+$$('.next-step').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();   // ← HTML의 중복 핸들러 차단
+    const cur = activeStepEl(); if (!cur) return;
+    const step = cur.getAttribute('data-step');
+    if (!validateByStep(step)){
+      refreshStepFlags();
+      goFirstErrorStep();
+    } else {
+      goStep(Number(step) + 1);
+    }
+  }, { capture:true });
+});
+
+// prev
+$$('.prev-step').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();   // ← 중복 차단
+    const cur = activeStepEl(); if (!cur) return;
+    goStep(Number(cur.getAttribute('data-step')) - 1);
+  }, { capture:true });
+});
+
 
   /* ========== Submit ========== */
   const form = document.getElementById('worklogForm');
