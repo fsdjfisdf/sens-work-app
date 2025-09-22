@@ -299,10 +299,16 @@ input[type="time"]::-webkit-calendar-picker-indicator{ filter:opacity(.75); }
 #worklog-table tbody td:nth-child(1),
 #worklog-table tbody td:nth-child(2),
 #worklog-table tbody td:nth-child(3),
-#worklog-table tbody td:nth-child(7){ text-align:center; }
-#worklog-table tbody td:nth-child(6){ text-align:center; }
+#worklog-table tbody td:nth-child(6),
+#worklog-table tbody td:nth-child(7),
+#worklog-table tbody td:nth-child(8){ text-align:center; }
+
+/* 텍스트 많은 컬럼 */
 #worklog-table tbody td:nth-child(4),
 #worklog-table tbody td:nth-child(5){ text-align:left; padding-right:16px; }
+
+/* 숫자 자릿수 균등: TIME(8번째) */
+#worklog-table tbody td:nth-child(8){ font-variant-numeric: tabular-nums; }
 
 /* Hover indicator (첫번째 셀 좌측바) */
 #worklog-table tbody tr:hover td:first-child{ position:relative; }
