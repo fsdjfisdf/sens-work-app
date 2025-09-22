@@ -244,6 +244,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const cancelSaveBtn = document.getElementById('cancel-save');
   const hiddenSubmit = document.getElementById('save-button');
 
+  const resultModal = document.getElementById('result-modal');
+  const resultOk    = document.getElementById('result-ok');
+  const resultMsgEl = document.getElementById('result-msg');
+
+  function openResult(msg){
+    if (resultMsgEl && msg) resultMsgEl.textContent = msg;
+    overlay?.classList.add('show');
+    resultModal?.classList.add('show');
+    try { resultOk?.focus(); } catch(_) {}
+  }
+  function closeResult(){
+    resultModal?.classList.remove('show');
+    overlay?.classList.remove('show');
+  }
+  resultOk?.addEventListener('click', closeResult);
+
   function openPreview(){
     overlay?.classList.add('show');
     previewModal?.classList.add('show');
@@ -330,11 +346,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.key === 'Escape') {
       if (previewModal?.classList.contains('show')) closePreview();
       if (popup?.classList.contains('show')) closePaste();
+      if (resultModal?.classList.contains('show')) closeResult();  // ✅ [추가]
     }
   });
   overlay?.addEventListener('click', () => {
     if (previewModal?.classList.contains('show')) closePreview();
     if (popup?.classList.contains('show')) closePaste();
+    if (resultModal?.classList.contains('show')) closeResult();    // ✅ [추가]
   });
 
   /* ========== Step 1 — INFO editable toggle ========== */
@@ -696,8 +714,12 @@ $$('.prev-step').forEach(btn => {
       });
 
       if (response.status === 201) {
-        showToast('success','결재 요청','결재 대기 등록 완료(승인 후 저장됩니다).');
+        openResult('결재 대기 등록이 완료되었습니다.'); // ✅ [교체]
+        // 필요 시 폼 리셋/첫 스텝 이동도 여기서:
+        // form.reset();
+        // goStep(1);
       }
+
     }catch(error){
       let title = '저장 실패';
       let msg   = '알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
