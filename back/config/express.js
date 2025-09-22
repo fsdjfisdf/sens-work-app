@@ -292,6 +292,7 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
     const taskMaintItem = maintItem || 'SELECT';
     const taskTransferItem = transferItem || 'SELECT';
     const taskStatus = status || 'active';
+    const reqEms = (req.body.ems === 0 || req.body.ems === 1) ? Number(req.body.ems) : null;
     const taskMaint = task_maint || 'SELECT';
 
     logger.info('수정된 요청 데이터:', {
@@ -319,14 +320,15 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
       taskMaintItem,
       taskTransferItem,
       taskStatus,
-      taskMaint
+      taskMaint,
+      ems
     });
 
     try {
       const query = `
         INSERT INTO work_log 
-        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2, setup_item, maint_item, transfer_item, status, task_maint) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time, \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2, setup_item, maint_item, transfer_item, status, task_maint, ems) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       const values = [
         task_name,
@@ -353,7 +355,8 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
         taskMaintItem,
         taskTransferItem,
         taskStatus,
-        taskMaint
+        taskMaint,
+        reqEms
       ];
 
       logger.info('실행할 쿼리:', query);

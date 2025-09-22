@@ -1,4 +1,4 @@
-// worklog.js — end-to-end validation, step-guard, better error anchors, preview/submit flow
+// worklog.js — end-to-end validation, step-guard, better error anchors, preview/submit flow + EMS(유/무상) 자동권고/수동오버라이드
 document.addEventListener('DOMContentLoaded', async () => {
   /* ========== Helpers ========== */
   const $  = (sel, root=document) => root.querySelector(sel);
@@ -60,7 +60,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const firstErrRow = $('.form-row.error') || $('.form-step.has-error') || document.body;
     goStepOfNode(firstErrRow);
     firstErrRow?.scrollIntoView({behavior:'smooth', block:'center'});
-    // focus first bad field
     const bad = firstErrRow?.querySelector('[aria-invalid="true"]') || firstErrRow?.querySelector('input,select,textarea,button');
     try{ bad?.focus(); }catch(_){}
   }
@@ -159,10 +158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         hide(transferOptions);
         hide(transferOptions2);
       } else if (v === 'MAINT') {
-        // 요구사항: MAINT 선택 시 MAINT ITEM은 안나와도 됨(숨김)
         hide(additionalOptions);
         hide(maintOptions);
-        // TRANSFER/WORK SORT는 보여주되, 선택은 옵션(SELECT 허용)
         show(transferOptions);
         show(transferOptions2);
       } else {
@@ -173,6 +170,80 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  /* ========== EMS (유/무상) 권고/오버라이드 로직 ========== */
+  const warrantySel = document.getElementById('warranty');
+  const emsPaid = document.getElementById('ems-paid');
+  const emsFree = document.getElementById('ems-free');
+  const emsNull = document.getElementById('ems-null');
+  const emsHint = document.getElementById('ems-hint');
+  const emsAutoBtn = document.getElementById('ems-auto-btn');
+  const emsResetBtn = document.getElementById('ems-reset-btn');
+  const checkWarrantyBtn = document.getElementById('check-warranty');
+
+  let emsAutoFollow = true;  // true면 warranty 변경 시 권고값 자동 반영
+
+  function suggestedEmsFromWarranty(w){
+    if (w === 'WO') return 1;         // 유상 권고 (단, 예외가 있으므로 오버라이드 가능)
+    if (w === 'WI') return 0;         // 무상 권고
+    return null;                      // 미결정 권고
+  }
+  function setEmsUI(value){
+    if (!emsPaid || !emsFree || !emsNull) return;
+    if (value === 1){ emsPaid.checked = true; }
+    else if (value === 0){ emsFree.checked = true; }
+    else { emsNull.checked = true; }
+    if (emsHint){
+      const txt = (value===1) ? '권고: 유상' : (value===0) ? '권고: 무상' : '권고: 미결정';
+      emsHint.textContent = txt;
+    }
+  }
+  function currentEmsValue(){
+    const v = document.querySelector('input[name="emsChoice"]:checked')?.value ?? 'null';
+    if (v === '1') return 1;
+    if (v === '0') return 0;
+    return null;
+  }
+  function applyEmsSuggestion(){
+    if (!warrantySel) return;
+    const sug = suggestedEmsFromWarranty(warrantySel.value || '');
+    setEmsUI(sug);
+  }
+  function setAuto(on){
+    emsAutoFollow = !!on;
+    emsAutoBtn?.classList.toggle('active', emsAutoFollow);
+    if (emsAutoFollow) applyEmsSuggestion();
+  }
+
+  // 초기: AUTO on + 현재 워런티 기준 권고반영
+  setAuto(true);
+
+  // warranty 변경 시 (AUTO일 때만) 권고 재적용
+  warrantySel?.addEventListener('change', () => {
+    if (emsAutoFollow) applyEmsSuggestion();
+  });
+
+  // CHECK 버튼(설비 조회) 후에도 업데이트(AUTO 중일 때)
+  checkWarrantyBtn?.addEventListener('click', () => {
+    setTimeout(() => { if (emsAutoFollow) applyEmsSuggestion(); }, 0);
+  });
+
+  // 수동으로 EMS 라디오를 건드리면 AUTO 해제
+  document.querySelectorAll('input[name="emsChoice"]').forEach(r => {
+    r.addEventListener('change', () => {
+      setAuto(false);
+    });
+  });
+
+  // AUTO 버튼: 다시 워런티를 따라가며 권고값 반영
+  emsAutoBtn?.addEventListener('click', () => {
+    setAuto(true);
+  });
+
+  // 권고로 되돌리기: AUTO 상태와 무관하게 권고값만 한 번 반영
+  emsResetBtn?.addEventListener('click', () => {
+    applyEmsSuggestion();
+  });
 
   /* ========== Preview / Paste Modals (class .show) ========== */
   const overlay = document.getElementById('modal-overlay');
@@ -219,11 +290,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const uniqueWorkers = [...new Set(workerTokens)].join(', ');
       setText('preview-task_man', uniqueWorkers);
 
+      // EMS 표시
+      const emsTxt = (currentEmsValue()===1) ? '유상' : (currentEmsValue()===0) ? '무상' : '미결정';
+      setText('preview-ems', emsTxt);
+
       openPreview();
     });
   }
   confirmSaveBtn?.addEventListener('click', () => {
-    // 결재 요청(제출) 전에 모달 닫고 form submit 트리거
     closePreview();
     hiddenSubmit?.click();
   });
@@ -355,7 +429,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       setFieldError(rowOf('workType'),'WORK TYPE을 선택하세요.', document.getElementById('workType'));
       errors.push(['workType']);
     }
-    // 요구사항: SET UP ITEM / TRANSFER ITEM / WORK SORT / MAINT ITEM은 모두 옵션(SELECT 허용) → 추가 검증 없음
     return errors.length === 0;
   }
 
@@ -487,7 +560,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return true;
   }
 
-  /* ========== Guard step navigation (요구1) ========== */
+  /* ========== Guard step navigation ========== */
   $$('.next-step').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const cur = activeStepEl();
@@ -499,7 +572,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshStepFlags();
         goFirstErrorStep();
       } else {
-        // 정상 이동
         const next = Number(step) + 1;
         goStep(next);
       }
@@ -513,22 +585,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  /* ========== Submit (요구2,3,4 포함) ========== */
+  /* ========== Submit ========== */
   const form = document.getElementById('worklogForm');
   form?.addEventListener('submit', async (e) => {
-    // 선제 검증
     if (!validateAll()){
       e.preventDefault();
       e.stopImmediatePropagation();
       return;
     }
 
-    // 요구4: 오전 10시 이전이고 작업일이 오늘이면 확인
     try{
       const now = new Date();
-      const before10 = now.getHours() < 11
+      const before11 = now.getHours() < 11; // 기존 로직: 11시 이전 경고
       const isToday = (getV('task_date') || '') === getTodayDate();
-      if (before10 && isToday){
+      if (before11 && isToday){
         const yes = confirm('현재 시간이 오전 11시 이전인데, 작업 날짜를 오늘로 선택하셨습니다. 오늘 진행한 작업이 맞으신가요?');
         if (!yes){
           e.preventDefault();
@@ -540,8 +610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }catch(_){}
 
-    // 최종 페이로드 구성
-    e.preventDefault(); // we’ll submit via axios
+    e.preventDefault(); // axios로 제출
 
     const getVal = (id) => document.getElementById(id)?.value || '';
 
@@ -550,7 +619,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const taskResults = Array.from(document.getElementsByClassName('task-result-input')).map(el => el.value).join('<br>');
     const taskCauses  = Array.from(document.getElementsByClassName('task-cause-input')).map(el => el.value).join('<br>');
 
-    // length check (inline already, but keep server-safe short-circuit)
     if (task_name.length > 255){ showToast('error','제목 길이 초과',`TITLE은 255자 이내로 입력해 주세요. 현재 ${task_name.length}자입니다.`); goStep(5); return; }
     if (taskResults.length > 255){ showToast('error','RESULT 길이 초과',`RESULT는 255자 이내로 입력해 주세요. 현재 ${taskResults.length}자입니다.`); goStep(5); return; }
     if (taskCauses.length  > 255){ showToast('error','CAUSE 길이 초과',`CAUSE는 255자 이내로 입력해 주세요. 현재 ${taskCauses.length}자입니다.`); goStep(5); return; }
@@ -571,7 +639,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const noneTime = getVal('noneTime');
     const moveTime = getVal('moveTime');
 
-    // 요구3: 시간 역전 방지 (재검)
+    function isTimeStr(s){ return /^\d{2}:\d{2}(:\d{2})?$/.test(s || ''); }
+    function toSec(s){ if (!s) return 0; const [hh,mm,ss='0']=s.split(':').map(Number); return hh*3600+mm*60+ss; }
+
     if (!isTimeStr(start_time) || !isTimeStr(end_time) || toSec(end_time) <= toSec(start_time)){
       setFieldError(rowOf('end_time'),'END TIME은 START TIME보다 늦어야 합니다.', document.getElementById('end_time'));
       refreshStepFlags();
@@ -599,13 +669,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const transferItem  = (workType === 'MAINT') ? (document.getElementById('transferOptionSelect')?.value || 'SELECT') : 'SELECT';
     const task_maint    = maintItem;
 
-    // Submit to pending approval (백엔드 경로/필드명 일치)
+    // EMS 경고(선택): 미결정으로 올리면 안내만 띄움(저장은 허용)
+    if (currentEmsValue() === null) {
+      showToast('warn','EMS 미결정','워런티 기준 권고와 다를 수 있습니다. 필요 시 유상/무상을 명시 선택하세요.');
+    }
+
     try{
       const response = await axios.post(`http://3.37.73.151:3001/approval/work-log/submit`, {
         task_name, task_result: taskResults, task_cause: taskCauses, task_man: taskMans,
         task_description: taskDescriptions, task_date, start_time, end_time, none_time: noneTime, move_time: moveTime,
         group, site, SOP, tsguide, warranty, line, equipment_type, equipment_name, workType, workType2,
-        setupItem, maintItem, transferItem, task_maint, status
+        setupItem, maintItem, transferItem, task_maint, status,
+        ems: currentEmsValue() // 1(유상) | 0(무상) | null(미결정)
       }, {
         headers: {
           'Content-Type': 'application/json',
@@ -617,7 +692,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         showToast('success','결재 요청','결재 대기 등록 완료(승인 후 저장됩니다).');
       }
     }catch(error){
-      // 네트워크/응답별 메시지 + 문제 스텝으로 이동
       let title = '저장 실패';
       let msg   = '알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
 
@@ -647,7 +721,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           msg = data?.message || data?.error || msg;
         }
 
-        // 백엔드 커스텀 400: 제출자 이름 포함 요구 → 스텝3로 안내
         if (status === 400 && (data?.error||'').includes('제출자는 task_man')){
           const manGroup = document.getElementById('task-mans-container');
           const row = manGroup?.closest('.form-row');
@@ -657,7 +730,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           manGroup?.scrollIntoView({behavior:'smooth', block:'center'});
         }
 
-        // 백엔드가 { errors:[{field,message}...] } 주면 인라인 표시 + 해당 스텝으로 이동
         if (Array.isArray(data?.errors)){
           data.errors.forEach(err => {
             const id = err.field;

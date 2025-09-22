@@ -49,7 +49,8 @@ exports.addWorkLog = async (
   maint_item,
   transfer_item,
   task_maint,
-  status
+  status,
+  ems
 ) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
@@ -59,14 +60,14 @@ exports.addWorkLog = async (
         equipment_type, warranty, equipment_name, status,
         task_description, task_cause, task_result, SOP, tsguide,
         work_type, work_type2, setup_item, maint_item, transfer_item,
-        task_duration, start_time, end_time, none_time, move_time, task_maint
+        task_duration, start_time, end_time, none_time, move_time, task_maint, ems
       ) VALUES (
         ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
         SEC_TO_TIME(GREATEST(0, TIME_TO_SEC(TIMEDIFF(?, ?)) - ((? + ?) * 60))),
-        ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?
       )
     `;
     const values = [
@@ -99,6 +100,7 @@ exports.addWorkLog = async (
       Number(none_time) || 0,
       Number(move_time) || 0,
       task_maint || 'SELECT',
+      (ems === 0 || ems === 1) ? ems : null
     ];
     await connection.query(query, values);
   } catch (err) {
@@ -148,7 +150,8 @@ exports.updateWorkLog = async (
   warranty,
   equipment_type,
   equipment_name,
-  status
+  status,
+  ems
 ) => {
   const fields = [];
   const values = [];
@@ -212,6 +215,10 @@ exports.updateWorkLog = async (
   if (status !== undefined) {
     fields.push('status = ?');
     values.push(status);
+  }
+  if (ems !== undefined)    {
+    fields.push('ems = ?');    
+    values.push((ems===0||ems===1)?ems:null); 
   }
 
   values.push(id);
@@ -359,9 +366,9 @@ exports.submitPendingWorkLog = async (payload) => {
         task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time, none_time, move_time,
         \`group\`, site, SOP, tsguide, \`line\`, warranty, equipment_type, equipment_name, work_type, work_type2,
         setup_item, maint_item, transfer_item, task_maint, status,
-        submitted_by, approval_status
+        submitted_by, approval_status, ems
       )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending')
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending', ?)
     `;
     const values = [
       payload.task_name,
@@ -390,8 +397,9 @@ exports.submitPendingWorkLog = async (payload) => {
       payload.task_maint,
       payload.status,
       payload.submitted_by,
+      (payload.ems === 0 || payload.ems === 1) ? payload.ems : null
     ];
-    if (values.length !== 26) throw new Error(`submitPendingWorkLog placeholder mismatch: ${values.length}`);
+    if (values.length !== 27) throw new Error(`submitPendingWorkLog placeholder mismatch: ${values.length}`);
     const [result] = await connection.query(query, values);
     return result.insertId;
   } finally {
@@ -481,6 +489,7 @@ exports.updatePendingWorkLogFields = async (id, patch) => {
       'transfer_item',
       'task_maint',
       'status',
+      'ems'
     ];
 
     const sets = [];
@@ -550,14 +559,15 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
         equipment_type, warranty, equipment_name, status,
         task_description, task_cause, task_result, SOP, tsguide,
         work_type, work_type2, setup_item, maint_item, transfer_item,
-        start_time, end_time, none_time, move_time, task_maint
+        start_time, end_time, none_time, move_time, task_maint, ems
       )
       SELECT
         p.task_name, p.task_date, p.task_man, p.\`group\`, p.site, p.\`line\`,
         p.equipment_type, p.warranty, p.equipment_name, p.status,
         p.task_description, p.task_cause, p.task_result, p.SOP, p.tsguide,
         p.work_type, p.work_type2, p.setup_item, p.maint_item, p.transfer_item,
-        p.start_time, p.end_time, p.none_time, p.move_time, p.task_maint
+        p.start_time, p.end_time, p.none_time, p.move_time, p.task_maint,
+        p.ems
       FROM work_log_pending p
       WHERE p.id = ?
     `;

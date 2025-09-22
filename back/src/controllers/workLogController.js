@@ -39,7 +39,7 @@ exports.addWorkLog = async (req, res) => {
     task_name, task_result, task_cause, task_man, task_description,
     task_date, start_time, end_time, none_time, move_time,
     group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name,
-    workType, workType2, setupItem, maintItem, transferItem, task_maint, status
+    workType, workType2, setupItem, maintItem, transferItem, task_maint, status, ems
   } = req.body;
 
   try {
@@ -47,7 +47,8 @@ exports.addWorkLog = async (req, res) => {
       task_name, task_result, task_cause, task_man, task_description,
       task_date, start_time, end_time, none_time, move_time,
       group, site, SOP, tsguide, line, warranty, equipment_type, equipment_name,
-      workType, workType2, setupItem, maintItem, transferItem, task_maint, status
+      workType, workType2, setupItem, maintItem, transferItem, task_maint, status,
+      (ems === 0 || ems === 1) ? ems : null
     );
     res.status(201).json({ message: "Work log added" });
   } catch (err) {
@@ -91,7 +92,7 @@ exports.updateWorkLog = async (req, res) => {
   const { id } = req.params;
   const {
     task_name, task_result, task_cause, task_man, task_description, task_date, start_time, end_time,
-    group, site, line, warranty, equipment_type, equipment_name, status
+    group, site, line, warranty, equipment_type, equipment_name, status, ems
   } = req.body;
 
   try {
@@ -116,7 +117,8 @@ exports.updateWorkLog = async (req, res) => {
       warranty !== undefined ? warranty : existingLog.warranty,
       equipment_type !== undefined ? equipment_type : existingLog.equipment_type,
       equipment_name !== undefined ? equipment_name : existingLog.equipment_name,
-      status !== undefined ? status : existingLog.status
+      status !== undefined ? status : existingLog.status,
+      (ems !== undefined) ? ((ems===0||ems===1)?ems:null) : existingLog.ems
     );
     res.status(200).json({ message: "Work log updated" });
   } catch (err) {
@@ -206,7 +208,8 @@ exports.submitWorkLogPending = async (req, res) => {
       status         : payload.status         ?? 'active',
       task_maint     : payload.task_maint     ?? 'SELECT',
       task_name      : payload.task_name      ?? '',
-      submitted_by   : payload.submitted_by
+      submitted_by   : payload.submitted_by,
+      ems            : (payload.ems === 0 || payload.ems === 1) ? payload.ems : null
     };
 
     const hasMe = String(d.task_man||'').split(',').map(x=>x.trim().split('(')[0].trim()).includes(d.submitted_by);
@@ -257,7 +260,18 @@ exports.getPendingWorkLogOne = async (req, res) => {
 exports.updatePendingWorkLog = async (req, res) => {
   try {
     const id = req.params.id;
-    const patch = req.body || {};
+    const patch = { ...(req.body || {}) };
+
+    // ems 값 검증: 0/1만 허용, 그 외는 null(미결정) 처리
+    if (patch.hasOwnProperty('ems')) {
+      if (patch.ems === 0 || patch.ems === 1) {
+        // OK
+      } else if (patch.ems === null || patch.ems === 'null') {
+        patch.ems = null;
+      } else {
+        return res.status(400).json({ error: 'ems는 0(무상), 1(유상), null(미결정)만 허용' });
+      }
+    }
     const row = await workLogDao.getPendingById(id);
     if (!row) return res.status(404).json({ error: '없음' });
 
