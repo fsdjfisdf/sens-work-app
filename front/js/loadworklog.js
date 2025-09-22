@@ -165,6 +165,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (setupItem) {
             filteredLogs = filteredLogs.filter(log => log.setup_item === setupItem);
         }
+
+        // ✅ EMS 필터링
+        const emsFilter = document.getElementById('ems-filter').value;
+        if (emsFilter !== '') {
+        const want = Number(emsFilter); // 0 or 1
+        filteredLogs = filteredLogs.filter(log => {
+            const v = (log.ems === 0 || log.ems === 1) ? log.ems
+                    : (log.ems === '0' || log.ems === '1') ? Number(log.ems)
+                    : null;
+            return v === want;
+        });
+        }
+
     
         // ✅ 최신 날짜 순 정렬 (task_date 내림차순) → end_time 기준으로 다시 정렬
         filteredLogs.sort((a, b) => {
@@ -235,6 +248,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log(`✅ 정리된 작업자 목록: ${cleanedNames}`);
         return cleanedNames;
     }
+
+    function emsLabel(v) {
+    return (v === 1 || v === '1') ? '유상'
+        : (v === 0 || v === '0') ? '무상'
+        : '—';
+    }
+
     
 
     // 현재 페이지의 데이터 렌더링
@@ -256,6 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${log.task_name}</td>
                 <td>${log.task_result}</td>
                 <td>${log.task_man}</td>
+                <td>${emsLabel(log.ems)}</td>
                 <td>${log.task_duration}</td>
             `;
             worklogBody.appendChild(row);
@@ -371,6 +392,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (editForm.elements['setup_item']) editForm.elements['setup_item'].value = log.setup_item || '';
         if (editForm.elements['transfer_item']) editForm.elements['transfer_item'].value = log.transfer_item || '';
         if (editForm.elements['warranty']) editForm.elements['warranty'].value = log.warranty || '';
+        if (editForm.elements['ems']) {
+        editForm.elements['ems'].value =
+            (log.ems === 1 || log.ems === '1') ? '1' :
+            (log.ems === 0 || log.ems === '0') ? '0' : '';
+        }
         if (editForm.elements['work_type']) editForm.elements['work_type'].value = log.work_type || '';
         if (editForm.elements['work_type2']) editForm.elements['work_type2'].value = log.work_type2 || 'SELECT';
     
@@ -403,7 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("이 작업 이력을 수정할 권한이 없습니다.");
             return;
         }
-
+        const emsVal = editForm.elements['ems'] ? editForm.elements['ems'].value : '';
         const updatedLog = {
             task_name: editForm.elements['task_name'].value,
             task_date: editForm.elements['task_date'].value,
@@ -426,6 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setup_item: editForm.elements['setup_item'].value,
             transfer_item: editForm.elements['transfer_item'].value,
             warranty: editForm.elements['warranty'].value,
+            ems: emsVal === '' ? null : Number(emsVal), // 0/1/null
             work_type: editForm.elements['work_type'].value,
             work_type2: editForm.elements['work_type2'].value,
 
@@ -545,6 +572,7 @@ document.getElementById('export-excel-btn').addEventListener('click', async () =
             "line": log.line,
             "eq type": log.equipment_type,
             "task_warranty": log.warranty,
+            "EMS": emsLabel(log.ems),
             "eq name": log.equipment_name,
             "status": log.status,
             "action": log.task_description,
