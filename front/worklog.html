@@ -137,6 +137,29 @@
                                 <option value="WO">WO</option>
                             </select>
                         </div>
+                                <div class="form-row" id="ems-row">
+                                    
+                        <label>EMS (유상/무상)</label>
+                        <div class="ems-wrap">
+                            <div class="ems-seg">
+                            <input type="radio" id="ems-paid"   name="emsChoice" value="1">
+                            <label for="ems-paid">유상</label>
+
+                            <input type="radio" id="ems-free"   name="emsChoice" value="0">
+                            <label for="ems-free">무상</label>
+
+                            <input type="radio" id="ems-null"   name="emsChoice" value="null" checked>
+                            <label for="ems-null">미결정</label>
+                            </div>
+
+                            <div class="ems-tools">
+                            <span class="ems-hint" id="ems-hint">권고: 미결정</span>
+                            <button type="button" id="ems-auto-btn" class="btn-chip" title="워런티 기반 권고값 자동 적용">AUTO</button>
+                            <button type="button" id="ems-reset-btn" class="btn-text" title="권고값으로 되돌리기">권고로 되돌리기</button>
+                            </div>
+                        </div>
+                        <small class="help">⚠️ WARRANTY가 WO라고 해서 반드시 유상이 아닙니다. 확인 후 필요시 수정하세요.</small>
+                        </div>
 
 
                         <div class="form-row info-container">
@@ -557,28 +580,7 @@ EPAB515 PM1 Wafer Broken  점검
             </select>
         </div>
                 <!-- EMS (유상/무상) 판단 + 수동 오버라이드 -->
-        <div class="form-row" id="ems-row">
-        <label>EMS (유상/무상)</label>
-        <div class="ems-wrap">
-            <div class="ems-seg">
-            <input type="radio" id="ems-paid"   name="emsChoice" value="1">
-            <label for="ems-paid">유상</label>
 
-            <input type="radio" id="ems-free"   name="emsChoice" value="0">
-            <label for="ems-free">무상</label>
-
-            <input type="radio" id="ems-null"   name="emsChoice" value="null" checked>
-            <label for="ems-null">미결정</label>
-            </div>
-
-            <div class="ems-tools">
-            <span class="ems-hint" id="ems-hint">권고: 미결정</span>
-            <button type="button" id="ems-auto-btn" class="btn-chip" title="워런티 기반 권고값 자동 적용">AUTO</button>
-            <button type="button" id="ems-reset-btn" class="btn-text" title="권고값으로 되돌리기">권고로 되돌리기</button>
-            </div>
-        </div>
-        <small class="help">⚠️ WARRANTY가 WO라고 해서 반드시 유상이 아닙니다. 확인 후 필요시 수정하세요.</small>
-        </div>
 
         <div class="form-row">
             <label for="new_info">INFO</label>
