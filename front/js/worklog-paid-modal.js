@@ -13,8 +13,8 @@
   /* ───────── helpers ───────── */
   const isHHMM = (v) => /^\d{2}:\d{2}$/.test(v||'');
   const toMin  = (v) => { if(!isHHMM(v)) return null; const [h,m]=v.split(':').map(Number); return h*60+m; };
-  const lt     = (a,b) => { const A=toMin(a), B=toMin(b); if(A==null||B==null) return null; return A < B; };
-  const gt     = (a,b) => { const A=toMin(a), B=toMin(b); if(A==null||B==null) return null; return A > B; };
+  const lt     = (a,b) => { const A=toMin(a), B=toMin(b); if(A==null||B==null) return null; return A <= B; };
+  const gt     = (a,b) => { const A=toMin(a), B=toMin(b); if(A==null||B==null) return null; return A >= B; };
 
   function currentEmsValue() {
     const ck = document.querySelector('input[name="emsChoice"]:checked');
@@ -319,18 +319,18 @@ function rowTemplate() {
 
       // 기본 순서
       if (!lt(data.line_start_time, data.line_end_time)) {
-        ok=false; showRowErr(el, '라인 퇴실은 라인 입실보다 늦어야 합니다.'); return;
+        ok=false; showRowErr(el, '라인 퇴실은 라인 입실보다 늦거나 같아야 합니다.'); return;
       }
       if (!lt(data.inform_start_time, data.inform_end_time)) {
-        ok=false; showRowErr(el, '작업 완료는 작업 시작보다 늦어야 합니다.'); return;
+        ok=false; showRowErr(el, '작업 완료는 작업 시작보다 늦거나 같아야 합니다.'); return;
       }
 
       // 포함 관계: line_start < inform_start < inform_end < line_end
       if (!lt(data.line_start_time, data.inform_start_time)) {
-        ok=false; showRowErr(el, '라인 입실은 작업 시작보다 빨라야 합니다.'); return;
+        ok=false; showRowErr(el, '라인 입실은 작업 시작보다 빠르거나 같아야 합니다.'); return;
       }
       if (!gt(data.line_end_time, data.inform_end_time)) {
-        ok=false; showRowErr(el, '라인 퇴실은 작업 완료보다 늦어야 합니다.'); return;
+        ok=false; showRowErr(el, '라인 퇴실은 작업 완료보다 빠르거나 같아야 합니다.'); return;
       }
     });
     return ok;
