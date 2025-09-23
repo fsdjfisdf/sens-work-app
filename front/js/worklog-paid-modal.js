@@ -73,7 +73,10 @@
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px;flex-wrap:wrap;">
         <div style="display:flex;gap:8px;align-items:center;">
           <button type="button" id="paid-add-row" style="border:1px solid #d4d4d8;background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;">+ 작업자 추가</button>
-          <button type="button" id="paid-fill-inform" style="border:1px solid #d4d4d8;background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;" title="Step 4의 START/END를 각 행의 작업 시작/완료에 일괄 적용">작업시간 일괄적용</button>
+          <button type="button" id="paid-fill-inform"
+            style="border:1px solid #d4d4d8;background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;"
+            title="첫 번째 행의 시간을 아래 행들에 복사">첫 행 시간 복사
+          </button>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
           <span id="paid-error" style="color:#b42318;font-size:12.5px;display:none;"></span>
@@ -116,7 +119,7 @@
     return `
       <div class="paid-row" data-id="${id}" style="padding:10px 12px;border-top:1px solid #eef2f7;">
         <div style="display:grid;grid-template-columns:1.2fr repeat(4,.9fr) 72px;gap:8px;align-items:center;">
-          <input type="text"  class="paid-worker" placeholder="예: 홍길동" aria-label="작업자" />
+          <input type="text"  class="paid-worker" placeholder="예: 정현우" aria-label="작업자" />
           <input type="time"  class="paid-ls" placeholder="예: 09:00" aria-label="라인 입실" title="라인에 들어간 시각" />
           <input type="time"  class="paid-le" placeholder="예: 18:00" aria-label="라인 퇴실" title="라인에서 나온 시각" />
           <input type="time"  class="paid-is" placeholder="예: 09:30" aria-label="작업 시작" title="작업(Inform) 시작 시각" />
@@ -127,14 +130,27 @@
       </div>
     `;
   }
-  function addRow() {
+  
+    function addRow() {
     const host = $('#paid-rows', modal);
     const wrap = document.createElement('div');
     wrap.innerHTML = rowTemplate();
     const el = wrap.firstElementChild;
     host.appendChild(el);
     $('.paid-del', el).addEventListener('click', () => el.remove());
-  }
+
+    const first = $$('.paid-row', modal)[0];
+    if (first && first !== el) {
+        const ls = $('.paid-ls', first)?.value || '';
+        const le = $('.paid-le', first)?.value || '';
+        const is = $('.paid-is', first)?.value || '';
+        const ie = $('.paid-ie', first)?.value || '';
+        if (isHHMM(ls)) $('.paid-ls', el).value = ls;
+        if (isHHMM(le)) $('.paid-le', el).value = le;
+        if (isHHMM(is)) $('.paid-is', el).value = is;
+        if (isHHMM(ie)) $('.paid-ie', el).value = ie;
+    }
+    }
 
   function showRowErr(el, msg) {
     const e = $('.row-err', el);
@@ -203,15 +219,32 @@
     return ok;
   }
 
-  function fillInformAll() {
-    const st = $('#start_time')?.value || '';
-    const et = $('#end_time')?.value || '';
-    $$('.paid-row', modal).forEach(row => {
-      const is = $('.paid-is', row), ie = $('.paid-ie', row);
-      if (is && isHHMM(st)) is.value = st;
-      if (ie && isHHMM(et)) ie.value = et;
+    function fillInformAll() {
+    const rows = $$('.paid-row', modal);
+    if (!rows.length) return;
+
+    // 소스: 첫 번째 행
+    let src_ls = $('.paid-ls', rows[0])?.value || '';
+    let src_le = $('.paid-le', rows[0])?.value || '';
+    let src_is = $('.paid-is', rows[0])?.value || '';
+    let src_ie = $('.paid-ie', rows[0])?.value || '';
+
+    // 첫 행의 작업(Inform) 시간이 비어 있으면 스텝4 값으로 보조 채움
+    if (!isHHMM(src_is) || !isHHMM(src_ie)) {
+        const st = $('#start_time')?.value || '';
+        const et = $('#end_time')?.value || '';
+        if (isHHMM(st)) src_is = st;
+        if (isHHMM(et)) src_ie = et;
+    }
+
+    // 첫 행의 라인 시간이 비어 있으면 복사하지 않음(있는 것만 복사)
+    rows.slice(1).forEach(row => {
+        if (isHHMM(src_ls)) $('.paid-ls', row).value = src_ls;
+        if (isHHMM(src_le)) $('.paid-le', row).value = src_le;
+        if (isHHMM(src_is)) $('.paid-is', row).value = src_is;
+        if (isHHMM(src_ie)) $('.paid-ie', row).value = src_ie;
     });
-  }
+    }
 
   function onSaveClicked() {
     if (!validateRows()) return;
