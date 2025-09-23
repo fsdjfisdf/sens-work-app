@@ -577,7 +577,7 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
     const newWorkLogId = ins.insertId;
 
     // 2) 유상 상세 이관 (있을 경우)
-    await paidDao.movePaidFromPending(connection, newWorkLogId, id);
+    await paidDao.movePaidFromPending(connection, id, newWorkLogId);
 
     // 3) pending 상태 수정
     const updQuery = `
