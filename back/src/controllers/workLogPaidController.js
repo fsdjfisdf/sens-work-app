@@ -43,3 +43,25 @@ exports.savePaidRowsForPending = async (req, res) => {
     return res.status(500).json({ error: 'internal error' });
   }
 };
+
+exports.searchPaidRows = async (req, res) => {
+  try {
+    const f = {
+      date_from: req.query.date_from || null,
+      date_to:   req.query.date_to   || null,
+      group:     req.query.group     || '',
+      site:      req.query.site      || '',
+      worker:    req.query.worker    || '',
+      line:      req.query.line      || '',
+      equipment_type: req.query.equipment_type || '',
+      equipment_name: req.query.equipment_name || '',
+      ems: (req.query.ems === '0' || req.query.ems === '1') ? Number(req.query.ems) : null,
+      limit: Math.min( Number(req.query.limit || 5000), 20000 )
+    };
+    const rows = await paidDao.searchPaidRows(f);
+    return res.json(rows);
+  } catch (e) {
+    console.error('[work_log_paid.search] error', e);
+    return res.status(500).json({ error: 'internal error' });
+  }
+};

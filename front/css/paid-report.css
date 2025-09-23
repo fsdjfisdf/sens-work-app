@@ -1,0 +1,63 @@
+/* paid-report.css — 유상(EMS) 조회/분석 전용 */
+
+.report-wrap{
+  background: var(--panel);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.report-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding-bottom:10px; border-bottom:1px solid var(--hair);
+}
+.report-head h1{ margin:0; font-size:18px; font-weight:900; letter-spacing:-.01em; }
+.report-head .head-actions{ display:flex; gap:8px; }
+
+.filter-grid{
+  margin-top:12px;
+  display:grid; gap:10px;
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 980px){ .filter-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px){ .filter-grid{ grid-template-columns: 1fr; } }
+
+/* 요약 카드 */
+.cards{
+  margin-top:14px;
+  display:grid; gap:10px;
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 980px){ .cards{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px){ .cards{ grid-template-columns: 1fr; } }
+.card{
+  background:#fff; border:1px solid var(--border); border-radius:12px;
+  box-shadow: var(--shadow-xs); padding:10px 12px;
+}
+.card-k{ margin:0; color:#5d718b; font-size:12.5px; font-weight:800; letter-spacing:.2px; }
+.card-v{ margin:6px 0 0; font-weight:900; font-size:20px; color:#0f172a; }
+
+/* 테이블 */
+.table-wrap{ margin-top:12px; background:#fff; border:1px solid var(--border); border-radius:12px; overflow:auto; }
+#paid-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:14px; }
+#paid-table thead th{
+  position:sticky; top:0; z-index:1;
+  background:linear-gradient(180deg, #fff, #fdfefe);
+  border-bottom:1px solid var(--hair);
+  text-align:left; padding:10px; font-size:12.5px; color:#425269;
+}
+#paid-table tbody td{
+  padding:10px; border-bottom:1px solid var(--hair);
+  white-space:nowrap; vertical-align:top; color:#0f172a;
+}
+#paid-table tbody tr:nth-child(odd){ background:#fafcfe; }
+#paid-table tbody tr:hover{ background:#f6faff; }
+
+/* 페이저 */
+.pager{
+  display:flex; align-items:center; gap:10px; justify-content:flex-end;
+  padding:10px; border-top:1px solid var(--hair); background:#fff;
+}
+.pager-right{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+#pg-info{ color:#64748b; font-size:13px; }

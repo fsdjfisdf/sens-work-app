@@ -50,3 +50,39 @@ exports.movePaidFromPending = async (conn, pendingId, workLogId) => {
   `;
   await conn.query(sql, [workLogId, pendingId]);
 };
+
+exports.searchPaidRows = async (f) => {
+  const where = [];
+  const args = [];
+
+  if (f.date_from){ where.push('w.task_date >= ?'); args.push(f.date_from); }
+  if (f.date_to){   where.push('w.task_date <= ?'); args.push(f.date_to); }
+
+  if (f.group){ where.push('w.`group` = ?'); args.push(f.group); }
+  if (f.site){  where.push('w.`site` = ?'); args.push(f.site); }
+
+  if (f.worker){ where.push('w.paid_worker LIKE ?'); args.push(`%${f.worker}%`); }
+  if (f.line){   where.push('w.`line` LIKE ?'); args.push(`%${f.line}%`); }
+
+  if (f.equipment_type){ where.push('w.equipment_type LIKE ?'); args.push(`%${f.equipment_type}%`); }
+  if (f.equipment_name){ where.push('w.equipment_name LIKE ?'); args.push(`%${f.equipment_name}%`); }
+
+  if (f.ems===0 || f.ems===1){ where.push('w.ems = ?'); args.push(f.ems); }
+
+  const sql = `
+    SELECT
+      w.id, w.work_log_id, w.paid_worker,
+      TIME_FORMAT(w.line_start_time,   '%H:%i:%s') AS line_start_time,
+      TIME_FORMAT(w.line_end_time,     '%H:%i:%s') AS line_end_time,
+      TIME_FORMAT(w.inform_start_time, '%H:%i:%s') AS inform_start_time,
+      TIME_FORMAT(w.inform_end_time,   '%H:%i:%s') AS inform_end_time,
+      w.task_name, w.task_date, w.\`group\`, w.site, w.\`line\`, w.warranty,
+      w.equipment_type, w.equipment_name, w.ems
+    FROM work_log_paid w
+    ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+    ORDER BY w.task_date DESC, w.id DESC
+    LIMIT ${Number(f.limit||5000)}
+  `;
+  const [rows] = await pool.query(sql, args);
+  return rows;
+};

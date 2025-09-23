@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>유상(EMS) 상세 조회/분석</title>
+  <!-- 기존 톤 재사용 -->
+  <link rel="stylesheet" href="/css/worklog.css">
+  <!-- 이 페이지 전용 -->
+  <link rel="stylesheet" href="/css/paid-report.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+
+<nav>
+  <div class="inner nav-container">
+    <div class="nav-title"><a href="/readworklog">S-WORKS</a></div>
+    <div class="sign-container">
+      <a class="menu-item" href="/worklog.html">작업 등록</a>
+      <a class="menu-item" href="/readworklog">작업 이력</a>
+      <a class="menu-item" href="/paid-report.html">유상 조회/분석</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="inner report-wrap">
+    <header class="report-head">
+      <h1>유상(EMS) 상세 조회/분석</h1>
+      <div class="head-actions">
+        <button id="btn-search" class="btn-primary">조회</button>
+        <button id="btn-reset" class="btn-secondary">초기화</button>
+        <button id="btn-export" class="btn-primary">엑셀(CSV)로 내보내기</button>
+      </div>
+    </header>
+
+    <!-- 필터 -->
+    <div class="filter-grid">
+      <div class="form-row">
+        <label>작업 날짜(From)</label>
+        <input type="date" id="f-date-from">
+      </div>
+      <div class="form-row">
+        <label>작업 날짜(To)</label>
+        <input type="date" id="f-date-to">
+      </div>
+      <div class="form-row">
+        <label>그룹</label>
+        <select id="f-group" class="option-select">
+          <option value="">ALL</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>사이트</label>
+        <select id="f-site" class="option-select">
+          <option value="">ALL</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>작업자(이름 포함검색)</label>
+        <input type="text" id="f-worker" placeholder="예: 홍길동">
+      </div>
+      <div class="form-row">
+        <label>라인</label>
+        <input type="text" id="f-line" placeholder="라인명">
+      </div>
+      <div class="form-row">
+        <label>장비 타입</label>
+        <input type="text" id="f-eq-type" placeholder="equipment_type">
+      </div>
+      <div class="form-row">
+        <label>장비 명</label>
+        <input type="text" id="f-eq-name" placeholder="equipment_name">
+      </div>
+      <div class="form-row">
+        <label>EMS</label>
+        <select id="f-ems">
+          <option value="">ALL</option>
+          <option value="1">유상</option>
+          <option value="0">무상</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 카드 요약 -->
+    <div class="cards">
+      <div class="card">
+        <p class="card-k">총 건수</p>
+        <p class="card-v" id="sum-count">0</p>
+      </div>
+      <div class="card">
+        <p class="card-k">총 인원(고유)</p>
+        <p class="card-v" id="sum-people">0</p>
+      </div>
+      <div class="card">
+        <p class="card-k">작업 시간 합계(Inform)</p>
+        <p class="card-v" id="sum-inform">0h</p>
+      </div>
+      <div class="card">
+        <p class="card-k">라인 체류시간 합계</p>
+        <p class="card-v" id="sum-line">0h</p>
+      </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="table-wrap">
+      <table id="paid-table">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>그룹</th>
+            <th>사이트</th>
+            <th>라인</th>
+            <th>장비타입</th>
+            <th>장비명</th>
+            <th>작업자</th>
+            <th>라인입실</th>
+            <th>라인퇴실</th>
+            <th>작업시작</th>
+            <th>작업완료</th>
+            <th>Inform(분)</th>
+            <th>Line(분)</th>
+            <th>작업명</th>
+            <th>work_log_id</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <!-- 페이지네이션 -->
+      <div class="pager">
+        <button id="pg-prev" class="btn-secondary">이전</button>
+        <span id="pg-info">0 / 0</span>
+        <button id="pg-next" class="btn-secondary">다음</button>
+
+        <div class="pager-right">
+          <label for="pg-size">표시</label>
+          <select id="pg-size">
+            <option>20</option>
+            <option selected>50</option>
+            <option>100</option>
+            <option>200</option>
+          </select>
+          <span>행</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="inner">
+    <p>© S-WORKS</p>
+  </div>
+</footer>
+
+<script src="/js/paid-report.js"></script>
+</body>
+</html>
