@@ -5,9 +5,6 @@
 //   GET  /approval/work-log-paid/pending/:id
 //   GET  /approval/work-log-paid/live/:workLogId
 
-const express = require('express');
-const router = express.Router();
-
 const { pool } = require('../../config/database'); // ← 경로 확인
 const paidDao  = require('../dao/work_LogPaidDao'); // ← 경로 확인
 
@@ -176,14 +173,7 @@ async function listLivePaidRows(req, res) {
   }
 }
 
-// ----- Router 바인딩(선택) -----
-// (앱에서 app.use(router) 하거나 상위 라우터에 붙이세요)
-router.post('/approval/work-log-paid/pending/:id', uploadPendingPaidRows);
-router.get('/approval/work-log-paid/pending/:id', listPendingPaidRows);
-router.get('/approval/work-log-paid/live/:workLogId', listLivePaidRows);
-
 module.exports = {
-  router,
   uploadPendingPaidRows,
   listPendingPaidRows,
   listLivePaidRows,
