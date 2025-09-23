@@ -548,12 +548,14 @@ exports.resubmitPendingWorkLog = async (id, submitted_by) => {
 };
 
 /* 승인 (본 테이블로 이관) — task_duration 은 삽입하지 않음(생성칼럼/트리거 호환) */
+// work_LogDao.approvePendingWorkLog
 exports.approvePendingWorkLog = async (id, approver, note) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
     await connection.beginTransaction();
 
-    const insertQuery = `
+    // ❗ 기존 쿼리의 alias 오타(pw/p)도 함께 정리
+    const [ins] = await connection.query(`
       INSERT INTO work_log (
         task_name, task_date, task_man, \`group\`, site, \`line\`,
         equipment_type, warranty, equipment_name, status,
@@ -566,21 +568,21 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
         p.equipment_type, p.warranty, p.equipment_name, p.status,
         p.task_description, p.task_cause, p.task_result, p.SOP, p.tsguide,
         p.work_type, p.work_type2, p.setup_item, p.maint_item, p.transfer_item,
-        p.start_time, p.end_time, p.none_time, p.move_time, p.task_maint,
-        p.ems
+        p.start_time, p.end_time, p.none_time, p.move_time, p.task_maint, p.ems
       FROM work_log_pending p
       WHERE p.id = ?
-    `;
-    await connection.query(insertQuery, [id]);
+    `, [id]);
 
-    const updQuery = `
+    await connection.query(`
       UPDATE work_log_pending
       SET approval_status='approved', approver=?, approval_note=?, approved_at=NOW()
       WHERE id=?
-    `;
-    await connection.query(updQuery, [approver || '', note || '', id]);
+    `, [approver || '', note || '', id]);
 
     await connection.commit();
+
+    // ✅ 새로 생성된 work_log의 ID 반환
+    return ins.insertId;
   } catch (e) {
     await connection.rollback();
     throw e;
@@ -588,6 +590,7 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
     connection.release();
   }
 };
+
 
 /* 반려 */
 exports.rejectPendingWorkLog = async (id, approver, note) => {

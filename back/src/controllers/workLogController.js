@@ -2,6 +2,7 @@ const workLogDao = require('../dao/work_LogDao');
 const xlsx = require('xlsx');
 const fs = require('fs');
 const path = require('path');
+const workLogPaidController = require('./workLogPaidController');
 
 /** 결재자 매핑 (Users.nickname 과 일치) */
 const APPROVER_MAP = {
@@ -361,28 +362,44 @@ exports.approvePendingWorkLog = async (req, res) => {
       return res.status(403).json({ error: '해당 그룹/사이트의 결재 권한이 없습니다.' });
     }
 
+    // (선택) 결재자가 보정한 patch 반영
     if (patch && Object.keys(patch).length) {
       await workLogDao.updatePendingWorkLogFields(id, patch);
     }
 
     const approver = req.user?.nickname || 'admin';
-    await workLogDao.approvePendingWorkLog(id, approver, note || '');
 
-    // 승인 시 카운트 (transfer_item 기준)
-    const tr = pending.transfer_item;
-    if (tr && tr !== 'SELECT' && pending.task_man) {
-      const engineers = pending.task_man.split(',').map(x => x.trim().split('(')[0].trim()).filter(Boolean);
+    // ✅ 여기서 본 테이블로 이관하고, 새 workLogId를 반드시 돌려받음
+    const workLogId = await workLogDao.approvePendingWorkLog(id, approver, note || '');
+
+    // ✅ 유상 상세 (pending → work_log_paid) 이관
+    try {
+      await workLogPaidController.attachPaidRowsOnApprove(id, workLogId);
+    } catch (migrateErr) {
+      console.error('[approve] paid rows migrate failed:', migrateErr);
+      // 승인 자체는 성공으로 유지 (필요시 여기에 Sentry/Slack 알림 등)
+    }
+
+    // (기존) 승인 시 작업 카운트 증가
+    const tr = (patch?.transfer_item ?? pending.transfer_item);
+    const taskMan = (patch?.task_man ?? pending.task_man);
+    if (tr && tr !== 'SELECT' && taskMan) {
+      const engineers = String(taskMan)
+        .split(',')
+        .map(x => x.trim().split('(')[0].trim())
+        .filter(Boolean);
       for (const eng of engineers) {
         try { await workLogDao.incrementTaskCount(eng, tr); } catch (_) {}
       }
     }
 
-    res.status(200).json({ message: '승인 및 저장 완료' });
+    res.status(200).json({ message: '승인 및 저장 완료', work_log_id: workLogId });
   } catch (err) {
     console.error('approve error:', err);
     res.status(500).json({ error: '승인 처리 오류' });
   }
 };
+
 
 /* 반려 */
 exports.rejectPendingWorkLog = async (req, res) => {

@@ -127,6 +127,9 @@ const editRoutes = require("../src/routes/editRoute"); // 🔹 작업 이력 편
 app.use("/api", editRoutes); // 🔹 작업 이력 편집 API 라우트 연결
 const analysisRoute = require('../src/routes/analysisRoute'); // 경로는 프로젝트 구조에 맞게
 app.use('/analysis', analysisRoute);
+const workLogPaidRoute = require('../src/routes/workLogPaidRoute');
+app.use('/', workLogPaidRoute);
+
 
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
