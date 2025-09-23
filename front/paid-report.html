@@ -3,190 +3,214 @@
 <head>
   <meta charset="utf-8" />
   <title>S WORKS - EMS REPORT</title>
-  <!-- 기존 톤 재사용 -->
   <link rel="stylesheet" href="/css/worklog.css">
-  <!-- 이 페이지 전용 -->
   <link rel="stylesheet" href="/css/paid-report.css">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
 
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                    <a href="./signin.html" class="sign-link">Login</a>
-                </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
         </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./approval.html" class="menu-item">Worklog Approval</a>
-                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-                <a href="./PCI.html" class="menu-item">PCI</a>
-                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span><span></span><span></span>
             </div>
+          </button>
         </div>
-    </nav>
-
-<main>
-  <section class="inner report-wrap">
-    <header class="report-head">
-      <div class="head-left">
-        <h1>유상(EMS) 상세 조회/분석</h1>
-        <p class="sub">필터 선택 후 조회하세요. 행을 클릭하면 원본 작업이력 상세를 확인할 수 있습니다.</p>
-      </div>
-      <div class="head-actions">
-        <button id="btn-search" class="btn-primary">조회</button>
-        <button id="btn-reset" class="btn-secondary">초기화</button>
-        <button id="btn-export" class="btn-primary">엑셀로 내보내기</button>
-      </div>
-    </header>
-
-    <!-- 필터 -->
-    <div class="filter-grid">
-      <div class="form-row">
-        <label>작업 날짜(From)</label>
-        <input type="date" id="f-date-from">
-      </div>
-      <div class="form-row">
-        <label>작업 날짜(To)</label>
-        <input type="date" id="f-date-to">
-      </div>
-      <div class="form-row">
-        <label>그룹</label>
-        <select id="f-group" class="option-select">
-          <option value="">ALL</option>
-          <option value="PEE1">PEE1</option>
-          <option value="PEE2">PEE2</option>
-          <option value="PSKH">PSKH</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>사이트</label>
-        <select id="f-site" class="option-select">
-          <option value="">ALL</option>
-          <option value="PT">PT</option>
-          <option value="HS">HS</option>
-          <option value="IC">IC</option>
-          <option value="CJ">CJ</option>
-        </select>
-      </div>
-      <div class="form-row">
-        <label>작업자(이름 포함검색)</label>
-        <input type="text" id="f-worker" placeholder="예: 홍길동">
-      </div>
-      <div class="form-row">
-        <label>장비 타입</label>
-        <input type="text" id="f-eq-type" placeholder="equipment_type">
-      </div>
-      <div class="form-row">
-        <label>장비 명</label>
-        <input type="text" id="f-eq-name" placeholder="equipment_name">
       </div>
     </div>
-
-    <!-- 카드 요약 -->
-    <div class="cards">
-      <div class="card">
-        <p class="card-k">총 건수</p>
-        <p class="card-v" id="sum-count">0</p>
-      </div>
-      <div class="card">
-        <p class="card-k">작업 소요시간 합계</p>
-        <p class="card-v" id="sum-inform">0h</p>
-      </div>
-      <div class="card">
-        <p class="card-k">라인 체류시간 합계</p>
-        <p class="card-v" id="sum-line">0h</p>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./approval.html" class="menu-item">Worklog Approval</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item">Logout</button>
       </div>
     </div>
+  </nav>
 
-    <!-- 테이블 -->
-    <div class="table-wrap">
-      <table id="paid-table">
-        <thead>
-          <tr>
-            <th>날짜</th>
-            <th>그룹</th>
-            <th>사이트</th>
-            <th>작업명</th>
-            <th>라인</th>
-            <th>장비타입</th>
-            <th>장비명</th>
-            <th>작업자</th>
-            <th>라인입실</th>
-            <th>라인퇴실</th>
-            <th>Line 체류 시간(분)</th>
-            <th>작업시작</th>
-            <th>작업완료</th>
-            <th>작업소요시간(분)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <!-- 페이지네이션 UI 제거 -->
+  <main>
+    <section class="inner report-wrap">
+      <header class="report-head">
+        <div class="head-left">
+          <h1>유상(EMS) 상세 조회/분석</h1>
+          <p class="sub">필터 선택 후 조회하세요. 행을 클릭하면 원본 작업이력을 확인할 수 있습니다.</p>
+        </div>
+        <div class="head-actions">
+          <button id="btn-search" class="btn-primary">조회</button>
+          <button id="btn-reset" class="btn-secondary">초기화</button>
+          <button id="btn-export" class="btn-primary">엑셀로 내보내기</button>
+        </div>
+      </header>
+
+      <!-- 필터: 3줄 구성 -->
+      <div class="filter-rows">
+        <!-- 1줄: 날짜 From/To -->
+        <div class="filter-row">
+          <div class="form-row">
+            <label>작업 날짜(From)</label>
+            <input type="date" id="f-date-from">
+          </div>
+          <div class="form-row">
+            <label>작업 날짜(To)</label>
+            <input type="date" id="f-date-to">
+          </div>
+        </div>
+
+        <!-- 2줄: 그룹/사이트 -->
+        <div class="filter-row">
+          <div class="form-row">
+            <label>그룹</label>
+            <select id="f-group" class="option-select">
+              <option value="">ALL</option>
+              <option value="PEE1">PEE1</option>
+              <option value="PEE2">PEE2</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>사이트</label>
+            <select id="f-site" class="option-select">
+              <option value="">ALL</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3줄: 장비타입/장비명 -->
+        <div class="filter-row">
+          <div class="form-row">
+            <label>장비 타입</label>
+            <select id="f-eq-type" class="option-select">
+              <option value="">ALL</option>
+              <option value="SELECT">SELECT</option>
+              <option value="SUPRA N">SUPRA N</option>
+              <option value="SUPRA NM">SUPRA NM</option>
+              <option value="SUPRA III">SUPRA III</option>
+              <option value="SUPRA IV">SUPRA IV</option>
+              <option value="SUPRA V">SUPRA V</option>
+              <option value="SUPRA Vplus">SUPRA Vplus</option>
+              <option value="SUPRA VM">SUPRA VM</option>
+              <option value="SUPRA XP">SUPRA XP</option>
+              <option value="SUPRA Q">SUPRA Q</option>
+              <option value="SUPRA XQ">SUPRA XQ</option>
+              <option value="TERA21">TERA21</option>
+              <option value="INTEGER IVr">INTEGER IVr</option>
+              <option value="INTEGER Plus">INTEGER Plus</option>
+              <option value="INTEGER XP">INTEGER XP</option>
+              <option value="PRECIA">PRECIA</option>
+              <option value="ECOLITE 300">ECOLITE 300</option>
+              <option value="ECOLITE 400">ECOLITE 400</option>
+              <option value="ECOLITE 3000">ECOLITE 3000</option>
+              <option value="ECOLITE XP">ECOLITE XP</option>
+              <option value="GENEVA">GENEVA</option>
+              <option value="HDW">HDW</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>장비 명</label>
+            <input type="text" id="f-eq-name" placeholder="equipment_name">
+          </div>
+        </div>
+      </div>
+
+      <!-- 카드 요약 -->
+      <div class="cards">
+        <div class="card">
+          <p class="card-k">총 건수</p>
+          <p class="card-v" id="sum-count">0</p>
+        </div>
+        <div class="card">
+          <p class="card-k">작업 소요시간 합계</p>
+          <p class="card-v" id="sum-inform">0h</p>
+        </div>
+        <div class="card">
+          <p class="card-k">라인 체류시간 합계</p>
+          <p class="card-v" id="sum-line">0h</p>
+        </div>
+      </div>
+
+      <!-- 테이블 -->
+      <div class="table-wrap">
+        <table id="paid-table">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>그룹</th>
+              <th>사이트</th>
+              <th>작업명</th>
+              <th>라인</th>
+              <th>장비타입</th>
+              <th>장비명</th>
+              <th>작업자</th>
+              <th>라인입실</th>
+              <th>라인퇴실</th>
+              <th>Line 체류 시간(분)</th>
+              <th>작업시작</th>
+              <th>작업완료</th>
+              <th>작업소요시간(분)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="inner">
+      <p>© S-WORKS</p>
     </div>
-  </section>
-</main>
+  </footer>
 
-<footer>
-  <div class="inner">
-    <p>© S-WORKS</p>
-  </div>
-</footer>
+  <script>window.API_BASE = 'http://3.37.73.151:3001';</script>
+  <script src="/js/paid-report.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
 
-<script>window.API_BASE = 'http://3.37.73.151:3001';</script>
-<script src="/js/paid-report.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const token = localStorage.getItem("x-access-token");
-    const userRole = localStorage.getItem("user-role");
+      if (!token) {
+        document.querySelector(".unsigned").classList.remove("hidden");
+        document.querySelector(".signed").classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned").classList.add("hidden");
+        document.querySelector(".signed").classList.remove("hidden");
+      }
 
-    if (!token) {
-      document.querySelector(".unsigned").classList.remove("hidden");
-      document.querySelector(".signed").classList.add("hidden");
-    } else {
-      document.querySelector(".unsigned").classList.add("hidden");
-      document.querySelector(".signed").classList.remove("hidden");
-    }
+      if (!token || userRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      }
 
-    if (!token || userRole !== 'admin') {
-      document.querySelectorAll('.admin-only').forEach(element => {
-        element.style.display = 'none';
-      });
-    }
-
-    const signOutButton = document.querySelector("#sign-out");
-    if (signOutButton) {
-      signOutButton.addEventListener("click", function() {
-        localStorage.removeItem("x-access-token");
-        localStorage.removeItem("user-role");
-        alert("로그아웃 되었습니다.");
-        window.location.replace("./signin.html");
-      });
-    }
-  });
-</script>
+      const signOutButton = document.querySelector("#sign-out");
+      if (signOutButton) {
+        signOutButton.addEventListener("click", function() {
+          localStorage.removeItem("x-access-token");
+          localStorage.removeItem("user-role");
+          alert("로그아웃 되었습니다.");
+          window.location.replace("./signin.html");
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -15,9 +15,7 @@
   };
   const fmtDate = (v) => {
     if (!v) return '';
-    // 이미 YYYY-MM-DD면 그대로
     if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
-    // Date 또는 ISO 문자열 -> YYYY-MM-DD
     const d = new Date(v);
     if (Number.isNaN(d.getTime())) return String(v);
     return toLocalISODate(d);
@@ -26,7 +24,7 @@
   // ---------- 시간 계산 ----------
   function toMin(hhmmOrHHMMSS){
     if(!hhmmOrHHMMSS) return 0;
-    const s = hhmmOrHHMMSS.length===5 ? hhmmOrHHMMSS+':00' : hhmmOrHHMMSS; // HH:MM -> HH:MM:SS
+    const s = hhmmOrHHMMSS.length===5 ? hhmmOrHHMMSS+':00' : hhmmOrHHMMSS;
     const [h,m] = s.split(':').map(Number);
     return (h*60 + m) | 0;
   }
@@ -48,12 +46,13 @@
 
     add('date_from', v('f-date-from'));
     add('date_to',   v('f-date-to'));
-    add('group',     v('f-group'));        // ALL("")이면 안보냄
-    add('site',      v('f-site'));         // ALL("")이면 안보냄
-    add('worker',    v('f-worker'));
-    add('equipment_type', v('f-eq-type'));
-    add('equipment_name', v('f-eq-name'));
-    p.set('limit', '5000'); // 안전장치
+    add('group',     v('f-group'));                 // ''(ALL) 이면 제외
+    add('site',      v('f-site'));                  // ''(ALL) 이면 제외
+    const eqType = v('f-eq-type');
+    if (eqType && eqType !== 'SELECT') add('equipment_type', eqType);
+    const eqName = v('f-eq-name');
+    if (eqName) add('equipment_name', eqName);
+    p.set('limit', '5000');
     return p.toString();
   }
 
@@ -106,20 +105,23 @@
   }
   function openViewer(){ ensureViewer(); $('#viewer-overlay').classList.add('show'); }
   function closeViewer(){ const ov = $('#viewer-overlay'); if(ov) ov.classList.remove('show'); }
+  function pretty(v){
+    if (v==null) return '—';
+    const s = String(v).trim();
+    if (s==='' || s==='SELECT') return '—';
+    return s;
+  }
   function kv(label, value){
-    const v = (value==null || value==='') ? '—' : String(value);
-    return `<p><strong>${label}</strong><span>${v}</span></p>`;
+    return `<p><strong>${label}</strong><span>${pretty(value)}</span></p>`;
   }
 
-  // work_log 단건 조회(백엔드 지원 우선 → 없으면 /logs에서 찾아보기)
+  // work_log 단건 조회(있으면 /api/work-log/:id, 없으면 /logs에서 찾기)
   async function fetchWorkLogById(id){
     const token = localStorage.getItem('x-access-token') || '';
-    // 1) 권장: /api/work-log/:id (있다면)
     try{
       const r1 = await fetch(`${API_BASE}/api/work-log/${id}`, { headers:{ 'x-access-token': token } });
       if (r1.ok) return await r1.json();
     }catch(_) {}
-    // 2) fallback: /logs 전체에서 찾기 (비권장, 데이터 많을 경우 느릴 수 있음)
     const r2 = await fetch(`${API_BASE}/logs`, { headers:{ 'x-access-token': token } });
     if (!r2.ok) throw new Error('작업이력 로드 실패');
     const all = await r2.json();
@@ -137,27 +139,45 @@
       document.body.style.cursor='progress';
       const w = await fetchWorkLogById(id);
       ensureViewer();
+
+      // 읽기 좋은 구역별 배치
       const body = $('#viewer-body');
       body.innerHTML = [
+        // 기본 정보
         kv('ID', w.id),
         kv('작업명', w.task_name),
         kv('작업일', fmtDate(w.task_date)),
+        kv('작업자', w.task_man),
         kv('그룹', w.group),
         kv('사이트', w.site),
         kv('라인', w.line),
         kv('장비타입', w.equipment_type),
         kv('장비명', w.equipment_name),
-        kv('작업자', w.task_man),
-        kv('작업결과', w.task_result),
-        kv('작업원인', w.task_cause),
-        kv('작업설명', w.task_description),
+        kv('상태', w.status),
+        kv('보증/EMS', (w.warranty || '—') + (typeof w.ems==='number' ? ` / ${w.ems===1?'유상':'무상'}` : '')),
+
+        // 카테고리
+        kv('작업유형1', w.work_type),
+        kv('작업유형2', w.work_type2),
+        kv('SETUP 항목', w.setup_item),
+        kv('MAINT 항목', w.maint_item),
+        kv('TRANSFER 항목', w.transfer_item),
+
+        // 시간/소요
         kv('시작시각', w.start_time),
         kv('종료시각', w.end_time),
-        kv('이동시간', w.move_time),
-        kv('비가동시간', w.none_time),
-        kv('보증/EMS', w.warranty + (typeof w.ems==='number' ? ` / ${w.ems===1?'유상':'무상'}` : '')),
-        kv('상태', w.status)
+        kv('기록된 소요(시간)', w.task_duration),
+        kv('이동시간(분)', w.move_time),
+        kv('비가동(분)', w.none_time),
+
+        // 문서/설명
+        kv('SOP', w.SOP),
+        kv('TS Guide', w.tsguide),
+        kv('작업결과', w.task_result),
+        kv('작업원인', w.task_cause),
+        kv('작업설명', w.task_description)
       ].join('');
+
       openViewer();
     }catch(err){
       toast('오류', err.message||'작업이력을 불러오지 못했습니다.');
@@ -203,7 +223,6 @@
 
     const esc = (v)=> {
       const s = (v==null?'':String(v));
-      // HTML 이스케이프
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     };
 
@@ -227,9 +246,8 @@
       </tr>
     `).join('');
 
-    // Excel이 잘 여는 HTML 테이블(.xls)
     const html =
-      '\ufeff' + // BOM (한글 보장)
+      '\ufeff' +
       `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
        <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/>
        <style>
@@ -268,8 +286,7 @@
     try{
       document.body.style.cursor='progress';
       const rows = await fetchData();
-      // 전역 저장(엑셀 내보내기용)
-      window.__PAID_ROWS__ = rows.slice();
+      window.__PAID_ROWS__ = rows.slice(); // 엑셀용
       renderSummary(rows);
       renderTable(rows);
     }catch(e){
@@ -282,7 +299,6 @@
   function onReset(){
     $('#f-group').value='';
     $('#f-site').value='';
-    $('#f-worker').value='';
     $('#f-eq-type').value='';
     $('#f-eq-name').value='';
     setDefaultDates();
@@ -297,7 +313,7 @@
     $('#btn-export').addEventListener('click', exportExcel);
 
     // 엔터로 바로 조회
-    $$('.filter-grid input, .filter-grid select').forEach(el=>{
+    $$('.filter-rows input, .filter-rows select').forEach(el=>{
       el.addEventListener('keydown', (e)=>{ if(e.key==='Enter') onSearch(); });
     });
 
