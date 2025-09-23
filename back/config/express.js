@@ -127,12 +127,8 @@ const editRoutes = require("../src/routes/editRoute"); // 🔹 작업 이력 편
 app.use("/api", editRoutes); // 🔹 작업 이력 편집 API 라우트 연결
 const analysisRoute = require('../src/routes/analysisRoute'); // 경로는 프로젝트 구조에 맞게
 app.use('/analysis', analysisRoute);
-// ⬇️ 맨 위쪽 require들 사이에 추가
-const workLogPaidRoute = require('../src/routes/workLogPaidRoute');
-
-// ⬇️ 라우트 섹션 어딘가에 추가(JWT 필요하면 미들웨어 같이 붙이세요)
-app.use('/api/work-log-paid', jwtMiddleware, workLogPaidRoute);
-
+const workLogPaidRouter = require('./controllers/workLogPaidController').router;
+app.use(workLogPaidRouter);
 
 
 // (위쪽 아무 데서든) 한 번만 선언
