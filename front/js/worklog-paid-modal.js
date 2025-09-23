@@ -1,8 +1,8 @@
-// worklog-paid-modal.js
-// - 스텝3 작업자값 사용 안 함. 모달에서 별도 입력
-// - EMS가 '유상'이 되면 즉시 모달 오픈(수동 선택 + AUTO 버튼으로 자동선택 모두)
-// - 유상인데 모달 저장 안 했으면 결재요청 가로막음
-// - 저장한 유상 상세는 본문 제출(201, pending_id) 직후 /api/work-log-paid/pending/:id 로 업로드
+// worklog-paid-modal.js (mobile-friendly)
+// - EMS가 '유상'이면 모달 자동 오픈
+// - 저장 전 결재요청 가로막음
+// - 제출 직후 pendingId에 draft 업로드
+// - ★ 모바일 대응: 풀스크린 시트, 스티키 헤더/푸터, 1열 폼, 터치 사이즈↑, 배경 스크롤 락
 
 (function () {
   if (typeof window === "undefined" || !document) return;
@@ -25,27 +25,111 @@
   /* ───────── modal DOM ───────── */
   let modal, overlay;
 
+  function injectModalStylesOnce(){
+    if (document.getElementById('paid-modal-style')) return;
+    const css = `
+      /* ===== Overlay ===== */
+      #paid-overlay{
+        position:fixed; inset:0; background: rgba(0,0,0,.35);
+        -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+        display:none; z-index:9998;
+      }
+      /* ===== Base Sheet ===== */
+      #paid-modal{
+        position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        width:min(980px, 92vw); max-height:80vh; overflow:hidden;
+        background:#fff; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.25);
+        padding:0; display:none; z-index:9999;
+        display:flex; flex-direction:column;
+      }
+      /* 내부 스크롤 영역 */
+      #paid-modal .paid-scroll{
+        overflow:auto; padding:12px 16px;
+      }
+      /* 헤더/푸터 */
+      #paid-modal .paid-head{
+        position:sticky; top:0; z-index:2;
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+        padding:12px 16px; border-bottom:1px solid #e5e7eb;
+        background:linear-gradient(180deg,#fff,#fdfefe);
+      }
+      #paid-modal .paid-actions{
+        position:sticky; bottom:0; z-index:2;
+        display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+        padding:10px 12px; border-top:1px solid #e5e7eb;
+        background:linear-gradient(0deg,#fff,#fdfefe);
+      }
+      #paid-modal .btn{
+        height:42px; padding:0 14px; border-radius:12px; cursor:pointer; font-weight:700;
+        border:1px solid #d4d4d8; background:#fff;
+      }
+      #paid-modal .btn-primary{
+        background:#18181b; color:#fff; border-color:#18181b;
+      }
+      #paid-modal .btn-danger{
+        background:#fee2e2; color:#b91c1c; border-color:#fecaca;
+      }
+      #paid-modal input[type="text"], #paid-modal input[type="time"]{
+        height:44px; font-size:16px; /* iOS 줌 방지 */
+        border-radius:10px; border:1px solid #e5e7eb; padding:0 10px; width:100%;
+      }
+      #paid-modal .paid-header-grid{
+        display:grid; grid-template-columns:1.2fr repeat(4,.9fr) 72px;
+        background:#f8fafc; color:#0f172a; font-weight:700; font-size:12.5px;
+        padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px 12px 0 0;
+      }
+      #paid-rows{ border:1px solid #e5e7eb; border-top:0; border-radius:0 0 12px 12px; overflow:hidden; }
+      #paid-modal .paid-row{ padding:10px 12px; border-top:1px solid #eef2f7; }
+      #paid-modal .paid-grid{
+        display:grid; grid-template-columns:1.2fr repeat(4,.9fr) 72px; gap:8px; align-items:center;
+      }
+      #paid-modal .row-err{ color:#b42318; font-size:12px; margin-top:6px; display:none; }
+
+      /* ===== Mobile: full-screen sheet ===== */
+      @media (max-width: 640px){
+        #paid-modal{
+          top:0; left:0; transform:none;
+          width:100vw; height:100dvh; max-height:100dvh; border-radius:0;
+        }
+        #paid-modal .paid-head{ padding:12px 14px; }
+        #paid-modal .paid-scroll{ padding:10px 12px; }
+        #paid-modal .paid-header-grid{ display:none; }
+        #paid-modal .paid-grid{
+          grid-template-columns:1fr !important; /* 1열 스택 */
+        }
+        #paid-modal .btn{ height:46px; font-size:15px; }
+        #paid-modal .btn-danger{ padding:8px 12px; }
+        /* Safe-area for iOS notch */
+        #paid-modal .paid-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+        #paid-modal .paid-actions{ padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+      }
+
+      /* ===== Click-areas ===== */
+      #paid-close{ border:1px solid #e5e7eb; background:#fff; padding:8px 12px; border-radius:10px; cursor:pointer; }
+      #paid-error{ color:#b42318; font-size:12.5px; display:none; }
+
+      /* body scroll lock */
+      body.modal-open{ overflow:hidden; touch-action:none; overscroll-behavior:contain; }
+    `;
+    const style = document.createElement('style');
+    style.id = 'paid-modal-style';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
   function ensureModal() {
     if (modal) return modal;
 
+    injectModalStylesOnce();
+
     overlay = document.createElement('div');
     overlay.id = 'paid-overlay';
-    Object.assign(overlay.style, {
-      position:'fixed', inset:'0', background:'rgba(0,0,0,.35)', backdropFilter:'blur(2px)',
-      display:'none', zIndex:'9998'
-    });
 
     modal = document.createElement('div');
     modal.id = 'paid-modal';
-    Object.assign(modal.style, {
-      position:'fixed', top:'50%', left:'50%', transform:'translate(-50%,-50%)',
-      width:'min(980px, 92vw)', maxHeight:'80vh', overflow:'auto',
-      background:'#fff', borderRadius:'16px', boxShadow:'0 10px 40px rgba(0,0,0,.25)',
-      padding:'18px', display:'none', zIndex:'9999'
-    });
 
     modal.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div class="paid-head">
         <div>
           <h3 style="margin:0;font-size:18px;">유상(EMS) 상세 입력</h3>
           <p style="margin:.25rem 0 0 0;color:#475569;font-size:13px;line-height:1.4;">
@@ -54,12 +138,11 @@
             <b>작업 시작(Inform)</b> = 작업을 실제로 시작한 시각 / <b>작업 완료(Inform)</b> = 실제 종료 시각
           </p>
         </div>
-        <button type="button" id="paid-close" style="border:none;background:#f4f4f5;padding:8px 12px;border-radius:10px;cursor:pointer;">닫기</button>
+        <button type="button" id="paid-close">닫기</button>
       </div>
 
-      <!-- 컬럼 헤더 -->
-      <div style="margin-top:12px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
-        <div style="display:grid;grid-template-columns:1.2fr repeat(4,.9fr) 72px;background:#f8fafc;color:#0f172a;font-weight:600;font-size:12.5px;padding:10px 12px;">
+      <div class="paid-scroll">
+        <div class="paid-header-grid">
           <div>작업자</div>
           <div title="라인에 입실한 시각">라인 입실</div>
           <div title="라인에서 퇴실한 시각">라인 퇴실</div>
@@ -70,17 +153,15 @@
         <div id="paid-rows"></div>
       </div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:10px;flex-wrap:wrap;">
+      <div class="paid-actions">
         <div style="display:flex;gap:8px;align-items:center;">
-          <button type="button" id="paid-add-row" style="border:1px solid #d4d4d8;background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;">+ 작업자 추가</button>
-          <button type="button" id="paid-fill-inform"
-            style="border:1px solid #d4d4d8;background:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;"
-            title="첫 번째 행의 시간을 아래 행들에 복사">첫 행 시간 복사
-          </button>
+          <button type="button" id="paid-add-row" class="btn">+ 작업자 추가</button>
+          <button type="button" id="paid-fill-inform" class="btn"
+            title="첫 번째 행의 시간을 아래 행들에 복사">첫 행 시간 복사</button>
         </div>
         <div style="display:flex;gap:10px;align-items:center;">
-          <span id="paid-error" style="color:#b42318;font-size:12.5px;display:none;"></span>
-          <button type="button" id="paid-save" style="background:#18181b;color:#fff;padding:10px 14px;border-radius:12px;border:none;cursor:pointer;">저장</button>
+          <span id="paid-error"></span>
+          <button type="button" id="paid-save" class="btn btn-primary">저장</button>
         </div>
       </div>
     `;
@@ -104,34 +185,40 @@
   function openModal() {
     ensureModal();
     overlay.style.display = 'block';
-    modal.style.display = 'block';
+    modal.style.display = 'flex';
+    document.body.classList.add('modal-open');
     const host = $('#paid-rows', modal);
     if (!host.children.length) addRow(); // 비어 있으면 1행 생성
+    // 첫 입력칸 포커스
+    const firstWorker = $('.paid-row .paid-worker', modal);
+    if (firstWorker) firstWorker.focus({ preventScroll:true });
   }
+
   function closeModal() {
     if (!modal) return;
     overlay.style.display = 'none';
     modal.style.display = 'none';
+    document.body.classList.remove('modal-open');
   }
 
   function rowTemplate() {
     const id = `rw_${Math.random().toString(36).slice(2,8)}`;
     return `
-      <div class="paid-row" data-id="${id}" style="padding:10px 12px;border-top:1px solid #eef2f7;">
-        <div style="display:grid;grid-template-columns:1.2fr repeat(4,.9fr) 72px;gap:8px;align-items:center;">
-          <input type="text"  class="paid-worker" placeholder="예: 정현우" aria-label="작업자" />
+      <div class="paid-row" data-id="${id}">
+        <div class="paid-grid">
+          <input type="text"  class="paid-worker" placeholder="작업자 (예: 정현우)" aria-label="작업자" />
           <input type="time"  class="paid-ls" placeholder="예: 09:00" aria-label="라인 입실" title="라인에 들어간 시각" />
           <input type="time"  class="paid-le" placeholder="예: 18:00" aria-label="라인 퇴실" title="라인에서 나온 시각" />
           <input type="time"  class="paid-is" placeholder="예: 09:30" aria-label="작업 시작" title="작업(Inform) 시작 시각" />
           <input type="time"  class="paid-ie" placeholder="예: 17:30" aria-label="작업 완료" title="작업(Inform) 완료 시각" />
-          <button type="button" class="paid-del" style="border:none;background:#fee2e2;color:#b91c1c;padding:8px 10px;border-radius:10px;cursor:pointer;">삭제</button>
+          <button type="button" class="paid-del btn btn-danger">삭제</button>
         </div>
-        <div class="row-err" style="color:#b42318;font-size:12px;margin-top:6px;display:none;"></div>
+        <div class="row-err"></div>
       </div>
     `;
   }
-  
-    function addRow() {
+
+  function addRow() {
     const host = $('#paid-rows', modal);
     const wrap = document.createElement('div');
     wrap.innerHTML = rowTemplate();
@@ -139,18 +226,22 @@
     host.appendChild(el);
     $('.paid-del', el).addEventListener('click', () => el.remove());
 
+    // 신규행에 첫행 시간 자동 복사(있을 때만)
     const first = $$('.paid-row', modal)[0];
     if (first && first !== el) {
-        const ls = $('.paid-ls', first)?.value || '';
-        const le = $('.paid-le', first)?.value || '';
-        const is = $('.paid-is', first)?.value || '';
-        const ie = $('.paid-ie', first)?.value || '';
-        if (isHHMM(ls)) $('.paid-ls', el).value = ls;
-        if (isHHMM(le)) $('.paid-le', el).value = le;
-        if (isHHMM(is)) $('.paid-is', el).value = is;
-        if (isHHMM(ie)) $('.paid-ie', el).value = ie;
+      const ls = $('.paid-ls', first)?.value || '';
+      const le = $('.paid-le', first)?.value || '';
+      const is = $('.paid-is', first)?.value || '';
+      const ie = $('.paid-ie', first)?.value || '';
+      if (isHHMM(ls)) $('.paid-ls', el).value = ls;
+      if (isHHMM(le)) $('.paid-le', el).value = le;
+      if (isHHMM(is)) $('.paid-is', el).value = is;
+      if (isHHMM(ie)) $('.paid-ie', el).value = ie;
     }
-    }
+
+    // 모바일 UX: 새 행의 첫 입력에 포커스
+    $('.paid-worker', el)?.focus({ preventScroll:true });
+  }
 
   function showRowErr(el, msg) {
     const e = $('.row-err', el);
@@ -219,7 +310,7 @@
     return ok;
   }
 
-    function fillInformAll() {
+  function fillInformAll() {
     const rows = $$('.paid-row', modal);
     if (!rows.length) return;
 
@@ -229,22 +320,22 @@
     let src_is = $('.paid-is', rows[0])?.value || '';
     let src_ie = $('.paid-ie', rows[0])?.value || '';
 
-    // 첫 행의 작업(Inform) 시간이 비어 있으면 스텝4 값으로 보조 채움
+    // 첫 행의 작업(Inform) 시간이 비어 있으면 Step4 값으로 보조 채움
     if (!isHHMM(src_is) || !isHHMM(src_ie)) {
-        const st = $('#start_time')?.value || '';
-        const et = $('#end_time')?.value || '';
-        if (isHHMM(st)) src_is = st;
-        if (isHHMM(et)) src_ie = et;
+      const st = $('#start_time')?.value || '';
+      const et = $('#end_time')?.value || '';
+      if (isHHMM(st)) src_is = st;
+      if (isHHMM(et)) src_ie = et;
     }
 
-    // 첫 행의 라인 시간이 비어 있으면 복사하지 않음(있는 것만 복사)
+    // 있는 값만 복사
     rows.slice(1).forEach(row => {
-        if (isHHMM(src_ls)) $('.paid-ls', row).value = src_ls;
-        if (isHHMM(src_le)) $('.paid-le', row).value = src_le;
-        if (isHHMM(src_is)) $('.paid-is', row).value = src_is;
-        if (isHHMM(src_ie)) $('.paid-ie', row).value = src_ie;
+      if (isHHMM(src_ls)) $('.paid-ls', row).value = src_ls;
+      if (isHHMM(src_le)) $('.paid-le', row).value = src_le;
+      if (isHHMM(src_is)) $('.paid-is', row).value = src_is;
+      if (isHHMM(src_ie)) $('.paid-ie', row).value = src_ie;
     });
-    }
+  }
 
   function onSaveClicked() {
     if (!validateRows()) return;
@@ -257,7 +348,6 @@
 
   /* ───────── EMS 변화에 따른 모달 오픈 ───────── */
   function maybeOpenOnAutoResult() {
-    // AUTO/권고 반영 직후 상태 확인
     const paidChecked = document.getElementById('ems-paid')?.checked;
     if (paidChecked) openModal();
   }
@@ -269,10 +359,10 @@
     const warrantySel = document.getElementById('warranty');
     const checkBtn = document.getElementById('check-warranty');
 
-    // 1) 수동으로 '유상' 선택
+    // 수동 '유상'
     paid?.addEventListener('change', () => { if (paid.checked) openModal(); });
 
-    // 2) '무상' 전환 시 임시저장 초기화
+    // '무상' 전환 시 임시저장 초기화
     free?.addEventListener('change', () => {
       if (free.checked) {
         closeModal();
@@ -281,10 +371,8 @@
       }
     });
 
-    // 3) AUTO 버튼으로 유상 자동 선택되었을 때도 모달 오픈
+    // AUTO/권고 반영 후에도 열기
     auto?.addEventListener('click', () => setTimeout(maybeOpenOnAutoResult, 0));
-
-    // (보너스) WARRANTY 변경/체크 결과로 권고값이 반영될 때도 모달 오픈
     warrantySel?.addEventListener('change', () => setTimeout(maybeOpenOnAutoResult, 0));
     checkBtn?.addEventListener('click', () => setTimeout(maybeOpenOnAutoResult, 0));
   });
