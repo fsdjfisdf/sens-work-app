@@ -372,13 +372,6 @@ exports.approvePendingWorkLog = async (req, res) => {
     // ✅ 여기서 본 테이블로 이관하고, 새 workLogId를 반드시 돌려받음
     const workLogId = await workLogDao.approvePendingWorkLog(id, approver, note || '');
 
-    // ✅ 유상 상세 (pending → work_log_paid) 이관
-    try {
-      await workLogPaidController.attachPaidRowsOnApprove(id, workLogId);
-    } catch (migrateErr) {
-      console.error('[approve] paid rows migrate failed:', migrateErr);
-      // 승인 자체는 성공으로 유지 (필요시 여기에 Sentry/Slack 알림 등)
-    }
 
     // (기존) 승인 시 작업 카운트 증가
     const tr = (patch?.transfer_item ?? pending.transfer_item);
