@@ -2,7 +2,14 @@
 (function(){
   const $  = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-  const API = '/api/work-log-paid/search';   // 백엔드 검색 API (아래 2) 참고)
+    // paid-report.js 상단에 이걸로 교체
+    const API_BASE = (() => {
+    const { protocol, hostname, port } = window.location;
+    // 현재 페이지에 포트가 있으면 그대로 사용, 없으면 3001로 기본 지정
+    return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}:3001`;
+    })();
+    const API = `${API_BASE}/api/work-log-paid/search`;
+
   const PAGE = { all: [], page: 1, size: 50 };
 
   // 날짜 기본: 최근 30일

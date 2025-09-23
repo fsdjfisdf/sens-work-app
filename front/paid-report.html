@@ -11,16 +11,43 @@
 </head>
 <body>
 
-<nav>
-  <div class="inner nav-container">
-    <div class="nav-title"><a href="/readworklog">S-WORKS</a></div>
-    <div class="sign-container">
-      <a class="menu-item" href="/worklog.html">작업 등록</a>
-      <a class="menu-item" href="/readworklog">작업 이력</a>
-      <a class="menu-item" href="/paid-report.html">유상 조회/분석</a>
-    </div>
-  </div>
-</nav>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./approval.html" class="menu-item">Worklog Approval</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
 
 <main>
   <section class="inner report-wrap">
@@ -154,5 +181,36 @@
 </footer>
 
 <script src="/js/paid-report.js"></script>
+<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+        });
+</script>
 </body>
 </html>
