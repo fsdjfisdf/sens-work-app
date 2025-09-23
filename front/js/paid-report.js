@@ -144,38 +144,38 @@
       const body = $('#viewer-body');
       body.innerHTML = [
         // 기본 정보
-        kv('ID', w.id),
-        kv('작업명', w.task_name),
-        kv('작업일', fmtDate(w.task_date)),
-        kv('작업자', w.task_man),
-        kv('그룹', w.group),
-        kv('사이트', w.site),
-        kv('라인', w.line),
-        kv('장비타입', w.equipment_type),
-        kv('장비명', w.equipment_name),
-        kv('상태', w.status),
-        kv('보증/EMS', (w.warranty || '—') + (typeof w.ems==='number' ? ` / ${w.ems===1?'유상':'무상'}` : '')),
+        kv('WORK ID', w.id),
+        kv('TITLE', w.task_name),
+        kv('DATE', fmtDate(w.task_date)),
+        kv('WORKER', w.task_man),
+        kv('GROUP', w.group),
+        kv('SITE', w.site),
+        kv('LINE', w.line),
+        kv('EQ TYPE', w.equipment_type),
+        kv('EQ', w.equipment_name),
+        kv('STATUS', w.status),
+        kv('EMS', (w.warranty || '—') + (typeof w.ems==='number' ? ` / ${w.ems===1?'유상':'무상'}` : '')),
 
         // 카테고리
-        kv('작업유형1', w.work_type),
-        kv('작업유형2', w.work_type2),
-        kv('SETUP 항목', w.setup_item),
-        kv('MAINT 항목', w.maint_item),
-        kv('TRANSFER 항목', w.transfer_item),
+        kv('WORK TYPE', w.work_type),
+        kv('WORK TYPE2', w.work_type2),
+        kv('SETUP ITEM', w.setup_item),
+        kv('MAINT ITEM', w.maint_item),
+        kv('TRANSFER ITEM', w.transfer_item),
 
         // 시간/소요
-        kv('시작시각', w.start_time),
-        kv('종료시각', w.end_time),
-        kv('기록된 소요(시간)', w.task_duration),
-        kv('이동시간(분)', w.move_time),
-        kv('비가동(분)', w.none_time),
+        kv('START TIME', w.start_time),
+        kv('END TIME', w.end_time),
+        kv('TASK DURATION', w.task_duration),
+        kv('MOVING TIME', w.move_time),
+        kv('NONE TIME', w.none_time),
 
         // 문서/설명
         kv('SOP', w.SOP),
         kv('TS Guide', w.tsguide),
-        kv('작업결과', w.task_result),
-        kv('작업원인', w.task_cause),
-        kv('작업설명', w.task_description)
+        kv('RESULT', w.task_result),
+        kv('CAUSE', w.task_cause),
+        kv('ACTION', w.task_description)
       ].join('');
 
       openViewer();
