@@ -25,97 +25,97 @@
   /* ───────── modal DOM ───────── */
   let modal, overlay;
 
-  function injectModalStylesOnce(){
-    if (document.getElementById('paid-modal-style')) return;
-    const css = `
-      /* ===== Overlay ===== */
-      #paid-overlay{
-        position:fixed; inset:0; background: rgba(0,0,0,.35);
-        -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
-        display:none; z-index:9998;
-      }
-      /* ===== Base Sheet ===== */
+function injectModalStylesOnce(){
+  if (document.getElementById('paid-modal-style')) return;
+  const css = `
+    /* ===== Overlay ===== */
+    #paid-overlay{
+      position:fixed; inset:0; background: rgba(0,0,0,.35);
+      -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+      display:none; z-index:9998;
+    }
+    /* ===== Base Sheet ===== */
+    #paid-modal{
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      width:min(980px, 92vw); max-height:80vh; overflow:hidden;
+      background:#fff; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.25);
+      padding:0; display:none; z-index:9999;
+      display:flex; flex-direction:column;
+    }
+    /* 내부 스크롤 영역 */
+    #paid-modal .paid-scroll{ overflow:auto; padding:12px 16px; }
+    /* 헤더/푸터 */
+    #paid-modal .paid-head{
+      position:sticky; top:0; z-index:2;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 16px; border-bottom:1px solid #e5e7eb;
+      background:linear-gradient(180deg,#fff,#fdfefe);
+    }
+    #paid-modal .paid-actions{
+      position:sticky; bottom:0; z-index:2;
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      padding:10px 12px; border-top:1px solid #e5e7eb;
+      background:linear-gradient(0deg,#fff,#fdfefe);
+    }
+    #paid-modal .btn{
+      height:42px; padding:0 14px; border-radius:12px; cursor:pointer; font-weight:700;
+      border:1px solid #d4d4d8; background:#fff;
+    }
+    #paid-modal .btn-primary{ background:#18181b; color:#fff; border-color:#18181b; }
+    #paid-modal .btn-danger{ background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    #paid-modal input[type="text"], #paid-modal input[type="time"]{
+      height:44px; font-size:16px; /* iOS 줌 방지 */
+      border-radius:10px; border:1px solid #e5e7eb; padding:0 10px; width:100%;
+    }
+    #paid-modal .paid-header-grid{
+      display:grid; grid-template-columns:1.2fr repeat(4,.9fr) 72px;
+      background:#f8fafc; color:#0f172a; font-weight:700; font-size:12.5px;
+      padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px 12px 0 0;
+    }
+    #paid-rows{ border:1px solid #e5e7eb; border-top:0; border-radius:0 0 12px 12px; overflow:hidden; }
+    #paid-modal .paid-row{ padding:10px 12px; border-top:1px solid #eef2f7; }
+    #paid-modal .paid-grid{
+      display:grid; grid-template-columns:1.2fr repeat(4,.9fr) 72px; gap:8px; align-items:center;
+    }
+    #paid-modal .row-err{ color:#b42318; font-size:12px; margin-top:6px; display:none; }
+
+    /* ===== 필드 래퍼/라벨/힌트 ===== */
+    #paid-modal .fld{ display:flex; flex-direction:column; gap:6px; }
+    #paid-modal .fld-lbl{ display:none; font-size:12.5px; font-weight:800; color:#425269; }
+    #paid-modal .fld-hint{ display:none; font-size:12px; color:#7890a8; }
+
+    /* ===== Mobile: full-screen sheet ===== */
+    @media (max-width: 640px){
       #paid-modal{
-        position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-        width:min(980px, 92vw); max-height:80vh; overflow:hidden;
-        background:#fff; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.25);
-        padding:0; display:none; z-index:9999;
-        display:flex; flex-direction:column;
+        top:0; left:0; transform:none;
+        width:100vw; height:100dvh; max-height:100dvh; border-radius:0;
       }
-      /* 내부 스크롤 영역 */
-      #paid-modal .paid-scroll{
-        overflow:auto; padding:12px 16px;
-      }
-      /* 헤더/푸터 */
-      #paid-modal .paid-head{
-        position:sticky; top:0; z-index:2;
-        display:flex; align-items:center; justify-content:space-between; gap:12px;
-        padding:12px 16px; border-bottom:1px solid #e5e7eb;
-        background:linear-gradient(180deg,#fff,#fdfefe);
-      }
-      #paid-modal .paid-actions{
-        position:sticky; bottom:0; z-index:2;
-        display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
-        padding:10px 12px; border-top:1px solid #e5e7eb;
-        background:linear-gradient(0deg,#fff,#fdfefe);
-      }
-      #paid-modal .btn{
-        height:42px; padding:0 14px; border-radius:12px; cursor:pointer; font-weight:700;
-        border:1px solid #d4d4d8; background:#fff;
-      }
-      #paid-modal .btn-primary{
-        background:#18181b; color:#fff; border-color:#18181b;
-      }
-      #paid-modal .btn-danger{
-        background:#fee2e2; color:#b91c1c; border-color:#fecaca;
-      }
-      #paid-modal input[type="text"], #paid-modal input[type="time"]{
-        height:44px; font-size:16px; /* iOS 줌 방지 */
-        border-radius:10px; border:1px solid #e5e7eb; padding:0 10px; width:100%;
-      }
-      #paid-modal .paid-header-grid{
-        display:grid; grid-template-columns:1.2fr repeat(4,.9fr) 72px;
-        background:#f8fafc; color:#0f172a; font-weight:700; font-size:12.5px;
-        padding:10px 12px; border:1px solid #e5e7eb; border-radius:12px 12px 0 0;
-      }
-      #paid-rows{ border:1px solid #e5e7eb; border-top:0; border-radius:0 0 12px 12px; overflow:hidden; }
-      #paid-modal .paid-row{ padding:10px 12px; border-top:1px solid #eef2f7; }
-      #paid-modal .paid-grid{
-        display:grid; grid-template-columns:1.2fr repeat(4,.9fr) 72px; gap:8px; align-items:center;
-      }
-      #paid-modal .row-err{ color:#b42318; font-size:12px; margin-top:6px; display:none; }
+      #paid-modal .paid-head{ padding:12px 14px; }
+      #paid-modal .paid-scroll{ padding:10px 12px; }
+      #paid-modal .paid-header-grid{ display:none; } /* 헤더 숨김 */
+      #paid-modal .paid-grid{ grid-template-columns:1fr !important; } /* 1열 스택 */
+      #paid-modal .btn{ height:46px; font-size:15px; }
+      #paid-modal .btn-danger{ padding:8px 12px; }
+      /* safe-area */
+      #paid-modal .paid-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+      #paid-modal .paid-actions{ padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+      /* 라벨/힌트 모바일에서 표시 */
+      #paid-modal .fld-lbl, #paid-modal .fld-hint{ display:block; }
+    }
 
-      /* ===== Mobile: full-screen sheet ===== */
-      @media (max-width: 640px){
-        #paid-modal{
-          top:0; left:0; transform:none;
-          width:100vw; height:100dvh; max-height:100dvh; border-radius:0;
-        }
-        #paid-modal .paid-head{ padding:12px 14px; }
-        #paid-modal .paid-scroll{ padding:10px 12px; }
-        #paid-modal .paid-header-grid{ display:none; }
-        #paid-modal .paid-grid{
-          grid-template-columns:1fr !important; /* 1열 스택 */
-        }
-        #paid-modal .btn{ height:46px; font-size:15px; }
-        #paid-modal .btn-danger{ padding:8px 12px; }
-        /* Safe-area for iOS notch */
-        #paid-modal .paid-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
-        #paid-modal .paid-actions{ padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
-      }
+    /* close & error */
+    #paid-close{ border:1px solid #e5e7eb; background:#fff; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    #paid-error{ color:#b42318; font-size:12.5px; display:none; }
 
-      /* ===== Click-areas ===== */
-      #paid-close{ border:1px solid #e5e7eb; background:#fff; padding:8px 12px; border-radius:10px; cursor:pointer; }
-      #paid-error{ color:#b42318; font-size:12.5px; display:none; }
+    /* body scroll lock */
+    body.modal-open{ overflow:hidden; touch-action:none; overscroll-behavior:contain; }
+  `;
+  const style = document.createElement('style');
+  style.id = 'paid-modal-style';
+  style.textContent = css;
+  document.head.appendChild(style);
+}
 
-      /* body scroll lock */
-      body.modal-open{ overflow:hidden; touch-action:none; overscroll-behavior:contain; }
-    `;
-    const style = document.createElement('style');
-    style.id = 'paid-modal-style';
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
 
   function ensureModal() {
     if (modal) return modal;
@@ -201,22 +201,48 @@
     document.body.classList.remove('modal-open');
   }
 
-  function rowTemplate() {
-    const id = `rw_${Math.random().toString(36).slice(2,8)}`;
-    return `
-      <div class="paid-row" data-id="${id}">
-        <div class="paid-grid">
-          <input type="text"  class="paid-worker" placeholder="작업자 (예: 정현우)" aria-label="작업자" />
-          <input type="time"  class="paid-ls" placeholder="예: 09:00" aria-label="라인 입실" title="라인에 들어간 시각" />
-          <input type="time"  class="paid-le" placeholder="예: 18:00" aria-label="라인 퇴실" title="라인에서 나온 시각" />
-          <input type="time"  class="paid-is" placeholder="예: 09:30" aria-label="작업 시작" title="작업(Inform) 시작 시각" />
-          <input type="time"  class="paid-ie" placeholder="예: 17:30" aria-label="작업 완료" title="작업(Inform) 완료 시각" />
-          <button type="button" class="paid-del btn btn-danger">삭제</button>
+function rowTemplate() {
+  const id = `rw_${Math.random().toString(36).slice(2,8)}`;
+  return `
+    <div class="paid-row" data-id="${id}">
+      <div class="paid-grid">
+        <div class="fld">
+          <span class="fld-lbl">작업자</span>
+          <input type="text" class="paid-worker" placeholder="예: 정현우" aria-label="작업자" />
+          <small class="fld-hint">작업자 실명(필수)</small>
         </div>
-        <div class="row-err"></div>
+
+        <div class="fld">
+          <span class="fld-lbl">라인 입실</span>
+          <input type="time" class="paid-ls" placeholder="예: 09:00" aria-label="라인 입실" title="라인에 들어간 시각" />
+          <small class="fld-hint">라인에 들어간 시각(HH:MM)</small>
+        </div>
+
+        <div class="fld">
+          <span class="fld-lbl">라인 퇴실</span>
+          <input type="time" class="paid-le" placeholder="예: 18:00" aria-label="라인 퇴실" title="라인에서 나온 시각" />
+          <small class="fld-hint">라인에서 나온 시각(HH:MM)</small>
+        </div>
+
+        <div class="fld">
+          <span class="fld-lbl">작업 시작(Inform)</span>
+          <input type="time" class="paid-is" placeholder="예: 09:30" aria-label="작업 시작" title="작업(Inform) 시작 시각" />
+          <small class="fld-hint">작업을 실제로 시작한 시각(HH:MM)</small>
+        </div>
+
+        <div class="fld">
+          <span class="fld-lbl">작업 완료(Inform)</span>
+          <input type="time" class="paid-ie" placeholder="예: 17:30" aria-label="작업 완료" title="작업(Inform) 완료 시각" />
+          <small class="fld-hint">작업을 실제로 마친 시각(HH:MM)</small>
+        </div>
+
+        <button type="button" class="paid-del btn btn-danger">삭제</button>
       </div>
-    `;
-  }
+      <div class="row-err"></div>
+    </div>
+  `;
+}
+
 
   function addRow() {
     const host = $('#paid-rows', modal);
