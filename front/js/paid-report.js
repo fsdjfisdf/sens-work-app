@@ -2,13 +2,19 @@
 (function(){
   const $  = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-    // paid-report.js 상단에 이걸로 교체
-    const API_BASE = (() => {
-    const { protocol, hostname, port } = window.location;
-    // 현재 페이지에 포트가 있으면 그대로 사용, 없으면 3001로 기본 지정
-    return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}:3001`;
-    })();
-    const API = `${API_BASE}/api/work-log-paid/search`;
+  // 맨 위에 추가
+const API_BASE = 'http://3.37.73.151:3001';
+
+// 기존 fetch 부분을 이렇게
+async function fetchData(filters = {}) {
+  const qs = new URLSearchParams(filters).toString();
+  const token = localStorage.getItem('x-access-token') || '';
+  const res = await fetch(`${API_BASE}/api/work-log-paid/search?${qs}`, {
+    headers: { 'x-access-token': token }
+  });
+  if (!res.ok) throw new Error('fetch failed');
+  return res.json();
+}
 
   const PAGE = { all: [], page: 1, size: 50 };
 
