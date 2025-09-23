@@ -291,7 +291,7 @@
             try {
               const token = localStorage.getItem('x-access-token') || '';
               await axios.post(
-                `/api/work-log-paid/pending/${pendingId}`,
+                `http://3.37.73.151:3001/approval/work-log-paid/pending/${pendingId}`,
                 { rows: draft.rows },
                 { headers: { 'Content-Type':'application/json', 'x-access-token': token } }
               );
