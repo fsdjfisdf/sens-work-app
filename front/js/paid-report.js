@@ -1,40 +1,38 @@
 // paid-report.js
-(function(){
+(function () {
   const $  = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
-  // 맨 위에 추가
-const API_BASE = 'http://3.37.73.151:3001';
 
-// 기존 fetch 부분을 이렇게
-async function fetchData(filters = {}) {
-  const qs = new URLSearchParams(filters).toString();
-  const token = localStorage.getItem('x-access-token') || '';
-  const res = await fetch(`${API_BASE}/api/work-log-paid/search?${qs}`, {
-    headers: { 'x-access-token': token }
-  });
-  if (!res.ok) throw new Error('fetch failed');
-  return res.json();
-}
+  // API 베이스 (html에서 window.API_BASE 주입됨)
+  const API_BASE =
+    (typeof API !== 'undefined' ? API : null) ||
+    (window.API_BASE || 'http://3.37.73.151:3001');
 
+  // 페이지 상태
   const PAGE = { all: [], page: 1, size: 50 };
 
-  // 날짜 기본: 최근 30일
+  // ---------- 날짜 유틸 (로컬 기준 YYYY-MM-DD) ----------
+  const d2str = (d)=>{
+    const z = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+    return z.toISOString().slice(0,10);
+  };
   function setDefaultDates(){
     const to   = new Date();
     const from = new Date(); from.setDate(to.getDate()-30);
-    $('#f-date-to').value   = to.toISOString().slice(0,10);
-    $('#f-date-from').value = from.toISOString().slice(0,10);
+    $('#f-date-to').value   = d2str(to);
+    $('#f-date-from').value = d2str(from);
   }
 
+  // ---------- 시간 계산 ----------
   function toMin(hhmmOrHHMMSS){
     if(!hhmmOrHHMMSS) return 0;
-    const s = hhmmOrHHMMSS.length===5 ? hhmmOrHHMMSS+':00' : hhmmOrHHMMSS;
+    const s = hhmmOrHHMMSS.length===5 ? hhmmOrHHMMSS+':00' : hhmmOrHHMMSS; // HH:MM -> HH:MM:SS
     const [h,m] = s.split(':').map(Number);
     return (h*60 + m) | 0;
   }
   const fmtHour = (min)=> (min/60).toFixed(1)+'h';
 
-  // 필터 -> 쿼리스트링
+  // ---------- 쿼리스트링 구성 ----------
   function buildQuery(){
     const p = new URLSearchParams();
     const v = (id)=>$('#'+id).value.trim();
@@ -53,16 +51,17 @@ async function fetchData(filters = {}) {
     return p.toString();
   }
 
+  // ---------- 데이터 조회 (단일 정의) ----------
   async function fetchData(){
     const qs = buildQuery();
     const token = localStorage.getItem('x-access-token') || '';
-    const res = await fetch(`${API}?${qs}`, {
+    const res = await fetch(`${API_BASE}/api/work-log-paid/search?${qs}`, {
       headers:{ 'x-access-token': token }
     });
     if(!res.ok) throw new Error('검색 실패');
     const rows = await res.json();
 
-    // 가공 필드(분/시간) 계산
+    // 가공 필드(분) 계산
     rows.forEach(r=>{
       r._inform_min = Math.max(0, toMin(r.inform_end_time)-toMin(r.inform_start_time));
       r._line_min   = Math.max(0, toMin(r.line_end_time)-toMin(r.line_start_time));
@@ -70,15 +69,17 @@ async function fetchData(filters = {}) {
     return rows;
   }
 
+  // ---------- 상단 요약 ----------
   function renderSummary(rows){
     $('#sum-count').textContent  = rows.length.toLocaleString();
-    $('#sum-people').textContent = new Set(rows.map(r=>r.paid_worker)).size.toLocaleString();
-    const inf = rows.reduce((a,b)=>a+b._inform_min, 0);
-    const lin = rows.reduce((a,b)=>a+b._line_min,   0);
+    $('#sum-people').textContent = new Set(rows.map(r=>r.paid_worker).filter(Boolean)).size.toLocaleString();
+    const inf = rows.reduce((a,b)=>a+(b._inform_min||0), 0);
+    const lin = rows.reduce((a,b)=>a+(b._line_min||0),   0);
     $('#sum-inform').textContent = fmtHour(inf);
     $('#sum-line').textContent   = fmtHour(lin);
   }
 
+  // ---------- 테이블 ----------
   function renderTablePage(){
     const tbody = $('#paid-table tbody');
     tbody.innerHTML = '';
@@ -109,18 +110,20 @@ async function fetchData(filters = {}) {
     $('#pg-info').textContent = `${PAGE.page} / ${totalPages}`;
   }
 
+  // ---------- 셀렉트 옵션 자동 구성 ----------
   function populateSelectOptions(rows){
     function fill(id, key){
       const sel = $('#'+id);
       const cur = sel.value;
       const uniq = Array.from(new Set(rows.map(r=>r[key]).filter(Boolean))).sort();
       sel.innerHTML = `<option value="">ALL</option>` + uniq.map(v=>`<option>${v}</option>`).join('');
-      if (uniq.includes(cur)) sel.value = cur; // 유지
+      if (uniq.includes(cur)) sel.value = cur; // 기존 선택 유지
     }
     fill('f-group', 'group');
     fill('f-site',  'site');
   }
 
+  // ---------- 핸들러 ----------
   async function onSearch(){
     try{
       document.body.style.cursor='progress';
@@ -129,7 +132,6 @@ async function fetchData(filters = {}) {
       PAGE.page = 1;
       renderSummary(rows);
       renderTablePage();
-      // 그룹/사이트 옵션 자동 구축(초기/조회마다 갱신)
       populateSelectOptions(rows);
     }catch(e){
       toast('오류', e.message||'검색 실패');
@@ -149,7 +151,7 @@ async function fetchData(filters = {}) {
     setDefaultDates();
   }
 
-  // CSV 내보내기(현재 필터 결과 그대로)
+  // ---------- CSV 내보내기 ----------
   function exportCSV(){
     const rows = PAGE.all;
     if(!rows.length){ toast('안내', '내보낼 데이터가 없습니다.'); return; }
@@ -164,6 +166,7 @@ async function fetchData(filters = {}) {
       const s = (v==null?'':String(v));
       return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
     };
+
     const lines = [];
     lines.push(header.join(','));
     for(const r of rows){
@@ -173,6 +176,7 @@ async function fetchData(filters = {}) {
         r._inform_min, r._line_min, r.task_name, r.work_log_id
       ].map(esc).join(','));
     }
+
     const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
     const a = document.createElement('a');
     const from = $('#f-date-from').value || 'all';
@@ -183,7 +187,7 @@ async function fetchData(filters = {}) {
     URL.revokeObjectURL(a.href);
   }
 
-  // 토스트 간단 버전(기존 톤 차용)
+  // ---------- 토스트 ----------
   function toast(title, msg){
     const root = document.getElementById('toast-root') || (()=> {
       const d=document.createElement('div'); d.id='toast-root'; document.body.appendChild(d); return d;
@@ -195,9 +199,10 @@ async function fetchData(filters = {}) {
     setTimeout(()=> box.remove(), 3800);
   }
 
-  // 이벤트
+  // ---------- 이벤트 바인딩 ----------
   document.addEventListener('DOMContentLoaded', ()=>{
     setDefaultDates();
+
     $('#btn-search').addEventListener('click', onSearch);
     $('#btn-reset').addEventListener('click', ()=>{ onReset(); onSearch(); });
     $('#btn-export').addEventListener('click', exportCSV);
