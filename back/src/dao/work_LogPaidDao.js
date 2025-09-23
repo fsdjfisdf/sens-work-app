@@ -27,7 +27,11 @@ exports.insertPaidRowsPending = async (pendingId, rows, snap) => {
 };
 
 // 승인 시 대기 → 본테이블 이관
-exports.movePaidFromPending = async (conn, workLogId, pendingId) => {
+exports.movePaidFromPending = async (conn, pendingId, workLogId) => {
+  // 1) 동일 work_log_id 기존 행 제거 (재승인/재실행 대비)
+  await conn.query('DELETE FROM work_log_paid WHERE work_log_id = ?', [workLogId]);
+
+  // 2) pending → live 복사
   const sql = `
     INSERT INTO work_log_paid
       (work_log_id, paid_worker, line_start_time, line_end_time, inform_start_time, inform_end_time,
@@ -39,7 +43,4 @@ exports.movePaidFromPending = async (conn, workLogId, pendingId) => {
     WHERE pp.pending_id = ?
   `;
   await conn.query(sql, [workLogId, pendingId]);
-
-  // 원하면 대기 테이블 정리
-  await conn.query(`DELETE FROM work_log_paid_pending WHERE pending_id=?`, [pendingId]);
 };
