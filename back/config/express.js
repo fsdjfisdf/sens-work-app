@@ -127,11 +127,8 @@ const editRoutes = require("../src/routes/editRoute"); // 🔹 작업 이력 편
 app.use("/api", editRoutes); // 🔹 작업 이력 편집 API 라우트 연결
 const analysisRoute = require('../src/routes/analysisRoute'); // 경로는 프로젝트 구조에 맞게
 app.use('/analysis', analysisRoute);
-// 유상(EMS) 상세 라우트 장착
-const { apiRouter, approvalRouter } = require('../routes/workLogPaidRoute'); // ← config 기준 ../routes
-app.use('/api/work-log-paid', apiRouter);        // 프런트가 호출: /api/work-log-paid/pending/:id
-app.use('/approval/work-log-paid', approvalRouter); // 레거시/호환 경로
-
+const workLogPaidRouter = require('./controllers/workLogPaidController').router;
+app.use(workLogPaidRouter);
 
 
 // (위쪽 아무 데서든) 한 번만 선언
