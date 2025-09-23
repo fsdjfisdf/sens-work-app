@@ -52,11 +52,14 @@
 <main>
   <section class="inner report-wrap">
     <header class="report-head">
-      <h1>유상(EMS) 상세 조회/분석</h1>
+      <div class="head-left">
+        <h1>유상(EMS) 상세 조회/분석</h1>
+        <p class="sub">필터 선택 후 조회하세요. 행을 클릭하면 원본 작업이력 상세를 확인할 수 있습니다.</p>
+      </div>
       <div class="head-actions">
         <button id="btn-search" class="btn-primary">조회</button>
         <button id="btn-reset" class="btn-secondary">초기화</button>
-        <button id="btn-export" class="btn-primary">엑셀(CSV)로 내보내기</button>
+        <button id="btn-export" class="btn-primary">엑셀로 내보내기</button>
       </div>
     </header>
 
@@ -74,21 +77,24 @@
         <label>그룹</label>
         <select id="f-group" class="option-select">
           <option value="">ALL</option>
+          <option value="PEE1">PEE1</option>
+          <option value="PEE2">PEE2</option>
+          <option value="PSKH">PSKH</option>
         </select>
       </div>
       <div class="form-row">
         <label>사이트</label>
         <select id="f-site" class="option-select">
           <option value="">ALL</option>
+          <option value="PT">PT</option>
+          <option value="HS">HS</option>
+          <option value="IC">IC</option>
+          <option value="CJ">CJ</option>
         </select>
       </div>
       <div class="form-row">
         <label>작업자(이름 포함검색)</label>
         <input type="text" id="f-worker" placeholder="예: 홍길동">
-      </div>
-      <div class="form-row">
-        <label>라인</label>
-        <input type="text" id="f-line" placeholder="라인명">
       </div>
       <div class="form-row">
         <label>장비 타입</label>
@@ -97,14 +103,6 @@
       <div class="form-row">
         <label>장비 명</label>
         <input type="text" id="f-eq-name" placeholder="equipment_name">
-      </div>
-      <div class="form-row">
-        <label>EMS</label>
-        <select id="f-ems">
-          <option value="">ALL</option>
-          <option value="1">유상</option>
-          <option value="0">무상</option>
-        </select>
       </div>
     </div>
 
@@ -115,11 +113,7 @@
         <p class="card-v" id="sum-count">0</p>
       </div>
       <div class="card">
-        <p class="card-k">총 인원(고유)</p>
-        <p class="card-v" id="sum-people">0</p>
-      </div>
-      <div class="card">
-        <p class="card-k">작업 시간 합계(Inform)</p>
+        <p class="card-k">작업 소요시간 합계</p>
         <p class="card-v" id="sum-inform">0h</p>
       </div>
       <div class="card">
@@ -136,40 +130,22 @@
             <th>날짜</th>
             <th>그룹</th>
             <th>사이트</th>
+            <th>작업명</th>
             <th>라인</th>
             <th>장비타입</th>
             <th>장비명</th>
             <th>작업자</th>
             <th>라인입실</th>
             <th>라인퇴실</th>
+            <th>Line 체류 시간(분)</th>
             <th>작업시작</th>
             <th>작업완료</th>
-            <th>Inform(분)</th>
-            <th>Line(분)</th>
-            <th>작업명</th>
-            <th>work_log_id</th>
+            <th>작업소요시간(분)</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
-
-      <!-- 페이지네이션 -->
-      <div class="pager">
-        <button id="pg-prev" class="btn-secondary">이전</button>
-        <span id="pg-info">0 / 0</span>
-        <button id="pg-next" class="btn-secondary">다음</button>
-
-        <div class="pager-right">
-          <label for="pg-size">표시</label>
-          <select id="pg-size">
-            <option>20</option>
-            <option selected>50</option>
-            <option>100</option>
-            <option>200</option>
-          </select>
-          <span>행</span>
-        </div>
-      </div>
+      <!-- 페이지네이션 UI 제거 -->
     </div>
   </section>
 </main>
@@ -183,35 +159,34 @@
 <script>window.API_BASE = 'http://3.37.73.151:3001';</script>
 <script src="/js/paid-report.js"></script>
 <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-            const userRole = localStorage.getItem("user-role");
+  document.addEventListener("DOMContentLoaded", function() {
+    const token = localStorage.getItem("x-access-token");
+    const userRole = localStorage.getItem("user-role");
 
-            if (!token) {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            }
+    if (!token) {
+      document.querySelector(".unsigned").classList.remove("hidden");
+      document.querySelector(".signed").classList.add("hidden");
+    } else {
+      document.querySelector(".unsigned").classList.add("hidden");
+      document.querySelector(".signed").classList.remove("hidden");
+    }
 
-            if (!token || userRole !== 'admin') {
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = 'none';
-                });
-            }
+    if (!token || userRole !== 'admin') {
+      document.querySelectorAll('.admin-only').forEach(element => {
+        element.style.display = 'none';
+      });
+    }
 
-            const signOutButton = document.querySelector("#sign-out");
-
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    localStorage.removeItem("user-role");
-                    alert("로그아웃 되었습니다.");
-                    window.location.replace("./signin.html");
-                });
-            }
-        });
+    const signOutButton = document.querySelector("#sign-out");
+    if (signOutButton) {
+      signOutButton.addEventListener("click", function() {
+        localStorage.removeItem("x-access-token");
+        localStorage.removeItem("user-role");
+        alert("로그아웃 되었습니다.");
+        window.location.replace("./signin.html");
+      });
+    }
+  });
 </script>
 </body>
 </html>

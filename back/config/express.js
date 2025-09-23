@@ -230,7 +230,14 @@ app.use("/api/pci/hdw-setup", pciHdwSetupRoute);
 
 
 
-
+ const workLogReadOne = async (req,res) => {
+   const { pool } = require("./database");
+   const id = req.params.id;
+   const [rows] = await pool.query('SELECT * FROM work_log WHERE id = ?', [id]);
+   if (!rows.length) return res.status(404).json({ error:'not found' });
+   res.json(rows[0]);
+ };
+ app.get('/api/work-log/:id', workLogReadOne);
 
   
 
