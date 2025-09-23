@@ -1,4 +1,5 @@
 const { pool } = require('../../config/database');
+const paidDao = require('./work_LogPaidDao');
 
 /* ────────────────────────────────────────────────
  * 기존 work_log CRUD 유지
@@ -554,8 +555,8 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
   try {
     await connection.beginTransaction();
 
-    // ❗ 기존 쿼리의 alias 오타(pw/p)도 함께 정리
-    const [ins] = await connection.query(`
+    // 1) pending → work_log
+    const insertQuery = `
       INSERT INTO work_log (
         task_name, task_date, task_man, \`group\`, site, \`line\`,
         equipment_type, warranty, equipment_name, status,
@@ -564,25 +565,29 @@ exports.approvePendingWorkLog = async (id, approver, note) => {
         start_time, end_time, none_time, move_time, task_maint, ems
       )
       SELECT
-        p.task_name, p.task_date, p.task_man, p.\`group\`, p.site, p.\`line\`,
-        p.equipment_type, p.warranty, p.equipment_name, p.status,
-        p.task_description, p.task_cause, p.task_result, p.SOP, p.tsguide,
-        p.work_type, p.work_type2, p.setup_item, p.maint_item, p.transfer_item,
-        p.start_time, p.end_time, p.none_time, p.move_time, p.task_maint, p.ems
-      FROM work_log_pending p
-      WHERE p.id = ?
-    `, [id]);
+        pw.task_name, pw.task_date, pw.task_man, pw.\`group\`, pw.site, pw.\`line\`,
+        pw.equipment_type, pw.warranty, pw.equipment_name, pw.status,
+        pw.task_description, pw.task_cause, pw.task_result, pw.SOP, pw.tsguide,
+        pw.work_type, pw.work_type2, pw.setup_item, pw.maint_item, pw.transfer_item,
+        pw.start_time, pw.end_time, pw.none_time, pw.move_time, pw.task_maint, pw.ems
+      FROM work_log_pending pw
+      WHERE pw.id = ?
+    `;
+    const [ins] = await connection.query(insertQuery, [id]);
+    const newWorkLogId = ins.insertId;
 
-    await connection.query(`
+    // 2) 유상 상세 이관 (있을 경우)
+    await paidDao.movePaidFromPending(connection, newWorkLogId, id);
+
+    // 3) pending 상태 수정
+    const updQuery = `
       UPDATE work_log_pending
       SET approval_status='approved', approver=?, approval_note=?, approved_at=NOW()
       WHERE id=?
-    `, [approver || '', note || '', id]);
+    `;
+    await connection.query(updQuery, [approver || '', note || '', id]);
 
     await connection.commit();
-
-    // ✅ 새로 생성된 work_log의 ID 반환
-    return ins.insertId;
   } catch (e) {
     await connection.rollback();
     throw e;
