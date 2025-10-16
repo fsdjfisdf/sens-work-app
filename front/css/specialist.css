@@ -1,0 +1,7 @@
+/* Specialist 전용 소소한 추가 스타일 (기본 테마는 pci_supran.css 사용) */
+.specialist-filters { grid-template-columns: repeat(6, minmax(160px,1fr)); }
+.quick { display:flex; gap:6px; flex-wrap:wrap; }
+.result { color:#475569; font-size:12.5px; }
+@media (max-width:960px){
+  .specialist-filters { grid-template-columns: repeat(2, minmax(140px,1fr)); }
+}

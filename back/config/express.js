@@ -130,6 +130,10 @@ app.use('/analysis', analysisRoute);
 const workLogPaidRoute = require('../src/routes/workLogPaidRoute');
 app.use('/api/work-log-paid', workLogPaidRoute);
 
+// express.js 라우트들 아래쪽 어딘가에 추가
+const specialistIntegerRoute = require('../src/routes/specialistIntegerRoute');
+app.use('/api/specialist/integer', specialistIntegerRoute);
+
 
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
