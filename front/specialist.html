@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>S-WORKS | Specialist (교육 건수 편집)</title>
+
+  <link rel="stylesheet" href="./css/pci_supran.css"/>
+  <link rel="stylesheet" href="./css/specialist.css"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
+        </div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span><span></span><span></span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./specialist.html" class="menu-item">교육 건수 편집</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section class="panel">
+      <div class="panel-header">
+        <h2>교육 건수 편집 (INTEGER)</h2>
+        <div class="hint">관리자만 접근 가능합니다. 편집 즉시 DB 반영 + 감사 로그 기록</div>
+      </div>
+
+      <div class="filters specialist-filters">
+        <div class="field">
+          <label for="selWorker">작업자 선택</label>
+          <input id="selWorker" list="worker-list" class="input" placeholder="예: 정현우"/>
+          <datalist id="worker-list"></datalist>
+        </div>
+
+        <div class="field">
+          <label for="q">항목 검색</label>
+          <input id="q" class="input" placeholder="예: ROBOT, VALVE, PIN ..."/>
+        </div>
+
+        <div class="field">
+          <label for="mode">수정 방식</label>
+          <select id="mode" class="input">
+            <option value="set">지정 (Set)</option>
+            <option value="inc">증가 (+=)</option>
+            <option value="dec">감소 (-=)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="val">값</label>
+          <input id="val" class="input" type="number" step="1" value="1"/>
+        </div>
+
+        <div class="field">
+          <label for="reason">사유(감사 로그)</label>
+          <input id="reason" class="input" placeholder="예: 교육 실적 정정"/>
+        </div>
+
+        <div class="field actions">
+          <button id="btnLoad" class="btn">불러오기</button>
+          <button id="btnApplySelected" class="btn primary">선택 항목 일괄 적용</button>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table" id="tblItems">
+          <thead>
+            <tr>
+              <th style="width:36px"><input type="checkbox" id="chkAll"/></th>
+              <th>중분류</th>
+              <th>작업 항목</th>
+              <th style="width:120px">현재 교육 건수</th>
+              <th style="width:160px">빠른 수정</th>
+              <th>결과</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="inner">
+      <span>© S-WORKS · Specialist Editor</span>
+    </div>
+  </footer>
+
+  <script src="./js/specialist.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+        document.querySelector(".unsigned")?.classList.remove("hidden");
+        document.querySelector(".signed")?.classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned")?.classList.add("hidden");
+        document.querySelector(".signed")?.classList.remove("hidden");
+      }
+      if (!token || userRole !== 'admin') {
+        //alert("관리자만 접근 가능합니다.");
+        //window.location.replace("./signin.html");
+        //return;
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      signOutButton?.addEventListener("click", function() {
+        localStorage.removeItem("x-access-token");
+        localStorage.removeItem("user-role");
+        alert("로그아웃 되었습니다.");
+        window.location.replace("./signin.html");
+      });
+      menuBtn?.addEventListener('click', ()=> menuBar.classList.toggle('open'));
+      document.addEventListener('click', (e)=>{
+        if (!menuBtn.contains(e.target) && !menuBar.contains(e.target)) menuBar.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>

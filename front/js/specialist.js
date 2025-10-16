@@ -1,4 +1,9 @@
 /* Specialist — 교육 건수 편집기 (INTEGER) */
+const token = localStorage.getItem('x-access-token');
+if (token) {
+  axios.defaults.headers.common['x-access-token'] = token;     // 서버가 주로 읽는 헤더
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // 혹시 모를 Bearer 대응
+}
 const $ = (id)=>document.getElementById(id);
 const el = {
   selWorker: $("selWorker"),
