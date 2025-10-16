@@ -140,6 +140,9 @@ app.use("/api/specialist/supran", specialistSupranRoute);
 const specialistPreciaRoute = require("../src/routes/specialistPreciaRoute");
 app.use("/api/specialist/precia", specialistPreciaRoute);
 
+const specialistSupraxpRoute = require("../src/routes/specialistSupraxpRoute");
+app.use("/api/specialist/supraxp", specialistSupraxpRoute);
+
 
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
