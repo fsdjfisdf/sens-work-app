@@ -8,7 +8,7 @@ function qi(identifier) {
 }
 
 /** 테이블/컬럼 상수 */
-const TBL_COUNT = "task_count_myservice";  // ← 사용자 요청 반영
+const TBL_COUNT = "PRECIA_MAINT_COUNT";  // ← 사용자 요청 반영
 const COL_ITEM  = "작업_항목";
 
 /** 열(작업자) 존재 유무 */
