@@ -1,23 +1,33 @@
 const express = require("express");
 const router = express.Router();
-const ctrl = require("../specialist/supran/specialistSupranController");
-const jwtMiddleware = require("../../config/jwtMiddleware");
+const jwtMiddleware = require("../../config/jwtMiddleware"); // 경로는 프로젝트에 맞게 조정
+const ctrl = require("../specialist/supran/specialistController");
 
-// 관리자만
+// 관리자 확인 미들웨어 (jwtMiddleware가 req.user 주입한다고 가정)
 function requireAdmin(req, res, next){
-  // jwtMiddleware가 req.verifiedToken 또는 req.user 로 역할을 심어주는 구조라면 아래 중 하나에 맞춰 쓰세요.
-  const role = req.user?.role || req.verifiedToken?.role || req.headers["user-role"];
-  if (role === "admin") return next();
-  return res.status(403).json({ message: "forbidden" });
+  try{
+    const role = req.user?.role || req.user?.ROLE || req.user?.Role;
+    if (role === 'admin') return next();
+    return res.status(403).json({ message: "forbidden_admin_only" });
+  }catch(e){
+    return res.status(401).json({ message: "unauthorized" });
+  }
 }
 
-// 작업자(열) 목록
-router.get("/workers", jwtMiddleware, requireAdmin, ctrl.getWorkers);
+// 전체 라우트에 인증
+router.use(jwtMiddleware);
 
-// 특정 작업자 전 항목
-router.get("/edu", jwtMiddleware, requireAdmin, ctrl.getEducationByWorker);
+// 조회
+router.get("/workers", requireAdmin, ctrl.getWorkers);
+router.get("/edu",     requireAdmin, ctrl.getEducationByWorker); // ?worker=정현우
 
-// 셀 수정
-router.patch("/cell", jwtMiddleware, requireAdmin, ctrl.setCell);
+// 셀 수정 (Set/Inc/Dec)
+router.patch("/cell",  requireAdmin, ctrl.patchCell);
+
+// (선택) 신규 작업자 컬럼 생성만 따로
+router.post("/column", requireAdmin, ctrl.ensureWorkerColumn);
+
+// (선택) 신규 항목 행 생성만 따로
+router.post("/item",   requireAdmin, ctrl.ensureItemRow);
 
 module.exports = router;
