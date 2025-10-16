@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const jwtMiddleware = require("../../config/jwtMiddleware"); // 경로는 프로젝트에 맞게 조정
-const ctrl = require("../specialist/supran/specialistController");
+const ctrl = require("../specialist/supran/specialistSupranController");
 
 // 관리자 확인 미들웨어 (jwtMiddleware가 req.user 주입한다고 가정)
 function requireAdmin(req, res, next){
