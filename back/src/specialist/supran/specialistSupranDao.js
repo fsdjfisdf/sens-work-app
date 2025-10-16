@@ -1,5 +1,5 @@
 // SUPRA N 교육(가산) 횟수 편집 DAO
-const { pool } = require("../../../../config/database");
+const { pool } = require("../../../config/database");
 
 /** 안전한 컬럼 식별자 (백틱 이스케이프) */
 function qi(identifier){
