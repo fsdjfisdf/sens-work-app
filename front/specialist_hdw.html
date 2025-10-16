@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>S-WORKS | Specialist (HDW 교육 횟수)</title>
+
+  <link rel="stylesheet" href="./css/pci_supran.css"/>
+  <link rel="stylesheet" href="./css/specialist.css"/>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
+        </div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn" aria-label="메뉴 열기">
+            <div class="menu-icon"><span></span><span></span><span></span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./specialist_hdw.html" class="menu-item">HDW 교육 편집</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- 상단 툴바 -->
+    <div class="sticky-toolbar">
+      <div class="toolbar-grid">
+        <div class="tool">
+          <label for="selWorker">작업자</label>
+          <input id="selWorker" list="worker-list" class="input" placeholder="예: 정현우" autocomplete="off"/>
+          <datalist id="worker-list"></datalist>
+        </div>
+        <div class="tool">
+          <label for="filter">항목 검색</label>
+          <input id="filter" class="input" placeholder="예: ROBOT, VALVE ..." autocomplete="off"/>
+        </div>
+        <div class="tool tool-actions">
+          <button id="btnLoad" class="btn primary">조회</button>
+          <button id="btnReload" class="btn">새로고침</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>교육(가산) 횟수 편집 — HDW</h2>
+        <div class="hint">사람만 고르고 ‘조회’ → 전체 항목이 한 번에 뜹니다. 숫자 수정 후 <b>저장</b>을 누르세요.</div>
+      </div>
+
+      <div class="responsive-wrap">
+        <!-- 데스크톱 -->
+        <div class="table-scroll desktop-only">
+          <div class="loading-line" aria-hidden="true"></div>
+          <table class="table sticky-head" id="tbl">
+            <thead>
+            <tr>
+              <th style="width:160px">중분류</th>
+              <th>작업 항목</th>
+              <th style="width:160px">현재 값</th>
+              <th style="width:200px">수정</th>
+              <th style="width:180px">작업</th>
+              <th>상태</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- 모바일 -->
+        <div id="cards" class="cards-list mobile-only"></div>
+      </div>
+
+      <div class="panel subpanel">
+        <div class="panel-header">
+          <h3>최근 변경</h3>
+        </div>
+        <div class="resultline" id="resultLine">-</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 토스트 -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <footer class="footer">
+    <div class="inner">
+      <span>© S-WORKS · Specialist (HDW)</span>
+    </div>
+  </footer>
+
+  <script src="./js/specialist_hdw.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
+
+      if (!token) {
+        document.querySelector(".unsigned")?.classList.remove("hidden");
+        document.querySelector(".signed")?.classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned")?.classList.add("hidden");
+        document.querySelector(".signed")?.classList.remove("hidden");
+      }
+      if (!token || userRole !== 'admin') {
+        alert("관리자만 접근 가능합니다.");
+        window.location.replace("./signin.html");
+        return;
+      }
+
+      const signOutButton = document.querySelector("#sign-out");
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
+
+      signOutButton?.addEventListener("click", function() {
+        localStorage.removeItem("x-access-token");
+        localStorage.removeItem("user-role");
+        alert("로그아웃 되었습니다.");
+        window.location.replace("./signin.html");
+      });
+
+      menuBtn?.addEventListener('click', ()=> menuBar.classList.toggle('open'));
+      document.addEventListener('click', (e)=>{
+        if (!menuBtn.contains(e.target) && !menuBar.contains(e.target)) menuBar.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>

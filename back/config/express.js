@@ -149,6 +149,8 @@ app.use("/api/specialist/ecolite", specialistEcoliteRoute);
 const specialistGenevaRoute = require("../src/routes/specialistGenevaRoute");
 app.use("/api/specialist/geneva", specialistGenevaRoute);
 
+const specialistHdwRoute = require("../src/routes/specialistHdwRoute");
+app.use("/api/specialist/hdw", specialistHdwRoute);
 
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
