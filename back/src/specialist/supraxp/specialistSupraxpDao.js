@@ -86,28 +86,10 @@ exports.setCell = async ({ item, worker, value }) => {
 
 /** 6) 감사 로그 (없으면 무시) */
 exports.insertAudit = async ({ actor, worker, item, prev, next, mode, reason, ip }) => {
-  // 필요 시 먼저 아래 테이블을 생성하세요 (권장):
-  // CREATE TABLE SUPRAXP_EDU_AUDIT(
-  //   id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  //   at DATETIME NOT NULL,
-  //   actor VARCHAR(100),
-  //   worker VARCHAR(100),
-  //   item VARCHAR(200),
-  //   prev DECIMAL(10,2),
-  //   next DECIMAL(10,2),
-  //   mode VARCHAR(10),
-  //   reason VARCHAR(255),
-  //   ip VARCHAR(64)
-  // ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
   const sql = `
     INSERT INTO SUPRAXP_EDU_AUDIT
-      (at, actor, worker, item, prev, next, mode, reason, ip)
-    VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)
+    (acted_at, actor, worker, item, prev_value, next_value, mode, reason, ip)
+    VALUES (NOW(), ?,?,?,?,?,?,?,?)
   `;
-  try {
-    await pool.query(sql, [actor, worker, item, prev, next, mode, reason || null, ip || null]);
-  } catch (_e) {
-    // 감사 테이블이 없다면 조용히 무시 (요구 시 에러로 바꿔도 됨)
-  }
+  await pool.query(sql, [actor, worker, item, prev, next, mode, reason, ip]);
 };
