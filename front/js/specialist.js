@@ -1,41 +1,50 @@
-/* Specialist — 교육 건수 편집기 (INTEGER) */
-const token = localStorage.getItem('x-access-token');
-if (token) {
-  axios.defaults.headers.common['x-access-token'] = token;     // 서버가 주로 읽는 헤더
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // 혹시 모를 Bearer 대응
-}
+/* Specialist — 사람 선택 → 모든 항목 값을 한 화면에서 직접 수정/저장 (반응형 UI) */
 const $ = (id)=>document.getElementById(id);
 const el = {
   selWorker: $("selWorker"),
   workerList: $("worker-list"),
-  q: $("q"),
-  mode: $("mode"),
-  val: $("val"),
-  reason: $("reason"),
+  filter: $("filter"),
   btnLoad: $("btnLoad"),
-  btnApplySelected: $("btnApplySelected"),
-  chkAll: $("chkAll"),
-  tbody: $("tbody")
+  btnReload: $("btnReload"),
+  tbody: $("tbody"),
+  cards: $("cards"),
+  resultLine: $("resultLine"),
+  toast: $("toast"),
 };
 
-const CATS = [ // UI 분류용(PCI INTEGER와 동일 분류)
-  { cat:"Swap Kit", items:["SWAP KIT","GAS LINE & GAS FILTER","TOP FEED THROUGH","GAS FEED THROUGH","CERAMIC PARTS","MATCHER","PM BAFFLE","AM BAFFLE","FLANGE ADAPTOR"] },
-  { cat:"Slot Valve", items:["SLOT VALVE ASSY(HOUSING)","SLOT VALVE","DOOR VALVE"] },
-  { cat:"Pendulum Valve", items:["PENDULUM VALVE"] },
-  { cat:"Pin Motor & CTR", items:["PIN ASSY MODIFY","MOTOR & CONTROLLER","PIN 구동부 ASSY","PIN BELLOWS","SENSOR"] },
-  { cat:"Step Motor & CTR", items:["STEP MOTOR & CONTROLLER","CASSETTE & HOLDER PAD","BALL SCREW ASSY","BUSH","MAIN SHAFT","BELLOWS"] },
-  { cat:"Robot", items:["EFEM ROBOT REP","TM ROBOT REP","EFEM ROBOT TEACHING","TM ROBOT TEACHING","TM ROBOT SERVO PACK"] },
-  { cat:"Vac. Line", items:["UNDER COVER","VAC. LINE","BARATRON GAUGE","PIRANI GAUGE","CONVACTRON GAUGE","MANUAL VALVE","PNEUMATIC VALVE","ISOLATION VALVE","VACUUM BLOCK","CHECK VALVE","EPC","PURGE LINE REGULATOR"] },
-  { cat:"Chuck", items:["COOLING CHUCK","HEATER CHUCK"] },
-  { cat:"Rack", items:["GENERATOR"] },
-  { cat:"Board", items:["D-NET BOARD","SOURCE BOX BOARD","INTERFACE BOARD","SENSOR BOARD","PIO SENSOR BOARD","AIO CALIBRATION[PSK BOARD]","AIO CALIBRATION[TOS BOARD]"] },
-  { cat:"Sensor", items:["CODED SENSOR","GAS BOX DOOR SENSOR","LASER SENSOR AMP"] },
-  { cat:"ETC", items:["HE LEAK CHECK","DIFFUSER","LOT 조사","GAS SPRING","LP ESCORT"] }
+const token = localStorage.getItem('x-access-token');
+if (token) {
+  axios.defaults.headers.common['x-access-token'] = token;
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+}
+
+// 카테고리 그룹 (PCI Integer 프론트와 동일)
+const CATS = [
+  { category: "Swap Kit", items: ["SWAP KIT","GAS LINE & GAS FILTER","TOP FEED THROUGH","GAS FEED THROUGH","CERAMIC PARTS","MATCHER","PM BAFFLE","AM BAFFLE","FLANGE ADAPTOR"] },
+  { category: "Slot Valve", items: ["SLOT VALVE ASSY(HOUSING)","SLOT VALVE","DOOR VALVE"] },
+  { category: "Pendulum Valve", items: ["PENDULUM VALVE"] },
+  { category: "Pin Motor & CTR", items: ["PIN ASSY MODIFY","MOTOR & CONTROLLER","PIN 구동부 ASSY","PIN BELLOWS","SENSOR"] },
+  { category: "Step Motor & CTR", items: ["STEP MOTOR & CONTROLLER","CASSETTE & HOLDER PAD","BALL SCREW ASSY","BUSH","MAIN SHAFT","BELLOWS"] },
+  { category: "Robot", items: ["EFEM ROBOT REP","TM ROBOT REP","EFEM ROBOT TEACHING","TM ROBOT TEACHING","TM ROBOT SERVO PACK"] },
+  { category: "Vac. Line", items: ["UNDER COVER","VAC. LINE","BARATRON GAUGE","PIRANI GAUGE","CONVACTRON GAUGE","MANUAL VALVE","PNEUMATIC VALVE","ISOLATION VALVE","VACUUM BLOCK","CHECK VALVE","EPC","PURGE LINE REGULATOR"] },
+  { category: "Chuck", items: ["COOLING CHUCK","HEATER CHUCK"] },
+  { category: "Rack", items: ["GENERATOR"] },
+  { category: "Board", items: ["D-NET BOARD","SOURCE BOX BOARD","INTERFACE BOARD","SENSOR BOARD","PIO SENSOR BOARD","AIO CALIBRATION[PSK BOARD]","AIO CALIBRATION[TOS BOARD]"] },
+  { category: "Sensor", items: ["CODED SENSOR","GAS BOX DOOR SENSOR","LASER SENSOR AMP"] },
+  { category: "ETC", items: ["HE LEAK CHECK","DIFFUSER","LOT 조사","GAS SPRING","LP ESCORT"] }
 ];
+const ITEM2CAT = (()=>{ const m={}; for(const g of CATS) for(const it of g.items) m[it]=g.category; return m; })();
 
-const ITEM2CAT = (()=>{ const m={}; for(const g of CATS) for(const it of g.items) m[it]=g.cat; return m; })();
+function esc(s){ s = (s==null?"":String(s)); return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]); }
+const debounce = (fn, ms=200)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
 
-function esc(s){ s = (s==null?"":String(s)); return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function showToast(text, type="ok"){
+  const box = el.toast;
+  if (!box) return;
+  box.textContent = text;
+  box.className = `toast ${type} show`;
+  setTimeout(()=> box.classList.remove("show"), 1800);
+}
 
 async function loadWorkers(){
   const { data } = await axios.get("/api/specialist/integer/workers");
@@ -43,161 +52,259 @@ async function loadWorkers(){
   el.workerList.innerHTML = list.map(n=>`<option value="${esc(n)}"></option>`).join("");
 }
 
-async function fetchCounts(worker){
+async function fetchAll(worker){
   const { data } = await axios.get("/api/specialist/integer/edu?worker="+encodeURIComponent(worker));
   return data?.rows || []; // [{item, add_count}]
 }
 
+// ===== 렌더: 데스크톱 테이블 =====
 function renderTable(rows){
-  const q = (el.q.value||"").trim().toLowerCase();
-  const filtered = rows.filter(r=> !q || r.item.toLowerCase().includes(q));
+  const q = (el.filter.value||"").trim().toLowerCase();
+  const map = new Map(rows.map(r=>[r.item, Number(r.add_count||0)]));
   const frag = document.createDocumentFragment();
 
-  // 카테고리 헤더 + 행
-  let lastCat = null;
-  for (const r of filtered){
-    const cat = ITEM2CAT[r.item] || "-";
-    if (cat !== lastCat){
-      const trCat = document.createElement("tr");
-      trCat.className = "cat-row";
-      const td = document.createElement("td");
-      td.colSpan = 6;
-      td.textContent = cat;
-      trCat.appendChild(td);
-      frag.appendChild(trCat);
-      lastCat = cat;
-    }
+  for (const g of CATS){
+    const visible = g.items.filter(it=> !q || it.toLowerCase().includes(q));
+    if (!visible.length) continue;
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><input type="checkbox" class="rowchk" data-item="${esc(r.item)}"/></td>
-      <td><span class="badge">${esc(cat)}</span></td>
-      <td>${esc(r.item)}</td>
-      <td class="mono" data-item="${esc(r.item)}"><strong>${Number(r.add_count||0)}</strong></td>
-      <td>
-        <div class="quick">
-          <button class="btn sm" data-act="dec" data-item="${esc(r.item)}">-1</button>
-          <button class="btn sm" data-act="inc" data-item="${esc(r.item)}">+1</button>
-          <button class="btn sm ghost" data-act="zero" data-item="${esc(r.item)}">0으로</button>
-        </div>
-      </td>
-      <td class="result" data-item="${esc(r.item)}"></td>
-    `;
-    frag.appendChild(tr);
+    // 그룹 헤더
+    const trh = document.createElement("tr");
+    trh.className = "cat-row";
+    const td = document.createElement("td");
+    td.colSpan = 6;
+    td.innerHTML = `<span class="caret">▶</span>${esc(g.category)}`;
+    trh.appendChild(td);
+    trh.addEventListener("click", ()=>{
+      trh.classList.toggle("collapsed");
+      // 다음 행들 중 같은 카테고리 모두 토글
+      let n = trh.nextElementSibling;
+      while(n && !n.classList.contains("cat-row")){
+        n.classList.toggle("hidden-row");
+        n = n.nextElementSibling;
+      }
+    });
+    frag.appendChild(trh);
+
+    for (const it of visible){
+      const v = map.get(it) ?? 0;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><span class="badge">${esc(ITEM2CAT[it]||g.category)}</span></td>
+        <td>${esc(it)}</td>
+        <td class="mono"><strong data-cur="${esc(it)}">${v}</strong></td>
+        <td>
+          <div class="editbox">
+            <button class="btn step" data-step="-1" aria-label="감소">−</button>
+            <input type="number" class="input input-sm" data-edit="${esc(it)}" value="${v}" step="1" inputmode="numeric" pattern="[0-9]*" />
+            <button class="btn step" data-step="+1" aria-label="증가">＋</button>
+          </div>
+        </td>
+        <td>
+          <button class="btn sm savebtn" data-save="${esc(it)}">저장</button>
+        </td>
+        <td class="result" data-msg="${esc(it)}"></td>
+      `;
+      frag.appendChild(tr);
+    }
   }
   el.tbody.innerHTML = "";
   el.tbody.appendChild(frag);
 }
 
+// ===== 렌더: 모바일 카드 =====
+function renderCards(rows){
+  const q = (el.filter.value||"").trim().toLowerCase();
+  const map = new Map(rows.map(r=>[r.item, Number(r.add_count||0)]));
+  const frag = document.createDocumentFragment();
+
+  for (const g of CATS){
+    const visible = g.items.filter(it=> !q || it.toLowerCase().includes(q));
+    if (!visible.length) continue;
+
+    // 섹션 헤더
+    const sec = document.createElement("div");
+    sec.className = "cards-section";
+    sec.innerHTML = `
+      <div class="cards-section-head">
+        <button class="section-toggle" aria-label="${esc(g.category)} 접기/펼치기"><span>▶</span>${esc(g.category)}</button>
+      </div>
+      <div class="cards-section-body"></div>
+    `;
+    frag.appendChild(sec);
+
+    const body = sec.querySelector(".cards-section-body");
+    for (const it of visible){
+      const v = map.get(it) ?? 0;
+      const card = document.createElement("div");
+      card.className = "card-row";
+      card.innerHTML = `
+        <div class="row-top">
+          <span class="badge">${esc(ITEM2CAT[it]||g.category)}</span>
+          <b class="item-name">${esc(it)}</b>
+        </div>
+        <div class="row-mid">
+          <div class="kv">
+            <div class="k">현재</div><div class="v mono"><strong data-cur="${esc(it)}">${v}</strong></div>
+          </div>
+          <div class="editbox">
+            <button class="btn step" data-step="-1" aria-label="감소">−</button>
+            <input type="number" class="input input-sm" data-edit="${esc(it)}" value="${v}" step="1" inputmode="numeric" pattern="[0-9]*" />
+            <button class="btn step" data-step="+1" aria-label="증가">＋</button>
+          </div>
+        </div>
+        <div class="row-btm">
+          <button class="btn sm savebtn wfull" data-save="${esc(it)}">저장</button>
+          <div class="result" data-msg="${esc(it)}"></div>
+        </div>
+      `;
+      body.appendChild(card);
+    }
+
+    // 섹션 토글
+    const toggle = sec.querySelector(".section-toggle");
+    toggle.addEventListener("click", ()=>{
+      sec.classList.toggle("collapsed");
+    });
+  }
+
+  el.cards.innerHTML = "";
+  el.cards.appendChild(frag);
+}
+
+function isMobile(){
+  return window.matchMedia("(max-width: 960px)").matches;
+}
+
+function render(rows){
+  if (isMobile()){
+    el.cards.classList.remove("hidden");
+    document.querySelector(".desktop-only")?.classList.add("hidden");
+    renderCards(rows);
+  }else{
+    el.cards.classList.add("hidden");
+    document.querySelector(".desktop-only")?.classList.remove("hidden");
+    renderTable(rows);
+  }
+}
+
 async function load(){
   const worker = el.selWorker.value.trim();
   if (!worker) return alert("작업자를 선택하세요.");
-  const rows = await fetchCounts(worker);
-  // 기준에 있는 모든 항목을 보이게(없으면 0으로)
-  const map = new Map(rows.map(r=>[r.item, r.add_count]));
-  const full = [];
-  for (const g of CATS){
-    for (const it of g.items){
-      full.push({ item: it, add_count: map.has(it)? map.get(it): 0 });
-    }
+  try{
+    startLine();
+    const rows = await fetchAll(worker);
+    render(rows);
+  }catch(e){
+    console.error(e);
+    alert("데이터 로드 실패: "+(e.response?.data?.message || e.message));
+  }finally{
+    stopLine();
   }
-  renderTable(full);
 }
 
-async function applyOne(item, mode, value, reason){
+function startLine(){
+  document.querySelector(".table-scroll .loading-line")?.classList.add("is-loading");
+}
+function stopLine(){
+  document.querySelector(".table-scroll .loading-line")?.classList.remove("is-loading");
+}
+
+async function saveOne(item){
   const worker = el.selWorker.value.trim();
-  const body = { worker, item, mode, value: Number(value||0), reason: reason||"" };
-  const { data } = await axios.patch("/api/specialist/integer/cell", body);
-  return data; // {item, worker, prev, next}
+  if (!worker) return alert("작업자를 먼저 선택하세요.");
+  const selector = `input[data-edit="${CSS.escape(item)}"]`;
+  const input = (isMobile() ? el.cards : el.tbody).querySelector(selector);
+  if (!input) return;
+
+  // 유효성
+  let value = Number(input.value||0);
+  if (!Number.isFinite(value) || value < 0) value = Math.max(0, Math.floor(Number(input.value)||0));
+  input.value = String(value);
+
+  const btn = (isMobile() ? el.cards : el.tbody).querySelector(`button[data-save="${CSS.escape(item)}"]`);
+  const msg = (isMobile() ? el.cards : el.tbody).querySelector(`[data-msg="${CSS.escape(item)}"]`);
+  const cur = (isMobile() ? el.cards : el.tbody).querySelector(`strong[data-cur="${CSS.escape(item)}"]`);
+
+  btn?.setAttribute("disabled","true");
+  msg && (msg.textContent = "저장 중…");
+  try{
+    // 낙관적 업데이트 느낌으로 먼저 표시
+    const prevShown = cur ? Number(cur.textContent||0) : 0;
+
+    const { data } = await axios.patch("/api/specialist/integer/cell", {
+      worker, item, mode: "set", value, reason: "specialist 편집"
+    });
+
+    // 실제 결과 반영
+    if (cur) cur.textContent = String(data.next);
+    input.value = String(data.next);
+    msg && (msg.textContent = `${dayjs(data.at).format("MM-DD HH:mm")} 저장됨`);
+    el.resultLine.textContent = `${dayjs(data.at).format("YYYY-MM-DD HH:mm")} — [${data.worker}] ${data.item} : ${data.prev} → ${data.next} (set)`;
+
+    // 하이라이트
+    input.closest("tr, .card-row")?.classList.add("row-saved");
+    setTimeout(()=> input.closest("tr, .card-row")?.classList.remove("row-saved"), 900);
+
+    showToast(`저장 완료: ${item} ${prevShown}→${data.next}`, "ok");
+  }catch(e){
+    console.error(e);
+    msg && (msg.textContent = "실패");
+    showToast(`저장 실패: ${e.response?.data?.message || e.message}`, "bad");
+  }finally{
+    btn?.removeAttribute("disabled");
+  }
+}
+
+function onStepClick(target){
+  const step = Number(target.dataset.step || 0);
+  const wrap = target.closest(".editbox");
+  const inp = wrap?.querySelector("input[data-edit]");
+  if (!inp) return;
+  let v = Number(inp.value||0);
+  if (!Number.isFinite(v)) v = 0;
+  v = Math.max(0, v + step);
+  inp.value = String(v);
 }
 
 document.addEventListener("DOMContentLoaded", async ()=>{
-  try{
-    await loadWorkers();
-  }catch(e){
-    console.error(e);
-    alert("작업자 목록 로드 실패");
-  }
+  try{ await loadWorkers(); }catch(e){ console.error(e); }
+
+  // 반응형 렌더 전환
+  window.addEventListener("resize", debounce(()=>{
+    // 현재 DOM 값을 기반으로 재렌더
+    const inputs = [...document.querySelectorAll('input[data-edit]')];
+    if (inputs.length){
+      const data = inputs.map(inp=>({ item: inp.dataset.edit, add_count: Number(inp.value||0) }));
+      render(data);
+    }
+  }, 150));
+
+  // 검색 필터
+  el.filter.addEventListener("input", debounce(()=>{
+    const inputs = [...document.querySelectorAll('input[data-edit]')];
+    if (!inputs.length) return;
+    const rows = inputs.map(inp=>({ item: inp.dataset.edit, add_count: Number(inp.value||0) }));
+    render(rows);
+  }, 120));
 
   el.btnLoad.addEventListener("click", load);
-  el.q.addEventListener("input", ()=>{ // 단순 필터
-    const tds = [...el.tbody.querySelectorAll("td[data-item]")];
-    if (!tds.length) return;
-    const rows = [];
-    const seen = new Set();
-    // 현재 DOM에서 재구성
-    for (const td of tds){
-      const item = td.dataset.item;
-      if (seen.has(item)) continue;
-      seen.add(item);
-      const val = Number(td.textContent || 0);
-      rows.push({ item, add_count: val });
-    }
-    renderTable(rows);
+  el.btnReload.addEventListener("click", load);
+
+  // 테이블/카드 공통 이벤트 위임
+  const root = document.body;
+  root.addEventListener("click", (e)=>{
+    // stepper
+    const stepBtn = e.target.closest(".btn.step");
+    if (stepBtn) { onStepClick(stepBtn); return; }
+    // 저장
+    const saveBtn = e.target.closest("button[data-save]");
+    if (saveBtn) { saveOne(saveBtn.dataset.save); return; }
   });
-
-  // 전체 선택
-  el.chkAll.addEventListener("change", ()=>{
-    document.querySelectorAll(".rowchk").forEach(chk=> chk.checked = el.chkAll.checked);
-  });
-
-  // 빠른 수정(한 행 단위)
-  el.tbody.addEventListener("click", async (e)=>{
-    const btn = e.target.closest("button[data-act]");
-    if (!btn) return;
-    const act = btn.dataset.act;
-    const item = btn.dataset.item;
-    const reason = el.reason.value.trim();
-
-    let mode, value;
-    if (act === "inc"){ mode="inc"; value=1; }
-    else if (act === "dec"){ mode="dec"; value=1; }
-    else if (act === "zero"){ mode="set"; value=0; }
-    else return;
-
-    btn.disabled = true;
-    try{
-      const res = await applyOne(item, mode, value, reason);
-      const cell = el.tbody.querySelector(`td.mono[data-item="${CSS.escape(item)}"]`);
-      const msg = el.tbody.querySelector(`td.result[data-item="${CSS.escape(item)}"]`);
-      if (cell) cell.innerHTML = `<strong>${res.next}</strong>`;
-      if (msg) msg.textContent = `${dayjs(res.at).format("MM/DD HH:mm")} 저장`;
-    }catch(err){
-      console.error(err);
-      alert("저장 실패: " + (err.response?.data?.message || err.message));
-    }finally{
-      btn.disabled = false;
-    }
-  });
-
-  // 선택 항목 일괄 적용
-  el.btnApplySelected.addEventListener("click", async ()=>{
-    const worker = el.selWorker.value.trim();
-    if (!worker) return alert("작업자를 선택하세요.");
-    const checks = [...document.querySelectorAll(".rowchk:checked")];
-    if (!checks.length) return alert("선택된 항목이 없습니다.");
-
-    const mode = el.mode.value;
-    let value = Number(el.val.value||0);
-    const reason = el.reason.value.trim();
-    if (!Number.isFinite(value)) value = 0;
-
-    el.btnApplySelected.disabled = true;
-    try{
-      for (const chk of checks){
-        const item = chk.dataset.item;
-        const res = await applyOne(item, mode, value, reason);
-        const cell = el.tbody.querySelector(`td.mono[data-item="${CSS.escape(item)}"]`);
-        const msg  = el.tbody.querySelector(`td.result[data-item="${CSS.escape(item)}"]`);
-        if (cell) cell.innerHTML = `<strong>${res.next}</strong>`;
-        if (msg)  msg.textContent = `${dayjs(res.at).format("MM/DD HH:mm")} 저장`;
-      }
-      alert("저장했습니다.");
-    }catch(err){
-      console.error(err);
-      alert("일괄 저장 중 오류: " + (err.response?.data?.message || err.message));
-    }finally{
-      el.btnApplySelected.disabled = false;
-    }
+  root.addEventListener("keydown", (e)=>{
+    if (e.key !== "Enter") return;
+    const input = e.target.closest('input[data-edit]');
+    if (!input) return;
+    e.preventDefault();
+    saveOne(input.dataset.edit);
   });
 });
