@@ -20,24 +20,33 @@ if (token) {
 
 // 카테고리 그룹 (PCI PRECIA 프론트와 동일)
 const CATS = [
-  { category: "ESCORT", items: ["LP ESCORT", "ROBOT ESCORT"] },
-  { category: "EFEM ROBOT", items: ["SR8241 TEACHING", "SR8240 TEACHING", "M124 TEACHING", "EFEM FIXTURE", "EFEM ROBOT REP", "EFEM ROBOT CONTROLLER REP"] },
-  { category: "TM ROBOT", items: ["SR8250 TEACHING", "SR8232 TEACHING", "TM FIXTURE", "TM ROBOT REP", "TM ROBOT CONTROLLER REP", "PASSIVE PAD REP"] },
-  { category: "BM MODULE", items: ["PIN CYLINDER", "PUSHER CYLINDER", "IB FLOW", "DRT"] },
-  { category: "FFU (EFEM, TM)", items: ["FFU CONTROLLER", "FAN", "MOTOR DRIVER"] },
-  { category: "FCIP", items: ["R1", "R3", "R5", "R3 TO R5", "PRISM"] },
-  { category: "MICROWAVE", items: ["MICROWAVE", "APPLICATOR", "GENERATOR"] },
-  { category: "CHUCK", items: ["CHUCK"] },
-  { category: "PROCESS KIT", items: ["PROCESS KIT"] },
-  { category: "LEAK", items: ["HELIUM DETECTOR"] },
-  { category: "PIN", items: ["HOOK LIFT PIN", "BELLOWS", "PIN SENSOR", "LM GUIDE", "PIN MOTOR CONTROLLER"] },
-  { category: "EPD", items: ["SINGLE EPD", "DUAL EPD"] },
-  { category: "BOARD", items: ["GAS BOX BOARD", "TEMP CONTROLLER BOARD", "POWER DISTRIBUTION BOARD", "DC POWER SUPPLY", "BM SENSOR", "PIO SENSOR", "SAFETY MODULE", "IO BOX", "FPS BOARD", "D-NET"] },
-  { category: "IGS BLOCK", items: ["MFC", "VALVE"] },
-  { category: "VALVE", items: ["SOLENOID", "FAST VAC VALVE", "SLOW VAC VALVE", "SLIT DOOR", "APC VALVE", "SHUTOFF VALVE"] },
-  { category: "ETC", items: ["BARATRON ASS'Y", "PIRANI ASS'Y", "VIEW PORT QUARTZ", "FLOW SWITCH", "CERAMIC PLATE", "MONITOR", "KEYBOARD", "MOUSE", "HEATING JACKET", "WATER LEAK DETECTOR", "MANOMETER"] },
-  { category: "CTR", items: ["CTC", "PMC", "EDA", "EFEM CONTROLLER", "TEMP LIMIT CONTROLLER", "TEMP CONTROLLER"] },
-  { category: "S/W", items: ["S/W PATCH"] }
+  {
+    category: "PM",
+    items: [
+      "PM CENTERING",
+      "PM CLN",
+      "PM SLOT VALVE REP",
+      "PM PEEK PLATE REP",
+      "PM RF MATCHER REP",
+      "PM PIN HOLDER REP",
+      "PM GAP SENSOR ADJUST",
+      "PM PROCESS KIT REP"
+    ]
+  },
+  {
+    category: "ROBOT",
+    items: [
+      "EFEM ROBOT TEACHING",
+      "TM ROBOT TEACHING"
+    ]
+  },
+  {
+    category: "ETC",
+    items: [
+      "LOT 조사",
+      "LP ESCORT"
+    ]
+  }
 ];
 
 const ITEM2CAT = (()=>{ const m={}; for(const g of CATS) for(const it of g.items) m[it]=g.category; return m; })();
