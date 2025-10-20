@@ -152,6 +152,9 @@ app.use("/api/specialist/geneva", specialistGenevaRoute);
 const specialistHdwRoute = require("../src/routes/specialistHdwRoute");
 app.use("/api/specialist/hdw", specialistHdwRoute);
 
+const specialistPreciaSetupRoute = require("../src/routes/specialistPreciaSetupRoute");
+app.use("/api/specialist/precia-setup", specialistPreciaSetupRoute);
+
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
 

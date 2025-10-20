@@ -3,7 +3,7 @@
   const $  = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
-  // API 베이스 (html에서 window.API_BASE 주입됨)
+  // ---------- API 베이스 (html에서 window.API_BASE 주입됨) ----------
   const API_BASE =
     (typeof API !== 'undefined' ? API : null) ||
     (window.API_BASE || 'http://3.37.73.151:3001');
@@ -30,7 +30,7 @@
   }
   const fmtHour = (min)=> (min/60).toFixed(1)+'h';
 
-  // 날짜 기본: 최근 30일
+  // ---------- 날짜 기본: 최근 30일 ----------
   function setDefaultDates(){
     const to   = new Date();
     const from = new Date(); from.setDate(to.getDate()-30);
@@ -48,10 +48,14 @@
     add('date_to',   v('f-date-to'));
     add('group',     v('f-group'));                 // ''(ALL) 이면 제외
     add('site',      v('f-site'));                  // ''(ALL) 이면 제외
+
     const eqType = v('f-eq-type');
     if (eqType && eqType !== 'SELECT') add('equipment_type', eqType);
+
     const eqName = v('f-eq-name');
     if (eqName) add('equipment_name', eqName);
+
+    // 안전 가드
     p.set('limit', '5000');
     return p.toString();
   }
@@ -68,7 +72,7 @@
 
     // 가공 필드(분) + 날짜 포맷
     rows.forEach(r=>{
-      r._task_date = fmtDate(r.task_date);
+      r._task_date  = fmtDate(r.task_date);
       r._inform_min = Math.max(0, toMin(r.inform_end_time)-toMin(r.inform_start_time));
       r._line_min   = Math.max(0, toMin(r.line_end_time)-toMin(r.line_start_time));
     });
@@ -115,13 +119,14 @@
     return `<p><strong>${label}</strong><span>${pretty(value)}</span></p>`;
   }
 
-  // work_log 단건 조회(있으면 /api/work-log/:id, 없으면 /logs에서 찾기)
+  // ---------- work_log 단건 조회 ----------
   async function fetchWorkLogById(id){
     const token = localStorage.getItem('x-access-token') || '';
     try{
       const r1 = await fetch(`${API_BASE}/api/work-log/${id}`, { headers:{ 'x-access-token': token } });
       if (r1.ok) return await r1.json();
     }catch(_) {}
+    // fallback: /logs 전체에서 찾아보기
     const r2 = await fetch(`${API_BASE}/logs`, { headers:{ 'x-access-token': token } });
     if (!r2.ok) throw new Error('작업이력 로드 실패');
     const all = await r2.json();
@@ -140,7 +145,6 @@
       const w = await fetchWorkLogById(id);
       ensureViewer();
 
-      // 읽기 좋은 구역별 배치
       const body = $('#viewer-body');
       body.innerHTML = [
         // 기본 정보
@@ -211,62 +215,132 @@
     tbody.innerHTML = rows.map(tr).join('');
   }
 
+  // ---------- ACTION 컬럼 채우기 (엑셀 내보내기에서 사용) ----------
+  async function enrichActions(rows){
+    const cache = new Map(); // work_log_id -> action
+    const targets = rows.filter(r => r.work_log_id);
+
+    const BATCH = 10; // 동시에 10개씩 병렬
+    for(let i=0; i<targets.length; i+=BATCH){
+      const chunk = targets.slice(i, i+BATCH);
+      await Promise.all(chunk.map(async (r) => {
+        const id = String(r.work_log_id);
+        if (cache.has(id)) {
+          r._action = cache.get(id);
+          return;
+        }
+        try{
+          const w = await fetchWorkLogById(id);
+          const action = (w?.task_description || '').trim();
+          cache.set(id, action);
+          r._action = action;
+        }catch(_){
+          r._action = '';
+        }
+      }));
+    }
+  }
+
   // ---------- 엑셀(.xls) 내보내기 ----------
-  function exportExcel(){
+  async function exportExcel(){
     const rows = window.__PAID_ROWS__ || [];
     if(!rows.length){ toast('안내', '내보낼 데이터가 없습니다.'); return; }
 
-    const header = [
-      '날짜','그룹','사이트','작업명','라인','장비타입','장비명','작업자',
-      '라인입실','라인퇴실','Line 체류 시간(분)','작업시작','작업완료','작업소요시간(분)'
-    ];
+    document.body.style.cursor = 'progress';
+    try{
+      // ACTION 채우기 (필요 시 네트워크 호출)
+      await enrichActions(rows);
 
-    const esc = (v)=> {
-      const s = (v==null?'':String(v));
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    };
+      const header = [
+        '날짜','그룹','사이트','작업명','라인','장비타입','장비명','작업자',
+        '라인입실','라인퇴실','Line 체류 시간(분)','EMS시작','EMS종료','EMS시간(분)',
+        '작업내용(ACTION)'
+      ];
 
-    const headHtml = `<tr>${header.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
-    const bodyHtml = rows.map(r => `
-      <tr>
-        <td>${esc(r._task_date||'')}</td>
-        <td>${esc(r.group||'')}</td>
-        <td>${esc(r.site||'')}</td>
-        <td>${esc(r.task_name||'')}</td>
-        <td>${esc(r.line||'')}</td>
-        <td>${esc(r.equipment_type||'')}</td>
-        <td>${esc(r.equipment_name||'')}</td>
-        <td>${esc(r.paid_worker||'')}</td>
-        <td>${esc(r.line_start_time||'')}</td>
-        <td>${esc(r.line_end_time||'')}</td>
-        <td style="mso-number-format:'0';">${esc(r._line_min||0)}</td>
-        <td>${esc(r.inform_start_time||'')}</td>
-        <td>${esc(r.inform_end_time||'')}</td>
-        <td style="mso-number-format:'0';">${esc(r._inform_min||0)}</td>
-      </tr>
-    `).join('');
+      const esc = (v)=> {
+        const s = (v==null?'':String(v));
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      };
+      // 개행 → <br>로 바꿔서 엑셀에서 줄바꿈 보이게
+// ACTION 문자열을 엑셀 셀 줄바꿈(\r\n) 기준으로 정리
+// ACTION 문자열을 "셀 내부 줄바꿈"으로 표현 (HTML <br/> 사용)
+const escWithBR = (v)=> {
+  let s = (v == null ? '' : String(v));
 
-    const html =
-      '\ufeff' +
-      `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
-       <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/>
-       <style>
-         table{border-collapse:collapse}
-         td,th{border:1px solid #ddd; padding:6px 8px; white-space:nowrap}
-         th{background:#eef3ff}
-       </style>
-       </head><body>
-       <table>${headHtml}${bodyHtml}</table>
-       </body></html>`;
+  // (a) 이미 이스케이프된 <br> → 실제 <br/>
+  s = s.replace(/&lt;br\s*\/?&gt;/gi, '<br/>');
 
-    const blob = new Blob([html], { type:'application/vnd.ms-excel;charset=utf-8;' });
-    const a = document.createElement('a');
-    const from = $('#f-date-from').value || 'all';
-    const to   = $('#f-date-to').value   || 'all';
-    a.download = `work_log_paid_${from}_${to}.xls`;
-    a.href = URL.createObjectURL(blob);
-    a.click();
-    URL.revokeObjectURL(a.href);
+  // (b) 실제 <br> 보존을 위해 임시 토큰으로 치환
+  s = s.replace(/<br\s*\/?>/gi, '___BR___');
+
+  // (c) 나머지 HTML 특수문자 이스케이프
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // (d) 토큰을 다시 <br/>로 복원
+  s = s.replace(/___BR___/g, '<br/>');
+
+  // (e) 원문에 남아있을 수 있는 개행문자도 줄바꿈으로
+  s = s.replace(/\r?\n/g, '<br/>');
+
+  // (f) 불릿/구분자 기준으로 줄바꿈 추가
+  s = s.replace(/\s*-\.\s*/g, '<br/>-. ')   // "-." 앞에 줄바꿈
+       .replace(/\s*\/\/\s*/g, '<br/>');    // "//" 구분도 줄바꿈
+
+  // (g) 중복 <br> 정리
+  s = s.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br/>').trim();
+
+  return s;
+};
+
+
+      const headHtml = `<tr>${header.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
+      const bodyHtml = rows.map(r => `
+        <tr>
+          <td>${esc(r._task_date||'')}</td>
+          <td>${esc(r.group||'')}</td>
+          <td>${esc(r.site||'')}</td>
+          <td>${esc(r.task_name||'')}</td>
+          <td>${esc(r.line||'')}</td>
+          <td>${esc(r.equipment_type||'')}</td>
+          <td>${esc(r.equipment_name||'')}</td>
+          <td>${esc(r.paid_worker||'')}</td>
+          <td>${esc(r.line_start_time||'')}</td>
+          <td>${esc(r.line_end_time||'')}</td>
+          <td style="mso-number-format:'0'; text-align:right;">${esc(r._line_min||0)}</td>
+          <td>${esc(r.inform_start_time||'')}</td>
+          <td>${esc(r.inform_end_time||'')}</td>
+          <td style="mso-number-format:'0'; text-align:right;">${esc(r._inform_min||0)}</td>
+          <td style="mso-number-format:'@'; white-space:normal;">${escWithBR(r._action || r.task_description || '')}</td>
+        </tr>
+      `).join('');
+
+      const html =
+        '\ufeff' +
+        `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+         <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/>
+         <style>
+           table{border-collapse:collapse}
+           td,th{border:1px solid #ddd; padding:6px 8px; vertical-align:top; white-space:nowrap}
+           td:last-child{white-space:normal} /* ACTION 칼럼은 줄바꿈 허용 */
+           th{background:#eef3ff}
+         </style>
+         </head><body>
+         <table>${headHtml}${bodyHtml}</table>
+         </body></html>`;
+
+      const blob = new Blob([html], { type:'application/vnd.ms-excel;charset=utf-8;' });
+      const a = document.createElement('a');
+      const from = $('#f-date-from').value || 'all';
+      const to   = $('#f-date-to').value   || 'all';
+      a.download = `work_log_paid_${from}_${to}.xls`;
+      a.href = URL.createObjectURL(blob);
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }catch(e){
+      toast('오류', e.message||'엑셀 내보내기 실패');
+    }finally{
+      document.body.style.cursor = 'auto';
+    }
   }
 
   // ---------- 토스트 ----------
@@ -310,7 +384,9 @@
 
     $('#btn-search').addEventListener('click', onSearch);
     $('#btn-reset').addEventListener('click', ()=>{ onReset(); onSearch(); });
-    $('#btn-export').addEventListener('click', exportExcel);
+    $('#btn-export').addEventListener('click', () => {
+      exportExcel().catch(err => toast('오류', err?.message || '엑셀 내보내기 실패'));
+    });
 
     // 엔터로 바로 조회
     $$('.filter-rows input, .filter-rows select').forEach(el=>{

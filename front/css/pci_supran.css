@@ -496,3 +496,14 @@ body.modal-open{ overflow:hidden; }
   .matrix-wrap, .table-scroll{ border-color:#bbb; }
   .matrix, .table{ min-width:auto; }
 }
+
+/* 상단 개별 액션 영역 */
+.page-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin:8px 0 12px;
+}
+@media (max-width: 960px){
+  .page-actions{ justify-content:flex-start; }
+}
