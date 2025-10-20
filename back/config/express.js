@@ -155,6 +155,24 @@ app.use("/api/specialist/hdw", specialistHdwRoute);
 const specialistPreciaSetupRoute = require("../src/routes/specialistPreciaSetupRoute");
 app.use("/api/specialist/precia-setup", specialistPreciaSetupRoute);
 
+const specialistHdwSetupRoute = require("../src/routes/specialistHdwSetupRoute");
+app.use("/api/specialist/hdw-setup", specialistHdwSetupRoute);
+
+const specialistEcoliteSetupRoute = require("../src/routes/specialistEcoliteSetupRoute");
+app.use("/api/specialist/ecolite-setup", specialistEcoliteSetupRoute);
+
+const specialistGenevaSetupRoute = require("../src/routes/specialistGenevaSetupRoute");
+app.use("/api/specialist/geneva-setup", specialistGenevaSetupRoute);
+
+const specialistIntegerSetupRoute = require("../src/routes/specialistIntegerSetupRoute");
+app.use("/api/specialist/integer-setup", specialistIntegerSetupRoute);
+
+const specialistSupranSetupRoute = require("../src/routes/specialistSupranSetupRoute");
+app.use("/api/specialist/supran-setup", specialistSupranSetupRoute);
+
+const specialistSupraxpSetupRoute = require("../src/routes/specialistSupraxpSetupRoute");
+app.use("/api/specialist/supraxp-setup", specialistSupraxpSetupRoute);
+
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
 
