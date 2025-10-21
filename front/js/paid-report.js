@@ -241,107 +241,104 @@
     }
   }
 
-  // ---------- 엑셀(.xls) 내보내기 ----------
-  async function exportExcel(){
-    const rows = window.__PAID_ROWS__ || [];
-    if(!rows.length){ toast('안내', '내보낼 데이터가 없습니다.'); return; }
+// ---------- 엑셀(.xls) 내보내기 ----------
+async function exportExcel(){
+  const rows = window.__PAID_ROWS__ || [];
+  if(!rows.length){ toast('안내', '내보낼 데이터가 없습니다.'); return; }
 
-    document.body.style.cursor = 'progress';
-    try{
-      // ACTION 채우기 (필요 시 네트워크 호출)
-      await enrichActions(rows);
+  // 일반 셀 이스케이프
+  const esc = (v)=> {
+    const s = (v==null?'':String(v));
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  };
 
-      const header = [
-        '날짜','그룹','사이트','작업명','라인','장비타입','장비명','작업자',
-        '라인입실','라인퇴실','Line 체류 시간(분)','EMS시작','EMS종료','EMS시간(분)',
-        '작업내용(ACTION)'
-      ];
+  // ACTION을 “한 셀 내부 줄바꿈”으로만 표시하도록 정리
+  function formatActionForCell(v){
+    let s = (v == null ? '' : String(v));
 
-      const esc = (v)=> {
-        const s = (v==null?'':String(v));
-        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      };
-      // 개행 → <br>로 바꿔서 엑셀에서 줄바꿈 보이게
-// ACTION 문자열을 엑셀 셀 줄바꿈(\r\n) 기준으로 정리
-// ACTION 문자열을 "셀 내부 줄바꿈"으로 표현 (HTML <br/> 사용)
-const escWithBR = (v)=> {
-  let s = (v == null ? '' : String(v));
+    // 1) 다양한 <br> → 개행으로 통일
+    s = s.replace(/&lt;br\s*\/?&gt;/gi, '\n')
+         .replace(/<br\s*\/?>/gi, '\n');
 
-  // (a) 이미 이스케이프된 <br> → 실제 <br/>
-  s = s.replace(/&lt;br\s*\/?&gt;/gi, '<br/>');
+    // 2) 구분자 기준 줄바꿈 삽입
+    s = s.replace(/\s*-\.\s*/g, '\n-. ')   // "-." 앞에서 줄바꿈
+         .replace(/\s*\/\/\s*/g, '\n');    // "//"도 줄바꿈
 
-  // (b) 실제 <br> 보존을 위해 임시 토큰으로 치환
-  s = s.replace(/<br\s*\/?>/gi, '___BR___');
+    // 3) 개행 정리
+    s = s.replace(/\r?\n/g, '\n').replace(/\n{2,}/g, '\n').trim();
 
-  // (c) 나머지 HTML 특수문자 이스케이프
-  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  // (d) 토큰을 다시 <br/>로 복원
-  s = s.replace(/___BR___/g, '<br/>');
-
-  // (e) 원문에 남아있을 수 있는 개행문자도 줄바꿈으로
-  s = s.replace(/\r?\n/g, '<br/>');
-
-  // (f) 불릿/구분자 기준으로 줄바꿈 추가
-  s = s.replace(/\s*-\.\s*/g, '<br/>-. ')   // "-." 앞에 줄바꿈
-       .replace(/\s*\/\/\s*/g, '<br/>');    // "//" 구분도 줄바꿈
-
-  // (g) 중복 <br> 정리
-  s = s.replace(/(?:<br\s*\/?>\s*){2,}/gi, '<br/>').trim();
-
-  return s;
-};
-
-
-      const headHtml = `<tr>${header.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
-      const bodyHtml = rows.map(r => `
-        <tr>
-          <td>${esc(r._task_date||'')}</td>
-          <td>${esc(r.group||'')}</td>
-          <td>${esc(r.site||'')}</td>
-          <td>${esc(r.task_name||'')}</td>
-          <td>${esc(r.line||'')}</td>
-          <td>${esc(r.equipment_type||'')}</td>
-          <td>${esc(r.equipment_name||'')}</td>
-          <td>${esc(r.paid_worker||'')}</td>
-          <td>${esc(r.line_start_time||'')}</td>
-          <td>${esc(r.line_end_time||'')}</td>
-          <td style="mso-number-format:'0'; text-align:right;">${esc(r._line_min||0)}</td>
-          <td>${esc(r.inform_start_time||'')}</td>
-          <td>${esc(r.inform_end_time||'')}</td>
-          <td style="mso-number-format:'0'; text-align:right;">${esc(r._inform_min||0)}</td>
-          <td style="mso-number-format:'@'; white-space:normal;">${escWithBR(r._action || r.task_description || '')}</td>
-        </tr>
-      `).join('');
-
-      const html =
-        '\ufeff' +
-        `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
-         <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/>
-         <style>
-           table{border-collapse:collapse}
-           td,th{border:1px solid #ddd; padding:6px 8px; vertical-align:top; white-space:nowrap}
-           td:last-child{white-space:normal} /* ACTION 칼럼은 줄바꿈 허용 */
-           th{background:#eef3ff}
-         </style>
-         </head><body>
-         <table>${headHtml}${bodyHtml}</table>
-         </body></html>`;
-
-      const blob = new Blob([html], { type:'application/vnd.ms-excel;charset=utf-8;' });
-      const a = document.createElement('a');
-      const from = $('#f-date-from').value || 'all';
-      const to   = $('#f-date-to').value   || 'all';
-      a.download = `work_log_paid_${from}_${to}.xls`;
-      a.href = URL.createObjectURL(blob);
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }catch(e){
-      toast('오류', e.message||'엑셀 내보내기 실패');
-    }finally{
-      document.body.style.cursor = 'auto';
-    }
+    // 4) 줄 단위 이스케이프 → 같은 셀 줄바꿈(<br mso-data-placement>)
+    const lines = s.split('\n').map(t =>
+      t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    );
+    return lines.join("<br style='mso-data-placement:same-cell;'/>");
   }
+
+  document.body.style.cursor = 'progress';
+  try{
+    // ACTION 채우기 (필요 시 네트워크 호출)
+    await enrichActions(rows);
+
+    const header = [
+      '날짜','그룹','사이트','작업명','라인','장비타입','장비명','작업자',
+      '라인입실','라인퇴실','Line 체류 시간(분)','EMS시작','EMS종료','EMS시간(분)',
+      '작업내용(ACTION)'
+    ];
+
+    const headHtml = `<tr>${header.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`;
+
+    const bodyHtml = rows.map(r => `
+      <tr>
+        <td>${esc(r._task_date||'')}</td>
+        <td>${esc(r.group||'')}</td>
+        <td>${esc(r.site||'')}</td>
+        <td>${esc(r.task_name||'')}</td>
+        <td>${esc(r.line||'')}</td>
+        <td>${esc(r.equipment_type||'')}</td>
+        <td>${esc(r.equipment_name||'')}</td>
+        <td>${esc(r.paid_worker||'')}</td>
+        <td>${esc(r.line_start_time||'')}</td>
+        <td>${esc(r.line_end_time||'')}</td>
+        <td style="mso-number-format:'0'; text-align:right;">${esc(r._line_min||0)}</td>
+        <td>${esc(r.inform_start_time||'')}</td>
+        <td>${esc(r.inform_end_time||'')}</td>
+        <td style="mso-number-format:'0'; text-align:right;">${esc(r._inform_min||0)}</td>
+        <td style="mso-number-format:'@'; vertical-align:top;">
+          <div style="mso-data-placement:same-cell; white-space:normal;">
+            ${formatActionForCell(r._action || r.task_description || '')}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+
+    const html =
+      '\ufeff' +
+      `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+       <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"/>
+       <style>
+         table{border-collapse:collapse}
+         td,th{border:1px solid #ddd; padding:6px 8px; vertical-align:top; white-space:nowrap}
+         th{background:#eef3ff}
+       </style>
+       </head><body>
+       <table>${headHtml}${bodyHtml}</table>
+       </body></html>`;
+
+    const blob = new Blob([html], { type:'application/vnd.ms-excel;charset=utf-8;' });
+    const a = document.createElement('a');
+    const from = $('#f-date-from').value || 'all';
+    const to   = $('#f-date-to').value   || 'all';
+    a.download = `work_log_paid_${from}_${to}.xls`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }catch(e){
+    toast('오류', e.message||'엑셀 내보내기 실패');
+  }finally{
+    document.body.style.cursor = 'auto';
+  }
+}
+
 
   // ---------- 토스트 ----------
   function toast(title, msg){
