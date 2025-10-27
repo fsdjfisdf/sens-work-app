@@ -1,0 +1,85 @@
+:root{
+  --bg:#f7f8fb; --card:#ffffff; --text:#1f2533; --muted:#6c7a91;
+  --accent:#2f6feb; --accent-2:#ecf2ff; --stroke:#e6e9f2;
+  --ok:#0f9d58; --warn:#f2994a; --danger:#e64646;
+  --shadow:0 6px 18px rgba(22,34,51,.06);
+  --radius:16px;
+}
+
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0; font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,Helvetica,Arial;
+  color:var(--text); background:var(--bg);
+}
+
+.app-header{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 22px; background:#fff; border-bottom:1px solid var(--stroke);
+}
+.brand{ font-weight:700; letter-spacing:.2px }
+.nav a{ color:var(--muted); text-decoration:none; margin-left:16px; padding:6px 8px; border-radius:10px }
+.nav a.active, .nav a:hover{ background:var(--accent-2); color:var(--accent) }
+
+.container{ max-width:1100px; margin:28px auto; padding:0 18px }
+
+.card{
+  background:var(--card); border:1px solid var(--stroke); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:18px 18px 20px; margin-bottom:18px
+}
+.card-head{ margin-bottom:12px }
+.card-head h1,.card-head h2{ margin:0 0 4px 0 }
+.hint{ color:var(--muted); font-size:12.5px }
+
+.form-row{ margin:10px 0 }
+.form-row label{ display:block; font-weight:600; margin-bottom:6px }
+textarea, input[type="number"]{
+  width:100%; padding:12px 14px; border:1px solid var(--stroke); border-radius:12px; outline:none;
+  background:#fff; color:var(--text);
+}
+textarea:focus, input[type="number"]:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-2) }
+
+.form-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px }
+
+.btn-row{ display:flex; align-items:center; justify-content:space-between; margin-top:8px }
+.btn{ border:1px solid var(--stroke); background:#fff; color:var(--text); padding:10px 14px; border-radius:12px; cursor:pointer }
+.btn.primary{ background:var(--accent); color:#fff; border-color:var(--accent) }
+.btn.secondary{ background:#eef2f7 }
+.btn.ghost{ background:#fff }
+.btn.tiny{ padding:6px 10px; font-size:12px }
+.btn:disabled{ opacity:.6; cursor:not-allowed }
+.left .btn{ margin-right:6px }
+.right .btn{ margin-left:6px }
+
+.status{ min-height:22px; color:var(--muted); margin-top:8px }
+
+.hidden{ display:none }
+
+.row{ display:flex; align-items:center; justify-content:space-between }
+.chips{ display:flex; gap:8px; flex-wrap:wrap }
+.chip{
+  display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; font-size:12px;
+  background:#f1f4fb; color:#3b4353; border:1px solid var(--stroke)
+}
+
+.answer{ white-space:pre-wrap; border:1px dashed var(--stroke); border-radius:12px; padding:14px; background:#fff }
+.markdown p{ margin: 0 0 8px 0 }
+.markdown ul{ margin: 8px 0 8px 22px }
+.markdown li{ margin: 2px 0 }
+.markdown h3{ margin:12px 0 8px; font-size:16px }
+
+.evidence{ margin-top:16px }
+.evidence table{ width:100%; border-collapse:collapse; }
+.evidence th, .evidence td{ border:1px solid var(--stroke); padding:8px; text-align:left; vertical-align:top }
+.evidence .sim{ text-align:right; font-variant-numeric:tabular-nums }
+.evidence .idcell{ font-weight:700 }
+.evidence .desc{ color:#3a4252 }
+
+.history{ display:flex; gap:8px; flex-wrap:wrap }
+.history .pill{
+  border:1px solid var(--stroke); background:#fff; border-radius:999px; padding:6px 10px; cursor:pointer;
+  max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+.footer{ text-align:center; color:var(--muted); padding:20px 0 40px }

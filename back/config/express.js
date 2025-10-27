@@ -176,6 +176,9 @@ app.use("/api/specialist/supraxp-setup", specialistSupraxpSetupRoute);
 // (위쪽 아무 데서든) 한 번만 선언
 const workLogController = require('../src/controllers/workLogController');
 
+const ragRoute = require('../src/routes/ragRoute');
+app.use('/api/rag', ragRoute);
+
 // 권한 가드: DB ENUM에 맞게
 function requireRole(roles = ['admin', 'editor']) {
   return (req, res, next) => {

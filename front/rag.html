@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>S-WORKS · RAG 검색</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="/css/rag.css" rel="stylesheet" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">S-WORKS · RAG</div>
+    <nav class="nav">
+      <a href="/index.html">Home</a>
+      <a href="/readworklog.html">Work Logs</a>
+      <a class="active" href="/rag.html">RAG 검색</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- 검색 카드 -->
+    <section class="card">
+      <div class="card-head">
+        <h1>DB 기반 RAG 질의</h1>
+        <div class="hint">질문을 한국어로 입력하면, 임베딩으로 유사 로그를 찾아 요약합니다.</div>
+      </div>
+
+      <div class="form-row">
+        <label for="question">질문</label>
+        <textarea id="question" rows="5" placeholder="예) HS 15L 라인 Slit Door 교체 후 Leak 수치 변화 요약해줘"></textarea>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="days">검색 기간(일)</label>
+          <input id="days" type="number" min="7" max="3650" value="365" />
+        </div>
+        <div class="form-row">
+          <label for="prefilterLimit">프리필터 개수</label>
+          <input id="prefilterLimit" type="number" min="50" max="2000" value="300" />
+        </div>
+        <div class="form-row">
+          <label for="topK">최종 근거 개수(Top-K)</label>
+          <input id="topK" type="number" min="5" max="50" value="20" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <div class="left">
+          <button class="btn ghost" data-preset="Pin Move Timeout 원인/조치 요약">예시 1</button>
+          <button class="btn ghost" data-preset="EPAB305 Slow/Fast V.V 반복 이슈 플레이북">예시 2</button>
+          <button class="btn ghost" data-preset="FCIP O-RING REP 평균 작업 시간 알려줘">예시 3</button>
+          <button class="btn ghost" data-preset="EPD Peak 0 Reading 재발방지 체크리스트">예시 4</button>
+        </div>
+        <div class="right">
+          <button id="btn-clear" class="btn secondary">지우기</button>
+          <button id="btn-ask" class="btn primary">검색 실행</button>
+        </div>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <!-- 결과 카드 -->
+    <section id="result-card" class="card hidden">
+      <div class="card-head row">
+        <h2>요약 결과</h2>
+        <div class="chips">
+          <span class="chip" id="chip-days"></span>
+          <span class="chip" id="chip-topk"></span>
+          <span class="chip" id="chip-pref"></span>
+          <span class="chip" id="chip-model"></span>
+        </div>
+      </div>
+
+      <article id="answer" class="answer markdown"></article>
+
+      <details id="evidence-wrap" class="evidence">
+        <summary>근거 보기 (Top-K)</summary>
+        <div id="evidence"></div>
+      </details>
+    </section>
+
+    <!-- 최근 질문 카드 -->
+    <section class="card">
+      <div class="card-head row">
+        <h2>최근 질문</h2>
+        <button id="btn-clear-history" class="btn tiny">비우기</button>
+      </div>
+      <div id="history" class="history"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© S-WORKS · RAG</div>
+  </footer>
+
+  <script src="/js/rag.js"></script>
+</body>
+</html>
