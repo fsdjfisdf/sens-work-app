@@ -1,8 +1,9 @@
 const OpenAI = require('openai');
-
+const secret = require('./secret');
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: secret.openai_api_key
 });
+
 
 // 공용 모델 설정
 const MODELS = {
@@ -11,3 +12,4 @@ const MODELS = {
 };
 
 module.exports = { openai, MODELS };
+
