@@ -82,7 +82,6 @@ function buildRowToText(row) {
 }
 
 /* ---------- 배치 로딩(임베딩 전처리 등에서 사용 가능) ---------- */
-/* whereSql 은 ? 플레이스홀더로 작성, paramsArr 는 그에 대응하는 배열 */
 async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', paramsArr = [] } = {}) {
   const conn = await pool.getConnection();
   try {
@@ -201,7 +200,8 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
     const where = [
-      'JSON_VALID(e.embedding) = 1',
+      // ⛔ JSON_VALID 제거 (MariaDB/버전 호환 위해)
+      'e.embedding IS NOT NULL',
       'c.content IS NOT NULL',
       "c.content <> ''"
     ];
@@ -211,7 +211,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.site)           { where.push('c.site = ?');            args.push(filters.site); }
     if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
 
-    // ✅ days 필터 적용하되, task_date가 NULL인 건도 통과시켜서 초기/구버전 데이터가 차단되지 않도록 함
+    // ✅ task_date가 NULL인 것도 통과 (구버전/초기 데이터 구제)
     if (filters.days && Number(filters.days) > 0) {
       where.push('(c.task_date IS NULL OR c.task_date >= (CURRENT_DATE - INTERVAL ? DAY))');
       args.push(Number(filters.days));
