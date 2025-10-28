@@ -17,54 +17,51 @@ async function embedTexts(texts) {
   return res.data.map(d => d.embedding);
 }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function main() {
   const argv = minimist(process.argv.slice(2));
-  const limit = Number(argv.limit || 200);
-  const offset = Number(argv.offset || 0);
-  const whereSql = argv.where || '';   // 예: "equipment_type='SUPRA N'"
+  const batchSize = Number(argv.batch || 500);   // 한 번에 읽을 DB 로우 수
+  const whereSql  = argv.where || '';            // 예: "site='PT'"
+  let offset = Number(argv.offset || 0);
 
-  console.log(`[embed-all] start: limit=${limit}, offset=${offset}, where="${whereSql}"`);
-
+  console.log('🔹 Embedding build start');
   await ensureTables();
 
-  const rows = await fetchWorkLogBatch({ limit, offset, whereSql, paramsArr: [] });
-  if (!rows.length) {
-    console.log('[embed-all] no rows.');
-    return;
-  }
+  let total = 0;
+  while (true) {
+    const rows = await fetchWorkLogBatch({
+      limit: batchSize,
+      offset,
+      whereSql,
+      paramsArr: []
+    });
 
-  const texts = rows.map(buildRowToText);
+    if (!rows.length) break;
 
-  const BATCH = 100;
-  let saved = 0;
+    const texts = rows.map(buildRowToText);
+    const vecs  = await embedTexts(texts);
 
-  for (let i = 0; i < texts.length; i += BATCH) {
-    const sliceTexts = texts.slice(i, i + BATCH);
-    const vecs = await embedTexts(sliceTexts);
-
-    for (let j = 0; j < sliceTexts.length; j++) {
-      const r = rows[i + j]; // ✅ 올바른 참조
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
       const chunkId = await upsertChunk({
         src_table: 'work_log',
         src_id: String(r.id),
-        content: buildRowToText(r),   // ✅ 항상 본문 채움
+        content: buildRowToText(r),  // 본문 채움(줄바꿈 정리 포함)
         rowMeta: {
+          // --- 메타: 쿼리에서 가져온 컬럼들 정확히 매핑 ---
           site: r.site,
           line: r.line,
           equipment_type: r.equipment_type,
           equipment_name: r.equipment_name,
           work_type: r.work_type,
           work_type2: r.work_type2,
-          task_warranty: r.task_warranty,         // ✅ warranty 매핑
-          task_date: r.task_date || null,         // ✅ 물리 컬럼에도 저장
+          task_warranty: r.task_warranty,      // warranty -> task_warranty alias
+          task_date: r.task_date || null,      // 물리 task_date
           task_name: r.task_name || null,
           start_time: r.start_time,
           end_time: r.end_time,
-          task_duration: r.duration_min ?? null,  // ✅ 분 단위
+          task_duration: r.duration_min ?? null, // 분 단위
           status: r.status,
           SOP: r.SOP,
           tsguide: r.tsguide,
@@ -76,15 +73,16 @@ async function main() {
         }
       });
 
-      await saveEmbedding(chunkId, vecs[j]);
-      saved++;
-      if (saved % 10 === 0) console.log(`✅ ${saved} / ${rows.length}`);
+      await saveEmbedding(chunkId, vecs[i]);
+      total++;
+      if (total % 200 === 0) console.log(`✅ ${total} rows embedded...`);
     }
 
-    if (i + BATCH < texts.length) await sleep(300);
+    offset += rows.length;
+    await sleep(200); // API 보호
   }
 
-  console.log(`[embed-all] done. saved=${saved}`);
+  console.log(`🎉 done. embedded=${total}`);
 }
 
 main().catch(err => {

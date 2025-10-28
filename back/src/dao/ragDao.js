@@ -1,5 +1,4 @@
 // back/src/dao/ragDao.js
-// 공용 DB 풀 사용 (다른 모듈과 일관)
 const { pool } = require('../../config/database');
 
 /* ---------- 유틸 ---------- */
@@ -23,17 +22,17 @@ async function ensureTables() {
         id BIGINT PRIMARY KEY AUTO_INCREMENT,
         src_table VARCHAR(64) NOT NULL,
         src_id   VARCHAR(64) NOT NULL,
-        site VARCHAR(64), 
-        line VARCHAR(64), 
+        site VARCHAR(64),
+        line VARCHAR(64),
         equipment_type VARCHAR(64),
         equipment_name VARCHAR(128),
-        work_type VARCHAR(64), 
+        work_type VARCHAR(64),
         work_type2 VARCHAR(64),
         task_warranty VARCHAR(32),
-        task_date DATE NULL,                -- 날짜 필터/인덱스
-        start_time TIME NULL, 
+        task_date DATE NULL,
+        start_time TIME NULL,
         end_time TIME NULL,
-        task_duration INT NULL,            -- 분(min) 저장
+        task_duration INT NULL,
         content MEDIUMTEXT NOT NULL,
         metadata JSON NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -81,7 +80,7 @@ function buildRowToText(row) {
   return lines.join('\n').trim();
 }
 
-/* ---------- 배치 로딩(임베딩 전처리 등에서 사용 가능) ---------- */
+/* ---------- 배치 로딩 ---------- */
 async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', paramsArr = [] } = {}) {
   const conn = await pool.getConnection();
   try {
@@ -92,7 +91,7 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
         task_name,
         task_man,
         site, line, equipment_type, equipment_name,
-        warranty AS task_warranty,          -- 원본 컬럼 warranty
+        warranty AS task_warranty,
         status,
         task_description, task_cause, task_result,
         SOP, tsguide,
@@ -112,7 +111,7 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
   }
 }
 
-/* ---------- rag_chunks upsert ---------- */
+/* ---------- upsert ---------- */
 async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
   const conn = await pool.getConnection();
   try {
@@ -123,18 +122,18 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
       VALUES
       (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
       ON DUPLICATE KEY UPDATE
-        site=VALUES(site), 
-        line=VALUES(line), 
+        site=VALUES(site),
+        line=VALUES(line),
         equipment_type=VALUES(equipment_type),
-        equipment_name=VALUES(equipment_name), 
-        work_type=VALUES(work_type), 
+        equipment_name=VALUES(equipment_name),
+        work_type=VALUES(work_type),
         work_type2=VALUES(work_type2),
-        task_warranty=VALUES(task_warranty), 
+        task_warranty=VALUES(task_warranty),
         task_date=VALUES(task_date),
-        start_time=VALUES(start_time), 
+        start_time=VALUES(start_time),
         end_time=VALUES(end_time),
-        task_duration=VALUES(task_duration), 
-        content=VALUES(content), 
+        task_duration=VALUES(task_duration),
+        content=VALUES(content),
         metadata=VALUES(metadata)
     `;
     const args = [
@@ -147,10 +146,10 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
       rowMeta.work_type || null,
       rowMeta.work_type2 || null,
       rowMeta.task_warranty || null,
-      rowMeta.task_date || null,                    // 물리 컬럼
+      rowMeta.task_date || null,
       rowMeta.start_time || null,
       rowMeta.end_time || null,
-      (rowMeta.task_duration ?? null),              // 분(min) 정수
+      (rowMeta.task_duration ?? null),
       content,
       JSON.stringify(rowMeta || {}),
     ];
@@ -168,7 +167,7 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
   }
 }
 
-/* ---------- rag_embeddings insert ---------- */
+/* ---------- 저장 ---------- */
 async function saveEmbedding(chunk_id, embedding) {
   const conn = await pool.getConnection();
   try {
@@ -181,7 +180,7 @@ async function saveEmbedding(chunk_id, embedding) {
   }
 }
 
-/* ---------- 코사인 유사도 ---------- */
+/* ---------- 유사도 ---------- */
 function cosineSimilarity(a, b) {
   let dot = 0, na = 0, nb = 0;
   const len = Math.min(a.length, b.length);
@@ -194,16 +193,14 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
-/* ---------- 후보 임베딩 로딩 ---------- */
-/* filters: {equipment_type, site, line, days} */
+/* ---------- 후보 조회 ---------- */
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
     const where = [
-      // ⛔ JSON_VALID 제거 (MariaDB/버전 호환 위해)
       'e.embedding IS NOT NULL',
       'c.content IS NOT NULL',
-      "c.content <> ''"
+      'LENGTH(c.content) > 0'
     ];
     const args = [];
 
@@ -211,7 +208,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.site)           { where.push('c.site = ?');            args.push(filters.site); }
     if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
 
-    // ✅ task_date가 NULL인 것도 통과 (구버전/초기 데이터 구제)
+    // days 필터: task_date NULL은 통과
     if (filters.days && Number(filters.days) > 0) {
       where.push('(c.task_date IS NULL OR c.task_date >= (CURRENT_DATE - INTERVAL ? DAY))');
       args.push(Number(filters.days));
@@ -251,10 +248,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       }
       if (!Array.isArray(emb) || emb.length === 0) continue;
 
-      out.push({
-        ...r,
-        embedding: emb,
-      });
+      out.push({ ...r, embedding: emb });
     }
     return out;
   } finally {
@@ -262,10 +256,8 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   }
 }
 
-/* ---------- 구버전 호환 함수 ---------- */
-function buildText(row) {
-  return buildRowToText(row);
-}
+/* ---------- 구버전 호환 ---------- */
+function buildText(row) { return buildRowToText(row); }
 
 async function upsertEmbedding(id, embedding) {
   const chunkId = await upsertChunk({
@@ -287,7 +279,6 @@ module.exports = {
   fetchAllEmbeddings,
   buildRowToText,
   cosineSimilarity,
-  // 호환
   buildText,
   upsertEmbedding,
   hhmmOrHhmmssToMin,
