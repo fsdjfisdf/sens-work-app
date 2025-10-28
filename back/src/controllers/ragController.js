@@ -1,12 +1,11 @@
 // back/src/controllers/ragController.js
-const { openai, MODELS } = require('../../scripts/openai');      // ← 네 경로에 맞게 조정
+const { openai, MODELS } = require('../../config/openai'); // 경로 수정
 const {
   ensureTables,
   fetchAllEmbeddings,
   cosineSimilarity,
-} = require('../../scripts/Dao');                                // ← 네 경로에 맞게 조정
+} = require('../dao/ragDao'); // 경로 수정 (src/dao)
 
-// 프롬프트 헬퍼
 function buildPrompt(question, contexts) {
   const ctx = contexts.map((c, i) => `【근거 ${i + 1}】\n${c.content}`).join('\n\n');
   return [
@@ -33,11 +32,11 @@ async function ask(req, res) {
 
     await ensureTables();
 
-    // 후보 로딩 (프리필터)
     const candidates = await fetchAllEmbeddings({
-      filters,                     // {equipment_type, site, line} 지원
+      filters, // {equipment_type, site, line}
       limit: Number(prefilterLimit) || 300,
     });
+
     if (!candidates.length) {
       return res.json({
         ok: true,
@@ -60,7 +59,6 @@ async function ask(req, res) {
       .sort((a, b) => b.score - a.score)
       .slice(0, Number(topK) || 20);
 
-    // LLM 컨텍스트로는 과도하지 않게 상위 6~8개만 사용
     const contextForLLM = ranked.slice(0, 8);
 
     // 답변 생성
@@ -75,7 +73,7 @@ async function ask(req, res) {
 
     // 프론트 표시용 프리뷰
     const evidence_preview = ranked.map((r) => ({
-      id: r.chunk_id,                              // rag_chunks.id
+      id: r.chunk_id,
       sim: r.score,
       site: r.site,
       line: r.line,
