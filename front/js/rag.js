@@ -3,396 +3,545 @@
   document.addEventListener('DOMContentLoaded', init);
 
   function init() {
-    /* ========== DOM helpers ========== */
+    /* ===== DOM helpers ===== */
     const $  = (s, r=document)=>r.querySelector(s);
     const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
-    // 안전하게 요소 가져오기 (없으면 생성해서 붙임)
-    function need(sel, creator){
-      let el = $(sel);
-      if(!el && typeof creator === 'function'){
-        el = creator();
-      }
-      return el;
-    }
-
-    /* ========== 잡을 요소들 ========== */
+    /* ===== Elements ===== */
     const els = {
-      q: need('#question'),
+      chat: $('#chat'),
+      q: $('#question'),
+      ask: $('#btn-ask'),
+      clear: $('#btn-clear'),
+      status: $('#status'),
+
+      // sidebar controls
       days: $('#days'),
       pref: $('#prefilterLimit'),
       topk: $('#topK'),
-      ask: $('#btn-ask'),
-      clear: $('#btn-clear'),
-      status: need('#status', ()=>{
-        const d = document.createElement('div');
-        d.id = 'status';
-        (need('main')||document.body).appendChild(d);
-        return d;
-      }),
-      resultCard: need('#result-card', ()=>{
-        const s = document.createElement('section');
-        s.id = 'result-card';
-        s.className = 'card';
-        (need('main')||document.body).appendChild(s);
-        return s;
-      }),
-      answer: need('#answer', ()=>{
-        const a = document.createElement('article');
-        a.id = 'answer';
-        a.className = 'answer markdown';
-        need('#result-card').appendChild(a);
-        return a;
-      }),
-      chipDays: need('#chip-days', ()=>{
-        const span = document.createElement('span');
-        span.id = 'chip-days';
-        span.className = 'chip';
-        addChips(span);
-        return span;
-      }),
-      chipTopk: need('#chip-topk', ()=>{
-        const span = document.createElement('span');
-        span.id = 'chip-topk';
-        span.className = 'chip';
-        addChips(span);
-        return span;
-      }),
-      chipPref: need('#chip-pref', ()=>{
-        const span = document.createElement('span');
-        span.id = 'chip-pref';
-        span.className = 'chip';
-        addChips(span);
-        return span;
-      }),
-      chipModel: need('#chip-model', ()=>{
-        const span = document.createElement('span');
-        span.id = 'chip-model';
-        span.className = 'chip';
-        addChips(span);
-        return span;
-      }),
-      evidenceWrap: need('#evidence-wrap', ()=>{
-        const det = document.createElement('details');
-        det.id = 'evidence-wrap';
-        det.className = 'evidence';
-        det.innerHTML = '<summary>근거 보기 (Top-K)</summary><div id="evidence"></div>';
-        need('#result-card').appendChild(det);
-        return det;
-      }),
-      evidence: need('#evidence', ()=>{
-        const d = document.createElement('div');
-        d.id = 'evidence';
-        need('#evidence-wrap').appendChild(d);
-        return d;
-      }),
-      history: need('#history', ()=>{
-        const d = document.createElement('div');
-        d.id = 'history';
-        (need('main')||document.body).appendChild(d);
-        return d;
-      }),
-      clearHistory: $('#btn-clear-history')
+      newChat: $('#btn-new-chat'),
+      history: $('#history'),
+      clearHistory: $('#btn-clear-history'),
+
+      // chips
+      chipModel: $('#chip-model'),
+      chipDays: $('#chip-days'),
+      chipPref: $('#chip-pref'),
+      chipTopk: $('#chip-topk'),
     };
 
-    function addChips(span){
-      let chips = $('#result-card .chips');
-      if(!chips){
-        const head = document.createElement('div');
-        head.className = 'card-head row';
-        head.innerHTML = '<h2>요약 결과</h2><div class="chips"></div>';
-        els.resultCard.insertBefore(head, els.resultCard.firstChild);
-        chips = head.querySelector('.chips');
+    /* ===== App State ===== */
+    const STATE = {
+      lastQuestion: '',
+      lastAnswerHtml: '',
+      lastEvidence: [],
+      evidenceView: { // table ui state
+        sortBy: 'sim', // 'sim' | 'date' | 'site' | 'eq'
+        sortDir: 'desc', // 'asc' | 'desc'
+        query: '',
+        compact: false,
+      },
+      filters: {
+        site: null,
+        line: null,
+        equipment_type: null,
       }
-      chips.appendChild(span);
-    }
+    };
 
-    /* ========== Tiny toast ========== */
-    function toast(msg, type='info'){
-      let box = $('#__tiny_toast');
-      if(!box){
-        box = document.createElement('div');
-        box.id='__tiny_toast';
-        box.style.cssText = `
-          position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
-          background:#1f2937; color:#fff; padding:10px 14px; border-radius:12px;
-          font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.18); z-index:9999; opacity:0;
-          transition:opacity .18s ease;
-        `;
-        document.body.appendChild(box);
-      }
-      box.textContent = msg;
-      box.style.background = type==='error' ? '#e64646' : (type==='ok' ? '#0f9d58' : '#1f2937');
-      box.style.opacity = '0.98';
-      setTimeout(()=> box.style.opacity='0', 1500);
-    }
-
-    /* ========== Markdown utils ========== */
+    /* ===== Utils ===== */
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])) }
-
     function md(text=''){
-      // 코드블록
       text = text.replace(/```([\s\S]*?)```/g, (_, code)=>`<pre><code>${escapeHtml(code)}</code></pre>`);
-      // 제목/불릿
       text = text.replace(/^### (.*)$/gm, '<h3>$1</h3>');
       text = text.replace(/^\- (.*)$/gm, '<li>$1</li>');
       text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-      // 굵게
       text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      // 문단
       text = text.split(/\n{2,}/).map(p=>`<p>${p}</p>`).join('\n');
       return text;
     }
-
-    /* ========== Evidence helpers ========== */
     function formatDate(d){
       if(!d) return '';
       const s = String(d);
       if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
       return s;
     }
+    function toast(msg, type='info'){
+      let box = document.getElementById('__tiny_toast');
+      if(!box){
+        box = document.createElement('div');
+        box.id='__tiny_toast';
+        box.style.cssText = `
+          position:fixed; left:50%; bottom:28px; transform:translateX(-50%);
+          background:#111418; color:#fff; padding:10px 14px; border-radius:12px;
+          font-size:13px; box-shadow:0 8px 24px rgba(0,0,0,.18); z-index:9999; opacity:0;
+          transition:opacity .18s ease;
+        `;
+        document.body.appendChild(box);
+      }
+      box.textContent = msg;
+      box.style.background = type==='error' ? '#e64646' : (type==='ok' ? '#0f9d58' : '#111418');
+      box.style.opacity = '0.98';
+      setTimeout(()=> box.style.opacity='0', 1500);
+    }
 
-    /* ========== History ========== */
-    const HS_KEY = 'RAG_RECENT_QUESTIONS';
+    /* ===== History ===== */
+    const HS_KEY = 'RAG_RECENT_QUESTIONS_V2';
     function loadHistory(){
       try { return JSON.parse(localStorage.getItem(HS_KEY)||'[]'); } catch { return [] }
     }
-    function saveHistory(q){
-      if(!q) return;
+    function addHistory(q){
       const arr = loadHistory().filter(x=>x!==q);
       arr.unshift(q);
-      localStorage.setItem(HS_KEY, JSON.stringify(arr.slice(0,12)));
+      localStorage.setItem(HS_KEY, JSON.stringify(arr.slice(0,30)));
       renderHistory();
     }
     function renderHistory(){
       if(!els.history) return;
       const arr = loadHistory();
       els.history.innerHTML = '';
+      if(!arr.length){
+        els.history.innerHTML = `<div class="small muted">아직 기록이 없습니다.</div>`;
+        return;
+      }
       arr.forEach(q=>{
-        const pill = document.createElement('button');
-        pill.className = 'pill';
-        pill.textContent = q;
-        pill.title = q;
-        pill.onclick = ()=>{ if(els.q){ els.q.value = q; autoGrow(els.q); els.q.focus(); } };
-        els.history.appendChild(pill);
+        const b = document.createElement('button');
+        b.className = 'history-item';
+        b.innerHTML = `<span class="title">${escapeHtml(q)}</span><span class="sub">질문 불러오기</span>`;
+        b.onclick = ()=>{ els.q.value = q; autoGrow(els.q); els.q.focus(); };
+        els.history.appendChild(b);
       });
     }
 
-    /* ========== “챗GPT-스러운” 미니 연출 ========== */
-    function addUserBubble(text){
-      if(!els.answer) return;
+    /* ===== Chat Bubbles ===== */
+    function addMsg(role, html, opts={}){
       const wrap = document.createElement('div');
-      wrap.className = 'bubble user';
-      wrap.innerHTML = `<div class="bubble-hd">나</div><div class="bubble-bd">${escapeHtml(text)}</div>`;
-      els.answer.appendChild(wrap);
-      els.resultCard.classList.remove('hidden');
-      els.answer.scrollTop = els.answer.scrollHeight;
+      wrap.className = 'msg';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar ' + (role==='user' ? 'user' : 'assistant');
+      avatar.textContent = role==='user' ? '나' : 'AI';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble ' + (role==='user' ? 'user' : 'assistant');
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.textContent = opts.meta || (role==='user' ? '사용자' : '요약');
+
+      const body = document.createElement('div');
+      body.className = 'markdown';
+      body.innerHTML = html;
+
+      bubble.appendChild(meta);
+      bubble.appendChild(body);
+
+      // evidence block 붙이기 (assistant일 때만)
+      if (role !== 'user' && opts.evidence && Array.isArray(opts.evidence)) {
+        const ev = renderEvidenceBlock(opts.evidence);
+        bubble.appendChild(ev);
+      }
+
+      wrap.appendChild(avatar);
+      wrap.appendChild(bubble);
+      els.chat.appendChild(wrap);
+      els.chat.scrollTop = els.chat.scrollHeight;
+      return {wrap, bubble};
     }
-    function addAssistantSkeleton(){
-      if(!els.answer) return ()=>{};
+
+    function addSkeleton(){
       const wrap = document.createElement('div');
-      wrap.className = 'bubble ai skeleton';
+      wrap.className = 'msg';
       wrap.innerHTML = `
-        <div class="bubble-hd">요약</div>
-        <div class="bubble-bd">
-          <div class="sk-line" style="width:82%"></div>
-          <div class="sk-line" style="width:94%"></div>
-          <div class="sk-line" style="width:76%"></div>
+        <div class="avatar assistant">AI</div>
+        <div class="bubble assistant">
+          <div class="meta">요약</div>
+          <div class="markdown">
+            <div class="sk-line" style="width:82%"></div>
+            <div class="sk-line" style="width:94%"></div>
+            <div class="sk-line" style="width:76%"></div>
+          </div>
         </div>
       `;
-      els.answer.appendChild(wrap);
-      els.resultCard.classList.remove('hidden');
-      els.answer.scrollTop = els.answer.scrollHeight;
-      return ()=>{ wrap.remove(); };
+      els.chat.appendChild(wrap);
+      els.chat.scrollTop = els.chat.scrollHeight;
+      return ()=>wrap.remove();
     }
-    function addAssistantBubble(html){
-      if(!els.answer) return;
+
+    /* ===== Evidence UI ===== */
+    function renderEvidenceBlock(list){
+      // state 보관
+      STATE.lastEvidence = Array.isArray(list) ? list.slice() : [];
+
       const wrap = document.createElement('div');
-      wrap.className = 'bubble ai';
-      wrap.innerHTML = `<div class="bubble-hd">요약</div><div class="bubble-bd">${html}</div>`;
-      els.answer.appendChild(wrap);
-      els.resultCard.classList.remove('hidden');
-      els.answer.scrollTop = els.answer.scrollHeight;
-    }
+      wrap.className = 'evidence';
 
-    /* ========== UI state ========== */
-    function setLoading(on){
-      if(els.ask){
-        els.ask.disabled = on;
-        if(on) { els.ask.dataset._label = els.ask.textContent; els.ask.textContent = '검색 중…'; }
-        else if(els.ask.dataset._label){ els.ask.textContent = els.ask.dataset._label; }
-      }
-      if(els.status){
-        els.status.textContent = on ? '유사 로그 검색 및 요약 생성 중…' : '';
-      }
-    }
-
-    /* ========== Evidence table render ========== */
-    function renderEvidence(list){
-      if(!els.evidence) return;
-      if(!list || !list.length){
-        els.evidence.innerHTML = '<div class="hint">근거가 없습니다.</div>';
-        return;
-      }
-      const rows = list.map(r=>{
-        const siteLine = [r.site, r.line].filter(Boolean).join(' ');
-        const eq       = r.eq || '';
-        const desc     = r.desc || '';
-        const name     = r.name || '';
-        return `
-          <tr>
-            <td class="idcell">#${r.id}</td>
-            <td>${formatDate(r.date) || ''}</td>
-            <td>${escapeHtml(siteLine)}</td>
-            <td>${escapeHtml(eq)}</td>
-            <td class="sim">${(r.sim ?? 0).toFixed(3)}</td>
-            <td class="desc">
-              <div class="rowline">
-                <span class="badge">${escapeHtml(name || 'WORK')}</span>
-              </div>
-              <div class="muted">${escapeHtml(desc)}</div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-      els.evidence.innerHTML = `
-        <table>
-          <thead>
-            <tr><th>ID</th><th>날짜</th><th>SITE-LINE</th><th>장비</th><th>유사도</th><th>요약</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+      // Controls
+      const controls = document.createElement('div');
+      controls.className = 'evi-controls';
+      controls.innerHTML = `
+        <div class="left">
+          <input class="evi-search" type="search" placeholder="근거 검색 (site/line/장비/요약)" />
+          <select class="evi-sort">
+            <option value="sim:desc">정렬: 유사도 ⬇</option>
+            <option value="sim:asc">정렬: 유사도 ⬆</option>
+            <option value="date:desc">정렬: 날짜 ⬇</option>
+            <option value="date:asc">정렬: 날짜 ⬆</option>
+            <option value="site:asc">정렬: SITE ⬆</option>
+            <option value="site:desc">정렬: SITE ⬇</option>
+            <option value="eq:asc">정렬: 장비 ⬆</option>
+            <option value="eq:desc">정렬: 장비 ⬇</option>
+          </select>
+          <label class="evi-compact"><input type="checkbox" /> 컴팩트 보기</label>
+        </div>
+        <div class="right">
+          <button class="btn mini" data-act="csv">CSV</button>
+          <button class="btn mini" data-act="copy">표 복사</button>
+          <button class="btn mini ghost" data-act="clear-filter">필터 해제</button>
+        </div>
       `;
+      wrap.appendChild(controls);
+
+      // Table
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'table-wrap';
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>날짜</th>
+            <th>SITE-LINE</th>
+            <th>장비</th>
+            <th class="t-right">유사도</th>
+            <th>요약/상세</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      tableWrap.appendChild(table);
+      wrap.appendChild(tableWrap);
+
+      const searchInput = controls.querySelector('.evi-search');
+      const sortSelect  = controls.querySelector('.evi-sort');
+      const compactChk  = controls.querySelector('.evi-compact input');
+
+      // 초기값
+      sortSelect.value = `${STATE.evidenceView.sortBy}:${STATE.evidenceView.sortDir}`;
+      compactChk.checked = !!STATE.evidenceView.compact;
+      if (STATE.evidenceView.query) searchInput.value = STATE.evidenceView.query;
+      if (compactChk.checked) table.classList.add('compact');
+
+      // 렌더러
+      function filteredSorted(){
+        const q = (searchInput.value||'').trim().toLowerCase();
+        STATE.evidenceView.query = q;
+
+        let rows = STATE.lastEvidence.map(r=>({...r}));
+        if(q){
+          rows = rows.filter(r=>{
+            const siteLine = [r.site, r.line].filter(Boolean).join(' ').toLowerCase();
+            const eq = (r.eq||'').toLowerCase();
+            const name = (r.name||'').toLowerCase();
+            const desc = (r.desc||'').toLowerCase();
+            return siteLine.includes(q) || eq.includes(q) || name.includes(q) || desc.includes(q);
+          });
+        }
+
+        // 정렬
+        const [by, dir] = sortSelect.value.split(':'); // sim/date/site/eq + asc/desc
+        STATE.evidenceView.sortBy = by;
+        STATE.evidenceView.sortDir = dir;
+
+        rows.sort((a,b)=>{
+          let av, bv;
+          if(by==='sim'){ av=a.sim||0; bv=b.sim||0; }
+          else if(by==='date'){ av=(a.date||''); bv=(b.date||''); }
+          else if(by==='site'){ av=((a.site||'')+' '+(a.line||'')); bv=((b.site||'')+' '+(b.line||'')); }
+          else if(by==='eq'){ av=(a.eq||''); bv=(b.eq||''); }
+          else { av=0; bv=0; }
+          if(av < bv) return dir==='asc' ? -1 : 1;
+          if(av > bv) return dir==='asc' ? 1 : -1;
+          return 0;
+        });
+        return rows;
+      }
+
+      function renderBody(){
+        const rows = filteredSorted();
+        const tbody = table.querySelector('tbody');
+        if(!rows.length){
+          tbody.innerHTML = `<tr><td colspan="6" class="muted">조건에 맞는 근거가 없습니다.</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = rows.map(r=>{
+          const siteLine = [r.site, r.line].filter(Boolean).join(' ');
+          const eq = r.eq || '';
+          const name = r.name || '';
+          const desc = r.desc || '';
+          return `
+            <tr data-id="${r.id}">
+              <td class="idcell">#${r.id}</td>
+              <td>${formatDate(r.date) || ''}</td>
+              <td>
+                <div class="rowline">
+                  <span class="badge link" data-fsite="${escapeHtml(r.site||'')}">${escapeHtml(r.site||'')}</span>
+                  <span class="sep"></span>
+                  <span class="badge link" data-fline="${escapeHtml(r.line||'')}">${escapeHtml(r.line||'')}</span>
+                </div>
+              </td>
+              <td>
+                <div class="rowline">
+                  <span class="badge link" data-feq="${escapeHtml(eq)}">${escapeHtml(eq||'')}</span>
+                </div>
+              </td>
+              <td class="t-right">${(r.sim ?? 0).toFixed(3)}</td>
+              <td class="desc">
+                <div class="label">${escapeHtml(name||'WORK')}</div>
+                <details>
+                  <summary>요약 보기</summary>
+                  <div class="desc-full">${escapeHtml(desc)}</div>
+                  <div class="desc-actions">
+                    <button class="btn mini" data-act="copy-desc">내용 복사</button>
+                    <button class="btn mini ghost" data-act="site-filter">이 SITE로 재검색</button>
+                    <button class="btn mini ghost" data-act="eq-filter">이 장비로 재검색</button>
+                  </div>
+                </details>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Events
+      searchInput.addEventListener('input', renderBody);
+      sortSelect.addEventListener('change', renderBody);
+      compactChk.addEventListener('change', ()=>{
+        STATE.evidenceView.compact = compactChk.checked;
+        table.classList.toggle('compact', STATE.evidenceView.compact);
+      });
+
+      controls.addEventListener('click', (e)=>{
+        const act = e.target?.dataset?.act;
+        if(!act) return;
+        if(act==='csv'){
+          const rows = filteredSorted();
+          const csv = toCSV(rows);
+          downloadBlob(csv, 'evidence.csv', 'text/csv;charset=utf-8;');
+        } else if(act==='copy'){
+          const rows = filteredSorted();
+          const text = rows.map(r=>{
+            const siteLine = [r.site, r.line].filter(Boolean).join(' ');
+            return `#${r.id}\t${formatDate(r.date) || ''}\t${siteLine}\t${r.eq||''}\t${(r.sim??0).toFixed(3)}\t${(r.name||'')}\t${(r.desc||'')}`;
+          }).join('\n');
+          navigator.clipboard.writeText(text).then(()=>toast('표 복사 완료','ok'));
+        } else if(act==='clear-filter'){
+          STATE.filters = {site:null,line:null,equipment_type:null};
+          toast('필터를 해제했습니다.');
+        }
+      });
+
+      tableWrap.addEventListener('click', (e)=>{
+        const t = e.target;
+        if(!(t instanceof HTMLElement)) return;
+
+        // row-level actions
+        if (t.dataset.act === 'copy-desc') {
+          const full = t.closest('details')?.querySelector('.desc-full')?.textContent || '';
+          navigator.clipboard.writeText(full).then(()=>toast('내용 복사 완료','ok'));
+        } else if (t.dataset.act === 'site-filter') {
+          const tr = t.closest('tr');
+          const id = tr?.dataset?.id;
+          const row = STATE.lastEvidence.find(x=>String(x.id)===String(id));
+          if(row){
+            STATE.filters.site = row.site || null;
+            STATE.filters.line = row.line || null;
+            toast(`SITE 필터 적용: ${[row.site,row.line].filter(Boolean).join(' ')}`);
+            rerunWithFilter();
+          }
+        } else if (t.dataset.act === 'eq-filter') {
+          const tr = t.closest('tr');
+          const id = tr?.dataset?.id;
+          const row = STATE.lastEvidence.find(x=>String(x.id)===String(id));
+          if(row){
+            // eq 는 "TYPE / NAME" 형태 → TYPE만 필터로
+            const type = (row.eq||'').split('/')[0].trim() || null;
+            STATE.filters.equipment_type = type || null;
+            toast(`장비타입 필터 적용: ${type||'-'}`);
+            rerunWithFilter();
+          }
+        }
+
+        // badge quick filters
+        if (t.matches('[data-fsite]')) {
+          STATE.filters.site = t.dataset.fsite || null;
+          toast(`SITE 필터: ${STATE.filters.site||'-'}`);
+          rerunWithFilter();
+        } else if (t.matches('[data-fline]')) {
+          STATE.filters.line = t.dataset.fline || null;
+          toast(`LINE 필터: ${STATE.filters.line||'-'}`);
+          rerunWithFilter();
+        } else if (t.matches('[data-feq]')) {
+          const type = (t.dataset.feq||'').split('/')[0].trim() || null;
+          STATE.filters.equipment_type = type || null;
+          toast(`장비타입 필터: ${type||'-'}`);
+          rerunWithFilter();
+        }
+      });
+
+      renderBody();
+      return wrap;
     }
 
-    /* ========== Autosize textarea & placeholder rotation ========== */
+    function toCSV(rows){
+      const header = ['ID','날짜','SITE','LINE','장비','유사도','라벨','요약'];
+      const out = [header.join(',')];
+      rows.forEach(r=>{
+        const fields = [
+          `#${r.id}`,
+          formatDate(r.date)||'',
+          (r.site||''),
+          (r.line||''),
+          (r.eq||''),
+          (r.sim??0).toFixed(3),
+          (r.name||''),
+          (r.desc||'').replace(/\n/g,' ').replace(/"/g,'""'),
+        ];
+        out.push(fields.map(f=>`"${String(f)}"`).join(','));
+      });
+      return out.join('\n');
+    }
+    function downloadBlob(text, filename, mime){
+      const blob = new Blob([text], {type:mime});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    /* ===== Composer helpers ===== */
     function autoGrow(t){
       if(!t) return;
       t.style.height = 'auto';
-      const maxH = 280;
-      t.style.height = Math.min(t.scrollHeight, maxH) + 'px';
+      t.style.height = Math.min(t.scrollHeight, 180) + 'px';
     }
 
-    const PLACEHOLDERS = [
-      '예) HS 15L TM ROBOT COMM/REAL TIME Error 원인과 조치 요약',
-      '예) PT P2D EFEM Wafer Sensor Alarm 빈발 사례 모아줘',
-      '예) EPAB310 Slow/Fast Valve 반복 이슈 해결 플레이북',
-      '예) FCIP O-RING REP 평균 소요시간과 변동 범위',
-      '예) GEN EVA L/L Door Cylinder 풀림 방지 작업 요약',
-    ];
-    let phIdx = 0;
-    function rotatePlaceholder(){
-      if(!els.q || document.activeElement === els.q) return;
-      phIdx = (phIdx + 1) % PLACEHOLDERS.length;
-      els.q.setAttribute('placeholder', PLACEHOLDERS[phIdx]);
-    }
-    setInterval(rotatePlaceholder, 5000);
+    /* ===== Core ask ===== */
+    async function ask(question, opts={}){
+      const q = (question ?? els.q.value ?? '').trim();
+      if(!q){ els.q.focus(); toast('메시지를 입력해 주세요.','error'); return; }
 
-    /* ========== Core ask ========== */
-    async function ask(){
-      if(!els.answer){ toast('결과 영역이 없습니다. HTML을 확인하세요.', 'error'); return; }
+      // print user bubble
+      addMsg('user', escapeHtml(q), { meta:'사용자' });
+      els.status.textContent = '생성 중…';
+      const removeSkel = addSkeleton();
 
-      const question = (els.q && els.q.value || '').trim();
-      if(!question){ if(els.q) els.q.focus(); toast('질문을 입력해 주세요.', 'error'); return; }
-
-      // 대화 버블: 사용자
-      addUserBubble(question);
+      const days = Number(els.days?.value || 365);
+      const prefilterLimit = Number(els.pref?.value || 300);
+      const topK = Number(els.topk?.value || 20);
 
       const body = {
-        question,
-        days: Number(els.days?.value || 365),
-        prefilterLimit: Number(els.pref?.value || 300),
-        topK: Number(els.topk?.value || 20),
-        filters: {}
+        question: q,
+        days,
+        prefilterLimit,
+        topK,
+        filters: cleanupFilters(STATE.filters)
       };
 
-      setLoading(true);
-      const removeSkel = addAssistantSkeleton();
-
       try{
-        const headers = { 'Content-Type': 'application/json' };
         const res = await fetch('/api/rag/ask', {
           method:'POST',
-          headers,
+          headers: {'Content-Type':'application/json'},
           body: JSON.stringify(body)
         });
-
         const raw = await res.text();
         let data;
-        try {
-          data = JSON.parse(raw);
-        } catch (e) {
-          throw new Error(`HTTP ${res.status} - JSON 파싱 실패. 응답 미리보기: ${raw.slice(0,200)}`);
-        }
-
+        try { data = JSON.parse(raw); }
+        catch { throw new Error(`HTTP ${res.status} - JSON 파싱 실패. 응답: ${raw.slice(0,200)}`); }
         if(!res.ok) throw new Error(data?.detail || data?.error || ('HTTP '+res.status));
 
-        // Chips
-        if(els.chipDays) els.chipDays.textContent = `기간 ${body.days}일`;
-        if(els.chipTopk) els.chipTopk.textContent = `Top-K ${body.topK}`;
-        if(els.chipPref) els.chipPref.textContent = `프리필터 ${body.prefilterLimit}`;
-        const modelStr = data?.used?.model ? `${data.used.model.chat} / ${data.used.model.embedding}` : '모델 정보 없음';
-        if(els.chipModel) els.chipModel.textContent = modelStr;
+        // chips
+        els.chipModel.textContent = `모델: ${data?.used?.model ? `${data.used.model.chat} / ${data.used.model.embedding}` : '-'}`;
+        els.chipDays.textContent  = `기간 ${days}일`;
+        els.chipPref.textContent  = `프리필터 ${prefilterLimit}`;
+        els.chipTopk.textContent  = `Top-K ${topK}`;
 
-        // Answer & Evidence (버블로 교체)
         removeSkel();
-        addAssistantBubble(md(data.answer || '응답 없음'));
-        renderEvidence(data.evidence_preview || []);
-        els.resultCard.classList.remove('hidden');
-        if(els.evidenceWrap) els.evidenceWrap.open = false;
+        const html = md(data.answer || '응답 없음');
+        const evidence = data.evidence_preview || [];
+        addMsg('assistant', html, { meta:'요약', evidence });
 
-        saveHistory(question);
-        toast('완료', 'ok');
+        STATE.lastQuestion = q;
+        addHistory(q);
+        els.status.textContent = '';
+
       }catch(err){
         console.error(err);
         removeSkel();
-        addAssistantBubble(md('오류가 발생했습니다:\n- ' + String(err.message||err)));
-        toast('오류: ' + err.message, 'error');
-        if(els.status) els.status.textContent = '오류: ' + err.message;
-      }finally{
-        setLoading(false);
+        addMsg('assistant', md('오류가 발생했습니다:\n- '+String(err.message||err)), { meta:'오류' });
+        els.status.textContent = '오류: '+String(err.message||err);
+        toast('오류: '+String(err.message||err), 'error');
       }
     }
 
-    /* ========== Wire events ========== */
-    if(els.ask) els.ask.addEventListener('click', ask);
-    if(els.clear) els.clear.addEventListener('click', ()=>{
-      if(els.q){ els.q.value = ''; autoGrow(els.q); }
-      if(els.status) els.status.textContent = '';
-      if(els.resultCard) els.resultCard.classList.add('hidden');
-      if(els.answer) els.answer.innerHTML = '';  // 대화 버블 초기화
-      toast('입력을 지웠습니다.');
-    });
-    if(els.clearHistory) els.clearHistory.addEventListener('click', ()=>{
-      localStorage.removeItem(HS_KEY);
-      renderHistory();
-      toast('최근 질문을 비웠습니다.');
-    });
-
-    // 예시 프리셋
-    $$('.btn.ghost[data-preset]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        if(!els.q) return;
-        els.q.value = b.getAttribute('data-preset') || '';
-        autoGrow(els.q);
-        els.q.focus();
-      });
-    });
-
-    // 입력 UX: 자동 높이/단축키
-    if(els.q){
-      els.q.setAttribute('placeholder', PLACEHOLDERS[0]);
-      els.q.addEventListener('input', ()=> autoGrow(els.q));
-      autoGrow(els.q);
-      els.q.addEventListener('keydown', (e)=>{
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
-          e.preventDefault();
-          ask();
-        }
-      });
-      setTimeout(()=> els.q && els.q.focus(), 80);
+    function cleanupFilters(f){
+      const out = {};
+      if (f.site) out.site = f.site;
+      if (f.line) out.line = f.line;
+      if (f.equipment_type) out.equipment_type = f.equipment_type;
+      return out;
     }
 
+    function rerunWithFilter(){
+      if(!STATE.lastQuestion){
+        toast('최근 질문이 없습니다. 먼저 질문을 입력하세요.');
+        return;
+      }
+      // 안내용 시스템 메시지
+      addMsg('assistant', md(`적용된 필터로 다시 검색합니다.\n- SITE: **${STATE.filters.site||'-'}**\n- LINE: **${STATE.filters.line||'-'}**\n- 장비타입: **${STATE.filters.equipment_type||'-'}**`), { meta: '안내' });
+      ask(STATE.lastQuestion);
+    }
+
+    /* ===== Wire events ===== */
+    els.ask?.addEventListener('click', ()=> ask());
+    els.clear?.addEventListener('click', ()=>{
+      els.q.value = '';
+      autoGrow(els.q);
+      els.status.textContent = '';
+      toast('초기화했습니다.');
+    });
+    els.newChat?.addEventListener('click', ()=>{
+      // 채팅 영역 초기화
+      els.chat.innerHTML = '';
+      els.q.value = '';
+      autoGrow(els.q);
+      STATE.lastQuestion = '';
+      STATE.lastAnswerHtml = '';
+      STATE.lastEvidence = [];
+      STATE.filters = {site:null,line:null,equipment_type:null};
+      toast('새 대화를 시작합니다.');
+    });
+    els.clearHistory?.addEventListener('click', ()=>{
+      localStorage.removeItem(HS_KEY);
+      renderHistory();
+      toast('기록을 비웠습니다.');
+    });
+
+    // textarea UX
+    els.q?.addEventListener('input', ()=> autoGrow(els.q));
+    els.q?.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter' && !e.shiftKey){
+        e.preventDefault();
+        ask();
+      } else if ((e.ctrlKey||e.metaKey) && e.key==='Enter'){
+        e.preventDefault();
+        ask();
+      }
+    });
+    setTimeout(()=> els.q && els.q.focus(), 80);
+
+    // first render
     renderHistory();
   }
 })();
