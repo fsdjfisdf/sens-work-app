@@ -1,8 +1,8 @@
 // back/src/dao/ragDao.js
-// ✅ 공용 풀 재사용: 다른 모듈과 DB 엇갈림 방지
+// 공용 DB 풀 사용 (다른 모듈과 일관)
 const { pool } = require('../../config/database');
 
-/* 테이블 보장 */
+/* ---------- 테이블 보장 ---------- */
 async function ensureTables() {
   const conn = await pool.getConnection();
   try {
@@ -42,7 +42,7 @@ async function ensureTables() {
   }
 }
 
-/* work_log 1row → 텍스트 */
+/* ---------- work_log 1row → 텍스트 ---------- */
 function buildRowToText(row) {
   const lines = [
     `[SITE/LINE] ${row.site || ''} / ${row.line || ''}`,
@@ -59,8 +59,9 @@ function buildRowToText(row) {
   return lines.map(s => String(s).replace(/<br\s*\/?>/gi, '\n')).join('\n').trim();
 }
 
-/* 일괄 로딩 (임베딩 전용) */
-async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', params = {} } = {}) {
+/* ---------- 배치 로딩(임베딩 전처리 등에서 사용 가능) ---------- */
+/* whereSql 은 ? 플레이스홀더로 작성, paramsArr 는 그에 대응하는 배열 */
+async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', paramsArr = [] } = {}) {
   const conn = await pool.getConnection();
   try {
     const sql = `
@@ -79,56 +80,54 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
       FROM work_log
       ${whereSql ? `WHERE ${whereSql}` : ''}
       ORDER BY id ASC
-      LIMIT :limit OFFSET :offset
+      LIMIT ? OFFSET ?
     `;
-    const [rows] = await conn.query(sql, { ...params, limit, offset });
+    const [rows] = await conn.query(sql, [...paramsArr, Number(limit), Number(offset)]);
     return rows;
   } finally {
     conn.release();
   }
 }
 
-/* rag_chunks upsert */
+/* ---------- rag_chunks upsert ---------- */
 async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
   const conn = await pool.getConnection();
   try {
-    const [res] = await conn.query(
-      `
+    const sql = `
       INSERT INTO rag_chunks
       (src_table, src_id, site, line, equipment_type, equipment_name, work_type, work_type2, task_warranty,
        start_time, end_time, task_duration, content, metadata)
       VALUES
-      (:src_table, :src_id, :site, :line, :equipment_type, :equipment_name, :work_type, :work_type2, :task_warranty,
-       :start_time, :end_time, :task_duration, :content, CAST(:metadata AS JSON))
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
       ON DUPLICATE KEY UPDATE
         site=VALUES(site), line=VALUES(line), equipment_type=VALUES(equipment_type),
         equipment_name=VALUES(equipment_name), work_type=VALUES(work_type), work_type2=VALUES(work_type2),
         task_warranty=VALUES(task_warranty), start_time=VALUES(start_time), end_time=VALUES(end_time),
         task_duration=VALUES(task_duration), content=VALUES(content), metadata=VALUES(metadata)
-      `,
-      {
-        src_table,
-        src_id: String(src_id),
-        site: rowMeta.site || null,
-        line: rowMeta.line || null,
-        equipment_type: rowMeta.equipment_type || null,
-        equipment_name: rowMeta.equipment_name || null,
-        work_type: rowMeta.work_type || null,
-        work_type2: rowMeta.work_type2 || null,
-        task_warranty: rowMeta.task_warranty || null,
-        start_time: rowMeta.start_time || null,
-        end_time: rowMeta.end_time || null,
-        task_duration: rowMeta.task_duration ?? null,
-        content,
-        metadata: JSON.stringify(rowMeta || {}),
-      }
-    );
+    `;
+    const args = [
+      src_table,
+      String(src_id),
+      rowMeta.site || null,
+      rowMeta.line || null,
+      rowMeta.equipment_type || null,
+      rowMeta.equipment_name || null,
+      rowMeta.work_type || null,
+      rowMeta.work_type2 || null,
+      rowMeta.task_warranty || null,
+      rowMeta.start_time || null,
+      rowMeta.end_time || null,
+      rowMeta.task_duration ?? null,
+      content,
+      JSON.stringify(rowMeta || {}),
+    ];
 
+    const [res] = await conn.query(sql, args);
     if (res.insertId) return res.insertId;
 
     const [found] = await conn.query(
-      `SELECT id FROM rag_chunks WHERE src_table = :src_table AND src_id = :src_id LIMIT 1`,
-      { src_table, src_id: String(src_id) }
+      `SELECT id FROM rag_chunks WHERE src_table = ? AND src_id = ? LIMIT 1`,
+      [src_table, String(src_id)]
     );
     return found?.[0]?.id;
   } finally {
@@ -136,20 +135,20 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
   }
 }
 
-/* rag_embeddings insert */
+/* ---------- rag_embeddings insert ---------- */
 async function saveEmbedding(chunk_id, embedding) {
   const conn = await pool.getConnection();
   try {
     await conn.query(
-      `INSERT INTO rag_embeddings (chunk_id, dims, embedding) VALUES (:chunk_id, :dims, :embedding)`,
-      { chunk_id, dims: embedding.length, embedding: JSON.stringify(embedding) }
+      `INSERT INTO rag_embeddings (chunk_id, dims, embedding) VALUES (?, ?, ?)`,
+      [chunk_id, embedding.length, JSON.stringify(embedding)]
     );
   } finally {
     conn.release();
   }
 }
 
-/* 코사인 유사도 */
+/* ---------- 코사인 유사도 ---------- */
 function cosineSimilarity(a, b) {
   let dot = 0, na = 0, nb = 0;
   const len = Math.min(a.length, b.length);
@@ -162,16 +161,17 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
-/* ✅ 후보 임베딩 로딩: JSON.parse 방어 추가 */
+/* ---------- 후보 임베딩 로딩 ---------- */
+/* filters: {equipment_type, site, line} 지원. 모두 optional. */
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
     const where = ['JSON_VALID(e.embedding) = 1'];
-    const params = { limit };
+    const args = [];
 
-    if (filters.equipment_type) { where.push('c.equipment_type = :equipment_type'); params.equipment_type = filters.equipment_type; }
-    if (filters.site)           { where.push('c.site = :site'); params.site = filters.site; }
-    if (filters.line)           { where.push('c.line = :line'); params.line = filters.line; }
+    if (filters.equipment_type) { where.push('c.equipment_type = ?'); args.push(filters.equipment_type); }
+    if (filters.site)           { where.push('c.site = ?');            args.push(filters.site); }
+    if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
 
     const sql = `
       SELECT e.id as emb_id, e.chunk_id, e.dims, e.embedding,
@@ -181,20 +181,18 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
       ORDER BY e.id DESC
-      LIMIT :limit
+      LIMIT ?
     `;
-    const [rows] = await conn.query(sql, params);
+    args.push(Number(limit));
+
+    const [rows] = await conn.query(sql, args);
 
     const out = [];
     for (const r of rows) {
-      // ✅ 이미 객체(Array)로 오는 경우가 많음: 그대로 사용
+      // mysql2는 JSON 컬럼을 JS 객체로 반환하는 경우가 많음
       let emb = r.embedding;
       if (typeof emb === 'string') {
-        try {
-          emb = JSON.parse(emb);
-        } catch {
-          continue; // 파싱 실패는 스킵
-        }
+        try { emb = JSON.parse(emb); } catch { continue; }
       }
       if (!Array.isArray(emb) || emb.length === 0) continue;
 
@@ -206,7 +204,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   }
 }
 
-/* 구버전 호환 함수들 */
+/* ---------- 구버전 호환 함수 ---------- */
 function buildText(row) {
   return buildRowToText(row);
 }
