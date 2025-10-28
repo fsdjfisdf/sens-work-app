@@ -176,22 +176,41 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.site)           { where.push('c.site = :site'); params.site = filters.site; }
     if (filters.line)           { where.push('c.line = :line'); params.line = filters.line; }
 
+    // JSON_VALID로 1차 필터링 (MySQL JSON/TEXT 모두 대응)
     const sql = `
       SELECT e.id as emb_id, e.chunk_id, e.dims, e.embedding,
              c.site, c.line, c.equipment_type, c.equipment_name,
              c.work_type, c.work_type2, c.task_warranty, c.content
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
-      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+      WHERE JSON_VALID(e.embedding) ${where.length ? 'AND ' + where.join(' AND ') : ''}
       ORDER BY e.id DESC
       LIMIT :limit
     `;
     const [rows] = await conn.query(sql, params);
-    return rows.map(r => ({ ...r, embedding: JSON.parse(r.embedding) }));
+
+    // 2차: 파싱 방어 + 유효성 점검 (배열/숫자 여부)
+    const safe = [];
+    for (const r of rows) {
+      let embArr;
+      try {
+        embArr = JSON.parse(r.embedding);
+      } catch (e) {
+        // 혹시 JSON_VALID가 true인데도 파싱 실패하면 스킵
+        continue;
+      }
+      if (!Array.isArray(embArr) || embArr.length === 0) continue;
+      // 모든 요소가 number인가?
+      if (embArr.some(v => typeof v !== 'number' || Number.isNaN(v))) continue;
+
+      safe.push({ ...r, embedding: embArr });
+    }
+    return safe;
   } finally {
     conn.release();
   }
 }
+
 
 // 추가: 구버전 호환 시그니처
 function buildText(row) {
