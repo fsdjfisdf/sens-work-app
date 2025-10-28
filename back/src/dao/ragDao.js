@@ -1,59 +1,224 @@
-const { pool } = require('../../config/database');
+// Dao.js
+const mysql = require('mysql2/promise');
+const secret = require('./secret');
 
-// work_log → 임베딩용 텍스트 만들기
-function buildText(row) {
-  const parts = [
-    row.task_name, row.equipment_type, row.site, row.line,
-    row.task_description, row.task_cause, row.task_result,
-    row.work_type, row.work_type2, row.setup_item, row.maint_item, row.transfer_item
-  ].filter(Boolean);
-  return parts.join(' | ').slice(0, 4000);
+const pool = mysql.createPool({
+  host: secret.host,
+  user: secret.user,
+  password: secret.password,
+  database: secret.database,
+  port: Number(secret.port || 3306),
+  waitForConnections: true,
+  connectionLimit: 10,
+  namedPlaceholders: true,
+});
+
+async function ensureTables() {
+  const conn = await pool.getConnection();
+  try {
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS rag_chunks (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        src_table VARCHAR(64) NOT NULL,
+        src_id   VARCHAR(64) NOT NULL,
+        site VARCHAR(64), line VARCHAR(64), equipment_type VARCHAR(64),
+        equipment_name VARCHAR(128),
+        work_type VARCHAR(64), work_type2 VARCHAR(64),
+        task_warranty VARCHAR(32),
+        start_time TIME NULL, end_time TIME NULL,
+        task_duration INT NULL,
+        content MEDIUMTEXT NOT NULL,
+        metadata JSON NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_src (src_table, src_id)
+      )
+    `);
+
+    await conn.query(`
+      CREATE TABLE IF NOT EXISTS rag_embeddings (
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        chunk_id BIGINT NOT NULL,
+        dims INT NOT NULL,
+        embedding JSON NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_chunk_id (chunk_id),
+        CONSTRAINT fk_chunk
+          FOREIGN KEY (chunk_id) REFERENCES rag_chunks(id)
+          ON DELETE CASCADE
+      )
+    `);
+  } finally {
+    conn.release();
+  }
 }
 
-// 임베딩 upsert
-async function upsertEmbedding(id, embeddingArray) {
-  const placeholders = embeddingArray.map(() => '?').join(',');
-  const sql = `
-    REPLACE INTO work_log_embedding (id, embedding)
-    VALUES (?, JSON_ARRAY(${placeholders}))
-  `;
-  await pool.query(sql, [id, ...embeddingArray]);
+function buildRowToText(row) {
+  // work_log 스키마 기준: 모델 컨텍스트 & 예시 컬럼을 최대한 매핑
+  // 없는 컬럼은 NULL 처리되어도 안전 (COALESCE로 문자열화)
+  const lines = [
+    `[SITE/LINE] ${row.site || ''} / ${row.line || ''}`,
+    `[EQUIP] ${row.equipment_type || ''} - ${row.equipment_name || ''} (Warranty: ${row.task_warranty || ''})`,
+    `[STATUS] ${row.status || ''}`,
+    `[ACTION] ${row.task_description || row.action || ''}`,
+    `[CAUSE] ${row.task_cause || row.cause || ''}`,
+    `[RESULT] ${row.task_result || row.result || ''}`,
+    `[SOP/TS] SOP=${row.SOP || ''} / TS=${row.tsguide || row.TS_guide || ''}`,
+    `[WORK TYPE] ${row.work_type || ''} / ${row.work_type2 || ''}`,
+    `[SETUP/TRANS] setup_item=${row.setup_item || ''} / transfer_item=${row.transfer_item || ''}`,
+    `[TIME] duration(min)=${row.task_duration ?? row.time ?? ''}, start=${row.start_time || ''}, end=${row.end_time || ''}, none=${row.none_time ?? row.none ?? ''}, move=${row.move_time ?? row.move ?? ''}`,
+  ];
+  return lines
+    .map(s => String(s).replace(/<br\s*\/?>/gi, '\n')) // HTML <br> → 개행
+    .join('\n')
+    .trim();
 }
 
-// 최근 N건 후보(키워드 프리필터) 조회
-async function fetchCandidateRows(keyword, days=365, limit=300) {
-  const like = `%${keyword}%`;
-  const sql = `
-    SELECT wl.id, wl.task_date, wl.task_name, wl.task_man, wl.site, wl.\`line\`,
-           wl.equipment_type, wl.task_description, JSON_EXTRACT(wle.embedding, '$') AS emb
-    FROM work_log wl
-    JOIN work_log_embedding wle ON wle.id = wl.id
-    WHERE wl.task_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      AND (wl.task_name LIKE ? OR wl.task_description LIKE ? OR wl.task_cause LIKE ? OR wl.task_result LIKE ?)
-    ORDER BY wl.task_date DESC
-    LIMIT ?
-  `;
-  const [rows] = await pool.query(sql, [days, like, like, like, like, limit]);
-  return rows;
+async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', params = {} } = {}) {
+  const conn = await pool.getConnection();
+  try {
+    const base = `
+      SELECT 
+        id,
+        site, line, equipment_type, equipment_name,
+        task_warranty,
+        status,
+        task_description, task_cause, task_result,
+        SOP, tsguide,
+        work_type, work_type2,
+        setup_item, transfer_item,
+        task_duration, start_time, end_time, none_time, move_time,
+        -- 예시 데이터 컬럼 호환용
+        action, cause, result, time, none, move
+      FROM work_log
+      ${whereSql ? `WHERE ${whereSql}` : ''}
+      ORDER BY id ASC
+      LIMIT :limit OFFSET :offset
+    `;
+    const [rows] = await conn.query(base, { ...params, limit, offset });
+    return rows;
+  } finally {
+    conn.release();
+  }
 }
 
-// 특정 id 상세 (근거 표시용)
-async function readRowsByIds(ids) {
-  if (!ids.length) return [];
-  const placeholders = ids.map(() => '?').join(',');
-  const sql = `
-    SELECT id, task_date, task_name, task_man, site, \`line\`, equipment_type,
-           task_description, task_cause, task_result
-    FROM work_log
-    WHERE id IN (${placeholders})
-  `;
-  const [rows] = await pool.query(sql, ids);
-  return rows;
+async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
+  const conn = await pool.getConnection();
+  try {
+    const [res] = await conn.query(
+      `
+      INSERT INTO rag_chunks
+      (src_table, src_id, site, line, equipment_type, equipment_name, work_type, work_type2, task_warranty,
+       start_time, end_time, task_duration, content, metadata)
+      VALUES
+      (:src_table, :src_id, :site, :line, :equipment_type, :equipment_name, :work_type, :work_type2, :task_warranty,
+       :start_time, :end_time, :task_duration, :content, CAST(:metadata AS JSON))
+      ON DUPLICATE KEY UPDATE
+        site=VALUES(site), line=VALUES(line), equipment_type=VALUES(equipment_type),
+        equipment_name=VALUES(equipment_name), work_type=VALUES(work_type), work_type2=VALUES(work_type2),
+        task_warranty=VALUES(task_warranty), start_time=VALUES(start_time), end_time=VALUES(end_time),
+        task_duration=VALUES(task_duration), content=VALUES(content), metadata=VALUES(metadata)
+      `,
+      {
+        src_table,
+        src_id: String(src_id),
+        site: rowMeta.site || null,
+        line: rowMeta.line || null,
+        equipment_type: rowMeta.equipment_type || null,
+        equipment_name: rowMeta.equipment_name || null,
+        work_type: rowMeta.work_type || null,
+        work_type2: rowMeta.work_type2 || null,
+        task_warranty: rowMeta.task_warranty || null,
+        start_time: rowMeta.start_time || null,
+        end_time: rowMeta.end_time || null,
+        task_duration: rowMeta.task_duration ?? null,
+        content,
+        metadata: JSON.stringify(rowMeta || {}),
+      }
+    );
+
+    const insertId = res.insertId;
+    if (insertId) return insertId;
+
+    // ON DUPLICATE일 경우 id 재조회
+    const [found] = await conn.query(
+      `SELECT id FROM rag_chunks WHERE src_table = :src_table AND src_id = :src_id LIMIT 1`,
+      { src_table, src_id: String(src_id) }
+    );
+    return found?.[0]?.id;
+  } finally {
+    conn.release();
+  }
+}
+
+async function saveEmbedding(chunk_id, embedding) {
+  const conn = await pool.getConnection();
+  try {
+    const dims = embedding.length;
+    await conn.query(
+      `INSERT INTO rag_embeddings (chunk_id, dims, embedding) VALUES (:chunk_id, :dims, :embedding)`,
+      { chunk_id, dims, embedding: JSON.stringify(embedding) }
+    );
+  } finally {
+    conn.release();
+  }
+}
+
+function cosineSimilarity(a, b) {
+  let dot = 0, na = 0, nb = 0;
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  if (!na || !nb) return 0;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
+  const conn = await pool.getConnection();
+  try {
+    const where = [];
+    const params = { limit };
+    if (filters.equipment_type) {
+      where.push('c.equipment_type = :equipment_type');
+      params.equipment_type = filters.equipment_type;
+    }
+    if (filters.site) {
+      where.push('c.site = :site');
+      params.site = filters.site;
+    }
+    if (filters.line) {
+      where.push('c.line = :line');
+      params.line = filters.line;
+    }
+
+    const sql = `
+      SELECT e.id as emb_id, e.chunk_id, e.dims, e.embedding,
+             c.site, c.line, c.equipment_type, c.equipment_name, c.work_type, c.work_type2, c.task_warranty, c.content
+      FROM rag_embeddings e
+      JOIN rag_chunks c ON c.id = e.chunk_id
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+      ORDER BY e.id DESC
+      LIMIT :limit
+    `;
+    const [rows] = await conn.query(sql, params);
+    return rows.map(r => ({
+      ...r,
+      embedding: JSON.parse(r.embedding),
+    }));
+  } finally {
+    conn.release();
+  }
 }
 
 module.exports = {
-  buildText,
-  upsertEmbedding,
-  fetchCandidateRows,
-  readRowsByIds
+  pool,
+  ensureTables,
+  fetchWorkLogBatch,
+  upsertChunk,
+  saveEmbedding,
+  fetchAllEmbeddings,
+  buildRowToText,
+  cosineSimilarity,
 };
