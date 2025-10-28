@@ -8,7 +8,7 @@ const {
 
 /** 컨텍스트 묶어서 메시지 프롬프트 생성 (contexts는 string[] 가정) */
 function buildPrompt(question, contexts) {
-  const ctx = contexts
+  const ctx = (contexts || [])
     .map((text, i) => `【근거 ${i + 1}】\n${text}`)
     .join('\n\n');
 
@@ -50,6 +50,7 @@ async function ask(req, res) {
       question,
       topK: _topK = 20,
       prefilterLimit: _prefilter = 300,
+      days: _days = 365,
       filters = {},
     } = req.body || {};
 
@@ -60,17 +61,18 @@ async function ask(req, res) {
     // 숫자 파라미터 정규화
     const topK = Math.max(1, Math.min(50, Number(_topK) || 20));
     const prefilterLimit = Math.max(10, Math.min(5000, Number(_prefilter) || 300));
+    const days = Math.max(1, Math.min(3650, Number(_days) || 365)); // 최대 10년
 
     await ensureTables();
 
-    // 1) 후보 로딩 (DAO에서 content 비어있는 것 배제되도록 수정되어 있어야 함)
+    // 1) 후보 로딩
     const candidates = await fetchAllEmbeddings({
-      filters,           // { site, line, equipment_type } 지원
+      filters: { ...filters, days },     // ✅ 날짜 필터 반영
       limit: prefilterLimit,
     });
 
     if (!candidates.length) {
-      console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', filters, prefilterLimit);
+      console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', { ...filters, days }, prefilterLimit);
       return res.json({
         ok: true,
         used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
@@ -102,10 +104,10 @@ async function ask(req, res) {
     const contextsForLLM = rankedNonEmpty.slice(0, 8).map(r => normalizeContent(r.content));
     const ctxUsedCount = contextsForLLM.length;
 
-    // 5) 프리뷰(프론트 테이블용) 구성: 날짜/위치/장비/요약 채우기
+    // 5) 프리뷰(프론트 테이블용) 구성
     const evidence_preview = ranked.map(r => ({
       id: r.chunk_id,
-      date: r.task_date || '',                                     // DAO에서 metadata.task_date alias 제공
+      date: r.task_date ? String(r.task_date).slice(0, 10) : '',
       site: r.site || '',
       line: r.line || '',
       eq: [r.equipment_type, r.equipment_name].filter(Boolean).join(' / '),

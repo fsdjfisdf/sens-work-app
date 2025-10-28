@@ -26,13 +26,12 @@ async function main() {
   const limit = Number(argv.limit || 200);
   const offset = Number(argv.offset || 0);
   const whereSql = argv.where || '';   // 예: "equipment_type='SUPRA N'"
-  const srcTable = argv.src || 'work_log';
 
   console.log(`[embed-all] start: limit=${limit}, offset=${offset}, where="${whereSql}"`);
 
   await ensureTables();
 
-  const rows = await fetchWorkLogBatch({ limit, offset, whereSql, params: {} });
+  const rows = await fetchWorkLogBatch({ limit, offset, whereSql, paramsArr: [] });
   if (!rows.length) {
     console.log('[embed-all] no rows.');
     return;
@@ -44,36 +43,45 @@ async function main() {
   let saved = 0;
 
   for (let i = 0; i < texts.length; i += BATCH) {
-    const slice = texts.slice(i, i + BATCH);
-    const vecs = await embedTexts(slice);
+    const sliceTexts = texts.slice(i, i + BATCH);
+    const vecs = await embedTexts(sliceTexts);
 
-    for (let j = 0; j < slice.length; j++) {
-      const r = rows[i + j];
+    for (let j = 0; j < sliceTexts.length; j++) {
+      const r = rows[i + j]; // ✅ 올바른 참조
       const chunkId = await upsertChunk({
-  src_table: 'work_log',
-  src_id: String(row.id),
-  content: buildRowToText(row), // 줄바꿈/요약 포함된 본문
-  rowMeta: {
-    site: row.site,
-    line: row.line,
-    equipment_type: row.equipment_type,
-    equipment_name: row.equipment_name,
-    work_type: row.work_type,
-    work_type2: row.work_type2,
-    task_warranty: row.task_warranty,
-    start_time: row.start_time,
-    end_time: row.end_time,
-    task_duration: row.task_duration ?? row.time ?? null,
-    task_date: row.task_date || null,          // ✅ 날짜를 metadata로 저장!
-    task_name: row.task_name || null           // (있으면 같이 저장)
-  }
-});
+        src_table: 'work_log',
+        src_id: String(r.id),
+        content: buildRowToText(r),   // ✅ 항상 본문 채움
+        rowMeta: {
+          site: r.site,
+          line: r.line,
+          equipment_type: r.equipment_type,
+          equipment_name: r.equipment_name,
+          work_type: r.work_type,
+          work_type2: r.work_type2,
+          task_warranty: r.task_warranty,         // ✅ warranty 매핑
+          task_date: r.task_date || null,         // ✅ 물리 컬럼에도 저장
+          task_name: r.task_name || null,
+          start_time: r.start_time,
+          end_time: r.end_time,
+          task_duration: r.duration_min ?? null,  // ✅ 분 단위
+          status: r.status,
+          SOP: r.SOP,
+          tsguide: r.tsguide,
+          action: r.task_description,
+          cause: r.task_cause,
+          result: r.task_result,
+          none_time: r.none_time,
+          move_time: r.move_time,
+        }
+      });
 
       await saveEmbedding(chunkId, vecs[j]);
       saved++;
+      if (saved % 10 === 0) console.log(`✅ ${saved} / ${rows.length}`);
     }
 
-    if (i + BATCH < texts.length) await sleep(500);
+    if (i + BATCH < texts.length) await sleep(300);
   }
 
   console.log(`[embed-all] done. saved=${saved}`);

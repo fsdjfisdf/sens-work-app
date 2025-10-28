@@ -2,6 +2,18 @@
 // 공용 DB 풀 사용 (다른 모듈과 일관)
 const { pool } = require('../../config/database');
 
+/* ---------- 유틸 ---------- */
+function hhmmOrHhmmssToMin(v) {
+  if (!v) return null;
+  const s = String(v);
+  const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return null;
+  const h = Number(m[1] || 0);
+  const mi = Number(m[2] || 0);
+  const sec = Number(m[3] || 0);
+  return h * 60 + mi + (sec >= 30 ? 1 : 0);
+}
+
 /* ---------- 테이블 보장 ---------- */
 async function ensureTables() {
   const conn = await pool.getConnection();
@@ -11,16 +23,23 @@ async function ensureTables() {
         id BIGINT PRIMARY KEY AUTO_INCREMENT,
         src_table VARCHAR(64) NOT NULL,
         src_id   VARCHAR(64) NOT NULL,
-        site VARCHAR(64), line VARCHAR(64), equipment_type VARCHAR(64),
+        site VARCHAR(64), 
+        line VARCHAR(64), 
+        equipment_type VARCHAR(64),
         equipment_name VARCHAR(128),
-        work_type VARCHAR(64), work_type2 VARCHAR(64),
+        work_type VARCHAR(64), 
+        work_type2 VARCHAR(64),
         task_warranty VARCHAR(32),
-        start_time TIME NULL, end_time TIME NULL,
-        task_duration INT NULL,
+        task_date DATE NULL,                -- ✅ 물리 컬럼 (날짜 필터/인덱스)
+        start_time TIME NULL, 
+        end_time TIME NULL,
+        task_duration INT NULL,            -- ✅ 분(min) 저장
         content MEDIUMTEXT NOT NULL,
         metadata JSON NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY uniq_src (src_table, src_id)
+        UNIQUE KEY uniq_src (src_table, src_id),
+        KEY idx_task_date (task_date),
+        KEY idx_eq_site_line (equipment_type, site, line)
       )
     `);
 
@@ -44,19 +63,22 @@ async function ensureTables() {
 
 /* ---------- work_log 1row → 텍스트 ---------- */
 function buildRowToText(row) {
+  const durationMin = row.duration_min ?? hhmmOrHhmmssToMin(row.task_duration ?? row.time);
+  const actionText = String(row.task_description || row.action || '').replace(/<br\s*\/?>/gi, '\n');
+
   const lines = [
     `[SITE/LINE] ${row.site || ''} / ${row.line || ''}`,
-    `[EQUIP] ${row.equipment_type || ''} - ${row.equipment_name || ''} (Warranty: ${row.task_warranty || ''})`,
+    `[EQUIP] ${row.equipment_type || ''} - ${row.equipment_name || ''} (Warranty: ${row.warranty || row.task_warranty || ''})`,
     `[STATUS] ${row.status || ''}`,
-    `[ACTION] ${row.task_description || row.action || ''}`,
+    `[ACTION] ${actionText}`,
     `[CAUSE] ${row.task_cause || row.cause || ''}`,
     `[RESULT] ${row.task_result || row.result || ''}`,
     `[SOP/TS] SOP=${row.SOP || ''} / TS=${row.tsguide || row.TS_guide || ''}`,
     `[WORK TYPE] ${row.work_type || ''} / ${row.work_type2 || ''}`,
     `[SETUP/TRANS] setup_item=${row.setup_item || ''} / transfer_item=${row.transfer_item || ''}`,
-    `[TIME] duration(min)=${row.task_duration ?? row.time ?? ''}, start=${row.start_time || ''}, end=${row.end_time || ''}, none=${row.none_time ?? row.none ?? ''}, move=${row.move_time ?? row.move ?? ''}`,
+    `[TIME] duration(min)=${durationMin ?? ''}, start=${row.start_time || ''}, end=${row.end_time || ''}, none=${row.none_time ?? row.none ?? ''}, move=${row.move_time ?? row.move ?? ''}`,
   ];
-  return lines.map(s => String(s).replace(/<br\s*\/?>/gi, '\n')).join('\n').trim();
+  return lines.join('\n').trim();
 }
 
 /* ---------- 배치 로딩(임베딩 전처리 등에서 사용 가능) ---------- */
@@ -67,16 +89,18 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
     const sql = `
       SELECT 
         id,
+        task_date,
+        task_name,
+        task_man,
         site, line, equipment_type, equipment_name,
-        task_warranty,
+        warranty AS task_warranty,          -- ✅ 정확 매핑 (원본 컬럼 warranty)
         status,
         task_description, task_cause, task_result,
         SOP, tsguide,
         work_type, work_type2,
         setup_item, transfer_item,
         task_duration, start_time, end_time, none_time, move_time,
-        -- 예시 데이터 컬럼 호환
-        action, cause, result, time, none, move
+        TIME_TO_SEC(task_duration)/60 AS duration_min
       FROM work_log
       ${whereSql ? `WHERE ${whereSql}` : ''}
       ORDER BY id ASC
@@ -96,14 +120,23 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
     const sql = `
       INSERT INTO rag_chunks
       (src_table, src_id, site, line, equipment_type, equipment_name, work_type, work_type2, task_warranty,
-       start_time, end_time, task_duration, content, metadata)
+       task_date, start_time, end_time, task_duration, content, metadata)
       VALUES
-      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
+      (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON))
       ON DUPLICATE KEY UPDATE
-        site=VALUES(site), line=VALUES(line), equipment_type=VALUES(equipment_type),
-        equipment_name=VALUES(equipment_name), work_type=VALUES(work_type), work_type2=VALUES(work_type2),
-        task_warranty=VALUES(task_warranty), start_time=VALUES(start_time), end_time=VALUES(end_time),
-        task_duration=VALUES(task_duration), content=VALUES(content), metadata=VALUES(metadata)
+        site=VALUES(site), 
+        line=VALUES(line), 
+        equipment_type=VALUES(equipment_type),
+        equipment_name=VALUES(equipment_name), 
+        work_type=VALUES(work_type), 
+        work_type2=VALUES(work_type2),
+        task_warranty=VALUES(task_warranty), 
+        task_date=VALUES(task_date),
+        start_time=VALUES(start_time), 
+        end_time=VALUES(end_time),
+        task_duration=VALUES(task_duration), 
+        content=VALUES(content), 
+        metadata=VALUES(metadata)
     `;
     const args = [
       src_table,
@@ -115,9 +148,10 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
       rowMeta.work_type || null,
       rowMeta.work_type2 || null,
       rowMeta.task_warranty || null,
+      rowMeta.task_date || null,                          // ✅ 물리 컬럼
       rowMeta.start_time || null,
       rowMeta.end_time || null,
-      rowMeta.task_duration ?? null,
+      (rowMeta.task_duration ?? null),                    // ✅ 분(min) 정수
       content,
       JSON.stringify(rowMeta || {}),
     ];
@@ -162,7 +196,7 @@ function cosineSimilarity(a, b) {
 }
 
 /* ---------- 후보 임베딩 로딩 ---------- */
-/* filters: {equipment_type, site, line} 지원. 모두 optional. */
+/* filters: {equipment_type, site, line, days} */
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
@@ -176,6 +210,10 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.equipment_type) { where.push('c.equipment_type = ?'); args.push(filters.equipment_type); }
     if (filters.site)           { where.push('c.site = ?');            args.push(filters.site); }
     if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
+    if (filters.days && Number(filters.days) > 0) {
+      where.push('c.task_date >= (CURRENT_DATE - INTERVAL ? DAY)');
+      args.push(Number(filters.days));
+    }
 
     const sql = `
       SELECT
@@ -191,8 +229,8 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
         c.work_type,
         c.work_type2,
         c.task_warranty,
-        c.content,
-        JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.task_date')) AS task_date
+        c.task_date,
+        c.content
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
@@ -250,4 +288,5 @@ module.exports = {
   // 호환
   buildText,
   upsertEmbedding,
+  hhmmOrHhmmssToMin,
 };
