@@ -30,10 +30,10 @@ async function ensureTables() {
         work_type VARCHAR(64), 
         work_type2 VARCHAR(64),
         task_warranty VARCHAR(32),
-        task_date DATE NULL,                -- ✅ 물리 컬럼 (날짜 필터/인덱스)
+        task_date DATE NULL,                -- 날짜 필터/인덱스
         start_time TIME NULL, 
         end_time TIME NULL,
-        task_duration INT NULL,            -- ✅ 분(min) 저장
+        task_duration INT NULL,            -- 분(min) 저장
         content MEDIUMTEXT NOT NULL,
         metadata JSON NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -93,7 +93,7 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
         task_name,
         task_man,
         site, line, equipment_type, equipment_name,
-        warranty AS task_warranty,          -- ✅ 정확 매핑 (원본 컬럼 warranty)
+        warranty AS task_warranty,          -- 원본 컬럼 warranty
         status,
         task_description, task_cause, task_result,
         SOP, tsguide,
@@ -148,10 +148,10 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
       rowMeta.work_type || null,
       rowMeta.work_type2 || null,
       rowMeta.task_warranty || null,
-      rowMeta.task_date || null,                          // ✅ 물리 컬럼
+      rowMeta.task_date || null,                    // 물리 컬럼
       rowMeta.start_time || null,
       rowMeta.end_time || null,
-      (rowMeta.task_duration ?? null),                    // ✅ 분(min) 정수
+      (rowMeta.task_duration ?? null),              // 분(min) 정수
       content,
       JSON.stringify(rowMeta || {}),
     ];
@@ -210,8 +210,10 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.equipment_type) { where.push('c.equipment_type = ?'); args.push(filters.equipment_type); }
     if (filters.site)           { where.push('c.site = ?');            args.push(filters.site); }
     if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
+
+    // ✅ days 필터 적용하되, task_date가 NULL인 건도 통과시켜서 초기/구버전 데이터가 차단되지 않도록 함
     if (filters.days && Number(filters.days) > 0) {
-      where.push('c.task_date >= (CURRENT_DATE - INTERVAL ? DAY)');
+      where.push('(c.task_date IS NULL OR c.task_date >= (CURRENT_DATE - INTERVAL ? DAY))');
       args.push(Number(filters.days));
     }
 

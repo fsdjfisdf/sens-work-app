@@ -6,6 +6,24 @@ const {
   cosineSimilarity,
 } = require('../dao/ragDao');
 
+/** 질문에서 SITE 키워드 자동 추론 (PT/HS/IC/CJ/PSKH) */
+function inferSiteFromQuestion(q = '') {
+  const U = String(q).toUpperCase();
+  const tests = [
+    { key: 'PT',   pats: [/\bPT\b/, ' PT ', 'PT ', ' PT', 'PT사이트'] },
+    { key: 'HS',   pats: [/\bHS\b/, ' HS ', 'HS ', ' HS', 'HS사이트'] },
+    { key: 'IC',   pats: [/\bIC\b/, ' IC ', 'IC ', ' IC', 'IC사이트'] },
+    { key: 'CJ',   pats: [/\bCJ\b/, ' CJ ', 'CJ ', ' CJ', 'CJ사이트'] },
+    { key: 'PSKH', pats: [/\bPSKH\b/, ' PSKH ', 'PSKH ', ' PSKH', 'PSKH사이트'] },
+  ];
+  for (const t of tests) {
+    for (const p of t.pats) {
+      if (p instanceof RegExp ? p.test(U) : U.includes(p)) return t.key;
+    }
+  }
+  return null;
+}
+
 /** 컨텍스트 묶어서 메시지 프롬프트 생성 (contexts는 string[] 가정) */
 function buildPrompt(question, contexts) {
   const ctx = (contexts || [])
@@ -65,20 +83,36 @@ async function ask(req, res) {
 
     await ensureTables();
 
+    // 🔎 질문에서 SITE 자동 추론 (프론트가 filters.site 안 보낼 때 보정)
+    const inferredSite = (!filters.site) ? inferSiteFromQuestion(question) : null;
+    const effectiveFilters = {
+      ...filters,
+      ...(inferredSite ? { site: inferredSite } : {}),
+      days, // 날짜 필터 전달 (DAO에서 NULL 허용 처리함)
+    };
+
     // 1) 후보 로딩
-    const candidates = await fetchAllEmbeddings({
-      filters: { ...filters, days },     // ✅ 날짜 필터 반영
+    let candidates = await fetchAllEmbeddings({
+      filters: effectiveFilters,
       limit: prefilterLimit,
     });
 
+    // ⚖️ 후보 0이면 날짜 필터 제거해 재시도 (초기 NULL task_date 데이터 구제)
     if (!candidates.length) {
-      console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', { ...filters, days }, prefilterLimit);
-      return res.json({
-        ok: true,
-        used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
-        answer: '근거가 없습니다.',
-        evidence_preview: [],
+      const { days: _ignored, ...noDaysFilters } = effectiveFilters;
+      candidates = await fetchAllEmbeddings({
+        filters: noDaysFilters,
+        limit: Math.max(prefilterLimit, 1000), // 한번 더 넉넉히
       });
+      if (!candidates.length) {
+        console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', effectiveFilters, prefilterLimit);
+        return res.json({
+          ok: true,
+          used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
+          answer: '근거가 없습니다.',
+          evidence_preview: [],
+        });
+      }
     }
 
     // 2) 쿼리 임베딩
