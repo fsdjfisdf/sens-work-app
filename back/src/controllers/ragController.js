@@ -1,39 +1,72 @@
 // back/src/controllers/ragController.js
-const { openai, MODELS } = require('../../config/openai');   // ✅ config로 고정
+const { openai, MODELS } = require('../../config/openai');
 const {
   ensureTables,
   fetchAllEmbeddings,
   cosineSimilarity,
-} = require('../dao/ragDao');                                // ✅ 실제 DAO 경로
+} = require('../dao/ragDao');
 
+/** 컨텍스트 묶어서 메시지 프롬프트 생성 (contexts는 string[] 가정) */
 function buildPrompt(question, contexts) {
-  const ctx = contexts.map((c, i) => `【근거 ${i + 1}】\n${c.content}`).join('\n\n');
+  const ctx = contexts
+    .map((text, i) => `【근거 ${i + 1}】\n${text}`)
+    .join('\n\n');
+
   return [
     {
       role: 'system',
       content:
-        '너는 현장 작업 로그 요약/검색 보조자야. 주어진 근거 안에서만 답하고, 모르면 모른다고 말해. 한국어로 간결하게.',
+        '너는 현장 작업 로그 요약/검색 보조자야. 주어진 근거 안에서만 답하고, 모르면 모른다고 말해. 한국어로 간결하게. 항목은 불릿으로 정리해.',
     },
     {
       role: 'user',
-      content: `질문:\n${question}\n\n------\n근거 모음:\n${ctx}\n\n지침:\n- 근거에 없는 내용은 추측하지 말 것\n- 계량 값/조건은 근거에서 확인된 것만 언급\n- 마지막 줄에 "※ 근거: n건" 표기`,
+      content: [
+        `질문:\n${question}`,
+        '------',
+        '근거 모음:',
+        ctx || '(근거 없음)',
+        '------',
+        '지침:',
+        '- 근거에 없는 내용은 추측하지 말 것',
+        '- 수치/조건은 근거에서 확인된 것만 언급',
+        '- 마지막 줄에 "※ 근거: n건" 표기',
+      ].join('\n'),
     },
   ];
 }
 
+/** 텍스트 정리 (너무 긴 공백/HTML br 정리) */
+function normalizeContent(s = '') {
+  return String(s)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/\r/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 async function ask(req, res) {
   try {
-    const { question, topK = 20, prefilterLimit = 300, filters = {} } = req.body || {};
+    const {
+      question,
+      topK: _topK = 20,
+      prefilterLimit: _prefilter = 300,
+      filters = {},
+    } = req.body || {};
+
     if (!question || !String(question).trim()) {
       return res.status(400).json({ ok: false, error: 'question is required' });
     }
 
+    // 숫자 파라미터 정규화
+    const topK = Math.max(1, Math.min(50, Number(_topK) || 20));
+    const prefilterLimit = Math.max(10, Math.min(5000, Number(_prefilter) || 300));
+
     await ensureTables();
 
-    // 후보 로딩
+    // 1) 후보 로딩 (DAO에서 content 비어있는 것 배제되도록 수정되어 있어야 함)
     const candidates = await fetchAllEmbeddings({
-      filters,                     // (site/line/equipment_type 필터 확장 가능)
-      limit: Number(prefilterLimit) || 300,
+      filters,           // { site, line, equipment_type } 지원
+      limit: prefilterLimit,
     });
 
     if (!candidates.length) {
@@ -46,50 +79,77 @@ async function ask(req, res) {
       });
     }
 
-    // 쿼리 임베딩
+    // 2) 쿼리 임베딩
     const emb = await openai.embeddings.create({
       model: MODELS.embedding,
-      input: [question],
+      input: [String(question)],
     });
-    const qVec = emb.data[0].embedding;
+    const qVec = emb.data?.[0]?.embedding || [];
 
-    // 유사도 정렬 → 상위 topK
+    // 3) 유사도 계산 및 정렬
     const ranked = candidates
-      .map((c) => ({ ...c, score: cosineSimilarity(qVec, c.embedding) }))
+      .map(c => ({
+        ...c,
+        score: cosineSimilarity(qVec, c.embedding),
+      }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, Number(topK) || 20);
+      .slice(0, topK);
 
-    // LLM 컨텍스트는 상위 8개만
-    const contextForLLM = ranked.slice(0, 8);
+    // 4) 빈 컨텐츠 제외(LLM 컨텍스트/요약 모두)
+    const rankedNonEmpty = ranked.filter(r => (r.content && String(r.content).trim().length > 0));
 
-    const messages = buildPrompt(question, contextForLLM);
+    // 모델에 들어갈 컨텍스트는 최대 8개 (토큰 안전장치)
+    const contextsForLLM = rankedNonEmpty.slice(0, 8).map(r => normalizeContent(r.content));
+    const ctxUsedCount = contextsForLLM.length;
+
+    // 5) 프리뷰(프론트 테이블용) 구성: 날짜/위치/장비/요약 채우기
+    const evidence_preview = ranked.map(r => ({
+      id: r.chunk_id,
+      date: r.task_date || '',                                     // DAO에서 metadata.task_date alias 제공
+      site: r.site || '',
+      line: r.line || '',
+      eq: [r.equipment_type, r.equipment_name].filter(Boolean).join(' / '),
+      sim: r.score || 0,
+      name: r.work_type
+        ? `${r.work_type}${r.work_type2 ? ' / ' + r.work_type2 : ''}`
+        : '',
+      desc: normalizeContent(r.content || '').slice(0, 180),
+    }));
+
+    // 6) 컨텍스트가 하나도 없으면 모델 호출하지 않고 안내
+    if (ctxUsedCount === 0) {
+      return res.json({
+        ok: true,
+        used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
+        answer: '죄송하지만, 제공된 근거 텍스트가 없어 요약을 생성할 수 없습니다.\n\n※ 근거: 0건',
+        evidence_preview,
+      });
+    }
+
+    // 7) 모델 호출
+    const messages = buildPrompt(question, contextsForLLM);
     const chatRes = await openai.chat.completions.create({
       model: MODELS.chat,
       messages,
       temperature: 0.2,
     });
 
-    const answer = chatRes.choices?.[0]?.message?.content?.trim() || '응답을 생성하지 못했습니다.';
+    const rawAnswer = chatRes.choices?.[0]?.message?.content?.trim();
+    const answer = rawAnswer
+      ? `${rawAnswer}\n\n※ 근거: ${ctxUsedCount}건`
+      : `응답을 생성하지 못했습니다.\n\n※ 근거: ${ctxUsedCount}건`;
 
-    const evidence_preview = ranked.map((r) => ({
-      id: r.chunk_id,
-      sim: r.score,
-      site: r.site,
-      line: r.line,
-      eq: [r.equipment_type, r.equipment_name].filter(Boolean).join(' / '),
-      name: r.work_type ? `${r.work_type}${r.work_type2 ? ' / ' + r.work_type2 : ''}` : '',
-      desc: r.content?.slice(0, 180) || '',
-    }));
-
-    res.json({
+    // 8) 응답
+    return res.json({
       ok: true,
       used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
-      answer: `${answer}\n\n※ 근거: ${contextForLLM.length}건`,
+      answer,
       evidence_preview,
     });
+
   } catch (err) {
     console.error('[RAG] ask error:', err);
-    res.status(500).json({ ok: false, error: String(err?.message || err) });
+    return res.status(500).json({ ok: false, error: String(err?.message || err) });
   }
 }
 
