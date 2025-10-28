@@ -485,3 +485,16 @@ app.post('/api/update-task-count', workLogController.updateTaskCount);
 
   return app;
 };
+
+  // 404를 JSON으로 고정
+  app.use((req, res, next) => {
+    res.status(404).json({ ok:false, error:'Not Found' });
+  });
+
+  // 전역 에러 핸들러 - 어떤 에러도 JSON으로 응답
+  app.use((err, req, res, next) => {
+    console.error('[Express Error]', err);
+    if (res.headersSent) return next(err);
+    const status = err.status || 500;
+    res.status(status).json({ ok:false, error: err?.message || 'Internal Server Error' });
+  });

@@ -117,7 +117,13 @@
         headers,
         body: JSON.stringify(body)
       });
-      const data = await res.json();
+      const raw = await res.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        throw new Error(`HTTP ${res.status} - JSON 파싱 실패. 응답 미리보기: ${raw.slice(0,200)}`);
+      }
 
       if(!res.ok) throw new Error(data?.detail || data?.error || ('HTTP '+res.status));
 
