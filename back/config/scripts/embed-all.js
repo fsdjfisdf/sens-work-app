@@ -50,24 +50,25 @@ async function main() {
     for (let j = 0; j < slice.length; j++) {
       const r = rows[i + j];
       const chunkId = await upsertChunk({
-        src_table: srcTable,
-        src_id: r.id ?? String(offset + i + j),
-        content: slice[j],
-        rowMeta: {
-          site: r.site, line: r.line,
-          equipment_type: r.equipment_type, equipment_name: r.equipment_name,
-          work_type: r.work_type, work_type2: r.work_type2,
-          task_warranty: r.task_warranty,
-          start_time: r.start_time, end_time: r.end_time,
-          task_duration: r.task_duration ?? r.time,
-          status: r.status, SOP: r.SOP, tsguide: r.tsguide,
-          action: r.task_description || r.action,
-          cause: r.task_cause || r.cause,
-          result: r.task_result || r.result,
-          none_time: r.none_time ?? r.none,
-          move_time: r.move_time ?? r.move,
-        },
-      });
+  src_table: 'work_log',
+  src_id: String(row.id),
+  content: buildRowToText(row), // 줄바꿈/요약 포함된 본문
+  rowMeta: {
+    site: row.site,
+    line: row.line,
+    equipment_type: row.equipment_type,
+    equipment_name: row.equipment_name,
+    work_type: row.work_type,
+    work_type2: row.work_type2,
+    task_warranty: row.task_warranty,
+    start_time: row.start_time,
+    end_time: row.end_time,
+    task_duration: row.task_duration ?? row.time ?? null,
+    task_date: row.task_date || null,          // ✅ 날짜를 metadata로 저장!
+    task_name: row.task_name || null           // (있으면 같이 저장)
+  }
+});
+
       await saveEmbedding(chunkId, vecs[j]);
       saved++;
     }

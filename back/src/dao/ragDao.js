@@ -166,7 +166,11 @@ function cosineSimilarity(a, b) {
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
-    const where = ['JSON_VALID(e.embedding) = 1'];
+    const where = [
+      'JSON_VALID(e.embedding) = 1',
+      'c.content IS NOT NULL',
+      "c.content <> ''"
+    ];
     const args = [];
 
     if (filters.equipment_type) { where.push('c.equipment_type = ?'); args.push(filters.equipment_type); }
@@ -174,9 +178,21 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
 
     const sql = `
-      SELECT e.id as emb_id, e.chunk_id, e.dims, e.embedding,
-             c.site, c.line, c.equipment_type, c.equipment_name,
-             c.work_type, c.work_type2, c.task_warranty, c.content
+      SELECT
+        e.id   AS emb_id,
+        e.chunk_id,
+        e.dims,
+        e.embedding,
+        c.id   AS chunk_row_id,
+        c.site,
+        c.line,
+        c.equipment_type,
+        c.equipment_name,
+        c.work_type,
+        c.work_type2,
+        c.task_warranty,
+        c.content,
+        JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.task_date')) AS task_date
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
@@ -189,14 +205,16 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
 
     const out = [];
     for (const r of rows) {
-      // mysql2는 JSON 컬럼을 JS 객체로 반환하는 경우가 많음
       let emb = r.embedding;
       if (typeof emb === 'string') {
         try { emb = JSON.parse(emb); } catch { continue; }
       }
       if (!Array.isArray(emb) || emb.length === 0) continue;
 
-      out.push({ ...r, embedding: emb });
+      out.push({
+        ...r,
+        embedding: emb,
+      });
     }
     return out;
   } finally {
