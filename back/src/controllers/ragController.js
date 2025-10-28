@@ -1,12 +1,11 @@
 // back/src/controllers/ragController.js
-const { openai, MODELS } = require('../../config/openai');
+const { openai, MODELS } = require('../../config/openai');   // ✅ config로 고정
 const {
   ensureTables,
   fetchAllEmbeddings,
   cosineSimilarity,
-} = require('../dao/ragDao');
+} = require('../dao/ragDao');                                // ✅ 실제 DAO 경로
 
-// 프롬프트 헬퍼
 function buildPrompt(question, contexts) {
   const ctx = contexts.map((c, i) => `【근거 ${i + 1}】\n${c.content}`).join('\n\n');
   return [
@@ -22,9 +21,7 @@ function buildPrompt(question, contexts) {
   ];
 }
 
-// POST /api/rag/ask
-// body: { question, topK=20, prefilterLimit=300, filters? }
-async function ask(req, res, next) {
+async function ask(req, res) {
   try {
     const { question, topK = 20, prefilterLimit = 300, filters = {} } = req.body || {};
     if (!question || !String(question).trim()) {
@@ -33,23 +30,21 @@ async function ask(req, res, next) {
 
     await ensureTables();
 
-    // 후보 로딩 (프리필터)
-// 후보 로딩 (프리필터)
-const candidates = await fetchAllEmbeddings({
-  filters,                     // {equipment_type, site, line}
-  limit: Number(prefilterLimit) || 300,
-});
-if (!candidates.length) {
-  console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d',
-              filters, prefilterLimit);
-  return res.json({
-    ok: true,
-    used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
-    answer: '근거가 없습니다.',
-    evidence_preview: [],
-  });
-}
+    // 후보 로딩
+    const candidates = await fetchAllEmbeddings({
+      filters,                     // (site/line/equipment_type 필터 확장 가능)
+      limit: Number(prefilterLimit) || 300,
+    });
 
+    if (!candidates.length) {
+      console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', filters, prefilterLimit);
+      return res.json({
+        ok: true,
+        used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
+        answer: '근거가 없습니다.',
+        evidence_preview: [],
+      });
+    }
 
     // 쿼리 임베딩
     const emb = await openai.embeddings.create({
@@ -64,10 +59,9 @@ if (!candidates.length) {
       .sort((a, b) => b.score - a.score)
       .slice(0, Number(topK) || 20);
 
-    // LLM 컨텍스트로는 과도하지 않게 상위 6~8개만 사용
+    // LLM 컨텍스트는 상위 8개만
     const contextForLLM = ranked.slice(0, 8);
 
-    // 답변 생성
     const messages = buildPrompt(question, contextForLLM);
     const chatRes = await openai.chat.completions.create({
       model: MODELS.chat,
@@ -77,9 +71,8 @@ if (!candidates.length) {
 
     const answer = chatRes.choices?.[0]?.message?.content?.trim() || '응답을 생성하지 못했습니다.';
 
-    // 프론트 표시용 프리뷰
     const evidence_preview = ranked.map((r) => ({
-      id: r.chunk_id,                              // rag_chunks.id
+      id: r.chunk_id,
       sim: r.score,
       site: r.site,
       line: r.line,
@@ -96,8 +89,7 @@ if (!candidates.length) {
     });
   } catch (err) {
     console.error('[RAG] ask error:', err);
-    // 전역 에러 핸들러로 위임 (항상 JSON 보장)
-    next(err);
+    res.status(500).json({ ok: false, error: String(err?.message || err) });
   }
 }
 

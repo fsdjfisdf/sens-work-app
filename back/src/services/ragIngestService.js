@@ -1,29 +1,25 @@
 // back/src/services/ragIngestService.js
-const { openai, MODELS } = require('../../config/openai'); // 경로 수정
+const { openai, MODELS } = require('../../config/openai');   // ✅
+const { pool } = require('../../config/database');           // ✅
 const {
-  pool,                // 기존 DB pool: ragDao에서 export
   buildRowToText,
   upsertChunk,
   saveEmbedding,
-} = require('../dao/ragDao'); // 경로 수정
+} = require('../dao/ragDao');                                // ✅
 
 async function embedOneById(id) {
-  // 1) 원본 로우 로드
   const [rows] = await pool.query('SELECT * FROM work_log WHERE id = ?', [id]);
   if (!rows.length) return { ok: false, reason: 'not found' };
   const row = rows[0];
 
-  // 2) 텍스트화
   const text = buildRowToText(row);
 
-  // 3) OpenAI 임베딩
   const embRes = await openai.embeddings.create({
     model: MODELS.embedding,
     input: text,
   });
   const embedding = embRes.data[0].embedding;
 
-  // 4) 청크 upsert + 임베딩 저장
   const chunkId = await upsertChunk({
     src_table: 'work_log',
     src_id: String(id),

@@ -1,18 +1,8 @@
 // back/src/dao/ragDao.js
-const mysql = require('mysql2/promise');
-const secret = require('../../config/secret');
+// ✅ 공용 풀 재사용: 다른 모듈과 DB 엇갈림 방지
+const { pool } = require('../../config/database');
 
-const pool = mysql.createPool({
-  host: secret.host,
-  user: secret.user,
-  password: secret.password,
-  database: secret.database,
-  port: Number(secret.port || 3306),
-  waitForConnections: true,
-  connectionLimit: 10,
-  namedPlaceholders: true,
-});
-
+/* 테이블 보장 */
 async function ensureTables() {
   const conn = await pool.getConnection();
   try {
@@ -52,6 +42,7 @@ async function ensureTables() {
   }
 }
 
+/* work_log 1row → 텍스트 */
 function buildRowToText(row) {
   const lines = [
     `[SITE/LINE] ${row.site || ''} / ${row.line || ''}`,
@@ -68,6 +59,7 @@ function buildRowToText(row) {
   return lines.map(s => String(s).replace(/<br\s*\/?>/gi, '\n')).join('\n').trim();
 }
 
+/* 일괄 로딩 (임베딩 전용) */
 async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', params = {} } = {}) {
   const conn = await pool.getConnection();
   try {
@@ -96,6 +88,7 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
   }
 }
 
+/* rag_chunks upsert */
 async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
   const conn = await pool.getConnection();
   try {
@@ -143,6 +136,7 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
   }
 }
 
+/* rag_embeddings insert */
 async function saveEmbedding(chunk_id, embedding) {
   const conn = await pool.getConnection();
   try {
@@ -155,6 +149,7 @@ async function saveEmbedding(chunk_id, embedding) {
   }
 }
 
+/* 코사인 유사도 */
 function cosineSimilarity(a, b) {
   let dot = 0, na = 0, nb = 0;
   const len = Math.min(a.length, b.length);
@@ -167,10 +162,11 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
+/* ✅ 후보 임베딩 로딩: JSON.parse 방어 추가 */
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
-    const where = ['JSON_VALID(e.embedding) = 1'];   // ✅ 유효 JSON만
+    const where = ['JSON_VALID(e.embedding) = 1'];
     const params = { limit };
 
     if (filters.equipment_type) { where.push('c.equipment_type = :equipment_type'); params.equipment_type = filters.equipment_type; }
@@ -191,14 +187,18 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
 
     const out = [];
     for (const r of rows) {
-      try {
-        const parsed = JSON.parse(r.embedding);
-        if (!Array.isArray(parsed) || parsed.length === 0) continue; // 빈 배열 방지
-        out.push({ ...r, embedding: parsed });
-      } catch (e) {
-        // 깨진 건 건너뜀
-        continue;
+      // ✅ 이미 객체(Array)로 오는 경우가 많음: 그대로 사용
+      let emb = r.embedding;
+      if (typeof emb === 'string') {
+        try {
+          emb = JSON.parse(emb);
+        } catch {
+          continue; // 파싱 실패는 스킵
+        }
       }
+      if (!Array.isArray(emb) || emb.length === 0) continue;
+
+      out.push({ ...r, embedding: emb });
     }
     return out;
   } finally {
@@ -206,9 +206,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   }
 }
 
-
-
-// 추가: 구버전 호환 시그니처
+/* 구버전 호환 함수들 */
 function buildText(row) {
   return buildRowToText(row);
 }
@@ -217,7 +215,7 @@ async function upsertEmbedding(id, embedding) {
   const chunkId = await upsertChunk({
     src_table: 'work_log',
     src_id: String(id),
-    content: '',        // 알 수 없어서 비워둠 (권장X)
+    content: '',
     rowMeta: {},
   });
   await saveEmbedding(chunkId, embedding);
