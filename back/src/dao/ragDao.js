@@ -198,19 +198,23 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
     const where = [
-      'e.embedding IS NOT NULL',
+      'JSON_VALID(e.embedding) = 1',
       'c.content IS NOT NULL',
-      'LENGTH(c.content) > 0'
+      "c.content <> ''"
     ];
     const args = [];
 
-    if (filters.equipment_type) { where.push('c.equipment_type = ?'); args.push(filters.equipment_type); }
-    if (filters.site)           { where.push('c.site = ?');            args.push(filters.site); }
-    if (filters.line)           { where.push('c.line = ?');            args.push(filters.line); }
-
-    // days 필터: task_date NULL은 통과
+    if (filters.equipment_type) { where.push('COALESCE(c.equipment_type, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.equipment_type"))) = ?'); args.push(filters.equipment_type); }
+    if (filters.site)           { where.push('COALESCE(c.site, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.site"))) = ?'); args.push(filters.site); }
+    if (filters.line)           { where.push('COALESCE(c.line, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.line"))) = ?'); args.push(filters.line); }
     if (filters.days && Number(filters.days) > 0) {
-      where.push('(c.task_date IS NULL OR c.task_date >= (CURRENT_DATE - INTERVAL ? DAY))');
+      // 날짜도 물리 컬럼/메타 모두 고려
+      where.push(`
+        COALESCE(
+          c.task_date,
+          CAST(JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.task_date")) AS DATE)
+        ) >= (CURRENT_DATE - INTERVAL ? DAY)
+      `);
       args.push(Number(filters.days));
     }
 
@@ -220,16 +224,24 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
         e.chunk_id,
         e.dims,
         e.embedding,
+
         c.id   AS chunk_row_id,
-        c.site,
-        c.line,
-        c.equipment_type,
-        c.equipment_name,
-        c.work_type,
-        c.work_type2,
-        c.task_warranty,
-        c.task_date,
+
+        -- ✅ 물리 컬럼이 NULL이면 metadata로 보강
+        COALESCE(c.site, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.site'))) AS site,
+        COALESCE(c.line, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.line'))) AS line,
+        COALESCE(c.equipment_type, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.equipment_type'))) AS equipment_type,
+        COALESCE(c.equipment_name, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.equipment_name'))) AS equipment_name,
+        COALESCE(c.work_type, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.work_type'))) AS work_type,
+        COALESCE(c.work_type2, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.work_type2'))) AS work_type2,
+        COALESCE(c.task_warranty, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.task_warranty'))) AS task_warranty,
+        COALESCE(
+          c.task_date,
+          CAST(JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.task_date')) AS DATE)
+        ) AS task_date,
+
         c.content
+
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
@@ -248,7 +260,10 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       }
       if (!Array.isArray(emb) || emb.length === 0) continue;
 
-      out.push({ ...r, embedding: emb });
+      out.push({
+        ...r,
+        embedding: emb,
+      });
     }
     return out;
   } finally {
