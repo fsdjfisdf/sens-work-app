@@ -1,6 +1,6 @@
-// Dao.js
+// back/src/dao/ragDao.js
 const mysql = require('mysql2/promise');
-const secret = require('./secret');
+const secret = require('../../config/secret');
 
 const pool = mysql.createPool({
   host: secret.host,
@@ -53,8 +53,7 @@ async function ensureTables() {
 }
 
 function buildRowToText(row) {
-  // work_log 스키마 기준: 모델 컨텍스트 & 예시 컬럼을 최대한 매핑
-  // 없는 컬럼은 NULL 처리되어도 안전 (COALESCE로 문자열화)
+  // HTML <br> 정리 포함
   const lines = [
     `[SITE/LINE] ${row.site || ''} / ${row.line || ''}`,
     `[EQUIP] ${row.equipment_type || ''} - ${row.equipment_name || ''} (Warranty: ${row.task_warranty || ''})`,
@@ -67,16 +66,13 @@ function buildRowToText(row) {
     `[SETUP/TRANS] setup_item=${row.setup_item || ''} / transfer_item=${row.transfer_item || ''}`,
     `[TIME] duration(min)=${row.task_duration ?? row.time ?? ''}, start=${row.start_time || ''}, end=${row.end_time || ''}, none=${row.none_time ?? row.none ?? ''}, move=${row.move_time ?? row.move ?? ''}`,
   ];
-  return lines
-    .map(s => String(s).replace(/<br\s*\/?>/gi, '\n')) // HTML <br> → 개행
-    .join('\n')
-    .trim();
+  return lines.map(s => String(s).replace(/<br\s*\/?>/gi, '\n')).join('\n').trim();
 }
 
 async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', params = {} } = {}) {
   const conn = await pool.getConnection();
   try {
-    const base = `
+    const sql = `
       SELECT 
         id,
         site, line, equipment_type, equipment_name,
@@ -87,14 +83,14 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
         work_type, work_type2,
         setup_item, transfer_item,
         task_duration, start_time, end_time, none_time, move_time,
-        -- 예시 데이터 컬럼 호환용
+        -- 예시 데이터 컬럼 호환
         action, cause, result, time, none, move
       FROM work_log
       ${whereSql ? `WHERE ${whereSql}` : ''}
       ORDER BY id ASC
       LIMIT :limit OFFSET :offset
     `;
-    const [rows] = await conn.query(base, { ...params, limit, offset });
+    const [rows] = await conn.query(sql, { ...params, limit, offset });
     return rows;
   } finally {
     conn.release();
@@ -136,10 +132,8 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
       }
     );
 
-    const insertId = res.insertId;
-    if (insertId) return insertId;
+    if (res.insertId) return res.insertId;
 
-    // ON DUPLICATE일 경우 id 재조회
     const [found] = await conn.query(
       `SELECT id FROM rag_chunks WHERE src_table = :src_table AND src_id = :src_id LIMIT 1`,
       { src_table, src_id: String(src_id) }
@@ -153,10 +147,9 @@ async function upsertChunk({ src_table, src_id, content, rowMeta = {} }) {
 async function saveEmbedding(chunk_id, embedding) {
   const conn = await pool.getConnection();
   try {
-    const dims = embedding.length;
     await conn.query(
       `INSERT INTO rag_embeddings (chunk_id, dims, embedding) VALUES (:chunk_id, :dims, :embedding)`,
-      { chunk_id, dims, embedding: JSON.stringify(embedding) }
+      { chunk_id, dims: embedding.length, embedding: JSON.stringify(embedding) }
     );
   } finally {
     conn.release();
@@ -180,22 +173,14 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   try {
     const where = [];
     const params = { limit };
-    if (filters.equipment_type) {
-      where.push('c.equipment_type = :equipment_type');
-      params.equipment_type = filters.equipment_type;
-    }
-    if (filters.site) {
-      where.push('c.site = :site');
-      params.site = filters.site;
-    }
-    if (filters.line) {
-      where.push('c.line = :line');
-      params.line = filters.line;
-    }
+    if (filters.equipment_type) { where.push('c.equipment_type = :equipment_type'); params.equipment_type = filters.equipment_type; }
+    if (filters.site)           { where.push('c.site = :site'); params.site = filters.site; }
+    if (filters.line)           { where.push('c.line = :line'); params.line = filters.line; }
 
     const sql = `
       SELECT e.id as emb_id, e.chunk_id, e.dims, e.embedding,
-             c.site, c.line, c.equipment_type, c.equipment_name, c.work_type, c.work_type2, c.task_warranty, c.content
+             c.site, c.line, c.equipment_type, c.equipment_name,
+             c.work_type, c.work_type2, c.task_warranty, c.content
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
@@ -203,10 +188,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       LIMIT :limit
     `;
     const [rows] = await conn.query(sql, params);
-    return rows.map(r => ({
-      ...r,
-      embedding: JSON.parse(r.embedding),
-    }));
+    return rows.map(r => ({ ...r, embedding: JSON.parse(r.embedding) }));
   } finally {
     conn.release();
   }

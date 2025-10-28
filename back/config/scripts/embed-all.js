@@ -1,13 +1,13 @@
-// embed-all.js
+// back/scripts/embed-all.js
 const minimist = require('minimist');
-const { openai, MODELS } = require('./openai');
+const { openai, MODELS } = require('../config/openai');
 const {
   ensureTables,
   fetchWorkLogBatch,
   upsertChunk,
   saveEmbedding,
   buildRowToText,
-} = require('./Dao');
+} = require('../src/dao/ragDao');
 
 async function embedTexts(texts) {
   const res = await openai.embeddings.create({
@@ -25,69 +25,54 @@ async function main() {
   const argv = minimist(process.argv.slice(2));
   const limit = Number(argv.limit || 200);
   const offset = Number(argv.offset || 0);
-  const whereSql = argv.where || '';       // e.g. "equipment_type='SUPRA N'"
+  const whereSql = argv.where || '';   // 예: "equipment_type='SUPRA N'"
   const srcTable = argv.src || 'work_log';
 
   console.log(`[embed-all] start: limit=${limit}, offset=${offset}, where="${whereSql}"`);
 
   await ensureTables();
 
-  const rows = await fetchWorkLogBatch({
-    limit,
-    offset,
-    whereSql,
-    params: {}, // 필요하면 바인딩 변수 추가해서 쓰기
-  });
-
+  const rows = await fetchWorkLogBatch({ limit, offset, whereSql, params: {} });
   if (!rows.length) {
     console.log('[embed-all] no rows.');
     return;
   }
 
-  const texts = rows.map(r => buildRowToText(r));
+  const texts = rows.map(buildRowToText);
 
-  // 대량 호출 시 100개 이하로 분할 권장
   const BATCH = 100;
   let saved = 0;
+
   for (let i = 0; i < texts.length; i += BATCH) {
     const slice = texts.slice(i, i + BATCH);
     const vecs = await embedTexts(slice);
 
     for (let j = 0; j < slice.length; j++) {
-      const row = rows[i + j];
+      const r = rows[i + j];
       const chunkId = await upsertChunk({
         src_table: srcTable,
-        src_id: row.id ?? String(offset + i + j),
+        src_id: r.id ?? String(offset + i + j),
         content: slice[j],
         rowMeta: {
-          site: row.site,
-          line: row.line,
-          equipment_type: row.equipment_type,
-          equipment_name: row.equipment_name,
-          work_type: row.work_type,
-          work_type2: row.work_type2,
-          task_warranty: row.task_warranty,
-          start_time: row.start_time,
-          end_time: row.end_time,
-          task_duration: row.task_duration ?? row.time,
-          status: row.status,
-          SOP: row.SOP,
-          tsguide: row.tsguide,
-          action: row.task_description || row.action,
-          cause: row.task_cause || row.cause,
-          result: row.task_result || row.result,
-          none_time: row.none_time ?? row.none,
-          move_time: row.move_time ?? row.move,
+          site: r.site, line: r.line,
+          equipment_type: r.equipment_type, equipment_name: r.equipment_name,
+          work_type: r.work_type, work_type2: r.work_type2,
+          task_warranty: r.task_warranty,
+          start_time: r.start_time, end_time: r.end_time,
+          task_duration: r.task_duration ?? r.time,
+          status: r.status, SOP: r.SOP, tsguide: r.tsguide,
+          action: r.task_description || r.action,
+          cause: r.task_cause || r.cause,
+          result: r.task_result || r.result,
+          none_time: r.none_time ?? r.none,
+          move_time: r.move_time ?? r.move,
         },
       });
       await saveEmbedding(chunkId, vecs[j]);
       saved++;
     }
 
-    // OpenAI rate-limit 여유
-    if (i + BATCH < texts.length) {
-      await sleep(500);
-    }
+    if (i + BATCH < texts.length) await sleep(500);
   }
 
   console.log(`[embed-all] done. saved=${saved}`);
