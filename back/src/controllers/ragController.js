@@ -34,19 +34,22 @@ async function ask(req, res, next) {
     await ensureTables();
 
     // 후보 로딩 (프리필터)
-    const candidates = await fetchAllEmbeddings({
-      filters,                     // {equipment_type, site, line} 지원
-      limit: Number(prefilterLimit) || 300,
-    });
+// 후보 로딩 (프리필터)
+const candidates = await fetchAllEmbeddings({
+  filters,                     // {equipment_type, site, line}
+  limit: Number(prefilterLimit) || 300,
+});
+if (!candidates.length) {
+  console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d',
+              filters, prefilterLimit);
+  return res.json({
+    ok: true,
+    used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
+    answer: '근거가 없습니다.',
+    evidence_preview: [],
+  });
+}
 
-    if (!candidates.length) {
-      return res.json({
-        ok: true,
-        used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
-        answer: '근거가 없습니다.',
-        evidence_preview: [],
-      });
-    }
 
     // 쿼리 임베딩
     const emb = await openai.embeddings.create({

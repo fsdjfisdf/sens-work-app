@@ -170,46 +170,42 @@ function cosineSimilarity(a, b) {
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
-    const where = [];
+    const where = ['JSON_VALID(e.embedding) = 1'];   // ✅ 유효 JSON만
     const params = { limit };
+
     if (filters.equipment_type) { where.push('c.equipment_type = :equipment_type'); params.equipment_type = filters.equipment_type; }
     if (filters.site)           { where.push('c.site = :site'); params.site = filters.site; }
     if (filters.line)           { where.push('c.line = :line'); params.line = filters.line; }
 
-    // JSON_VALID로 1차 필터링 (MySQL JSON/TEXT 모두 대응)
     const sql = `
       SELECT e.id as emb_id, e.chunk_id, e.dims, e.embedding,
              c.site, c.line, c.equipment_type, c.equipment_name,
              c.work_type, c.work_type2, c.task_warranty, c.content
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
-      WHERE JSON_VALID(e.embedding) ${where.length ? 'AND ' + where.join(' AND ') : ''}
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
       ORDER BY e.id DESC
       LIMIT :limit
     `;
     const [rows] = await conn.query(sql, params);
 
-    // 2차: 파싱 방어 + 유효성 점검 (배열/숫자 여부)
-    const safe = [];
+    const out = [];
     for (const r of rows) {
-      let embArr;
       try {
-        embArr = JSON.parse(r.embedding);
+        const parsed = JSON.parse(r.embedding);
+        if (!Array.isArray(parsed) || parsed.length === 0) continue; // 빈 배열 방지
+        out.push({ ...r, embedding: parsed });
       } catch (e) {
-        // 혹시 JSON_VALID가 true인데도 파싱 실패하면 스킵
+        // 깨진 건 건너뜀
         continue;
       }
-      if (!Array.isArray(embArr) || embArr.length === 0) continue;
-      // 모든 요소가 number인가?
-      if (embArr.some(v => typeof v !== 'number' || Number.isNaN(v))) continue;
-
-      safe.push({ ...r, embedding: embArr });
     }
-    return safe;
+    return out;
   } finally {
     conn.release();
   }
 }
+
 
 
 // 추가: 구버전 호환 시그니처
