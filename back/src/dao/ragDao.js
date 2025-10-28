@@ -204,3 +204,29 @@ module.exports = {
   buildRowToText,
   cosineSimilarity,
 };
+
+// ragDao.js 하단에 추가
+
+// 1) 구이름 → 새이름 별칭
+function buildText(row) {
+  return buildRowToText(row);
+}
+
+// 2) 구버전 시그니처 흉내내기 (가능한 한 보수적으로)
+async function upsertEmbedding(id, embedding) {
+  // 경고: 청크가 없다면 의미가 없습니다. 최소한 빈 청크를 보장해줍니다.
+  const chunkId = await upsertChunk({
+    src_table: 'work_log',
+    src_id: String(id),
+    content: '',        // 내용을 알 수 없어서 비워둠(권장X)
+    rowMeta: {},
+  });
+  await saveEmbedding(chunkId, embedding);
+  return chunkId;
+}
+
+module.exports = {
+  // ...기존 export
+  buildText,           // 추가
+  upsertEmbedding,     // 추가
+};
