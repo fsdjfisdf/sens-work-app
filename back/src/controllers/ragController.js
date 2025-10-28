@@ -1,196 +1,94 @@
 // back/src/controllers/ragController.js
-const { openai, MODELS } = require('../../config/openai');
+const { openai, MODELS } = require('../../scripts/openai');      // ← 네 경로에 맞게 조정
 const {
   ensureTables,
-  fetchWorkLogBatch,
-  upsertChunk,
-  saveEmbedding,
   fetchAllEmbeddings,
-  buildRowToText,
   cosineSimilarity,
-} = require('../dao/ragDao');
+} = require('../../scripts/Dao');                                // ← 네 경로에 맞게 조정
 
-// 서버 시작 후 1회 스키마 보장
-ensureTables().catch(err => console.error('[RAG] ensureTables error:', err));
-
-async function embedTexts(texts) {
-  const res = await openai.embeddings.create({
-    model: MODELS.embedding,
-    input: texts,
-  });
-  return res.data.map(d => d.embedding);
+// 프롬프트 헬퍼
+function buildPrompt(question, contexts) {
+  const ctx = contexts.map((c, i) => `【근거 ${i + 1}】\n${c.content}`).join('\n\n');
+  return [
+    {
+      role: 'system',
+      content:
+        '너는 현장 작업 로그 요약/검색 보조자야. 주어진 근거 안에서만 답하고, 모르면 모른다고 말해. 한국어로 간결하게.',
+    },
+    {
+      role: 'user',
+      content: `질문:\n${question}\n\n------\n근거 모음:\n${ctx}\n\n지침:\n- 근거에 없는 내용은 추측하지 말 것\n- 계량 값/조건은 근거에서 확인된 것만 언급\n- 마지막 줄에 "※ 근거: n건" 표기`,
+    },
+  ];
 }
 
-/** POST /api/rag/embed-all */
-async function embedAll(req, res) {
-  try {
-    const {
-      limit = 200,
-      offset = 0,
-      whereSql = '',
-      params = {},
-      srcTable = 'work_log',
-    } = req.body || {};
-
-    const rows = await fetchWorkLogBatch({ limit, offset, whereSql, params });
-    if (!rows.length) return res.json({ ok: true, message: 'no rows', count: 0 });
-
-    const texts = rows.map(buildRowToText);
-    const BATCH = 100;
-    let saved = 0;
-
-    for (let i = 0; i < texts.length; i += BATCH) {
-      const slice = texts.slice(i, i + BATCH);
-      const vecs = await embedTexts(slice);
-
-      for (let j = 0; j < slice.length; j++) {
-        const r = rows[i + j];
-        const chunkId = await upsertChunk({
-          src_table: srcTable,
-          src_id: r.id ?? String(offset + i + j),
-          content: slice[j],
-          rowMeta: {
-            site: r.site, line: r.line,
-            equipment_type: r.equipment_type, equipment_name: r.equipment_name,
-            work_type: r.work_type, work_type2: r.work_type2,
-            task_warranty: r.task_warranty,
-            start_time: r.start_time, end_time: r.end_time,
-            task_duration: r.task_duration ?? r.time,
-            status: r.status, SOP: r.SOP, tsguide: r.tsguide,
-            action: r.task_description || r.action,
-            cause: r.task_cause || r.cause,
-            result: r.task_result || r.result,
-            none_time: r.none_time ?? r.none,
-            move_time: r.move_time ?? r.move,
-          },
-        });
-        await saveEmbedding(chunkId, vecs[j]);
-        saved++;
-      }
-    }
-
-    res.json({ ok: true, count: saved });
-  } catch (err) {
-    console.error('[RAG] embed-all error:', err);
-    res.status(500).json({ ok: false, error: String(err?.message || err) });
-  }
-}
-
-/** POST /api/rag/query */
-async function query(req, res) {
-  try {
-    const { query, topK = 5, filters = {} } = req.body || {};
-    if (!query || !String(query).trim()) {
-      return res.status(400).json({ ok: false, error: 'query is required' });
-    }
-
-    const [qVec] = await embedTexts([query]);
-
-    const candidates = await fetchAllEmbeddings({ filters, limit: 3000 });
-    const ranked = candidates
-      .map(c => ({ ...c, score: cosineSimilarity(qVec, c.embedding) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, topK);
-
-    const matches = ranked.map(r => ({
-      chunk_id: r.chunk_id,
-      score: Number(r.score.toFixed(6)),
-      site: r.site, line: r.line,
-      equipment_type: r.equipment_type, equipment_name: r.equipment_name,
-      work_type: r.work_type, work_type2: r.work_type2,
-      task_warranty: r.task_warranty,
-      content: r.content,
-    }));
-
-    res.json({ ok: true, matches });
-  } catch (err) {
-    console.error('[RAG] query error:', err);
-    res.status(500).json({ ok: false, error: String(err?.message || err) });
-  }
-}
-
-/** POST /api/rag/ask  (프런트 rag.js가 기대하는 응답 형태) */
+// POST /api/rag/ask
+// body: { question, topK=20, prefilterLimit=300, filters? }
 async function ask(req, res) {
   try {
-    const {
-      question,
-      days = 365,
-      prefilterLimit = 300,
-      topK = 20,
-      filters = {},
-    } = {
-      question: req.body?.question || req.body?.query,
-      days: req.body?.days,
-      prefilterLimit: req.body?.prefilterLimit,
-      topK: req.body?.topK,
-      filters: req.body?.filters || {},
-    };
-
+    const { question, topK = 20, prefilterLimit = 300, filters = {} } = req.body || {};
     if (!question || !String(question).trim()) {
       return res.status(400).json({ ok: false, error: 'question is required' });
     }
 
-    // 1) 프리필터로 후보 로딩
-    const candidates = await fetchAllEmbeddings({ filters, limit: prefilterLimit });
+    await ensureTables();
 
-    // 2) 질문 임베딩
-    const [qVec] = await embedTexts([question]);
+    // 후보 로딩 (프리필터)
+    const candidates = await fetchAllEmbeddings({
+      filters,                     // {equipment_type, site, line} 지원
+      limit: Number(prefilterLimit) || 300,
+    });
+    if (!candidates.length) {
+      return res.json({
+        ok: true,
+        used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
+        answer: '근거가 없습니다.',
+        evidence_preview: [],
+      });
+    }
 
-    // 3) 유사도 TopK 선별
+    // 쿼리 임베딩
+    const emb = await openai.embeddings.create({
+      model: MODELS.embedding,
+      input: [question],
+    });
+    const qVec = emb.data[0].embedding;
+
+    // 유사도 정렬 → 상위 topK
     const ranked = candidates
-      .map(c => ({
-        ...c,
-        score: cosineSimilarity(qVec, c.embedding),
-      }))
+      .map((c) => ({ ...c, score: cosineSimilarity(qVec, c.embedding) }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, topK);
+      .slice(0, Number(topK) || 20);
 
-    // 4) 프롬프트 구성
-    const contextBlocks = ranked.map((r, i) =>
-      `#${i + 1} (${(r.score || 0).toFixed(3)}) [${r.site || ''}/${r.line || ''}] ${r.equipment_type || ''} ${r.equipment_name || ''}\n${r.content}`
-    ).join('\n\n---\n\n');
+    // LLM 컨텍스트로는 과도하지 않게 상위 6~8개만 사용
+    const contextForLLM = ranked.slice(0, 8);
 
-    const prompt = [
-      '다음은 반도체 현장 작업 로그의 요약 자료입니다.',
-      '사용자 질문에 대해 아래 컨텍스트만 근거로 삼아, 한국어로 간결하고 정확히 답하세요.',
-      '근거가 부족하면 부족하다고 분명히 말하고, 추가 확인이 필요한 포인트를 제시하세요.',
-      '',
-      '### 질문',
-      question,
-      '',
-      '### 컨텍스트',
-      contextBlocks || '(관련 컨텍스트 없음)',
-    ].join('\n');
-
-    // 5) LLM 요약/답변
-    const chat = await openai.chat.completions.create({
+    // 답변 생성
+    const messages = buildPrompt(question, contextForLLM);
+    const chatRes = await openai.chat.completions.create({
       model: MODELS.chat,
-      messages: [
-        { role: 'system', content: '당신은 반도체 장비 현장 로그를 근거로 정확히 답하는 어시스턴트입니다.' },
-        { role: 'user', content: prompt },
-      ],
+      messages,
       temperature: 0.2,
     });
 
-    const answer = chat.choices?.[0]?.message?.content?.trim() || '';
+    const answer = chatRes.choices?.[0]?.message?.content?.trim() || '응답을 생성하지 못했습니다.';
 
-    // 6) 근거 미리보기 테이블 (프런트 rag.js가 렌더)
-    const evidence_preview = ranked.map((r, idx) => ({
-      id: r.chunk_id,
-      date: '', // 원본에 날짜 컬럼이 없으니 비워둠(원하면 rag_chunks.metadata에 task_date도 저장 가능)
+    // 프론트 표시용 프리뷰
+    const evidence_preview = ranked.map((r) => ({
+      id: r.chunk_id,                              // rag_chunks.id
+      sim: r.score,
       site: r.site,
       line: r.line,
-      eq: [r.equipment_type, r.equipment_name].filter(Boolean).join(' '),
-      sim: r.score,
-      name: `${r.work_type || ''}/${r.work_type2 || ''} ${r.task_warranty || ''}`.trim(),
-      desc: r.content.slice(0, 120).replace(/\n+/g, ' ') + (r.content.length > 120 ? '…' : ''),
+      eq: [r.equipment_type, r.equipment_name].filter(Boolean).join(' / '),
+      name: r.work_type ? `${r.work_type}${r.work_type2 ? ' / ' + r.work_type2 : ''}` : '',
+      desc: r.content?.slice(0, 180) || '',
     }));
 
     res.json({
       ok: true,
-      answer,
-      evidence_preview,
       used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
+      answer: `${answer}\n\n※ 근거: ${contextForLLM.length}건`,
+      evidence_preview,
     });
   } catch (err) {
     console.error('[RAG] ask error:', err);
@@ -198,4 +96,4 @@ async function ask(req, res) {
   }
 }
 
-module.exports = { embedAll, query, ask };
+module.exports = { ask };
