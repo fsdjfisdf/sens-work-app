@@ -88,12 +88,12 @@
     const question = els.q.value.trim();
     if(!question){ els.q.focus(); return; }
 
-    const body = {
-      question,
-      days: Number(els.days.value||365),
-      prefilterLimit: Number(els.pref.value||300),
-      topK: Number(els.topk.value||20)
-    };
+const body = {
+  question,
+  prefilterLimit: Number(els.pref.value||300),
+  topK: Number(els.topk.value||20),
+  filters: {}  // ← filters는 장비, 사이트 선택할 때만 사용
+};
 
     setLoading(true, '유사 로그 검색 및 요약 생성 중…');
 
