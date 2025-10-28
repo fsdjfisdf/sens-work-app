@@ -193,22 +193,22 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   }
 }
 
-/* ---- 구버전 호환 (별칭) ---- */
+// 추가: 구버전 호환 시그니처
 function buildText(row) {
   return buildRowToText(row);
 }
+
 async function upsertEmbedding(id, embedding) {
   const chunkId = await upsertChunk({
     src_table: 'work_log',
     src_id: String(id),
-    content: '',
+    content: '',        // 알 수 없어서 비워둠 (권장X)
     rowMeta: {},
   });
   await saveEmbedding(chunkId, embedding);
   return chunkId;
 }
 
-/* ---- 단일 export (덮어쓰기 금지) ---- */
 module.exports = {
   pool,
   ensureTables,
@@ -218,7 +218,7 @@ module.exports = {
   fetchAllEmbeddings,
   buildRowToText,
   cosineSimilarity,
-  // 호환용
+  // 호환
   buildText,
   upsertEmbedding,
 };

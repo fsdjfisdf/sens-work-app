@@ -1,11 +1,12 @@
 // back/src/controllers/ragController.js
-const { openai, MODELS } = require('../../config/openai'); // 경로 수정
+const { openai, MODELS } = require('../../config/openai');
 const {
   ensureTables,
   fetchAllEmbeddings,
   cosineSimilarity,
-} = require('../dao/ragDao'); // 경로 수정 (src/dao)
+} = require('../dao/ragDao');
 
+// 프롬프트 헬퍼
 function buildPrompt(question, contexts) {
   const ctx = contexts.map((c, i) => `【근거 ${i + 1}】\n${c.content}`).join('\n\n');
   return [
@@ -23,7 +24,7 @@ function buildPrompt(question, contexts) {
 
 // POST /api/rag/ask
 // body: { question, topK=20, prefilterLimit=300, filters? }
-async function ask(req, res) {
+async function ask(req, res, next) {
   try {
     const { question, topK = 20, prefilterLimit = 300, filters = {} } = req.body || {};
     if (!question || !String(question).trim()) {
@@ -32,8 +33,9 @@ async function ask(req, res) {
 
     await ensureTables();
 
+    // 후보 로딩 (프리필터)
     const candidates = await fetchAllEmbeddings({
-      filters, // {equipment_type, site, line}
+      filters,                     // {equipment_type, site, line} 지원
       limit: Number(prefilterLimit) || 300,
     });
 
@@ -59,6 +61,7 @@ async function ask(req, res) {
       .sort((a, b) => b.score - a.score)
       .slice(0, Number(topK) || 20);
 
+    // LLM 컨텍스트로는 과도하지 않게 상위 6~8개만 사용
     const contextForLLM = ranked.slice(0, 8);
 
     // 답변 생성
@@ -73,7 +76,7 @@ async function ask(req, res) {
 
     // 프론트 표시용 프리뷰
     const evidence_preview = ranked.map((r) => ({
-      id: r.chunk_id,
+      id: r.chunk_id,                              // rag_chunks.id
       sim: r.score,
       site: r.site,
       line: r.line,
@@ -90,7 +93,8 @@ async function ask(req, res) {
     });
   } catch (err) {
     console.error('[RAG] ask error:', err);
-    res.status(500).json({ ok: false, error: String(err?.message || err) });
+    // 전역 에러 핸들러로 위임 (항상 JSON 보장)
+    next(err);
   }
 }
 

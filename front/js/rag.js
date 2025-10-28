@@ -1,4 +1,4 @@
-// RAG 프런트 스크립트
+// front/js/rag.js
 (function () {
   const $ = (s, r=document)=>r.querySelector(s);
   const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
@@ -23,28 +23,21 @@
     clearHistory: $('#btn-clear-history')
   };
 
-  // 간단한 마크다운 최소 렌더(리스트/헤딩/코드블록 정도만)
   function md(text=''){
-    // 코드블록
     text = text.replace(/```([\s\S]*?)```/g, (_, code)=>`<pre><code>${escapeHtml(code)}</code></pre>`);
-    // 헤딩
     text = text.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-    // 불릿
     text = text.replace(/^\- (.*)$/gm, '<li>$1</li>');
     text = text.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-    // 줄바꿈->p
     text = text.split(/\n{2,}/).map(p=>`<p>${p}</p>`).join('\n');
     return text;
   }
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])) }
 
-  // 로딩 표시
   function setLoading(on, msg=''){
     els.ask.disabled = on;
     els.status.textContent = on ? (msg || '검색 중...') : (msg || '');
   }
 
-  // 최근 질문 저장/로드
   const HS_KEY = 'RAG_RECENT_QUESTIONS';
   function loadHistory(){
     try { return JSON.parse(localStorage.getItem(HS_KEY)||'[]'); } catch { return [] }
@@ -69,7 +62,6 @@
     });
   }
 
-  // 근거 테이블 렌더
   function renderEvidence(list){
     if(!list || !list.length){ els.evidence.innerHTML = '<div class="hint">근거가 없습니다.</div>'; return; }
     const rows = list.map(r=>`
@@ -92,7 +84,6 @@
     `;
   }
 
-  // 호출
   async function ask(){
     const question = els.q.value.trim();
     if(!question){ els.q.focus(); return; }
@@ -108,15 +99,13 @@
 
     try{
       const headers = { 'Content-Type': 'application/json' };
-      // JWT 필요해지면 주석 해제
-      // const token = localStorage.getItem('ACCESS_TOKEN');
-      // if(token) headers['x-access-token'] = token;
-
       const res = await fetch('/api/rag/ask', {
         method:'POST',
         headers,
         body: JSON.stringify(body)
       });
+
+      // 항상 텍스트로 읽은 뒤 JSON 시도
       const raw = await res.text();
       let data;
       try {
@@ -127,18 +116,16 @@
 
       if(!res.ok) throw new Error(data?.detail || data?.error || ('HTTP '+res.status));
 
-      // 상단 칩
       els.chipDays.textContent = `기간 ${body.days}일`;
       els.chipTopk.textContent = `Top-K ${body.topK}`;
       els.chipPref.textContent = `프리필터 ${body.prefilterLimit}`;
       const modelStr = data?.used?.model ? `${data.used.model.chat} / ${data.used.model.embedding}` : '모델 정보 없음';
       els.chipModel.textContent = modelStr;
 
-      // 답변/근거
       els.answer.innerHTML = md(data.answer || '응답 없음');
       renderEvidence(data.evidence_preview || []);
       els.resultCard.classList.remove('hidden');
-      els.evidenceWrap.open = false; // 기본 닫힘
+      els.evidenceWrap.open = false;
 
       saveHistory(question);
       setLoading(false, '완료');
@@ -149,7 +136,6 @@
     }
   }
 
-  // 이벤트 바인딩
   els.ask.addEventListener('click', ask);
   els.clear.addEventListener('click', ()=>{
     els.q.value = '';
@@ -167,6 +153,5 @@
     });
   });
 
-  // 초기
   renderHistory();
 })();
