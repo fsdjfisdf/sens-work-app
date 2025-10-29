@@ -218,7 +218,11 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.line)           { where.push(`COALESCE(c.line, ${j('line')}) = ?`); args.push(filters.line); }
 
     if (filters.group)         { where.push(`${j('group')} = ?`); args.push(filters.group); }
-    if (filters.task_man)      { where.push(`${j('task_man')} LIKE ?`); args.push(`%${filters.task_man}%`); }
+    // ★ 핵심: 이름 필터는 메타 + 본문 동시 확인(fallback)
+    if (filters.task_man) {
+      where.push(`( ${j('task_man')} LIKE ? OR c.content LIKE ? )`);
+      args.push(`%${filters.task_man}%`, `%${filters.task_man}%`);
+    }
     if (filters.warranty)      { where.push(`COALESCE(c.task_warranty, ${j('warranty')}) = ?`); args.push(filters.warranty); }
     if (filters.ems != null)   { where.push(`${j('ems')} = ?`); args.push(String(filters.ems)); }
     if (filters.task_name)     { where.push(`${j('task_name')} LIKE ?`); args.push(`%${filters.task_name}%`); }
