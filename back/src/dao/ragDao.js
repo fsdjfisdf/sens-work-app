@@ -69,7 +69,7 @@ function buildRowToText(row) {
     `[BASIC] id=${row.id ?? ''}`,
     `[TASK] name=${row.task_name || ''}, date=${row.task_date || ''}, man=${row.task_man || ''}`,
     `[ORG] group=${row.grp || row.group || ''}, site=${row.site || ''}, line=${row.line || ''}`,
-    `[EQUIP] type=${row.equipment_type || ''}, name=${row.equipment_name || ''}, warranty=${row.warranty || row.task_warranty || ''}`,
+    `[EQUIP] type=${row.equipment_type || ''}, name=${row.equipment_name || ''}, warranty=${row.warranty || ''}`,
     `[STATUS] ${row.status || ''}, EMS=${row.ems ?? ''}`,
     `[ACTION] ${actionText}`,
     `[CAUSE] ${row.task_cause || ''}`,
@@ -92,9 +92,7 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
         task_date,
         task_name,
         task_man,
-        \`group\` AS \`group\`,
         site, line, equipment_type, equipment_name,
-        warranty AS warranty,
         warranty AS task_warranty,
         status,
         task_description, task_cause, task_result,
@@ -102,7 +100,6 @@ async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', param
         work_type, work_type2,
         setup_item, maint_item, transfer_item,
         task_duration, start_time, end_time, none_time, move_time,
-        ems,
         TIME_TO_SEC(task_duration)/60 AS duration_min
       FROM work_log
       ${whereSql ? `WHERE ${whereSql}` : ''}
@@ -177,7 +174,7 @@ async function saveEmbedding(chunk_id, embedding) {
   const conn = await pool.getConnection();
   try {
     await conn.query(
-      `INSERT INTO rag_embeddings (chunk_id, dims, embedding) VALUES (?, ?, ?)`,
+      `INSERT INTO rag_embeddings (chunk_id, dims, embedding) VALUES (?, ?, ?)` ,
       [chunk_id, embedding.length, JSON.stringify(embedding)]
     );
   } finally {
@@ -198,7 +195,7 @@ function cosineSimilarity(a, b) {
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
-/* ---------- 후보 조회 (프리필터) ---------- */
+/* ---------- 후보 조회 ---------- */
 async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
@@ -208,31 +205,23 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       "c.content <> ''"
     ];
     const args = [];
-
-    // 메타 JSON 키 접근 헬퍼
     const j = (k) => `JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.${k}'))`;
 
-    // 인덱스/물리 + 메타 병합 필터
+    // 기본 필터
     if (filters.equipment_type) { where.push(`COALESCE(c.equipment_type, ${j('equipment_type')}) = ?`); args.push(filters.equipment_type); }
     if (filters.site)           { where.push(`COALESCE(c.site, ${j('site')}) = ?`); args.push(filters.site); }
     if (filters.line)           { where.push(`COALESCE(c.line, ${j('line')}) = ?`); args.push(filters.line); }
 
-    if (filters.group)         { where.push(`${j('group')} = ?`); args.push(filters.group); }
-    // ★ 핵심: 이름 필터는 메타 + 본문 동시 확인(fallback)
+    // 이름 필터(조사 허용) : meta LIKE OR content REGEXP
     if (filters.task_man) {
-      where.push(`( ${j('task_man')} LIKE ? OR c.content LIKE ? )`);
-      args.push(`%${filters.task_man}%`, `%${filters.task_man}%`);
+      const base = String(filters.task_man).trim();
+      const like = `%${base}%`;
+      const rx = `(${base})(이|가|은|는|을|를|의)?( |\\(|,|\\]|$)`;
+      where.push(`( ${j('task_man')} LIKE ? OR c.content REGEXP ? )`);
+      args.push(like, rx);
     }
-    if (filters.warranty)      { where.push(`COALESCE(c.task_warranty, ${j('warranty')}) = ?`); args.push(filters.warranty); }
-    if (filters.ems != null)   { where.push(`${j('ems')} = ?`); args.push(String(filters.ems)); }
-    if (filters.task_name)     { where.push(`${j('task_name')} LIKE ?`); args.push(`%${filters.task_name}%`); }
-    if (filters.status)        { where.push(`${j('status')} = ?`); args.push(filters.status); }
-    if (filters.work_type)     { where.push(`COALESCE(c.work_type, ${j('work_type')}) = ?`); args.push(filters.work_type); }
-    if (filters.work_type2)    { where.push(`COALESCE(c.work_type2, ${j('work_type2')}) = ?`); args.push(filters.work_type2); }
-    if (filters.setup_item)    { where.push(`${j('setup_item')} = ?`); args.push(filters.setup_item); }
-    if (filters.maint_item)    { where.push(`${j('maint_item')} = ?`); args.push(filters.maint_item); }
-    if (filters.transfer_item) { where.push(`${j('transfer_item')} = ?`); args.push(filters.transfer_item); }
 
+    // 기간
     if (filters.days && Number(filters.days) > 0) {
       where.push(`
         COALESCE(
@@ -243,43 +232,38 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       args.push(Number(filters.days));
     }
 
-    // 이름 질의면 과거 데이터도 잘 끌어오도록 task_date DESC
-    const orderSql = filters.task_man
-      ? `ORDER BY COALESCE(c.task_date, CAST(${j('task_date')} AS DATE)) DESC`
-      : `ORDER BY e.id DESC`;
-
     const sql = `
       SELECT
-        e.id AS emb_id,
+        e.id   AS emb_id,
         e.chunk_id,
         e.dims,
         e.embedding,
 
-        c.id AS chunk_row_id,
+        c.id   AS chunk_row_id,
         c.content,
 
+        -- 미리 evidence용 필드 뽑아둠
         COALESCE(c.task_date, CAST(${j('task_date')} AS DATE)) AS task_date,
         COALESCE(c.site, ${j('site')}) AS site,
         COALESCE(c.line, ${j('line')}) AS line,
         COALESCE(c.equipment_type, ${j('equipment_type')}) AS equipment_type,
         COALESCE(c.equipment_name, ${j('equipment_name')}) AS equipment_name,
         COALESCE(c.work_type, ${j('work_type')}) AS work_type,
-        COALESCE(c.work_type2, ${j('work_type2')}) AS work_type2
+        COALESCE(c.work_type2, ${j('work_type2')}) AS work_type2,
+        ${j('task_man')} AS task_man
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-      ${orderSql}
+      ORDER BY e.id DESC
       LIMIT ?
     `;
     args.push(Number(limit));
 
     const [rows] = await conn.query(sql, args);
-    return rows
-      .map(r => ({
-        ...r,
-        embedding: typeof r.embedding === 'string' ? JSON.parse(r.embedding) : r.embedding
-      }))
-      .filter(r => Array.isArray(r.embedding));
+    return rows.map(r => ({
+      ...r,
+      embedding: typeof r.embedding === 'string' ? JSON.parse(r.embedding) : r.embedding
+    })).filter(r => Array.isArray(r.embedding));
   } finally {
     conn.release();
   }
@@ -288,16 +272,9 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
 /* ---------- 구버전 호환 ---------- */
 function buildText(row) { return buildRowToText(row); }
 
-/** 단순 삽입용 (행 내용 없이 벡터만 추가해야 할 때) */
 async function upsertEmbedding(id, embedding) {
-  const chunkId = await upsertChunk({
-    src_table: 'work_log',
-    src_id: String(id),
-    content: '',
-    rowMeta: {},
-  });
-  await saveEmbedding(chunkId, embedding);
-  return chunkId;
+  // 필요 시 확장용(현재 경로에선 사용 안 함)
+  return id, embedding;
 }
 
 module.exports = {

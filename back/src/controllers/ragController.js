@@ -6,7 +6,7 @@ const {
   cosineSimilarity,
 } = require('../dao/ragDao');
 
-/** SITE 자동 추론 (PT/HS/IC/CJ/PSKH) */
+/** 질문에서 SITE 키워드 자동 추론 (PT/HS/IC/CJ/PSKH) */
 function inferSiteFromQuestion(q = '') {
   const U = String(q).toUpperCase();
   const tests = [
@@ -24,20 +24,28 @@ function inferSiteFromQuestion(q = '') {
   return null;
 }
 
-/** 질문에서 한글 이름 간단 추출 (2~4글자 토큰 1개) */
-function extractKoreanName(q = '') {
-  const s = String(q).replace(/\(.*?\)/g, '');
-  const m = s.match(/[\uAC00-\uD7A3]{2,4}/g);
-  if (!m) return null;
-  return m.sort((a, b) => b.length - a.length)[0];
+/** 질문에서 한국어 이름 추출 + 조사 제거 */
+function extractNormalizedName(q=''){
+  const s = String(q).replace(/\(.*?\)/g, ' ');
+  const toks = s.match(/[\uAC00-\uD7A3]{2,6}/g);
+  if(!toks) return null;
+
+  const POST = ['께서','에게','에서','에서의','부터는','부터','으로','로','와','과','도','만','는','은','이','가','를','을','의'];
+  const stripPost = (w)=>{
+    for(const p of POST.sort((a,b)=>b.length-a.length)){
+      if(w.endsWith(p) && w.length>p.length+1) return w.slice(0, w.length - p.length);
+    }
+    return w;
+  };
+
+  // 가장 길고 의미있는 토큰을 선택
+  const base = stripPost(toks.sort((a,b)=>b.length-a.length)[0]);
+  return base && base.length>=2 ? base : null;
 }
 
-/** LLM 컨텍스트 프롬프트 생성 */
+/** 컨텍스트 묶어서 메시지 프롬프트 생성 */
 function buildPrompt(question, contexts) {
-  const ctx = (contexts || [])
-    .map((text, i) => `【근거 ${i + 1}】\n${text}`)
-    .join('\n\n');
-
+  const ctx = (contexts || []).map((t,i)=>`【근거 ${i+1}】\n${t}`).join('\n\n');
   return [
     {
       role: 'system',
@@ -100,50 +108,45 @@ async function ask(req, res) {
 
     // 숫자 파라미터 정규화
     const topK = Math.max(1, Math.min(50, Number(_topK) || 20));
-    const days = Math.max(1, Math.min(3650, Number(_days) || 365)); // 최대 10년
+    const prefilterLimit = Math.max(10, Math.min(5000, Number(_prefilter) || 300));
+    const days = Math.max(1, Math.min(3650, Number(_days) || 365));
 
     await ensureTables();
 
-    // 자동 필터 보정
+    // 자동 추론
     const inferredSite = (!filters.site) ? inferSiteFromQuestion(question) : null;
-    const nameFromQ = extractKoreanName(question);
+    const nameFromQ = extractNormalizedName(question);
 
-    const effectiveFilters = {
+    // 1차: 이름 고정 + days 적용
+    const filters1 = {
       ...filters,
       ...(inferredSite ? { site: inferredSite } : {}),
       ...(nameFromQ ? { task_man: nameFromQ } : {}),
       days,
     };
 
-    // 이름 질의면 프리필터 넓게
-    const firstLimit = (effectiveFilters.task_man)
-      ? Math.max(Number(_prefilter) || 300, 5000)
-      : Math.max(10, Math.min(5000, Number(_prefilter) || 300));
-
-    // 1) 1차 조회
     let candidates = await fetchAllEmbeddings({
-      filters: effectiveFilters,
-      limit: firstLimit,
+      filters: filters1,
+      limit: prefilterLimit,
     });
 
-    // 2) 0건이면 날짜 필터 제거 + limit 확대
-    if (!candidates.length) {
-      const { days: _ignored, ...noDays } = effectiveFilters;
+    // 2차: 이름 고정 + days 제거 (이름은 절대 해제하지 않음)
+    if (!candidates.length && nameFromQ) {
+      const { days: _ignored, ...noDays } = filters1;
       candidates = await fetchAllEmbeddings({
         filters: noDays,
-        limit: Math.max(firstLimit, 7000),
+        limit: Math.max(prefilterLimit, 1000),
       });
     }
 
-    // 3) 그래도 0건이면 완전 완화(필터 전부 제거)
-    if (!candidates.length) {
+    // 3차: 이름도 없을 때만 전체 풀 검색 허용
+    if (!candidates.length && !nameFromQ) {
       candidates = await fetchAllEmbeddings({
         filters: {},
-        limit: Math.max(firstLimit, 8000),
+        limit: Math.max(prefilterLimit, 2000),
       });
 
       if (!candidates.length) {
-        console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', effectiveFilters, firstLimit);
         return res.json({
           ok: true,
           used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
@@ -153,31 +156,23 @@ async function ask(req, res) {
       }
     }
 
-    // 4) 쿼리 임베딩
+    // 쿼리 임베딩
     const emb = await openai.embeddings.create({
       model: MODELS.embedding,
       input: [String(question)],
     });
     const qVec = emb.data?.[0]?.embedding || [];
 
-    // 5) 유사도 + 이름 문자열 보너스(근소)
-    const nameBonusToken = (nameFromQ && nameFromQ.length >= 2) ? nameFromQ : null;
+    // 랭킹
     const ranked = candidates
-      .map(c => {
-        let s = cosineSimilarity(qVec, c.embedding);
-        if (nameBonusToken && c.content && String(c.content).includes(nameBonusToken)) s += 0.08;
-        return { ...c, score: s };
-      })
+      .map(c => ({ ...c, score: cosineSimilarity(qVec, c.embedding) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, topK);
 
     const rankedNonEmpty = ranked.filter(r => (r.content && String(r.content).trim().length > 0));
-
-    // 모델 컨텍스트 최대 8개
     const contextsForLLM = rankedNonEmpty.slice(0, 8).map(r => normalizeContent(r.content));
     const ctxUsedCount = contextsForLLM.length;
 
-    // 프리뷰 (근거 표)
     const evidence_preview = ranked.map(r => ({
       id: r.chunk_id,
       date: r.task_date ? String(r.task_date).slice(0, 10) : '',
@@ -185,7 +180,7 @@ async function ask(req, res) {
       line: r.line || '',
       eq: [r.equipment_type, r.equipment_name].filter(Boolean).join(' / '),
       sim: r.score || 0,
-      name: r.work_type ? `${r.work_type}${r.work_type2 ? ' / ' + r.work_type2 : ''}` : '',
+      name: r.task_man ? `man=${r.task_man}` : (r.work_type ? `${r.work_type}${r.work_type2 ? ' / ' + r.work_type2 : ''}` : ''),
       desc: normalizeContent(r.content || '').slice(0, 180),
     }));
 
@@ -198,7 +193,6 @@ async function ask(req, res) {
       });
     }
 
-    // 6) 모델 호출
     const messages = buildPrompt(question, contextsForLLM);
     const chatRes = await openai.chat.completions.create({
       model: MODELS.chat,
