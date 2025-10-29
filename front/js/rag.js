@@ -35,7 +35,7 @@
       lastQuestion: '',
       lastAnswerHtml: '',
       lastEvidence: [],
-      evidenceView: { // table ui state
+      evidenceView: {
         sortBy: 'sim', // 'sim' | 'date' | 'site' | 'eq'
         sortDir: 'desc', // 'asc' | 'desc'
         query: '',
@@ -135,7 +135,7 @@
       bubble.appendChild(meta);
       bubble.appendChild(body);
 
-      // evidence block 붙이기 (assistant일 때만)
+      // evidence block (assistant only)
       if (role !== 'user' && opts.evidence && Array.isArray(opts.evidence)) {
         const ev = renderEvidenceBlock(opts.evidence);
         bubble.appendChild(ev);
@@ -169,7 +169,6 @@
 
     /* ===== Evidence UI ===== */
     function renderEvidenceBlock(list){
-      // state 보관
       STATE.lastEvidence = Array.isArray(list) ? list.slice() : [];
 
       const wrap = document.createElement('div');
@@ -247,8 +246,7 @@
           });
         }
 
-        // 정렬
-        const [by, dir] = sortSelect.value.split(':'); // sim/date/site/eq + asc/desc
+        const [by, dir] = sortSelect.value.split(':');
         STATE.evidenceView.sortBy = by;
         STATE.evidenceView.sortDir = dir;
 
@@ -344,7 +342,6 @@
         const t = e.target;
         if(!(t instanceof HTMLElement)) return;
 
-        // row-level actions
         if (t.dataset.act === 'copy-desc') {
           const full = t.closest('details')?.querySelector('.desc-full')?.textContent || '';
           navigator.clipboard.writeText(full).then(()=>toast('내용 복사 완료','ok'));
@@ -363,7 +360,6 @@
           const id = tr?.dataset?.id;
           const row = STATE.lastEvidence.find(x=>String(x.id)===String(id));
           if(row){
-            // eq 는 "TYPE / NAME" 형태 → TYPE만 필터로
             const type = (row.eq||'').split('/')[0].trim() || null;
             STATE.filters.equipment_type = type || null;
             toast(`장비타입 필터 적용: ${type||'-'}`);
@@ -371,7 +367,6 @@
           }
         }
 
-        // badge quick filters
         if (t.matches('[data-fsite]')) {
           STATE.filters.site = t.dataset.fsite || null;
           toast(`SITE 필터: ${STATE.filters.site||'-'}`);
@@ -432,7 +427,6 @@
       const q = (question ?? els.q.value ?? '').trim();
       if(!q){ els.q.focus(); toast('메시지를 입력해 주세요.','error'); return; }
 
-      // print user bubble
       addMsg('user', escapeHtml(q), { meta:'사용자' });
       els.status.textContent = '생성 중…';
       const removeSkel = addSkeleton();
@@ -498,7 +492,6 @@
         toast('최근 질문이 없습니다. 먼저 질문을 입력하세요.');
         return;
       }
-      // 안내용 시스템 메시지
       addMsg('assistant', md(`적용된 필터로 다시 검색합니다.\n- SITE: **${STATE.filters.site||'-'}**\n- LINE: **${STATE.filters.line||'-'}**\n- 장비타입: **${STATE.filters.equipment_type||'-'}**`), { meta: '안내' });
       ask(STATE.lastQuestion);
     }
@@ -512,7 +505,6 @@
       toast('초기화했습니다.');
     });
     els.newChat?.addEventListener('click', ()=>{
-      // 채팅 영역 초기화
       els.chat.innerHTML = '';
       els.q.value = '';
       autoGrow(els.q);
@@ -528,7 +520,6 @@
       toast('기록을 비웠습니다.');
     });
 
-    // textarea UX
     els.q?.addEventListener('input', ()=> autoGrow(els.q));
     els.q?.addEventListener('keydown', (e)=>{
       if(e.key==='Enter' && !e.shiftKey){
@@ -541,7 +532,6 @@
     });
     setTimeout(()=> els.q && els.q.focus(), 80);
 
-    // first render
     renderHistory();
   }
 })();

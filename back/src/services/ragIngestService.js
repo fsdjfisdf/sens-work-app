@@ -25,7 +25,7 @@ async function embedOneById(id) {
       task_name: row.task_name || null,
       task_date: row.task_date || null,
       task_man: row.task_man || null,
-      group: row.group || null, // 예약어 주의
+      group: row.group || null,
       site: row.site || null,
       line: row.line || null,
       equipment_type: row.equipment_type || null,
@@ -44,17 +44,16 @@ async function embedOneById(id) {
       maint_item: row.maint_item || null,
       transfer_item: row.transfer_item || null,
       task_duration_hms: row.task_duration || null,
-      task_duration: hhmmOrHhmmssToMin(row.task_duration) ?? null, // 분 단위
+      task_duration: hhmmOrHhmmssToMin(row.task_duration) ?? null,
       start_time: row.start_time || null,
       end_time: row.end_time || null,
       none_time: row.none_time ?? null,
       move_time: row.move_time ?? null,
       ems: row.ems ?? null,
-     },
+    },
   });
 
   await saveEmbedding(chunkId, embedding);
-
   return { ok: true, chunkId };
 }
 

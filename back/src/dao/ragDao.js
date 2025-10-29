@@ -203,7 +203,6 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
   const conn = await pool.getConnection();
   try {
     const where = [
-      'JSON_VALID(e.embedding) = 1',
       'c.content IS NOT NULL',
       "c.content <> ''"
     ];
@@ -218,11 +217,14 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.line)           { where.push(`COALESCE(c.line, ${j('line')}) = ?`); args.push(filters.line); }
 
     if (filters.group)         { where.push(`${j('group')} = ?`); args.push(filters.group); }
+
     // ★ 핵심: 이름 필터는 메타 + 본문 동시 확인(fallback)
     if (filters.task_man) {
+      const base = String(filters.task_man).trim();
       where.push(`( ${j('task_man')} LIKE ? OR c.content LIKE ? )`);
-      args.push(`%${filters.task_man}%`, `%${filters.task_man}%`);
+      args.push(`%${base}%`, `%${base}%`);
     }
+
     if (filters.warranty)      { where.push(`COALESCE(c.task_warranty, ${j('warranty')}) = ?`); args.push(filters.warranty); }
     if (filters.ems != null)   { where.push(`${j('ems')} = ?`); args.push(String(filters.ems)); }
     if (filters.task_name)     { where.push(`${j('task_name')} LIKE ?`); args.push(`%${filters.task_name}%`); }
@@ -243,7 +245,6 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       args.push(Number(filters.days));
     }
 
-    // 이름 질의면 과거 데이터도 잘 끌어오도록 task_date DESC
     const orderSql = filters.task_man
       ? `ORDER BY COALESCE(c.task_date, CAST(${j('task_date')} AS DATE)) DESC`
       : `ORDER BY e.id DESC`;
@@ -275,10 +276,16 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
 
     const [rows] = await conn.query(sql, args);
     return rows
-      .map(r => ({
-        ...r,
-        embedding: typeof r.embedding === 'string' ? JSON.parse(r.embedding) : r.embedding
-      }))
+      .map(r => {
+        let emb = r.embedding;
+        if (typeof emb === 'string') {
+          try { emb = JSON.parse(emb); } catch {}
+        }
+        if (!Array.isArray(emb)) {
+          try { emb = JSON.parse(JSON.stringify(emb)); } catch {}
+        }
+        return { ...r, embedding: emb };
+      })
       .filter(r => Array.isArray(r.embedding));
   } finally {
     conn.release();

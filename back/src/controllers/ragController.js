@@ -32,7 +32,17 @@ function extractKoreanName(q = '') {
   return m.sort((a, b) => b.length - a.length)[0];
 }
 
-/** LLM 컨텍스트 프롬프트 생성 */
+/** 질문에서 장비타입 추출 */
+function extractEquipmentType(q='') {
+  const U = String(q).toUpperCase();
+  const KEYS = ['SUPRA N','SUPRA XP','INTEGER','PRECIA','ECOLITE','GENEVA','HDW'];
+  for (const k of KEYS) {
+    if (U.includes(k)) return k; // 그대로 equipment_type 값으로 사용
+  }
+  return null;
+}
+
+/** LLM 컨텍스트 프롬프트 생성 — 자연스러운 대답 지향 */
 function buildPrompt(question, contexts) {
   const ctx = (contexts || [])
     .map((text, i) => `【근거 ${i + 1}】\n${text}`)
@@ -42,10 +52,11 @@ function buildPrompt(question, contexts) {
     {
       role: 'system',
       content: [
-        '너는 현장 작업 로그 요약/검색 보조자야.',
-        '반드시 주어진 근거 안에서만 답하고, 모르면 모른다고 말해.',
-        '한국어로 간결하게, 불릿과 짧은 문장으로 정리해.',
-        '출력 형식을 엄격히 지켜.'
+        '너는 현장 작업 로그를 바탕으로 사실만으로 답하는 분석 조수야.',
+        '근거 텍스트를 꼼꼼히 읽고, 사용자 질문에 자연스럽게 한국어로 답해.',
+        '추측이나 창작 금지. 날짜/수치/장비/작업자 등은 근거에서 확인된 것만 사용.',
+        '불확실하면 모른다고 말하고, 추가로 확인할 만한 구체적 제안을 해.',
+        '문단과 불릿을 적절히 섞되, 딱딱한 템플릿 헤더는 쓰지 마.',
       ].join(' ')
     },
     {
@@ -53,23 +64,8 @@ function buildPrompt(question, contexts) {
       content: [
         `질문:\n${question}`,
         '------',
-        '근거 모음:',
-        ctx || '(근거 없음)',
-        '------',
-        '출력 형식(그대로 따르기):',
-        '### 핵심 요약',
-        '- (3~5줄 내) 이번 질문에 대한 한눈 요약',
-        '',
-        '### 주요 원인/증상',
-        '- (근거에서 확인된 사실만, 추측 금지)',
-        '',
-        '### 조치/권고',
-        '- (근거에서 실제로 수행/권장된 액션만)',
-        '',
-        '제약:',
-        '- 근거에 없는 내용은 쓰지 말 것',
-        '- 수치/날짜/코드는 근거에서 확인된 것만',
-        '- "**※ 근거: n건**" 문구는 **너가 쓰지 않는다** (서버에서 자동 추가)',
+        '근거 텍스트:',
+        ctx || '(없음)',
       ].join('\n'),
     },
   ];
@@ -99,7 +95,7 @@ async function ask(req, res) {
     }
 
     // 숫자 파라미터 정규화
-    const topK = Math.max(1, Math.min(50, Number(_topK) || 20));
+    const topK = Math.max(5, Math.min(50, Number(_topK) || 20));
     const days = Math.max(1, Math.min(3650, Number(_days) || 365)); // 최대 10년
 
     await ensureTables();
@@ -107,18 +103,21 @@ async function ask(req, res) {
     // 자동 필터 보정
     const inferredSite = (!filters.site) ? inferSiteFromQuestion(question) : null;
     const nameFromQ = extractKoreanName(question);
+    const equipFromQ = (!filters.equipment_type) ? extractEquipmentType(question) : null;
 
     const effectiveFilters = {
       ...filters,
       ...(inferredSite ? { site: inferredSite } : {}),
       ...(nameFromQ ? { task_man: nameFromQ } : {}),
+      ...(equipFromQ ? { equipment_type: equipFromQ } : {}),
       days,
     };
 
-    // 이름 질의면 프리필터 넓게
-    const firstLimit = (effectiveFilters.task_man)
+    // 이름/장비 질의면 프리필터 넓게
+    const widen = Boolean(nameFromQ) || Boolean(equipFromQ);
+    const firstLimit = widen
       ? Math.max(Number(_prefilter) || 300, 5000)
-      : Math.max(10, Math.min(5000, Number(_prefilter) || 300));
+      : Math.max(30, Math.min(5000, Number(_prefilter) || 300));
 
     // 1) 1차 조회
     let candidates = await fetchAllEmbeddings({
@@ -147,7 +146,7 @@ async function ask(req, res) {
         return res.json({
           ok: true,
           used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
-          answer: '근거가 없습니다.',
+          answer: '관련 로그를 찾지 못했습니다. (근거 0건)\n- 이름/장비/기간 필터를 완화하거나, 철자를 다시 확인해 보세요.',
           evidence_preview: [],
         });
       }
@@ -160,12 +159,15 @@ async function ask(req, res) {
     });
     const qVec = emb.data?.[0]?.embedding || [];
 
-    // 5) 유사도 + 이름 문자열 보너스(근소)
-    const nameBonusToken = (nameFromQ && nameFromQ.length >= 2) ? nameFromQ : null;
+    // 5) 유사도 + 보너스
+    const nameToken = (nameFromQ && nameFromQ.length >= 2) ? nameFromQ : null;
+    const equipToken = equipFromQ ? String(equipFromQ).toUpperCase() : null;
+
     const ranked = candidates
       .map(c => {
         let s = cosineSimilarity(qVec, c.embedding);
-        if (nameBonusToken && c.content && String(c.content).includes(nameBonusToken)) s += 0.08;
+        if (nameToken && c.content && String(c.content).includes(nameToken)) s += 0.08;
+        if (equipToken && c.equipment_type && String(c.equipment_type).toUpperCase() === equipToken) s += 0.04;
         return { ...c, score: s };
       })
       .sort((a, b) => b.score - a.score)
@@ -193,23 +195,21 @@ async function ask(req, res) {
       return res.json({
         ok: true,
         used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
-        answer: '죄송하지만, 제공된 근거 텍스트가 없어 요약을 생성할 수 없습니다.\n\n※ 근거: 0건',
+        answer: '관련 텍스트가 없어 답변을 구성할 수 없습니다. (근거 0건)\n- 기간/필터를 완화하거나 키워드를 바꿔 시도해 보세요.',
         evidence_preview,
       });
     }
 
-    // 6) 모델 호출
+    // 6) 모델 호출 — 자연스러운 자유 서술
     const messages = buildPrompt(question, contextsForLLM);
     const chatRes = await openai.chat.completions.create({
       model: MODELS.chat,
       messages,
-      temperature: 0.2,
+      temperature: 0.3,
     });
 
     const rawAnswer = chatRes.choices?.[0]?.message?.content?.trim();
-    const answer = rawAnswer
-      ? `${rawAnswer}\n\n※ 근거: ${ctxUsedCount}건`
-      : `응답을 생성하지 못했습니다.\n\n※ 근거: ${ctxUsedCount}건`;
+    const answer = rawAnswer || '응답을 생성하지 못했습니다.';
 
     return res.json({
       ok: true,
