@@ -9,8 +9,8 @@ if (!secret.openai_api_key) {
 const openai = new OpenAI({ apiKey: secret.openai_api_key });
 
 const MODELS = {
-  embedding: 'text-embedding-3-large',
-  chat: 'gpt-4o',
+  embedding: 'text-embedding-3-small',
+  chat: 'gpt-4o-mini',
 };
 
 module.exports = { openai, MODELS };
