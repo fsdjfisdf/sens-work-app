@@ -62,23 +62,27 @@ async function ensureTables() {
 
 /* ---------- work_log 1row → 텍스트 ---------- */
 function buildRowToText(row) {
-  const durationMin = row.duration_min ?? hhmmOrHhmmssToMin(row.task_duration ?? row.time);
-  const actionText = String(row.task_description || row.action || '').replace(/<br\s*\/?>/gi, '\n');
+  const durationMin =
+    row.duration_min ?? hhmmOrHhmmssToMin(row.task_duration);
+  const actionText = String(row.task_description || '').replace(/<br\s*\/?>/gi, '\n');
 
   const lines = [
-    `[SITE/LINE] ${row.site || ''} / ${row.line || ''}`,
-    `[EQUIP] ${row.equipment_type || ''} - ${row.equipment_name || ''} (Warranty: ${row.warranty || row.task_warranty || ''})`,
-    `[STATUS] ${row.status || ''}`,
+    `[BASIC] id=${row.id ?? ''}`,
+    `[TASK] name=${row.task_name || ''}, date=${row.task_date || ''}, man=${row.task_man || ''}`,
+    `[ORG] group=${row.grp || row.group || ''}, site=${row.site || ''}, line=${row.line || ''}`,
+    `[EQUIP] type=${row.equipment_type || ''}, name=${row.equipment_name || ''}, warranty=${row.warranty || ''}`,
+    `[STATUS] ${row.status || ''}, EMS=${row.ems ?? ''}`,
     `[ACTION] ${actionText}`,
-    `[CAUSE] ${row.task_cause || row.cause || ''}`,
-    `[RESULT] ${row.task_result || row.result || ''}`,
-    `[SOP/TS] SOP=${row.SOP || ''} / TS=${row.tsguide || row.TS_guide || ''}`,
+    `[CAUSE] ${row.task_cause || ''}`,
+    `[RESULT] ${row.task_result || ''}`,
+    `[DOC] SOP=${row.SOP || ''} / TS=${row.tsguide || ''}`,
     `[WORK TYPE] ${row.work_type || ''} / ${row.work_type2 || ''}`,
-    `[SETUP/TRANS] setup_item=${row.setup_item || ''} / transfer_item=${row.transfer_item || ''}`,
-    `[TIME] duration(min)=${durationMin ?? ''}, start=${row.start_time || ''}, end=${row.end_time || ''}, none=${row.none_time ?? row.none ?? ''}, move=${row.move_time ?? row.move ?? ''}`,
+    `[ITEMS] setup=${row.setup_item || ''}, maint=${row.maint_item || ''}, transfer=${row.transfer_item || ''}`,
+    `[TIME] duration(min)=${durationMin ?? ''}, start=${row.start_time || ''}, end=${row.end_time || ''}, none(min)=${row.none_time ?? ''}, move(min)=${row.move_time ?? ''}`,
   ];
   return lines.join('\n').trim();
 }
+
 
 /* ---------- 배치 로딩 ---------- */
 async function fetchWorkLogBatch({ limit = 100, offset = 0, whereSql = '', paramsArr = [] } = {}) {
@@ -204,15 +208,32 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     ];
     const args = [];
 
-    if (filters.equipment_type) { where.push('COALESCE(c.equipment_type, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.equipment_type"))) = ?'); args.push(filters.equipment_type); }
-    if (filters.site)           { where.push('COALESCE(c.site, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.site"))) = ?'); args.push(filters.site); }
-    if (filters.line)           { where.push('COALESCE(c.line, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.line"))) = ?'); args.push(filters.line); }
+    // 공통 coalesce helper
+    const j = (k) => `JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.${k}'))`;
+
+    // 기본
+    if (filters.equipment_type) { where.push(`COALESCE(c.equipment_type, ${j('equipment_type')}) = ?`); args.push(filters.equipment_type); }
+    if (filters.site)           { where.push(`COALESCE(c.site, ${j('site')}) = ?`); args.push(filters.site); }
+    if (filters.line)           { where.push(`COALESCE(c.line, ${j('line')}) = ?`); args.push(filters.line); }
+
+    // 확장: 전 컬럼 어디든 필터 가능
+    if (filters.group)         { where.push(`COALESCE(${j('group')}, c.site) = ?`); args.push(filters.group); } // 물리 없음 → 메타 사용
+    if (filters.task_man)      { where.push(`${j('task_man')} LIKE ?`); args.push(`%${filters.task_man}%`); }   // 다중 인원 대응
+    if (filters.warranty)      { where.push(`COALESCE(c.task_warranty, ${j('warranty')}) = ?`); args.push(filters.warranty); }
+    if (filters.ems != null)   { where.push(`${j('ems')} = ?`); args.push(String(filters.ems)); }
+    if (filters.task_name)     { where.push(`${j('task_name')} LIKE ?`); args.push(`%${filters.task_name}%`); }
+    if (filters.status)        { where.push(`COALESCE(c.work_type, ${j('status')}) IS NOT NULL AND ${j('status')} = ?`); args.push(filters.status); }
+    if (filters.work_type)     { where.push(`COALESCE(c.work_type, ${j('work_type')}) = ?`); args.push(filters.work_type); }
+    if (filters.work_type2)    { where.push(`COALESCE(c.work_type2, ${j('work_type2')}) = ?`); args.push(filters.work_type2); }
+    if (filters.setup_item)    { where.push(`${j('setup_item')} = ?`); args.push(filters.setup_item); }
+    if (filters.maint_item)    { where.push(`${j('maint_item')} = ?`); args.push(filters.maint_item); }
+    if (filters.transfer_item) { where.push(`${j('transfer_item')} = ?`); args.push(filters.transfer_item); }
+
     if (filters.days && Number(filters.days) > 0) {
-      // 날짜도 물리 컬럼/메타 모두 고려
       where.push(`
         COALESCE(
           c.task_date,
-          CAST(JSON_UNQUOTE(JSON_EXTRACT(c.metadata, "$.task_date")) AS DATE)
+          CAST(${j('task_date')} AS DATE)
         ) >= (CURRENT_DATE - INTERVAL ? DAY)
       `);
       args.push(Number(filters.days));
@@ -220,28 +241,15 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
 
     const sql = `
       SELECT
-        e.id   AS emb_id,
+        e.id AS emb_id,
         e.chunk_id,
         e.dims,
         e.embedding,
 
-        c.id   AS chunk_row_id,
+        c.id AS chunk_row_id,
+        c.content,
 
-        -- ✅ 물리 컬럼이 NULL이면 metadata로 보강
-        COALESCE(c.site, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.site'))) AS site,
-        COALESCE(c.line, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.line'))) AS line,
-        COALESCE(c.equipment_type, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.equipment_type'))) AS equipment_type,
-        COALESCE(c.equipment_name, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.equipment_name'))) AS equipment_name,
-        COALESCE(c.work_type, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.work_type'))) AS work_type,
-        COALESCE(c.work_type2, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.work_type2'))) AS work_type2,
-        COALESCE(c.task_warranty, JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.task_warranty'))) AS task_warranty,
-        COALESCE(
-          c.task_date,
-          CAST(JSON_UNQUOTE(JSON_EXTRACT(c.metadata, '$.task_date')) AS DATE)
-        ) AS task_date,
-
-        c.content
-
+        COALESCE(c.task_date, CAST(${j('task_date')} AS DATE)) AS task_date
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
@@ -251,36 +259,57 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     args.push(Number(limit));
 
     const [rows] = await conn.query(sql, args);
-
-    const out = [];
-    for (const r of rows) {
-      let emb = r.embedding;
-      if (typeof emb === 'string') {
-        try { emb = JSON.parse(emb); } catch { continue; }
-      }
-      if (!Array.isArray(emb) || emb.length === 0) continue;
-
-      out.push({
-        ...r,
-        embedding: emb,
-      });
-    }
-    return out;
+    return rows.map(r => ({
+      ...r,
+      embedding: typeof r.embedding === 'string' ? JSON.parse(r.embedding) : r.embedding
+    })).filter(r => Array.isArray(r.embedding));
   } finally {
     conn.release();
   }
 }
 
+
 /* ---------- 구버전 호환 ---------- */
 function buildText(row) { return buildRowToText(row); }
 
 async function upsertEmbedding(id, embedding) {
-  const chunkId = await upsertChunk({
-    src_table: 'work_log',
-    src_id: String(id),
-    content: '',
-    rowMeta: {},
-  });
+// embed-all.js에서 upsertChunk(rowMeta) 넣는 부분 확장
+const chunkId = await upsertChunk({
+  src_table: 'work_log',
+  src_id: String(r.id),
+  content: buildRowToText(r),
+  rowMeta: {
+    id: r.id,
+    task_name: r.task_name,
+    task_date: r.task_date || null,
+    task_man: r.task_man,
+    group: r.grp,                      // 주의: 키는 'group'
+    site: r.site,
+    line: r.line,
+    equipment_type: r.equipment_type,
+    equipment_name: r.equipment_name,
+    warranty: r.warranty,
+    status: r.status,
+    task_description: r.task_description,
+    task_cause: r.task_cause,
+    task_result: r.task_result,
+    SOP: r.SOP,
+    tsguide: r.tsguide,
+    work_type: r.work_type,
+    work_type2: r.work_type2,
+    setup_item: r.setup_item,
+    maint_item: r.maint_item,
+    transfer_item: r.transfer_item,
+    task_duration_hms: r.task_duration,
+    duration_min: r.duration_min ?? null,
+    start_time: r.start_time,
+    end_time: r.end_time,
+    none_time: r.none_time,
+    move_time: r.move_time,
+    ems: r.ems
+  }
+});
+
   await saveEmbedding(chunkId, embedding);
   return chunkId;
 }

@@ -50,26 +50,35 @@ async function main() {
         content: buildRowToText(r),  // 본문 채움(줄바꿈 정리 포함)
         rowMeta: {
           // --- 메타: 쿼리에서 가져온 컬럼들 정확히 매핑 ---
-          site: r.site,
-          line: r.line,
-          equipment_type: r.equipment_type,
-          equipment_name: r.equipment_name,
-          work_type: r.work_type,
-          work_type2: r.work_type2,
-          task_warranty: r.task_warranty,      // warranty -> task_warranty alias
-          task_date: r.task_date || null,      // 물리 task_date
-          task_name: r.task_name || null,
-          start_time: r.start_time,
-          end_time: r.end_time,
-          task_duration: r.duration_min ?? null, // 분 단위
-          status: r.status,
-          SOP: r.SOP,
-          tsguide: r.tsguide,
-          action: r.task_description,
-          cause: r.task_cause,
-          result: r.task_result,
-          none_time: r.none_time,
-          move_time: r.move_time,
+        id: r.id,
+        task_name: r.task_name || null,
+        task_date: r.task_date || null,
+        task_man: r.task_man || null,
+        group: r.group || r.grp || null,          // `group` 예약어 주의
+        site: r.site || null,
+        line: r.line || null,
+        equipment_type: r.equipment_type || null,
+        equipment_name: r.equipment_name || null,
+        warranty: r.warranty || r.task_warranty || null,
+        task_warranty: r.task_warranty || r.warranty || null, // 둘 다 보존
+        status: r.status || null,
+        task_description: r.task_description || null,
+        task_cause: r.task_cause || null,
+        task_result: r.task_result || null,
+        SOP: r.SOP || null,
+        tsguide: r.tsguide || null,
+        work_type: r.work_type || null,
+        work_type2: r.work_type2 || null,
+        setup_item: r.setup_item || null,
+        maint_item: r.maint_item || null,
+        transfer_item: r.transfer_item || null,
+        task_duration_hms: r.task_duration || null,
+        duration_min: r.duration_min ?? null,
+        start_time: r.start_time || null,
+        end_time: r.end_time || null,
+        none_time: r.none_time ?? null,
+        move_time: r.move_time ?? null,
+        ems: r.ems ?? null,
         }
       });
 
