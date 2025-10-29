@@ -6,7 +6,7 @@ const {
   cosineSimilarity,
 } = require('../dao/ragDao');
 
-/** 질문에서 SITE 키워드 자동 추론 (PT/HS/IC/CJ/PSKH) */
+/** SITE 자동 추론 (PT/HS/IC/CJ/PSKH) */
 function inferSiteFromQuestion(q = '') {
   const U = String(q).toUpperCase();
   const tests = [
@@ -24,8 +24,15 @@ function inferSiteFromQuestion(q = '') {
   return null;
 }
 
-/** 컨텍스트 묶어서 메시지 프롬프트 생성 */
-// 교체: buildPrompt(question, contexts)
+/** 질문에서 한글 이름 간단 추출 (2~4글자 토큰 1개) */
+function extractKoreanName(q = '') {
+  const s = String(q).replace(/\(.*?\)/g, '');
+  const m = s.match(/[\uAC00-\uD7A3]{2,4}/g);
+  if (!m) return null;
+  return m.sort((a, b) => b.length - a.length)[0];
+}
+
+/** LLM 컨텍스트 프롬프트 생성 */
 function buildPrompt(question, contexts) {
   const ctx = (contexts || [])
     .map((text, i) => `【근거 ${i + 1}】\n${text}`)
@@ -68,7 +75,6 @@ function buildPrompt(question, contexts) {
   ];
 }
 
-
 /** 텍스트 정리 */
 function normalizeContent(s = '') {
   return String(s)
@@ -94,43 +100,50 @@ async function ask(req, res) {
 
     // 숫자 파라미터 정규화
     const topK = Math.max(1, Math.min(50, Number(_topK) || 20));
-    const prefilterLimit = Math.max(10, Math.min(5000, Number(_prefilter) || 300));
     const days = Math.max(1, Math.min(3650, Number(_days) || 365)); // 최대 10년
 
     await ensureTables();
 
-    // SITE 자동 추론 (프론트가 filters.site 안 보낼 때 보정)
+    // 자동 필터 보정
     const inferredSite = (!filters.site) ? inferSiteFromQuestion(question) : null;
+    const nameFromQ = extractKoreanName(question);
+
     const effectiveFilters = {
       ...filters,
       ...(inferredSite ? { site: inferredSite } : {}),
+      ...(nameFromQ ? { task_man: nameFromQ } : {}),
       days,
     };
+
+    // 이름 질의면 프리필터 넓게
+    const firstLimit = (effectiveFilters.task_man)
+      ? Math.max(Number(_prefilter) || 300, 5000)
+      : Math.max(10, Math.min(5000, Number(_prefilter) || 300));
 
     // 1) 1차 조회
     let candidates = await fetchAllEmbeddings({
       filters: effectiveFilters,
-      limit: prefilterLimit,
+      limit: firstLimit,
     });
 
-    // 2) 0건이면 날짜 필터 제거 재시도
+    // 2) 0건이면 날짜 필터 제거 + limit 확대
     if (!candidates.length) {
       const { days: _ignored, ...noDays } = effectiveFilters;
       candidates = await fetchAllEmbeddings({
         filters: noDays,
-        limit: Math.max(prefilterLimit, 1000),
+        limit: Math.max(firstLimit, 7000),
       });
     }
 
-    // 3) 그래도 0건이면 완전 완화(필터 전부 제거) 재시도
+    // 3) 그래도 0건이면 완전 완화(필터 전부 제거)
     if (!candidates.length) {
       candidates = await fetchAllEmbeddings({
         filters: {},
-        limit: Math.max(prefilterLimit, 2000),
+        limit: Math.max(firstLimit, 8000),
       });
 
       if (!candidates.length) {
-        console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', effectiveFilters, prefilterLimit);
+        console.warn('[RAG] no candidates after fetchAllEmbeddings. filters=%j, prefilter=%d', effectiveFilters, firstLimit);
         return res.json({
           ok: true,
           used: { model: { chat: MODELS.chat, embedding: MODELS.embedding } },
@@ -147,9 +160,14 @@ async function ask(req, res) {
     });
     const qVec = emb.data?.[0]?.embedding || [];
 
-    // 5) 유사도 계산 및 정렬
+    // 5) 유사도 + 이름 문자열 보너스(근소)
+    const nameBonusToken = (nameFromQ && nameFromQ.length >= 2) ? nameFromQ : null;
     const ranked = candidates
-      .map(c => ({ ...c, score: cosineSimilarity(qVec, c.embedding) }))
+      .map(c => {
+        let s = cosineSimilarity(qVec, c.embedding);
+        if (nameBonusToken && c.content && String(c.content).includes(nameBonusToken)) s += 0.08;
+        return { ...c, score: s };
+      })
       .sort((a, b) => b.score - a.score)
       .slice(0, topK);
 
@@ -159,7 +177,7 @@ async function ask(req, res) {
     const contextsForLLM = rankedNonEmpty.slice(0, 8).map(r => normalizeContent(r.content));
     const ctxUsedCount = contextsForLLM.length;
 
-    // 프리뷰
+    // 프리뷰 (근거 표)
     const evidence_preview = ranked.map(r => ({
       id: r.chunk_id,
       date: r.task_date ? String(r.task_date).slice(0, 10) : '',
@@ -180,7 +198,7 @@ async function ask(req, res) {
       });
     }
 
-    // 7) 모델 호출
+    // 6) 모델 호출
     const messages = buildPrompt(question, contextsForLLM);
     const chatRes = await openai.chat.completions.create({
       model: MODELS.chat,
