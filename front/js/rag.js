@@ -5,7 +5,6 @@
   function init() {
     /* ===== DOM helpers ===== */
     const $  = (s, r=document)=>r.querySelector(s);
-    const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
 
     /* ===== Elements ===== */
     const els = {
@@ -22,30 +21,22 @@
       newChat: $('#btn-new-chat'),
       history: $('#history'),
       clearHistory: $('#btn-clear-history'),
+      eqSelect: $('#equipmentType'),
 
       // chips
       chipModel: $('#chip-model'),
       chipDays: $('#chip-days'),
       chipPref: $('#chip-pref'),
       chipTopk: $('#chip-topk'),
+      chipEq: $('#chip-eq'),
     };
 
     /* ===== App State ===== */
     const STATE = {
       lastQuestion: '',
-      lastAnswerHtml: '',
       lastEvidence: [],
-      evidenceView: {
-        sortBy: 'sim', // 'sim' | 'date' | 'site' | 'eq'
-        sortDir: 'desc', // 'asc' | 'desc'
-        query: '',
-        compact: false,
-      },
-      filters: {
-        site: null,
-        line: null,
-        equipment_type: null,
-      }
+      evidenceView: { sortBy:'sim', sortDir:'desc', query:'', compact:false },
+      filters: { site:null, line:null, equipment_type:null }
     };
 
     /* ===== Utils ===== */
@@ -59,12 +50,7 @@
       text = text.split(/\n{2,}/).map(p=>`<p>${p}</p>`).join('\n');
       return text;
     }
-    function formatDate(d){
-      if(!d) return '';
-      const s = String(d);
-      if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
-      return s;
-    }
+    function formatDate(d){ return /^\d{4}-\d{2}-\d{2}/.test(String(d)) ? String(d).slice(0,10) : (d||''); }
     function toast(msg, type='info'){
       let box = document.getElementById('__tiny_toast');
       if(!box){
@@ -86,9 +72,7 @@
 
     /* ===== History ===== */
     const HS_KEY = 'RAG_RECENT_QUESTIONS_V2';
-    function loadHistory(){
-      try { return JSON.parse(localStorage.getItem(HS_KEY)||'[]'); } catch { return [] }
-    }
+    const loadHistory=()=>{ try { return JSON.parse(localStorage.getItem(HS_KEY)||'[]'); } catch { return [] } };
     function addHistory(q){
       const arr = loadHistory().filter(x=>x!==q);
       arr.unshift(q);
@@ -112,37 +96,26 @@
       });
     }
 
-    /* ===== Chat Bubbles ===== */
+    /* ===== Chat UI ===== */
     function addMsg(role, html, opts={}){
       const wrap = document.createElement('div');
       wrap.className = 'msg';
-
       const avatar = document.createElement('div');
       avatar.className = 'avatar ' + (role==='user' ? 'user' : 'assistant');
       avatar.textContent = role==='user' ? '나' : 'AI';
-
       const bubble = document.createElement('div');
       bubble.className = 'bubble ' + (role==='user' ? 'user' : 'assistant');
-
       const meta = document.createElement('div');
       meta.className = 'meta';
       meta.textContent = opts.meta || (role==='user' ? '사용자' : '요약');
-
       const body = document.createElement('div');
       body.className = 'markdown';
       body.innerHTML = html;
-
-      bubble.appendChild(meta);
-      bubble.appendChild(body);
-
-      // evidence block (assistant only)
+      bubble.appendChild(meta); bubble.appendChild(body);
       if (role !== 'user' && opts.evidence && Array.isArray(opts.evidence)) {
-        const ev = renderEvidenceBlock(opts.evidence);
-        bubble.appendChild(ev);
+        bubble.appendChild(renderEvidenceBlock(opts.evidence));
       }
-
-      wrap.appendChild(avatar);
-      wrap.appendChild(bubble);
+      wrap.appendChild(avatar); wrap.appendChild(bubble);
       els.chat.appendChild(wrap);
       els.chat.scrollTop = els.chat.scrollHeight;
       return {wrap, bubble};
@@ -170,11 +143,8 @@
     /* ===== Evidence UI ===== */
     function renderEvidenceBlock(list){
       STATE.lastEvidence = Array.isArray(list) ? list.slice() : [];
-
       const wrap = document.createElement('div');
       wrap.className = 'evidence';
-
-      // Controls
       const controls = document.createElement('div');
       controls.className = 'evi-controls';
       controls.innerHTML = `
@@ -200,7 +170,6 @@
       `;
       wrap.appendChild(controls);
 
-      // Table
       const tableWrap = document.createElement('div');
       tableWrap.className = 'table-wrap';
       const table = document.createElement('table');
@@ -224,17 +193,8 @@
       const sortSelect  = controls.querySelector('.evi-sort');
       const compactChk  = controls.querySelector('.evi-compact input');
 
-      // 초기값
-      sortSelect.value = `${STATE.evidenceView.sortBy}:${STATE.evidenceView.sortDir}`;
-      compactChk.checked = !!STATE.evidenceView.compact;
-      if (STATE.evidenceView.query) searchInput.value = STATE.evidenceView.query;
-      if (compactChk.checked) table.classList.add('compact');
-
-      // 렌더러
       function filteredSorted(){
         const q = (searchInput.value||'').trim().toLowerCase();
-        STATE.evidenceView.query = q;
-
         let rows = STATE.lastEvidence.map(r=>({...r}));
         if(q){
           rows = rows.filter(r=>{
@@ -245,11 +205,7 @@
             return siteLine.includes(q) || eq.includes(q) || name.includes(q) || desc.includes(q);
           });
         }
-
         const [by, dir] = sortSelect.value.split(':');
-        STATE.evidenceView.sortBy = by;
-        STATE.evidenceView.sortDir = dir;
-
         rows.sort((a,b)=>{
           let av, bv;
           if(by==='sim'){ av=a.sim||0; bv=b.sim||0; }
@@ -310,12 +266,10 @@
         }).join('');
       }
 
-      // Events
       searchInput.addEventListener('input', renderBody);
       sortSelect.addEventListener('change', renderBody);
       compactChk.addEventListener('change', ()=>{
-        STATE.evidenceView.compact = compactChk.checked;
-        table.classList.toggle('compact', STATE.evidenceView.compact);
+        table.classList.toggle('compact', compactChk.checked);
       });
 
       controls.addEventListener('click', (e)=>{
@@ -323,17 +277,32 @@
         if(!act) return;
         if(act==='csv'){
           const rows = filteredSorted();
-          const csv = toCSV(rows);
-          downloadBlob(csv, 'evidence.csv', 'text/csv;charset=utf-8;');
+          const header = ['ID','날짜','SITE','LINE','장비','유사도','라벨','요약'];
+          const out = [header.join(',')];
+          rows.forEach(r=>{
+            const fields = [
+              `#${r.id}`, formatDate(r.date)||'',
+              (r.site||''), (r.line||''), (r.eq||''),
+              (r.sim??0).toFixed(3), (r.name||''),
+              (r.desc||'').replace(/\n/g,' ').replace(/"/g,'""'),
+            ];
+            out.push(fields.map(f=>`"${String(f)}"`).join(','));
+          });
+          const blob = new Blob([out.join('\n')], {type:'text/csv;charset=utf-8;'});
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob); a.download = 'evidence.csv';
+          document.body.appendChild(a); a.click(); a.remove();
         } else if(act==='copy'){
           const rows = filteredSorted();
           const text = rows.map(r=>{
             const siteLine = [r.site, r.line].filter(Boolean).join(' ');
-            return `#${r.id}\t${formatDate(r.date) || ''}\t${siteLine}\t${r.eq||''}\t${(r.sim??0).toFixed(3)}\t${(r.name||'')}\t${(r.desc||'')}`;
+            return `#${r.id}\t${formatDate(r.date)||''}\t${siteLine}\t${r.eq||''}\t${(r.sim??0).toFixed(3)}\t${(r.name||'')}\t${(r.desc||'')}`;
           }).join('\n');
           navigator.clipboard.writeText(text).then(()=>toast('표 복사 완료','ok'));
         } else if(act==='clear-filter'){
           STATE.filters = {site:null,line:null,equipment_type:null};
+          if (els.eqSelect) els.eqSelect.value = '';
+          chipEqUpdate();
           toast('필터를 해제했습니다.');
         }
       });
@@ -362,6 +331,8 @@
           if(row){
             const type = (row.eq||'').split('/')[0].trim() || null;
             STATE.filters.equipment_type = type || null;
+            if (els.eqSelect) els.eqSelect.value = type || '';
+            chipEqUpdate();
             toast(`장비타입 필터 적용: ${type||'-'}`);
             rerunWithFilter();
           }
@@ -378,41 +349,19 @@
         } else if (t.matches('[data-feq]')) {
           const type = (t.dataset.feq||'').split('/')[0].trim() || null;
           STATE.filters.equipment_type = type || null;
+          if (els.eqSelect) els.eqSelect.value = type || '';
+          chipEqUpdate();
           toast(`장비타입 필터: ${type||'-'}`);
           rerunWithFilter();
         }
       });
 
+      function chipEqUpdate(){
+        els.chipEq.textContent = `설비: ${STATE.filters.equipment_type || '전체'}`;
+      }
+
       renderBody();
       return wrap;
-    }
-
-    function toCSV(rows){
-      const header = ['ID','날짜','SITE','LINE','장비','유사도','라벨','요약'];
-      const out = [header.join(',')];
-      rows.forEach(r=>{
-        const fields = [
-          `#${r.id}`,
-          formatDate(r.date)||'',
-          (r.site||''),
-          (r.line||''),
-          (r.eq||''),
-          (r.sim??0).toFixed(3),
-          (r.name||''),
-          (r.desc||'').replace(/\n/g,' ').replace(/"/g,'""'),
-        ];
-        out.push(fields.map(f=>`"${String(f)}"`).join(','));
-      });
-      return out.join('\n');
-    }
-    function downloadBlob(text, filename, mime){
-      const blob = new Blob([text], {type:mime});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
     }
 
     /* ===== Composer helpers ===== */
@@ -423,7 +372,7 @@
     }
 
     /* ===== Core ask ===== */
-    async function ask(question, opts={}){
+    async function ask(question){
       const q = (question ?? els.q.value ?? '').trim();
       if(!q){ els.q.focus(); toast('메시지를 입력해 주세요.','error'); return; }
 
@@ -435,43 +384,37 @@
       const prefilterLimit = Number(els.pref?.value || 300);
       const topK = Number(els.topk?.value || 20);
 
-      const body = {
-        question: q,
-        days,
-        prefilterLimit,
-        topK,
-        filters: cleanupFilters(STATE.filters)
-      };
+      // ★ UI 설비 선택 내용을 서버 filters로 전달
+      const filters = cleanupFilters(STATE.filters);
+      if (els.eqSelect && els.eqSelect.value) {
+        filters.equipment_type = els.eqSelect.value;
+      }
 
       try{
         const res = await fetch('/api/rag/ask', {
           method:'POST',
           headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(body)
+          body: JSON.stringify({ question:q, days, prefilterLimit, topK, filters })
         });
         const raw = await res.text();
-        let data;
-        try { data = JSON.parse(raw); }
-        catch { throw new Error(`HTTP ${res.status} - JSON 파싱 실패. 응답: ${raw.slice(0,200)}`); }
+        let data; try { data = JSON.parse(raw); } catch { throw new Error(`HTTP ${res.status} - JSON 파싱 실패. 응답: ${raw.slice(0,200)}`); }
         if(!res.ok) throw new Error(data?.detail || data?.error || ('HTTP '+res.status));
 
-        // chips
         els.chipModel.textContent = `모델: ${data?.used?.model ? `${data.used.model.chat} / ${data.used.model.embedding}` : '-'}`;
         els.chipDays.textContent  = `기간 ${days}일`;
         els.chipPref.textContent  = `프리필터 ${prefilterLimit}`;
         els.chipTopk.textContent  = `Top-K ${topK}`;
+        els.chipEq.textContent    = `설비: ${filters.equipment_type || '전체'}`;
 
         removeSkel();
         const html = md(data.answer || '응답 없음');
-        const evidence = data.evidence_preview || [];
-        addMsg('assistant', html, { meta:'요약', evidence });
+        addMsg('assistant', html, { meta:'요약', evidence: (data.evidence_preview||[]) });
 
         STATE.lastQuestion = q;
         addHistory(q);
         els.status.textContent = '';
 
       }catch(err){
-        console.error(err);
         removeSkel();
         addMsg('assistant', md('오류가 발생했습니다:\n- '+String(err.message||err)), { meta:'오류' });
         els.status.textContent = '오류: '+String(err.message||err);
@@ -488,30 +431,26 @@
     }
 
     function rerunWithFilter(){
-      if(!STATE.lastQuestion){
-        toast('최근 질문이 없습니다. 먼저 질문을 입력하세요.');
-        return;
-      }
-      addMsg('assistant', md(`적용된 필터로 다시 검색합니다.\n- SITE: **${STATE.filters.site||'-'}**\n- LINE: **${STATE.filters.line||'-'}**\n- 장비타입: **${STATE.filters.equipment_type||'-'}**`), { meta: '안내' });
+      if(!STATE.lastQuestion){ toast('최근 질문이 없습니다. 먼저 질문을 입력하세요.'); return; }
+      addMsg('assistant', md(`설비/SITE/LINE 필터로 다시 검색합니다.\n- SITE: **${STATE.filters.site||'-'}**\n- LINE: **${STATE.filters.line||'-'}**\n- 설비타입: **${STATE.filters.equipment_type|| (els.eqSelect?.value || '-') }**`), { meta:'안내' });
       ask(STATE.lastQuestion);
     }
 
-    /* ===== Wire events ===== */
+    /* ===== Wire ===== */
     els.ask?.addEventListener('click', ()=> ask());
     els.clear?.addEventListener('click', ()=>{
-      els.q.value = '';
-      autoGrow(els.q);
+      els.q.value = ''; autoGrow(els.q);
       els.status.textContent = '';
       toast('초기화했습니다.');
     });
     els.newChat?.addEventListener('click', ()=>{
       els.chat.innerHTML = '';
-      els.q.value = '';
-      autoGrow(els.q);
+      els.q.value = ''; autoGrow(els.q);
       STATE.lastQuestion = '';
-      STATE.lastAnswerHtml = '';
       STATE.lastEvidence = [];
       STATE.filters = {site:null,line:null,equipment_type:null};
+      if (els.eqSelect) els.eqSelect.value = '';
+      els.chipEq.textContent = '설비: 전체';
       toast('새 대화를 시작합니다.');
     });
     els.clearHistory?.addEventListener('click', ()=>{
@@ -520,18 +459,18 @@
       toast('기록을 비웠습니다.');
     });
 
+    els.eqSelect?.addEventListener('change', ()=>{
+      STATE.filters.equipment_type = els.eqSelect.value || null;
+      els.chipEq.textContent = `설비: ${STATE.filters.equipment_type || '전체'}`;
+    });
+
     els.q?.addEventListener('input', ()=> autoGrow(els.q));
     els.q?.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter' && !e.shiftKey){
-        e.preventDefault();
-        ask();
-      } else if ((e.ctrlKey||e.metaKey) && e.key==='Enter'){
-        e.preventDefault();
-        ask();
-      }
+      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); ask(); }
+      else if ((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); ask(); }
     });
-    setTimeout(()=> els.q && els.q.focus(), 80);
 
+    setTimeout(()=> els.q && els.q.focus(), 80);
     renderHistory();
   }
 })();

@@ -34,8 +34,24 @@
           <label for="topK">Top-K</label>
           <input id="topK" type="number" min="5" max="50" value="20" />
         </div>
+
+        <!-- ★ 설비타입 미리 선택 UI -->
+        <div class="kv">
+          <label for="equipmentType">설비타입</label>
+          <select id="equipmentType">
+            <option value="">(전체)</option>
+            <option>SUPRA N</option>
+            <option>SUPRA XP</option>
+            <option>INTEGER</option>
+            <option>PRECIA</option>
+            <option>ECOLITE</option>
+            <option>GENEVA</option>
+            <option>HDW</option>
+          </select>
+        </div>
+
         <div class="side-note small muted">
-          ※ 질문에 “김동한”, “SUPRA XP”, “PT” 등 키워드를 포함하면 자동으로 필터가 적용됩니다.
+          ※ “김동한”, “PT”, “SUPRA XP” 같은 키워드는 자동 인식되며,<br/>설비타입을 선택하면 해당 설비 이력만 종합해 답변합니다.
         </div>
       </div>
 
@@ -47,7 +63,6 @@
 
     <!-- ========== Main (Chat area) ========== -->
     <main class="main">
-      <!-- Topbar -->
       <header class="topbar">
         <div class="brand">
           <span class="mark" aria-hidden="true">
@@ -63,16 +78,15 @@
           <span class="chip" id="chip-days">기간 365일</span>
           <span class="chip" id="chip-pref">프리필터 300</span>
           <span class="chip" id="chip-topk">Top-K 20</span>
+          <span class="chip" id="chip-eq">설비: 전체</span>
         </div>
       </header>
 
-      <!-- Chat messages -->
       <section id="chat" class="chat"></section>
 
-      <!-- Composer -->
       <footer class="composer">
         <div class="composer-box">
-          <textarea id="question" rows="1" placeholder="메시지를 입력하세요… 예) 김동한 작업 이력 요약해줘 (Shift+Enter 줄바꿈, Enter 전송)"></textarea>
+          <textarea id="question" rows="1" placeholder="메시지를 입력하세요… 예) 김동한 SUPRA XP 최근 작업 요약 (Shift+Enter 줄바꿈, Enter 전송)"></textarea>
           <div class="composer-actions">
             <div id="status" class="status typing"></div>
             <div class="gap"></div>
@@ -80,7 +94,7 @@
             <button id="btn-ask" class="btn primary">보내기</button>
           </div>
         </div>
-        <div class="tips muted small">이 답변은 DB의 유사 로그를 바탕으로 자연스럽게 요약합니다.</div>
+        <div class="tips muted small">선택한 설비타입과 질문 속 키워드를 바탕으로 관련 로그만 요약합니다.</div>
       </footer>
     </main>
   </div>

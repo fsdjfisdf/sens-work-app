@@ -215,14 +215,19 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
     if (filters.equipment_type) { where.push(`COALESCE(c.equipment_type, ${j('equipment_type')}) = ?`); args.push(filters.equipment_type); }
     if (filters.site)           { where.push(`COALESCE(c.site, ${j('site')}) = ?`); args.push(filters.site); }
     if (filters.line)           { where.push(`COALESCE(c.line, ${j('line')}) = ?`); args.push(filters.line); }
+    if (filters.group)          { where.push(`${j('group')} = ?`); args.push(filters.group); }
 
-    if (filters.group)         { where.push(`${j('group')} = ?`); args.push(filters.group); }
-
-    // ★ 핵심: 이름 필터는 메타 + 본문 동시 확인(fallback)
-    if (filters.task_man) {
-      const base = String(filters.task_man).trim();
-      where.push(`( ${j('task_man')} LIKE ? OR c.content LIKE ? )`);
-      args.push(`%${base}%`, `%${base}%`);
+    // ★ 이름 필터: 배열로 들어오면 각 이름마다 (task_man LIKE ? OR content LIKE ?) OR 결합
+    if (Array.isArray(filters.task_man_names) && filters.task_man_names.length) {
+      const orParts = [];
+      for (const nm of filters.task_man_names) {
+        const base = String(nm).trim();
+        if (!base) continue;
+        // (main)/(support) 엄격 매칭(가산점용)은 컨트롤러에서 보너스, 여기서는 검색 Recall 확보
+        orParts.push(`(${j('task_man')} LIKE ? OR c.content LIKE ?)`);
+        args.push(`%${base}%`, `%${base}%`);
+      }
+      if (orParts.length) where.push(`(${orParts.join(' OR ')})`);
     }
 
     if (filters.warranty)      { where.push(`COALESCE(c.task_warranty, ${j('warranty')}) = ?`); args.push(filters.warranty); }
@@ -245,7 +250,7 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
       args.push(Number(filters.days));
     }
 
-    const orderSql = filters.task_man
+    const orderSql = (Array.isArray(filters.task_man_names) && filters.task_man_names.length)
       ? `ORDER BY COALESCE(c.task_date, CAST(${j('task_date')} AS DATE)) DESC`
       : `ORDER BY e.id DESC`;
 
@@ -265,7 +270,8 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
         COALESCE(c.equipment_type, ${j('equipment_type')}) AS equipment_type,
         COALESCE(c.equipment_name, ${j('equipment_name')}) AS equipment_name,
         COALESCE(c.work_type, ${j('work_type')}) AS work_type,
-        COALESCE(c.work_type2, ${j('work_type2')}) AS work_type2
+        COALESCE(c.work_type2, ${j('work_type2')}) AS work_type2,
+        ${j('task_man')} AS meta_task_man
       FROM rag_embeddings e
       JOIN rag_chunks c ON c.id = e.chunk_id
       ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
@@ -295,7 +301,6 @@ async function fetchAllEmbeddings({ filters = {}, limit = 2000 } = {}) {
 /* ---------- 구버전 호환 ---------- */
 function buildText(row) { return buildRowToText(row); }
 
-/** 단순 삽입용 (행 내용 없이 벡터만 추가해야 할 때) */
 async function upsertEmbedding(id, embedding) {
   const chunkId = await upsertChunk({
     src_table: 'work_log',
