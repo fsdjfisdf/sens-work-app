@@ -3,7 +3,7 @@ const { BASELINE, normalizeItem, toSelfCol, workerAliases } = require("./pciConf
 const { parseTaskMen, round1, clamp } = require("./pciUtils");
 const { fetchWorkLogsForSupraN, fetchSelfCheckRow, fetchAdditionalCountsPivot } = require("./pciDao");
 const { fetchSelfCheckAll, fetchSelfCheckNames } = require("./pciDao");
-const { fetchActiveUsers, fetchUserFilterOptions } = require("../../dao/userDao"); // 추가
+const { fetchActiveUsers, fetchUserFilterOptions } = require("../../dao/userDao");
 
 /** 1명 계산 */
 exports.getWorkerPci = async (req, res) => {
@@ -20,8 +20,7 @@ exports.getWorkerPci = async (req, res) => {
       fetchSelfCheckRow(worker),
     ]);
 
-    // 로그 카운트 집계
-    const counts = {}; // { item: { main: number, support: number } }
+    const counts = {};
     for (const r of logs) {
       const item = normalizeItem(r.transfer_item);
       if (!BASELINE[item]) continue;
@@ -30,12 +29,11 @@ exports.getWorkerPci = async (req, res) => {
         if (workerAliases(p.name) !== worker) continue;
         const role = p.weight >= 1 ? "main" : "support";
         counts[item] = counts[item] || { main: 0, support: 0 };
-        counts[item][role] += p.weight; // main=1.0, support=0.2
+        counts[item][role] += p.weight;
       }
     }
 
-    // 교육/가산 합산
-    const addCounts = {}; // { item: number }
+    const addCounts = {};
     for (const itemRaw of Object.keys(addPivot)) {
       const norm = normalizeItem(itemRaw);
       if (!BASELINE[norm]) continue;
@@ -47,7 +45,6 @@ exports.getWorkerPci = async (req, res) => {
       if (sum > 0) addCounts[norm] = (addCounts[norm] || 0) + sum;
     }
 
-    // 항목별 PCI 계산
     const rows = [];
     let usedItems = 0, accWork = 0, accTotal = 0;
 
@@ -55,24 +52,23 @@ exports.getWorkerPci = async (req, res) => {
       const base = BASELINE[item];
       const c = counts[item] || { main: 0, support: 0 };
       const add = addCounts[item] || 0;
-      const totalCnt = (c.main + c.support) + add; // support 가중치 적용됨
+      const totalCnt = (c.main + c.support) + add;
 
       const ratio = base > 0 ? clamp(totalCnt / base, 0, 1) : 0;
       const workPct = round1(ratio * 80);
 
-      // 자가체크 20%: 해당 컬럼이 1 이상이면 20, 아니면 0
       let selfPct = 0;
       if (selfRow) {
-        const col = toSelfCol(item); // 예: "LP_ESCORT"
+        const col = toSelfCol(item);
         const val = Number(selfRow[col] ?? 0);
         if (Number.isFinite(val) && val > 0) selfPct = 20;
       }
 
       const pciPct = clamp(workPct + selfPct, 0, 100);
 
-        usedItems += 1;          // ✅ 항상 카운트 (0% 포함)
-        accWork  += workPct;     // ✅ 전부 누적
-        accTotal += pciPct;
+      usedItems += 1;
+      accWork  += workPct;
+      accTotal += pciPct;
 
       rows.push({
         item,
@@ -109,7 +105,6 @@ exports.getAllSummary = async (req, res) => {
   try {
     const { start_date: startDate, end_date: endDate, limit = 200 } = req.query;
 
-    // 후보군 추출을 위해 로그/가산만 스캔
     const [logs, addPivot] = await Promise.all([
       fetchWorkLogsForSupraN({ startDate, endDate }),
       fetchAdditionalCountsPivot(),
@@ -121,7 +116,6 @@ exports.getAllSummary = async (req, res) => {
 
     const workers = [...set].slice(0, Number(limit));
 
-    // 각자 상세 API를 내부 재사용
     const list = [];
     for (const w of workers) {
       const fakeReq = { query: { start_date: startDate, end_date: endDate }, params: { name: w } };
@@ -138,14 +132,20 @@ exports.getAllSummary = async (req, res) => {
   }
 };
 
-// (A) 초경량: 작업자 이름 리스트만 반환
+// (A) 초경량: 작업자 이름 리스트만 반환 (필터/재직 적용)
 exports.getWorkerNames = async (req, res) => {
   try {
     const { company, group, site } = req.query;
+    // 문자열·불리언 어떤 형식으로 와도 true 판정
+    const activeOnly = (() => {
+      const v = (req.query.activeOnly ?? req.query.active_only ?? req.query.active ?? req.query.active_bool ?? req.query.active_yesno);
+      if (v === undefined) return true;
+      const s = String(v).toLowerCase();
+      return s === "1" || s === "true" || s === "yes";
+    })();
 
-    // 기존 소스에서 가능한 이름 수집
     const [logs, addPivot, selfNames] = await Promise.all([
-      fetchWorkLogsForSupraN({}),              
+      fetchWorkLogsForSupraN({}),
       fetchAdditionalCountsPivot(),
       fetchSelfCheckNames(),
     ]);
@@ -153,8 +153,7 @@ exports.getWorkerNames = async (req, res) => {
     for (const r of logs) for (const p of parseTaskMen(r.task_man)) rawSet.add(workerAliases(p.name));
     for (const item of Object.keys(addPivot)) for (const col of Object.keys(addPivot[item])) rawSet.add(workerAliases(col));
 
-    // 재직자 화이트리스트 교집합
-    const { nameSet } = await fetchActiveUsers({ company, group, site });
+    const { nameSet } = await fetchActiveUsers({ company, group, site, activeOnly });
     const workers = [...rawSet].filter(n => nameSet.has(n)).sort((a,b)=>a.localeCompare(b,'ko'));
 
     res.json({ workers });
@@ -164,10 +163,16 @@ exports.getWorkerNames = async (req, res) => {
   }
 };
 
-// (B) 한 방에 매트릭스 계산
+// (B) 한 방에 매트릭스 계산 (필터/재직 적용)
 exports.getMatrix = async (req, res) => {
   try {
     const { company, group, site } = req.query;
+    const activeOnly = (() => {
+      const v = (req.query.activeOnly ?? req.query.active_only ?? req.query.active ?? req.query.active_bool ?? req.query.active_yesno);
+      if (v === undefined) return true;
+      const s = String(v).toLowerCase();
+      return s === "1" || s === "true" || s === "yes";
+    })();
 
     const [logs, addPivot, selfRows] = await Promise.all([
       fetchWorkLogsForSupraN({}),
@@ -175,11 +180,9 @@ exports.getMatrix = async (req, res) => {
       fetchSelfCheckAll(),
     ]);
 
-    // Self 체크 맵
     const selfMap = {};
     for (const row of selfRows) selfMap[workerAliases(row.name)] = row;
 
-    // 로그 카운트
     const counts = {};
     for (const r of logs) {
       const item = normalizeItem(r.transfer_item);
@@ -193,7 +196,6 @@ exports.getMatrix = async (req, res) => {
       }
     }
 
-    // 가산/교육
     const addCounts = {};
     for (const itemRaw of Object.keys(addPivot)) {
       const norm = normalizeItem(itemRaw);
@@ -205,7 +207,6 @@ exports.getMatrix = async (req, res) => {
       }
     }
 
-    // 전체 후보
     const itemList = Object.keys(BASELINE).slice().sort((a,b)=>a.localeCompare(b,'ko'));
     const allWorkers = new Set([
       ...Object.keys(counts),
@@ -213,11 +214,10 @@ exports.getMatrix = async (req, res) => {
       ...Object.keys(selfMap),
     ]);
 
-    // ▼ 재직자 필터 교집합
-    const { nameSet } = await fetchActiveUsers({ company, group, site });
+    // 재직자 화이트리스트 교집합 (회사/그룹/사이트 & activeOnly 반영)
+    const { nameSet } = await fetchActiveUsers({ company, group, site, activeOnly });
     const workers = [...allWorkers].filter(w => nameSet.has(w)).sort((a,b)=>a.localeCompare(b,'ko'));
 
-    // 계산
     const data = {};
     const workerAvg = {};
     for (const item of itemList) {
@@ -277,7 +277,6 @@ exports.getUserFilterOptions = async (req, res) => {
   }
 };
 
-// ====== 항목 단위 상세: 한 사람 + 한 항목의 산출 근거 ======
 exports.getWorkerItemBreakdown = async (req, res) => {
   try {
     const rawName = req.params.name || req.query.name;
@@ -292,12 +291,11 @@ exports.getWorkerItemBreakdown = async (req, res) => {
     const baseline = BASELINE[itemNorm];
 
     const [logs, addPivot, selfRow] = await Promise.all([
-      fetchWorkLogsForSupraN({}),         // 전체기간
+      fetchWorkLogsForSupraN({}),
       fetchAdditionalCountsPivot(),
       fetchSelfCheckRow(worker),
     ]);
 
-    // 1) 이 항목 관련 로그 중, 해당 작업자가 참여한 건만 추출(역할/가중치 포함)
     const logRows = [];
     let mainSum = 0, supportSum = 0;
     for (const r of logs) {
@@ -311,12 +309,11 @@ exports.getWorkerItemBreakdown = async (req, res) => {
           id: r.id,
           task_date: r.task_date,
           equipment_type: r.equipment_type,
-        equipment_name: r.equipment_name,   // 새 컬럼 그대로
-          task_name: r.task_name,             // 새 컬럼 그대로
-          task_man: r.task_man,               // 프론트에선 task_man 우선 사용
-          task_man_raw: r.task_man,           // 하위 호환 유지
-          task_description: r.task_description, // 새 컬럼 그대로
-
+          equipment_name: r.equipment_name,
+          task_name: r.task_name,
+          task_man: r.task_man,
+          task_man_raw: r.task_man,
+          task_description: r.task_description,
           role,
           weight: p.weight,
         });
@@ -325,12 +322,10 @@ exports.getWorkerItemBreakdown = async (req, res) => {
     mainSum = Math.round(mainSum * 10) / 10;
     supportSum = Math.round(supportSum * 10) / 10;
 
-    // 2) 가산(교육)
     let addCount = 0;
     for (const key of Object.keys(addPivot)) {
       const norm = normalizeItem(key);
       if (norm !== itemNorm) continue;
-      // addPivot의 열 이름(사람 이름)에도 별칭 통일 적용
       for (const col of Object.keys(addPivot[key] || {})) {
         if (workerAliases(col) === worker) {
           addCount += Number(addPivot[key][col] || 0);
@@ -338,12 +333,10 @@ exports.getWorkerItemBreakdown = async (req, res) => {
       }
     }
 
-    // 3) 자가(20%)
-    const selfCol = toSelfCol(itemNorm);     // 예: "LP_ESCORT"
+    const selfCol = toSelfCol(itemNorm);
     const selfVal = Number(selfRow?.[selfCol] || 0);
     const selfPct = selfVal > 0 ? 20 : 0;
 
-    // 4) 퍼센트 산출
     const totalCount = Math.round((mainSum + supportSum + addCount) * 10) / 10;
     const workPct = baseline > 0 ? Math.round((Math.min(1, totalCount / baseline) * 80) * 10) / 10 : 0;
     const pciPct  = clamp(workPct + selfPct, 0, 100);

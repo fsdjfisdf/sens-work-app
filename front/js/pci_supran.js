@@ -1,11 +1,12 @@
 /* ==========================================================================
    SUPRA N PCI — 매트릭스/개인 보기 + 상단 "바로가기" 컨트롤
+   쿼리 파라미터 호환(신/구 키 동시 전송): company/company_name, group/group_name,
+   site/site_name, activeOnly/active_only
    ========================================================================== */
 
 const API_BASE = "";
 
-/* -------------------- ▼ 추가: 그룹별 설비 옵션 + URL 매핑 ------------------- */
-// 그룹 선택에 따른 설비 필드 업데이트 옵션
+/* -------------------- 그룹별 설비 옵션 + URL 매핑 ------------------- */
 const equipmentOptions = {
   "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA", "HDW"],
   "PEE1": ["SUPRA N", "SUPRA XP"],
@@ -13,7 +14,6 @@ const equipmentOptions = {
   "PSKH": ["ECOLITE", "GENEVA", "HDW"]
 };
 
-// 설비와 작업 종류에 따른 URL 매핑
 const urlMapping = {
   "SUPRA N":   { "SET UP": "pci_supran_setup.html",   "MAINTENANCE": "pci_supran.html" },
   "SUPRA XP":  { "SET UP": "pci_supraxp_setup.html",  "MAINTENANCE": "pci_supraxp.html" },
@@ -23,20 +23,17 @@ const urlMapping = {
   "GENEVA":    { "SET UP": "pci_geneva_setup.html",   "MAINTENANCE": "pci_geneva.html" },
   "HDW":       { "SET UP": "pci_hdw_setup.html",      "MAINTENANCE": "pci_hdw.html" }
 };
-/* -------------------- ▲ 추가 끝 ------------------------------------------- */
 
-// ===== 전역 상태 =====
+/* -------------------- 전역 상태 ------------------- */
 let workerNames = [];
 let stackedChart = null;
 
-/* ▼ 추가: 직원/현장 필터 상태 */
 const filterState = {
   company: "",
   group: "",
   site: "",
   activeOnly: true, // 재직자만 기본 on
 };
-/* ▲ 추가 끝 */
 
 // 매트릭스 상태
 let matrixItems = [];
@@ -49,23 +46,25 @@ let collapsedCats = new Set();
 let currentRows = [];
 let currentSummary = null;
 
-/* ▼ 추가: 쿼리스트링 생성기 */
-function toQuery(params){
-  const q = new URLSearchParams(params);
-  return q.toString();
-}
-function currentFilterQuery(){
-  return toQuery({
-    company: filterState.company || "",
-    group: filterState.group || "",
-    site: filterState.site || "",
-    activeOnly: filterState.activeOnly ? 1 : 0,
-  });
-}
-/* ▲ 추가 끝 */
-
-// ===== DOM =====
+/* -------------------- Utils ------------------- */
 const $ = (id) => document.getElementById(id);
+const ESC_RE  = /[&<>"']/g;
+const ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+function esc(s){ s = (s==null)?'':String(s); return s.replace(ESC_RE, ch=>ESC_MAP[ch]||ch); }
+function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
+function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
+const debounce = (fn, ms=200)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+
+function startLine(container){ container?.classList.add("is-loading"); }
+function stopLine(container){ container?.classList.remove("is-loading"); }
+function showBusy(container, work){
+  startLine(container);
+  requestAnimationFrame(()=>{ try{ work(); } finally{ setTimeout(()=>stopLine(container), 280); } });
+}
+
+function fadeInBox(box){ box?.classList.remove("fade-in"); void box?.offsetWidth; box?.classList.add("fade-in"); }
+
+/* -------------------- DOM Map ------------------- */
 const el = {
   tabs: document.querySelectorAll(".tab"),
   panes: document.querySelectorAll(".tab-pane"),
@@ -107,74 +106,54 @@ const el = {
   modalBody: $("modalBody"),
   modalClose: $("modalClose"),
 
-  // goto controls (NEW)
+  // goto controls
   selGroup: $("selGroup"),
   selEquipment: $("selEquipment"),
   selWorkType: $("selWorkType"),
   btnGoto: $("btnGoto"),
   gotoPreview: $("gotoPreview"),
+
+  // filters
+  fltCompany: $("filterCompany"),
+  fltGroup: $("filterGroup"),
+  fltSite: $("filterSite"),
 };
 
-// ===== 카테고리 정의 =====
-const CATEGORIES = [
-  { category: "ESCORT",             items: ["LP ESCORT","ROBOT ESCORT"] },
-  { category: "EFEM ROBOT",         items: ["SR8241 TEACHING","SR8240 TEACHING","M124 TEACHING","EFEM FIXTURE","EFEM ROBOT REP","EFEM ROBOT CONTROLLER REP"] },
-  { category: "TM ROBOT",           items: ["SR8250 TEACHING","SR8232 TEACHING","TM FIXTURE", "TM ROBOT REP","TM ROBOT CONTROLLER REP","PASSIVE PAD REP"] },
-  { category: "BM MODULE",          items: ["PIN CYLINDER","PUSHER CYLINDER","IB FLOW","DRT"] },
-  { category: "FFU (EFEM, TM)",     items: ["FFU CONTROLLER","FAN","MOTOR DRIVER"] },
-  { category: "FCIP",               items: ["R1","R3","R5","R3 TO R5","PRISM"] },
-  { category: "MICROWAVE",          items: ["MICROWAVE","APPLICATOR","GENERATOR"] },
-  { category: "CHUCK",              items: ["CHUCK"] },
-  { category: "PROCESS KIT",        items: ["PROCESS KIT"] },
-  { category: "LEAK",               items: ["HELIUM DETECTOR"] },
-  { category: "PIN",                items: ["HOOK LIFT PIN","BELLOWS","PIN SENSOR","LM GUIDE","PIN MOTOR CONTROLLER"] },
-  { category: "EPD",                items: ["SINGLE EPD","DUAL EPD"] },
-  { category: "BOARD",              items: ["GAS BOX BOARD","TEMP CONTROLLER BOARD","POWER DISTRIBUTION BOARD","DC POWER SUPPLY","BM SENSOR","PIO SENSOR","SAFETY MODULE","IO BOX","FPS BOARD","D-NET"] },
-  { category: "IGS BLOCK",          items: ["MFC","VALVE"] },
-  { category: "VALVE",              items: ["SOLENOID","FAST VAC VALVE","SLOW VAC VALVE","SLIT DOOR","APC VALVE","SHUTOFF VALVE"] },
-  { category: "ETC",                items: ["BARATRON ASS'Y","PIRANI ASS'Y","VIEW PORT QUARTZ","FLOW SWITCH","CERAMIC PLATE","MONITOR","KEYBOARD","MOUSE","HEATING JACKET","WATER LEAK DETECTOR","MANOMETER"] },
-  { category: "CTR",                items: ["CTC","PMC","EDA","EFEM CONTROLLER","TEMP LIMIT CONTROLLER","TEMP CONTROLLER"] },
-  { category: "S/W",                items: ["S/W PATCH"] },
-];
-const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it of g.items) m[it]=g.category; return m; })();
-const getCategory = (item)=> ITEM_TO_CAT[item] || "-";
+/* -------------------- 쿼리 생성 (호환 키 동시 전송) ------------------- */
+function currentFilterQuery(){
+  // 숫자/불리언 표현 모두 지원: 1/0, true/false, yes/no
+  const activeNum = filterState.activeOnly ? 1 : 0;
+  const activeStr = filterState.activeOnly ? "true" : "false";
+  const activeYes = filterState.activeOnly ? "yes" : "no";
 
-// ===== Utils =====
-const ESC_RE  = /[&<>"']/g;
-const ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
-function esc(s){ s = (s==null)?'':String(s); return s.replace(ESC_RE, ch=>ESC_MAP[ch]||ch); }
-function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
-function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
-const debounce = (fn, ms=200)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+  const q = new URLSearchParams({
+    // 신 키
+    company: filterState.company || "",
+    group:   filterState.group   || "",
+    site:    filterState.site    || "",
+    activeOnly: String(activeNum),
 
-// Busy indicator helpers
-function startLine(container){ container?.classList.add("is-loading"); }
-function stopLine(container){ container?.classList.remove("is-loading"); }
-function showBusy(container, work){
-  startLine(container);
-  requestAnimationFrame(()=>{ try{ work(); } finally{ setTimeout(()=>stopLine(container), 280); } });
+    // 구/대체 키 (백엔드 호환용)
+    company_name: filterState.company || "",
+    group_name:   filterState.group   || "",
+    site_name:    filterState.site    || "",
+    active_only:  String(activeNum),
+
+    // 추가 호환 (혹시 문자열 불리언만 받는 경우)
+    active: String(activeNum),
+    active_bool: activeStr,
+    active_yesno: activeYes,
+  });
+
+  return q.toString();
 }
 
-// Fade-in helper
-function fadeInBox(box){ box?.classList.remove("fade-in"); void box?.offsetWidth; box?.classList.add("fade-in"); }
-
-// Column highlight
-let currentColIndex = null;
-function clearColHighlight(){
-  if (currentColIndex == null) return;
-  el.matrixTable.querySelectorAll(`[data-col="${currentColIndex}"]`).forEach(n=>n.classList.remove("col-hl"));
-  currentColIndex = null;
-}
-function highlightColumn(colIdx){
-  clearColHighlight();
-  currentColIndex = colIdx;
-  el.matrixTable.querySelectorAll(`[data-col="${colIdx}"]`).forEach(n=>n.classList.add("col-hl"));
-}
-
-// ===== 초기화 =====
+/* -------------------- 초기화 ------------------- */
 document.addEventListener("DOMContentLoaded", async () => {
-  // ▼ NEW: 바로가기 컨트롤 바인딩
+  // 바로가기 컨트롤
   initGotoControls();
+
+  // 필터 바인딩
   await initEmployeeFilters();
 
   bindTabs();
@@ -186,6 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   el.overlay.addEventListener("click", hideModal);
   window.addEventListener("keydown",(e)=>{ if(e.key==="Escape") hideModal(); });
 
+  // 최초 로드
   await loadWorkerList();
   await buildMatrix();
 
@@ -207,16 +187,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (w && it) openBreakdown(w, it);
   });
 
-  // 카테고리 접기/펼치기
-  el.matrixTbody.addEventListener("click", (e)=>{
-    const row = e.target.closest("tr.cat-row");
-    if (!row) return;
-    const cat = row.getAttribute("data-cat");
-    if (!cat) return;
-    if (collapsedCats.has(cat)) collapsedCats.delete(cat); else collapsedCats.add(cat);
-    showBusy(el.matrixWrap, ()=>renderMatrix());
-  });
-
   // 열 하이라이트
   el.matrixTable.addEventListener("mouseover",(e)=>{
     const td = e.target.closest("td.worker-col, th.worker-col");
@@ -226,77 +196,53 @@ document.addEventListener("DOMContentLoaded", async () => {
   el.matrixTable.addEventListener("mouseleave", clearColHighlight);
 });
 
-/* ======================= NEW: Goto Controls =============================== */
+/* -------------------- Goto Controls ------------------- */
 function initGotoControls(){
-  // 장비 select 채우기 (초기: 그룹 전체)
-  fillEquipmentOptions(el.selGroup.value || "");
-
-  // 이벤트 바인딩
+  fillEquipmentOptions(el.selGroup?.value || "");
   el.selGroup?.addEventListener("change", ()=>{
     fillEquipmentOptions(el.selGroup.value || "");
     updateGotoPreview();
   });
   el.selEquipment?.addEventListener("change", updateGotoPreview);
   el.selWorkType?.addEventListener("change", updateGotoPreview);
-
-  // 버튼 클릭/Enter 처리
   el.btnGoto?.addEventListener("click", navigateBySelection);
-  [el.selGroup, el.selEquipment, el.selWorkType].forEach(s => {
-    s?.addEventListener("keydown", (e)=>{
-      if (e.key === "Enter" && !el.btnGoto.disabled) navigateBySelection();
-    });
+  [el.selGroup, el.selEquipment, el.selWorkType].forEach(s=>{
+    s?.addEventListener("keydown",(e)=>{ if(e.key==="Enter" && !el.btnGoto.disabled) navigateBySelection(); });
   });
-
-  // 초기 미리보기
   updateGotoPreview();
 }
-
 function fillEquipmentOptions(group){
   const list = equipmentOptions[group] || [];
   const equip = el.selEquipment;
   if (!equip) return;
-
   equip.innerHTML = list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
-
-  // 이전 선택 유지가 불가능하면 첫 값으로
   if (!list.includes(equip.value)) equip.value = list[0] || "";
 }
-
 function computeTargetHref(){
   const equipment = el.selEquipment?.value || "";
   const workType  = el.selWorkType?.value || "";
   const map = urlMapping[equipment] || null;
   return map ? map[workType] || "" : "";
 }
-
 function updateGotoPreview(){
   const href = computeTargetHref();
-  const preview = el.gotoPreview;
-  const btn = el.btnGoto;
-
   if (!href){
-    btn.disabled = true;
-    preview.textContent = "매핑된 페이지가 없습니다.";
-    preview.removeAttribute("href");
+    el.btnGoto.disabled = true;
+    el.gotoPreview.textContent = "매핑된 페이지가 없습니다.";
+    el.gotoPreview.removeAttribute("href");
   } else {
-    btn.disabled = false;
-    preview.textContent = `이동 대상: ${href}`;
-    preview.setAttribute("href", href);
+    el.btnGoto.disabled = false;
+    el.gotoPreview.textContent = `이동 대상: ${href}`;
+    el.gotoPreview.setAttribute("href", href);
   }
 }
-
 function navigateBySelection(){
   const href = computeTargetHref();
-  if (!href){
-    alert("해당 조합에 매핑된 페이지가 없습니다.");
-    return;
-  }
-  // 동일 탭 이동 (요청사항: '바로 이 링크로 옮겨갈 수 있는 버튼')
+  if (!href){ alert("해당 조합에 매핑된 페이지가 없습니다."); return; }
   window.location.href = href;
 }
-/* ======================= Goto Controls 끝 ================================ */
 
-// ===== 탭 =====
+/* -------------------- 탭 ------------------- */
 function bindTabs(){
   el.tabs.forEach(btn=>{
     btn.addEventListener("click",()=>{
@@ -310,7 +256,7 @@ function bindTabs(){
   });
 }
 
-// ===== 매트릭스 =====
+/* -------------------- 매트릭스 ------------------- */
 function bindMatrixEvents(){
   el.btnReloadMatrix.addEventListener("click", ()=>buildMatrix());
   el.btnMatrixCsv.addEventListener("click", exportMatrixXlsx);
@@ -546,6 +492,19 @@ function renderMatrix(){
   toggleDensity();
 }
 
+/* -------------------- 열 하이라이트 ------------------- */
+let currentColIndex = null;
+function clearColHighlight(){
+  if (currentColIndex == null) return;
+  el.matrixTable.querySelectorAll(`[data-col="${currentColIndex}"]`).forEach(n=>n.classList.remove("col-hl"));
+  currentColIndex = null;
+}
+function highlightColumn(colIdx){
+  clearColHighlight();
+  currentColIndex = colIdx;
+  el.matrixTable.querySelectorAll(`[data-col="${colIdx}"]`).forEach(n=>n.classList.add("col-hl"));
+}
+
 function toggleDensity(){
   const dense = el.density.value === "compact";
   el.matrixTable.classList.toggle("dense", dense);
@@ -559,7 +518,7 @@ function applyColumnWidth(){
 }
 window.addEventListener("resize", debounce(syncStickyOffsets, 120));
 
-// ===== Excel (중분류/기준 + 요약행 포함) =====
+/* -------------------- Excel (요약행 포함) ------------------- */
 function exportMatrixXlsx(){
   const qItem = el.filterItem.value.trim().toLowerCase();
   const qWorker = el.filterWorker.value.trim().toLowerCase();
@@ -597,10 +556,17 @@ function exportMatrixXlsx(){
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   XLSX.utils.book_append_sheet(wb, ws, "SUPRA N PCI");
-  XLSX.writeFile(wb, "SUPRAN_PCI_MATRIX.xlsx");
+
+  const tag = [
+    filterState.activeOnly ? "재직" : "전체",
+    filterState.group || "ALL",
+    filterState.site  || "ALL",
+    filterState.company || "ALL",
+  ].join("-");
+  XLSX.writeFile(wb, `SUPRAN_PCI_MATRIX_${tag}.xlsx`);
 }
 
-// ===== 개인 보기 =====
+/* -------------------- 개인 보기 ------------------- */
 function bindPersonEvents(){
   el.btnFetch.addEventListener("click", onFetchPerson);
   el.btnCsv.addEventListener("click", exportPersonXlsx);
@@ -784,10 +750,10 @@ function exportPersonXlsx(){
   XLSX.writeFile(wb, name);
 }
 
-// ===== 산출 근거 모달 =====
+/* -------------------- 산출 근거 모달 ------------------- */
 async function openBreakdown(worker, item){
   try{
-    const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
+    const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}?${currentFilterQuery()}`;
     const { data } = await axios.get(url);
 
     function escapeAllowBr(html){
@@ -886,104 +852,71 @@ function hideModal(){
   el.modal.classList.remove("show");
 }
 
-// baseline 추출(데이터에서 첫 개체 사용)
+/* -------------------- Baseline 추출 ------------------- */
 function getBaseline(item){
   const d = matrixData[item] || {};
   const first = Object.values(d)[0];
   return first?.baseline ?? "";
 }
 
-
-/* ▼ 추가: 상단 COMPANY/GROUP/SITE/재직 체크 UI 초기화 */
+/* -------------------- 필터 초기화 ------------------- */
 async function initEmployeeFilters(){
-  const $box = document.querySelector(".filters");
-  if(!$box){ console.warn("[filters] .filters 컨테이너가 없습니다."); return; }
+  const $c = el.fltCompany;
+  const $g = el.fltGroup;
+  const $s = el.fltSite;
 
-  // 서버에서 옵션 받아오기
-  // (백엔드: GET /api/userdb/filters → {companies, groups, sites})
-  let companies = [], groups = [], sites = [];
-  try{
-    const { data } = await axios.get(`/api/userdb/filters`);
-    companies = data?.companies || [];
-    groups    = data?.groups    || [];
-    sites     = data?.sites     || [];
-  }catch(e){
-    console.warn("필터 옵션 로드 실패:", e);
+  if(!$c || !$g || !$s){
+    console.warn("[filters] filterCompany/filterGroup/filterSite 가 없습니다.");
+    return;
   }
 
-  // UI 렌더
-  $box.innerHTML = `
-    <div class="filter-row">
-      <label>COMPANY
-        <select id="fltCompany">
-          <option value="">전체</option>
-          ${companies.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}
-        </select>
-      </label>
-      <label>GROUP
-        <select id="fltGroup">
-          <option value="">전체</option>
-          ${groups.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}
-        </select>
-      </label>
-      <label>SITE
-        <select id="fltSite">
-          <option value="">전체</option>
-          ${sites.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}
-        </select>
-      </label>
-      <label class="chk">
-        <input type="checkbox" id="chkActive" checked />
-        재직자만
-      </label>
-      <button id="btnApplyFilters" class="btn primary" type="button">적용</button>
-      <button id="btnResetFilters" class="btn" type="button">초기화</button>
-    </div>
-  `;
-
-  // 초기값 주입 (localStorage 복원 가능)
+  // 로컬스토리지 복원
   const ls = JSON.parse(localStorage.getItem("supraN_pci_filters")||"{}");
-  Object.assign(filterState, {
-    company: ls.company ?? filterState.company,
-    group:   ls.group   ?? filterState.group,
-    site:    ls.site    ?? filterState.site,
-    activeOnly: (typeof ls.activeOnly==="boolean") ? ls.activeOnly : filterState.activeOnly,
-  });
+  filterState.company    = (ls.company ?? "");
+  filterState.group      = (ls.group   ?? "");
+  filterState.site       = (ls.site    ?? "");
+  filterState.activeOnly = (typeof ls.activeOnly==="boolean") ? ls.activeOnly : true;
 
-  const $c = document.getElementById("fltCompany");
-  const $g = document.getElementById("fltGroup");
-  const $s = document.getElementById("fltSite");
-  const $a = document.getElementById("chkActive");
+  $c.value = filterState.company || "";
+  $g.value = filterState.group   || "";
+  $s.value = filterState.site    || "";
 
-  if($c) $c.value = filterState.company || "";
-  if($g) $g.value = filterState.group   || "";
-  if($s) $s.value = filterState.site    || "";
-  if($a) $a.checked = !!filterState.activeOnly;
+  const onChange = async ()=>{
+    filterState.company = $c.value || "";
+    filterState.group   = $g.value || "";
+    filterState.site    = $s.value || "";
 
-  // 변경 → 상태 반영만 (즉시 호출은 '적용' 버튼에서)
-  const onChange = ()=>{
-    filterState.company   = $c?.value || "";
-    filterState.group     = $g?.value || "";
-    filterState.site      = $s?.value || "";
-    filterState.activeOnly= !!$a?.checked;
-  };
-  [$c,$g,$s,$a].forEach(elm=>elm?.addEventListener("change", onChange));
-
-  // 적용 버튼: 워커 목록/매트릭스 재조회
-  document.getElementById("btnApplyFilters")?.addEventListener("click", async ()=>{
-    onChange();
+    // 저장
     localStorage.setItem("supraN_pci_filters", JSON.stringify(filterState));
-    await loadWorkerList();   // 자동완성도 필터 반영
-    await buildMatrix();      // 매트릭스 갱신
-  });
 
-  // 초기화 버튼
-  document.getElementById("btnResetFilters")?.addEventListener("click", async ()=>{
-    filterState.company = ""; filterState.group = ""; filterState.site = ""; filterState.activeOnly = true;
-    $c.value=""; $g.value=""; $s.value=""; $a.checked=true;
-    localStorage.removeItem("supraN_pci_filters");
+    // 재조회
     await loadWorkerList();
     await buildMatrix();
-  });
+  };
+
+  [$c,$g,$s].forEach(elm=>elm.addEventListener("change", onChange));
 }
-/* ▲ 추가 끝 */
+
+/* -------------------- 카테고리 정의 ------------------- */
+const CATEGORIES = [
+  { category: "ESCORT",             items: ["LP ESCORT","ROBOT ESCORT"] },
+  { category: "EFEM ROBOT",         items: ["SR8241 TEACHING","SR8240 TEACHING","M124 TEACHING","EFEM FIXTURE","EFEM ROBOT REP","EFEM ROBOT CONTROLLER REP"] },
+  { category: "TM ROBOT",           items: ["SR8250 TEACHING","SR8232 TEACHING","TM FIXTURE", "TM ROBOT REP","TM ROBOT CONTROLLER REP","PASSIVE PAD REP"] },
+  { category: "BM MODULE",          items: ["PIN CYLINDER","PUSHER CYLINDER","IB FLOW","DRT"] },
+  { category: "FFU (EFEM, TM)",     items: ["FFU CONTROLLER","FAN","MOTOR DRIVER"] },
+  { category: "FCIP",               items: ["R1","R3","R5","R3 TO R5","PRISM"] },
+  { category: "MICROWAVE",          items: ["MICROWAVE","APPLICATOR","GENERATOR"] },
+  { category: "CHUCK",              items: ["CHUCK"] },
+  { category: "PROCESS KIT",        items: ["PROCESS KIT"] },
+  { category: "LEAK",               items: ["HELIUM DETECTOR"] },
+  { category: "PIN",                items: ["HOOK LIFT PIN","BELLOWS","PIN SENSOR","LM GUIDE","PIN MOTOR CONTROLLER"] },
+  { category: "EPD",                items: ["SINGLE EPD","DUAL EPD"] },
+  { category: "BOARD",              items: ["GAS BOX BOARD","TEMP CONTROLLER BOARD","POWER DISTRIBUTION BOARD","DC POWER SUPPLY","BM SENSOR","PIO SENSOR","SAFETY MODULE","IO BOX","FPS BOARD","D-NET"] },
+  { category: "IGS BLOCK",          items: ["MFC","VALVE"] },
+  { category: "VALVE",              items: ["SOLENOID","FAST VAC VALVE","SLOW VAC VALVE","SLIT DOOR","APC VALVE","SHUTOFF VALVE"] },
+  { category: "ETC",                items: ["BARATRON ASS'Y","PIRANI ASS'Y","VIEW PORT QUARTZ","FLOW SWITCH","CERAMIC PLATE","MONITOR","KEYBOARD","MOUSE","HEATING JACKET","WATER LEAK DETECTOR","MANOMETER"] },
+  { category: "CTR",                items: ["CTC","PMC","EDA","EFEM CONTROLLER","TEMP LIMIT CONTROLLER","TEMP CONTROLLER"] },
+  { category: "S/W",                items: ["S/W PATCH"] },
+];
+const ITEM_TO_CAT = (()=>{ const m={}; for(const g of CATEGORIES) for(const it of g.items) m[it]=g.category; return m; })();
+function getCategory(item){ return ITEM_TO_CAT[item] || "-"; }
