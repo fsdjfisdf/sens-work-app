@@ -507,3 +507,16 @@ body.modal-open{ overflow:hidden; }
 @media (max-width: 960px){
   .page-actions{ justify-content:flex-start; }
 }
+
+.jump-box{
+  display: grid;
+  grid-template-columns: 180px 180px 180px auto;
+  gap: 8px;
+  align-items: end;
+}
+@media (max-width:960px){
+  .jump-box{
+    grid-template-columns: 1fr 1fr;
+  }
+  .jump-box .btn{ width: 100%; }
+}

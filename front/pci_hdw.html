@@ -56,6 +56,31 @@
     <!-- 탭 -->
        <div class="page-actions">
     <a href="./specialist_hdw.html" class="menu-item admin-only">HDW 교육 편집</a>
+          <!-- ▼ 신규: 링크 바로가기 컨트롤 -->
+      <div class="goto-wrap" role="group" aria-label="장비/작업 선택 후 페이지 이동">
+        <select id="selGroup" class="input sm" aria-label="그룹 선택">
+          <option value="">그룹 전체</option>
+          <option value="PEE1">PEE1</option>
+          <option value="PEE2">PEE2</option>
+          <option value="PSKH">PSKH</option>
+        </select>
+
+        <select id="selEquipment" class="input sm" aria-label="설비 선택">
+          <!-- JS에서 equipmentOptions 기반으로 채움 -->
+        </select>
+
+        <select id="selWorkType" class="input sm" aria-label="작업 종류 선택">
+          <option value="SET UP">SET UP</option>
+          <option value="MAINTENANCE">MAINTENANCE</option>
+        </select>
+
+        <button id="btnGoto" class="btn sm primary" disabled>
+          바로가기
+        </button>
+
+        <a id="gotoPreview" class="goto-preview" href="#" target="_self" aria-live="polite"></a>
+      </div>
+      <!-- ▲ 신규 컨트롤 끝 -->
   </div>
     <section class="tabs">
       <button class="tab active" data-tab="tab-matrix" aria-controls="tab-matrix" aria-selected="true">전체 인원 보기</button>

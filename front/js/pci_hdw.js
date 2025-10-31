@@ -9,6 +9,27 @@
 
 const API_BASE = "";
 
+/* -------------------- ▼ 추가: 그룹별 설비 옵션 + URL 매핑 ------------------- */
+// 그룹 선택에 따른 설비 필드 업데이트 옵션
+const equipmentOptions = {
+  "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA", "HDW"],
+  "PEE1": ["SUPRA N", "SUPRA XP"],
+  "PEE2": ["INTEGER", "PRECIA"],
+  "PSKH": ["ECOLITE", "GENEVA", "HDW"]
+};
+
+// 설비와 작업 종류에 따른 URL 매핑
+const urlMapping = {
+  "SUPRA N":   { "SET UP": "pci_supran_setup.html",   "MAINTENANCE": "pci_supran.html" },
+  "SUPRA XP":  { "SET UP": "pci_supraxp_setup.html",  "MAINTENANCE": "pci_supraxp.html" },
+  "INTEGER":   { "SET UP": "pci_integer_setup.html",  "MAINTENANCE": "pci_integer.html" },
+  "PRECIA":    { "SET UP": "pci_precia_setup.html",   "MAINTENANCE": "pci_precia.html" },
+  "ECOLITE":   { "SET UP": "pci_ecolite_setup.html",  "MAINTENANCE": "pci_ecolite.html" },
+  "GENEVA":    { "SET UP": "pci_geneva_setup.html",   "MAINTENANCE": "pci_geneva.html" },
+  "HDW":       { "SET UP": "pci_hdw_setup.html",      "MAINTENANCE": "pci_hdw.html" }
+};
+/* -------------------- ▲ 추가 끝 ------------------------------------------- */
+
 // ===== 전역 상태 =====
 let workerNames = [];
 let stackedChart = null;
@@ -66,6 +87,13 @@ const el = {
   modalTitle: $("modalTitle"),
   modalBody: $("modalBody"),
   modalClose: $("modalClose"),
+  // goto controls (NEW)
+selGroup: $("selGroup"),
+selEquipment: $("selEquipment"),
+selWorkType: $("selWorkType"),
+btnGoto: $("btnGoto"),
+gotoPreview: $("gotoPreview"),
+
 };
 
 const CATEGORIES = [
@@ -126,6 +154,9 @@ function highlightColumn(colIdx){
 
 // ===== 초기화 =====
 document.addEventListener("DOMContentLoaded", async () => {
+  // ▼ NEW: 바로가기 컨트롤 바인딩
+initGotoControls();
+
   bindTabs();
   bindMatrixEvents();
   bindPersonEvents();
@@ -174,6 +205,76 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   el.matrixTable.addEventListener("mouseleave", clearColHighlight);
 });
+
+/* ======================= NEW: Goto Controls =============================== */
+function initGotoControls(){
+  // 장비 select 채우기 (초기: 그룹 전체)
+  fillEquipmentOptions(el.selGroup.value || "");
+
+  // 이벤트 바인딩
+  el.selGroup?.addEventListener("change", ()=>{
+    fillEquipmentOptions(el.selGroup.value || "");
+    updateGotoPreview();
+  });
+  el.selEquipment?.addEventListener("change", updateGotoPreview);
+  el.selWorkType?.addEventListener("change", updateGotoPreview);
+
+  // 버튼 클릭/Enter 처리
+  el.btnGoto?.addEventListener("click", navigateBySelection);
+  [el.selGroup, el.selEquipment, el.selWorkType].forEach(s => {
+    s?.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter" && !el.btnGoto.disabled) navigateBySelection();
+    });
+  });
+
+  // 초기 미리보기
+  updateGotoPreview();
+}
+
+function fillEquipmentOptions(group){
+  const list = equipmentOptions[group] || [];
+  const equip = el.selEquipment;
+  if (!equip) return;
+
+  equip.innerHTML = list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+
+  // 이전 선택 유지가 불가능하면 첫 값으로
+  if (!list.includes(equip.value)) equip.value = list[0] || "";
+}
+
+function computeTargetHref(){
+  const equipment = el.selEquipment?.value || "";
+  const workType  = el.selWorkType?.value || "";
+  const map = urlMapping[equipment] || null;
+  return map ? map[workType] || "" : "";
+}
+
+function updateGotoPreview(){
+  const href = computeTargetHref();
+  const preview = el.gotoPreview;
+  const btn = el.btnGoto;
+
+  if (!href){
+    btn.disabled = true;
+    preview.textContent = "매핑된 페이지가 없습니다.";
+    preview.removeAttribute("href");
+  } else {
+    btn.disabled = false;
+    preview.textContent = `이동 대상: ${href}`;
+    preview.setAttribute("href", href);
+  }
+}
+
+function navigateBySelection(){
+  const href = computeTargetHref();
+  if (!href){
+    alert("해당 조합에 매핑된 페이지가 없습니다.");
+    return;
+  }
+  // 동일 탭 이동 (요청사항: '바로 이 링크로 옮겨갈 수 있는 버튼')
+  window.location.href = href;
+}
+/* ======================= Goto Controls 끝 ================================ */
 
 // ===== 탭 =====
 function bindTabs(){

@@ -15,6 +15,8 @@ router.get("/worker", ctrl.getWorkerPci);
 router.get("/summary", ctrl.getAllSummary);
 
 // 기존 라우트에 아래 두 줄 추가
+router.get("/filters", ctrl.getUserFilterOptions); // 추가
+
 router.get("/workers", ctrl.getWorkerNames);   // 작업자 이름만
 router.get("/matrix", ctrl.getMatrix);         // 한 방에 매트릭스
 // 항목 단위 상세(산출 근거)

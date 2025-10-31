@@ -1,27 +1,68 @@
 /* ==========================================================================
-   SUPRA N PCI — 전체 보기 요약행(평균) + 개인 보기 테이블 룩&필 적용
-   - Thead 2단: ① 헤더 ② 요약(평균) 행
-   - 요약(평균) 행은 현재 필터에 노출된 항목/작업자 기준으로 즉시 재계산
-   - 전체 평균(가시 항목 기준) 배지 제공
-   - 모달 아코디언/버튼/차트/엑셀 유지
+   SUPRA N PCI — 매트릭스/개인 보기 + 상단 "바로가기" 컨트롤
    ========================================================================== */
 
 const API_BASE = "";
+
+/* -------------------- ▼ 추가: 그룹별 설비 옵션 + URL 매핑 ------------------- */
+// 그룹 선택에 따른 설비 필드 업데이트 옵션
+const equipmentOptions = {
+  "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA", "HDW"],
+  "PEE1": ["SUPRA N", "SUPRA XP"],
+  "PEE2": ["INTEGER", "PRECIA"],
+  "PSKH": ["ECOLITE", "GENEVA", "HDW"]
+};
+
+// 설비와 작업 종류에 따른 URL 매핑
+const urlMapping = {
+  "SUPRA N":   { "SET UP": "pci_supran_setup.html",   "MAINTENANCE": "pci_supran.html" },
+  "SUPRA XP":  { "SET UP": "pci_supraxp_setup.html",  "MAINTENANCE": "pci_supraxp.html" },
+  "INTEGER":   { "SET UP": "pci_integer_setup.html",  "MAINTENANCE": "pci_integer.html" },
+  "PRECIA":    { "SET UP": "pci_precia_setup.html",   "MAINTENANCE": "pci_precia.html" },
+  "ECOLITE":   { "SET UP": "pci_ecolite_setup.html",  "MAINTENANCE": "pci_ecolite.html" },
+  "GENEVA":    { "SET UP": "pci_geneva_setup.html",   "MAINTENANCE": "pci_geneva.html" },
+  "HDW":       { "SET UP": "pci_hdw_setup.html",      "MAINTENANCE": "pci_hdw.html" }
+};
+/* -------------------- ▲ 추가 끝 ------------------------------------------- */
 
 // ===== 전역 상태 =====
 let workerNames = [];
 let stackedChart = null;
 
+/* ▼ 추가: 직원/현장 필터 상태 */
+const filterState = {
+  company: "",
+  group: "",
+  site: "",
+  activeOnly: true, // 재직자만 기본 on
+};
+/* ▲ 추가 끝 */
+
 // 매트릭스 상태
 let matrixItems = [];
 let matrixWorkers = [];
-let matrixData = {};   // data[item][worker] = {pci, work, self, baseline, ...}
-let workerAvgMap = {}; // worker -> avg pci(서버 제공; 정렬 기본값에 사용)
-let collapsedCats = new Set(); // 카테고리 접힘 상태
+let matrixData = {};
+let workerAvgMap = {};
+let collapsedCats = new Set();
 
 // 개인 보기 상태
 let currentRows = [];
 let currentSummary = null;
+
+/* ▼ 추가: 쿼리스트링 생성기 */
+function toQuery(params){
+  const q = new URLSearchParams(params);
+  return q.toString();
+}
+function currentFilterQuery(){
+  return toQuery({
+    company: filterState.company || "",
+    group: filterState.group || "",
+    site: filterState.site || "",
+    activeOnly: filterState.activeOnly ? 1 : 0,
+  });
+}
+/* ▲ 추가 끝 */
 
 // ===== DOM =====
 const $ = (id) => document.getElementById(id);
@@ -65,6 +106,13 @@ const el = {
   modalTitle: $("modalTitle"),
   modalBody: $("modalBody"),
   modalClose: $("modalClose"),
+
+  // goto controls (NEW)
+  selGroup: $("selGroup"),
+  selEquipment: $("selEquipment"),
+  selWorkType: $("selWorkType"),
+  btnGoto: $("btnGoto"),
+  gotoPreview: $("gotoPreview"),
 };
 
 // ===== 카테고리 정의 =====
@@ -94,7 +142,7 @@ const getCategory = (item)=> ITEM_TO_CAT[item] || "-";
 // ===== Utils =====
 const ESC_RE  = /[&<>"']/g;
 const ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
-function esc(s) { s = (s == null) ? '' : String(s); return s.replace(ESC_RE, ch => ESC_MAP[ch] || ch); }
+function esc(s){ s = (s==null)?'':String(s); return s.replace(ESC_RE, ch=>ESC_MAP[ch]||ch); }
 function pct(n){ return (Number.isFinite(n)?n:0).toFixed(1); }
 function heatClass(p){ const b = Math.max(0, Math.min(10, Math.round((p||0)/10))); return `h${b}`; }
 const debounce = (fn, ms=200)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
@@ -108,11 +156,7 @@ function showBusy(container, work){
 }
 
 // Fade-in helper
-function fadeInBox(box){
-  box?.classList.remove("fade-in");
-  void box?.offsetWidth;
-  box?.classList.add("fade-in");
-}
+function fadeInBox(box){ box?.classList.remove("fade-in"); void box?.offsetWidth; box?.classList.add("fade-in"); }
 
 // Column highlight
 let currentColIndex = null;
@@ -129,6 +173,10 @@ function highlightColumn(colIdx){
 
 // ===== 초기화 =====
 document.addEventListener("DOMContentLoaded", async () => {
+  // ▼ NEW: 바로가기 컨트롤 바인딩
+  initGotoControls();
+  await initEmployeeFilters();
+
   bindTabs();
   bindMatrixEvents();
   bindPersonEvents();
@@ -141,7 +189,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadWorkerList();
   await buildMatrix();
 
-  // 매트릭스 셀 상세(이벤트 위임)
+  // 매트릭스 셀 상세
   el.matrixTbody.addEventListener("click", (e)=>{
     const c = e.target.closest(".cell");
     if (!c) return;
@@ -178,6 +226,76 @@ document.addEventListener("DOMContentLoaded", async () => {
   el.matrixTable.addEventListener("mouseleave", clearColHighlight);
 });
 
+/* ======================= NEW: Goto Controls =============================== */
+function initGotoControls(){
+  // 장비 select 채우기 (초기: 그룹 전체)
+  fillEquipmentOptions(el.selGroup.value || "");
+
+  // 이벤트 바인딩
+  el.selGroup?.addEventListener("change", ()=>{
+    fillEquipmentOptions(el.selGroup.value || "");
+    updateGotoPreview();
+  });
+  el.selEquipment?.addEventListener("change", updateGotoPreview);
+  el.selWorkType?.addEventListener("change", updateGotoPreview);
+
+  // 버튼 클릭/Enter 처리
+  el.btnGoto?.addEventListener("click", navigateBySelection);
+  [el.selGroup, el.selEquipment, el.selWorkType].forEach(s => {
+    s?.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter" && !el.btnGoto.disabled) navigateBySelection();
+    });
+  });
+
+  // 초기 미리보기
+  updateGotoPreview();
+}
+
+function fillEquipmentOptions(group){
+  const list = equipmentOptions[group] || [];
+  const equip = el.selEquipment;
+  if (!equip) return;
+
+  equip.innerHTML = list.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+
+  // 이전 선택 유지가 불가능하면 첫 값으로
+  if (!list.includes(equip.value)) equip.value = list[0] || "";
+}
+
+function computeTargetHref(){
+  const equipment = el.selEquipment?.value || "";
+  const workType  = el.selWorkType?.value || "";
+  const map = urlMapping[equipment] || null;
+  return map ? map[workType] || "" : "";
+}
+
+function updateGotoPreview(){
+  const href = computeTargetHref();
+  const preview = el.gotoPreview;
+  const btn = el.btnGoto;
+
+  if (!href){
+    btn.disabled = true;
+    preview.textContent = "매핑된 페이지가 없습니다.";
+    preview.removeAttribute("href");
+  } else {
+    btn.disabled = false;
+    preview.textContent = `이동 대상: ${href}`;
+    preview.setAttribute("href", href);
+  }
+}
+
+function navigateBySelection(){
+  const href = computeTargetHref();
+  if (!href){
+    alert("해당 조합에 매핑된 페이지가 없습니다.");
+    return;
+  }
+  // 동일 탭 이동 (요청사항: '바로 이 링크로 옮겨갈 수 있는 버튼')
+  window.location.href = href;
+}
+/* ======================= Goto Controls 끝 ================================ */
+
 // ===== 탭 =====
 function bindTabs(){
   el.tabs.forEach(btn=>{
@@ -205,7 +323,7 @@ function bindMatrixEvents(){
 
 async function loadWorkerList(){
   try{
-    const res = await axios.get(`/api/pci/supra-n/workers`);
+    const res = await axios.get(`/api/pci/supra-n/workers?${currentFilterQuery()}`);
     workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
@@ -242,7 +360,7 @@ async function buildMatrix(){
   startLine(el.matrixWrap);
   renderMatrixSkeleton(12, 15);
   try{
-    const res = await axios.get(`/api/pci/supra-n/matrix`);
+    const res = await axios.get(`/api/pci/supra-n/matrix?${currentFilterQuery()}`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
     matrixWorkers = workers || [];
     matrixItems = items || [];
@@ -267,43 +385,35 @@ function sortMatrixWorkers(){
   if (mode === "name_asc"){
     matrixWorkers.sort((a,b)=>a.localeCompare(b,'ko'));
   } else {
-    // 서버 제공 평균 PCI 기준(전역) → 동률은 이름순
     matrixWorkers.sort((a,b)=>(workerAvgMap[b]??0)-(workerAvgMap[a]??0) || a.localeCompare(b,'ko'));
   }
 }
 
-// 요약(평균) 계산: 현재 표시되는 항목/작업자에 한정
 function computeVisibleAverages(shownItems, shownWorkers){
   const perWorker = {};
   const totalItems = shownItems.length;
-
   let sumAll = 0;
 
   for (const w of shownWorkers){
     let s = 0;
     for (const it of shownItems){
       const v = Number(matrixData[it]?.[w]?.pci);
-      s += Number.isFinite(v) ? v : 0; // 값이 없으면 0으로 취급
+      s += Number.isFinite(v) ? v : 0;
     }
     perWorker[w] = totalItems > 0 ? (s / totalItems) : null;
     sumAll += s;
   }
-
   const denom = totalItems * shownWorkers.length;
   const overall = denom > 0 ? (sumAll / denom) : null;
   return { perWorker, overall };
 }
 
-// 헤더 높이/고정열 폭을 실제 치수로 CSS 변수 동기화
 function syncStickyOffsets(){
-  // 1) 헤더 1행 실제 높이 → --thead-h
   const headRow = el.matrixThead.querySelector("tr.header-row");
   if (headRow) {
     const h = Math.ceil(headRow.getBoundingClientRect().height);
     el.matrixTable.style.setProperty("--thead-h", h + "px");
   }
-
-  // 2) 좌측 고정열 실제 폭 → --w-cat / --w-item (픽셀 라운딩 차이 흡수)
   const th1 = el.matrixThead.querySelector("tr.header-row th.item-col:nth-child(1)");
   const th2 = el.matrixThead.querySelector("tr.header-row th.item-col:nth-child(2)");
   if (th1 && th2) {
@@ -313,7 +423,6 @@ function syncStickyOffsets(){
     el.matrixTable.style.setProperty("--w-item", w2 + "px");
   }
 }
-
 
 function renderMatrix(){
   clearColHighlight();
@@ -331,10 +440,8 @@ function renderMatrix(){
     }
   }
 
-  // 평균 계산(가시 항목 기준)
   const { perWorker, overall } = computeVisibleAverages(shownItems, shownWorkers);
 
-  // ===== thead (헤더 + 요약행) =====
   const headRow = document.createElement("tr");
   headRow.className = "header-row";
   const thCat = document.createElement("th"); thCat.textContent = "중분류"; thCat.className="item-col"; thCat.dataset.col = 0;
@@ -351,11 +458,10 @@ function renderMatrix(){
     headRow.appendChild(th);
   });
 
-  // 요약(평균) 행
   const sumRow = document.createElement("tr");
   sumRow.className = "summary-row";
   const sumThCat = document.createElement("th");
-  sumThCat.className = "item-col sum-col"; sumThCat.dataset.col = 0; sumThCat.textContent = ""; // 빈칸
+  sumThCat.className = "item-col sum-col"; sumThCat.dataset.col = 0; sumThCat.textContent = "";
   const sumThItem = document.createElement("th");
   sumThItem.className = "item-col sum-col"; sumThItem.dataset.col = 1;
   sumThItem.innerHTML = `${Number.isFinite(overall) ? `<span class="badge b-total">전체 평균 ${pct(overall)}%</span>` : `<span class="badge">데이터 없음</span>`}`;
@@ -379,16 +485,13 @@ function renderMatrix(){
   el.matrixThead.appendChild(headRow);
   el.matrixThead.appendChild(sumRow);
 
-  // ===== tbody =====
   const frag = document.createDocumentFragment();
-
   for (const grp of CATEGORIES){
     const its = grp.items
       .filter(it => matrixItems.includes(it))
       .filter(it => !qItem || it.toLowerCase().includes(qItem));
     if (!its.length) continue;
 
-    // 그룹 헤더
     const catTr = document.createElement("tr");
     catTr.className = "cat-row" + (collapsedCats.has(grp.category) ? " collapsed" : "");
     catTr.setAttribute("data-cat", grp.category);
@@ -400,7 +503,6 @@ function renderMatrix(){
 
     if (collapsedCats.has(grp.category)) continue;
 
-    // 항목 행
     for (const item of its){
       const tr = document.createElement("tr");
 
@@ -439,7 +541,6 @@ function renderMatrix(){
   el.matrixTbody.innerHTML = "";
   el.matrixTbody.appendChild(frag);
 
-  // 렌더 후 스타일 반영
   toggleDensity();
   applyColumnWidth();
   toggleDensity();
@@ -473,12 +574,11 @@ function exportMatrixXlsx(){
     }
   }
 
-  const { perWorker, overall } = computeVisibleAverages(items.map(r=>r.item), workers);
+  const { perWorker } = computeVisibleAverages(items.map(r=>r.item), workers);
 
   const header = ["중분류","작업 항목","기준", ...workers];
   const aoa = [header];
 
-  // 요약행(엑셀 첫줄)
   const sumRow = ["-","","-",
     ...workers.map(w => Number.isFinite(perWorker[w]) ? Number(pct(perWorker[w])) : "")
   ];
@@ -507,7 +607,6 @@ function bindPersonEvents(){
   el.searchItem.addEventListener("input", debounce(()=> showBusy(el.personTableScroll, renderPersonTable), 120));
   el.sortBy.addEventListener("change", ()=>{ sortPersonRows(); showBusy(el.personTableScroll, renderPersonTable); });
 
-  // 행 클릭 → 상세
   el.tbody.addEventListener("click", (e)=>{
     const tr = e.target.closest("tr[data-item]");
     const item = tr?.getAttribute("data-item");
@@ -521,7 +620,7 @@ async function onFetchPerson(){
   if (!name) return alert("작업자를 입력하세요.");
   startLine(el.personTableScroll);
   try{
-    const res = await axios.get(`/api/pci/supra-n/worker/${encodeURIComponent(name)}`);
+    const res = await axios.get(`/api/pci/supra-n/worker/${encodeURIComponent(name)}?${currentFilterQuery()}`);
     currentSummary = res.data?.summary || null;
     currentRows = res.data?.rows || [];
     updateCards();
@@ -543,7 +642,6 @@ function updateCards(){
     el.avgWork.textContent="-"; el.avgPci.textContent="-"; el.itemsCnt.textContent="-";
     return;
   }
-  // ✅ 0% 포함: 전체 행으로 평균
   const n = rows.length;
   const sumWork = rows.reduce((s,r)=> s + (Number(r.work_pct)||0), 0);
   const sumPci  = rows.reduce((s,r)=> s + (Number(r.pci_pct)||0),  0);
@@ -552,44 +650,33 @@ function updateCards(){
   el.avgPci.textContent  = pct(sumPci  / n);
   el.itemsCnt.textContent = n;
 
-  // 카드 보조 문구도 실제 규칙과 일치시키기
   const cntSub = document.querySelector('.cards .card.stat:nth-child(3) .sub');
   if (cntSub) cntSub.textContent = '모든 항목 포함(0% 포함)';
 }
 
 function renderPersonChart(){
-  // ✅ 0%도 포함: 필터 제거
   const rows = (currentRows || []).slice();
-
-  // 보기 좋게: PCI 내림차순 → 같은 값이면 수행횟수 많은 순
   rows.sort((a,b)=> b.pci_pct - a.pci_pct || b.total_count - a.total_count);
 
   const labels = rows.map(r => r.item);
   const work   = rows.map(r => Number(r.work_pct) || 0);
   const self   = rows.map(r => Number(r.self_pct) || 0);
 
-  // 가로 폭 계산 (막대당 고정 px)
-  const PX_PER_BAR = 56; // 필요하면 48~60 사이로 조절 가능
-  const minWidth   = el.chartScroll.clientWidth; // 컨테이너 가시 폭
+  const PX_PER_BAR = 56;
+  const minWidth   = el.chartScroll.clientWidth;
   const targetWidth = Math.max(minWidth, Math.ceil(labels.length * PX_PER_BAR));
 
-  // 스크롤 영역의 내부 래퍼 폭을 먼저 늘려줌
   el.chartInner.style.width = targetWidth + "px";
 
-  // ✅ Chart.js는 responsive:false 이므로 캔버스 '속성' 폭/높이를 매번 동기화해야 함
   const dpr = Math.max(1, window.devicePixelRatio || 1);
-  const cssH = 260; // CSS 높이
-  // CSS 크기
+  const cssH = 260;
   el.stackedCanvas.style.width  = targetWidth + "px";
   el.stackedCanvas.style.height = cssH + "px";
-  // 실제 픽셀 크기(레티나 대응)
   el.stackedCanvas.width  = Math.floor(targetWidth * dpr);
   el.stackedCanvas.height = Math.floor(cssH * dpr);
 
-  // 기존 차트 정리
   if (stackedChart) { stackedChart.destroy(); stackedChart = null; }
 
-  // 새 차트 렌더
   stackedChart = new Chart(el.stackedCanvas.getContext("2d"), {
     type: "bar",
     data: {
@@ -600,14 +687,12 @@ function renderPersonChart(){
       ]
     },
     options: {
-      // ❗ responsive:false 이므로 위에서 width/height를 직접 맞춰줌
       responsive: false,
       maintainAspectRatio: false,
       plugins: {
         legend: { position: "top" },
         tooltip: { enabled: true },
         datalabels: {
-          // 항목이 너무 많으면 라벨은 자동 감춤
           display: labels.length <= 30,
           anchor: "end",
           align: "end",
@@ -628,7 +713,6 @@ function renderPersonChart(){
     plugins: [ChartDataLabels]
   });
 }
-
 
 function sortPersonRows(){
   const mode = el.sortBy.value;
@@ -685,7 +769,6 @@ function renderPersonTable(){
 
 function exportPersonXlsx(){
   if (!currentRows?.length) return alert("내보낼 데이터가 없습니다.");
-
   const aoa = [["중분류","항목","기준","main","support","교육","총횟수","작업이력(80%)","자가(20%)","PCI(%)"]];
   for (const r of currentRows){
     aoa.push([
@@ -701,64 +784,62 @@ function exportPersonXlsx(){
   XLSX.writeFile(wb, name);
 }
 
-// ===== 산출 근거 모달 (아코디언) =====
+// ===== 산출 근거 모달 =====
 async function openBreakdown(worker, item){
   try{
     const url = `/api/pci/supra-n/worker/${encodeURIComponent(worker)}/item/${encodeURIComponent(item)}`;
     const { data } = await axios.get(url);
 
-// <br>만 통과시키고 나머지는 escape (XSS 방지)
-function escapeAllowBr(html){
-  const s = String(html ?? "");
-  // 임시 치환으로 <br> 허용
-  const token = "__BR__TOKEN__";
-  return s
-    .replace(/<br\s*\/?>/gi, token)
-    .replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
-    .replaceAll(token, "<br>");
-}
+    function escapeAllowBr(html){
+      const s = String(html ?? "");
+      const token = "__BR__TOKEN__";
+      return s
+        .replace(/<br\s*\/?>/gi, token)
+        .replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))
+        .replaceAll(token, "<br>");
+    }
 
-const logsHtml = (data.logs && data.logs.length)
-  ? `
-     <div class="table-scroll">
-       <table class="table" style="min-width: 980px">
-         <thead>
-           <tr>
-             <th>작업한 날짜</th>
-             <th>설비 이름</th>
-             <th>설비 종류</th>
-             <th>작업명</th>
-             <th>작업자</th>
-             <th style="width:240px">작업 내용</th>
-           </tr>
-         </thead>
-         <tbody>
-           ${data.logs.map(l=>{
-             const dateStr = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
-             const eqName  = l.equipment_name ? String(l.equipment_name).trim() : "-";
-             const eqType  = l.equipment_type ? String(l.equipment_type).trim() : "-";
-             const tName   = l.task_name ? String(l.task_name).trim() : "-";
-             const tMen    = l.task_man ?? l.task_man_raw ?? "";
-             const descHtml= escapeAllowBr(l.task_description ?? "");
-             return `
-               <tr>
-                 <td>${dateStr}</td>
-                 <td>${esc(eqName)}</td>
-                 <td>${esc(eqType)}</td>
-                 <td>${esc(tName)}</td>
-                 <td>${esc(tMen)}</td>
-                 <td>
-                   <details class="desc">
-                     <summary>펼쳐보기</summary>
-                     <div class="desc-body">${descHtml || "-"}</div>
-                   </details>
-                 </td>
-               </tr>`;
-           }).join("")}
-         </tbody>
-       </table>
-     </div>`
-  : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
+    const logsHtml = (data.logs && data.logs.length)
+      ? `
+        <div class="table-scroll">
+          <table class="table" style="min-width: 980px">
+            <thead>
+              <tr>
+                <th>작업한 날짜</th>
+                <th>설비 이름</th>
+                <th>설비 종류</th>
+                <th>작업명</th>
+                <th>작업자</th>
+                <th style="width:240px">작업 내용</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.logs.map(l=>{
+                const dateStr = l.task_date ? dayjs(l.task_date).format("YYYY-MM-DD") : "-";
+                const eqName  = l.equipment_name ? String(l.equipment_name).trim() : "-";
+                const eqType  = l.equipment_type ? String(l.equipment_type).trim() : "-";
+                const tName   = l.task_name ? String(l.task_name).trim() : "-";
+                const tMen    = l.task_man ?? l.task_man_raw ?? "";
+                const descHtml= escapeAllowBr(l.task_description ?? "");
+                return `
+                  <tr>
+                    <td>${dateStr}</td>
+                    <td>${esc(eqName)}</td>
+                    <td>${esc(eqType)}</td>
+                    <td>${esc(tName)}</td>
+                    <td>${esc(tMen)}</td>
+                    <td>
+                      <details class="desc">
+                        <summary>펼쳐보기</summary>
+                        <div class="desc-body">${descHtml || "-"}</div>
+                      </details>
+                    </td>
+                  </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`
+      : `<div class="hint">참여한 작업 로그가 없습니다.</div>`;
 
     const box = `
       <div class="modal-body">
@@ -811,3 +892,98 @@ function getBaseline(item){
   const first = Object.values(d)[0];
   return first?.baseline ?? "";
 }
+
+
+/* ▼ 추가: 상단 COMPANY/GROUP/SITE/재직 체크 UI 초기화 */
+async function initEmployeeFilters(){
+  const $box = document.querySelector(".filters");
+  if(!$box){ console.warn("[filters] .filters 컨테이너가 없습니다."); return; }
+
+  // 서버에서 옵션 받아오기
+  // (백엔드: GET /api/userdb/filters → {companies, groups, sites})
+  let companies = [], groups = [], sites = [];
+  try{
+    const { data } = await axios.get(`/api/userdb/filters`);
+    companies = data?.companies || [];
+    groups    = data?.groups    || [];
+    sites     = data?.sites     || [];
+  }catch(e){
+    console.warn("필터 옵션 로드 실패:", e);
+  }
+
+  // UI 렌더
+  $box.innerHTML = `
+    <div class="filter-row">
+      <label>COMPANY
+        <select id="fltCompany">
+          <option value="">전체</option>
+          ${companies.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}
+        </select>
+      </label>
+      <label>GROUP
+        <select id="fltGroup">
+          <option value="">전체</option>
+          ${groups.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}
+        </select>
+      </label>
+      <label>SITE
+        <select id="fltSite">
+          <option value="">전체</option>
+          ${sites.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("")}
+        </select>
+      </label>
+      <label class="chk">
+        <input type="checkbox" id="chkActive" checked />
+        재직자만
+      </label>
+      <button id="btnApplyFilters" class="btn primary" type="button">적용</button>
+      <button id="btnResetFilters" class="btn" type="button">초기화</button>
+    </div>
+  `;
+
+  // 초기값 주입 (localStorage 복원 가능)
+  const ls = JSON.parse(localStorage.getItem("supraN_pci_filters")||"{}");
+  Object.assign(filterState, {
+    company: ls.company ?? filterState.company,
+    group:   ls.group   ?? filterState.group,
+    site:    ls.site    ?? filterState.site,
+    activeOnly: (typeof ls.activeOnly==="boolean") ? ls.activeOnly : filterState.activeOnly,
+  });
+
+  const $c = document.getElementById("fltCompany");
+  const $g = document.getElementById("fltGroup");
+  const $s = document.getElementById("fltSite");
+  const $a = document.getElementById("chkActive");
+
+  if($c) $c.value = filterState.company || "";
+  if($g) $g.value = filterState.group   || "";
+  if($s) $s.value = filterState.site    || "";
+  if($a) $a.checked = !!filterState.activeOnly;
+
+  // 변경 → 상태 반영만 (즉시 호출은 '적용' 버튼에서)
+  const onChange = ()=>{
+    filterState.company   = $c?.value || "";
+    filterState.group     = $g?.value || "";
+    filterState.site      = $s?.value || "";
+    filterState.activeOnly= !!$a?.checked;
+  };
+  [$c,$g,$s,$a].forEach(elm=>elm?.addEventListener("change", onChange));
+
+  // 적용 버튼: 워커 목록/매트릭스 재조회
+  document.getElementById("btnApplyFilters")?.addEventListener("click", async ()=>{
+    onChange();
+    localStorage.setItem("supraN_pci_filters", JSON.stringify(filterState));
+    await loadWorkerList();   // 자동완성도 필터 반영
+    await buildMatrix();      // 매트릭스 갱신
+  });
+
+  // 초기화 버튼
+  document.getElementById("btnResetFilters")?.addEventListener("click", async ()=>{
+    filterState.company = ""; filterState.group = ""; filterState.site = ""; filterState.activeOnly = true;
+    $c.value=""; $g.value=""; $s.value=""; $a.checked=true;
+    localStorage.removeItem("supraN_pci_filters");
+    await loadWorkerList();
+    await buildMatrix();
+  });
+}
+/* ▲ 추가 끝 */
