@@ -173,6 +173,10 @@ module.exports = function () {
   const ragRoute = require('../src/routes/ragRoute');
   app.use('/api/rag', ragRoute);
 
+  // ✅ RAG 라우트 추가
+const aiRagRoute = require('../routes/aiRagRoute');
+app.use('/api/rag', aiRagRoute);
+
   // 권한 가드: DB ENUM에 맞게 (중복 선언 방지: 한 번만 정의)
   function requireRole(roles = ['admin', 'editor']) {
     return (req, res, next) => {

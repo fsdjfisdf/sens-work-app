@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>S-WORKS RAG 콘솔</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./css/ai.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>S-WORKS RAG 콘솔</h1>
+    <p class="subtitle">work_log 기반 질의·요약 (RAG)</p>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <form id="ragForm" class="form-grid">
+        <label class="full">
+          <span class="label">질문</span>
+          <textarea id="q" rows="4" placeholder="예) HS 15L 라인의 LP Foup 치는 현상 원인과 조치 요약"></textarea>
+        </label>
+
+        <div class="grid-3">
+          <label>
+            <span class="label">기간(일)</span>
+            <input id="days" type="number" min="1" value="365" />
+          </label>
+          <label>
+            <span class="label">Prefilter</span>
+            <input id="prefilter" type="number" min="10" value="300" />
+          </label>
+          <label>
+            <span class="label">Top-K(유사도)</span>
+            <input id="topK" type="number" min="1" value="20" />
+          </label>
+        </div>
+
+        <div class="grid-3">
+          <label>
+            <span class="label">Answer Top-K</span>
+            <input id="answerTopK" type="number" min="1" value="8" />
+          </label>
+          <label>
+            <span class="label">Group</span>
+            <input id="filterGroup" type="text" placeholder="예: PEE1" />
+          </label>
+          <label>
+            <span class="label">Site</span>
+            <input id="filterSite" type="text" placeholder="예: HS" />
+          </label>
+        </div>
+
+        <div class="grid-3">
+          <label>
+            <span class="label">Equipment Type</span>
+            <input id="filterEq" type="text" placeholder="예: SUPRA V" />
+          </label>
+          <label>
+            <span class="label">Work Type</span>
+            <input id="filterWork1" type="text" placeholder="SET UP / MAINT / RELOCATION" />
+          </label>
+          <label>
+            <span class="label">Work Type2</span>
+            <input id="filterWork2" type="text" placeholder="REP / ADJ / CLN / MON" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" id="btnSearch">검색 실행 (Ctrl/Cmd + Enter)</button>
+          <button type="button" id="btnReset" class="ghost">지우기</button>
+          <span id="status" class="status"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="result-header">
+        <h2>요약 결과</h2>
+        <button type="button" id="btnCopy" class="ghost sm">복사</button>
+      </div>
+      <pre id="answer" class="answer" aria-live="polite">아직 결과가 없습니다.</pre>
+      <details id="rawParams" class="details">
+        <summary>요청 파라미터</summary>
+        <pre id="params"></pre>
+      </details>
+    </section>
+
+    <section class="panel">
+      <div class="result-header">
+        <h2>근거 목록 (Top-K)</h2>
+        <button type="button" id="btnToggle" class="ghost sm">접기/펼치기</button>
+      </div>
+      <div id="evidences" class="table-wrap">
+        <!-- 동적 렌더링 -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>© S-WORKS RAG</span>
+  </footer>
+
+  <script src="./js/ai.js" defer></script>
+</body>
+</html>
