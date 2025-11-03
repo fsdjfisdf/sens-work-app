@@ -131,19 +131,6 @@ async function getContentsByIds(ids = []) {
   }
 }
 
-// dao에 추가 (FULLTEXT 있으면 MATCH, 없으면 LIKE)
-async function keywordCandidates(q, limit = 200){
-  if(!q || !String(q).trim()) return new Set();
-  const conn = await pool.getConnection();
-  try{
-    const [rows] = await conn.query(
-      `SELECT id FROM rag_chunks
-       WHERE MATCH(content) AGAINST (? IN NATURAL LANGUAGE MODE)
-       ORDER BY id DESC LIMIT ?`, [q, limit]
-    );
-    return new Set(rows.map(r => r.id));
-  } finally { conn.release(); }
-}
 
 
 
@@ -151,5 +138,4 @@ module.exports = {
   prefilterCandidates,
   getEmbeddingsByIds,
   getContentsByIds,
-  keywordCandidates,
 };
