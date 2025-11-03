@@ -18,25 +18,31 @@ function float32ToBuffer(arr) {
 }
 
 async function fetchTotalCount(conn) {
-  const [r] = await conn.query(`SELECT COUNT(*) AS cnt FROM v_rag_source`);
+  // rag_chunks 기준으로 스캔(뷰 계산 비용↓)
+  const [r] = await conn.query(`
+    SELECT COUNT(*) AS cnt
+    FROM rag_chunks c
+    JOIN v_rag_source s ON s.id = c.src_id
+  `);
   return r[0].cnt;
 }
 
 async function fetchWindow(conn, offset, limit) {
   const [rows] = await conn.query(
     `
-    SELECT s.id AS chunk_id,
-           s.content,
-           SHA1(s.content)     AS new_hash,
-           e.content_hash      AS prev_hash
-    FROM v_rag_source s
-    LEFT JOIN rag_embeddings e ON e.chunk_id = s.id
-    ORDER BY s.id
+    SELECT
+      c.id              AS chunk_id,     -- ✅ 청크ID
+      s.content,
+      SHA1(s.content)   AS new_hash,
+      e.content_hash    AS prev_hash
+    FROM rag_chunks c
+    JOIN v_rag_source s ON s.id = c.src_id
+    LEFT JOIN rag_embeddings e ON e.chunk_id = c.id
+    ORDER BY c.id
     LIMIT ? OFFSET ?
     `,
     [limit, offset]
   );
-  // 변경된 것만 반환
   return rows.filter(r => !r.prev_hash || r.prev_hash !== r.new_hash);
 }
 

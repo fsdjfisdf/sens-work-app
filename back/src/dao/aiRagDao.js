@@ -51,15 +51,26 @@ function addFilters(where, params, f = {}) {
 async function prefilterCandidates({ q, limit = 300, filters = {} }) {
   const where = [];
   const params = [];
+  const { days, group, site, equipment_type, work_type, work_type2 } = filters || {};
 
-  addFilters(where, params, filters); // days / group / site / equipment_type / work_type / work_type2
+  // v_rag_source s (정규화/날짜/메타), rag_chunks c (청크ID), 매핑: c.src_id = s.id
+  if (days && Number(days) > 0) {
+    where.push('s.task_date >= (CURRENT_DATE - INTERVAL ? DAY)');
+    params.push(Number(days));
+  }
+  if (group)           { where.push(`CONVERT(s.\`group\` USING utf8mb4) COLLATE utf8mb4_unicode_ci = ?`); params.push(group); }
+  if (site)            { where.push(`CONVERT(s.site USING utf8mb4) COLLATE utf8mb4_unicode_ci = ?`); params.push(site); }
+  if (equipment_type)  { where.push(`CONVERT(s.equipment_type_norm USING utf8mb4) COLLATE utf8mb4_unicode_ci = ?`); params.push(equipment_type); }
+  if (work_type)       { where.push(`CONVERT(s.work_type USING utf8mb4) COLLATE utf8mb4_unicode_ci = ?`); params.push(work_type); }
+  if (work_type2)      { where.push(`CONVERT(s.work_type2 USING utf8mb4) COLLATE utf8mb4_unicode_ci = ?`); params.push(work_type2); }
 
-  // ❌ content LIKE 는 프리필터에서 사용하지 않는다 (후보 말림 방지)
+  // ✅ 프리필터에서는 LIKE 금지(후보 말림 방지). 오직 메타/기간만.
   const sql = `
-    SELECT s.id
-    FROM v_rag_source s
+    SELECT c.id
+    FROM rag_chunks c
+    JOIN v_rag_source s ON s.id = c.src_id
     ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-    ORDER BY s.task_date DESC
+    ORDER BY s.task_date DESC, c.id DESC
     LIMIT ?
   `;
   params.push(Number(limit));
@@ -67,11 +78,12 @@ async function prefilterCandidates({ q, limit = 300, filters = {} }) {
   const conn = await pool.getConnection();
   try {
     const [rows] = await conn.query(sql, params);
-    return rows.map(r => r.id);
+    return rows.map(r => r.id); // ← 이제 항상 청크ID
   } finally {
     conn.release();
   }
 }
+
 
 /**
  * 임베딩 로드
@@ -110,7 +122,7 @@ async function getContentsByIds(ids = []) {
     const placeholders = ids.map(() => '?').join(',');
     const sql = `
       SELECT
-        s.id,
+        c.id,                     -- 청크ID
         s.content,
         s.task_date,
         s.equipment_type_norm,
@@ -118,14 +130,14 @@ async function getContentsByIds(ids = []) {
         s.site,
         s.work_type,
         s.work_type2
-      FROM v_rag_source s
-      WHERE s.id IN (${placeholders})
-      ORDER BY FIELD(s.id, ${placeholders})
+      FROM rag_chunks c
+      JOIN v_rag_source s ON s.id = c.src_id
+      WHERE c.id IN (${placeholders})
+      ORDER BY FIELD(c.id, ${placeholders})
     `;
-    // ids 를 두 번 전달 (IN, FIELD 순서 유지)
     const args = [...ids, ...ids];
     const [rows] = await conn.query(sql, args);
-    return rows;
+    return rows; // controller에서 p.id 등 그대로 사용 가능
   } finally {
     conn.release();
   }
