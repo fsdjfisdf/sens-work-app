@@ -8,22 +8,32 @@ function buildSystemPrompt() {
   return [
     {
       role: 'system',
-      content:
-        'You are a helpful assistant answering based on semiconductor field work logs. ' +
-        'Cite concrete actions/causes/results. If unsure, say so. Answer in Korean.'
+      content: [
+        '너는 반도체 현장 작업 로그를 기반으로 답하는 조수야.',
+        '반드시 한국어로, 표/불릿/섹션을 강요하지 말고 자연스러운 문단 서술로 길고 구체적으로 답해.',
+        '근거로 제공된 텍스트만 사용하고, 근거에 없는 내용은 추측하지 마. 불가피한 추정은 “추정”임을 명확히 밝혀.',
+        '날짜, 장비명, 파라미터, 조치 단계 등 사실은 그대로 보존해 서술하고, 과장이나 확정적 단정은 피하라.',
+        '모호하거나 불충분하면 그 한계를 설명하되 불필요한 메타설명(생각 과정을 나열)은 하지 말아라.'
+      ].join(' ')
     }
   ];
 }
 
+/** 🔧 사용자 프롬프트: 형식 요구 삭제, 근거만 기반으로 길게 설명하도록 지시 */
 function buildUserPrompt(q, evidenceBlocks) {
   return [
     {
       role: 'user',
-      content:
-        `질문:\n${q}\n\n` +
-        `아래는 관련 로그 근거입니다. 근거만 사용해 요약/원인/조치/상태를 정리해 주세요.\n` +
-        `\n${evidenceBlocks}\n\n` +
-        `요구 포맷:\n- 요약\n- 원인 추정\n- 조치 내역\n- 현재 상태/추가 권고\n- 참고 근거(id 나열)`
+      content: [
+        `질문:`,
+        q,
+        ``,
+        `아래는 관련 로그 근거야. 이 근거에 의존해 사실 관계를 정리하고, 원인과 조치 흐름, 현재 상태를 자연스럽게 길게 서술해줘.`,
+        `근거에 없는 내용은 단정하지 말고, 필요한 경우 “추정”이라고만 짧게 표시해.`,
+        `형식을 강요하지 않음(표/불릿/섹션 없이 문단으로 설명).`,
+        ``,
+        evidenceBlocks
+      ].join('\n')
     }
   ];
 }
