@@ -52,13 +52,9 @@ async function prefilterCandidates({ q, limit = 300, filters = {} }) {
   const where = [];
   const params = [];
 
-  addFilters(where, params, filters);
+  addFilters(where, params, filters); // days / group / site / equipment_type / work_type / work_type2
 
-  if (q && String(q).trim()) {
-    where.push(`${asUnicode('s.content')} LIKE ?`);
-    params.push(`%${String(q).trim()}%`);
-  }
-
+  // ❌ content LIKE 는 프리필터에서 사용하지 않는다 (후보 말림 방지)
   const sql = `
     SELECT s.id
     FROM v_rag_source s
@@ -135,8 +131,25 @@ async function getContentsByIds(ids = []) {
   }
 }
 
+// dao에 추가 (FULLTEXT 있으면 MATCH, 없으면 LIKE)
+async function keywordCandidates(q, limit = 200){
+  if(!q || !String(q).trim()) return new Set();
+  const conn = await pool.getConnection();
+  try{
+    const [rows] = await conn.query(
+      `SELECT id FROM rag_chunks
+       WHERE MATCH(content) AGAINST (? IN NATURAL LANGUAGE MODE)
+       ORDER BY id DESC LIMIT ?`, [q, limit]
+    );
+    return new Set(rows.map(r => r.id));
+  } finally { conn.release(); }
+}
+
+
+
 module.exports = {
   prefilterCandidates,
   getEmbeddingsByIds,
   getContentsByIds,
+  keywordCandidates,
 };

@@ -2,6 +2,9 @@
 const { openai, MODELS } = require('../../config/openai');
 const dao = require('../dao/aiRagDao');
 const svc = require('../services/aiRagIngestService');
+const kwSet = await dao.keywordCandidates(q, 200);
+const ranked = svc.rankByCosine(queryVec, embedRows, (id)=> kwSet.has(id) ? 0.05 : 0); // +0.05 보너스 예시
+
 
 function buildSystemPrompt() {
   return [

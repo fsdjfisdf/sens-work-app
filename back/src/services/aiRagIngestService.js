@@ -26,12 +26,12 @@ async function embedQuery(q) {
 }
 
 function rankByCosine(queryVec, embedRows, keywordBonusFn) {
-  return embedRows.map(r => {
+    return embedRows.map(r => {
     const vec = bufferToFloat32Array(r.embedding);
     const score = cosineSim(queryVec, vec);
-    const bonus = keywordBonusFn ? keywordBonusFn(r.chunk_id) : 0;
-    return { id: r.chunk_id, score: score + bonus };
-  }).sort((a,b) => b.score - a.score);
+    const bonus = keywordBonusFn ? keywordBonusFn(r.id) : 0;
+    return { id: r.id, score: score + bonus };
+    }).sort((a,b) => b.score - a.score);
 }
 
 function packContext(contents, topIds, topK = 8) {
