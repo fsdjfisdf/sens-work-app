@@ -41,6 +41,10 @@ function addFilters(where, params, f = {}) {
     where.push(`${asUnicode('s.work_type2')} = ?`);
     params.push(work_type2);
   }
+  if (person) {
+    where.push(`REPLACE(s.people_norm,' ','') LIKE REPLACE(CONCAT('%', ? , '%'),' ','')`);
+    params.push(person);
+  }
 }
 
 /**
