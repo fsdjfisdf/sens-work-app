@@ -169,12 +169,10 @@ module.exports = function () {
   // (위쪽 아무 데서든) 한 번만 선언
   const workLogController = require('../src/controllers/workLogController');
 
-  // RAG Route (JSON 에러 응답을 위해 전역 핸들러 아래가 아닌 여기서 마운트)
-  const ragRoute = require('../src/routes/ragRoute');
-  app.use('/api/rag', ragRoute);
-
 const aiRagRoute = require('../routes/aiRagRoute');
 app.use('/api/rag', aiRagRoute);
+
+
 
   // 권한 가드: DB ENUM에 맞게 (중복 선언 방지: 한 번만 정의)
   function requireRole(roles = ['admin', 'editor']) {

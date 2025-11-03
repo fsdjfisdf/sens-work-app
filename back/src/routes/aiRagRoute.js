@@ -1,8 +1,11 @@
 // back/routes/aiRagRoute.js
 const express = require('express');
 const router = express.Router();
-const ctrl = require('../src/controllers/aiRagController'); // 경로 주의
 
-router.post('/ask', ctrl.ask);
+// 컨트롤러 경로: back/src/controllers/aiRagController.js
+const { ask } = require('../src/controllers/aiRagController');
+
+// POST /api/rag/ask
+router.post('/ask', ask);
 
 module.exports = router;
