@@ -4,25 +4,25 @@ const { pool } = require('../../config/database');
 const COLL = 'utf8mb4_unicode_ci';
 const asUnicode = (expr) => `CONVERT(${expr} USING utf8mb4) COLLATE ${COLL}`;
 
-/** WHERE 절 빌더 — 절대기간(date_from/to) 우선, 없을 때만 days 사용 */
+/** WHERE 구성 — 절대기간 우선, 없으면 days */
 function addFilters(where, params, f = {}) {
   const {
     days, group, site, equipment_type, work_type, work_type2,
-    person, date_from, date_to
-  } = f;
+    person, date_from, date_to,
+  } = f || {};
 
   // 1) 절대기간 우선
   if (date_from) { where.push('s.task_date >= ?'); params.push(date_from); }
   if (date_to)   { where.push('s.task_date <  ?'); params.push(date_to); }
 
-  // 2) 상대기간(days)은 절대기간 없을 때만
+  // 2) days는 절대기간이 없을 때만
   if (!date_from && !date_to && days && Number(days) > 0) {
     where.push('s.task_date >= (CURRENT_DATE - INTERVAL ? DAY)');
     params.push(Number(days));
   }
 
   if (group)          { where.push(`${asUnicode('s.`group`')} = ?`); params.push(group); }
-  if (site)           { where.push(`${asUnicode('s.`site`')} = ?`); params.push(site); }
+  if (site)           { where.push(`${asUnicode('s.`site`')} = ?`);  params.push(site); }
   if (equipment_type) { where.push(`${asUnicode('s.equipment_type_norm')} = ?`); params.push(equipment_type); }
   if (work_type)      { where.push(`${asUnicode('s.work_type')} = ?`); params.push(work_type); }
   if (work_type2)     { where.push(`${asUnicode('s.work_type2')} = ?`); params.push(work_type2); }
@@ -81,18 +81,17 @@ async function getEmbeddingsByIds(ids = []) {
       `,
       [ids]
     );
-    // 서비스에서 r.id로 읽게 매핑
     return rows.map(r => ({
       id: r.chunk_id,
       dim: r.dim,
-      embedding: r.embedding
+      embedding: r.embedding,
     }));
   } finally {
     conn.release();
   }
 }
 
-/** 컨텐츠 로드 — 청크ID → v_rag_source 조인, 입력순서 유지 */
+/** 컨텐츠 로드 — rag_chunks.id → v_rag_source 매핑, 입력순서 유지 */
 async function getContentsByIds(ids = []) {
   if (!ids.length) return [];
   const placeholders = ids.map(() => '?').join(',');
@@ -126,5 +125,5 @@ async function getContentsByIds(ids = []) {
 module.exports = {
   prefilterCandidates,
   getEmbeddingsByIds,
-  getContentsByIds
+  getContentsByIds,
 };
