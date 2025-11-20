@@ -108,7 +108,7 @@ exports.BASELINE = {
 
 /** 인정 설비 타입 */
 exports.ALLOWED_EQUIP_TYPES = [
-  "ECOLITE 300", "ECOLITE 400", "ECOLITE 3000", "ECOLITE XP"
+  "ECOLITE 300", "ECOLITE 400", "ECOLITE 3000", "ECOLITE XP", "TERA21"
 ];
 
 /** 공백/기호/대소문자 흡수용 */

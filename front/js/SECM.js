@@ -207,6 +207,9 @@ const additionalEngineers = [
     { NAME: '손상일', GROUP: 'PEE2', SITE: 'PT', HIRE: '2024-04-22', resignation_date: '2025-10-10', COMPANY: 'SE&I' },
     { NAME: '민동찬', GROUP: 'PEE2', SITE: 'PT', HIRE: '2025-02-10', resignation_date: '2025-10-10', COMPANY: 'SE&I' },
     { NAME: '정지혁', GROUP: 'PEE1', SITE: 'HS', HIRE: '2024-08-19', resignation_date: '2025-08-22', COMPANY: 'SE&I' },
+    { NAME: '김동현', GROUP: 'PEE2', SITE: 'PT', HIRE: '2021-08-30', resignation_date: '2025-10-31', COMPANY: 'SE&I' },
+    { NAME: '정서후', GROUP: 'PEE2', SITE: 'PT', HIRE: '2025-02-10', resignation_date: '2025-11-07', COMPANY: 'SE&I' },
+    { NAME: '강승현', GROUP: 'PEE2', SITE: 'PT', HIRE: '2024-04-22', resignation_date: '2025-11-14', COMPANY: 'SE&I' },
 ];
 
 // 엔지니어 수 계산 함수 업데이트

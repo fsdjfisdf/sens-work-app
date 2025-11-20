@@ -221,7 +221,7 @@ function getFormattedMultiLevel(level) {
         };
   
         const currentMonthIndex = new Date().getMonth();
-        const monthlyCapaLabels = ['24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN', '25YFEB', '25YMAR', '25YAPR', '25YMAY', '25YJUN', '25YJUL', '25YAUG'].slice(0,);
+        const monthlyCapaLabels = ['24YDEC','25YJAN', '25YFEB', '25YMAR', '25YAPR', '25YMAY', '25YJUN', '25YJUL', '25YAUG', '25YSEP', '25YOCT', '25YNOV', '25YDEC'].slice(0,);
         const monthlyCapaData = monthlyCapaLabels.map(label => userInfo[label] ? (userInfo[label] * 100).toFixed(1) : 0);
   
         // 그래프 생성
@@ -601,10 +601,10 @@ function calculateMonthlyWorkHoursByMonth(workLogs) {
 function renderMonthlyWorkHoursChart(monthlyHours) {
   const maxHours = Math.max(...monthlyHours) * 1.2;
   const labels = [
-    '2024-08', '2024-09', '2024-10', '2024-11',
+    '2024-11',
     '2024-12', '2025-01', '2025-02', '2025-03',
     '2025-04', '2025-05', '2025-06', '2025-07',
-    '2025-08', '2025-09'
+    '2025-08', '2025-09', '2025-10', '2025-11', '2025-12'
   ]; // ← 총 14개
 
   const ctx = document.getElementById('monthlyWorkHoursChart').getContext('2d');
