@@ -207,7 +207,7 @@ const additionalEngineers = [
     { NAME: '손상일', GROUP: 'PEE2', SITE: 'PT', HIRE: '2024-04-22', resignation_date: '2025-10-10', COMPANY: 'SE&I' },
     { NAME: '민동찬', GROUP: 'PEE2', SITE: 'PT', HIRE: '2025-02-10', resignation_date: '2025-10-10', COMPANY: 'SE&I' },
     { NAME: '정지혁', GROUP: 'PEE1', SITE: 'HS', HIRE: '2024-08-19', resignation_date: '2025-08-22', COMPANY: 'SE&I' },
-    { NAME: '김동현', GROUP: 'PEE2', SITE: 'PT', HIRE: '2021-08-30', resignation_date: '2025-10-31', COMPANY: 'SE&I' },
+    { NAME: '김동현', GROUP: 'PEE2', SITE: 'PT', HIRE: '2021-08-30', resignation_date: '2025-10-30', COMPANY: 'SE&I' },
     { NAME: '정서후', GROUP: 'PEE2', SITE: 'PT', HIRE: '2025-02-10', resignation_date: '2025-11-07', COMPANY: 'SE&I' },
     { NAME: '강승현', GROUP: 'PEE2', SITE: 'PT', HIRE: '2024-04-22', resignation_date: '2025-11-14', COMPANY: 'SE&I' },
 ];
@@ -1065,7 +1065,7 @@ function calculateMonthlyEngineerCount(data) {
 
 // Monthly CAPA Graph 데이터 처리
 const currentMonth = new Date().getMonth();
-const monthlyCapaLabels = ['24YJUL', '24YAUG', '24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN','25YFEB','25YMAR','25YAPR','25YMAY','25YJUN', '25YJUL', '25YAUG'].slice(0,);
+const monthlyCapaLabels = ['24YSEP', '24YOCT', '24YNOV', '24YDEC','25YJAN','25YFEB','25YMAR','25YAPR','25YMAY','25YJUN', '25YJUL', '25YAUG', '25YSEP', '25YOCT'].slice(0,);
 const monthlyCapaData = monthlyCapaLabels.map(label => {
     const capaValues = data.map(row => row[label]).filter(value => value !== null);
     return capaValues.reduce((sum, value) => sum + value, 0) / capaValues.length;
