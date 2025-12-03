@@ -172,6 +172,9 @@ module.exports = function () {
 const aiRagRoute = require("../src/routes/aiRagRoute");
 app.use("/api/rag", aiRagRoute);
 
+const tsRagRoute = require('./src/routes/tsRagRoute');
+app.use('/api/ts-rag', tsRagRoute);
+
 
 
   // 권한 가드: DB ENUM에 맞게 (중복 선언 방지: 한 번만 정의)
