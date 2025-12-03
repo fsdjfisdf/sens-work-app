@@ -172,7 +172,7 @@ module.exports = function () {
 const aiRagRoute = require("../src/routes/aiRagRoute");
 app.use("/api/rag", aiRagRoute);
 
-const tsRagRoute = require('./src/routes/tsRagRoute');
+const tsRagRoute = require('../src/routes/tsRagRoute');
 app.use('/api/ts-rag', tsRagRoute);
 
 
