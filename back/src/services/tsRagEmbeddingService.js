@@ -123,6 +123,8 @@ async function searchSimilarSteps({
 async function searchSimilarWorkLogs({
   question,
   equipment_type,
+  equipment_name,
+  worker_name,
   topK = 5,
   candidateLimit = 300,
 }) {
@@ -140,6 +142,8 @@ async function searchSimilarWorkLogs({
   // 2) 후보 임베딩 + 메타 가져오기 (WORK_LOG 전용)
   const candidates = await dao.fetchWorkLogEmbeddingsWithMeta({
     equipment_type,
+    equipment_name,
+    worker_name,
     limit: candidateLimit,
   });
 
@@ -188,23 +192,50 @@ async function answerQuestion({
   alarm_key,
   topK = 5,
   candidateLimit = 300,
+  mode, // 'ALARM_ONLY' | 'WORK_LOG_ONLY' | 'MIXED'
 }) {
-  // 1) 알람 TS 근거 검색 (기존 그대로)
-  const { hits: alarmHits } = await searchSimilarSteps({
-    question,
-    equipment_type,
-    alarm_key,
-    topK,
-    candidateLimit,
-  });
+  // 기본 모드 자동 추론
+  let effectiveMode = mode;
+  if (!effectiveMode) {
+    const q = question || '';
+    const hasAlarmKey = !!alarm_key;
+    const looksLikeAlarm = /알람|alarm/i.test(q);
+    const looksLikeHistory = /작업이력|history|로그|log|EPAB\d{3}/i.test(q);
+    const looksLikePerson = /정현우|엔지니어|engineer/i.test(q);
 
-  // 2) 작업이력 근거 검색 (새로 추가)
-  const { hits: workLogHits } = await searchSimilarWorkLogs({
-    question,
-    equipment_type,
-    topK: 5,            // 필요하면 따로 숫자 조절
-    candidateLimit: 300,
-  });
+    if (hasAlarmKey || looksLikeAlarm) {
+      effectiveMode = 'ALARM_ONLY';
+    } else if (looksLikeHistory || looksLikePerson) {
+      effectiveMode = 'WORK_LOG_ONLY';
+    } else {
+      effectiveMode = 'MIXED';
+    }
+  }
+
+  const useAlarm = effectiveMode !== 'WORK_LOG_ONLY';
+  const useWorkLog = effectiveMode !== 'ALARM_ONLY';
+
+  let alarmHits = [];
+  let workLogHits = [];
+
+  if (useAlarm) {
+    ({ hits: alarmHits } = await searchSimilarSteps({
+      question,
+      equipment_type,
+      alarm_key,
+      topK,
+      candidateLimit,
+    }));
+  }
+
+  if (useWorkLog) {
+    ({ hits: workLogHits } = await searchSimilarWorkLogs({
+      question,
+      equipment_type,
+      topK: 5,
+      candidateLimit: 300,
+    }));
+  }
 
   if (!alarmHits.length && !workLogHits.length) {
     return {

@@ -112,16 +112,32 @@ module.exports = {
 
 // 🔹 작업이력(WORK_LOG)용 임베딩 + 메타 조회
 //    - equipment_type 기준으로 필터 (필요하면 group/site 등 나중에 확장)
+// tsRagDao.js
+
 async function fetchWorkLogEmbeddingsWithMeta({
   equipment_type,
+  equipment_name,   // EPAB301 같은 거
+  worker_name,      // 정현우 같은 거
   limit = 500,
 }) {
   const where = ['c.source_type = "WORK_LOG"'];
   const params = [];
 
   if (equipment_type) {
-    where.push('c.equipment_type = ?');
+    where.push('w.equipment_type = ?');
     params.push(equipment_type);
+  }
+  if (equipment_name) {
+    where.push('w.equipment_name = ?');        // 정확히 일치
+    // 또는 LIKE '%EPAB301%' 로 바꿀 수도 있음
+    params.push(equipment_name);
+  }
+  if (worker_name) {
+    // (main)/(support) 제거된 형태로 LIKE 검색
+    where.push(
+      "REPLACE(REPLACE(w.task_man, '(main)',''), '(support)','') LIKE ?"
+    );
+    params.push(`%${worker_name}%`);
   }
 
   const sql = `
@@ -136,22 +152,30 @@ async function fetchWorkLogEmbeddingsWithMeta({
       c.src_id,
       c.equipment_type,
       c.title,
-      c.content
+      c.content,
+      w.equipment_name,
+      w.task_man,
+      w.task_date
     FROM rag_embeddings e
     JOIN rag_chunks c
       ON c.id = e.chunk_id
+    JOIN work_log w
+      ON c.source_type = 'WORK_LOG'
+     AND c.src_table = 'work_log'
+     AND c.src_id = w.id
     WHERE e.model = ?
       AND ${where.join(' AND ')}
-    ORDER BY c.id
+    ORDER BY w.task_date DESC
     LIMIT ?
   `;
 
-  params.unshift(MODELS.embedding);  // 맨 앞에 모델명
+  params.unshift(MODELS.embedding);
   params.push(Number(limit));
 
   const [rows] = await pool.query(sql, params);
   return rows;
 }
+
 
 module.exports = {
   findChunksWithoutEmbedding,
