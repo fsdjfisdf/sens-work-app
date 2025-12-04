@@ -418,7 +418,7 @@ async function handleAsk() {
   const equipment_type = equipmentTypeSelect.value || "";
   const alarm_key = alarmKeySelect.value || "";
   const topK = Number(topKInput.value) || 5;
-  const mode = "BOTH"; // 항상 알람 + 작업 이력 함께 사용
+
 
   if (!question) {
     setStatus("질문을 입력해 주세요.", "error");
@@ -446,7 +446,6 @@ async function handleAsk() {
     const body = {
       question,
       topK,
-      mode,              // ← BOTH
       equipment_type,
       alarm_key,
     };

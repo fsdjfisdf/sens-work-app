@@ -26,9 +26,9 @@ async function askTsRag(req, res) {
       question,
       equipment_type,
       alarm_key,
-      // 🔹 모드 (ALARM / WORK_LOG / BOTH)
-      mode,
-      // 🔹 WORK_LOG 필터
+      // 🔹 mode 제거
+
+      // WORK_LOG 필터
       task_date,
       date_from,
       date_to,
@@ -53,20 +53,20 @@ async function askTsRag(req, res) {
       question: question.trim(),
       equipment_type,
       alarm_key,
-      mode: mode || 'BOTH',  // 기본은 기존처럼 알람 모드
 
       // WORK_LOG 필터 매핑
       task_date,
       date_from,
       date_to,
       equipment_name,
-      worker_name: workers_clean, // 서비스에서는 worker_name으로 받게 했음
+      worker_name: workers_clean,
       group_name,
       site: group_site,
       work_type,
       setup_item,
       transfer_item,
       topK,
+      // 🔹 mode 안 넘김. 항상 BOTH 로 동작하도록 service 쪽에서 처리
     });
 
     res.json({
