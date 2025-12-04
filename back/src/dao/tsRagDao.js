@@ -5,14 +5,24 @@ const MODELS = require('../../config/openai').MODELS;
 // 🔹 아직 임베딩이 안 만들어진 rag_chunks (ALARM_STEP 전용) 조회
 async function findChunksWithoutEmbedding(limit = 100) {
   const sql = `
-    SELECT c.id, c.title, c.content, c.alarm_key, c.case_no, c.step_no,
-           c.equipment_type, c.alarm_group, c.module_main
+    SELECT
+      c.id,
+      c.title,
+      c.content,
+      c.alarm_key,
+      c.case_no,
+      c.step_no,
+      c.equipment_type,
+      c.alarm_group,
+      c.module_main,
+      c.source_type,
+      c.src_table,
+      c.src_id
     FROM rag_chunks c
     LEFT JOIN rag_embeddings e
       ON e.chunk_id = c.id
      AND e.model = ?
     WHERE e.id IS NULL
-      AND c.source_type = 'ALARM_STEP'
     ORDER BY c.id
     LIMIT ?
   `;
