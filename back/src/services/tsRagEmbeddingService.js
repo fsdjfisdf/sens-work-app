@@ -120,9 +120,6 @@ async function searchSimilarSteps({
   };
 }
 
-// back/src/services/tsRagEmbeddingService.js
-const { openai, MODELS } = require('../../config/openai');
-const dao = require('../dao/tsRagDao');
 
 // ... cosineSimilarity, buildMissingEmbeddings 등 기존 코드 유지
 
