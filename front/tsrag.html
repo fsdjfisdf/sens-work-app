@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>S-WORKS · AI Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="tsrag.css" />
+</head>
+<body>
+  <div class="ts-app">
+    <!-- 좌측 사이드바 -->
+    <aside class="ts-sidebar">
+      <div class="ts-sidebar-header">
+        <div class="ts-sidebar-logo">SEnS/I</div>
+        <div class="ts-sidebar-text">
+          <div class="ts-sidebar-title">SEnS/I</div>
+          <div class="ts-sidebar-subtitle">Alarm Assistant</div>
+        </div>
+      </div>
+
+      <button id="btnNewChat" class="ts-sidebar-new">
+        <span>＋ 새 알람 대화</span>
+      </button>
+
+      <div class="ts-sidebar-section-label">예시 질문</div>
+      <div class="ts-sidebar-convos">
+        <button
+          class="ts-sidebar-convo ts-sample"
+          data-q="SUPRA N에서 Pin Move Timeout 알람이 났을 때 어떤 순서로 점검해야 하나요?"
+        >
+          SUPRA N · Pin Move Timeout 점검 순서
+        </button>
+        <button
+          class="ts-sidebar-convo ts-sample"
+          data-q="Diff Temp Interlock이 발생했을 때 우선 확인해야 할 항목이 뭐예요?"
+        >
+          Diff Temp Interlock 우선 확인 항목
+        </button>
+      </div>
+
+      <div class="ts-sidebar-footer">
+        <div class="ts-sidebar-footline">S-WORKS · AI</div>
+        <div class="ts-sidebar-footdesc">SEnS/I</div>
+      </div>
+    </aside>
+
+    <!-- 우측 메인 -->
+    <div class="ts-main">
+      <!-- 상단 헤더 -->
+      <header class="ts-header">
+        <div class="ts-header-left">
+          <div class="ts-header-pill">
+            <span class="ts-header-dot"></span>
+            SEnS/I · AI
+          </div>
+          <div class="ts-header-title">
+            Chat
+          </div>
+          <div class="ts-header-subtitle">
+            PSK 설비의 알람/트러블슈팅 가이드를 기반으로, 실제 CASE · STEP 순서에 맞춰 답변합니다.
+          </div>
+        </div>
+
+        <div class="ts-header-right">
+          <div class="ts-header-filter">
+            <label class="ts-label-inline" for="equipmentTypeSelect">설비</label>
+            <select id="equipmentTypeSelect" class="ts-input-select">
+              <option value="">전체</option>
+              <option value="SUPRA N">SUPRA N</option>
+              <option value="SUPRA XP">SUPRA XP</option>
+              <option value="INTEGER">INTEGER</option>
+              <option value="PRECIA">PRECIA</option>
+              <option value="ECOLITE">ECOLITE</option>
+              <option value="GENEVA">GENEVA</option>
+            </select>
+          </div>
+
+          <div class="ts-header-filter">
+            <label class="ts-label-inline" for="alarmKeySelect">AlarmKey</label>
+            <select id="alarmKeySelect" class="ts-input-select">
+            <option value="">전체</option>
+            <option value="SUPRA N - Pin Move Timeout Alarm">SUPRA N - Pin Move Timeout Alarm</option>
+            <option value="SUPRA N - Diff Temp Interlock">SUPRA N - Diff Temp Interlock</option>
+            <option value="SUPRA N - EFEM Robot COM Error">SUPRA N - EFEM Robot COM Error</option>
+            <option value="SUPRA N - EFEM to CTC Communication Alarm">SUPRA N - EFEM to CTC Communication Alarm</option>
+            <option value="SUPRA N - Fast Vacuum Timeout Alarm">SUPRA N - Fast Vacuum Timeout Alarm</option>
+            <option value="SUPRA N - Fast Vent Timeout Alarm">SUPRA N - Fast Vent Timeout Alarm</option>
+            <option value="SUPRA N - Slow Vent Timeout Alarm">SUPRA N - Slow Vent Timeout Alarm</option>
+            <option value="SUPRA N - Leak Rate Over Alarm">SUPRA N - Leak Rate Over Alarm</option>
+            <option value="SUPRA N - Chamber Open Alarm">SUPRA N - Chamber Open Alarm</option>
+            <option value="SUPRA N - Chamber Temp Limit Alarm">SUPRA N - Chamber Temp Limit Alarm</option>
+            <option value="SUPRA N - Slow Vacuum Time Out Alarm">SUPRA N - Slow Vacuum Time Out Alarm</option>
+            <option value="SUPRA N - C/S Pin Move Timeout Alarm">SUPRA N - C/S Pin Move Timeout Alarm</option>
+            <option value="SUPRA N - CTC to PMC Communication Alarm">SUPRA N - CTC to PMC Communication Alarm</option>
+            <option value="SUPRA N - Door Valve Open/Close Timeout Alarm">SUPRA N - Door Valve Open/Close Timeout Alarm</option>
+            <option value="SUPRA N - EFEM FFU Limit Alarm">SUPRA N - EFEM FFU Limit Alarm</option>
+            <option value="SUPRA N - TM FFU Limit Alarm">SUPRA N - TM FFU Limit Alarm</option>
+            <option value="SUPRA N - Chamber PCW Limit Alarm">SUPRA N - Chamber PCW Limit Alarm</option>
+            <option value="SUPRA N - TM Robot Communication Alarm">SUPRA N - TM Robot Communication Alarm</option>
+            <option value="SUPRA N - Gas Stable Timeout Alarm">SUPRA N - Gas Stable Timeout Alarm</option>
+            <option value="SUPRA N - TM FFU Communication Fail Alarm">SUPRA N - TM FFU Communication Fail Alarm</option>
+            <option value="SUPRA N - TM Side Door Open Alarm">SUPRA N - TM Side Door Open Alarm</option>
+            <option value="SUPRA N - Device Net Communication Alarm">SUPRA N - Device Net Communication Alarm</option>
+            <option value="SUPRA N - EFEM Robot Wafer Sensor Alarm">SUPRA N - EFEM Robot Wafer Sensor Alarm</option>
+            <option value="SUPRA N - Gas Exhaust Alarm">SUPRA N - Gas Exhaust Alarm</option>
+            <option value="SUPRA N - Slit Door Close Time out Alarm">SUPRA N - Slit Door Close Time out Alarm</option>
+            <option value="SUPRA N - YASKAWA ROBOT Other Alarm">SUPRA N - YASKAWA ROBOT Other Alarm</option>
+            <option value="SUPRA N - EFEM FFU Fail Alarm">SUPRA N - EFEM FFU Fail Alarm</option>
+            </select>
+
+          </div>
+
+          <button id="btnBuildEmbeddings" class="ts-btn ts-btn-ghost ts-btn-sm">
+            ⚙️ Alarm Embedding (관리자 외 클릭 금지)
+          </button>
+        </div>
+      </header>
+
+      <!-- 중앙 채팅 영역 -->
+      <main class="ts-chat-layout">
+        <div class="ts-chat-column">
+          <div id="chatMessages" class="ts-chat-messages"></div>
+
+          <!-- 입력 영역 -->
+          <div class="ts-input-panel">
+            <div id="statusBox" class="ts-status ts-status-hidden"></div>
+
+            <div class="ts-suggest-row">
+              <span class="ts-suggest-label">추천 질문</span>
+              <button
+                class="ts-suggest-chip ts-sample"
+                data-q="Diff Temp Interlock이 발생했을 때 Heater Chuck과 Pin 관련해서 각각 어떤 점검을 먼저 해야 하나요?"
+              >
+                Diff Temp Interlock 점검 포인트
+              </button>
+            </div>
+
+            <div class="ts-input-row">
+              <div class="ts-input-box">
+                <textarea
+                  id="questionInput"
+                  class="ts-input-textarea"
+                  rows="1"
+                  placeholder="알람 상황, 증상, 조건 등을 자연어로 입력해 주세요. (Ctrl+Enter로 전송)"
+                ></textarea>
+              </div>
+              <button id="btnAsk" class="ts-btn ts-btn-primary">
+                전송
+              </button>
+            </div>
+
+            <div class="ts-input-footer">
+              <div class="ts-input-footer-left">
+                <span class="ts-input-tip">
+                  💡 현상까지 같이 적어주면 더 정확한 Step을 추천합니다.
+                </span>
+              </div>
+              <div class="ts-input-footer-right">
+                <label for="topKInput" class="ts-label-inline">참조 Step 수</label>
+                <input
+                  id="topKInput"
+                  type="number"
+                  class="ts-input-number"
+                  min="1"
+                  max="20"
+                  value="5"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 하단 푸터 -->
+      <footer class="ts-footer">
+        <div class="ts-footer-inner">
+          <span>S-WORKS · AI</span>
+          <span>Developed by / SEnS/I</span>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="tsrag.js"></script>
+</body>
+</html>
