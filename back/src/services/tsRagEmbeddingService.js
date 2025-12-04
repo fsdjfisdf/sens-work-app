@@ -99,7 +99,7 @@ async function searchSimilarSteps({
 
     return {
       score,
-      source_type: 'ALARM_STEP',  // 🔹 구분용
+      source_type: 'ALARM_STEP', // 🔹 구분용
       chunk_id: row.chunk_id,
       alarm_key: row.alarm_key,
       case_no: row.case_no,
@@ -217,13 +217,13 @@ async function searchSimilarWorkLogs({
 }
 
 /* ------------------------------------------------------------------ */
-/*  최종 답변 생성 (ALARM / WORK_LOG 모드)                             */
+/*  최종 답변 생성 (ALARM / WORK_LOG 동시 활용)                       */
 /* ------------------------------------------------------------------ */
 
 async function answerQuestion({
   question,
-  equipment_type,  // 알람 필터
-  alarm_key,       // 알람 필터
+  equipment_type, // 알람 필터
+  alarm_key, // 알람 필터
 
   // WORK_LOG 필터
   task_date,
@@ -283,42 +283,124 @@ async function answerQuestion({
     };
   }
 
+  // 🔹 1) 유사도 기반 모드 판단 (alarm / worklog / mixed)
+  const bestAlarmScore = alarmHits[0]?.score ?? 0;
+  const bestWorkScore = workHits[0]?.score ?? 0;
+
+  // margin: 어느 정도 차이가 날 때 “이 쪽이 더 가깝다”고 인정할지
+  const MARGIN = 0.05;
+  const MIN_GOOD_SCORE = 0.3;
+
+  let answerMode = 'mixed'; // 기본값
+
+  if (bestWorkScore >= MIN_GOOD_SCORE && bestWorkScore - bestAlarmScore > MARGIN) {
+    answerMode = 'worklog';
+  } else if (bestAlarmScore >= MIN_GOOD_SCORE && bestAlarmScore - bestWorkScore > MARGIN) {
+    answerMode = 'alarm';
+  } else {
+    answerMode = 'mixed';
+  }
+
   // 🔹 알람 TS 근거 텍스트
-  const alarmEvidence = alarmHits.length
-    ? alarmHits
-        .map((h, idx) => {
-          return [
+  let alarmEvidence;
+  if (!alarmHits.length) {
+    alarmEvidence = '- 관련 알람/트러블슈팅 TS 근거를 찾지 못했습니다.';
+  } else if (answerMode === 'worklog' && bestAlarmScore < bestWorkScore - MARGIN) {
+    // 작업 이력 쪽이 훨씬 강할 때는 알람은 참고용으로만 짧게
+    alarmEvidence =
+      '- 이번 질문에서는 작업 이력과 직접적으로 연결된 패턴이 더 강하게 나타나며,\n' +
+      '  알람 TS 근거는 참고 수준으로만 활용 가능합니다.\n\n' +
+      alarmHits
+        .slice(0, 2)
+        .map((h, idx) =>
+          [
             `[#A${idx + 1}] ${h.title || ''}`,
             `- AlarmKey: ${h.alarm_key}`,
             `- CASE / STEP: ${h.case_no} / ${h.step_no}`,
             `- Equipment: ${h.equipment_type}`,
-            '',
-            h.content || '',
-          ].join('\n');
-        })
-        .join('\n\n----------------------------------------\n\n')
-    : '- 관련 알람/트러블슈팅 TS 근거를 찾지 못했습니다.';
+          ].join('\n'),
+        )
+        .join('\n\n');
+  } else {
+    // 일반적인 경우: 상세 제공
+    alarmEvidence = alarmHits
+      .map((h, idx) => {
+        return [
+          `[#A${idx + 1}] ${h.title || ''}`,
+          `- AlarmKey: ${h.alarm_key}`,
+          `- CASE / STEP: ${h.case_no} / ${h.step_no}`,
+          `- Equipment: ${h.equipment_type}`,
+          '',
+          h.content || '',
+        ].join('\n');
+      })
+      .join('\n\n----------------------------------------\n\n');
+  }
 
   // 🔹 작업 이력 근거 텍스트
-  const workEvidence = workHits.length
-    ? workHits
-        .map((h, idx) => {
-          return [
+  let workEvidence;
+  if (!workHits.length) {
+    workEvidence = '- 조건에 맞는 실제 작업 이력 근거를 찾지 못했습니다.';
+  } else if (answerMode === 'alarm' && bestAlarmScore > bestWorkScore + MARGIN) {
+    // 알람 쪽이 훨씬 강할 때는 작업 이력은 사례 위주로 짧게
+    workEvidence =
+      '- 이번 질문에서는 TS 워크플로우와 직접 연결되는 알람 근거가 더 강하게 나타나며,\n' +
+      '  실제 작업 이력은 참고용 사례로 일부만 활용됩니다.\n\n' +
+      workHits
+        .slice(0, 2)
+        .map((h, idx) =>
+          [
             `[#W${idx + 1}] ${h.title || ''}`,
             `- DATE: ${h.task_date || ''}`,
             `- EQUIP: ${h.equipment_type || ''} - ${h.equipment_name || ''}`,
-            `- GROUP/SITE/LINE: ${h.group_name || ''} / ${h.site || ''} / ${h.line || ''}`,
             `- WORK_TYPE: ${h.work_type || ''}`,
-            `- SETUP_ITEM: ${h.setup_item || ''}`,
-            `- TRANSFER_ITEM: ${h.transfer_item || ''}`,
-            '',
-            h.content || '',
-          ].join('\n');
-        })
-        .join('\n\n----------------------------------------\n\n')
-    : '- 조건에 맞는 실제 작업 이력 근거를 찾지 못했습니다.';
+          ].join('\n'),
+        )
+        .join('\n\n');
+  } else {
+    // 일반적인 경우: 상세 제공
+    workEvidence = workHits
+      .map((h, idx) => {
+        return [
+          `[#W${idx + 1}] ${h.title || ''}`,
+          `- DATE: ${h.task_date || ''}`,
+          `- EQUIP: ${h.equipment_type || ''} - ${h.equipment_name || ''}`,
+          `- GROUP/SITE/LINE: ${h.group_name || ''} / ${h.site || ''} / ${h.line || ''}`,
+          `- WORK_TYPE: ${h.work_type || ''}`,
+          `- SETUP_ITEM: ${h.setup_item || ''}`,
+          `- TRANSFER_ITEM: ${h.transfer_item || ''}`,
+          '',
+          h.content || '',
+        ].join('\n');
+      })
+      .join('\n\n----------------------------------------\n\n');
+  }
 
-  const evidenceBlocks = `
+  // 🔹 evidenceBlocks 순서도 모드에 따라 변경
+  let evidenceBlocks;
+  if (answerMode === 'worklog') {
+    evidenceBlocks = `
+[실제 작업 이력 근거(우선)]
+${workEvidence}
+
+========================================
+
+[알람/트러블슈팅 가이드 근거(참고)]
+${alarmEvidence}
+`.trim();
+  } else if (answerMode === 'alarm') {
+    evidenceBlocks = `
+[알람/트러블슈팅 가이드 근거(우선)]
+${alarmEvidence}
+
+========================================
+
+[실제 작업 이력 근거(참고)]
+${workEvidence}
+`.trim();
+  } else {
+    // mixed
+    evidenceBlocks = `
 [알람/트러블슈팅 가이드 근거]
 ${alarmEvidence}
 
@@ -327,8 +409,9 @@ ${alarmEvidence}
 [실제 작업 이력 근거]
 ${workEvidence}
 `.trim();
+  }
 
-const systemPrompt = `
+  const systemPrompt = `
 당신은 SEnS/I의 반도체 장비를 담당하는 시니어 엔지니어입니다.
 알람 TS 가이드(워크플로우)와 실제 작업 이력 데이터를 함께 참고하여,
 현장 엔지니어에게 이해하기 쉽게 정리해 주는 역할을 합니다.
@@ -360,9 +443,14 @@ const systemPrompt = `
   충분한 분량으로 성의 있게 작성해 주십시오.
 `.trim();
 
-const userPrompt = `
+  const userPrompt = `
 질문:
 ${question}
+
+현재 검색 결과 요약(모델 참고용):
+- 우선 모드(answerMode): ${answerMode}
+- 알람 TS 최고 유사도: ${bestAlarmScore.toFixed(3)}
+- 작업 이력 최고 유사도: ${bestWorkScore.toFixed(3)}
 
 조건(참고용):
 - 설비 타입(equipment_type): ${equipment_type || '(지정 없음)'}
@@ -403,31 +491,28 @@ ${evidenceBlocks}
 근거로 확인되지 않는 내용은 임의로 만들어내지 말고 "근거 상으로는 확인이 어렵습니다."라고 명시해 주십시오.
 `.trim();
 
-
-
   const completion = await openai.chat.completions.create({
     model: MODELS.chat,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.4,   // 🔹 말투/서술 조금 더 자유롭게
+    temperature: 0.4, // 🔹 말투/서술 조금 더 자유롭게
   });
 
   const answer = completion.choices[0]?.message?.content ?? '';
 
-  // 🔹 프론트에서 한 번에 볼 수 있도록 hits 병합
+  // 🔹 프론트에서 한 번에 볼 수 있도록 hits 병합 + 유사도 기준 정렬
   const mergedHits = [
     ...alarmHits.map((h) => ({ ...h, source_type: h.source_type || 'ALARM_STEP' })),
     ...workHits.map((h) => ({ ...h, source_type: h.source_type || 'WORK_LOG' })),
-  ];
+  ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
   return {
     answer,
     hits: mergedHits,
   };
 }
-
 
 module.exports = {
   buildMissingEmbeddings,
