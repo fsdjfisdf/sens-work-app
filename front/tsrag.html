@@ -22,73 +22,76 @@
         <span>＋ 새 대화</span>
       </button>
 
-              <div class="ts-header-right">
-          <div class="ts-header-filter">
-            <label class="ts-label-inline" for="equipmentTypeSelect">설비 타입</label>
-            <select id="equipmentTypeSelect" class="ts-input-select">
-              <option value="">전체</option>
-              <option value="SUPRA N">SUPRA N</option>
-              <option value="SUPRA XP">SUPRA XP</option>
-              <option value="INTEGER Plus">INTEGER Plus</option>
-              <option value="PRECIA">PRECIA</option>
-              <option value="ECOLITE 300">ECOLITE 300</option>
-              <option value="ECOLITE 3000">ECOLITE 3000</option>
-              <option value="GENEVA">GENEVA</option>
-              <option value="HDW">HDW</option>
-            </select>
-          </div>
-
-          <div class="ts-header-filter">
-            <label class="ts-label-inline" for="alarmKeySelect">AlarmKey</label>
-            <select id="alarmKeySelect" class="ts-input-select">
-              <option value="">전체</option>
-              <option value="SUPRA N - Pin Move Timeout Alarm">SUPRA N - Pin Move Timeout Alarm</option>
-              <option value="SUPRA N - Diff Temp Interlock">SUPRA N - Diff Temp Interlock</option>
-              <option value="SUPRA N - EFEM Robot COM Error">SUPRA N - EFEM Robot COM Error</option>
-              <option value="SUPRA N - EFEM to CTC Communication Alarm">SUPRA N - EFEM to CTC Communication Alarm</option>
-              <option value="SUPRA N - Fast Vacuum Timeout Alarm">SUPRA N - Fast Vacuum Timeout Alarm</option>
-              <option value="SUPRA N - Fast Vent Timeout Alarm">SUPRA N - Fast Vent Timeout Alarm</option>
-              <option value="SUPRA N - Slow Vent Timeout Alarm">SUPRA N - Slow Vent Timeout Alarm</option>
-              <option value="SUPRA N - Leak Rate Over Alarm">SUPRA N - Leak Rate Over Alarm</option>
-              <option value="SUPRA N - Chamber Open Alarm">SUPRA N - Chamber Open Alarm</option>
-              <option value="SUPRA N - Chamber Temp Limit Alarm">SUPRA N - Chamber Temp Limit Alarm</option>
-              <option value="SUPRA N - Slow Vacuum Time Out Alarm">SUPRA N - Slow Vacuum Time Out Alarm</option>
-              <option value="SUPRA N - C/S Pin Move Timeout Alarm">SUPRA N - C/S Pin Move Timeout Alarm</option>
-              <option value="SUPRA N - CTC to PMC Communication Alarm">SUPRA N - CTC to PMC Communication Alarm</option>
-              <option value="SUPRA N - Door Valve Open/Close Timeout Alarm">SUPRA N - Door Valve Open/Close Timeout Alarm</option>
-              <option value="SUPRA N - EFEM FFU Limit Alarm">SUPRA N - EFEM FFU Limit Alarm</option>
-              <option value="SUPRA N - TM FFU Limit Alarm">SUPRA N - TM FFU Limit Alarm</option>
-              <option value="SUPRA N - Chamber PCW Limit Alarm">SUPRA N - Chamber PCW Limit Alarm</option>
-              <option value="SUPRA N - TM Robot Communication Alarm">SUPRA N - TM Robot Communication Alarm</option>
-              <option value="SUPRA N - Gas Stable Timeout Alarm">SUPRA N - Gas Stable Timeout Alarm</option>
-              <option value="SUPRA N - TM FFU Communication Fail Alarm">SUPRA N - TM FFU Communication Fail Alarm</option>
-              <option value="SUPRA N - TM Side Door Open Alarm">SUPRA N - TM Side Door Open Alarm</option>
-              <option value="SUPRA N - Device Net Communication Alarm">SUPRA N - Device Net Communication Alarm</option>
-              <option value="SUPRA N - EFEM Robot Wafer Sensor Alarm">SUPRA N - EFEM Robot Wafer Sensor Alarm</option>
-              <option value="SUPRA N - Gas Exhaust Alarm">SUPRA N - Gas Exhaust Alarm</option>
-              <option value="SUPRA N - Slit Door Close Time out Alarm">SUPRA N - Slit Door Close Time out Alarm</option>
-              <option value="SUPRA N - YASKAWA ROBOT Other Alarm">SUPRA N - YASKAWA ROBOT Other Alarm</option>
-              <option value="SUPRA N - EFEM FFU Fail Alarm">SUPRA N - EFEM FFU Fail Alarm</option>
-            </select>
-          </div>
-
-          <div class="ts-header-filter">
-            <label class="ts-label-inline" for="topKInput">참조 개수</label>
-            <input
-              id="topKInput"
-              type="number"
-              class="ts-input-number"
-              min="1"
-              max="20"
-              value="5"
-            />
-          </div>
-
-          <button id="btnBuildEmbeddings" class="ts-btn ts-btn-ghost ts-btn-sm">
-            ⚙️ Embedding (관리자용)
-          </button>
+      <!-- 상단 필터 박스 -->
+      <div class="ts-header-right">
+        <div class="ts-header-filter">
+          <label class="ts-label-inline" for="equipmentTypeSelect">설비 타입</label>
+          <select id="equipmentTypeSelect" class="ts-input-select">
+            <option value="">전체</option>
+            <option value="SUPRA N">SUPRA N</option>
+            <option value="SUPRA XP">SUPRA XP</option>
+            <option value="INTEGER Plus">INTEGER Plus</option>
+            <option value="PRECIA">PRECIA</option>
+            <option value="ECOLITE 300">ECOLITE 300</option>
+            <option value="ECOLITE 3000">ECOLITE 3000</option>
+            <option value="GENEVA">GENEVA</option>
+            <option value="HDW">HDW</option>
+          </select>
         </div>
-            <section id="workLogFilters" class="ts-wlog-filters">
+
+        <div class="ts-header-filter">
+          <label class="ts-label-inline" for="alarmKeySelect">AlarmKey</label>
+          <select id="alarmKeySelect" class="ts-input-select">
+            <option value="">전체</option>
+            <option value="SUPRA N - Pin Move Timeout Alarm">SUPRA N - Pin Move Timeout Alarm</option>
+            <option value="SUPRA N - Diff Temp Interlock">SUPRA N - Diff Temp Interlock</option>
+            <option value="SUPRA N - EFEM Robot COM Error">SUPRA N - EFEM Robot COM Error</option>
+            <option value="SUPRA N - EFEM to CTC Communication Alarm">SUPRA N - EFEM to CTC Communication Alarm</option>
+            <option value="SUPRA N - Fast Vacuum Timeout Alarm">SUPRA N - Fast Vacuum Timeout Alarm</option>
+            <option value="SUPRA N - Fast Vent Timeout Alarm">SUPRA N - Fast Vent Timeout Alarm</option>
+            <option value="SUPRA N - Slow Vent Timeout Alarm">SUPRA N - Slow Vent Timeout Alarm</option>
+            <option value="SUPRA N - Leak Rate Over Alarm">SUPRA N - Leak Rate Over Alarm</option>
+            <option value="SUPRA N - Chamber Open Alarm">SUPRA N - Chamber Open Alarm</option>
+            <option value="SUPRA N - Chamber Temp Limit Alarm">SUPRA N - Chamber Temp Limit Alarm</option>
+            <option value="SUPRA N - Slow Vacuum Time Out Alarm">SUPRA N - Slow Vacuum Time Out Alarm</option>
+            <option value="SUPRA N - C/S Pin Move Timeout Alarm">SUPRA N - C/S Pin Move Timeout Alarm</option>
+            <option value="SUPRA N - CTC to PMC Communication Alarm">SUPRA N - CTC to PMC Communication Alarm</option>
+            <option value="SUPRA N - Door Valve Open/Close Timeout Alarm">SUPRA N - Door Valve Open/Close Timeout Alarm</option>
+            <option value="SUPRA N - EFEM FFU Limit Alarm">SUPRA N - EFEM FFU Limit Alarm</option>
+            <option value="SUPRA N - TM FFU Limit Alarm">SUPRA N - TM FFU Limit Alarm</option>
+            <option value="SUPRA N - Chamber PCW Limit Alarm">SUPRA N - Chamber PCW Limit Alarm</option>
+            <option value="SUPRA N - TM Robot Communication Alarm">SUPRA N - TM Robot Communication Alarm</option>
+            <option value="SUPRA N - Gas Stable Timeout Alarm">SUPRA N - Gas Stable Timeout Alarm</option>
+            <option value="SUPRA N - TM FFU Communication Fail Alarm">SUPRA N - TM FFU Communication Fail Alarm</option>
+            <option value="SUPRA N - TM Side Door Open Alarm">SUPRA N - TM Side Door Open Alarm</option>
+            <option value="SUPRA N - Device Net Communication Alarm">SUPRA N - Device Net Communication Alarm</option>
+            <option value="SUPRA N - EFEM Robot Wafer Sensor Alarm">SUPRA N - EFEM Robot Wafer Sensor Alarm</option>
+            <option value="SUPRA N - Gas Exhaust Alarm">SUPRA N - Gas Exhaust Alarm</option>
+            <option value="SUPRA N - Slit Door Close Time out Alarm">SUPRA N - Slit Door Close Time out Alarm</option>
+            <option value="SUPRA N - YASKAWA ROBOT Other Alarm">SUPRA N - YASKAWA ROBOT Other Alarm</option>
+            <option value="SUPRA N - EFEM FFU Fail Alarm">SUPRA N - EFEM FFU Fail Alarm</option>
+          </select>
+        </div>
+
+        <div class="ts-header-filter">
+          <label class="ts-label-inline" for="topKInput">참조 개수</label>
+          <input
+            id="topKInput"
+            type="number"
+            class="ts-input-number"
+            min="1"
+            max="20"
+            value="5"
+          />
+        </div>
+
+        <button id="btnBuildEmbeddings" class="ts-btn ts-btn-ghost ts-btn-sm">
+          ⚙️ Embedding (관리자용)
+        </button>
+      </div>
+
+      <!-- 작업 이력 필터 -->
+      <section id="workLogFilters" class="ts-wlog-filters">
         <div class="ts-wlog-header">
           <div class="ts-wlog-title">작업 이력 필터</div>
           <div class="ts-wlog-subtitle">
@@ -222,11 +225,13 @@
           </div>
         </div>
 
-
+        <!-- 모바일용 필터 토글 버튼 -->
+        <div class="ts-header-actions">
+          <button id="filterToggle" class="ts-filter-toggle" type="button">
+            <span class="ts-filter-toggle-icon">☰</span>
+          </button>
+        </div>
       </header>
-
-      <!-- 작업 이력 필터 (항상 표시, 필요할 때만 사용) -->
-
 
       <!-- 중앙 채팅 영역 -->
       <main class="ts-chat-layout">
@@ -279,6 +284,9 @@
       </footer>
     </div>
   </div>
+
+  <!-- 모바일에서 사이드바 열릴 때 사용하는 배경 -->
+  <div class="ts-sidebar-backdrop" id="sidebarBackdrop"></div>
 
   <script src="tsrag.js"></script>
 </body>

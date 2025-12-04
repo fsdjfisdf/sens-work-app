@@ -1,11 +1,12 @@
 /* ============================================================================
-   tsrag.css — S-WORKS · AI Chat (ChatGPT 스타일)
-   - 좌측: 사이드바 (예시 질문 + 필터 + 작업이력 필터)
-   - 우측: 메인 (헤더 + 채팅 + 입력창)
+   S-WORKS · AI Chat (tsrag.css)
+   - 좌측: 필터/사이드바
+   - 우측: 채팅 메인
+   - Q(사용자): 오른쪽 / A(어시스턴트): 왼쪽
+   - 모바일: 햄버거로 사이드바 열기 + 필터 스크롤
    ========================================================================== */
 
-/* ========== Reset & Base =================================================== */
-
+/* 기본 리셋/폰트 */
 *,
 *::before,
 *::after {
@@ -22,176 +23,50 @@ body {
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Noto Sans KR", sans-serif;
-  background: #f4f4f5; /* ChatGPT 비슷한 연한 회색 */
-  color: #111827;
+  background: linear-gradient(180deg, #f4f7fb 0%, #eef2f8 40%, #f8fafc 100%);
+  color: #0f172a;
 }
 
-/* 기본 스크롤 스타일 */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #d4d4d8 transparent;
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-}
-
-*::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: #d4d4d8;
-}
-
-/* 공통 인풋 스타일 */
-.ts-input-select,
-.ts-input-text,
-.ts-input-number,
-.ts-input-date,
-.ts-input-textarea {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #d4d4d8;
-  background: #ffffff;
-  font-size: 13px;
-  color: #111827;
-  outline: none;
-  transition: border-color 0.14s ease, box-shadow 0.14s ease,
-    background-color 0.14s ease;
-}
-
-.ts-input-select:focus,
-.ts-input-text:focus,
-.ts-input-number:focus,
-.ts-input-date:focus,
-.ts-input-textarea:focus {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 1px #22c55e33;
-}
-
-.ts-input-textarea {
-  resize: none;
-}
-
-/* disabled 상태 */
-.ts-input-select:disabled,
-.ts-input-text:disabled {
-  background: #f3f4f6;
-  color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* 라벨 */
-label,
-.ts-label-inline {
-  font-size: 11px;
-  color: #6b7280;
-  margin-bottom: 4px;
-  display: inline-block;
-}
-
-/* 버튼 공통 */
-.ts-btn {
-  border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 6px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: #e5e7eb;
-  color: #111827;
-  transition: background 0.14s ease, border-color 0.14s ease,
-    transform 0.05s ease, box-shadow 0.1s ease;
-  white-space: nowrap;
-}
-
-.ts-btn:hover {
-  background: #d4d4d8;
-}
-
-.ts-btn:active {
-  transform: translateY(1px);
-}
-
-.ts-btn-primary {
-  background: #22c55e;
-  border-color: #16a34a;
-  color: #ffffff;
-}
-
-.ts-btn-primary:hover {
-  background: #16a34a;
-  box-shadow: 0 0 0 1px #16a34a33;
-}
-
-.ts-btn-ghost {
-  background: transparent;
-  border-color: #d4d4d8;
-  color: #374151;
-}
-
-.ts-btn-ghost:hover {
-  background: #f4f4f5;
-}
-
-.ts-btn-sm {
-  padding: 4px 10px;
-  font-size: 12px;
-}
-
-/* ========== 전체 레이아웃 ================================================== */
-
+/* 전체 앱 레이아웃 */
 .ts-app {
   display: flex;
-  height: 100vh;
-  max-height: 100vh;
+  min-height: 100vh;
 }
 
-/* ========== 좌측 사이드바 ================================================== */
+/* ============================================================================
+   사이드바
+   ========================================================================== */
 
 .ts-sidebar {
   width: 320px;
-  min-width: 280px;
-  max-width: 360px;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  background: #0b1220;
+  color: #e5e7eb;
   display: flex;
   flex-direction: column;
-  padding: 10px 10px 8px;
-}
-
-/* 사이드바 안에서 스크롤 영역과 푸터 분리용 (구조는 없지만 흉내) */
-.ts-sidebar > .ts-sidebar-footer {
-  margin-top: auto;
-}
-
-/* 사이드바 전체 스크롤 (헤더/푸터 포함) */
-.ts-sidebar {
+  padding: 16px 18px 14px;
+  max-height: 100vh;       /* 작은 화면에서 필터 포함 전체 스크롤 */
   overflow-y: auto;
 }
 
-/* 헤더 */
 .ts-sidebar-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 8px 8px;
-  border-radius: 10px;
+  padding: 6px 4px 16px;
 }
 
 .ts-sidebar-logo {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #22c55e;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 700;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0b1120;
 }
 
 .ts-sidebar-text {
@@ -201,83 +76,54 @@ label,
 }
 
 .ts-sidebar-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  color: #111827;
 }
 
 .ts-sidebar-subtitle {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
-/* 새 대화 버튼 */
 .ts-sidebar-new {
-  margin-top: 6px;
+  margin-top: 4px;
+  margin-bottom: 14px;
   width: 100%;
-  padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid #d4d4d8;
-  background: #f9fafb;
+  border: 0;
+  padding: 9px 12px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
   font-size: 13px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: #111827;
   gap: 4px;
-  transition: background 0.14s ease, border-color 0.14s ease;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.25);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
 }
 
 .ts-sidebar-new:hover {
-  background: #e5e7eb;
-  border-color: #cbd5f5;
+  background: rgba(15, 23, 42, 1);
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.5),
+    0 10px 30px rgba(15, 23, 42, 0.45);
+  transform: translateY(-0.5px);
 }
 
-/* 예시 질문 섹션 */
-.ts-sidebar-section-label {
-  margin-top: 10px;
-  font-size: 11px;
-  text-transform: uppercase;
-  color: #9ca3af;
-  padding: 0 4px;
+.ts-sidebar-new:active {
+  transform: translateY(0);
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.6),
+    0 4px 16px rgba(15, 23, 42, 0.8);
 }
 
-.ts-sidebar-convos {
-  margin-top: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 160px;
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
-.ts-sidebar-convo {
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  padding: 7px 8px;
-  font-size: 12px;
-  text-align: left;
-  cursor: pointer;
-  color: #374151;
-  transition: background 0.12s ease, border-color 0.12s ease;
-}
-
-.ts-sidebar-convo:hover {
-  background: #f3f4f6;
-  border-color: #e5e7eb;
-}
-
-/* ========== 설비 / 알람 / Top-K 필터 박스 ================================ */
-
+/* 상단 필터 (설비 타입 / AlarmKey / topK / Embedding) */
 .ts-header-right {
-  margin-top: 10px;
-  padding: 10px 10px;
+  margin-top: 8px;
+  padding: 10px 10px 12px;
   border-radius: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.3);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -285,143 +131,251 @@ label,
 
 .ts-header-filter {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
-/* Top-K / Embedding 같은 줄 묶고 싶으면 여기에 flex 추가해서 사용 가능 */
-.ts-header-filter-row {
-  display: flex;
-  gap: 8px;
+.ts-label-inline {
+  font-size: 12px;
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 
-.ts-header-right .ts-btn {
-  align-self: flex-end;
-}
-
-/* ========== 작업 이력 필터 — 자연스럽게 이어지도록 ======================= */
-/* 카드처럼 튀지 않게, 위 필터의 연장선 느낌으로 변경 */
-
+/* 작업 이력 필터 박스 */
 .ts-wlog-filters {
-  margin-top: 8px;
-  padding-top: 10px;
-  border-top: 1px dashed #e5e7eb;  /* 부드러운 구분선 */
+  margin-top: 14px;
+  padding: 12px 10px 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.3);
 }
 
 .ts-wlog-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 0 2px 4px;
+  margin-bottom: 10px;
 }
 
 .ts-wlog-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #e5e7eb;
 }
 
 .ts-wlog-subtitle {
+  margin-top: 2px;
   font-size: 11px;
   color: #9ca3af;
 }
 
-/* 필터 인풋 그리드 */
 .ts-wlog-grid {
-  margin-top: 6px;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 8px 10px;
 }
 
-.ts-wlog-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
+.ts-wlog-field label {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 3px;
+  color: #cbd5f5;
 }
 
 .ts-wlog-date-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .ts-wlog-date-sep {
   font-size: 11px;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 .ts-wlog-help {
-  margin-top: 3px;
+  margin-top: 4px;
   font-size: 10px;
   color: #9ca3af;
 }
 
-/* ========== 사이드바 푸터 ================================================ */
-
+/* 사이드바 footer */
 .ts-sidebar-footer {
-  padding: 10px 6px 4px;
-  border-top: 1px solid #e5e7eb;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
   font-size: 11px;
   color: #9ca3af;
 }
 
 .ts-sidebar-footline {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .ts-sidebar-footdesc {
   margin-top: 2px;
+  font-size: 10px;
 }
 
-/* ========== 우측 메인 ====================================================== */
+/* ============================================================================
+   공통 입력 / 버튼 스타일
+   ========================================================================== */
+
+.ts-input-select,
+.ts-input-number,
+.ts-input-date,
+.ts-input-text {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid #1f2937;
+  padding: 6px 10px;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 12px;
+  outline: none;
+}
+
+.ts-input-select:focus,
+.ts-input-number:focus,
+.ts-input-date:focus,
+.ts-input-text:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
+}
+
+.ts-input-select:disabled,
+.ts-input-number:disabled,
+.ts-input-date:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 버튼 공통 */
+.ts-btn {
+  border-radius: 999px;
+  border: 0;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.ts-btn-primary {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #e5e7eb;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+}
+
+.ts-btn-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8, #4338ca);
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.55);
+  transform: translateY(-0.5px);
+}
+
+.ts-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.7);
+}
+
+.ts-btn-ghost {
+  background: transparent;
+  color: #e5e7eb;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+.ts-btn-ghost:hover {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.ts-btn-sm {
+  padding: 5px 9px;
+  font-size: 11px;
+}
+
+/* 로딩 상태 */
+.ts-btn-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 상태 표시줄 */
+.ts-status {
+  margin-bottom: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.ts-status-hidden {
+  display: none;
+}
+
+.ts-status-info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+}
+
+.ts-status-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.ts-status-error {
+  background: rgba(248, 113, 113, 0.1);
+  color: #b91c1c;
+}
+
+/* ============================================================================
+   메인 영역
+   ========================================================================== */
 
 .ts-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  padding: 16px 18px 10px;
 }
 
-/* 상단 헤더 (ChatGPT 상단 영역 유사) */
+/* 헤더 */
 .ts-header {
-  padding: 12px 24px 10px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .ts-header-left {
-  max-width: 900px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .ts-header-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 2px 9px;
   border-radius: 999px;
-  padding: 2px 10px;
-  background: #e5f9ef;
-  color: #15803d;
   font-size: 11px;
-  width: fit-content;
+  background: rgba(15, 23, 42, 0.06);
+  color: #0f172a;
 }
 
 .ts-header-dot {
   width: 6px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: 50%;
   background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35);
 }
 
 .ts-header-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  color: #111827;
 }
 
 .ts-header-subtitle {
@@ -429,114 +383,73 @@ label,
   color: #6b7280;
 }
 
-/* 채팅 전체 레이아웃 */
+/* 헤더 오른쪽 액션 (햄버거 자리) */
+.ts-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 모바일 필터 토글 버튼 */
+.ts-filter-toggle {
+  display: none; /* 기본은 데스크톱에서 숨김, 모바일에서만 보임 */
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 11px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #374151;
+  gap: 4px;
+  align-items: center;
+}
+
+.ts-filter-toggle-icon {
+  font-size: 14px;
+}
+
+/* 채팅 레이아웃 */
 .ts-chat-layout {
   flex: 1;
   display: flex;
-  justify-content: center;
-  overflow: hidden;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .ts-chat-column {
   flex: 1;
-  max-width: 900px;
   display: flex;
   flex-direction: column;
-  padding: 8px 24px 16px;
-  gap: 8px;
+  min-height: 0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  padding: 10px 12px 8px;
 }
 
-/* 메시지 영역 */
+/* 채팅 메시지 영역 */
 .ts-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  padding: 6px 4px 6px;
 }
 
-/* 비어있을 때를 위한 기본 안내 스타일이 필요하면: */
-/*
-.ts-chat-messages::before {
-  content: "알람 상황이나 작업 이력을 자연스럽게 질문해 보세요.";
-  font-size: 13px;
-  color: #9ca3af;
-  margin-top: 12px;
-}
-*/
-
-/* 메시지 버블 기본 구조 (JS에서 클래스 붙인다고 가정) */
-.ts-msg {
-  display: flex;
-  width: 100%;
-}
-
-.ts-msg-inner {
-  border-radius: 14px;
-  padding: 10px 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  max-width: 80%;
-  white-space: pre-wrap;
-}
-
-/* 사용자 메시지 (오른쪽) */
-.ts-msg-user {
-  justify-content: flex-end;
-}
-
-.ts-msg-user .ts-msg-inner {
-  background: #22c55e;
-  color: #ffffff;
-}
-
-/* 어시스턴트 메시지 (왼쪽) */
-.ts-msg-assistant {
-  justify-content: flex-start;
-}
-
-.ts-msg-assistant .ts-msg-inner {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-}
-
-/* 시스템 메시지 (중앙) */
-.ts-msg-system {
-  justify-content: center;
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-/* 입력 패널 (하단 입력창) */
+/* 입력 패널 */
 .ts-input-panel {
-  border-top: 1px solid #e5e7eb;
-  padding-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-top: 6px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  padding: 8px 10px;
 }
 
-/* 상태 박스 */
-.ts-status {
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #f59e0b33;
-}
-
-.ts-status-hidden {
-  display: none;
-}
-
-/* 추천 질문 칩 */
+/* 추천 질문 */
 .ts-suggest-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 6px;
-  align-items: center;
+  margin-bottom: 6px;
 }
 
 .ts-suggest-label {
@@ -546,85 +459,283 @@ label,
 
 .ts-suggest-chip {
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  padding: 4px 10px;
-  font-size: 12px;
-  background: #ffffff;
+  border: 0;
+  padding: 4px 9px;
+  font-size: 11px;
   cursor: pointer;
-  color: #374151;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  background: #e5f2ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  transition: background 0.12s ease, transform 0.05s ease;
 }
 
 .ts-suggest-chip:hover {
-  background: #f3f4f6;
-  border-color: #d4d4d8;
+  background: #dbeafe;
+  transform: translateY(-0.5px);
 }
 
-/* 입력 박스 + 전송 버튼 */
+/* 질문 입력 */
 .ts-input-row {
   display: flex;
-  gap: 8px;
   align-items: flex-end;
+  gap: 8px;
 }
 
 .ts-input-box {
   flex: 1;
-  border-radius: 16px;
-  border: 1px solid #d4d4d8;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
   background: #ffffff;
-  padding: 6px 10px;
+  padding: 6px 9px;
   display: flex;
 }
 
 .ts-input-textarea {
-  border: none;
-  box-shadow: none;
-  padding: 4px 0;
-  font-size: 14px;
-  background: transparent;
+  width: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #111827;
+  font-family: inherit;
 }
 
-.ts-input-textarea:focus {
-  border: none;
-  box-shadow: none;
+.ts-input-textarea::placeholder {
+  color: #9ca3af;
 }
 
-/* 전송 버튼 */
-#btnAsk {
-  align-self: stretch;
-  padding-inline: 18px;
-}
-
-/* 하단 푸터 */
+/* 푸터 */
 .ts-footer {
-  border-top: 1px solid #e5e7eb;
-  padding: 6px 16px;
-  background: #f9fafb;
+  margin-top: 10px;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .ts-footer-inner {
-  max-width: 900px;
-  margin: 0 auto;
-  font-size: 11px;
-  color: #9ca3af;
   display: flex;
+  align-items: center;
   justify-content: space-between;
 }
 
-/* ========== 반응형 ========================================================= */
+/* ============================================================================
+   메시지 버블 (Q: 오른쪽 / A: 왼쪽)
+   ========================================================================== */
 
+.ts-msg {
+  margin: 8px 0;
+  display: flex;
+}
 
-@media (max-width: 900px) {
-  /* 모바일에서는 사이드바 통째로 숨겨도 됨 (필요시 조정) */
-  .ts-sidebar {
-    display: none;
+.ts-msg-user {
+  justify-content: flex-end;
+}
+
+.ts-msg-assistant,
+.ts-msg-system {
+  justify-content: flex-start;
+}
+
+.ts-msg-inner {
+  max-width: min(640px, 90%);
+  border-radius: 18px;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* 사용자 버블 (오른쪽, 파란 톤) */
+.ts-msg-user .ts-msg-inner {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #eff6ff;
+  border-bottom-right-radius: 4px;
+}
+
+/* 어시스턴트 버블 (왼쪽, 밝은 톤) */
+.ts-msg-assistant .ts-msg-inner {
+  background: #f3f4f6;
+  color: #111827;
+  border-bottom-left-radius: 4px;
+}
+
+/* 시스템 안내 (필요 시) */
+.ts-msg-system .ts-msg-inner {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* 메시지 본문 */
+.ts-msg-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* [중요]/[주의]/[안전] 태그 */
+.ts-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.ts-tag-important {
+  background: rgba(248, 113, 113, 0.15);
+  color: #b91c1c;
+}
+
+.ts-tag-warning {
+  background: rgba(252, 211, 77, 0.25);
+  color: #92400e;
+}
+
+.ts-tag-safety {
+  background: rgba(34, 197, 94, 0.18);
+  color: #166534;
+}
+
+/* ============================================================================
+   참조 알람 / 작업 이력 섹션 (필요 시 활용)
+   ========================================================================== */
+
+.ts-ref-section {
+  margin-top: 8px;
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
+.ts-ref-alarm {
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+}
+
+.ts-ref-worklog {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.ts-ref-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.ts-ref-title-badge {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+}
+
+.ts-ref-body {
+  color: #374151;
+}
+
+/* ============================================================================
+   모바일 사이드바 토글 (햄버거) + 반응형
+   ========================================================================== */
+
+.ts-sidebar-backdrop {
+  display: none;
+}
+
+/* 960px 이하: 모바일/태블릿 모드 */
+@media (max-width: 960px) {
+  .ts-app {
+    position: relative;
   }
 
-  .ts-header {
-    padding-inline: 16px;
+  .ts-sidebar {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease-out;
+  }
+
+  .ts-main {
+    padding: 12px 10px 10px;
   }
 
   .ts-chat-column {
-    padding-inline: 12px;
+    padding: 8px 8px 6px;
+  }
+
+  /* 햄버거 버튼 노출 */
+  .ts-filter-toggle {
+    display: inline-flex;
+  }
+
+  /* 헤더 레이아웃 재정렬:
+     - 제목 왼쪽, 햄버거 오른쪽에 딱 붙도록 */
+  .ts-header {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ts-header-left {
+    flex: 1 1 auto;
+  }
+
+  .ts-header-actions {
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+
+  .ts-header-title {
+    font-size: 18px;
+  }
+
+  .ts-header-subtitle {
+    font-size: 11px;
+  }
+
+  /* 사이드바 뒷배경 */
+  .ts-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    z-index: 20;
+    display: none;
+  }
+
+  /* body에 ts-sidebar-open 클래스가 있으면 열기 */
+  body.ts-sidebar-open .ts-sidebar {
+    transform: translateX(0);
+  }
+
+  body.ts-sidebar-open .ts-sidebar-backdrop {
+    display: block;
+  }
+
+  /* 작업 이력 필터 그리드 → 1열 유지 */
+  .ts-wlog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 1024px 이상: 작업필터 2열 */
+@media (min-width: 1024px) {
+  .ts-wlog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 아주 넓은 화면에서는 채팅 영역 최대 폭 제한 */
+@media (min-width: 1440px) {
+  .ts-main {
+    max-width: 1120px;
+    margin: 0 auto;
   }
 }

@@ -27,6 +27,10 @@ const filterWorkType = $("filterWorkType");
 const filterSetupItem = $("filterSetupItem");
 const filterTransferItem = $("filterTransferItem");
 
+// 모바일 필터 토글
+const filterToggle = $("filterToggle");
+const sidebarBackdrop = $("sidebarBackdrop");
+
 let isSending = false;
 
 // ─────────────────────────────────────────────
@@ -176,149 +180,163 @@ function scrollToBottom() {
   });
 }
 
+// HTML 이스케이프
+function escapeHtml(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 // ─────────────────────────────────────────────
-// 메시지 렌더링
+// 메시지 렌더링 (Q: 오른쪽, A: 왼쪽)
 // ─────────────────────────────────────────────
 function createMessageBubble({ role, content, hits, loading }) {
+  // role: "user" | "assistant" | "system"
+  let roleClass = "assistant";
+  if (role === "user") roleClass = "user";
+  else if (role === "system") roleClass = "system";
+
   const row = document.createElement("div");
-  row.className = `ts-msg-row ts-msg-${role}`;
-
-  const bubble = document.createElement("div");
-  bubble.className = "ts-msg-bubble";
-
-  const avatar = document.createElement("div");
-  avatar.className = "ts-msg-avatar";
-  avatar.textContent = role === "user" ? "나" : "TS";
+  row.className = `ts-msg ts-msg-${roleClass}`;
 
   const inner = document.createElement("div");
   inner.className = "ts-msg-inner";
 
-  const meta = document.createElement("div");
-  meta.className = "ts-msg-meta";
-
-  const body = document.createElement("div");
-  body.className = "ts-msg-body";
-
   if (loading) {
-    body.innerHTML = `
-      <span class="ts-loader">
-        <span class="ts-loader-dots">
-          <span></span><span></span><span></span>
-        </span>
-        <span>관련 알람·작업 이력을 찾는 중입니다...</span>
-      </span>
+    // 로딩 애니메이션 제거 → 간단한 안내 텍스트만
+    inner.innerHTML = `
+      <div style="font-size:12px; color:#9ca3af;">
+        관련 알람·작업 이력을 조회하는 중입니다. 잠시만 기다려 주세요.
+      </div>
     `;
   } else {
-    let safe = (content || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br/>");
+    // 본문
+    const body = document.createElement("div");
+    body.className = "ts-msg-body";
 
-    // [중요], [주의], [안전] 태그를 하이라이트 span으로 변환
+    let safe = escapeHtml(content || "").replace(/\n/g, "<br/>");
+    // [중요], [주의], [안전] 태그 하이라이트
     safe = safe
-    .replace(/\[중요\]/g, '<span class="ts-tag ts-tag-important">중요</span>')
-    .replace(/\[주의\]/g, '<span class="ts-tag ts-tag-warning">주의</span>')
-    .replace(/\[안전\]/g, '<span class="ts-tag ts-tag-safety">안전</span>');
+      .replace(/\[중요\]/g, '<span class="ts-tag ts-tag-important">중요</span>')
+      .replace(/\[주의\]/g, '<span class="ts-tag ts-tag-warning">주의</span>')
+      .replace(/\[안전\]/g, '<span class="ts-tag ts-tag-safety">안전</span>');
 
     body.innerHTML = safe || "(내용 없음)";
+    inner.appendChild(body);
+
+    // 근거 hits 정리된 블록 (알람 / 작업 이력 구분)
+    if (hits && hits.length) {
+      const worklogHits = hits.filter(
+        (h) => h.source_type === "WORK_LOG" || h.src_table === "work_log" || h.task_date
+      );
+      const alarmHits = hits.filter((h) => !worklogHits.includes(h));
+
+      if (alarmHits.length) {
+        const sec = buildRefSection("alarm", alarmHits);
+        inner.appendChild(sec);
+      }
+      if (worklogHits.length) {
+        const sec = buildRefSection("worklog", worklogHits);
+        inner.appendChild(sec);
+      }
+    }
   }
 
-  inner.appendChild(meta);
-  inner.appendChild(body);
-  bubble.appendChild(avatar);
-  bubble.appendChild(inner);
-
-  // 근거 hits
-  if (hits && hits.length && !loading) {
-    const anyWorkLog = hits.some(
-      (h) =>
-        h.source_type === "WORK_LOG" ||
-        h.src_table === "work_log" ||
-        h.task_date
-    );
-
-    const details = document.createElement("details");
-    details.className = "ts-evidence-details";
-    details.open = false;
-
-    const summary = document.createElement("summary");
-    summary.textContent = anyWorkLog
-      ? `참조 알람 / 작업 이력 (${hits.length}개)`
-      : `참조 CASE/STEP (${hits.length}개)`;
-    details.appendChild(summary);
-
-    hits.forEach((hit) => {
-      const card = document.createElement("div");
-      card.className = "ts-evidence-card";
-
-      const title = document.createElement("div");
-      title.className = "ts-evidence-title";
-
-      if (hit.source_type === "WORK_LOG" || hit.task_date) {
-        title.textContent =
-          hit.title ||
-          `[WORK_LOG] ${hit.task_date || ""} ${hit.equipment_name || ""}`;
-      } else {
-        title.textContent =
-          hit.title ||
-          `[${hit.equipment_type || "-"}] ${hit.alarm_key || ""} · CASE ${
-            hit.case_no ?? "-"
-          } · STEP ${hit.step_no ?? "-"}`;
-      }
-
-      const metaRow = document.createElement("div");
-      metaRow.className = "ts-evidence-meta";
-
-      if (hit.source_type === "WORK_LOG" || hit.task_date) {
-        metaRow.innerHTML = `
-          <span>${hit.task_date || "-"}</span>
-          <span>${hit.equipment_type || "-"} - ${hit.equipment_name || "-"}</span>
-          <span>${hit.group_name || "-"} / ${hit.site || "-"} / ${hit.line || "-"}</span>
-          <span>${hit.work_type || "-"}</span>
-          <span>score: ${(hit.score ?? 0).toFixed(3)}</span>
-        `;
-      } else {
-        metaRow.innerHTML = `
-          <span>${hit.equipment_type || "-"}</span>
-          <span>${hit.alarm_key || "-"}</span>
-          <span>CASE ${hit.case_no ?? "-"}</span>
-          <span>STEP ${hit.step_no ?? "-"}</span>
-          <span>score: ${(hit.score ?? 0).toFixed(3)}</span>
-        `;
-      }
-
-      const preview = document.createElement("div");
-      preview.className = "ts-evidence-body";
-      const snippet = (hit.content || "").split("\n").slice(0, 8).join("\n");
-      const safeSnippet = snippet
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n/g, "<br/>");
-      preview.innerHTML = safeSnippet;
-
-      card.appendChild(title);
-      card.appendChild(metaRow);
-      card.appendChild(preview);
-      details.appendChild(card);
-    });
-
-    inner.appendChild(details);
-  }
-
-  row.appendChild(bubble);
+  row.appendChild(inner);
   return row;
+}
+
+// 참조 알람 / 작업 이력 섹션 생성
+function buildRefSection(kind, hits) {
+  const section = document.createElement("div");
+  section.className =
+    "ts-ref-section " + (kind === "alarm" ? "ts-ref-alarm" : "ts-ref-worklog");
+
+  const title = document.createElement("div");
+  title.className = "ts-ref-title";
+
+  const badge = document.createElement("span");
+  badge.className = "ts-ref-title-badge";
+
+  if (kind === "alarm") {
+    badge.textContent = "알람 TS 근거";
+  } else {
+    badge.textContent = "작업 이력 근거";
+  }
+
+  const titleText = document.createElement("span");
+  titleText.textContent = `${hits.length}개 참조`;
+
+  title.appendChild(badge);
+  title.appendChild(titleText);
+
+  const body = document.createElement("div");
+  body.className = "ts-ref-body";
+
+  // 너무 길어지지 않게 상위 3개만 상세 노출
+  hits.slice(0, 3).forEach((hit) => {
+    const line = document.createElement("div");
+    line.style.marginBottom = "4px";
+
+    if (kind === "worklog") {
+      const meta = [
+        hit.task_date || "",
+        hit.equipment_type || "",
+        hit.equipment_name || "",
+        hit.work_type || ""
+      ].filter(Boolean).join(" · ");
+
+      const snippet = (hit.content || hit.task_description || "")
+        .split("\n")
+        .slice(0, 2)
+        .join(" / ");
+
+      line.innerHTML =
+        `<strong>[${escapeHtml(meta || "WORK_LOG")}]</strong> ` +
+        escapeHtml(snippet);
+    } else {
+      const meta = [
+        hit.equipment_type || "",
+        hit.alarm_key || "",
+        hit.case_no != null ? `CASE ${hit.case_no}` : "",
+        hit.step_no != null ? `STEP ${hit.step_no}` : ""
+      ].filter(Boolean).join(" · ");
+
+      const snippet = (hit.content || "")
+        .split("\n")
+        .slice(0, 2)
+        .join(" / ");
+
+      line.innerHTML =
+        `<strong>[${escapeHtml(meta || "ALARM")}]</strong> ` +
+        escapeHtml(snippet);
+    }
+
+    body.appendChild(line);
+  });
+
+  if (hits.length > 3) {
+    const more = document.createElement("div");
+    more.style.fontSize = "11px";
+    more.style.color = "#9ca3af";
+    more.textContent = `+ ${hits.length - 3}개 더 참조됨`;
+    body.appendChild(more);
+  }
+
+  section.appendChild(title);
+  section.appendChild(body);
+  return section;
 }
 
 // 초기 안내 메시지
 function addIntro() {
   const intro = createMessageBubble({
     role: "assistant",
-content:
-  "안녕하세요, SEnS/I AI입니다.\n\n" +
-  "기본적으로 설비 종류만 선택하면 바로 답변을 드립니다.\n" +
-  "더 자세한 내용이 필요하면 아래의 작업 이력 필터를 사용해 주세요.",
+    content:
+      "안녕하세요, SEnS/I AI입니다.\n\n" +
+      "기본적으로 설비 종류만 선택하면 바로 답변을 드립니다.\n" +
+      "더 자세한 내용이 필요하면 좌측의 작업 이력 필터를 사용해 주세요."
   });
   chatMessages.appendChild(intro);
   scrollToBottom();
@@ -342,7 +360,7 @@ async function handleBuildEmbeddings() {
     const resp = await fetch(`${API_BASE}/api/ts-rag/build-embeddings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ batchSize: 200 }),
+      body: JSON.stringify({ batchSize: 200 })
     });
 
     if (!resp.ok) {
@@ -368,6 +386,7 @@ async function handleBuildEmbeddings() {
 // ─────────────────────────────────────────────
 function refreshSetupTransferEnabled() {
   const workType = filterWorkType?.value || "";
+
   // SETUP_ITEM: SET UP, RELOCATION 에서만
   if (filterSetupItem) {
     if (workType === "SET UP" || workType === "RELOCATION") {
@@ -420,7 +439,6 @@ async function handleAsk() {
   const alarm_key = alarmKeySelect.value || "";
   const topK = Number(topKInput.value) || 5;
 
-
   if (!question) {
     setStatus("질문을 입력해 주세요.", "error");
     questionInput.focus();
@@ -430,13 +448,15 @@ async function handleAsk() {
   clearStatus();
   addIntroIfNeeded();
 
+  // 사용자 메시지 (오른쪽)
   const userBubble = createMessageBubble({ role: "user", content: question });
   chatMessages.appendChild(userBubble);
 
+  // 로딩 버블 (왼쪽, 단순 텍스트)
   const loadingBubble = createMessageBubble({
     role: "assistant",
     content: "",
-    loading: true,
+    loading: true
   });
   chatMessages.appendChild(loadingBubble);
   scrollToBottom();
@@ -448,7 +468,7 @@ async function handleAsk() {
       question,
       topK,
       equipment_type,
-      alarm_key,
+      alarm_key
     };
 
     // Work Log 필터 값 추가
@@ -475,7 +495,7 @@ async function handleAsk() {
     const resp = await fetch(`${API_BASE}/api/ts-rag/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
     });
 
     if (!resp.ok) {
@@ -494,7 +514,7 @@ async function handleAsk() {
     const answerBubble = createMessageBubble({
       role: "assistant",
       content: answer,
-      hits,
+      hits
     });
 
     chatMessages.replaceChild(answerBubble, loadingBubble);
@@ -508,7 +528,7 @@ async function handleAsk() {
       content:
         "❌ 질문 처리 중 오류가 발생했습니다.\n" +
         "임베딩이 충분히 생성되지 않았거나 서버 설정 문제일 수 있습니다.\n" +
-        "상단의 [⚙️ Embedding] 버튼으로 먼저 동기화를 진행한 뒤 다시 시도해 주세요.",
+        "상단의 [⚙️ Embedding] 버튼으로 먼저 동기화를 진행한 뒤 다시 시도해 주세요."
     });
     chatMessages.replaceChild(errorBubble, loadingBubble);
     scrollToBottom();
@@ -543,6 +563,23 @@ function handleNewChat() {
 }
 
 // ─────────────────────────────────────────────
+// 모바일 사이드바(필터) 토글
+// ─────────────────────────────────────────────
+function bindSidebarToggle() {
+  if (filterToggle) {
+    filterToggle.addEventListener("click", () => {
+      document.body.classList.toggle("ts-sidebar-open");
+    });
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener("click", () => {
+      document.body.classList.remove("ts-sidebar-open");
+    });
+  }
+}
+
+// ─────────────────────────────────────────────
 // 이벤트 바인딩 / 초기화
 // ─────────────────────────────────────────────
 function bindEvents() {
@@ -565,12 +602,15 @@ function bindEvents() {
     });
   }
 
+  // Ctrl+Enter / Cmd+Enter 로 전송
   questionInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       handleAsk();
     }
   });
+
+  bindSidebarToggle();
 }
 
 function init() {
