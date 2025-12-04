@@ -287,6 +287,33 @@
 
   <!-- 모바일에서 사이드바 열릴 때 사용하는 배경 -->
   <div class="ts-sidebar-backdrop" id="sidebarBackdrop"></div>
+    <!-- 근거 상세 보기 모달 -->
+  <div id="evidenceModal" class="ts-modal ts-modal-hidden">
+    <div class="ts-modal-backdrop"></div>
+    <div class="ts-modal-dialog">
+      <header class="ts-modal-header">
+        <div class="ts-modal-title-wrap">
+          <div id="evidenceModalTag" class="ts-modal-tag">WORK LOG</div>
+          <h2 id="evidenceModalTitle" class="ts-modal-title">제목</h2>
+        </div>
+        <button id="evidenceModalClose" class="ts-modal-close" type="button">✕</button>
+      </header>
+
+      <section class="ts-modal-meta" id="evidenceModalMeta"></section>
+
+      <section class="ts-modal-body" id="evidenceModalBody"></section>
+
+      <footer class="ts-modal-footer">
+        <button id="evidenceModalCopy" class="ts-btn ts-btn-ghost ts-btn-sm" type="button">
+          근거 내용 복사
+        </button>
+        <button id="evidenceModalClose2" class="ts-btn ts-btn-primary ts-btn-sm" type="button">
+          닫기
+        </button>
+      </footer>
+    </div>
+  </div>
+  
 
   <script src="tsrag.js"></script>
 </body>

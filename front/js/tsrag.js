@@ -32,6 +32,19 @@ const filterToggle = $("filterToggle");
 const sidebarBackdrop = $("sidebarBackdrop");
 
 let isSending = false;
+// 근거 상세 모달 요소
+const evidenceModal = $("evidenceModal");
+const evidenceModalTitle = $("evidenceModalTitle");
+const evidenceModalTag = $("evidenceModalTag");
+const evidenceModalMeta = $("evidenceModalMeta");
+const evidenceModalBody = $("evidenceModalBody");
+const evidenceModalClose = $("evidenceModalClose");
+const evidenceModalClose2 = $("evidenceModalClose2");
+const evidenceModalCopy = $("evidenceModalCopy");
+const evidenceModalBackdrop = evidenceModal
+  ? evidenceModal.querySelector(".ts-modal-backdrop")
+  : null;
+
 
 // ─────────────────────────────────────────────
 // TRANSFER ITEM 옵션 (equipment_type 별)
@@ -176,7 +189,10 @@ function setLoading(loading) {
 
 function scrollToBottom() {
   requestAnimationFrame(() => {
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
   });
 }
 
@@ -247,6 +263,96 @@ function createMessageBubble({ role, content, hits, loading }) {
   return row;
 }
 
+// ─────────────────────────────────────────────
+// Evidence Modal (근거 상세 보기)
+// ─────────────────────────────────────────────
+function openEvidenceModal(hit) {
+  if (!evidenceModal) return;
+
+  // WORK LOG 인지 TS 인지 판별
+  const isWorkLog =
+    hit.source_type === "WORK_LOG" ||
+    hit.src_table === "work_log" ||
+    !!hit.task_date;
+
+  // 태그(초록/파랑 라벨)
+  evidenceModalTag.textContent = isWorkLog ? "WORK LOG" : "TS GUIDE";
+  evidenceModalTag.classList.remove("ts-modal-tag-log", "ts-modal-tag-ts");
+  evidenceModalTag.classList.add(isWorkLog ? "ts-modal-tag-log" : "ts-modal-tag-ts");
+
+  // 제목
+  if (isWorkLog) {
+    const titleText =
+      hit.title ||
+      `${hit.task_date || ""} · ${hit.equipment_type || ""} · ${hit.equipment_name || ""}`.trim();
+    evidenceModalTitle.textContent = titleText || "작업 이력 근거";
+  } else {
+    const titleText =
+      hit.title ||
+      `[${hit.equipment_type || "-"} · ${hit.alarm_key || "-"}] CASE ${
+        hit.case_no ?? "-"
+      } · STEP ${hit.step_no ?? "-"}`;
+    evidenceModalTitle.textContent = titleText || "알람 TS 근거";
+  }
+
+  // 메타 정보 (칩 형태)
+  const metaBits = [];
+  if (isWorkLog) {
+    if (hit.task_date) metaBits.push(`날짜 · ${hit.task_date}`);
+    if (hit.equipment_type || hit.equipment_name) {
+      metaBits.push(
+        `설비 · ${hit.equipment_type || "-"} / ${hit.equipment_name || "-"}`
+      );
+    }
+    if (hit.group_name || hit.site || hit.line) {
+      metaBits.push(
+        `그룹/사이트/라인 · ${hit.group_name || "-"} / ${
+          hit.site || "-"
+        } / ${hit.line || "-"}`
+      );
+    }
+    if (hit.work_type) metaBits.push(`작업타입 · ${hit.work_type}`);
+    if (hit.setup_item) metaBits.push(`SETUP_ITEM · ${hit.setup_item}`);
+    if (hit.transfer_item) metaBits.push(`TRANSFER_ITEM · ${hit.transfer_item}`);
+  } else {
+    if (hit.equipment_type) metaBits.push(`설비 · ${hit.equipment_type}`);
+    if (hit.alarm_key) metaBits.push(`AlarmKey · ${hit.alarm_key}`);
+    if (hit.case_no != null) metaBits.push(`CASE · ${hit.case_no}`);
+    if (hit.step_no != null) metaBits.push(`STEP · ${hit.step_no}`);
+  }
+  if (hit.score != null) {
+    metaBits.push(`유사도 score · ${(hit.score ?? 0).toFixed(3)}`);
+  }
+
+  evidenceModalMeta.innerHTML = "";
+  metaBits.forEach((m) => {
+    const span = document.createElement("span");
+    span.textContent = m;
+    evidenceModalMeta.appendChild(span);
+  });
+
+  // 본문: content 전체 (없으면 task_description)
+  const raw = hit.content || hit.task_description || "";
+  const safe = escapeHtml(raw).replace(/\n/g, "<br/>");
+  evidenceModalBody.innerHTML = safe || "(내용 없음)";
+
+  evidenceModal.classList.remove("ts-modal-hidden");
+}
+
+function closeEvidenceModal() {
+  if (!evidenceModal) return;
+  evidenceModal.classList.add("ts-modal-hidden");
+}
+
+function copyEvidenceText() {
+  if (!evidenceModalBody) return;
+  const tmp = document.createElement("div");
+  tmp.innerHTML = evidenceModalBody.innerHTML;
+  const text = tmp.textContent || tmp.innerText || "";
+  navigator.clipboard.writeText(text.trim()).catch(() => {});
+}
+
+
 // 참조 알람 / 작업 이력 섹션 생성
 function buildRefSection(kind, hits) {
   const section = document.createElement("div");
@@ -276,45 +382,53 @@ function buildRefSection(kind, hits) {
 
   // 너무 길어지지 않게 상위 3개만 상세 노출
   hits.slice(0, 3).forEach((hit) => {
-    const line = document.createElement("div");
-    line.style.marginBottom = "4px";
+    const line = document.createElement("button");
+    line.type = "button";
+    line.className = "ts-ref-row";
 
+    let text;
     if (kind === "worklog") {
       const meta = [
         hit.task_date || "",
         hit.equipment_type || "",
         hit.equipment_name || "",
         hit.work_type || ""
-      ].filter(Boolean).join(" · ");
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
       const snippet = (hit.content || hit.task_description || "")
         .split("\n")
         .slice(0, 2)
         .join(" / ");
 
-      line.innerHTML =
-        `<strong>[${escapeHtml(meta || "WORK_LOG")}]</strong> ` +
-        escapeHtml(snippet);
+      text = `[${meta || "WORK_LOG"}] ${snippet}`;
     } else {
       const meta = [
         hit.equipment_type || "",
         hit.alarm_key || "",
         hit.case_no != null ? `CASE ${hit.case_no}` : "",
         hit.step_no != null ? `STEP ${hit.step_no}` : ""
-      ].filter(Boolean).join(" · ");
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
       const snippet = (hit.content || "")
         .split("\n")
         .slice(0, 2)
         .join(" / ");
 
-      line.innerHTML =
-        `<strong>[${escapeHtml(meta || "ALARM")}]</strong> ` +
-        escapeHtml(snippet);
+      text = `[${meta || "ALARM"}] ${snippet}`;
     }
+
+    line.textContent = text;
+
+    // ★ 여기에서 클릭 시 모달 오픈 ★
+    line.addEventListener("click", () => openEvidenceModal(hit));
 
     body.appendChild(line);
   });
+
 
   if (hits.length > 3) {
     const more = document.createElement("div");
@@ -609,6 +723,19 @@ function bindEvents() {
       handleAsk();
     }
   });
+
+  if (evidenceModalClose) {
+    evidenceModalClose.addEventListener("click", closeEvidenceModal);
+  }
+  if (evidenceModalClose2) {
+    evidenceModalClose2.addEventListener("click", closeEvidenceModal);
+  }
+  if (evidenceModalBackdrop) {
+    evidenceModalBackdrop.addEventListener("click", closeEvidenceModal);
+  }
+  if (evidenceModalCopy) {
+    evidenceModalCopy.addEventListener("click", copyEvidenceText);
+  }
 
   bindSidebarToggle();
 }
