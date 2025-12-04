@@ -22,58 +22,7 @@
         <span>＋ 새 대화</span>
       </button>
 
-      <div class="ts-sidebar-section-label">예시 질문</div>
-      <div class="ts-sidebar-convos">
-        <button
-          class="ts-sidebar-convo ts-sample"
-          data-q="SUPRA N에서 Pin Move Timeout 알람이 났을 때 어떤 순서로 점검해야 하나요?"
-        >
-          SUPRA N · Pin Move Timeout 점검 순서
-        </button>
-        <button
-          class="ts-sidebar-convo ts-sample"
-          data-q="Diff Temp Interlock이 발생했을 때 우선 확인해야 할 항목이 뭐예요?"
-        >
-          Diff Temp Interlock 우선 확인 항목
-        </button>
-        <button
-          class="ts-sidebar-convo ts-sample"
-          data-q="2025년 10월 30일에 EPAB301에서 어떤 작업 이력이 있었는지 정리해줘."
-        >
-          EPAB301 · 특정 날짜 작업 이력
-        </button>
-        <button
-          class="ts-sidebar-convo ts-sample"
-          data-q="정현우 엔지니어의 최근 한 달간 작업 이력을 요약해줘."
-        >
-          특정 엔지니어 작업 이력 요약
-        </button>
-      </div>
-
-      <div class="ts-sidebar-footer">
-        <div class="ts-sidebar-footline">S-WORKS · AI</div>
-        <div class="ts-sidebar-footdesc">SEnS/I</div>
-      </div>
-    </aside>
-
-    <!-- 우측 메인 -->
-    <div class="ts-main">
-      <!-- 상단 헤더 -->
-      <header class="ts-header">
-        <div class="ts-header-left">
-          <div class="ts-header-pill">
-            <span class="ts-header-dot"></span>
-            SEnS/I · AI
-          </div>
-          <div class="ts-header-title">
-            Chat
-          </div>
-          <div class="ts-header-subtitle">
-            Alarm TS 가이드 + 실제 작업 이력을 동시에 참고하여, 현장 엔지니어에게 필요한 내용을 정리해 줍니다.
-          </div>
-        </div>
-
-        <div class="ts-header-right">
+              <div class="ts-header-right">
           <div class="ts-header-filter">
             <label class="ts-label-inline" for="equipmentTypeSelect">설비 타입</label>
             <select id="equipmentTypeSelect" class="ts-input-select">
@@ -139,10 +88,7 @@
             ⚙️ Embedding (관리자용)
           </button>
         </div>
-      </header>
-
-      <!-- 작업 이력 필터 (항상 표시, 필요할 때만 사용) -->
-      <section id="workLogFilters" class="ts-wlog-filters">
+            <section id="workLogFilters" class="ts-wlog-filters">
         <div class="ts-wlog-header">
           <div class="ts-wlog-title">작업 이력 필터</div>
           <div class="ts-wlog-subtitle">
@@ -252,6 +198,35 @@
           </div>
         </div>
       </section>
+
+      <div class="ts-sidebar-footer">
+        <div class="ts-sidebar-footline">S-WORKS · AI</div>
+        <div class="ts-sidebar-footdesc">SEnS/I</div>
+      </div>
+    </aside>
+
+    <!-- 우측 메인 -->
+    <div class="ts-main">
+      <!-- 상단 헤더 -->
+      <header class="ts-header">
+        <div class="ts-header-left">
+          <div class="ts-header-pill">
+            <span class="ts-header-dot"></span>
+            SEnS/I · AI
+          </div>
+          <div class="ts-header-title">
+            Chat
+          </div>
+          <div class="ts-header-subtitle">
+            Alarm + 실제 작업 이력을 동시에 참고하여, 현장 엔지니어에게 필요한 내용을 정리해 줍니다.
+          </div>
+        </div>
+
+
+      </header>
+
+      <!-- 작업 이력 필터 (항상 표시, 필요할 때만 사용) -->
+
 
       <!-- 중앙 채팅 영역 -->
       <main class="ts-chat-layout">

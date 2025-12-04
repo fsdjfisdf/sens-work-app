@@ -195,7 +195,6 @@ function createMessageBubble({ role, content, hits, loading }) {
 
   const meta = document.createElement("div");
   meta.className = "ts-msg-meta";
-  meta.textContent = role === "user" ? "You" : "TS RAG · Alarm + Work Log";
 
   const body = document.createElement("div");
   body.className = "ts-msg-body";
@@ -316,15 +315,10 @@ function createMessageBubble({ role, content, hits, loading }) {
 function addIntro() {
   const intro = createMessageBubble({
     role: "assistant",
-    content:
-      "안녕하세요. SEnS/I AI입니다.\n\n" +
-      "이 화면 하나에서 Alarm TS + 실제 작업 이력을 동시에 참고해서 답변합니다.\n" +
-      "- 상단: 설비 타입 / AlarmKey\n" +
-      "- 아래: 작업 이력 필터(기간, 설비명, 작업자, 그룹/사이트, 작업 타입, SETUP/TRANSFER 항목)\n\n" +
-      "예시)\n" +
-      "- \"SUPRA N에서 Pin Move Timeout이 날 때, 비슷한 CASE랑 실제 작업 이력까지 같이 정리해줘\"\n" +
-      "- \"2025-10-30에 EPAB301에서 어떤 작업들이 있었는지 정리해줘\"\n" +
-      "- \"정현우 엔지니어의 최근 한 달간 PRECIA Lot 조사 관련 작업이력만 모아서 요약해줘\"",
+content:
+  "안녕하세요, SEnS/I AI입니다.\n\n" +
+  "기본적으로 설비 종류만 선택하면 바로 답변을 드립니다.\n" +
+  "더 자세한 내용이 필요하면 아래의 작업 이력 필터를 사용해 주세요.",
   });
   chatMessages.appendChild(intro);
   scrollToBottom();

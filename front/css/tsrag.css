@@ -1,76 +1,197 @@
-/* =========================================================
-   S-WORKS · TS RAG
-   ChatGPT 스타일 라이트 테마 — 정돈 버전
-   ========================================================= */
+/* ============================================================================
+   tsrag.css — S-WORKS · AI Chat (ChatGPT 스타일)
+   - 좌측: 사이드바 (예시 질문 + 필터 + 작업이력 필터)
+   - 우측: 메인 (헤더 + 채팅 + 입력창)
+   ========================================================================== */
 
-/* ----- 기본 리셋 ----- */
-* {
+/* ========== Reset & Base =================================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html,
 body {
+  margin: 0;
+  padding: 0;
   height: 100%;
 }
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  background: #f4f4f5; /* 약간 따뜻한 회색 */
+    "Noto Sans KR", sans-serif;
+  background: #f4f4f5; /* ChatGPT 비슷한 연한 회색 */
   color: #111827;
 }
 
-button,
-input,
-textarea,
-select {
-  font-family: inherit;
+/* 기본 스크롤 스타일 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
 }
 
-/* ----- 전체 레이아웃 ----- */
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #d4d4d8;
+}
+
+/* 공통 인풋 스타일 */
+.ts-input-select,
+.ts-input-text,
+.ts-input-number,
+.ts-input-date,
+.ts-input-textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d4d4d8;
+  background: #ffffff;
+  font-size: 13px;
+  color: #111827;
+  outline: none;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease,
+    background-color 0.14s ease;
+}
+
+.ts-input-select:focus,
+.ts-input-text:focus,
+.ts-input-number:focus,
+.ts-input-date:focus,
+.ts-input-textarea:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px #22c55e33;
+}
+
+.ts-input-textarea {
+  resize: none;
+}
+
+/* disabled 상태 */
+.ts-input-select:disabled,
+.ts-input-text:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 라벨 */
+label,
+.ts-label-inline {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+/* 버튼 공통 */
+.ts-btn {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #e5e7eb;
+  color: #111827;
+  transition: background 0.14s ease, border-color 0.14s ease,
+    transform 0.05s ease, box-shadow 0.1s ease;
+  white-space: nowrap;
+}
+
+.ts-btn:hover {
+  background: #d4d4d8;
+}
+
+.ts-btn:active {
+  transform: translateY(1px);
+}
+
+.ts-btn-primary {
+  background: #22c55e;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+.ts-btn-primary:hover {
+  background: #16a34a;
+  box-shadow: 0 0 0 1px #16a34a33;
+}
+
+.ts-btn-ghost {
+  background: transparent;
+  border-color: #d4d4d8;
+  color: #374151;
+}
+
+.ts-btn-ghost:hover {
+  background: #f4f4f5;
+}
+
+.ts-btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ========== 전체 레이아웃 ================================================== */
 
 .ts-app {
   display: flex;
   height: 100vh;
   max-height: 100vh;
-  overflow: hidden;
 }
 
-/* =========================
-   좌측 사이드바
-   ========================= */
+/* ========== 좌측 사이드바 ================================================== */
 
 .ts-sidebar {
-  width: 260px;
-  background: #fafafa;
-  border-right: 1px solid #e4e4e7;
+  width: 320px;
+  min-width: 280px;
+  max-width: 360px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  padding: 12px;
-  gap: 10px;
+  padding: 10px 10px 8px;
 }
 
+/* 사이드바 안에서 스크롤 영역과 푸터 분리용 (구조는 없지만 흉내) */
+.ts-sidebar > .ts-sidebar-footer {
+  margin-top: auto;
+}
+
+/* 사이드바 전체 스크롤 (헤더/푸터 포함) */
+.ts-sidebar {
+  overflow-y: auto;
+}
+
+/* 헤더 */
 .ts-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px;
+  gap: 10px;
+  padding: 6px 8px 8px;
   border-radius: 10px;
 }
 
 .ts-sidebar-logo {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
-  background: #111827;
-  color: #f9fafb;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .ts-sidebar-text {
@@ -82,131 +203,211 @@ select {
 .ts-sidebar-title {
   font-size: 14px;
   font-weight: 600;
+  color: #111827;
 }
 
 .ts-sidebar-subtitle {
-  font-size: 12px;
-  color: #737373;
+  font-size: 11px;
+  color: #6b7280;
 }
 
+/* 새 대화 버튼 */
 .ts-sidebar-new {
+  margin-top: 6px;
+  width: 100%;
+  padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid #e4e4e7;
-  background: #ffffff;
-  padding: 7px 12px;
+  border: 1px solid #d4d4d8;
+  background: #f9fafb;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   cursor: pointer;
   color: #111827;
-  transition: background 0.12s ease, border-color 0.12s ease,
-    transform 0.05s ease, box-shadow 0.12s ease;
+  gap: 4px;
+  transition: background 0.14s ease, border-color 0.14s ease;
 }
 
 .ts-sidebar-new:hover {
-  background: #f4f4f5;
-  border-color: #d4d4d8;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: #e5e7eb;
+  border-color: #cbd5f5;
 }
 
-.ts-sidebar-new:active {
-  transform: translateY(1px);
-  box-shadow: none;
-}
-
+/* 예시 질문 섹션 */
 .ts-sidebar-section-label {
+  margin-top: 10px;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #a1a1aa;
+  color: #9ca3af;
   padding: 0 4px;
 }
 
 .ts-sidebar-convos {
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
+  max-height: 160px;
   overflow-y: auto;
   padding-right: 2px;
 }
 
 .ts-sidebar-convo {
-  text-align: left;
   border-radius: 10px;
   border: 1px solid transparent;
-  padding: 7px 9px;
-  font-size: 13px;
   background: transparent;
+  padding: 7px 8px;
+  font-size: 12px;
+  text-align: left;
   cursor: pointer;
-  color: #111827;
+  color: #374151;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .ts-sidebar-convo:hover {
-  background: #f4f4f5;
-  border-color: #e4e4e7;
+  background: #f3f4f6;
+  border-color: #e5e7eb;
 }
 
-.ts-sidebar-footer {
-  padding-top: 8px;
-  border-top: 1px solid #e4e4e7;
-  font-size: 11px;
-  color: #a1a1aa;
-}
+/* ========== 설비 / 알람 / Top-K 필터 박스 ================================ */
 
-.ts-sidebar-footline {
-  font-weight: 500;
-}
-
-/* 모바일에서 사이드바 숨김 */
-@media (max-width: 960px) {
-  .ts-sidebar {
-    display: none;
-  }
-}
-
-/* =========================
-   메인 영역
-   ========================= */
-
-.ts-main {
-  flex: 1;
+.ts-header-right {
+  margin-top: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  gap: 8px;
 }
 
-/* 상단 헤더 */
-
-.ts-header {
-  border-bottom: 1px solid #e4e4e7;
-  background: #fafafa;
-  padding: 10px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.ts-header-left {
+.ts-header-filter {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.ts-header-pill {
+/* Top-K / Embedding 같은 줄 묶고 싶으면 여기에 flex 추가해서 사용 가능 */
+.ts-header-filter-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ts-header-right .ts-btn {
+  align-self: flex-end;
+}
+
+/* ========== 작업 이력 필터 — 자연스럽게 이어지도록 ======================= */
+/* 카드처럼 튀지 않게, 위 필터의 연장선 느낌으로 변경 */
+
+.ts-wlog-filters {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed #e5e7eb;  /* 부드러운 구분선 */
+}
+
+.ts-wlog-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px 4px;
+}
+
+.ts-wlog-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ts-wlog-subtitle {
   font-size: 11px;
-  color: #71717a;
+  color: #9ca3af;
+}
+
+/* 필터 인풋 그리드 */
+.ts-wlog-grid {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.ts-wlog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.ts-wlog-date-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-wlog-date-sep {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.ts-wlog-help {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+/* ========== 사이드바 푸터 ================================================ */
+
+.ts-sidebar-footer {
+  padding: 10px 6px 4px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.ts-sidebar-footline {
+  font-weight: 600;
+}
+
+.ts-sidebar-footdesc {
+  margin-top: 2px;
+}
+
+/* ========== 우측 메인 ====================================================== */
+
+.ts-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* 상단 헤더 (ChatGPT 상단 영역 유사) */
+.ts-header {
+  padding: 12px 24px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.ts-header-left {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ts-header-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid #e4e4e7;
-  background: #ffffff;
+  padding: 2px 10px;
+  background: #e5f9ef;
+  color: #15803d;
+  font-size: 11px;
   width: fit-content;
 }
 
@@ -218,678 +419,212 @@ select {
 }
 
 .ts-header-title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
+  color: #111827;
 }
 
 .ts-header-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
 }
 
-.ts-header-right {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.ts-header-filter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.ts-label-inline {
-  color: #6b7280;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.ts-input-select {
-  border-radius: 999px;
-  border: 1px solid #d4d4d8;
-  padding: 6px 10px;
-  font-size: 12px;
-  background: #ffffff;
-  min-width: 135px;
-}
-
-.ts-input-select:focus {
-  outline: none;
-  border-color: #0f172a;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
-}
-
-/* 공통 버튼 */
-
-.ts-btn {
-  border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 7px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: #e4e4e7;
-  color: #111827;
-  transition: background 0.12s ease, box-shadow 0.12s ease,
-    transform 0.05s ease, border-color 0.12s ease;
-}
-
-.ts-btn:hover:not(:disabled) {
-  background: #d4d4d8;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
-}
-
-.ts-btn:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: none;
-}
-
-.ts-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.ts-btn-primary {
-  background: #0f172a;
-  color: #f9fafb;
-}
-
-.ts-btn-primary:hover:not(:disabled) {
-  background: #020617;
-}
-
-.ts-btn-ghost {
-  background: #ffffff;
-  border-color: #e4e4e7;
-  color: #374151;
-}
-
-.ts-btn-ghost:hover:not(:disabled) {
-  background: #f4f4f5;
-  border-color: #d4d4d8;
-}
-
-.ts-btn-sm {
-  padding: 6px 11px;
-  font-size: 12px;
-}
-
-/* 버튼 로딩 상태 */
-
-.ts-btn-loading {
-  position: relative;
-  pointer-events: none;
-}
-
-.ts-btn-loading::after {
-  content: "";
-  width: 11px;
-  height: 11px;
-  border-radius: 999px;
-  border: 2px solid rgba(55, 65, 81, 0.3);
-  border-top-color: #111827;
-  animation: ts-spin 0.8s linear infinite;
-  margin-left: 4px;
-}
-
-@keyframes ts-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* =========================
-   채팅 레이아웃
-   ========================= */
-
+/* 채팅 전체 레이아웃 */
 .ts-chat-layout {
   flex: 1;
   display: flex;
   justify-content: center;
   overflow: hidden;
-  padding: 8px 0;
 }
 
 .ts-chat-column {
   flex: 1;
-  max-width: 880px;
+  max-width: 900px;
   display: flex;
   flex-direction: column;
-  padding: 0 16px 8px;
+  padding: 8px 24px 16px;
+  gap: 8px;
 }
 
 /* 메시지 영역 */
-
 .ts-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 0 14px;
-}
-
-/* 스크롤바 */
-
-.ts-chat-messages::-webkit-scrollbar {
-  width: 8px;
-}
-
-.ts-chat-messages::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 999px;
-}
-
-.ts-chat-messages::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* =========================
-   메시지 말풍선
-   ========================= */
-
-.ts-msg-row {
+  padding: 8px 0 12px;
   display: flex;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 
+/* 비어있을 때를 위한 기본 안내 스타일이 필요하면: */
+/*
+.ts-chat-messages::before {
+  content: "알람 상황이나 작업 이력을 자연스럽게 질문해 보세요.";
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 12px;
+}
+*/
+
+/* 메시지 버블 기본 구조 (JS에서 클래스 붙인다고 가정) */
+.ts-msg {
+  display: flex;
+  width: 100%;
+}
+
+.ts-msg-inner {
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 80%;
+  white-space: pre-wrap;
+}
+
+/* 사용자 메시지 (오른쪽) */
 .ts-msg-user {
   justify-content: flex-end;
 }
 
+.ts-msg-user .ts-msg-inner {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+/* 어시스턴트 메시지 (왼쪽) */
 .ts-msg-assistant {
   justify-content: flex-start;
 }
 
-.ts-msg-bubble {
-  display: flex;
-  max-width: 100%;
-  gap: 10px;
-}
-
-/* 아바타 */
-
-.ts-msg-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: #0f172a;
-  color: #f9fafb;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.ts-msg-user .ts-msg-avatar {
-  background: #16a34a; /* 사용자 초록 톤 */
-}
-
-/* 말풍선 박스 */
-
-.ts-msg-inner {
+.ts-msg-assistant .ts-msg-inner {
   background: #ffffff;
-  border-radius: 18px;
-  padding: 9px 12px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  max-width: 680px;
-  font-size: 14px;
-  line-height: 1.55;
+  border: 1px solid #e5e7eb;
 }
 
-.ts-msg-user .ts-msg-inner {
-  background: #e4e4e7;
-  color: #111827;
-}
-
-/* 이름 라벨 */
-
-.ts-msg-meta {
+/* 시스템 메시지 (중앙) */
+.ts-msg-system {
+  justify-content: center;
   font-size: 11px;
   color: #9ca3af;
-  margin-bottom: 4px;
 }
 
-.ts-msg-user .ts-msg-meta {
-  color: #6b7280;
-}
-
-/* 본문 */
-
-.ts-msg-body {
-  font-size: 14px;
-}
-
-/* =========================
-   Evidence (details)
-   ========================= */
-
-.ts-evidence-details {
-  margin-top: 8px;
-  font-size: 12px;
-}
-
-.ts-evidence-details > summary {
-  cursor: pointer;
-  list-style: none;
-  color: #4b5563;
-  padding: 3px 0;
-}
-
-.ts-evidence-details > summary::before {
-  content: "▸";
-  display: inline-block;
-  margin-right: 4px;
-  transform-origin: center;
-  transition: transform 0.1s ease;
-}
-
-.ts-evidence-details[open] > summary::before {
-  transform: rotate(90deg);
-}
-
-.ts-evidence-card {
-  border-radius: 10px;
-  border: 1px solid #e4e4e7;
-  background: #f9fafb;
-  padding: 7px 9px;
-  margin-top: 6px;
-}
-
-.ts-evidence-title {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 3px;
-}
-
-.ts-evidence-meta {
-  font-size: 11px;
-  color: #6b7280;
+/* 입력 패널 (하단 입력창) */
+.ts-input-panel {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 8px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 3px;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.ts-evidence-body {
-  font-size: 12px;
-  color: #374151;
-}
-
-/* =========================
-   상태 박스
-   ========================= */
-
+/* 상태 박스 */
 .ts-status {
-  font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  margin-bottom: 6px;
-  border: 1px solid transparent;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b33;
 }
 
 .ts-status-hidden {
   display: none;
 }
 
-.ts-status-info {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
-}
-
-.ts-status-success {
-  background: #ecfdf3;
-  border-color: #bbf7d0;
-  color: #15803d;
-}
-
-.ts-status-error {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
-}
-
-/* =========================
-   입력 패널
-   ========================= */
-
-.ts-input-panel {
-  padding: 10px 0 14px;
-  border-top: 1px solid #e4e4e7;
-  background: #f4f4f5;
-}
-
-/* 추천 질문 chip */
-
+/* 추천 질문 칩 */
 .ts-suggest-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  margin-bottom: 8px;
 }
 
 .ts-suggest-label {
-  font-size: 12px;
-  color: #6b7280;
-  margin-right: 2px;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .ts-suggest-chip {
   border-radius: 999px;
-  border: 1px solid #e4e4e7;
-  background: #ffffff;
-  padding: 5px 9px;
+  border: 1px solid #e5e7eb;
+  padding: 4px 10px;
   font-size: 12px;
+  background: #ffffff;
   cursor: pointer;
   color: #374151;
-  transition: background 0.12s ease, border 0.12s ease,
-    box-shadow 0.12s ease, transform 0.05s ease;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .ts-suggest-chip:hover {
-  background: #f9fafb;
+  background: #f3f4f6;
   border-color: #d4d4d8;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
-/* 입력 박스 + 버튼 */
-
+/* 입력 박스 + 전송 버튼 */
 .ts-input-row {
   display: flex;
-  align-items: flex-end;
   gap: 8px;
+  align-items: flex-end;
 }
 
 .ts-input-box {
   flex: 1;
-}
-
-/* 입력창을 카드처럼 보이게 */
-
-.ts-input-textarea {
-  width: 100%;
-  min-height: 44px;
-  max-height: 150px;
-  resize: vertical;
   border-radius: 16px;
   border: 1px solid #d4d4d8;
-  padding: 10px 12px;
-  font-size: 14px;
-  line-height: 1.5;
   background: #ffffff;
+  padding: 6px 10px;
+  display: flex;
 }
 
-.ts-input-textarea::placeholder {
-  color: #a1a1aa;
+.ts-input-textarea {
+  border: none;
+  box-shadow: none;
+  padding: 4px 0;
+  font-size: 14px;
+  background: transparent;
 }
 
 .ts-input-textarea:focus {
-  outline: none;
-  border-color: #0f172a;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
+  border: none;
+  box-shadow: none;
 }
 
-/* 입력 하단 */
-
-.ts-input-footer {
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
-  color: #6b7280;
+/* 전송 버튼 */
+#btnAsk {
+  align-self: stretch;
+  padding-inline: 18px;
 }
 
-.ts-input-footer-left {
-  flex: 1;
-}
-
-.ts-input-tip {
-  font-size: 11px;
-}
-
-.ts-input-footer-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* TopK 입력 */
-
-.ts-input-number {
-  width: 60px;
-  border-radius: 999px;
-  border: 1px solid #d4d4d8;
-  padding: 4px 8px;
-  font-size: 12px;
-  background: #ffffff;
-}
-
-.ts-input-number:focus {
-  outline: none;
-  border-color: #0f172a;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
-}
-
-/* 로딩 점 애니메이션 */
-
-.ts-loader {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ts-loader-dots {
-  display: inline-flex;
-  gap: 3px;
-}
-
-.ts-loader-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: currentColor;
-  animation: ts-bounce 0.9s infinite;
-}
-
-.ts-loader-dots span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-.ts-loader-dots span:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-@keyframes ts-bounce {
-  0%,
-  80%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.4;
-  }
-  40% {
-    transform: translateY(-3px);
-    opacity: 1;
-  }
-}
-
-/* 모바일 레이아웃 */
-
-@media (max-width: 640px) {
-  .ts-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .ts-header-right {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .ts-chat-column {
-    padding: 0 12px 8px;
-  }
-
-  .ts-input-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .ts-input-footer {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* =========================
-   푸터
-   ========================= */
-
+/* 하단 푸터 */
 .ts-footer {
-  border-top: 1px solid #e4e4e7;
-  background: #fafafa;
-  padding: 8px 18px;
-  font-size: 11px;
-  color: #a1a1aa;
+  border-top: 1px solid #e5e7eb;
+  padding: 6px 16px;
+  background: #f9fafb;
 }
 
 .ts-footer-inner {
-  max-width: 880px;
+  max-width: 900px;
   margin: 0 auto;
+  font-size: 11px;
+  color: #9ca3af;
   display: flex;
-  align-items: center;
   justify-content: space-between;
 }
 
-@media (max-width: 640px) {
-  .ts-footer-inner {
-    flex-direction: column;
-    gap: 4px;
-    align-items: flex-start;
+/* ========== 반응형 ========================================================= */
+
+
+@media (max-width: 900px) {
+  /* 모바일에서는 사이드바 통째로 숨겨도 됨 (필요시 조정) */
+  .ts-sidebar {
+    display: none;
   }
-}
 
-/* =========================
-   Work Log 필터 영역
-   ========================= */
-
-.ts-wlog-filters {
-  border-bottom: 1px solid #e4e4e7;
-  background: #f9fafb;
-  padding: 10px 18px 8px;
-}
-
-.ts-wlog-filters-hidden {
-  display: none;
-}
-
-.ts-wlog-header {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.ts-wlog-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.ts-wlog-subtitle {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-.ts-wlog-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px 12px;
-}
-
-.ts-wlog-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-}
-
-.ts-wlog-field > label {
-  color: #6b7280;
-}
-
-.ts-input-text,
-.ts-input-date {
-  border-radius: 999px;
-  border: 1px solid #d4d4d8;
-  padding: 6px 10px;
-  font-size: 12px;
-  background: #ffffff;
-}
-
-.ts-input-text:focus,
-.ts-input-date:focus {
-  outline: none;
-  border-color: #0f172a;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.05);
-}
-
-.ts-wlog-date-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ts-wlog-date-sep {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.ts-wlog-help {
-  font-size: 11px;
-  color: #a1a1aa;
-  margin-top: 2px;
-}
-
-@media (max-width: 960px) {
-  .ts-wlog-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .ts-header {
+    padding-inline: 16px;
   }
-}
 
-@media (max-width: 640px) {
-  .ts-wlog-grid {
-    grid-template-columns: 1fr;
+  .ts-chat-column {
+    padding-inline: 12px;
   }
-}
-
-.ts-tag {
-  display: inline-block;
-  padding: 2px 6px;
-  margin-right: 4px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.ts-tag-important {
-  background: #1d4ed8;  /* 진한 파란색 계열 */
-  color: #ffffff;
-}
-
-.ts-tag-warning {
-  background: #f97316;  /* 주황 */
-  color: #ffffff;
-}
-
-.ts-tag-safety {
-  background: #16a34a;  /* 초록 */
-  color: #ffffff;
 }
