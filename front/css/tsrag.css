@@ -869,3 +869,27 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+.ts-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  margin-right: 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ts-tag-important {
+  background: #1d4ed8;  /* 진한 파란색 계열 */
+  color: #ffffff;
+}
+
+.ts-tag-warning {
+  background: #f97316;  /* 주황 */
+  color: #ffffff;
+}
+
+.ts-tag-safety {
+  background: #16a34a;  /* 초록 */
+  color: #ffffff;
+}

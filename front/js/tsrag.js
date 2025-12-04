@@ -210,11 +210,18 @@ function createMessageBubble({ role, content, hits, loading }) {
       </span>
     `;
   } else {
-    const safe = (content || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\n/g, "<br/>");
+    let safe = (content || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br/>");
+
+    // [중요], [주의], [안전] 태그를 하이라이트 span으로 변환
+    safe = safe
+    .replace(/\[중요\]/g, '<span class="ts-tag ts-tag-important">중요</span>')
+    .replace(/\[주의\]/g, '<span class="ts-tag ts-tag-warning">주의</span>')
+    .replace(/\[안전\]/g, '<span class="ts-tag ts-tag-safety">안전</span>');
+
     body.innerHTML = safe || "(내용 없음)";
   }
 
