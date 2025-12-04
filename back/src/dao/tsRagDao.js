@@ -105,3 +105,58 @@ module.exports = {
   fetchEmbeddingsWithMeta,
   getChunksByIds,
 };
+
+// back/src/dao/tsRagDao.js
+
+// ... 기존 코드 그대로 두고 아래에 추가 ...
+
+// 🔹 작업이력(WORK_LOG)용 임베딩 + 메타 조회
+//    - equipment_type 기준으로 필터 (필요하면 group/site 등 나중에 확장)
+async function fetchWorkLogEmbeddingsWithMeta({
+  equipment_type,
+  limit = 500,
+}) {
+  const where = ['c.source_type = "WORK_LOG"'];
+  const params = [];
+
+  if (equipment_type) {
+    where.push('c.equipment_type = ?');
+    params.push(equipment_type);
+  }
+
+  const sql = `
+    SELECT
+      e.id         AS embedding_id,
+      e.chunk_id,
+      e.model,
+      e.dim,
+      e.embedding,
+      c.source_type,
+      c.src_table,
+      c.src_id,
+      c.equipment_type,
+      c.title,
+      c.content
+    FROM rag_embeddings e
+    JOIN rag_chunks c
+      ON c.id = e.chunk_id
+    WHERE e.model = ?
+      AND ${where.join(' AND ')}
+    ORDER BY c.id
+    LIMIT ?
+  `;
+
+  params.unshift(MODELS.embedding);  // 맨 앞에 모델명
+  params.push(Number(limit));
+
+  const [rows] = await pool.query(sql, params);
+  return rows;
+}
+
+module.exports = {
+  findChunksWithoutEmbedding,
+  insertEmbedding,
+  fetchEmbeddingsWithMeta,
+  getChunksByIds,
+  fetchWorkLogEmbeddingsWithMeta,   // ⬅️ 이 줄 추가
+};
