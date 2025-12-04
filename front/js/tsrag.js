@@ -166,8 +166,8 @@ function addIntro() {
   const intro = createMessageBubble({
     role: "assistant",
     content:
-      "안녕하세요. SUPRA 계열 장비 알람/트러블슈팅 전용 TS RAG입니다.\n" +
-      "좌측 또는 상단에서 설비 / AlarmKey를 선택하고, 실제 발생한 알람 상황과 증상을 구체적으로 입력해 주세요.\n\n" +
+      "안녕하세요. SEnS/I AI입니다.\n" +
+      "상단에서 설비 / AlarmKey를 선택하고, 실제 발생한 알람 상황과 증상을 구체적으로 입력해 주세요.\n\n" +
       "예시)\n" +
       "- \"SUPRA N에서 Pin Move Timeout이 반복 발생할 때 어떤 순서로 CASE를 따라가야 하나요?\"\n" +
       "- \"Diff Temp Interlock 발생 후 Heater Chuck 온도는 정상이지만 Pin 쪽 온도가 낮을 때 우선 확인 항목이 뭐예요?\"",
