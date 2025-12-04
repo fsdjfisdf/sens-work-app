@@ -11,15 +11,15 @@
     <!-- 좌측 사이드바 -->
     <aside class="ts-sidebar">
       <div class="ts-sidebar-header">
-        <div class="ts-sidebar-logo">SEnS/I</div>
+        <div class="ts-sidebar-logo">SE</div>
         <div class="ts-sidebar-text">
           <div class="ts-sidebar-title">SEnS/I</div>
-          <div class="ts-sidebar-subtitle">Alarm Assistant</div>
+          <div class="ts-sidebar-subtitle">AI Assistant</div>
         </div>
       </div>
 
       <button id="btnNewChat" class="ts-sidebar-new">
-        <span>＋ 새 알람 대화</span>
+        <span>＋ 새 대화</span>
       </button>
 
       <div class="ts-sidebar-section-label">예시 질문</div>
@@ -35,6 +35,18 @@
           data-q="Diff Temp Interlock이 발생했을 때 우선 확인해야 할 항목이 뭐예요?"
         >
           Diff Temp Interlock 우선 확인 항목
+        </button>
+        <button
+          class="ts-sidebar-convo ts-sample"
+          data-q="2025년 10월 30일에 EPAB301에서 어떤 작업 이력이 있었는지 정리해줘."
+        >
+          EPAB301 · 특정 날짜 작업 이력
+        </button>
+        <button
+          class="ts-sidebar-convo ts-sample"
+          data-q="정현우 엔지니어의 최근 한 달간 작업 이력을 요약해줘."
+        >
+          특정 엔지니어 작업 이력 요약
         </button>
       </div>
 
@@ -57,75 +69,189 @@
             Chat
           </div>
           <div class="ts-header-subtitle">
-            PSK 설비의 알람/트러블슈팅 가이드를 기반으로, 실제 CASE · STEP 순서에 맞춰 답변합니다.
+            Alarm TS 가이드 + 실제 작업 이력을 동시에 참고하여, 현장 엔지니어에게 필요한 내용을 정리해 줍니다.
           </div>
         </div>
 
         <div class="ts-header-right">
           <div class="ts-header-filter">
-            <label class="ts-label-inline" for="equipmentTypeSelect">설비</label>
+            <label class="ts-label-inline" for="equipmentTypeSelect">설비 타입</label>
             <select id="equipmentTypeSelect" class="ts-input-select">
               <option value="">전체</option>
               <option value="SUPRA N">SUPRA N</option>
               <option value="SUPRA XP">SUPRA XP</option>
-              <option value="INTEGER">INTEGER</option>
+              <option value="INTEGER Plus">INTEGER Plus</option>
               <option value="PRECIA">PRECIA</option>
-              <option value="ECOLITE">ECOLITE</option>
+              <option value="ECOLITE 300">ECOLITE 300</option>
+              <option value="ECOLITE 3000">ECOLITE 3000</option>
               <option value="GENEVA">GENEVA</option>
+              <option value="HDW">HDW</option>
             </select>
           </div>
 
           <div class="ts-header-filter">
             <label class="ts-label-inline" for="alarmKeySelect">AlarmKey</label>
             <select id="alarmKeySelect" class="ts-input-select">
-            <option value="">전체</option>
-            <option value="SUPRA N - Pin Move Timeout Alarm">SUPRA N - Pin Move Timeout Alarm</option>
-            <option value="SUPRA N - Diff Temp Interlock">SUPRA N - Diff Temp Interlock</option>
-            <option value="SUPRA N - EFEM Robot COM Error">SUPRA N - EFEM Robot COM Error</option>
-            <option value="SUPRA N - EFEM to CTC Communication Alarm">SUPRA N - EFEM to CTC Communication Alarm</option>
-            <option value="SUPRA N - Fast Vacuum Timeout Alarm">SUPRA N - Fast Vacuum Timeout Alarm</option>
-            <option value="SUPRA N - Fast Vent Timeout Alarm">SUPRA N - Fast Vent Timeout Alarm</option>
-            <option value="SUPRA N - Slow Vent Timeout Alarm">SUPRA N - Slow Vent Timeout Alarm</option>
-            <option value="SUPRA N - Leak Rate Over Alarm">SUPRA N - Leak Rate Over Alarm</option>
-            <option value="SUPRA N - Chamber Open Alarm">SUPRA N - Chamber Open Alarm</option>
-            <option value="SUPRA N - Chamber Temp Limit Alarm">SUPRA N - Chamber Temp Limit Alarm</option>
-            <option value="SUPRA N - Slow Vacuum Time Out Alarm">SUPRA N - Slow Vacuum Time Out Alarm</option>
-            <option value="SUPRA N - C/S Pin Move Timeout Alarm">SUPRA N - C/S Pin Move Timeout Alarm</option>
-            <option value="SUPRA N - CTC to PMC Communication Alarm">SUPRA N - CTC to PMC Communication Alarm</option>
-            <option value="SUPRA N - Door Valve Open/Close Timeout Alarm">SUPRA N - Door Valve Open/Close Timeout Alarm</option>
-            <option value="SUPRA N - EFEM FFU Limit Alarm">SUPRA N - EFEM FFU Limit Alarm</option>
-            <option value="SUPRA N - TM FFU Limit Alarm">SUPRA N - TM FFU Limit Alarm</option>
-            <option value="SUPRA N - Chamber PCW Limit Alarm">SUPRA N - Chamber PCW Limit Alarm</option>
-            <option value="SUPRA N - TM Robot Communication Alarm">SUPRA N - TM Robot Communication Alarm</option>
-            <option value="SUPRA N - Gas Stable Timeout Alarm">SUPRA N - Gas Stable Timeout Alarm</option>
-            <option value="SUPRA N - TM FFU Communication Fail Alarm">SUPRA N - TM FFU Communication Fail Alarm</option>
-            <option value="SUPRA N - TM Side Door Open Alarm">SUPRA N - TM Side Door Open Alarm</option>
-            <option value="SUPRA N - Device Net Communication Alarm">SUPRA N - Device Net Communication Alarm</option>
-            <option value="SUPRA N - EFEM Robot Wafer Sensor Alarm">SUPRA N - EFEM Robot Wafer Sensor Alarm</option>
-            <option value="SUPRA N - Gas Exhaust Alarm">SUPRA N - Gas Exhaust Alarm</option>
-            <option value="SUPRA N - Slit Door Close Time out Alarm">SUPRA N - Slit Door Close Time out Alarm</option>
-            <option value="SUPRA N - YASKAWA ROBOT Other Alarm">SUPRA N - YASKAWA ROBOT Other Alarm</option>
-            <option value="SUPRA N - EFEM FFU Fail Alarm">SUPRA N - EFEM FFU Fail Alarm</option>
+              <option value="">전체</option>
+              <option value="SUPRA N - Pin Move Timeout Alarm">SUPRA N - Pin Move Timeout Alarm</option>
+              <option value="SUPRA N - Diff Temp Interlock">SUPRA N - Diff Temp Interlock</option>
+              <option value="SUPRA N - EFEM Robot COM Error">SUPRA N - EFEM Robot COM Error</option>
+              <option value="SUPRA N - EFEM to CTC Communication Alarm">SUPRA N - EFEM to CTC Communication Alarm</option>
+              <option value="SUPRA N - Fast Vacuum Timeout Alarm">SUPRA N - Fast Vacuum Timeout Alarm</option>
+              <option value="SUPRA N - Fast Vent Timeout Alarm">SUPRA N - Fast Vent Timeout Alarm</option>
+              <option value="SUPRA N - Slow Vent Timeout Alarm">SUPRA N - Slow Vent Timeout Alarm</option>
+              <option value="SUPRA N - Leak Rate Over Alarm">SUPRA N - Leak Rate Over Alarm</option>
+              <option value="SUPRA N - Chamber Open Alarm">SUPRA N - Chamber Open Alarm</option>
+              <option value="SUPRA N - Chamber Temp Limit Alarm">SUPRA N - Chamber Temp Limit Alarm</option>
+              <option value="SUPRA N - Slow Vacuum Time Out Alarm">SUPRA N - Slow Vacuum Time Out Alarm</option>
+              <option value="SUPRA N - C/S Pin Move Timeout Alarm">SUPRA N - C/S Pin Move Timeout Alarm</option>
+              <option value="SUPRA N - CTC to PMC Communication Alarm">SUPRA N - CTC to PMC Communication Alarm</option>
+              <option value="SUPRA N - Door Valve Open/Close Timeout Alarm">SUPRA N - Door Valve Open/Close Timeout Alarm</option>
+              <option value="SUPRA N - EFEM FFU Limit Alarm">SUPRA N - EFEM FFU Limit Alarm</option>
+              <option value="SUPRA N - TM FFU Limit Alarm">SUPRA N - TM FFU Limit Alarm</option>
+              <option value="SUPRA N - Chamber PCW Limit Alarm">SUPRA N - Chamber PCW Limit Alarm</option>
+              <option value="SUPRA N - TM Robot Communication Alarm">SUPRA N - TM Robot Communication Alarm</option>
+              <option value="SUPRA N - Gas Stable Timeout Alarm">SUPRA N - Gas Stable Timeout Alarm</option>
+              <option value="SUPRA N - TM FFU Communication Fail Alarm">SUPRA N - TM FFU Communication Fail Alarm</option>
+              <option value="SUPRA N - TM Side Door Open Alarm">SUPRA N - TM Side Door Open Alarm</option>
+              <option value="SUPRA N - Device Net Communication Alarm">SUPRA N - Device Net Communication Alarm</option>
+              <option value="SUPRA N - EFEM Robot Wafer Sensor Alarm">SUPRA N - EFEM Robot Wafer Sensor Alarm</option>
+              <option value="SUPRA N - Gas Exhaust Alarm">SUPRA N - Gas Exhaust Alarm</option>
+              <option value="SUPRA N - Slit Door Close Time out Alarm">SUPRA N - Slit Door Close Time out Alarm</option>
+              <option value="SUPRA N - YASKAWA ROBOT Other Alarm">SUPRA N - YASKAWA ROBOT Other Alarm</option>
+              <option value="SUPRA N - EFEM FFU Fail Alarm">SUPRA N - EFEM FFU Fail Alarm</option>
             </select>
-
           </div>
+
           <div class="ts-header-filter">
-            <label class="ts-label-inline" for="topKInput">참조 Step 수</label>
-            <input 
-                id="topKInput" 
-                type="number" 
-                class="ts-input-number"
-                min="1" 
-                max="20" 
-                value="5" 
+            <label class="ts-label-inline" for="topKInput">참조 개수</label>
+            <input
+              id="topKInput"
+              type="number"
+              class="ts-input-number"
+              min="1"
+              max="20"
+              value="5"
             />
-            </div>
+          </div>
 
           <button id="btnBuildEmbeddings" class="ts-btn ts-btn-ghost ts-btn-sm">
-            ⚙️ Alarm Embedding (관리자 외 클릭 금지)
+            ⚙️ Embedding (관리자용)
           </button>
         </div>
       </header>
+
+      <!-- 작업 이력 필터 (항상 표시, 필요할 때만 사용) -->
+      <section id="workLogFilters" class="ts-wlog-filters">
+        <div class="ts-wlog-header">
+          <div class="ts-wlog-title">작업 이력 필터</div>
+          <div class="ts-wlog-subtitle">
+            필요할 때만 사용하세요. (설비 / 알람 조건 + 실제 작업 이력 조건을 동시에 줄 수 있습니다.)
+          </div>
+        </div>
+        <div class="ts-wlog-grid">
+          <!-- 날짜 범위 -->
+          <div class="ts-wlog-field">
+            <label for="filterDateFrom">기간</label>
+            <div class="ts-wlog-date-row">
+              <input type="date" id="filterDateFrom" class="ts-input-date" />
+              <span class="ts-wlog-date-sep">~</span>
+              <input type="date" id="filterDateTo" class="ts-input-date" />
+            </div>
+          </div>
+
+          <!-- 설비 이름 -->
+          <div class="ts-wlog-field">
+            <label for="filterEqName">설비 이름</label>
+            <input
+              type="text"
+              id="filterEqName"
+              class="ts-input-text"
+              placeholder="예: EPAB301"
+            />
+          </div>
+
+          <!-- 작업자 이름 -->
+          <div class="ts-wlog-field">
+            <label for="filterWorker">작업자</label>
+            <input
+              type="text"
+              id="filterWorker"
+              class="ts-input-text"
+              placeholder="예: 정현우"
+            />
+          </div>
+
+          <!-- 그룹 -->
+          <div class="ts-wlog-field">
+            <label for="filterGroup">그룹</label>
+            <select id="filterGroup" class="ts-input-select">
+              <option value="">전체</option>
+              <option value="PEE1">PEE1</option>
+              <option value="PEE2">PEE2</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+
+          <!-- 사이트 -->
+          <div class="ts-wlog-field">
+            <label for="filterSite">사이트</label>
+            <select id="filterSite" class="ts-input-select">
+              <option value="">전체</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+
+          <!-- 작업 타입 -->
+          <div class="ts-wlog-field">
+            <label for="filterWorkType">작업 타입</label>
+            <select id="filterWorkType" class="ts-input-select">
+              <option value="">전체</option>
+              <option value="SET UP">SET UP</option>
+              <option value="MAINT">MAINT</option>
+              <option value="RELOCATION">RELOCATION</option>
+            </select>
+          </div>
+
+          <!-- SETUP ITEM -->
+          <div class="ts-wlog-field">
+            <label for="filterSetupItem">SETUP ITEM</label>
+            <select id="filterSetupItem" class="ts-input-select" disabled>
+              <option value="">선택</option>
+              <option value="SELECT">SELECT</option>
+              <option value="INSTALLATION PREPARATION">INSTALLATION PREPARATION</option>
+              <option value="FAB IN">FAB IN</option>
+              <option value="DOCKING">DOCKING</option>
+              <option value="CABLE HOOK UP">CABLE HOOK UP</option>
+              <option value="POWER TURN ON">POWER TURN ON</option>
+              <option value="UTILITY TURN ON">UTILITY TURN ON</option>
+              <option value="GAS TURN ON">GAS TURN ON</option>
+              <option value="LEVELING">LEVELING</option>
+              <option value="TEACHING">TEACHING</option>
+              <option value="PART INSTALLATION">PART INSTALLATION</option>
+              <option value="LEAK CHECK">LEAK CHECK</option>
+              <option value="TTTM">TTTM</option>
+              <option value="CUSTOMER CERTIFICATION">CUSTOMER CERTIFICATION</option>
+              <option value="PROCESS CONFIRM">PROCESS CONFIRM</option>
+            </select>
+          </div>
+
+          <!-- TRANSFER ITEM -->
+          <div class="ts-wlog-field">
+            <label for="filterTransferItem">TRANSFER ITEM</label>
+            <select id="filterTransferItem" class="ts-input-select" disabled>
+              <option value="">선택</option>
+            </select>
+            <div class="ts-wlog-help">
+              설비 타입 + MAINT 선택 시 활성화됩니다.
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- 중앙 채팅 영역 -->
       <main class="ts-chat-layout">
@@ -144,6 +270,12 @@
               >
                 Diff Temp Interlock 점검 포인트
               </button>
+              <button
+                class="ts-suggest-chip ts-sample"
+                data-q="정현우 엔지니어의 최근 한 달간 SUPRA N 작업 이력을 요약해줘."
+              >
+                엔지니어 작업 요약
+              </button>
             </div>
 
             <div class="ts-input-row">
@@ -152,14 +284,13 @@
                   id="questionInput"
                   class="ts-input-textarea"
                   rows="1"
-                  placeholder="알람 상황, 증상, 조건 등을 입력해 주세요."
+                  placeholder="알람 상황 / 작업 이력에 대해 자연스럽게 질문해 주세요."
                 ></textarea>
               </div>
               <button id="btnAsk" class="ts-btn ts-btn-primary">
                 전송
               </button>
             </div>
-
           </div>
         </div>
       </main>

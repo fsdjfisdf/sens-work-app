@@ -53,7 +53,7 @@ async function askTsRag(req, res) {
       question: question.trim(),
       equipment_type,
       alarm_key,
-      mode: mode || 'ALARM',  // 기본은 기존처럼 알람 모드
+      mode: mode || 'BOTH',  // 기본은 기존처럼 알람 모드
 
       // WORK_LOG 필터 매핑
       task_date,
