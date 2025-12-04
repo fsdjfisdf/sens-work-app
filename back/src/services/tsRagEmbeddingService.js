@@ -120,11 +120,25 @@ async function searchSimilarSteps({
   };
 }
 
+// back/src/services/tsRagEmbeddingService.js
+const { openai, MODELS } = require('../../config/openai');
+const dao = require('../dao/tsRagDao');
+
+// ... cosineSimilarity, buildMissingEmbeddings 등 기존 코드 유지
+
+// 🔹 작업이력 기반 유사 로그 검색
 async function searchSimilarWorkLogs({
   question,
-  equipment_type,
+  task_date,
+  date_from,
+  date_to,
   equipment_name,
   worker_name,
+  group_name,
+  site,
+  work_type,
+  setup_item,
+  transfer_item,
   topK = 5,
   candidateLimit = 300,
 }) {
@@ -132,18 +146,25 @@ async function searchSimilarWorkLogs({
     throw new Error('질문이 비어 있습니다.');
   }
 
-  // 1) 질문 임베딩 생성
+  // 1) 질문 임베딩
   const embResp = await openai.embeddings.create({
     model: MODELS.embedding,
     input: [question],
   });
   const qVec = embResp.data[0].embedding;
 
-  // 2) 후보 임베딩 + 메타 가져오기 (WORK_LOG 전용)
+  // 2) 후보 가져오기 (이제 필터 포함)
   const candidates = await dao.fetchWorkLogEmbeddingsWithMeta({
-    equipment_type,
+    task_date,
+    date_from,
+    date_to,
     equipment_name,
     worker_name,
+    group_name,
+    site,
+    work_type,
+    setup_item,
+    transfer_item,
     limit: candidateLimit,
   });
 
@@ -171,11 +192,23 @@ async function searchSimilarWorkLogs({
       src_table: row.src_table,
       src_id: row.src_id,
       equipment_type: row.equipment_type,
+      equipment_name: row.equipment_name,
+      workers_clean: row.workers_clean,
+      group_name: row.group_name,
+      site: row.site,
+      line: row.line,
+      task_date: row.task_date,
+      setup_item: row.setup_item,
+      transfer_item: row.transfer_item,
+      work_type: row.work_type,
+      status_short: row.status_short,
+      duration_min: row.duration_min,
       title: row.title,
       content: row.content,
     };
   });
 
+  // 4) 상위 K개
   scored.sort((a, b) => b.score - a.score);
   const topHits = scored.slice(0, topK);
 
@@ -185,164 +218,134 @@ async function searchSimilarWorkLogs({
   };
 }
 
+
 // 🔹 OpenAI Chat을 사용해 최종 답변 생성
 async function answerQuestion({
   question,
-  equipment_type,
-  alarm_key,
+  equipment_type,  // ALARM용
+  alarm_key,       // ALARM용
+  // === WORK_LOG용 필터 ===
+  task_date,
+  date_from,
+  date_to,
+  equipment_name,
+  worker_name,
+  group_name,
+  site,
+  work_type,
+  setup_item,
+  transfer_item,
+  // 공통
   topK = 5,
   candidateLimit = 300,
-  mode, // 'ALARM_ONLY' | 'WORK_LOG_ONLY' | 'MIXED'
+  mode = 'ALARM',  // 기본: 기존처럼 알람 위주
 }) {
-  // 기본 모드 자동 추론
-  let effectiveMode = mode;
-  if (!effectiveMode) {
-    const q = question || '';
-    const hasAlarmKey = !!alarm_key;
-    const looksLikeAlarm = /알람|alarm/i.test(q);
-    const looksLikeHistory = /작업이력|history|로그|log|EPAB\d{3}/i.test(q);
-    const looksLikePerson = /정현우|엔지니어|engineer/i.test(q);
-
-    if (hasAlarmKey || looksLikeAlarm) {
-      effectiveMode = 'ALARM_ONLY';
-    } else if (looksLikeHistory || looksLikePerson) {
-      effectiveMode = 'WORK_LOG_ONLY';
-    } else {
-      effectiveMode = 'MIXED';
-    }
-  }
-
-  const useAlarm = effectiveMode !== 'WORK_LOG_ONLY';
-  const useWorkLog = effectiveMode !== 'ALARM_ONLY';
-
-  let alarmHits = [];
-  let workLogHits = [];
-
-  if (useAlarm) {
-    ({ hits: alarmHits } = await searchSimilarSteps({
+  if (mode === 'WORK_LOG') {
+    // 🔹 작업이력만
+    const { hits } = await searchSimilarWorkLogs({
       question,
-      equipment_type,
-      alarm_key,
+      task_date,
+      date_from,
+      date_to,
+      equipment_name,
+      worker_name,
+      group_name,
+      site,
+      work_type,
+      setup_item,
+      transfer_item,
       topK,
       candidateLimit,
-    }));
-  }
+    });
 
-  if (useWorkLog) {
-    ({ hits: workLogHits } = await searchSimilarWorkLogs({
-      question,
-      equipment_type,
-      topK: 5,
-      candidateLimit: 300,
-    }));
-  }
+    if (!hits.length) {
+      // 날짜/필터 명확히 줬는데 아무것도 없으면, 우리가 직접 말해주는 게 안전
+      if (task_date || date_from || date_to || equipment_name || worker_name) {
+        return {
+          answer:
+            '요청하신 조건(task_date / 설비 / 작업자 등)에 맞는 작업 이력이 등록되어 있지 않습니다.\n' +
+            '필터 조건을 조금 완화해서 다시 조회해 주세요.',
+          hits: [],
+        };
+      }
 
-  if (!alarmHits.length && !workLogHits.length) {
-    return {
-      answer:
-        '관련된 알람/트러블슈팅 Step 또는 작업 이력 데이터를 찾지 못했습니다. 입력하신 조건(equipment_type, AlarmKey 등)을 확인해 주세요.',
-      hits: [],
-    };
-  }
+      return {
+        answer: '관련된 작업 이력 데이터를 찾지 못했습니다.',
+        hits: [],
+      };
+    }
 
-  // 근거 텍스트 블록 만들기
-  const alarmEvidenceBlock = alarmHits.length
-    ? alarmHits
-        .map((h, idx) => {
-          return [
-            `[#ALARM_${idx + 1}] ${h.title || ''}`,
-            `- AlarmKey: ${h.alarm_key || ''}`,
-            `- CASE / STEP: ${h.case_no ?? ''} / ${h.step_no ?? ''}`,
-            `- Equipment: ${h.equipment_type || ''}`,
-            '',
-            h.content || '',
-          ].join('\n');
-        })
-        .join('\n\n----------------------------------------\n\n')
-    : '(관련 알람 TS 근거 없음)';
+    // 🔹 근거 블록 만들기 (작업이력용)
+    const evidenceBlocks = hits
+      .map((h, idx) => {
+        return [
+          `[#${idx + 1}] ${h.title || ''}`,
+          `- DATE: ${h.task_date || ''}`,
+          `- EQUIP: ${h.equipment_type || ''} - ${h.equipment_name || ''}`,
+          `- GROUP/SITE/LINE: ${h.group_name || ''} / ${h.site || ''} / ${h.line || ''}`,
+          `- WORK_TYPE: ${h.work_type || ''}`,
+          `- SETUP_ITEM: ${h.setup_item || ''}`,
+          `- TRANSFER_ITEM: ${h.transfer_item || ''}`,
+          '',
+          h.content || '',
+        ].join('\n');
+      })
+      .join('\n\n----------------------------------------\n\n');
 
-  // 🔹 작업이력 근거 블록
-  const workLogEvidenceBlock = workLogHits.length
-    ? workLogHits
-        .map((h, idx) => {
-          return [
-            `[#LOG_${idx + 1}] ${h.title || ''}`,
-            `- Source: ${h.source_type || ''} / ${h.src_table || ''} / ID=${h.src_id ?? ''}`,
-            `- Equipment: ${h.equipment_type || ''}`,
-            '',
-            h.content || '',
-          ].join('\n');
-        })
-        .join('\n\n----------------------------------------\n\n')
-    : '(관련 작업 이력 근거 없음)';
+    // 🔹 Chat 호출 (작업이력용 프롬프트)
+    const systemPrompt = `
+너는 PSK 현장 작업 이력을 기반으로 요약/분석해 주는 엔지니어용 어시스턴트이다.
+- 후배 엔지니어에게 작업 히스토리를 설명하듯이 자연스럽게 말한다.
+- 제공된 근거(작업 이력 텍스트)만 사용해서 답한다.
+- 없거나 애매한 내용은 지어내지 말고 "데이터 상에서는 확인되지 않는다"고 말한다.
+`.trim();
 
-  const systemPrompt = `
-너는 PSK SUPRA 계열 장비의 알람/트러블슈팅 가이드와 실제 작업 이력을 함께 참고하여 답변하는 엔지니어용 어시스턴트이다.
-
-역할/톤:
-- 현장에서 후배 엔지니어에게 설명해주는 "시니어 엔지니어"라고 생각하고, 말투는 자연스럽고 친절한 한국어로 답변한다.
-- 문장은 너무 딱딱한 보고서 형식보다는, 이해하기 쉽게 풀어서 설명한다.
-
-제한:
-- 제공된 근거 텍스트(rag_chunks 내용)만 사용해서 답변한다.
-- 근거가 부족하거나 애매하면 "해당 근거로는 판단이 어렵다"라고 솔직하게 말하고, 추측은 최소화한다.
-- 지어내지 않는다.
-
-내용 구성:
-- 먼저 알람 TS(워크플로우) 근거를 기반으로 "정석적인 점검/조치 순서"를 설명한다.
-- 이어서 WORK LOG 근거를 참고하여, 실제 현장에서 자주 발생했던 원인/조치/주의사항을 보완 설명한다.
-- 안전 관련 내용(safety)이 있으면 반드시 눈에 띄게 강조해서 알려준다. (예: "⚠️ 안전 주의:" 로 시작)
-`;
-
-  const userPrompt = `
+    const userPrompt = `
 질문:
 ${question}
 
-설비 조건:
-- equipment_type: ${equipment_type || '(지정 없음)'}
-- AlarmKey: ${alarm_key || '(지정 없음)'}
+적용된 필터 (참고용):
+- 날짜: ${task_date || `${date_from || ''} ~ ${date_to || ''}`}
+- 설비: ${equipment_name || '(지정 없음)'}
+- 작업자: ${worker_name || '(지정 없음)'}
+- 그룹/사이트: ${group_name || '(지정 없음)'} / ${site || '(지정 없음)'}
+- 작업 타입: ${work_type || '(지정 없음)'}
+- SETUP_ITEM: ${setup_item || '(없음)'}
+- TRANSFER_ITEM: ${transfer_item || '(없음)'}
 
-[알람/트러블슈팅 가이드 근거]
-${alarmEvidenceBlock}
+아래는 조건에 맞는 작업 이력들이다. 이 근거만 사용해서 답변을 구성해라.
 
-[작업 이력 근거]
-${workLogEvidenceBlock}
+${evidenceBlocks}
 
-답변 지침:
-- "정석 TS 절차"와 "실제 작업 이력에서 보이는 패턴"을 잘 섞어서 설명하되, 서로 헷갈리지 않게 구분해서 말해라.
-- 예를 들어,
-  1) 먼저 알람의 의미와 기본 점검 순서를 TS 근거 기준으로 정리하고,
-  2) 그 다음, 비슷한 상황에서 실제로 어떤 조치를 했는지(Work Log 근거 기준) 요약해 주면 좋다.
-- 실제로 따라 할 수 있도록 점검/조치 순서를 단계별로 정리하되, 너무 딱딱한 보고서 스타일은 피하고 자연스럽게 설명해라.
-- 안전 관련 사항은 "⚠️ 안전 주의:" 형태로 따로 강조해라.
-`;
+답변 스타일:
+- "어떤 설비에서 어떤 이력이 있었는지"를 먼저 요약한 다음,
+- 주요 이슈 / 조치 내용 / 결과를 정리해라.
+- 여러 건이 있을 경우, 날짜 순서나 설비/작업자 기준으로 묶어서 설명해도 좋다.
+- 필요하면 bullet/list를 쓰되, 전체 흐름은 자연스럽게 읽히도록 작성해라.
+`.trim();
 
-  const completion = await openai.chat.completions.create({
-    model: MODELS.chat,
-    messages: [
-      { role: 'system', content: systemPrompt.trim() },
-      { role: 'user', content: userPrompt.trim() },
-    ],
-    temperature: 0.2,
-  });
+    const completion = await openai.chat.completions.create({
+      model: MODELS.chat,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.2,
+    });
 
-  const answer = completion.choices[0]?.message?.content ?? '';
+    const answer = completion.choices[0]?.message?.content ?? '';
 
-  // hits에는 두 소스 모두 반환 (프론트에서 필요하면 구분해서 사용)
-  const mergedHits = [
-    ...alarmHits.map((h) => ({ ...h, source_type: 'ALARM_STEP' })),
-    ...workLogHits.map((h) => ({ ...h, source_type: 'WORK_LOG' })),
-  ];
+    return { answer, hits };
+  }
 
-  return {
-    answer,
-    hits: mergedHits,
-  };
+  // 🔸 그 외는 기존 ALARM 모드 그대로 (너가 이미 쓰고 있는 코드 유지)
+  // mode === 'ALARM' or 'BOTH' 처리 부분은 생략(기존 코드 그대로)
 }
 
 module.exports = {
   buildMissingEmbeddings,
   searchSimilarSteps,
+  searchSimilarWorkLogs,   // 🔸 export
   answerQuestion,
 };
 

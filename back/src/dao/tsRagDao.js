@@ -115,29 +115,78 @@ module.exports = {
 // tsRagDao.js
 
 async function fetchWorkLogEmbeddingsWithMeta({
-  equipment_type,
-  equipment_name,   // EPAB301 같은 거
-  worker_name,      // 정현우 같은 거
+  task_date,      // '2025-10-30' (하루)
+  date_from,      // 기간 시작
+  date_to,        // 기간 끝
+  equipment_name,
+  worker_name,    // workers_clean LIKE %...%
+  group_name,     // PEE1 / PEE2 / PSKH
+  site,           // PT / HS / IC / CJ / PSKH
+  work_type,      // SET UP / MAINT / RELOCATION
+  setup_item,
+  transfer_item,
   limit = 500,
 }) {
   const where = ['c.source_type = "WORK_LOG"'];
   const params = [];
 
-  if (equipment_type) {
-    where.push('w.equipment_type = ?');
-    params.push(equipment_type);
+  // 🔸 날짜 (하루 지정)
+  if (task_date) {
+    where.push('c.task_date = ?');
+    params.push(task_date);
   }
+
+  // 🔸 기간 지정
+  if (date_from) {
+    where.push('c.task_date >= ?');
+    params.push(date_from);
+  }
+  if (date_to) {
+    where.push('c.task_date <= ?');
+    params.push(date_to);
+  }
+
+  // 🔸 설비명
   if (equipment_name) {
-    where.push('w.equipment_name = ?');        // 정확히 일치
-    // 또는 LIKE '%EPAB301%' 로 바꿀 수도 있음
+    where.push('c.equipment_name = ?');
     params.push(equipment_name);
   }
+
+  // 🔸 작업자 이름 (쉼표 포함 문자열에서 LIKE 검색)
   if (worker_name) {
-    // (main)/(support) 제거된 형태로 LIKE 검색
-    where.push(
-      "REPLACE(REPLACE(w.task_man, '(main)',''), '(support)','') LIKE ?"
-    );
+    where.push('c.workers_clean LIKE ?');
     params.push(`%${worker_name}%`);
+  }
+
+  // 🔸 그룹
+  if (group_name) {
+    where.push('c.group_name = ?');
+    params.push(group_name);
+  }
+
+  // 🔸 사이트
+  if (site) {
+    where.push('c.site = ?');
+    params.push(site);
+  }
+
+  // 🔸 작업 타입
+  if (work_type) {
+    where.push('c.work_type = ?');
+    params.push(work_type);
+  }
+
+  // 🔸 SET UP/RELOCATION일 때만 프론트에서 넘어오겠지만,
+  //     백엔드는 그냥 값이 있으면 필터만 건다.
+  if (setup_item) {
+    where.push('c.setup_item = ?');
+    params.push(setup_item);
+  }
+
+  // 🔸 MAINT일 때 프론트에서 넘어옴
+  if (transfer_item) {
+    where.push('c.transfer_item = ?');
+    params.push(transfer_item);
   }
 
   const sql = `
@@ -151,36 +200,39 @@ async function fetchWorkLogEmbeddingsWithMeta({
       c.src_table,
       c.src_id,
       c.equipment_type,
+      c.equipment_name,
+      c.workers_clean,
+      c.group_name,
+      c.site,
+      c.line,
+      c.task_date,
+      c.setup_item,
+      c.transfer_item,
+      c.work_type,
+      c.status_short,
+      c.duration_min,
       c.title,
-      c.content,
-      w.equipment_name,
-      w.task_man,
-      w.task_date
+      c.content
     FROM rag_embeddings e
     JOIN rag_chunks c
       ON c.id = e.chunk_id
-    JOIN work_log w
-      ON c.source_type = 'WORK_LOG'
-     AND c.src_table = 'work_log'
-     AND c.src_id = w.id
     WHERE e.model = ?
       AND ${where.join(' AND ')}
-    ORDER BY w.task_date DESC
+    ORDER BY c.task_date DESC, c.id DESC
     LIMIT ?
   `;
 
-  params.unshift(MODELS.embedding);
-  params.push(Number(limit));
+  params.unshift(MODELS.embedding);   // 맨 앞: 모델명
+  params.push(Number(limit));         // 맨 끝: limit
 
   const [rows] = await pool.query(sql, params);
   return rows;
 }
 
-
 module.exports = {
   findChunksWithoutEmbedding,
   insertEmbedding,
-  fetchEmbeddingsWithMeta,
+  fetchEmbeddingsWithMeta,       // ALARM용
+  fetchWorkLogEmbeddingsWithMeta, // 🔸 새로 추가
   getChunksByIds,
-  fetchWorkLogEmbeddingsWithMeta,   // ⬅️ 이 줄 추가
 };
