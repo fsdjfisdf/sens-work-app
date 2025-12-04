@@ -18,11 +18,7 @@ async function buildEmbeddings(req, res) {
   }
 }
 
-// 🔹 알람 RAG 질문
-//    POST /api/ts-rag/ask
-//    body: { question, equipment_type?, alarm_key?, topK? }
-// back/src/controllers/tsRagController.js
-const svc = require('../services/tsRagEmbeddingService');
+
 
 async function askTsRag(req, res) {
   try {
