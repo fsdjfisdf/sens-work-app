@@ -5,6 +5,9 @@ const secret = require("../../config/secret");
 const indexDao = require("../dao/indexDao");
 const redis = require("../../config/redisClient"); // Redis 클라이언트 불러오기
 
+const bcrypt = require("bcrypt");
+const SALT_ROUNDS = 10;
+
 // 로그인 유지, 토큰 검증
 exports.readJwt = async function (req, res) {
   const { userIdx, nickname } = req.verifiedToken;
@@ -28,11 +31,37 @@ exports.createJwt = async function (req, res) {
     });
   }
 
-  // 브루트포스 방지 - Redis에 IP 기반 로그인 시도 저장
   const loginAttemptsKey = `login_attempts:${clientIp}`;
   const blockTimeKey = `block_time:${clientIp}`;
   const maxAttempts = 5; // 최대 시도 횟수
   const baseBlockTime = 15 * 60; // 기본 차단 시간 (15분)
+
+  // 공통: 로그인 실패 처리 함수
+  const handleLoginFail = async () => {
+    const newAttempts = await redis.incr(loginAttemptsKey);
+    if (newAttempts === 1) {
+      await redis.expire(loginAttemptsKey, baseBlockTime);
+    }
+
+    if (newAttempts >= maxAttempts) {
+      const blockDuration = baseBlockTime * Math.pow(2, newAttempts - maxAttempts);
+      await redis.set(blockTimeKey, blockDuration, "EX", blockDuration);
+
+      return res.status(429).send({
+        isSuccess: false,
+        code: 429,
+        message: `너무 많은 실패 시도로 인해 ${Math.ceil(
+          blockDuration / 60
+        )}분 동안 계정이 잠겼습니다.`,
+      });
+    }
+
+    return res.send({
+      isSuccess: false,
+      code: 410,
+      message: `아이디 또는 비밀번호가 올바르지 않습니다. (${newAttempts}/${maxAttempts}회 실패)`,
+    });
+  };
 
   try {
     const attempts = await redis.get(loginAttemptsKey);
@@ -42,54 +71,65 @@ exports.createJwt = async function (req, res) {
       return res.status(429).send({
         isSuccess: false,
         code: 429,
-        message: `너무 많은 로그인 시도가 감지되었습니다. ${Math.ceil(blockTime / 60)}분 후 다시 시도하세요.`,
+        message: `너무 많은 로그인 시도가 감지되었습니다. ${Math.ceil(
+          blockTime / 60
+        )}분 후 다시 시도하세요.`,
       });
     }
 
     const connection = await pool.getConnection(async (conn) => conn);
     try {
-      const [rows] = await indexDao.isValidUsers(connection, userID, password);
+      const [rows] = await indexDao.isValidUsers(connection, userID);
 
+      // 아이디 없음
       if (rows.length < 1) {
-        // 로그인 실패 시 시도 횟수 증가
-        const newAttempts = await redis.incr(loginAttemptsKey);
-        if (newAttempts === 1) {
-          await redis.expire(loginAttemptsKey, baseBlockTime); // 만료 시간 설정
-        }
+        return await handleLoginFail();
+      }
 
-        if (newAttempts >= maxAttempts) {
-          const blockDuration = baseBlockTime * Math.pow(2, newAttempts - maxAttempts); // 점진적 증가
-          await redis.set(blockTimeKey, blockDuration, "EX", blockDuration);
+      const user = rows[0];
 
-          return res.status(429).send({
-            isSuccess: false,
-            code: 429,
-            message: `너무 많은 실패 시도로 인해 ${Math.ceil(blockDuration / 60)}분 동안 계정이 잠겼습니다.`,
-          });
-        }
-
-        return res.send({
-          isSuccess: false,
-          code: 410,
-          message: `아이디 또는 비밀번호가 올바르지 않습니다. (${newAttempts}/${maxAttempts}회 실패)`,
-        });
+      // 비밀번호 비교 (bcrypt)
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return await handleLoginFail();
       }
 
       // 로그인 성공 시 시도 횟수 초기화
       await redis.del(loginAttemptsKey);
       await redis.del(blockTimeKey);
 
-      const { userIdx, nickname, role } = rows[0];
+      // 비밀번호 변경 정책 체크
+      let mustChangePassword = false;           // 최초 로그인 강제 변경
+      let passwordChangeRecommended = false;    // 3개월 경과 권고
+
+      if (!user.password_changed_at) {
+        // 정책 도입 후 첫 로그인: 무조건 변경 요구
+        mustChangePassword = true;
+      } else {
+        const lastChange = new Date(user.password_changed_at);
+        const now = new Date();
+        const diffDays = (now - lastChange) / (1000 * 60 * 60 * 24);
+
+        if (diffDays >= 90) {
+          passwordChangeRecommended = true;
+        }
+      }
+
+      const { userIdx, nickname, role } = user;
       const token = jwt.sign(
         { userIdx: userIdx, nickname: nickname, role: role },
         secret.jwtsecret,
-        { expiresIn: "1h" } // 1시간 만료 설정
-    );
+        { expiresIn: "1h" }
+      );
 
       console.log(`User logged in: ${nickname}`);
 
       return res.send({
-        result: { jwt: token },
+        result: {
+          jwt: token,
+          mustChangePassword,
+          passwordChangeRecommended,
+        },
         isSuccess: true,
         code: 200,
         message: "로그인 성공",
@@ -113,6 +153,7 @@ exports.createJwt = async function (req, res) {
     });
   }
 };
+
 
 
 
@@ -152,12 +193,13 @@ exports.createUsers = async function (req, res) {
     const connection = await pool.getConnection(async (conn) => conn);
     try {
       // 아이디 중복 검사가 필요. 직접 구현해보기.
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
       // 2. DB 입력
       const [rows] = await indexDao.insertUsers(
         connection,
         userID,
-        password,
+        hashedPassword,
         nickname,
         group,
         site,
@@ -445,8 +487,22 @@ exports.resetPassword = async function (req, res) {
         });
       }
 
-      const updateQuery = `UPDATE Users SET password = ? WHERE userIdx = ?`;
-      await connection.query(updateQuery, [newPassword, rows[0].userIdx]);
+      const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/;
+      if (!passwordRegExp.test(newPassword)) {
+        return res.status(400).json({
+          isSuccess: false,
+          message: "비밀번호 정규식 8-16 문자, 숫자 조합",
+        });
+      }
+
+      const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+      const updateQuery = `
+        UPDATE Users
+        SET password = ?, password_changed_at = NOW()
+        WHERE userIdx = ?
+      `;
+      await connection.query(updateQuery, [hashed, rows[0].userIdx]);
 
       return res.status(200).json({
         isSuccess: true,
@@ -464,4 +520,61 @@ exports.resetPassword = async function (req, res) {
   }
 };
 
+exports.changePassword = async function (req, res) {
+  const userIdx = req.verifiedToken.userIdx;
+  const { currentPassword, newPassword } = req.body;
+
+  const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/;
+  if (!passwordRegExp.test(newPassword)) {
+    return res.status(400).json({
+      isSuccess: false,
+      message: "비밀번호 정규식 8-16 문자, 숫자 조합",
+    });
+  }
+
+  try {
+    const connection = await pool.getConnection(async (conn) => conn);
+    try {
+      const [rows] = await connection.query(
+        "SELECT password FROM Users WHERE userIdx = ? AND status = 'A'",
+        [userIdx]
+      );
+
+      if (rows.length < 1) {
+        return res.status(404).json({
+          isSuccess: false,
+          message: "사용자 정보를 찾을 수 없습니다.",
+        });
+      }
+
+      const user = rows[0];
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({
+          isSuccess: false,
+          message: "현재 비밀번호가 일치하지 않습니다.",
+        });
+      }
+
+      const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
+      await connection.query(
+        "UPDATE Users SET password = ?, password_changed_at = NOW() WHERE userIdx = ?",
+        [hashed, userIdx]
+      );
+
+      return res.status(200).json({
+        isSuccess: true,
+        message: "비밀번호가 성공적으로 변경되었습니다.",
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    logger.error(`changePassword error\n: ${JSON.stringify(err)}`);
+    return res.status(500).json({
+      isSuccess: false,
+      message: "비밀번호 변경 중 서버 오류가 발생했습니다.",
+    });
+  }
+};
 

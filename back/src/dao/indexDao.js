@@ -1,20 +1,42 @@
 const { pool } = require("../../config/database");
 
 // 로그인 (회원검증)
-exports.isValidUsers = async function (connection, userID, password) {
-  const Query = `SELECT userIdx, nickname, role FROM Users where userID = ? and password = ? and status = 'A';`;
-  const Params = [userID, password];
+exports.isValidUsers = async function (connection, userID) {
+  const Query = `
+    SELECT userIdx, nickname, role, password, password_changed_at
+    FROM Users
+    WHERE userID = ? AND status = 'A';
+  `;
+  const Params = [userID];
 
   const rows = await connection.query(Query, Params);
 
   return rows;
 };
 
-
 // 회원가입
 exports.insertUsers = async function (connection, userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa) {
-  const Query = `insert into Users(userID, password, nickname, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);`;
-  const Params = [userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa];
+  const Query = `
+  INSERT INTO Users(
+    userID,
+    password,
+    password_changed_at,
+    nickname,
+    \`group\`,
+    site,
+    level,
+    hire_date,
+    main_set_up_capa,
+    main_maint_capa,
+    main_capa,
+    multi_set_up_capa,
+    multi_maint_capa,
+    multi_capa,
+    total_capa
+  )
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+`;
+  const Params = [userID, password, new Date(), nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa];
 
   const rows = await connection.query(Query, Params);
 

@@ -3,47 +3,67 @@ const btnSignIn = document.querySelector("#signin");
 btnSignIn.addEventListener("click", signIn);
 
 async function signIn(event) {
-    const userID = document.querySelector("#userID").value;
-    const password = document.querySelector("#password").value;
-  
-    if (!userID || !password) {
-      return alert("회원 정보를 입력해주세요.");
+  const userID = document.querySelector("#userID").value;
+  const password = document.querySelector("#password").value;
+
+  if (!userID || !password) {
+    return alert("회원 정보를 입력해주세요.");
+  }
+
+  try {
+    const signInReturn = await axios({
+      method: "post",
+      url: "http://3.37.73.151:3001/sign-in",
+      headers: {},
+      data: { userID: userID, password: password },
+    });
+
+    const isValidSignIn = signInReturn.data.code === 200;
+
+    if (!isValidSignIn) {
+      alert(signInReturn.data.message);
+      return;
     }
-  
-    try {
-      const signInReturn = await axios({
-        method: "post",
-        url: "http://3.37.73.151:3001/sign-in",
-        headers: {},
-        data: { userID: userID, password: password },
-      });
-  
-      const isValidSignIn = signInReturn.data.code === 200;
-  
-      if (!isValidSignIn) {
-        alert(signInReturn.data.message);
+
+    const { jwt, mustChangePassword, passwordChangeRecommended } =
+      signInReturn.data.result;
+
+    localStorage.setItem("x-access-token", jwt);
+
+    const decodedToken = JSON.parse(atob(jwt.split(".")[1]));
+    localStorage.setItem("user-role", decodedToken.role);
+
+    // 🔴 최초 로그인: 무조건 비밀번호 변경 페이지로
+    if (mustChangePassword) {
+      alert("보안을 위해 최초 로그인 시 비밀번호를 변경해야 합니다.");
+      window.location.replace("./change_password.html");
+      return;
+    }
+
+    // 🟡 3개월 경과: 권고
+    if (passwordChangeRecommended) {
+      const goChange = confirm(
+        "마지막 비밀번호 변경일로부터 3개월이 지났습니다.\n지금 비밀번호를 변경하시겠습니까?"
+      );
+      if (goChange) {
+        window.location.replace("./change_password.html");
         return;
       }
-  
-      const jwt = signInReturn.data.result.jwt;
-      localStorage.setItem("x-access-token", jwt);
-  
-      const decodedToken = JSON.parse(atob(jwt.split(".")[1]));
-      localStorage.setItem("user-role", decodedToken.role);
-  
-      alert(signInReturn.data.message);
-      window.location.replace("./user_info.html");
-    } catch (error) {
-      if (error.response && error.response.status === 429) {
-        alert(error.response.data.message); // 차단 메시지 출력
-      } else if (error.response && error.response.status === 410) {
-        alert(error.response.data.message); // 실패 횟수 메시지 출력
-      } else {
-        console.error("로그인 요청 중 오류 발생:", error);
-        alert("로그인 요청 중 오류가 발생했습니다.");
-      }
+    }
+
+    alert(signInReturn.data.message);
+    window.location.replace("./user_info.html");
+  } catch (error) {
+    if (error.response && error.response.status === 429) {
+      alert(error.response.data.message); // 차단 메시지
+    } else if (error.response && error.response.status === 410) {
+      alert(error.response.data.message); // 실패 횟수 메시지
+    } else {
+      console.error("로그인 요청 중 오류 발생:", error);
+      alert("로그인 요청 중 오류가 발생했습니다.");
     }
   }
+}
   
 
 document.addEventListener("DOMContentLoaded", function () {
