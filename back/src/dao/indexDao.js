@@ -10,7 +10,6 @@ exports.isValidUsers = async function (connection, userID) {
   const Params = [userID];
 
   const rows = await connection.query(Query, Params);
-
   return rows;
 };
 

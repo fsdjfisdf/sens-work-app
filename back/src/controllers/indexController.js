@@ -87,9 +87,22 @@ exports.createJwt = async function (req, res) {
       }
 
       const user = rows[0];
+      const storedPassword = user.password;
 
-      // 비밀번호 비교 (bcrypt)
-      const isMatch = await bcrypt.compare(password, user.password);
+      let isMatch = false;
+      let isLegacy = false; // 평문 비번인지 여부
+
+      if (storedPassword && storedPassword.startsWith("$2")) {
+        // 이미 bcrypt 해시로 저장된 경우
+        isMatch = await bcrypt.compare(password, storedPassword);
+      } else {
+        // 옛날 방식: 평문으로 저장된 경우
+        if (password === storedPassword) {
+          isMatch = true;
+          isLegacy = true;
+        }
+      }
+
       if (!isMatch) {
         return await handleLoginFail();
       }
@@ -98,12 +111,25 @@ exports.createJwt = async function (req, res) {
       await redis.del(loginAttemptsKey);
       await redis.del(blockTimeKey);
 
+      // ⬇️ 레거시 평문 비번이면 여기서 해시로 자동 마이그레이션
+      if (isLegacy) {
+        const newHash = await bcrypt.hash(password, SALT_ROUNDS);
+        await connection.query(
+          `
+          UPDATE Users
+          SET password = ?, password_changed_at = NULL
+          WHERE userIdx = ?
+        `,
+          [newHash, user.userIdx]
+        );
+      }
+
       // 비밀번호 변경 정책 체크
-      let mustChangePassword = false;           // 최초 로그인 강제 변경
-      let passwordChangeRecommended = false;    // 3개월 경과 권고
+      let mustChangePassword = false; // 최초 로그인 강제 변경
+      let passwordChangeRecommended = false; // 3개월 경과 권고
 
       if (!user.password_changed_at) {
-        // 정책 도입 후 첫 로그인: 무조건 변경 요구
+        // 정책 기준상 "한 번도 비밀번호 변경 이력 없음" → 무조건 변경 요구
         mustChangePassword = true;
       } else {
         const lastChange = new Date(user.password_changed_at);
@@ -113,6 +139,12 @@ exports.createJwt = async function (req, res) {
         if (diffDays >= 90) {
           passwordChangeRecommended = true;
         }
+      }
+
+      // 레거시→해시로 막 변환한 유저는 첫 로그인이니 무조건 변경 강제
+      if (isLegacy) {
+        mustChangePassword = true;
+        passwordChangeRecommended = false;
       }
 
       const { userIdx, nickname, role } = user;
@@ -153,6 +185,7 @@ exports.createJwt = async function (req, res) {
     });
   }
 };
+
 
 
 
