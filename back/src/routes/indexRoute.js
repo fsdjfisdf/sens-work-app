@@ -29,6 +29,7 @@ module.exports = function (app) {
     // 비밀번호 재설정
     app.post("/find-password", index.resetPassword);
 
-    router.post("/change-password", jwtMiddleware, indexController.changePassword);
+    // 비밀번호 변경
+    app.post("/change-password", jwtMiddleware, index.changePassword);
     
 };
