@@ -195,7 +195,8 @@ exports.createUsers = async function (req, res) {
 
   // 1. 유저 데이터 검증
   const userIDRegExp = /^[a-z]+[a-z0-9]{5,19}$/; // 아이디 정규식 영문자로 시작하는 영문자 또는 숫자 6-20
-  const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/; // 비밀번호 정규식 8-16 문자, 숫자 조합
+const passwordRegExp =
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^~+=-])[A-Za-z\d@$!%*#?&^~+=-]{8,16}$/;
   const nicknameRegExp = /^[가-힣|a-z|A-Z|0-9|]{2,10}$/; // 닉네임 정규식 2-10 한글, 숫자 또는 영문
 
   if (!userIDRegExp.test(userID)) {
@@ -522,10 +523,10 @@ exports.resetPassword = async function (req, res) {
 
       const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/;
       if (!passwordRegExp.test(newPassword)) {
-        return res.status(400).json({
-          isSuccess: false,
-          message: "비밀번호 정규식 8-16 문자, 숫자 조합",
-        });
+return res.status(400).json({
+  isSuccess: false,
+  message: "비밀번호는 8~16자의 영문, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다.",
+});
       }
 
       const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
@@ -557,12 +558,13 @@ exports.changePassword = async function (req, res) {
   const userIdx = req.verifiedToken.userIdx;
   const { currentPassword, newPassword } = req.body;
 
-  const passwordRegExp = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/;
+const passwordRegExp =
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&^~+=-])[A-Za-z\d@$!%*#?&^~+=-]{8,16}$/;
   if (!passwordRegExp.test(newPassword)) {
-    return res.status(400).json({
-      isSuccess: false,
-      message: "비밀번호 정규식 8-16 문자, 숫자 조합",
-    });
+return res.status(400).json({
+  isSuccess: false,
+  message: "비밀번호는 8~16자의 영문, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다.",
+});
   }
 
   try {
