@@ -1,8 +1,13 @@
 // back/src/controllers/equipmentController.js
 const { pool } = require('../../config/database');
 
+// back/src/controllers/equipmentController.js
+const { pool } = require('../../config/database');
+
 exports.getEquipments = async (req, res) => {
-  // 프론트에서 보내는 모든 쿼리 파라미터 받기
+  console.log('==== getEquipments req.query ====');
+  console.log(req.query);
+
   const { eqname, group, site, line, type, warranty_status } = req.query;
 
   try {
@@ -17,7 +22,7 @@ exports.getEquipments = async (req, res) => {
     }
 
     if (group) {
-      conditions.push('`GROUP` = ?'); // GROUP은 예약어라 백틱 필수
+      conditions.push('`GROUP` = ?');   // GROUP 은 예약어라 백틱 필요
       params.push(group);
     }
 
@@ -41,18 +46,16 @@ exports.getEquipments = async (req, res) => {
       params.push(warranty_status);
     }
 
-    // 조건이 하나라도 있으면 WHERE 붙이기
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
-    // 보기 좋게 정렬
     query += ' ORDER BY SITE, LINE, EQNAME';
-
-    const [rows] = await pool.query(query, params);
 
     console.log('Executed Query:', query);
     console.log('Params:', params);
+
+    const [rows] = await pool.query(query, params);
     console.log('Result count:', rows.length);
 
     res.status(200).json(rows);
@@ -61,6 +64,7 @@ exports.getEquipments = async (req, res) => {
     res.status(500).json({ error: 'Error retrieving equipment data' });
   }
 };
+
 
 exports.addEquipment = async (req, res) => {
   const {
