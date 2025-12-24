@@ -1,9 +1,6 @@
 // back/src/controllers/equipmentController.js
 const { pool } = require('../../config/database');
 
-// back/src/controllers/equipmentController.js
-const { pool } = require('../../config/database');
-
 exports.getEquipments = async (req, res) => {
   console.log('==== getEquipments req.query ====');
   console.log(req.query);
