@@ -1,0 +1,654 @@
+/* equipment_singal2.css */
+/* S-WORKS Equipment Signal v2 — 검색 우선 레이아웃 */
+
+:root {
+  --eq2-bg: #0f172a;
+  --eq2-surface: #0b1220;
+  --eq2-panel: #020617;
+  --eq2-panel-soft: #020617;
+  --eq2-border-subtle: rgba(148, 163, 184, 0.25);
+
+  --eq2-text: #e5e7eb;
+  --eq2-text-soft: #94a3b8;
+  --eq2-text-weak: #64748b;
+
+  --eq2-accent: #38bdf8;
+  --eq2-accent-soft: rgba(56, 189, 248, 0.1);
+  --eq2-accent-strong: #0ea5e9;
+
+  --eq2-danger: #f97373;
+  --eq2-success: #4ade80;
+  --eq2-warning: #facc15;
+
+  --eq2-radius-lg: 18px;
+  --eq2-radius-md: 12px;
+  --eq2-radius-sm: 8px;
+
+  --eq2-shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.6);
+  --eq2-shadow-subtle: 0 10px 30px rgba(15, 23, 42, 0.35);
+
+  --eq2-input-bg: rgba(15, 23, 42, 0.85);
+  --eq2-input-border: rgba(148, 163, 184, 0.4);
+  --eq2-input-focus: #38bdf8;
+
+  --eq2-transition-fast: 0.15s ease-out;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #0b1120 0, #020617 50%, #000 100%);
+  color: var(--eq2-text);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 페이지 전체 레이아웃 */
+
+.eq2-app {
+  min-height: 100vh;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+}
+
+/* ========== 좌측: 검색 패널 ========== */
+
+.eq2-sidebar {
+  background: linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 0.95),
+      rgba(15, 23, 42, 0.99)
+    ),
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.06), transparent 55%);
+  border-radius: 22px;
+  padding: 18px 18px 16px;
+  box-shadow: var(--eq2-shadow-soft);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eq2-sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eq2-title {
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.eq2-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.eq2-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eq2-field label {
+  font-size: 0.78rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-field input,
+.eq2-field select,
+.eq2-field textarea {
+  border-radius: 10px;
+  border: 1px solid var(--eq2-input-border);
+  padding: 6px 9px;
+  font-size: 0.82rem;
+  background: var(--eq2-input-bg);
+  color: var(--eq2-text);
+  outline: none;
+  transition: border-color var(--eq2-transition-fast),
+    box-shadow var(--eq2-transition-fast),
+    background var(--eq2-transition-fast),
+    transform var(--eq2-transition-fast);
+}
+
+.eq2-field input::placeholder {
+  color: var(--eq2-text-weak);
+}
+
+.eq2-field input:focus,
+.eq2-field select:focus,
+.eq2-field textarea:focus {
+  border-color: var(--eq2-input-focus);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.55);
+  background: rgba(15, 23, 42, 0.96);
+  transform: translateY(-1px);
+}
+
+.eq2-input-error {
+  border-color: var(--eq2-danger) !important;
+}
+
+.eq2-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.eq2-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.eq2-btn {
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  padding: 7px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background var(--eq2-transition-fast),
+    border-color var(--eq2-transition-fast),
+    color var(--eq2-transition-fast),
+    box-shadow var(--eq2-transition-fast),
+    transform var(--eq2-transition-fast);
+}
+
+.eq2-btn-primary {
+  background: linear-gradient(135deg, var(--eq2-accent), var(--eq2-accent-strong));
+  color: #0b1120;
+  box-shadow: 0 10px 24px rgba(56, 189, 248, 0.45);
+}
+
+.eq2-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 35px rgba(56, 189, 248, 0.6);
+}
+
+.eq2-btn-ghost {
+  background: transparent;
+  color: var(--eq2-text-soft);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.eq2-btn-ghost:hover {
+  background: rgba(15, 23, 42, 0.86);
+  border-color: rgba(148, 163, 184, 0.8);
+}
+
+.eq2-btn-outline {
+  width: 100%;
+  margin-top: 2px;
+  background: rgba(15, 23, 42, 0.4);
+  color: var(--eq2-accent);
+  border-color: rgba(56, 189, 248, 0.6);
+}
+
+.eq2-btn-outline:hover {
+  background: rgba(8, 47, 73, 0.7);
+  box-shadow: 0 10px 28px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.eq2-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.eq2-divider {
+  margin: 8px 0;
+  border: none;
+  border-top: 1px dashed rgba(148, 163, 184, 0.4);
+}
+
+.eq2-help {
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: var(--eq2-text-soft);
+}
+
+/* ========== 우측: 결과 + 상세 ========== */
+
+.eq2-main {
+  display: grid;
+  grid-template-rows: minmax(0, 1.3fr) minmax(0, 1.2fr);
+  gap: 10px;
+}
+
+/* 검색 결과 카드 */
+
+.eq2-results {
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), #020617);
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow: var(--eq2-shadow-subtle);
+  padding: 14px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.eq2-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.eq2-results-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.eq2-results-subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-result-count {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: var(--eq2-text-soft);
+}
+
+.eq2-result-empty {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-result-list {
+  margin-top: 6px;
+  padding-right: 4px;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 스크롤바 살짝만 보이게 */
+.eq2-result-list::-webkit-scrollbar {
+  width: 6px;
+}
+.eq2-result-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.eq2-result-list::-webkit-scrollbar-thumb {
+  background: rgba(30, 64, 175, 0.65);
+  border-radius: 999px;
+}
+
+/* 결과 행 */
+
+.eq2-row {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(30, 64, 175, 0.55);
+  background: radial-gradient(circle at top left, rgba(30, 64, 175, 0.38), #020617);
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform var(--eq2-transition-fast),
+    box-shadow var(--eq2-transition-fast),
+    border-color var(--eq2-transition-fast),
+    background var(--eq2-transition-fast);
+}
+
+.eq2-row-main {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.eq2-row-name {
+  font-size: 0.84rem;
+}
+
+.eq2-row-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 0.74rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(30, 64, 175, 0.65);
+  border-color: rgba(56, 189, 248, 0.7);
+}
+
+.eq2-row-active {
+  border-color: var(--eq2-accent);
+  box-shadow: 0 14px 34px rgba(56, 189, 248, 0.65);
+}
+
+/* 상태 점 */
+
+.eq2-status-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.eq2-status-green {
+  background: var(--eq2-success);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.9);
+}
+.eq2-status-yellow {
+  background: var(--eq2-warning);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.9);
+}
+.eq2-status-red {
+  background: var(--eq2-danger);
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.9);
+}
+.eq2-status-gray {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* 상세 패널 */
+
+.eq2-detail {
+  background: radial-gradient(circle at top right, rgba(15, 23, 42, 0.8), #020617);
+  border-radius: 22px;
+  border: 1px solid var(--eq2-border-subtle);
+  box-shadow: var(--eq2-shadow-subtle);
+  padding: 14px 14px 10px;
+  min-height: 0;
+  display: flex;
+}
+
+.eq2-detail-empty {
+  margin: auto;
+  text-align: center;
+  color: var(--eq2-text-soft);
+  font-size: 0.82rem;
+}
+
+.eq2-detail-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eq2-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.eq2-detail-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.eq2-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.eq2-tag {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--eq2-text-soft);
+}
+
+.eq2-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 상세 정보 그리드 */
+
+.eq2-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+}
+
+.eq2-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.eq2-detail-label {
+  font-size: 0.72rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-detail-value {
+  font-size: 0.82rem;
+}
+
+/* INFO 섹션 */
+
+.eq2-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 16px;
+  background: radial-gradient(circle at bottom, rgba(15, 23, 42, 0.9), #020617);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+}
+
+.eq2-detail-info-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-info-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 180px;
+  border-radius: 10px;
+  border: 1px solid var(--eq2-input-border);
+  background: var(--eq2-input-bg);
+  color: var(--eq2-text);
+  padding: 7px 9px;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.eq2-info-textarea:focus {
+  border-color: var(--eq2-input-focus);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
+}
+
+.eq2-detail-info-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ========== 모달 ========== */
+
+.eq2-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.eq2-modal.hidden {
+  display: none;
+}
+
+.eq2-modal:not(.hidden) {
+  display: flex;
+}
+
+.eq2-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.eq2-modal-content {
+  position: relative;
+  z-index: 1;
+  width: min(720px, 100% - 32px);
+  max-height: min(520px, 90vh);
+  background: radial-gradient(circle at top left, #0b1120, #020617);
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, 0.9);
+  padding: 14px 16px 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.eq2-modal-header {
+  margin-bottom: 8px;
+}
+
+.eq2-modal-header h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.eq2-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.eq2-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.eq2-field-full {
+  grid-column: 1 / -1;
+}
+
+/* 모달 스크롤 */
+
+.eq2-modal-grid::-webkit-scrollbar,
+.eq2-field-full textarea::-webkit-scrollbar {
+  width: 6px;
+}
+.eq2-modal-grid::-webkit-scrollbar-thumb,
+.eq2-field-full textarea::-webkit-scrollbar-thumb {
+  background: rgba(30, 64, 175, 0.7);
+  border-radius: 999px;
+}
+
+.eq2-modal-footer {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.eq2-required {
+  color: var(--eq2-danger);
+  font-size: 0.72rem;
+}
+
+/* 모달 열릴 때 body 스크롤 방지 */
+
+.eq2-modal-open {
+  overflow: hidden;
+}
+
+/* ========== 반응형 ========== */
+
+@media (max-width: 960px) {
+  .eq2-app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .eq2-main {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .eq2-sidebar {
+    border-radius: 18px;
+  }
+
+  .eq2-inline-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .eq2-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .eq2-row-meta {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .eq2-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
