@@ -431,7 +431,7 @@ async function handleEq2Delete() {
   const targetName = eq2SelectedEquipment.EQNAME;
   const ok = confirm(
     `정말로 설비 "${targetName}" 을(를) 삭제하시겠습니까?\n` +
-    `※ 관련 작업이력 테이블과의 연동/제약은 DB 설정에 따라 달라집니다.`
+    `※ 설비정보만 삭제되며 작업이력은 삭제되지 않습니다.`
   );
   if (!ok) return;
 
