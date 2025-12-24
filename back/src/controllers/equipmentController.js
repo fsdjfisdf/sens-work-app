@@ -1,9 +1,11 @@
 // back/src/controllers/equipmentController.js
 const { pool } = require('../../config/database');
 
+// 장비 목록 조회 (검색)
 exports.getEquipments = async (req, res) => {
-  console.log('==== getEquipments req.query ====');
-  console.log(req.query);
+  // 실제로 어떤 쿼리 파라미터가 들어오는지 로그로 확인
+  console.log('==== [getEquipments] req.query ====');
+  console.log(req.query); // { eqname: 'EPAP301', site: 'PT', ... } 이런 식으로 나와야 함
 
   const { eqname, group, site, line, type, warranty_status } = req.query;
 
@@ -12,49 +14,57 @@ exports.getEquipments = async (req, res) => {
     const conditions = [];
     const params = [];
 
-    // EQNAME 부분 검색 (대소문자 무시)
-    if (eqname) {
+    // 1) EQNAME 부분 검색 (대소문자 무시)
+    if (eqname && eqname.trim() !== '') {
       conditions.push('LOWER(EQNAME) LIKE LOWER(?)');
       params.push(`%${eqname.trim()}%`);
     }
 
-    if (group) {
-      conditions.push('`GROUP` = ?');   // GROUP 은 예약어라 백틱 필요
-      params.push(group);
+    // 2) GROUP 필터
+    if (group && group.trim() !== '') {
+      conditions.push('`GROUP` = ?'); // GROUP은 예약어라 백틱 필요
+      params.push(group.trim());
     }
 
-    if (site) {
+    // 3) SITE 필터
+    if (site && site.trim() !== '') {
       conditions.push('SITE = ?');
-      params.push(site);
+      params.push(site.trim());
     }
 
-    if (line) {
+    // 4) LINE 필터
+    if (line && line.trim() !== '') {
       conditions.push('LINE = ?');
-      params.push(line);
+      params.push(line.trim());
     }
 
-    if (type) {
+    // 5) TYPE 필터
+    if (type && type.trim() !== '') {
       conditions.push('TYPE = ?');
-      params.push(type);
+      params.push(type.trim());
     }
 
-    if (warranty_status) {
+    // 6) WARRANTY_STATUS 필터
+    if (warranty_status && warranty_status.trim() !== '') {
       conditions.push('WARRANTY_STATUS = ?');
-      params.push(warranty_status);
+      params.push(warranty_status.trim());
     }
 
+    // 조건이 하나라도 있으면 WHERE 절 추가
     if (conditions.length > 0) {
       query += ' WHERE ' + conditions.join(' AND ');
     }
 
+    // 보기 좋게 정렬
     query += ' ORDER BY SITE, LINE, EQNAME';
 
-    console.log('Executed Query:', query);
+    console.log('==== [getEquipments] Executed Query ====');
+    console.log(query);
     console.log('Params:', params);
 
     const [rows] = await pool.query(query, params);
-    console.log('Result count:', rows.length);
 
+    console.log('Result count:', rows.length);
     res.status(200).json(rows);
   } catch (err) {
     console.error('Error in getEquipments:', err);
@@ -63,6 +73,7 @@ exports.getEquipments = async (req, res) => {
 };
 
 
+// 장비 추가
 exports.addEquipment = async (req, res) => {
   const {
     eqname,
@@ -78,7 +89,6 @@ exports.addEquipment = async (req, res) => {
     info,
   } = req.body;
 
-  // 필수 필드 검증
   if (!eqname || !group || !site || !type || !start_date || !end_date || !warranty_status) {
     const missingFields = [];
     if (!eqname) missingFields.push('eqname');
@@ -88,6 +98,7 @@ exports.addEquipment = async (req, res) => {
     if (!start_date) missingFields.push('start_date');
     if (!end_date) missingFields.push('end_date');
     if (!warranty_status) missingFields.push('warranty_status');
+
     return res.status(400).json({ error: 'Required fields are missing.', missingFields });
   }
 
@@ -98,7 +109,7 @@ exports.addEquipment = async (req, res) => {
         \`LINE\`, \`FLOOR\`, \`BAY\`,
         \`START_DATE\`, \`END_DATE\`, \`WARRANTY_STATUS\`, \`INFO\`
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       eqname,
@@ -116,16 +127,20 @@ exports.addEquipment = async (req, res) => {
 
     const [result] = await pool.query(query, params);
 
-    console.log('Query Executed:', query, params);
-    console.log('Inserted Equipment:', result);
+    console.log('==== [addEquipment] INSERT Executed ====');
+    console.log(query);
+    console.log('Params:', params);
+    console.log('Inserted Equipment ID:', result.insertId);
 
     res.status(201).json({ message: 'Equipment added successfully!' });
   } catch (err) {
-    console.error('Database Error:', err.message);
+    console.error('Database Error in addEquipment:', err.message);
     res.status(500).json({ error: 'Error adding equipment.', details: err.message });
   }
 };
 
+
+// INFO만 수정 (equipment_signal2 상세 INFO SAVE 버튼에서 사용)
 exports.updateEquipmentInfo = async (req, res) => {
   const { eqname, info } = req.body;
 
@@ -151,10 +166,8 @@ exports.updateEquipmentInfo = async (req, res) => {
   }
 };
 
-/**
- * (선택) 설비 전체 정보 수정용 updateEquipment
- * equipment_add2.js 에서 PUT /api/equipment/:eqname 호출할 때 필요
- */
+
+// 설비 전체 정보 수정 (equipment_add2.js의 EDIT 모달에서 사용)
 exports.updateEquipment = async (req, res) => {
   const { eqname } = req.params;
   const {
@@ -225,6 +238,10 @@ exports.updateEquipment = async (req, res) => {
       WHERE EQNAME = ?
     `;
     params.push(eqname);
+
+    console.log('==== [updateEquipment] Executed Query ====');
+    console.log(query);
+    console.log('Params:', params);
 
     const [result] = await pool.query(query, params);
 
