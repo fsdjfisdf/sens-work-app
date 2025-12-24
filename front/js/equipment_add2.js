@@ -1,7 +1,6 @@
 // equipment_add2.js
 // ADD / EDIT 겸용 모달
 
-const API_BASE_EQ2 = 'http://3.37.73.151:3001/api';
 
 document.addEventListener('DOMContentLoaded', () => {
   const addBtn = document.getElementById('add-equipment-btn2');
