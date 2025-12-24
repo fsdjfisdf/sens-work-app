@@ -134,8 +134,71 @@
           <p>설비를 선택하면 상세 정보와 INFO를 여기에서 확인할 수 있습니다.</p>
         </div>
       </section>
-    </main>
-  </div>
+// INFO 섹션 바로 뒤에 이어서
+      <section class="eq2-detail-info">
+        <div class="eq2-detail-info-header">
+          <span>INFO (특이사항)</span>
+        </div>
+        <textarea id="eq2-info-textarea" class="eq2-info-textarea" rows="6">${
+          eq.INFO || ''
+        }</textarea>
+        <div class="eq2-detail-info-actions">
+          <button type="button" id="eq2-info-save-btn" class="eq2-btn eq2-btn-primary">
+            INFO SAVE
+          </button>
+        </div>
+      </section>
+
+      <!-- 🔥 작업 이력 섹션 추가 -->
+      <section class="eq2-detail-history">
+        <div class="eq2-detail-info-header">
+          <span>작업 이력</span>
+          <span class="eq2-history-count">${eq2EquipmentLogs.length}건</span>
+        </div>
+        <div class="eq2-history-list">
+          ${
+            eq2EquipmentLogs.length === 0
+              ? '<p class="eq2-history-empty">등록된 작업 이력이 없거나, 최근 200건 이내에 작업이 없습니다.</p>'
+              : eq2EquipmentLogs
+                  .map((log) => {
+                    const date = formatDateOnly(log.task_date);
+                    const st = formatTimeOnly(log.start_time);
+                    const et = formatTimeOnly(log.end_time);
+                    const du = formatDuration(log.task_duration);
+                    const desc = escapeHtml(log.task_description || '');
+                    return `
+                      <article class="eq2-history-item">
+                        <div class="eq2-history-main">
+                          <div class="eq2-history-title-row">
+                            <span class="eq2-history-date">${date}</span>
+                            <span class="eq2-history-type">${log.work_type || '-'}</span>
+                          </div>
+                          <div class="eq2-history-title">${escapeHtml(
+                            log.task_name || ''
+                          )}</div>
+                          <div class="eq2-history-meta">
+                            <span>작업자: ${escapeHtml(log.task_man || '-')}</span>
+                            <span>시간: ${st} ~ ${et} (${du})</span>
+                          </div>
+                        </div>
+                        ${
+                          desc
+                            ? `<details class="eq2-history-desc">
+                                 <summary>상세 보기</summary>
+                                 <p>${desc}</p>
+                               </details>`
+                            : ''
+                        }
+                      </article>
+                    `;
+                  })
+                  .join('')
+          }
+        </div>
+      </section>
+    </div>
+  `;
+
 
   <!-- ADD / EDIT 모달 -->
   <div id="add-equipment-modal2" class="eq2-modal hidden">

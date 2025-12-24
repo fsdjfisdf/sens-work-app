@@ -255,3 +255,40 @@ exports.updateEquipment = async (req, res) => {
     res.status(500).json({ error: 'Error updating equipment.', details: err.message });
   }
 };
+
+// 설비별 작업 이력 조회
+exports.getEquipmentHistory = async (req, res) => {
+  const { eqname } = req.params;
+
+  if (!eqname) {
+    return res.status(400).json({ error: 'eqname 이 필요합니다.' });
+  }
+
+  try {
+    const query = `
+      SELECT
+        task_date,
+        work_type,
+        task_name,
+        task_man,
+        equipment_type,
+        start_time,
+        end_time,
+        task_duration,
+        task_description
+      FROM work_log
+      WHERE equipment_name = ?
+      ORDER BY task_date DESC, start_time DESC
+      LIMIT 200
+    `;
+    const [rows] = await pool.query(query, [eqname]);
+
+    console.log('==== [getEquipmentHistory] eqname ====', eqname);
+    console.log('Result count:', rows.length);
+
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error('Error in getEquipmentHistory:', err);
+    res.status(500).json({ error: 'Error retrieving equipment history' });
+  }
+};

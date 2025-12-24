@@ -652,3 +652,108 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ========== 작업 이력 섹션 ========== */
+
+.eq2-detail-history {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 16px;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), #020617);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+}
+
+.eq2-history-count {
+  font-size: 0.74rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--eq2-text-soft);
+}
+
+.eq2-history-list {
+  max-height: 170px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.eq2-history-list::-webkit-scrollbar {
+  width: 6px;
+}
+.eq2-history-list::-webkit-scrollbar-thumb {
+  background: rgba(30, 64, 175, 0.7);
+  border-radius: 999px;
+}
+
+.eq2-history-empty {
+  margin: 8px 0 2px;
+  font-size: 0.78rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-history-item {
+  border-radius: 12px;
+  border: 1px solid rgba(30, 64, 175, 0.55);
+  padding: 7px 9px;
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), #020617);
+}
+
+.eq2-history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.eq2-history-title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-history-date {
+  font-weight: 500;
+}
+
+.eq2-history-type {
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+.eq2-history-title {
+  font-size: 0.8rem;
+  margin-top: 1px;
+}
+
+.eq2-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--eq2-text-soft);
+}
+
+.eq2-history-desc {
+  margin-top: 4px;
+  font-size: 0.74rem;
+}
+
+.eq2-history-desc summary {
+  cursor: pointer;
+  color: var(--eq2-accent);
+}
+
+.eq2-history-desc p {
+  margin: 4px 0 0;
+  line-height: 1.3;
+}

@@ -4,6 +4,7 @@ const API_BASE_EQ2 = 'http://3.37.73.151:3001/api';
 
 let eq2Equipments = [];
 let eq2SelectedEquipment = null;
+let eq2EquipmentLogs = [];
 
 const $eq2 = (id) => document.getElementById(id);
 
@@ -96,17 +97,95 @@ async function handleEq2Search(e) {
       },
     });
 
-    eq2Equipments = Array.isArray(res.data) ? res.data : [];
-    // 아무 것도 선택 안 되어 있으면 첫 번째 설비 자동 선택
-    eq2SelectedEquipment = eq2Equipments[0] || null;
+eq2Equipments = Array.isArray(res.data) ? res.data : [];
+eq2SelectedEquipment = eq2Equipments[0] || null;
 
-    renderEq2EquipmentList();
-    renderEq2EquipmentDetail();
+renderEq2EquipmentList();
+renderEq2EquipmentDetail();
+
+// 🔥 첫 설비의 이력도 같이 조회
+if (eq2SelectedEquipment) {
+  fetchEq2History(eq2SelectedEquipment.EQNAME);
+} else {
+  eq2EquipmentLogs = [];
+}
   } catch (err) {
     console.error('Error fetching equipment list:', err);
     alert('설비 조회 중 오류가 발생했습니다.');
   }
 }
+
+async function fetchEq2History(eqname) {
+  if (!eqname) {
+    eq2EquipmentLogs = [];
+    renderEq2EquipmentDetail();
+    return;
+  }
+
+  try {
+    const res = await axios.get(
+      `${API_BASE_EQ2}/equipment/${encodeURIComponent(eqname)}/logs`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('x-access-token') || ''}`,
+        },
+      }
+    );
+
+    eq2EquipmentLogs = Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    console.error('Error fetching equipment history:', err);
+    eq2EquipmentLogs = [];
+  }
+
+  // 이력 데이터를 받은 뒤에 다시 상세 렌더
+  renderEq2EquipmentDetail();
+}
+
+// 날짜만 예쁘게 포맷 (2016-12-18T00:00:00.000Z → 2016-12-18)
+function formatDateOnly(value) {
+  if (!value) return '-';
+  const s = String(value);
+  // 이미 YYYY-MM-DD 형태면 앞 10자리만 반환
+  if (s.length >= 10) return s.slice(0, 10);
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  return d.toISOString().slice(0, 10);
+}
+
+function formatTimeOnly(value) {
+  if (!value) return '-';
+  const s = String(value);
+  const parts = s.split(':');
+  if (parts.length < 2) return s;
+  const [h, m] = parts;
+  return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+}
+
+function formatDuration(value) {
+  if (!value) return '-';
+  const s = String(value);
+  const parts = s.split(':');
+  if (parts.length < 2) return s;
+  const [h, m] = parts;
+  return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+
+function formatDateRange(start, end) {
+  return `${formatDateOnly(start)} ~ ${formatDateOnly(end)}`;
+}
+
 
 function renderEq2EquipmentList() {
   const listEl = $eq2('eq-result-list');
@@ -155,6 +234,7 @@ function renderEq2EquipmentList() {
       eq2SelectedEquipment = eq;
       renderEq2EquipmentList();
       renderEq2EquipmentDetail();
+      fetchEq2History(eq.EQNAME);
     });
 
     listEl.appendChild(btn);
@@ -177,8 +257,8 @@ function renderEq2EquipmentDetail() {
 
   const eq = eq2SelectedEquipment;
 
-  const periodText = `${eq.START_DATE || '-'} ~ ${eq.END_DATE || '-'}`;
-  const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
+const periodText = formatDateRange(eq.START_DATE, eq.END_DATE);
+const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
 
   container.innerHTML = `
     <div class="eq2-detail-card">
@@ -188,7 +268,8 @@ function renderEq2EquipmentDetail() {
           <div class="eq2-detail-tags">
             <span class="eq2-tag">${eq.TYPE || '-'}</span>
             <span class="eq2-tag">${eq.SITE || '-'} / ${eq.LINE || '-'}</span>
-            <span class="eq2-tag">${eq.WARRANTORY || eq.WARRANTY_STATUS || '-'}</span>
+            <span class="eq2-tag">${eq.WARRANTY_STATUS || '-'}</span>
+
           </div>
         </div>
         <div class="eq2-detail-actions">
