@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Status Board</title>
+    <link rel="stylesheet" href="./css/signal.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <nav>
+        <div class="inner">
+            <div class="nav-container">
+                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+                <div class="sign-container unsigned">
+                    <a href="./signin.html" class="sign-link">Login</a>
+                </div>
+                <div class="sign-container signed hidden">
+                    <button class="menu-btn">
+                        <div class="menu-icon">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <div class="menu-bar-content">
+                <a href="./user_info.html" class="menu-item">SECM</a>
+                <a href="./worklog.html" class="menu-item">Create Worklog</a>
+                <a href="./approval.html" class="menu-item">Worklog Approval</a>
+                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+                <a href="./PCI.html" class="menu-item">PCI</a>
+                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+                <a href="./update.html" class="menu-item">Update</a>
+                <button id="sign-out" class="menu-item">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-content">
+        <section id="equipment-signal" class="equipment-section">
+            <div class="inner">
+                <h2>Equipment Status Board</h2>
+
+                <!-- 색상별 통계 -->
+                <div id="stats-container" class="stats-container"></div>
+
+                <!-- 필터 컨테이너 -->
+                <div id="filter-container" class="filter-container">
+                    <input type="text" id="filter-eq-name" placeholder="EQ NAME">
+                    <select id="filter-group">
+                        <option value="">GROUP</option>
+                        <option value="PEE1">PEE1</option>
+                        <option value="PEE2">PEE2</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <select id="filter-site">
+                        <option value="">SITE</option>
+                        <option value="PT">PT</option>
+                        <option value="HS">HS</option>
+                        <option value="IC">IC</option>
+                        <option value="CJ">CJ</option>
+                        <option value="PSKH">PSKH</option>
+                    </select>
+                    <select id="filter-line">
+                        <option value="">LINE</option>
+                    </select>
+                    <select id="filter-eq-type">
+                        <option value="">EQ TYPE</option>
+                        <option value="SUPRA N">SUPRA N</option>
+                        <option value="SUPRA NM">SUPRA NM</option>
+                        <option value="SUPRA III">SUPRA III</option>
+                        <option value="SUPRA IV">SUPRA IV</option>
+                        <option value="SUPRA V">SUPRA V</option>
+                        <option value="SUPRA Vplus">SUPRA Vplus</option>
+                        <option value="SUPRA VM">SUPRA VM</option>
+                        <option value="SUPRA XP">SUPRA XP</option>
+                        <option value="SUPRA Q">SUPRA Q</option>
+                        <option value="SUPRA XQ">SUPRA XQ</option>
+                        <option value="TERA21">TERA21</option>
+                        <option value="INTEGER IVr">INTEGER IVr</option>
+                        <option value="INTEGER Plus">INTEGER Plus</option>
+                        <option value="INTEGER XP">INTEGER XP</option>
+                        <option value="PRECIA">PRECIA</option>
+                        <option value="ECOLITE 300">ECOLITE 300</option>
+                        <option value="ECOLITE 400">ECOLITE 400</option>
+                        <option value="ECOLITE 3000">ECOLITE 3000</option>
+                        <option value="ECOLITE XP">ECOLITE XP</option>
+                        <option value="GENEVA">GENEVA</option>
+                        <option value="HDW">HDW</option>
+                    </select>
+                    <select id="filter-warranty">
+                        <option value="">WARRANTY</option>
+                        <option value="WI">WI</option>
+                        <option value="WO">WO</option>
+                    </select>
+                    <select id="filter-color">
+                        <option value="">COLOR</option>
+                        <option value="darkred">Dark Red</option>
+                        <option value="red">Red</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="green">Green</option>
+                        <option value="gray">Gray</option>
+                    </select>
+                    <select id="filter-period">
+                        <option value="2">LAST 2 DAYS</option>
+                        <option value="7">LAST WEEK</option>
+                        <option value="30">LAST MONTH</option>
+                        <option value="90">LAST QUARTER</option>
+                        <option value="183">LAST HALF YEAR</option>
+                        <option value="365"selected>LAST YEAR</option>
+                    </select>
+                    <button id="apply-filter">SEARCH</button>
+                    <button id="reset-filter">RESET</button>
+                    <button id="add-equipment-btn" class="add-equipment-btn">ADD EQUIPMENT</button>
+                </div>
+
+                <!-- 신호등 컨테이너 -->
+                <div id="signal-container" class="signal-container"></div>
+
+                <!-- 장비 상세정보 -->
+                <div id="equipment-details" class="equipment-details hidden">
+                    <div class="selected-equipment">
+                        <div id="selected-point" class="selected-point"></div>
+                    </div>
+                    <div class="equipment-info">
+                        <h3 id="selected-eq-name">Equipment Details</h3>
+                        <p id="eq-info">Loading...</p>
+                        <h4>Additional Info</h4>
+                        <div id="info-container">
+                            <textarea id="info-text" class="info-text" disabled></textarea>
+                            <div class="info-buttons">
+                                <button id="edit-info" class="info-button">Edit</button>
+                                <button id="save-info" class="info-button hidden">Save</button>
+                                <button id="cancel-edit" class="info-button hidden">Cancel</button>
+                            </div>
+                        </div>
+                        <button id="back-to-list">BACK TO LIST</button>
+                        <h4>Work Log History</h4>
+                        <table id="work-log-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Work Type</th>
+                                    <th>Title</th>
+                                    <th>Cause</th>
+                                    <th>Result</th>
+                                    <th>Man</th>
+                                    <th>Working time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="work-log-body"></tbody>
+                        </table><br>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <div id="task-details-modal" class="task-details-modal hidden">
+        <div class="modal-content">
+            <h3>Task Details</h3>
+            <!-- 테이블을 감싸는 div 추가 -->
+            <div id="modal-task-table" class="modal-task-table">
+                <table>
+                    <tbody>
+                        <!-- 동적으로 데이터 추가 -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="close-task-modal-bottom">Close</button>
+        </div>
+    </div>
+<!-- 장비 추가 모달 -->
+<div id="add-equipment-modal" class="add-equipment-modal hidden">
+    <div class="modal-content">
+        <h3>ADD EQUIPMENT</h3>
+        <form id="add-equipment-form">
+            <label for="eq-name">EQ NAME</label>
+            <input type="text" id="eq-name" name="eqname" required>
+
+            <label for="group">GROUP</label>
+            <select id="group" name="group" required>
+                <option value="">GROUP</option>
+                <option value="PEE1">PEE1</option>
+                <option value="PEE2">PEE2</option>
+                <option value="PSKH">PSKH</option>
+            </select>
+
+            <label for="site">SITE</label>
+            <select id="site-select" name="site" required>
+                <option value="">SITE</option>
+                <option value="PT">PT</option>
+                <option value="HS">HS</option>
+                <option value="IC">IC</option>
+                <option value="CJ">CJ</option>
+                <option value="PSKH">PSKH</option>
+            </select>
+
+            <label for="line">Line</label>
+            <select id="line-select" name="line" disabled>
+                <option value="">SELECT LINE</option>
+            </select>
+            <label for="type">EQ TYPE</label>
+            <select id="type" name="type" required>
+                <option value="">EQ TYPE</option>
+                <option value="SUPRA N">SUPRA N</option>
+                <option value="SUPRA Np">SUPRA Np</option>
+                <option value="SUPRA NM">SUPRA NM</option>
+                <option value="SUPRA III">SUPRA III</option>
+                <option value="SUPRA IV">SUPRA IV</option>
+                <option value="SUPRA V">SUPRA V</option>
+                <option value="SUPRA Vplus">SUPRA Vplus</option>
+                <option value="SUPRA VM">SUPRA VM</option>
+                <option value="SUPRA XP">SUPRA XP</option>
+                <option value="TERA21">TERA21</option>
+                <option value="INTEGER IVr">INTEGER IVr</option>
+                <option value="INTEGER Plus">INTEGER Plus</option>
+                <option value="INTEGER XP">INTEGER XP</option>
+                <option value="PRECIA">PRECIA</option>
+                <option value="ECOLITE 300">ECOLITE 300</option>
+                <option value="ECOLITE 400">ECOLITE 400</option>
+                <option value="ECOLITE XP">ECOLITE XP</option>
+                <option value="GENEVA">GENEVA</option>
+                <option value="HDW">HDW</option>
+            </select>
+
+            <label for="floor">FLOOR</label>
+            <input type="text" id="floor" name="floor">
+
+            <label for="bay">BAY</label>
+            <input type="text" id="bay" name="bay">
+
+            <label for="start-date">WARRANTY START DATE</label>
+            <input type="date" id="start-date" name="start_date">
+
+            <label for="end-date">WARRANTY END DATE</label>
+            <input type="date" id="end-date" name="end_date">
+
+            <label for="warranty-status">WARRANTY STATUS</label>
+            <select id="warranty-status" name="warranty_status">
+                <option value="">WARRANTY STATUS</option>
+                <option value="WI">WI</option>
+                <option value="WO">WO</option>
+            </select>
+
+            <label for="info">설비 특이사항</label>
+            <textarea id="info" name="info"></textarea>
+
+            <div class="modal-buttons">
+                <button type="submit" id="save-equipment-btn">SAVE</button>
+                <button type="button" id="cancel-add-equipment-btn">CANCEL</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <script src="./js/signal.js"></script>
+    <script src="./js/equipmentAdd.js"></script>
+    <script defer src="./js/logoutTimer.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const token = localStorage.getItem("x-access-token");
+            const userRole = localStorage.getItem("user-role");
+
+            if (!token) {
+                document.querySelector(".unsigned").classList.remove("hidden");
+                document.querySelector(".signed").classList.add("hidden");
+            } else {
+                document.querySelector(".unsigned").classList.add("hidden");
+                document.querySelector(".signed").classList.remove("hidden");
+            }
+
+            if (!token || userRole !== 'admin') {
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = 'none';
+                });
+            }
+
+            const signOutButton = document.querySelector("#sign-out");
+
+            if (signOutButton) {
+                signOutButton.addEventListener("click", function() {
+                    localStorage.removeItem("x-access-token");
+                    localStorage.removeItem("user-role");
+                    alert("로그아웃 되었습니다.");
+                    window.location.replace("./signin.html");
+                });
+            }
+            const menuBtn = document.querySelector('.menu-btn');
+            const menuBar = document.querySelector('.menu-bar');
+
+            menuBtn.addEventListener('click', function() {
+                menuBar.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+                    menuBar.classList.remove('open');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,284 +1,296 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equipment Status Board</title>
-    <link rel="stylesheet" href="./css/signal.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>S-WORKS · Equipment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 설비 전용 CSS -->
+  <link rel="stylesheet" href="./css/equipment_signal2.css" />
+
+
+  <link rel="stylesheet" href="./css/user_info.css" />
+
 </head>
 <body>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                    <a href="./signin.html" class="sign-link">Login</a>
-                </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
+  <!-- 🔹 상단 네비게이션 (네가 준 구조 그대로) -->
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
         </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./approval.html" class="menu-item">Worklog Approval</a>
-                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-                <a href="./PCI.html" class="menu-item">PCI</a>
-                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
+          </button>
         </div>
-    </nav>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./approval.html" class="menu-item">Worklog Approval</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <!-- ⚠️ 나중에 equipment_signal2.html로 교체할 거면 여기 링크만 바꿔주면 됨 -->
+        <a href="./equipment_signal2.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
+<body>
+  <div class="eq2-app">
+    <!-- 좌측: 검색 / 필터 패널 -->
+    <aside class="eq2-sidebar">
+      <header class="eq2-sidebar-header">
+        <h1 class="eq2-title">Equipment</h1>
+      </header>
 
+      <form id="eq-search-form" class="eq2-search-form">
+        <div class="eq2-field">
+          <label for="filter-eqname">EQ NAME</label>
+          <input
+            id="filter-eqname"
+            type="text"
+            placeholder="설비 이름을 입력하세요."
+            autocomplete="off"
+          />
+        </div>
 
-    <!-- 메인 컨텐츠 -->
-    <main class="main-content">
-        <section id="equipment-signal" class="equipment-section">
-            <div class="inner">
-                <h2>Equipment Status Board</h2>
+        <div class="eq2-field">
+          <label for="filter-group">GROUP</label>
+          <select id="filter-group">
+            <option value="">ALL</option>
+            <option value="PEE1">PEE1</option>
+            <option value="PEE2">PEE2</option>
+            <option value="PEI1">PEI1</option>
+            <!-- 필요시 그룹 추가 -->
+          </select>
+        </div>
 
-                <!-- 색상별 통계 -->
-                <div id="stats-container" class="stats-container"></div>
+        <div class="eq2-inline-fields">
+          <div class="eq2-field">
+            <label for="filter-site">SITE</label>
+            <select id="filter-site">
+              <option value="">ALL</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+          <div class="eq2-field">
+            <label for="filter-line">LINE</label>
+            <select id="filter-line" disabled>
+              <option value="">ALL</option>
+            </select>
+          </div>
+        </div>
 
-                <!-- 필터 컨테이너 -->
-                <div id="filter-container" class="filter-container">
-                    <input type="text" id="filter-eq-name" placeholder="EQ NAME">
-                    <select id="filter-group">
-                        <option value="">GROUP</option>
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="filter-site">
-                        <option value="">SITE</option>
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="filter-line">
-                        <option value="">LINE</option>
-                    </select>
-                    <select id="filter-eq-type">
-                        <option value="">EQ TYPE</option>
-                        <option value="SUPRA N">SUPRA N</option>
-                        <option value="SUPRA NM">SUPRA NM</option>
-                        <option value="SUPRA III">SUPRA III</option>
-                        <option value="SUPRA IV">SUPRA IV</option>
-                        <option value="SUPRA V">SUPRA V</option>
-                        <option value="SUPRA Vplus">SUPRA Vplus</option>
-                        <option value="SUPRA VM">SUPRA VM</option>
-                        <option value="SUPRA XP">SUPRA XP</option>
-                        <option value="SUPRA Q">SUPRA Q</option>
-                        <option value="SUPRA XQ">SUPRA XQ</option>
-                        <option value="TERA21">TERA21</option>
-                        <option value="INTEGER IVr">INTEGER IVr</option>
-                        <option value="INTEGER Plus">INTEGER Plus</option>
-                        <option value="INTEGER XP">INTEGER XP</option>
-                        <option value="PRECIA">PRECIA</option>
-                        <option value="ECOLITE 300">ECOLITE 300</option>
-                        <option value="ECOLITE 400">ECOLITE 400</option>
-                        <option value="ECOLITE 3000">ECOLITE 3000</option>
-                        <option value="ECOLITE XP">ECOLITE XP</option>
-                        <option value="GENEVA">GENEVA</option>
-                        <option value="HDW">HDW</option>
-                    </select>
-                    <select id="filter-warranty">
-                        <option value="">WARRANTY</option>
-                        <option value="WI">WI</option>
-                        <option value="WO">WO</option>
-                    </select>
-                    <select id="filter-color">
-                        <option value="">COLOR</option>
-                        <option value="darkred">Dark Red</option>
-                        <option value="red">Red</option>
-                        <option value="yellow">Yellow</option>
-                        <option value="green">Green</option>
-                        <option value="gray">Gray</option>
-                    </select>
-                    <select id="filter-period">
-                        <option value="2">LAST 2 DAYS</option>
-                        <option value="7">LAST WEEK</option>
-                        <option value="30">LAST MONTH</option>
-                        <option value="90">LAST QUARTER</option>
-                        <option value="183">LAST HALF YEAR</option>
-                        <option value="365"selected>LAST YEAR</option>
-                    </select>
-                    <button id="apply-filter">SEARCH</button>
-                    <button id="reset-filter">RESET</button>
-                    <button id="add-equipment-btn" class="add-equipment-btn">ADD EQUIPMENT</button>
-                </div>
+        <div class="eq2-inline-fields">
+          <div class="eq2-field">
+            <label for="filter-type">TYPE</label>
+            <select id="filter-type">
+              <option value="">ALL</option>
+              <option value="SUPRA N">SUPRA N</option>
+              <option value="SUPRA XP">SUPRA XP</option>
+              <option value="INTEGER">INTEGER</option>
+              <option value="PRECIA">PRECIA</option>
+              <option value="ECOLITE">ECOLITE</option>
+              <option value="GENEVA">GENEVA</option>
+              <option value="HDW">HDW</option>
+            </select>
+          </div>
 
-                <!-- 신호등 컨테이너 -->
-                <div id="signal-container" class="signal-container"></div>
+          <div class="eq2-field">
+            <label for="filter-warranty">WARRANTY</label>
+            <select id="filter-warranty">
+              <option value="">ALL</option>
+              <option value="WI">WI</option>
+              <option value="WO">WO</option>
+            </select>
+          </div>
+        </div>
 
-                <!-- 장비 상세정보 -->
-                <div id="equipment-details" class="equipment-details hidden">
-                    <div class="selected-equipment">
-                        <div id="selected-point" class="selected-point"></div>
-                    </div>
-                    <div class="equipment-info">
-                        <h3 id="selected-eq-name">Equipment Details</h3>
-                        <p id="eq-info">Loading...</p>
-                        <h4>Additional Info</h4>
-                        <div id="info-container">
-                            <textarea id="info-text" class="info-text" disabled></textarea>
-                            <div class="info-buttons">
-                                <button id="edit-info" class="info-button">Edit</button>
-                                <button id="save-info" class="info-button hidden">Save</button>
-                                <button id="cancel-edit" class="info-button hidden">Cancel</button>
-                            </div>
-                        </div>
-                        <button id="back-to-list">BACK TO LIST</button>
-                        <h4>Work Log History</h4>
-                        <table id="work-log-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Work Type</th>
-                                    <th>Title</th>
-                                    <th>Cause</th>
-                                    <th>Result</th>
-                                    <th>Man</th>
-                                    <th>Working time</th>
-                                </tr>
-                            </thead>
-                            <tbody id="work-log-body"></tbody>
-                        </table><br>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class="eq2-actions">
+          <button type="submit" class="eq2-btn eq2-btn-primary">SEARCH</button>
+          <button type="button" id="eq-reset-btn" class="eq2-btn eq2-btn-ghost">
+            RESET
+          </button>
+        </div>
+
+        <hr class="eq2-divider" />
+
+        <button type="button" id="add-equipment-btn2" class="eq2-btn eq2-btn-outline">
+          + ADD EQUIPMENT
+        </button>
+
+        <div class="eq2-help">
+          <p>· EQ NAME 일부만 입력해도 검색됩니다.</p>
+          <p>· SITE를 선택하면 LINE 옵션이 자동으로 바뀝니다.</p>
+        </div>
+      </form>
+    </aside>
+
+    <!-- 우측: 결과 리스트 + 상세 -->
+    <main class="eq2-main">
+      <!-- 검색 결과 -->
+      <section class="eq2-results">
+        <div class="eq2-results-header">
+          <div>
+            <h2>검색 결과</h2>
+            <p class="eq2-results-subtitle">
+              조건을 변경하여 원하는 설비를 빠르게 찾을 수 있습니다.
+            </p>
+          </div>
+          <div id="eq-result-count" class="eq2-result-count">
+            0 Equipments
+          </div>
+        </div>
+
+        <div id="eq-result-empty" class="eq2-result-empty">
+          <p>좌측에서 조건을 입력하고 <strong>SEARCH</strong>를 눌러주세요.</p>
+        </div>
+
+        <div id="eq-result-list" class="eq2-result-list">
+          <!-- JS로 설비 리스트 렌더링 -->
+        </div>
+      </section>
+
+      <!-- 설비 상세 -->
+      <section class="eq2-detail" id="eq-detail">
+        <div class="eq2-detail-empty">
+          <p>설비를 선택하면 상세 정보와 INFO를 여기에서 확인할 수 있습니다.</p>
+        </div>
+      </section>
     </main>
-    <div id="task-details-modal" class="task-details-modal hidden">
-        <div class="modal-content">
-            <h3>Task Details</h3>
-            <!-- 테이블을 감싸는 div 추가 -->
-            <div id="modal-task-table" class="modal-task-table">
-                <table>
-                    <tbody>
-                        <!-- 동적으로 데이터 추가 -->
-                    </tbody>
-                </table>
-            </div>
-            <button id="close-task-modal-bottom">Close</button>
+  </div>
+
+  <!-- ADD / EDIT 모달 -->
+  <div id="add-equipment-modal2" class="eq2-modal hidden">
+    <div class="eq2-modal-backdrop"></div>
+    <div class="eq2-modal-content">
+      <header class="eq2-modal-header">
+        <h2 id="add-equipment-modal-title">Add Equipment</h2>
+      </header>
+
+      <form id="add-equipment-form2" class="eq2-modal-form">
+        <div class="eq2-modal-grid">
+          <div class="eq2-field">
+            <label for="eq2-eqname">EQ NAME <span class="eq2-required">*</span></label>
+            <input id="eq2-eqname" name="eqname" type="text" />
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-group">GROUP <span class="eq2-required">*</span></label>
+            <input id="eq2-group" name="group" type="text" placeholder="예: PEE1" />
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-site-select">SITE <span class="eq2-required">*</span></label>
+            <select id="eq2-site-select" name="site">
+              <option value="">Select Site</option>
+              <option value="PT">PT</option>
+              <option value="HS">HS</option>
+              <option value="IC">IC</option>
+              <option value="CJ">CJ</option>
+              <option value="PSKH">PSKH</option>
+            </select>
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-line-select">LINE <span class="eq2-required">*</span></label>
+            <select id="eq2-line-select" name="line" disabled>
+              <option value="">Select Line</option>
+            </select>
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-type">TYPE <span class="eq2-required">*</span></label>
+            <select id="eq2-type" name="type">
+              <option value="">Select Type</option>
+              <option value="SUPRA N">SUPRA N</option>
+              <option value="SUPRA XP">SUPRA XP</option>
+              <option value="INTEGER">INTEGER</option>
+              <option value="PRECIA">PRECIA</option>
+              <option value="ECOLITE">ECOLITE</option>
+              <option value="GENEVA">GENEVA</option>
+              <option value="HDW">HDW</option>
+            </select>
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-floor">FLOOR</label>
+            <input id="eq2-floor" name="floor" type="text" placeholder="예: 2F" />
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-bay">BAY</label>
+            <input id="eq2-bay" name="bay" type="text" placeholder="예: BAY-12" />
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-start-date">START DATE <span class="eq2-required">*</span></label>
+            <input id="eq2-start-date" name="start_date" type="date" />
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-end-date">END DATE <span class="eq2-required">*</span></label>
+            <input id="eq2-end-date" name="end_date" type="date" />
+          </div>
+
+          <div class="eq2-field">
+            <label for="eq2-warranty-status">WARRANTY <span class="eq2-required">*</span></label>
+            <select id="eq2-warranty-status" name="warranty_status">
+              <option value="">Select</option>
+              <option value="WI">WI</option>
+              <option value="WO">WO</option>
+            </select>
+          </div>
         </div>
+
+        <div class="eq2-field eq2-field-full">
+          <label for="eq2-info">INFO</label>
+          <textarea
+            id="eq2-info"
+            name="info"
+            rows="4"
+            placeholder="설비 특이사항을 자유롭게 작성하세요."
+          ></textarea>
+        </div>
+
+        <footer class="eq2-modal-footer">
+          <button type="button" id="cancel-add-equipment-btn2" class="eq2-btn eq2-btn-ghost">
+            취소
+          </button>
+          <button type="submit" id="save-equipment-btn2" class="eq2-btn eq2-btn-primary" disabled>
+            저장
+          </button>
+        </footer>
+      </form>
     </div>
-<!-- 장비 추가 모달 -->
-<div id="add-equipment-modal" class="add-equipment-modal hidden">
-    <div class="modal-content">
-        <h3>ADD EQUIPMENT</h3>
-        <form id="add-equipment-form">
-            <label for="eq-name">EQ NAME</label>
-            <input type="text" id="eq-name" name="eqname" required>
+  </div>
 
-            <label for="group">GROUP</label>
-            <select id="group" name="group" required>
-                <option value="">GROUP</option>
-                <option value="PEE1">PEE1</option>
-                <option value="PEE2">PEE2</option>
-                <option value="PSKH">PSKH</option>
-            </select>
-
-            <label for="site">SITE</label>
-            <select id="site-select" name="site" required>
-                <option value="">SITE</option>
-                <option value="PT">PT</option>
-                <option value="HS">HS</option>
-                <option value="IC">IC</option>
-                <option value="CJ">CJ</option>
-                <option value="PSKH">PSKH</option>
-            </select>
-
-            <label for="line">Line</label>
-            <select id="line-select" name="line" disabled>
-                <option value="">SELECT LINE</option>
-            </select>
-            <label for="type">EQ TYPE</label>
-            <select id="type" name="type" required>
-                <option value="">EQ TYPE</option>
-                <option value="SUPRA N">SUPRA N</option>
-                <option value="SUPRA Np">SUPRA Np</option>
-                <option value="SUPRA NM">SUPRA NM</option>
-                <option value="SUPRA III">SUPRA III</option>
-                <option value="SUPRA IV">SUPRA IV</option>
-                <option value="SUPRA V">SUPRA V</option>
-                <option value="SUPRA Vplus">SUPRA Vplus</option>
-                <option value="SUPRA VM">SUPRA VM</option>
-                <option value="SUPRA XP">SUPRA XP</option>
-                <option value="TERA21">TERA21</option>
-                <option value="INTEGER IVr">INTEGER IVr</option>
-                <option value="INTEGER Plus">INTEGER Plus</option>
-                <option value="INTEGER XP">INTEGER XP</option>
-                <option value="PRECIA">PRECIA</option>
-                <option value="ECOLITE 300">ECOLITE 300</option>
-                <option value="ECOLITE 400">ECOLITE 400</option>
-                <option value="ECOLITE XP">ECOLITE XP</option>
-                <option value="GENEVA">GENEVA</option>
-                <option value="HDW">HDW</option>
-            </select>
-
-            <label for="floor">FLOOR</label>
-            <input type="text" id="floor" name="floor">
-
-            <label for="bay">BAY</label>
-            <input type="text" id="bay" name="bay">
-
-            <label for="start-date">WARRANTY START DATE</label>
-            <input type="date" id="start-date" name="start_date">
-
-            <label for="end-date">WARRANTY END DATE</label>
-            <input type="date" id="end-date" name="end_date">
-
-            <label for="warranty-status">WARRANTY STATUS</label>
-            <select id="warranty-status" name="warranty_status">
-                <option value="">WARRANTY STATUS</option>
-                <option value="WI">WI</option>
-                <option value="WO">WO</option>
-            </select>
-
-            <label for="info">설비 특이사항</label>
-            <textarea id="info" name="info"></textarea>
-
-            <div class="modal-buttons">
-                <button type="submit" id="save-equipment-btn">SAVE</button>
-                <button type="button" id="cancel-add-equipment-btn">CANCEL</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-    
-
-    <!-- 푸터 -->
-    <footer class="footer">
-        <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
-    </footer>
-
-    <!-- JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-    <script src="./js/signal.js"></script>
-    <script src="./js/equipmentAdd.js"></script>
-    <script defer src="./js/logoutTimer.js"></script>
-    <script>
+  <!-- axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js" defer></script>
+  <script src="./js/equipment_add2.js" defer></script>
+  <script src="./js/equipment_signal2.js" defer></script>
+      <script>
         document.addEventListener("DOMContentLoaded", function() {
             const token = localStorage.getItem("x-access-token");
             const userRole = localStorage.getItem("user-role");

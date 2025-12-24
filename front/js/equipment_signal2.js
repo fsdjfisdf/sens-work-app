@@ -1,5 +1,4 @@
 // equipment_signal2.js
-
 const API_BASE_EQ2 = 'http://3.37.73.151:3001/api';
 
 let eq2Equipments = [];
@@ -50,18 +49,17 @@ document.addEventListener('DOMContentLoaded', () => {
     lineFilter.disabled = true;
     eq2Equipments = [];
     eq2SelectedEquipment = null;
+    eq2EquipmentLogs = [];
     renderEq2EquipmentList();
     renderEq2EquipmentDetail();
   });
 
   // ADD / EDIT 이후 다시 검색하도록 커스텀 이벤트 리스너
   window.addEventListener('equipmentChanged', () => {
-    // 마지막 검색 조건 기준으로 다시 검색하거나,
-    // 단순히 전체 검색을 하고 싶다면 아래처럼:
     handleEq2Search();
   });
 
-  // 초기 화면: 헬프 텍스트만 노출
+  // 초기 화면
   renderEq2EquipmentList();
   renderEq2EquipmentDetail();
 });
@@ -97,18 +95,17 @@ async function handleEq2Search(e) {
       },
     });
 
-eq2Equipments = Array.isArray(res.data) ? res.data : [];
-eq2SelectedEquipment = eq2Equipments[0] || null;
+    eq2Equipments = Array.isArray(res.data) ? res.data : [];
+    eq2SelectedEquipment = eq2Equipments[0] || null;
 
-renderEq2EquipmentList();
-renderEq2EquipmentDetail();
+    renderEq2EquipmentList();
+    renderEq2EquipmentDetail();
 
-// 🔥 첫 설비의 이력도 같이 조회
-if (eq2SelectedEquipment) {
-  fetchEq2History(eq2SelectedEquipment.EQNAME);
-} else {
-  eq2EquipmentLogs = [];
-}
+    if (eq2SelectedEquipment) {
+      fetchEq2History(eq2SelectedEquipment.EQNAME);
+    } else {
+      eq2EquipmentLogs = [];
+    }
   } catch (err) {
     console.error('Error fetching equipment list:', err);
     alert('설비 조회 중 오류가 발생했습니다.');
@@ -138,15 +135,14 @@ async function fetchEq2History(eqname) {
     eq2EquipmentLogs = [];
   }
 
-  // 이력 데이터를 받은 뒤에 다시 상세 렌더
   renderEq2EquipmentDetail();
 }
 
-// 날짜만 예쁘게 포맷 (2016-12-18T00:00:00.000Z → 2016-12-18)
+// ===== 포맷 헬퍼 =====
+
 function formatDateOnly(value) {
   if (!value) return '-';
   const s = String(value);
-  // 이미 YYYY-MM-DD 형태면 앞 10자리만 반환
   if (s.length >= 10) return s.slice(0, 10);
   const d = new Date(s);
   if (isNaN(d.getTime())) return s;
@@ -181,11 +177,21 @@ function escapeHtml(text) {
     .replace(/'/g, '&#39;');
 }
 
+// DESC 안의 <br> 만 줄바꿈으로 허용
+function formatDescription(text) {
+  if (!text) return '';
+  // 먼저 전체를 escape 해서 스크립트/태그 막기
+  let safe = escapeHtml(text);
+  // 그 다음, 원래 있던 <br>를 다시 줄바꿈 태그로 되살리기
+  safe = safe.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+  return safe;
+}
 
 function formatDateRange(start, end) {
   return `${formatDateOnly(start)} ~ ${formatDateOnly(end)}`;
 }
 
+// ===== 리스트 렌더링 =====
 
 function renderEq2EquipmentList() {
   const listEl = $eq2('eq-result-list');
@@ -212,7 +218,6 @@ function renderEq2EquipmentList() {
         ? ' eq2-row-active'
         : '');
 
-    // 컬러 정보가 있으면 사용하고, 없으면 gray
     const color =
       (eq.COLOR && String(eq.COLOR).toLowerCase()) ||
       (eq.WARRANTY_STATUS === 'WI' ? 'green' : 'gray');
@@ -241,9 +246,10 @@ function renderEq2EquipmentList() {
   });
 }
 
+// ===== 상세 렌더링 (INFO + 작업 이력) =====
+
 function renderEq2EquipmentDetail() {
   const container = $eq2('eq-detail');
-
   if (!container) return;
 
   if (!eq2SelectedEquipment) {
@@ -256,28 +262,65 @@ function renderEq2EquipmentDetail() {
   }
 
   const eq = eq2SelectedEquipment;
+  const periodText = formatDateRange(eq.START_DATE, eq.END_DATE);
+  const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
 
-const periodText = formatDateRange(eq.START_DATE, eq.END_DATE);
-const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
+  const historyHtml =
+    eq2EquipmentLogs.length === 0
+      ? '<p class="eq2-history-empty">등록된 작업 이력이 없거나, 최근 200건 이내에 작업이 없습니다.</p>'
+      : eq2EquipmentLogs
+          .map((log) => {
+            const date = formatDateOnly(log.task_date);
+            const st = formatTimeOnly(log.start_time);
+            const et = formatTimeOnly(log.end_time);
+            const du = formatDuration(log.task_duration);
+            const descHtml = formatDescription(log.task_description || '');
+            return `
+              <article class="eq2-history-item">
+                <div class="eq2-history-main">
+                  <div class="eq2-history-title-row">
+                    <span class="eq2-history-date">${date}</span>
+                    <span class="eq2-history-type">${log.work_type || '-'}</span>
+                  </div>
+                  <div class="eq2-history-title">${escapeHtml(log.task_name || '')}</div>
+                  <div class="eq2-history-meta">
+                    <span>작업자: ${escapeHtml(log.task_man || '-')}</span>
+                    <span>시간: ${st} ~ ${et} (${du})</span>
+                  </div>
+                </div>
+                ${
+                  descHtml
+                    ? `<details class="eq2-history-desc">
+                         <summary>상세 보기</summary>
+                         <p>${descHtml}</p>
+                       </details>`
+                    : ''
+                }
+              </article>
+            `;
+          })
+          .join('');
 
-  container.innerHTML = `
-    <div class="eq2-detail-card">
-      <header class="eq2-detail-header">
-        <div>
-          <h2 class="eq2-detail-title">${eq.EQNAME || '-'}</h2>
-          <div class="eq2-detail-tags">
-            <span class="eq2-tag">${eq.TYPE || '-'}</span>
-            <span class="eq2-tag">${eq.SITE || '-'} / ${eq.LINE || '-'}</span>
-            <span class="eq2-tag">${eq.WARRANTY_STATUS || '-'}</span>
-
-          </div>
+container.innerHTML = `
+  <div class="eq2-detail-card">
+    <header class="eq2-detail-header">
+      <div>
+        <h2 class="eq2-detail-title">${eq.EQNAME || '-'}</h2>
+        <div class="eq2-detail-tags">
+          <span class="eq2-tag">${eq.TYPE || '-'}</span>
+          <span class="eq2-tag">${eq.SITE || '-'} / ${eq.LINE || '-'}</span>
+          <span class="eq2-tag">${eq.WARRANTY_STATUS || '-'}</span>
         </div>
-        <div class="eq2-detail-actions">
-          <button type="button" id="eq2-edit-btn" class="eq2-btn eq2-btn-outline">
-            EDIT
-          </button>
-        </div>
-      </header>
+      </div>
+      <div class="eq2-detail-actions">
+        <button type="button" id="eq2-edit-btn" class="eq2-btn eq2-btn-outline">
+          EDIT
+        </button>
+        <button type="button" id="eq2-delete-btn" class="eq2-btn eq2-btn-danger">
+          DELETE
+        </button>
+      </div>
+    </header>
 
       <section class="eq2-detail-grid">
         <div class="eq2-detail-item">
@@ -297,7 +340,7 @@ const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
           <span class="eq2-detail-value">${floorBayText}</span>
         </div>
         <div class="eq2-detail-item">
-          <span class="eq2-detail-label">기간</span>
+          <span class="eq2-detail-label">Warranty Date</span>
           <span class="eq2-detail-value">${periodText}</span>
         </div>
         <div class="eq2-detail-item">
@@ -319,11 +362,22 @@ const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
           </button>
         </div>
       </section>
+
+      <section class="eq2-detail-history">
+        <div class="eq2-detail-info-header">
+          <span>작업 이력</span>
+          <span class="eq2-history-count">${eq2EquipmentLogs.length}건</span>
+        </div>
+        <div class="eq2-history-list">
+          ${historyHtml}
+        </div>
+      </section>
     </div>
   `;
 
   const saveInfoBtn = $eq2('eq2-info-save-btn');
   const editBtn = $eq2('eq2-edit-btn');
+  const deleteBtn = $eq2('eq2-delete-btn');   // 🔴 추가
 
   if (saveInfoBtn) {
     saveInfoBtn.addEventListener('click', handleEq2InfoSave);
@@ -333,6 +387,10 @@ const floorBayText = `${eq.FLOOR || '-'} / ${eq.BAY || '-'}`;
     editBtn.addEventListener('click', () => {
       window.openEquipmentEditModal2(eq);
     });
+  }
+
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', handleEq2Delete);
   }
 }
 
@@ -357,7 +415,6 @@ async function handleEq2InfoSave() {
     );
 
     alert('INFO가 저장되었습니다.');
-    // 로컬 상태도 업데이트
     eq2SelectedEquipment.INFO = newInfo;
     eq2Equipments = eq2Equipments.map((eq) =>
       eq.EQNAME === eq2SelectedEquipment.EQNAME ? { ...eq, INFO: newInfo } : eq
@@ -365,5 +422,49 @@ async function handleEq2InfoSave() {
   } catch (err) {
     console.error('Error updating INFO:', err);
     alert('INFO 저장 중 오류가 발생했습니다.');
+  }
+}
+
+async function handleEq2Delete() {
+  if (!eq2SelectedEquipment) return;
+
+  const targetName = eq2SelectedEquipment.EQNAME;
+  const ok = confirm(
+    `정말로 설비 "${targetName}" 을(를) 삭제하시겠습니까?\n` +
+    `※ 관련 작업이력 테이블과의 연동/제약은 DB 설정에 따라 달라집니다.`
+  );
+  if (!ok) return;
+
+  try {
+    await axios.delete(
+      `${API_BASE_EQ2}/equipment/${encodeURIComponent(targetName)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('x-access-token') || ''}`,
+        },
+      }
+    );
+
+    alert('설비가 삭제되었습니다.');
+
+    // 현재 리스트에서 제거
+    eq2Equipments = eq2Equipments.filter((eq) => eq.EQNAME !== targetName);
+
+    // 선택된 설비 재설정
+    if (eq2Equipments.length > 0) {
+      eq2SelectedEquipment = eq2Equipments[0];
+      await fetchEq2History(eq2SelectedEquipment.EQNAME);
+    } else {
+      eq2SelectedEquipment = null;
+      eq2EquipmentLogs = [];
+      renderEq2EquipmentList();
+      renderEq2EquipmentDetail();
+    }
+  } catch (err) {
+    console.error('Error deleting equipment:', err);
+    const msg =
+      err.response?.data?.error ||
+      '설비 삭제 중 오류가 발생했습니다.';
+    alert(msg);
   }
 }

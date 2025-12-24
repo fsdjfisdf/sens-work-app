@@ -292,3 +292,25 @@ exports.getEquipmentHistory = async (req, res) => {
     res.status(500).json({ error: 'Error retrieving equipment history' });
   }
 };
+
+exports.deleteEquipment = async (req, res) => {
+  const { eqname } = req.params;
+
+  if (!eqname) {
+    return res.status(400).json({ error: 'eqname 파라미터가 필요합니다.' });
+  }
+
+  try {
+    const query = `DELETE FROM Equipment WHERE EQNAME = ?`;
+    const [result] = await pool.query(query, [eqname]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: '해당 설비를 찾을 수 없습니다.', eqname });
+    }
+
+    res.status(200).json({ message: '설비가 삭제되었습니다.' });
+  } catch (err) {
+    console.error('Error deleting equipment:', err);
+    res.status(500).json({ error: '설비 삭제 중 오류가 발생했습니다.' });
+  }
+};

@@ -18,6 +18,9 @@ router.post('/equipment/update-info', equipmentController.updateEquipmentInfo);
 // 🔥 설비별 작업 이력 조회 (추가)
 router.get('/equipment/:eqname/logs', equipmentController.getEquipmentHistory);
 
+// 🔹 장비 삭제
+router.delete('/equipment/:eqname', equipmentController.deleteEquipment);
+
 // 라우터 등록
 module.exports = (app) => {
   app.use('/api', router);
