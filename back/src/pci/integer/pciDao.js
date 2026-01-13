@@ -1,6 +1,6 @@
 // src/pci/integer/pciDao.js
 const { pool } = require("../../../config/database");
-const { ALLOWED_EQUIP_TYPES, normalizeItem } = require("./pciConfig");
+const { ALLOWED_EQUIP_TYPES } = require("./pciConfig");
 
 /** 기간 필터 포함 INTEGER 관련 로그 */
 exports.fetchWorkLogsForInteger = async ({ startDate, endDate } = {}) => {
@@ -28,7 +28,6 @@ exports.fetchWorkLogsForInteger = async ({ startDate, endDate } = {}) => {
   const [rows] = await pool.query(sql, params);
 
   // 항목명 정규화
-  for (const r of rows) r.transfer_item = normalizeItem(r.transfer_item);
   return rows;
 };
 

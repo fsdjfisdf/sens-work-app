@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
         "PENDULUM VALVE",
         "PIN ASSY MODIFY",
         "MOTOR & CONTROLLER",
+        "통다발(교체)",
+        "통다발(티칭)",
         "PIN 구동부 ASSY",
         "PIN BELLOWS",  // Added from the table
         "SENSOR",

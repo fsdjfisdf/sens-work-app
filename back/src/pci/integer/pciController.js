@@ -1,5 +1,5 @@
 // src/pci/integer/pciController.js
-const { BASELINE, normalizeItem, toSelfCol, workerAliases } = require("./pciConfig");
+const { BASELINE, normalizeItem, expandItems, toSelfCol, workerAliases } = require("./pciConfig");
 const { parseTaskMen, round1, clamp } = require("./pciUtils");
 const {
   fetchWorkLogsForInteger,
@@ -27,14 +27,17 @@ exports.getWorkerPci = async (req, res) => {
     // 로그 카운트 집계
     const counts = {}; // { item: { main: number, support: number } }
     for (const r of logs) {
-      const item = normalizeItem(r.transfer_item);
-      if (!BASELINE[item]) continue;
+      const items = expandItems(r.transfer_item);
+      if (!items.length) continue;
 
       for (const p of parseTaskMen(r.task_man)) {
         if (workerAliases(p.name) !== worker) continue;
         const role = p.weight >= 1 ? "main" : "support";
-        counts[item] = counts[item] || { main: 0, support: 0 };
-        counts[item][role] += p.weight; // main=1.0, support=0.1
+          for (const item of items) {
+              if (!BASELINE[item]) continue;
+              counts[item] = counts[item] || { main: 0, support: 0 };
+              counts[item][role] += p.weight;
+            }
       }
     }
 
@@ -183,14 +186,20 @@ exports.getMatrix = async (_req, res) => {
     // 로그 카운트
     const counts = {};
     for (const r of logs) {
-      const item = normalizeItem(r.transfer_item);
-      if (!BASELINE[item]) continue;
-      for (const p of parseTaskMen(r.task_man)) {
-        const w = workerAliases(p.name);
-        counts[w] = counts[w] || {};
-        counts[w][item] = counts[w][item] || { main: 0, support: 0 };
-        const role = p.weight >= 1 ? "main" : "support";
-        counts[w][item][role] += p.weight;
+      const items = expandItems(r.transfer_item);
+if (!items.length) continue;
+
+for (const p of parseTaskMen(r.task_man)) {
+  const w = workerAliases(p.name);
+  counts[w] = counts[w] || {};
+  const role = p.weight >= 1 ? "main" : "support";
+
+  for (const item of items) {
+    if (!BASELINE[item]) continue;
+    counts[w][item] = counts[w][item] || { main: 0, support: 0 };
+    counts[w][item][role] += p.weight;
+  }
+
       }
     }
 
@@ -294,7 +303,8 @@ exports.getWorkerItemBreakdown = async (req, res) => {
     const logRows = [];
     let mainSum = 0, supportSum = 0;
     for (const r of logs) {
-      if (normalizeItem(r.transfer_item) !== itemNorm) continue;
+      const items = expandItems(r.transfer_item);
+if (!items.includes(itemNorm)) continue;
       for (const p of parseTaskMen(r.task_man)) {
         if (workerAliases(p.name) !== worker) continue;
         const role = p.weight >= 1 ? "main" : "support";

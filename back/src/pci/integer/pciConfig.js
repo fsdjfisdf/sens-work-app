@@ -223,3 +223,21 @@ exports.workerAliases = (name) => {
   if (!name) return "";
   return name.replace(/\(.*?\)/g, "").trim().replace(/\s+/g, " ");
 };
+
+/** transfer_item 확장 (특정 값은 여러 항목으로 분해) */
+exports.expandItems = (raw) => {
+  const v = strip(raw);
+  if (!v) return [];
+
+  // ✅ 특수 규칙: 통다발(교체) → 4개 항목 각각 1회 인정
+  if (v === "통다발(교체)") {
+    return ["BUSH", "BALL SCREW ASSY", "MAIN SHAFT", "BELLOWS"];
+  }
+
+  // (옵션) 여러 항목 입력 대비: "A, B" / "A / B" 등
+  const parts = v.split(/[,/]|(?:\r?\n)+/).map(s => strip(s)).filter(Boolean);
+  const list = (parts.length ? parts : [v]);
+
+  // normalize 적용 + baseline에 없는 건 나중에 controller에서 걸러짐
+  return [...new Set(list.map(exports.normalizeItem))];
+};
