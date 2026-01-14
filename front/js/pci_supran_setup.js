@@ -291,7 +291,7 @@ function bindMatrixEvents(){
 async function loadWorkerList(){
   try{
     const res = await axios.get(`${API_BASE}/workers`);
-workerNames = (res.data?.workers || [])
+    workerNames = (res.data?.workers || [])
   .map(x => String(x).trim())
   .filter(Boolean);
 
