@@ -84,6 +84,7 @@
   </div>
     <section class="tabs">
       <button class="tab active" data-tab="tab-matrix" aria-controls="tab-matrix" aria-selected="true">전체 인원 보기</button>
+      <button class="tab" data-tab="tab-compare" aria-controls="tab-compare" aria-selected="false">선택 인원 비교</button>
       <button class="tab" data-tab="tab-person" aria-controls="tab-person" aria-selected="false">개인 보기</button>
     </section>
 
@@ -137,6 +138,77 @@
       <div id="matrixLoading" class="loading hidden" aria-live="polite">
         <div class="spinner"></div>
         <div class="txt">전체 데이터를 수집/계산 중...</div>
+      </div>
+    </section>
+        
+    <!-- ===== 선택 인원 비교 ===== -->
+    <section id="tab-compare" class="panel tab-pane" role="tabpanel">
+      <div class="panel-header">
+        <h2>선택 인원 비교</h2>
+        <div class="hint">작업자 리스트에서 클릭으로 선택/해제 → “조회”로 비교 매트릭스 생성</div>
+      </div>
+
+      <div class="compare-layout">
+        <!-- 좌측: 작업자 리스트 -->
+        <aside class="compare-side">
+          <div class="compare-side-head">
+            <div class="field">
+              <label for="pickWorkerSearch">작업자 검색</label>
+              <input id="pickWorkerSearch" class="input" placeholder="이름 검색 (예: 정현우)" autocomplete="off"/>
+            </div>
+
+            <div class="compare-actions">
+              <button id="btnRunCompare" class="btn primary" disabled>조회</button>
+              <button id="btnClearCompare" class="btn">초기화</button>
+              <button id="btnCompareXlsx" class="btn" disabled>Excel</button>
+            </div>
+          </div>
+
+          <div class="compare-selected" id="compareChips"></div>
+
+          <div class="worker-picker" id="workerPicker" aria-label="작업자 리스트"></div>
+
+          <div class="hint" style="margin-top:8px;">
+            팁: 여러 명 선택 후 조회하면 항목별로 각 인원의 PCI가 한 화면에 보여요.
+          </div>
+        </aside>
+
+        <!-- 우측: 비교 매트릭스 -->
+        <section class="compare-main">
+          <!-- ✅ 선택 인원 평균 PCI만 -->
+          <section class="compare-summary">
+            <div class="compare-summary-top">
+              <div class="card stat">
+                <div class="label">선택 인원 평균 PCI</div>
+                <div class="value"><span id="cmpAvgPci">-</span><span class="unit">%</span></div>
+                <div class="sub">선택된 인원 전체 평균</div>
+              </div>
+            </div>
+          </section>
+
+          <div class="panel-header" style="margin-bottom:10px;">
+            <h2 style="font-size:16px;">비교 매트릭스</h2>
+            <div class="table-actions">
+              <input id="compareItemSearch" class="input" placeholder="항목 검색" autocomplete="off"/>
+              <select id="compareSort" class="input">
+                <option value="item_asc">정렬: 항목명 A→Z</option>
+                <option value="cat_then_item">정렬: 중분류 → 항목</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="matrix-wrap" id="compareWrap">
+            <div class="loading-line" aria-hidden="true"></div>
+            <table id="compareMatrixTable" class="matrix table-like dense">
+              <thead id="compareThead"></thead>
+              <tbody id="compareTbody"></tbody>
+            </table>
+          </div>
+
+          <div id="compareEmpty" class="hint" style="margin-top:10px;">
+            아직 조회된 데이터가 없어요. 왼쪽에서 인원을 선택하고 “조회”를 눌러주세요.
+          </div>
+        </section>
       </div>
     </section>
 
@@ -250,6 +322,8 @@
   </div>
 
   <!-- 페이지 전용 스크립트 -->
+   <script src="./js/pci_group_bundle.js" defer></script>
+<script src="./js/retired_workers.js" defer></script>
   <script src="./js/pci_precia_setup.js" defer></script>
 
   <!-- 세션/메뉴 -->

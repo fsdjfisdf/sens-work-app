@@ -1,150 +1,174 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCI(Personnal Capability Index)</title>
-    <link rel="stylesheet" href="./css/worklog.css">
-    <script defer src="./js/PCI.js"></script>
-    <script defer src="./js/logoutTimer.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCI (Personal Capability Index)</title>
+
+  <!-- ✅ PCI 전용 CSS로 변경 -->
+  <link rel="stylesheet" href="./css/PCI.css" />
+
+  <script defer src="./js/PCI.js"></script>
+  <script defer src="./js/logoutTimer.js"></script>
 </head>
 <body>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                    <a href="./signin.html" class="sign-link">Login</a>
-                </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
         </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./approval.html" class="menu-item">Worklog Approval</a>
-                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-                <a href="./PCI.html" class="menu-item">PCI</a>
-                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
+
+        <div class="sign-container signed hidden">
+          <button class="menu-btn" type="button" aria-label="메뉴 열기">
+            <div class="menu-icon" aria-hidden="true">
+              <span></span><span></span><span></span>
             </div>
+          </button>
         </div>
-    </nav>
+      </div>
+    </div>
 
-    <main>
-        <section class="pci-form-container">
-            <div class="inner">
-                <h2>PCI (Personal Capability Index)</h2>
-                <div class="form">
-                    <div class="form-row">
-                        <label for="groupSelect">Group</label>
-                        <select id="groupSelect">
-                            <option value="">Select Group</option>
-                            <option value="PEE1">PEE1</option>
-                            <option value="PEE2">PEE2</option>
-                            <option value="PSKH">PSKH</option>
-                        </select>
-                    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./approval.html" class="menu-item">Worklog Approval</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item" type="button">Logout</button>
+      </div>
+    </div>
+  </nav>
 
-                    <div class="form-row">
-                        <label for="equipmentSelect">Equipment</label>
-                        <select id="equipmentSelect">
-                            <option value="">Select Equipment</option>
-                        </select>
-                    </div>
+  <main>
+    <section class="pci-hero">
+      <div class="inner">
+        <div class="pci-card">
+          <div class="pci-head">
+            <h2>PCI (Personal Capability Index)</h2>
+            <p class="sub">
+              설비를 선택한 뒤 <b>SET UP / MAINT</b> 버튼을 누르면 바로 이동합니다.
+            </p>
+          </div>
 
-                    <div class="form-row">
-                        <label for="taskTypeSelect">Task Type</label>
-                        <select id="taskTypeSelect">
-                            <option value="">Select Task Type</option>
-                            <option value="SET UP">SET UP</option>
-                            <option value="MAINTENANCE">MAINTENANCE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-buttons">
-                        <button id="moveButton" class="btn-primary" disabled>SEARCH</button>
-                        <button id="resetButton" class="btn-secondary">Reset</button>
-                    </div>
-                </div>
+          <!-- ✅ 설비 버튼 영역 -->
+          <div class="block">
+            <div class="block-title">
+              <span class="badge">Step 1</span>
+              <h3>Equipment</h3>
             </div>
-        </section>
-    </main>
 
-    <footer>
-        <div class="inner">
-            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+            <div class="equip-grid" id="equipGrid" role="list" aria-label="설비 선택">
+              <!-- JS가 버튼 생성 -->
+            </div>
+
+            <p class="hint">
+            선택: <b id="selectedEquipText">없음</b>
+            </p>
+          </div>
+
+          <!-- ✅ 작업유형 버튼 영역(설비 선택 후 표시) -->
+          <div class="block hidden reveal" id="taskBlock">
+            <div class="block-title">
+              <span class="badge">Step 2</span>
+              <h3>Task Type</h3>
+            </div>
+
+            <div class="task-actions">
+              <button type="button" class="task-btn" id="btnSetup">
+                SET UP
+              </button>
+              <button type="button" class="task-btn" id="btnMaint">
+                MAINT
+              </button>
+            </div>
+
+            <p class="small">
+              * 설비 선택 후 바로 이동됩니다.
+            </p>
+          </div>
+
+          <div class="bottom-actions">
+            <button type="button" class="btn-secondary" id="resetBtn">Reset</button>
+          </div>
         </div>
-    </footer>
-</body>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const token = localStorage.getItem("x-access-token");
-        const userRole = localStorage.getItem("user-role");
+      </div>
+    </section>
+  </main>
 
-        if (!token) {
-            document.querySelector(".unsigned").classList.remove("hidden");
-            document.querySelector(".signed").classList.add("hidden");
-        } else {
-            document.querySelector(".unsigned").classList.add("hidden");
-            document.querySelector(".signed").classList.remove("hidden");
-        }
+  <footer>
+    <div class="inner">
+      <p>
+        제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며,
+        위반 시 법적 조치가 취해질 수 있습니다.
+      </p>
+    </div>
+  </footer>
 
-        if (!token || userRole !== 'admin') {
-            document.querySelectorAll('.admin-only').forEach(element => {
-                element.style.display = 'none';
-            });
-        }
+  <script>
+    // ✅ 기존 네비/권한/로그아웃 로직 유지(정리 버전)
+    document.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
 
-        const signOutButton = document.querySelector("#sign-out");
+      // signed/unsigned 토글
+      if (!token) {
+        document.querySelector(".unsigned").classList.remove("hidden");
+        document.querySelector(".signed").classList.add("hidden");
+      } else {
+        document.querySelector(".unsigned").classList.add("hidden");
+        document.querySelector(".signed").classList.remove("hidden");
+      }
 
-        if (signOutButton) {
-            signOutButton.addEventListener("click", function() {
-                localStorage.removeItem("x-access-token");
-                localStorage.removeItem("user-role");
-                alert("로그아웃 되었습니다.");
-                window.location.replace("./signin.html");
-            });
-        }
-        const menuBtn = document.querySelector('.menu-btn');
-        const menuBar = document.querySelector('.menu-bar');
+      // admin-only 숨김
+      if (!token || userRole !== "admin") {
+        document.querySelectorAll(".admin-only").forEach((el) => (el.style.display = "none"));
+      }
 
-        menuBtn.addEventListener('click', function() {
-            menuBar.classList.toggle('open');
+      // logout
+      const signOutButton = document.querySelector("#sign-out");
+      if (signOutButton) {
+        signOutButton.addEventListener("click", function () {
+          localStorage.removeItem("x-access-token");
+          localStorage.removeItem("user-role");
+          alert("로그아웃 되었습니다.");
+          window.location.replace("./signin.html");
+        });
+      }
+
+      // menu toggle
+      const menuBtn = document.querySelector(".menu-btn");
+      const menuBar = document.querySelector(".menu-bar");
+      if (menuBtn && menuBar) {
+        menuBtn.addEventListener("click", function () {
+          menuBar.classList.toggle("open");
         });
 
-        document.addEventListener('click', function(event) {
-            if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                menuBar.classList.remove('open');
-            }
+        document.addEventListener("click", function (event) {
+          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+            menuBar.classList.remove("open");
+          }
         });
+      }
+
+      // ✅ 로그인 가드
+      if (!token) {
+        alert("로그인이 필요합니다.");
+        window.location.replace("./signin.html");
+        return;
+      }
     });
-    document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('x-access-token');
-            if (!token) {
-                alert('로그인이 필요합니다.');
-                window.location.replace('./signin.html');
-                return;
-            }
-    }
-)
-    
-</script>
+  </script>
 </body>
 </html>

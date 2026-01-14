@@ -33,6 +33,8 @@ const urlMapping = {
 // ===== 전역 상태 =====
 let workerNames = [];
 let stackedChart = null;
+let groupRows = [];
+let groupChart = null;
 
 // 매트릭스 상태
 let matrixItems = [];
@@ -93,6 +95,27 @@ selEquipment: $("selEquipment"),
 selWorkType: $("selWorkType"),
 btnGoto: $("btnGoto"),
 gotoPreview: $("gotoPreview"),
+
+  // compare (NEW)
+  groupWorker: $("groupWorker"),
+  btnAddGroup: $("btnAddGroup"),
+  btnRunGroup: $("btnRunGroup"),
+  btnClearGroup: $("btnClearGroup"),
+  groupMode: $("groupMode"),
+  btnGroupXlsx: $("btnGroupXlsx"),
+  groupChips: $("groupChips"),
+
+  gAvgWork: $("gAvgWork"),
+  gAvgPci: $("gAvgPci"),
+  gItemsCnt: $("gItemsCnt"),
+  gStackedChart: $("gStackedChart"),
+  gChartScroll: $("gChartScroll"),
+  gChartInner: $("gChartInner"),
+  gSearchItem: $("gSearchItem"),
+  gSortBy: $("gSortBy"),
+  gTbody: $("gTbody"),
+  gTableScroll: $("gTableScroll"),
+
 
 };
 
@@ -183,6 +206,8 @@ initGotoControls();
   bindTabs();
   bindMatrixEvents();
   bindPersonEvents();
+  bindCompareEvents();      // ✅ 추가
+  initCompareBundle();      // ✅ 추가
 
   // 모달 close
   el.modalClose.addEventListener("click", hideModal);
@@ -327,7 +352,12 @@ function bindMatrixEvents(){
 async function loadWorkerList(){
   try{
     const res = await axios.get(`/api/pci/integer/workers`);
-    workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    workerNames = (res.data?.workers || [])
+      .slice()
+      .sort((a,b)=>a.localeCompare(b,'ko'));
+
+    workerNames = (window.filterActiveWorkers ? window.filterActiveWorkers(workerNames) : workerNames);
+
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
@@ -366,6 +396,7 @@ async function buildMatrix(){
     const res = await axios.get(`/api/pci/integer/matrix`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
     matrixWorkers = workers || [];
+    matrixWorkers = (window.filterActiveWorkers ? window.filterActiveWorkers(matrixWorkers) : matrixWorkers);
     matrixItems = items || [];
     matrixData = data || {};
     workerAvgMap = worker_avg_pci || {};
@@ -635,6 +666,184 @@ function bindPersonEvents(){
     if (tr && worker && item) openBreakdown(worker, item);
   });
 }
+
+/* ===================== 선택 인원 비교(NEW) ===================== */
+
+function bindCompareEvents(){
+  if (!el.gSearchItem || !el.gSortBy) return;
+
+  el.gSearchItem.addEventListener("input", debounce(()=> showBusy(el.gTableScroll, renderGroupTable), 120));
+  el.gSortBy.addEventListener("change", ()=>{ sortGroupRows(); showBusy(el.gTableScroll, renderGroupTable); });
+}
+
+function sortGroupRows(){
+  const mode = el.gSortBy?.value || "pci_desc";
+  const rows = groupRows || [];
+
+  if (mode === "pci_desc") rows.sort((a,b)=> (b.pci_pct||0) - (a.pci_pct||0) || (b.total_count||0)-(a.total_count||0));
+  else if (mode === "work_desc") rows.sort((a,b)=> (b.work_pct||0) - (a.work_pct||0) || (b.total_count||0)-(a.total_count||0));
+  else if (mode === "count_desc") rows.sort((a,b)=> (b.total_count||0) - (a.total_count||0) || (b.pci_pct||0)-(a.pci_pct||0));
+  else if (mode === "item_asc") rows.sort((a,b)=> String(a.item).localeCompare(String(b.item),'ko'));
+}
+
+function updateGroupCards(summary){
+  if (!summary){
+    el.gAvgWork.textContent = "-";
+    el.gAvgPci.textContent  = "-";
+    el.gItemsCnt.textContent = "-";
+    return;
+  }
+  el.gAvgWork.textContent = pct(summary.avgWork);
+  el.gAvgPci.textContent  = pct(summary.avgPci);
+  el.gItemsCnt.textContent = summary.itemsCnt ?? (groupRows?.length || 0);
+}
+
+function renderGroupChart(){
+  if (!el.gStackedChart) return;
+
+  const rows = (groupRows || []).slice();
+  rows.sort((a,b)=> (b.pci_pct||0) - (a.pci_pct||0) || (b.total_count||0)-(a.total_count||0));
+
+  const labels = rows.map(r => r.item);
+  const work   = rows.map(r => Number(r.work_pct) || 0);
+  const self   = rows.map(r => Number(r.self_pct) || 0);
+
+  const PX_PER_BAR = 56;
+  const minWidth   = el.gChartScroll?.clientWidth || 800;
+  const targetWidth = Math.max(minWidth, Math.ceil(labels.length * PX_PER_BAR));
+
+  if (el.gChartInner) el.gChartInner.style.width = targetWidth + "px";
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const cssH = 260;
+
+  el.gStackedChart.style.width  = targetWidth + "px";
+  el.gStackedChart.style.height = cssH + "px";
+  el.gStackedChart.width  = Math.floor(targetWidth * dpr);
+  el.gStackedChart.height = Math.floor(cssH * dpr);
+
+  if (groupChart) { groupChart.destroy(); groupChart = null; }
+
+  groupChart = new Chart(el.gStackedChart.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "작업이력(최대 80)", data: work, stack: "pci" },
+        { label: "자가체크(최대 20)", data: self, stack: "pci" }
+      ]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "top" },
+        tooltip: { enabled: true },
+        datalabels: {
+          display: labels.length <= 30,
+          anchor: "end",
+          align: "end",
+          formatter: v => `${(Number.isFinite(v) ? v : 0).toFixed(1)}%`,
+          color: "#333",
+          clamp: true
+        }
+      },
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          min: 0, max: 100,
+          ticks: { callback: v => v + "%" }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+function renderGroupTable(){
+  const q = (el.gSearchItem?.value || "").trim().toLowerCase();
+  const rows = (groupRows||[]).filter(r => !q || String(r.item||"").toLowerCase().includes(q));
+
+  const groups = new Map();
+  for (const r of rows){
+    const cat = getCategory(r.item);
+    if (!groups.has(cat)) groups.set(cat, []);
+    groups.get(cat).push(r);
+  }
+
+  const frag = document.createDocumentFragment();
+
+  for (const [cat, list] of groups){
+    const hr = document.createElement("tr");
+    hr.className = "cat-row";
+    const td = document.createElement("td");
+    td.colSpan = 10;
+    td.innerHTML = `<strong>${esc(cat)}</strong>`;
+    hr.appendChild(td);
+    frag.appendChild(hr);
+
+    for (const r of list){
+      const badgeClass = (r.pci_pct||0) >= 80 ? "ok" : ((r.pci_pct||0) >= 50 ? "mid" : "bad");
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><span class="badge">${esc(cat)}</span></td>
+        <td>${esc(r.item)}</td>
+        <td>${esc(r.baseline)}</td>
+        <td>${r.main_count ?? 0}</td>
+        <td>${r.support_count ?? 0}</td>
+        <td>${r.add_count ?? 0}</td>
+        <td>${r.total_count ?? 0}</td>
+        <td>${pct(r.work_pct)}%</td>
+        <td>${pct(r.self_pct)}%</td>
+        <td><span class="badge ${badgeClass}">${pct(r.pci_pct)}%</span></td>
+      `;
+      frag.appendChild(tr);
+    }
+  }
+
+  el.gTbody.innerHTML = "";
+  el.gTbody.appendChild(frag);
+}
+
+function initCompareBundle(){
+  if (!el.groupWorker || !el.btnAddGroup || !el.btnRunGroup) return;
+
+  const groupBundle = new PciGroupBundle({
+    storageKey: "PCI_INTEGER_MAINT_COMPARE",
+    normalizeName: (n) => (n || "").trim(),
+    host: {
+      fetchWorker: async (name) => {
+        const res = await axios.get(`/api/pci/integer/worker/${encodeURIComponent(name)}`);
+        return { summary: res.data?.summary || { worker: name }, rows: res.data?.rows || [] };
+      },
+      renderGroup: (result) => {
+        groupRows = result.group.rows || [];
+        sortGroupRows();
+        updateGroupCards(result.group.summary);
+        renderGroupChart();
+        renderGroupTable();
+      },
+      renderError: (msg) => alert(msg),
+      renderLoading: (on) => {
+        if (!el.gTableScroll) return;
+        if (on) startLine(el.gTableScroll);
+        else setTimeout(()=>stopLine(el.gTableScroll), 250);
+      }
+    }
+  });
+
+  groupBundle.mountUI({
+    inputEl: el.groupWorker,
+    addBtn: el.btnAddGroup,
+    runBtn: el.btnRunGroup,
+    clearBtn: el.btnClearGroup,
+    chipsWrap: el.groupChips,
+    modeSel: el.groupMode,
+    exportBtn: el.btnGroupXlsx,
+  });
+}
+
 
 async function onFetchPerson(){
   const name = el.worker.value.trim();
@@ -923,3 +1132,320 @@ function getBaseline(item){
   const first = Object.values(d)[0];
   return first?.baseline ?? "";
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = (s, r=document)=> r.querySelector(s);
+
+  const el = {
+    pickWorkerSearch: $("#pickWorkerSearch"),
+    workerPicker: $("#workerPicker"),
+    compareChips: $("#compareChips"),
+    btnRunCompare: $("#btnRunCompare"),
+    btnClearCompare: $("#btnClearCompare"),
+    btnCompareXlsx: $("#btnCompareXlsx"),
+
+    compareWrap: $("#compareWrap"),
+    compareThead: $("#compareThead"),
+    compareTbody: $("#compareTbody"),
+    compareEmpty: $("#compareEmpty"),
+
+    compareItemSearch: $("#compareItemSearch"),
+    compareSort: $("#compareSort"),
+
+    // ✅ 요약(선택 인원 평균 PCI만)
+    cmpAvgPci: $("#cmpAvgPci"),
+
+    workerList: $("#worker-list"),
+  };
+
+  if (!el.workerPicker || !el.compareThead) return;
+
+  const startLine = (wrap)=> wrap?.classList.add("is-loading");
+  const stopLine  = (wrap)=> wrap?.classList.remove("is-loading");
+
+  function readWorkerNamesFromDatalist(){
+    const opts = Array.from(el.workerList?.querySelectorAll("option") || []);
+    return opts.map(o => (o.value || "").trim()).filter(Boolean);
+  }
+
+  let compareData = null; // {names, by_worker, workerAvgPci, selectedAvgPci}
+  let allItems = [];
+
+  function pct1(n){
+    const v = Number(n);
+    return Number.isFinite(v) ? v.toFixed(1) : "0.0";
+  }
+
+  function heatClass(p){
+    const n = Math.max(0, Math.min(100, Number(p)||0));
+    return "h" + Math.round(n/10);
+  }
+
+  // ✅ rows로 개인 평균PCI 계산(혹시 bundle이 안 내려줄 때 fallback)
+  function calcAvgPciFromRows(rows){
+    const arr = Array.isArray(rows) ? rows : [];
+    if (!arr.length) return 0;
+    const sum = arr.reduce((s,r)=> s + (Number(r.pci_pct)||0), 0);
+    return sum / arr.length;
+  }
+
+  function getWorkerAvgPci(name){
+    // 1) bundle에서 내려온 맵 우선
+    if (compareData?.workerAvgPci && compareData.workerAvgPci[name] != null){
+      return Number(compareData.workerAvgPci[name]) || 0;
+    }
+
+    // 2) summary.avgPci 우선
+    const w = (compareData?.by_worker || []).find(x => x.name === name);
+    const s = w?.data?.summary;
+    if (s && s.avgPci != null) return Number(s.avgPci) || 0;
+
+    // 3) rows 평균 fallback
+    return calcAvgPciFromRows(w?.data?.rows);
+  }
+
+  function getSelectedAvgPci(){
+    // 1) bundle에서 내려온 값 우선
+    if (compareData?.selectedAvgPci != null) return Number(compareData.selectedAvgPci) || 0;
+
+    // 2) 이름별 평균의 평균
+    const names = compareData?.names || [];
+    if (!names.length) return 0;
+    const sum = names.reduce((s,n)=> s + getWorkerAvgPci(n), 0);
+    return sum / names.length;
+  }
+
+  // ✅ 요약 렌더(선택 인원 평균 PCI 1개만)
+  function renderCompareSummary(){
+    if (!compareData) return;
+    const v = getSelectedAvgPci();
+    if (el.cmpAvgPci) el.cmpAvgPci.textContent = pct1(v);
+  }
+
+  // ===== bundle 생성 =====
+  const bundle = new PciGroupBundle({
+    storageKey: "PCI_INTEGER_COMPARE",
+    maxNames: 30,
+    normalizeName: (n)=> (n||"").trim(),
+    host: {
+      fetchWorker: async (name) => {
+        const res = await axios.get(`/api/pci/integer/worker/${encodeURIComponent(name)}`);
+        return {
+          summary: res.data?.summary || { worker: name },
+          rows: res.data?.rows || []
+        };
+      },
+      renderCompare: (result) => {
+        // ✅ 1) 안전 가드: result가 null/undefined면 기본값으로
+        const safe = result && typeof result === "object" ? result : { names: [], by_worker: [] };
+
+        // ✅ 2) 구조 강제(혹시 undefined 방지)
+        safe.names = Array.isArray(safe.names) ? safe.names : [];
+        safe.by_worker = Array.isArray(safe.by_worker) ? safe.by_worker : [];
+
+        // ✅ 3) 이제부터 compareData는 절대 null이 아님
+        compareData = safe;
+
+        // ✅ 4) 퇴사자 제외 (names / by_worker 둘 다)
+        if (window.filterActiveWorkers) {
+          compareData.names = window.filterActiveWorkers(compareData.names);
+        }
+        if (window.isRetiredWorker) {
+          compareData.by_worker = compareData.by_worker.filter(w => !window.isRetiredWorker(w?.name));
+        }
+
+        // rows에 category 없으면 채움(기존 유지)
+        for (const w of compareData.by_worker){
+          for (const r of (w.data?.rows||[])){
+            if (r.category == null) r.category = (typeof getCategory === "function") ? getCategory(r.item) : (r.category || "ETC");
+          }
+        }
+
+        buildUnionItems();
+        renderCompareSummary();
+        renderCompareMatrix();
+
+        if (el.compareEmpty) el.compareEmpty.style.display = "none";
+        if (el.btnCompareXlsx) el.btnCompareXlsx.disabled = false;
+      },
+      renderError: (msg) => alert(msg),
+      renderLoading: (on) => {
+        if (on) startLine(el.compareWrap);
+        else setTimeout(()=>stopLine(el.compareWrap), 200);
+      }
+    }
+  });
+
+  bundle.mountUI({
+    pickerSearch: el.pickWorkerSearch,
+    pickerWrap: el.workerPicker,
+    chipsWrap: el.compareChips,
+    runBtn: el.btnRunCompare,
+    clearBtn: el.btnClearCompare,
+    exportBtn: el.btnCompareXlsx,
+  });
+
+  setTimeout(()=>{
+    let names = readWorkerNamesFromDatalist();
+    names = (window.filterActiveWorkers ? window.filterActiveWorkers(names) : names);
+    bundle.setAvailableNames(names);
+  }, 300);
+
+  function buildUnionItems(){
+    const bw = Array.isArray(compareData?.by_worker) ? compareData.by_worker : [];
+    const set = new Map();
+
+    for (const w of bw){
+      for (const r of (w.data?.rows||[])){
+        const item = String(r.item||"").trim();
+        if (!item) continue;
+        if (!set.has(item)){
+          set.set(item, {
+            item,
+            category: r.category ?? getCategory(item),
+            baseline: r.baseline ?? ""
+          });
+        }
+      }
+    }
+    allItems = Array.from(set.values());
+  }
+
+  function renderCompareMatrix(){
+    if (!compareData) return;
+
+    const q = (el.compareItemSearch?.value || "").trim().toLowerCase();
+    const sort = el.compareSort?.value || "cat_then_item";
+
+    let items = allItems.slice();
+    if (q) items = items.filter(x =>
+      x.item.toLowerCase().includes(q) || String(x.category||"").toLowerCase().includes(q)
+    );
+
+    if (sort === "item_asc"){
+      items.sort((a,b)=> a.item.localeCompare(b.item, "ko"));
+    } else {
+      items.sort((a,b)=> String(a.category||"").localeCompare(String(b.category||""),"ko") || a.item.localeCompare(b.item,"ko"));
+    }
+
+    // worker->item->row
+    const map = new Map();
+    for (const w of compareData.by_worker){
+      const m = new Map();
+      for (const r of (w.data?.rows||[])){
+        m.set(String(r.item||"").trim(), r);
+      }
+      map.set(w.name, m);
+    }
+
+    const names = compareData.names || [];
+
+    // ✅ THEAD 2단: (1) 이름행 (2) 인원별 평균 PCI 요약행
+    const head1 = `
+      <tr class="header-row">
+        <th class="item-col">중분류</th>
+        <th class="item-col">항목</th>
+        <th>기준</th>
+        ${names.map(n=> `<th class="worker-col"><span class="wname" title="${n}">${n}</span></th>`).join("")}
+      </tr>
+    `;
+
+    const overall = getSelectedAvgPci();
+    const head2 = `
+      <tr class="summary-row">
+        <th class="item-col sum-col"></th>
+        <th class="item-col sum-col">
+          <span class="badge b-total">선택 평균 ${pct1(overall)}%</span>
+        </th>
+        <th class="sum-col"></th>
+        ${names.map(n=>{
+          const v = getWorkerAvgPci(n);
+          const cls = v >= 80 ? "ok" : (v >= 50 ? "mid" : "bad");
+          return `<th class="worker-col sum-col"><span class="badge ${cls}">${pct1(v)}%</span></th>`;
+        }).join("")}
+      </tr>
+    `;
+
+    el.compareThead.innerHTML = head1 + head2;
+
+    let curCat = null;
+    const rowsHtml = [];
+    for (const it of items){
+      if (it.category !== curCat){
+        curCat = it.category;
+        rowsHtml.push(`<tr class="cat-row"><td colspan="${3 + names.length}"><strong>${curCat}</strong></td></tr>`);
+      }
+
+      const cells = names.map(name=>{
+        const r = map.get(name)?.get(it.item);
+        const p = r ? (Number(r.pci_pct)||0) : 0;
+        const cls = heatClass(p);
+        const badge = p >= 80 ? "ok" : (p >= 50 ? "mid" : "bad");
+        const txt = r ? `${pct1(p)}%` : "-";
+
+        return `
+          <td class="worker-col">
+            <div class="cell ${cls} cmp-cell"
+                 role="button" tabindex="0"
+                 data-worker="${name}"
+                 data-item="${it.item}"
+                 title="${name} · ${it.item}">
+              <span class="badge ${badge}">${txt}</span>
+            </div>
+          </td>
+        `;
+      }).join("");
+
+      rowsHtml.push(`
+        <tr>
+          <td class="item-col">${it.category}</td>
+          <td class="item-col">${it.item}</td>
+          <td>${it.baseline || ""}</td>
+          ${cells}
+        </tr>
+      `);
+    }
+
+    el.compareTbody.innerHTML = rowsHtml.join("");
+  }
+
+  // 검색/정렬
+  el.compareItemSearch?.addEventListener("input", ()=> renderCompareMatrix());
+  el.compareSort?.addEventListener("change", ()=> renderCompareMatrix());
+
+  // ✅ 모달: 비교 셀 클릭 → 기존 openBreakdown(worker,item) 그대로 사용(동일 모달)
+  el.compareTbody?.addEventListener("click", (e)=>{
+    const cell = e.target.closest(".cmp-cell");
+    if (!cell) return;
+
+    const worker = cell.getAttribute("data-worker");
+    const item = cell.getAttribute("data-item");
+    if (!worker || !item) return;
+
+    if (typeof window.openBreakdown === "function"){
+      window.openBreakdown(worker, item);
+    } else if (typeof openBreakdown === "function"){
+      openBreakdown(worker, item);
+    } else {
+      alert("모달 함수(openBreakdown)를 찾을 수 없습니다.");
+    }
+  });
+
+  // 키보드 접근성(Enter/Space)
+  el.compareTbody?.addEventListener("keydown", (e)=>{
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const cell = e.target.closest(".cmp-cell");
+    if (!cell) return;
+    e.preventDefault();
+
+    const worker = cell.getAttribute("data-worker");
+    const item = cell.getAttribute("data-item");
+    if (!worker || !item) return;
+
+    if (typeof window.openBreakdown === "function"){
+      window.openBreakdown(worker, item);
+    } else if (typeof openBreakdown === "function"){
+      openBreakdown(worker, item);
+    }
+  });
+});

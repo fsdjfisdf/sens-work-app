@@ -520,3 +520,173 @@ body.modal-open{ overflow:hidden; }
   }
   .jump-box .btn{ width: 100%; }
 }
+
+/* ===================== Compare Tab UI ===================== */
+.compare-layout{
+  display:grid;
+  grid-template-columns: 360px 1fr;
+  gap:12px;
+  align-items:start;
+}
+
+.compare-side{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  background:#fff;
+  box-shadow: var(--shadow);
+  padding:12px;
+}
+
+.compare-side-head{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.compare-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.compare-selected{
+  border:1px dashed var(--border);
+  border-radius:12px;
+  padding:10px;
+  margin:10px 0;
+  background:#fbfcff;
+}
+
+/* chips */
+.cmp-chip-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:8px; }
+.cmp-chip-title{ font-weight:900; font-size:13px; }
+.cmp-chip-sub{ font-size:12px; color:#64748b; }
+.cmp-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.cmp-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid var(--border);
+  background:#fff;
+  padding:4px 8px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:12.5px;
+}
+.cmp-x{
+  border:none; background:transparent; cursor:pointer;
+  width:18px; height:18px; line-height:18px;
+  border-radius:999px;
+  font-weight:900;
+  color:#64748b;
+}
+.cmp-x:hover{ background:#eef2f7; color:#0f172a; }
+.cmp-empty{ color:#64748b; font-size:12.5px; }
+
+/* worker picker list */
+.worker-picker{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  overflow:auto;
+  max-height:520px;
+}
+
+.wp-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 10px;
+  border-bottom:1px solid var(--grid);
+  cursor:pointer;
+  user-select:none;
+}
+.wp-row:hover{ background:#f7fbff; }
+.wp-row.sel{
+  background: color-mix(in srgb, var(--accent) 7%, #fff);
+  border-left:4px solid var(--accent);
+}
+.wp-name{ font-weight:900; color:#0f172a; }
+.wp-mark{
+  font-size:12px;
+  font-weight:900;
+  color:#64748b;
+  border:1px solid var(--border);
+  padding:2px 8px;
+  border-radius:999px;
+  background:#fff;
+}
+.wp-row.sel .wp-mark{
+  color:#0b216b;
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+}
+.wp-empty{ padding:14px; color:#64748b; }
+
+/* right area */
+.compare-main{
+  min-width:0;
+}
+
+@media (max-width: 1100px){
+  .compare-layout{ grid-template-columns: 1fr; }
+  .worker-picker{ max-height:360px; }
+}
+
+/* ===================== Compare Summary ===================== */
+.compare-summary{
+  margin: 0 0 12px;
+}
+.compare-summary-top{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+}
+
+.compare-summary-list{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap:10px;
+}
+
+.cmp-person-card{
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  box-shadow: var(--shadow-xs);
+  padding:12px;
+}
+
+.cmp-person-name{
+  font-weight: 950;
+  font-size: 14px;
+  margin-bottom:8px;
+}
+
+.cmp-person-kpis{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:8px;
+}
+
+.cmp-person-kpis .kpi{
+  border:1px solid var(--grid);
+  border-radius:10px;
+  padding:8px;
+  background:#fbfcff;
+}
+.cmp-person-kpis .k{
+  font-size:12px;
+  color:#64748b;
+  font-weight:900;
+}
+.cmp-person-kpis .v{
+  font-size:15px;
+  font-weight:950;
+  margin-top:2px;
+}
+
+@media (max-width: 960px){
+  .compare-summary-top{ grid-template-columns: 1fr; }
+  .compare-summary-list{ grid-template-columns: 1fr; }
+}
