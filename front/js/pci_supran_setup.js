@@ -291,15 +291,7 @@ function bindMatrixEvents(){
 async function loadWorkerList(){
   try{
     const res = await axios.get(`${API_BASE}/workers`);
-    workerNames = (res.data?.workers || [])
-  .map(x => String(x).trim())
-  .filter(Boolean);
-
-if (window.filterActiveWorkers) {
-  workerNames = window.filterActiveWorkers(workerNames);
-}
-
-workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
+    workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("[SETUP PCI] 작업자 목록 로드 실패:", err);
@@ -339,10 +331,6 @@ async function buildMatrix(){
     const res = await axios.get(`${API_BASE}/matrix`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
     matrixWorkers = (workers || []).slice();
-
-if (window.filterActiveWorkers) {
-  matrixWorkers = window.filterActiveWorkers(matrixWorkers);
-}
     matrixItems = (items || []).map(normItem);
     matrixData = data || {};
     workerAvgMap = worker_avg_pci || {};
@@ -874,7 +862,13 @@ function hideModal(){
   el.modal.classList.remove("show");
 }
 
+
 document.addEventListener("DOMContentLoaded", () => {
+  if (typeof PciGroupBundle !== "function") {
+  console.error("[COMPARE] PciGroupBundle is not loaded. check pci_group_bundle.js path/order");
+  return;
+}
+
   const $ = (s, r=document)=> r.querySelector(s);
 
   const cmpEl = {
@@ -957,15 +951,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ✅ 요약 렌더(선택 인원 평균 PCI 1개만)
-  function renderCompareSummary(){
-    if (!compareData) return;
-    const v = getSelectedAvgPci();
-    if (el.cmpAvgPci) el.cmpAvgPci.textContent = pct1(v);
-  }
+function renderCompareSummary(){
+  if (!compareData) return;
+  const v = getSelectedAvgPci();
+  if (cmpEl.cmpAvgPci) cmpEl.cmpAvgPci.textContent = pct1(v);
+}
 
   // ===== bundle 생성 =====
   const bundle = new PciGroupBundle({
-    storageKey: "PCI_SUPRAN_COMPARE",
+    storageKey: "PCI_SUPRAXP_COMPARE",
     maxNames: 30,
     normalizeName: (n)=> (n||"").trim(),
     host: {
@@ -1008,25 +1002,25 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCompareSummary();
         renderCompareMatrix();
 
-        if (el.compareEmpty) el.compareEmpty.style.display = "none";
-        if (el.btnCompareXlsx) el.btnCompareXlsx.disabled = false;
+if (cmpEl.compareEmpty) cmpEl.compareEmpty.style.display = "none";
+if (cmpEl.btnCompareXlsx) cmpEl.btnCompareXlsx.disabled = false;
       },
       renderError: (msg) => alert(msg),
       renderLoading: (on) => {
-        if (on) startLine(el.compareWrap);
-        else setTimeout(()=>stopLine(el.compareWrap), 200);
+        if (on) startLine(cmpEl.compareWrap);
+        else setTimeout(()=>stopLine(cmpEl.compareWrap), 200);
       }
     }
   });
 
-  bundle.mountUI({
-    pickerSearch: el.pickWorkerSearch,
-    pickerWrap: el.workerPicker,
-    chipsWrap: el.compareChips,
-    runBtn: el.btnRunCompare,
-    clearBtn: el.btnClearCompare,
-    exportBtn: el.btnCompareXlsx,
-  });
+bundle.mountUI({
+  pickerSearch: cmpEl.pickWorkerSearch,
+  pickerWrap: cmpEl.workerPicker,
+  chipsWrap: cmpEl.compareChips,
+  runBtn: cmpEl.btnRunCompare,
+  clearBtn: cmpEl.btnClearCompare,
+  exportBtn: cmpEl.btnCompareXlsx,
+});
 
   setTimeout(()=>{
 let names = readWorkerNamesFromDatalist();
@@ -1058,8 +1052,8 @@ bundle.setAvailableNames(names);
   function renderCompareMatrix(){
     if (!compareData) return;
 
-    const q = (el.compareItemSearch?.value || "").trim().toLowerCase();
-    const sort = el.compareSort?.value || "cat_then_item";
+    const q = (cmpEl.compareItemSearch?.value || "").trim().toLowerCase();
+    const sort = cmpEl.compareSort?.value || "cat_then_item";
 
     let items = allItems.slice();
     if (q) items = items.filter(x =>
@@ -1110,7 +1104,7 @@ bundle.setAvailableNames(names);
       </tr>
     `;
 
-    el.compareThead.innerHTML = head1 + head2;
+    cmpEl.compareThead.innerHTML = head1 + head2;
 
     let curCat = null;
     const rowsHtml = [];
@@ -1150,15 +1144,15 @@ bundle.setAvailableNames(names);
       `);
     }
 
-    el.compareTbody.innerHTML = rowsHtml.join("");
+    cmpEl.compareTbody.innerHTML = rowsHtml.join("");
   }
 
   // 검색/정렬
-  el.compareItemSearch?.addEventListener("input", ()=> renderCompareMatrix());
-  el.compareSort?.addEventListener("change", ()=> renderCompareMatrix());
+  cmpEl.compareItemSearch?.addEventListener("input", ()=> renderCompareMatrix());
+  cmpEl.compareSort?.addEventListener("change", ()=> renderCompareMatrix());
 
   // ✅ 모달: 비교 셀 클릭 → 기존 openBreakdown(worker,item) 그대로 사용(동일 모달)
-  el.compareTbody?.addEventListener("click", (e)=>{
+  cmpEl.compareTbody?.addEventListener("click", (e)=>{
     const cell = e.target.closest(".cmp-cell");
     if (!cell) return;
 
@@ -1176,7 +1170,7 @@ bundle.setAvailableNames(names);
   });
 
   // 키보드 접근성(Enter/Space)
-  el.compareTbody?.addEventListener("keydown", (e)=>{
+  cmpEl.compareTbody?.addEventListener("keydown", (e)=>{
     if (e.key !== "Enter" && e.key !== " ") return;
     const cell = e.target.closest(".cmp-cell");
     if (!cell) return;

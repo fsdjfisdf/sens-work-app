@@ -301,7 +301,15 @@ function bindMatrixEvents(){
 async function loadWorkerList(){
   try{
     const res = await axios.get(`/api/pci/precia/workers`);
-    workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    workerNames = (res.data?.workers || [])
+  .map(x => String(x).trim())
+  .filter(Boolean);
+
+if (window.filterActiveWorkers) {
+  workerNames = window.filterActiveWorkers(workerNames);
+}
+
+workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
@@ -339,7 +347,11 @@ async function buildMatrix(){
   try{
     const res = await axios.get(`/api/pci/precia/matrix`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
-    matrixWorkers = workers || [];
+    matrixWorkers = (workers || []).slice();
+
+if (window.filterActiveWorkers) {
+  matrixWorkers = window.filterActiveWorkers(matrixWorkers);
+}
     matrixItems = items || [];
     matrixData = data || {};
     workerAvgMap = worker_avg_pci || {};
@@ -1052,9 +1064,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   setTimeout(()=>{
-    let names = readWorkerNamesFromDatalist();
-    names = (window.filterActiveWorkers ? window.filterActiveWorkers(names) : names);
-    bundle.setAvailableNames(names);
+let names = readWorkerNamesFromDatalist();
+if (window.filterActiveWorkers) names = window.filterActiveWorkers(names);
+bundle.setAvailableNames(names);
   }, 300);
 
   function buildUnionItems(){

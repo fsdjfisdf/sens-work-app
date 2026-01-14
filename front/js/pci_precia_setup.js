@@ -291,8 +291,19 @@ function bindMatrixEvents(){
 async function loadWorkerList(){
   try{
     const res = await axios.get(`${API_BASE}/workers`);
-    workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    workerNames = (res.data?.workers || [])
+  .map(x => String(x).trim())
+  .filter(Boolean);
+
+if (window.filterActiveWorkers) {
+  workerNames = window.filterActiveWorkers(workerNames);
+}
+
+workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
+    if (typeof window.__syncPciCompareNames === "function") {
+  window.__syncPciCompareNames();
+}
   }catch(err){
     console.error("[SETUP PCI] 작업자 목록 로드 실패:", err);
     workerNames = [];
@@ -331,6 +342,10 @@ async function buildMatrix(){
     const res = await axios.get(`${API_BASE}/matrix`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
     matrixWorkers = (workers || []).slice();
+
+if (window.filterActiveWorkers) {
+  matrixWorkers = window.filterActiveWorkers(matrixWorkers);
+}
     matrixItems = (items || []).map(normItem);
     matrixData = data || {};
     workerAvgMap = worker_avg_pci || {};
@@ -1015,11 +1030,17 @@ document.addEventListener("DOMContentLoaded", () => {
     exportBtn: el.btnCompareXlsx,
   });
 
-  setTimeout(()=>{
-    let names = readWorkerNamesFromDatalist();
-    if (window.filterActiveWorkers) names = window.filterActiveWorkers(names);
-    bundle.setAvailableNames(names);
-  }, 300);
+function syncAvailableNames(){
+  let names = (Array.isArray(workerNames) ? workerNames : [])
+    .map(x => String(x).trim())
+    .filter(Boolean);
+
+  if (window.filterActiveWorkers) names = window.filterActiveWorkers(names);
+  bundle.setAvailableNames(names);
+}
+
+// 비교 UI 마운트 직후 1회
+syncAvailableNames();
 
   function buildUnionItems(){
     const bw = Array.isArray(compareData?.by_worker) ? compareData.by_worker : [];
