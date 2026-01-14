@@ -121,6 +121,7 @@ const el = {
 
 /* -------------------- 쿼리 생성 (호환 키 동시 전송) ------------------- */
 function currentFilterQuery(){
+  window.currentFilterQuery = currentFilterQuery;
   // 숫자/불리언 표현 모두 지원: 1/0, true/false, yes/no
   const activeNum = filterState.activeOnly ? 1 : 0;
   const activeStr = filterState.activeOnly ? "true" : "false";
@@ -269,23 +270,24 @@ function bindMatrixEvents(){
 
 async function loadWorkerList(){
   try{
-    const res = await axios.get(`/api/pci/supra-n/workers?${currentFilterQuery()}`);
-    workerNames = (res.data?.workers || [])
-  .map(x => String(x).trim())
-  .filter(Boolean);
+    const q = window.currentFilterQuery ? window.currentFilterQuery() : "";
+    const res = await axios.get(`/api/pci/supra-n/workers?${q}`);
+    workerNames = (res.data?.workers || []).map(x=>String(x).trim()).filter(Boolean);
 
-if (window.filterActiveWorkers) {
-  workerNames = window.filterActiveWorkers(workerNames);
-}
+    if (window.filterActiveWorkers) workerNames = window.filterActiveWorkers(workerNames);
 
-workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
-
+    workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
+
+    if (window._supraNCompareBundle) {
+      window._supraNCompareBundle.setAvailableNames(workerNames);
+    }
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
     workerNames = [];
   }
 }
+
 
 function renderMatrixSkeleton(rowCount=10, workerCount=12){
   const tr = document.createElement("tr");
@@ -1077,6 +1079,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+  window._supraNCompareBundle = bundle;
 
   bundle.mountUI({
     pickerSearch: el.pickWorkerSearch,

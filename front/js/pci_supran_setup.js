@@ -145,6 +145,38 @@ let workerAvgMap = {}; // worker -> 평균 PCI
 let stackedChart = null;
 let collapsedCats = new Set();
 
+const filterState = {
+  company: "",
+  group: "",
+  site: "",
+  activeOnly: true,
+};
+
+function currentFilterQuery(){
+  const activeNum = filterState.activeOnly ? 1 : 0;
+
+  const q = new URLSearchParams({
+    company: filterState.company || "",
+    group:   filterState.group   || "",
+    site:    filterState.site    || "",
+    activeOnly: String(activeNum),
+
+    // 호환 키
+    company_name: filterState.company || "",
+    group_name:   filterState.group   || "",
+    site_name:    filterState.site    || "",
+    active_only:  String(activeNum),
+
+    active: String(activeNum),
+    active_bool: filterState.activeOnly ? "true" : "false",
+    active_yesno: filterState.activeOnly ? "yes" : "no",
+  });
+
+  return q.toString();
+}
+window.currentFilterQuery = currentFilterQuery;
+
+
 // === 유틸 ===
 const ESC_RE  = /[&<>"']/g;
 const ESC_MAP = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
@@ -196,7 +228,8 @@ initGotoControls();
 /* ======================= NEW: Goto Controls =============================== */
 function initGotoControls(){
   // 장비 select 채우기 (초기: 그룹 전체)
-  fillEquipmentOptions(el.selGroup.value || "");
+  fillEquipmentOptions(el.selGroup?.value || "");
+  
 
   // 이벤트 바인딩
   el.selGroup?.addEventListener("change", ()=>{
@@ -291,13 +324,23 @@ function bindMatrixEvents(){
 async function loadWorkerList(){
   try{
     const res = await axios.get(`${API_BASE}/workers`);
-    workerNames = (res.data?.workers || []).slice().sort((a,b)=>a.localeCompare(b,'ko'));
+    workerNames = (res.data?.workers || [])
+      .map(x => String(x).trim())
+      .filter(Boolean);
+
+    if (window.filterActiveWorkers) {
+      workerNames = window.filterActiveWorkers(workerNames);
+    }
+
+    workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("[SETUP PCI] 작업자 목록 로드 실패:", err);
     workerNames = [];
   }
 }
+
+
 
 function renderMatrixSkeleton(rowCount=10, workerCount=12){
   const tr = document.createElement("tr");
@@ -331,6 +374,10 @@ async function buildMatrix(){
     const res = await axios.get(`${API_BASE}/matrix`);
     const { workers, items, data, worker_avg_pci } = res.data || {};
     matrixWorkers = (workers || []).slice();
+
+if (window.filterActiveWorkers) {
+  matrixWorkers = window.filterActiveWorkers(matrixWorkers);
+}
     matrixItems = (items || []).map(normItem);
     matrixData = data || {};
     workerAvgMap = worker_avg_pci || {};
@@ -1016,9 +1063,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   setTimeout(()=>{
-    let names = readWorkerNamesFromDatalist();
-    if (window.filterActiveWorkers) names = window.filterActiveWorkers(names);
-    bundle.setAvailableNames(names);
+let names = readWorkerNamesFromDatalist();
+if (window.filterActiveWorkers) names = window.filterActiveWorkers(names);
+bundle.setAvailableNames(names);
   }, 300);
 
   function buildUnionItems(){
