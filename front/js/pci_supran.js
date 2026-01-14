@@ -279,6 +279,7 @@ if (window.filterActiveWorkers) {
 }
 
 workerNames.sort((a,b)=>a.localeCompare(b,'ko'));
+
     el.workerList.innerHTML = workerNames.map(n=>`<option value="${esc(n)}"></option>`).join("");
   }catch(err){
     console.error("작업자 목록 로드 실패:", err);
