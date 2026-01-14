@@ -859,6 +859,7 @@ async function openBreakdown(worker, item){
     alert("상세를 불러오지 못했습니다.");
   }
 }
+window.openBreakdown = openBreakdown;
 
 function showModal(title, bodyHtml){
   el.modalTitle.textContent = title;
@@ -876,7 +877,7 @@ function hideModal(){
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (s, r=document)=> r.querySelector(s);
 
-  const el = {
+  const cmpEl = {
     pickWorkerSearch: $("#pickWorkerSearch"),
     workerPicker: $("#workerPicker"),
     compareChips: $("#compareChips"),
@@ -898,7 +899,7 @@ document.addEventListener("DOMContentLoaded", () => {
     workerList: $("#worker-list"),
   };
 
-  if (!el.workerPicker || !el.compareThead) return;
+  if (!cmpEl.workerPicker || !cmpEl.compareThead) return;
 
   const startLine = (wrap)=> wrap?.classList.add("is-loading");
   const stopLine  = (wrap)=> wrap?.classList.remove("is-loading");
