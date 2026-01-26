@@ -109,7 +109,7 @@ exports.addEquipment = async (req, res) => {
         \`LINE\`, \`FLOOR\`, \`BAY\`,
         \`START_DATE\`, \`END_DATE\`, \`WARRANTY_STATUS\`, \`INFO\`
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const params = [
       eqname,
