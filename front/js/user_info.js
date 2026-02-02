@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userInfo = await loadUserInfo();  // loadUserInfo 함수에서 반환된 userInfo를 기다림
   loggedInUserName = userInfo?.NAME?.replace(/\(.*?\)/g, '').trim();
   const workLogs = await loadWorkLogs(); // 작업 이력을 가져오고 변수에 저장
-  const monthlyHours = calculateMonthlyWorkHoursByMonth(workLogs); // 월별 작업 시간을 계산
+  const { labels, monthlyHours } = calculateMonthlyWorkHoursByMonth(workLogs, 16, new Date()); // 월별 작업 시간을 계산
 
   const today = new Date();
   const todayString = today.toISOString().split('T')[0];
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const firstLogDate = new Date(Math.min(...workLogs.map(log => new Date(log.task_date))));
   const firstLogDateString = firstLogDate.toISOString().split('T')[0]; // 최초 작업 날짜
 
-  renderMonthlyWorkHoursChart(monthlyHours); // 그래프 렌더링
+  renderMonthlyWorkHoursChart(labels, monthlyHours); // 그래프 렌더링
 
   // 작업 시작 시간별 AM/PM 계산
   const { amCount, pmCount } = calculateTaskStartTime(workLogs);
@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderDailyWorkCountChart(dailyWorkCount); // 그래프 렌더링
 
   // 이번 달의 작업 시간만 계산하여 화면에 표시
-  const currentMonthIndex = new Date().getMonth(); // 현재 달의 인덱스 (0: 1월, ..., 11: 12월)
-  const currentMonthHours = monthlyHours[currentMonthIndex];
+const currentMonthHours = monthlyHours[monthlyHours.length - 1] || 0;
+
   document.getElementById('userMonthlyHours').textContent = `${currentMonthHours.toFixed(2)} 시간`;
 
   await calculateAndRenderUserRanking();
@@ -221,7 +221,7 @@ function getFormattedMultiLevel(level) {
         };
   
         const currentMonthIndex = new Date().getMonth();
-        const monthlyCapaLabels = ['24YDEC','25YJAN', '25YFEB', '25YMAR', '25YAPR', '25YMAY', '25YJUN', '25YJUL', '25YAUG', '25YSEP', '25YOCT', '25YNOV', '25YDEC'].slice(0,);
+        const monthlyCapaLabels = ['25YFEB', '25YMAR', '25YAPR', '25YMAY', '25YJUN', '25YJUL', '25YAUG', '25YSEP', '25YOCT', '25YNOV', '25YDEC', '26YJAN', '26YFEB'].slice(0,);
         const monthlyCapaData = monthlyCapaLabels.map(label => userInfo[label] ? (userInfo[label] * 100).toFixed(1) : 0);
   
         // 그래프 생성
@@ -575,46 +575,106 @@ async function renderLevelChangeChart(levelChangeData, allQuarters) {
     }
 }
 
-// 월별 작업 시간 계산 함수
-function calculateMonthlyWorkHoursByMonth(workLogs) {
-  const monthlyHours = Array(14).fill(0); // 2024년 8월 ~ 2025년 9월까지 14개월
+/* =========================
+   월별 작업시간 (최근 N개월)
+   - labels/data 길이 자동 일치
+   - task_duration: "HH:MM:SS", "HH:MM", 숫자(hrs) 모두 지원
+   ========================= */
+
+function durationToHours(task_duration) {
+  if (task_duration == null) return 0;
+
+  // number이면 그대로
+  if (typeof task_duration === "number") return task_duration;
+
+  const s = String(task_duration).trim();
+
+  // "HH:MM:SS" 또는 "HH:MM"
+  if (s.includes(":")) {
+    const parts = s.split(":").map(v => Number(v) || 0);
+    const h = parts[0] || 0;
+    const m = parts[1] || 0;
+    const sec = parts[2] || 0;
+    return h + (m / 60) + (sec / 3600);
+  }
+
+  // "3.5" 같은 숫자 문자열
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+// baseDate(기준일)의 해당 월을 포함해서 최근 N개월 라벨 생성
+function buildRecentMonthLabels(N = 16, baseDate = new Date()) {
+  const base = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1); // 그 달 1일로 고정
+  const labels = [];
+
+  for (let i = N - 1; i >= 0; i--) {
+    const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+    labels.push(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}`);
+  }
+  return labels;
+}
+
+// 월별 작업 시간 계산 (최근 N개월만)
+function calculateMonthlyWorkHoursByMonth(workLogs, N = 16, baseDate = new Date()) {
+  const labels = buildRecentMonthLabels(N, baseDate);
+  const indexMap = new Map(labels.map((k, i) => [k, i]));
+  const monthlyHours = Array(N).fill(0);
 
   workLogs.forEach(log => {
-    const logDate = new Date(log.task_date);
-    const logYear = logDate.getFullYear();
-    const logMonth = logDate.getMonth(); // 0-based (1월=0)
+    if (!log.task_date) return;
 
-    if (logYear === 2024 && logMonth >= 7 && logMonth <= 11) {
-      // 2024-08(7) ~ 2024-12(11) → index 0~4
-      monthlyHours[logMonth - 7] += parseFloat(log.task_duration || 0);
-    } else if (logYear === 2025 && logMonth >= 0 && logMonth <= 8) {
-      // 2025-01(0) ~ 2025-09(8) → index 5~13
-      monthlyHours[logMonth + 5] += parseFloat(log.task_duration || 0);
-    }
+    // ✅ 날짜 파싱 안정화 (YYYY-MM-DD면 UTC 이슈 피하려고 T00:00:00 붙임)
+    const d = new Date(String(log.task_date).slice(0, 10) + "T00:00:00");
+    if (isNaN(d)) return;
+
+    const key = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+    const idx = indexMap.get(key);
+    if (idx == null) return; // 최근 N개월 밖은 무시
+
+    monthlyHours[idx] += durationToHours(log.task_duration);
   });
 
-  console.log("Monthly Hours Data:", monthlyHours); // 디버깅용
-  return monthlyHours;
+  console.log("Monthly Labels:", labels);
+  console.log("Monthly Hours Data:", monthlyHours);
+  return { labels, monthlyHours };
 }
 
 
-function renderMonthlyWorkHoursChart(monthlyHours) {
-  const maxHours = Math.max(...monthlyHours) * 1.2;
-  const labels = [
-    '2024-11',
-    '2024-12', '2025-01', '2025-02', '2025-03',
-    '2025-04', '2025-05', '2025-06', '2025-07',
-    '2025-08', '2025-09', '2025-10', '2025-11', '2025-12'
-  ]; // ← 총 14개
+/* =========================
+   차트 렌더링 (중복 방지)
+   ========================= */
+let monthlyWorkHoursChartInstance = null;
 
-  const ctx = document.getElementById('monthlyWorkHoursChart').getContext('2d');
-  new Chart(ctx, {
+function renderMonthlyWorkHoursChart(labels, monthlyHours) {
+  const max = Math.max(...monthlyHours, 0);
+  const maxHours = max > 0 ? max * 1.2 : undefined;
+
+  const canvas = document.getElementById('monthlyWorkHoursChart');
+  if (!canvas) {
+    console.warn("monthlyWorkHoursChart canvas not found");
+    return;
+  }
+
+  const ctx = canvas.getContext('2d');
+
+  // ✅ 기존 차트 있으면 제거 (겹침 방지)
+  if (monthlyWorkHoursChartInstance) {
+    monthlyWorkHoursChartInstance.destroy();
+    monthlyWorkHoursChartInstance = null;
+  }
+
+  monthlyWorkHoursChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: labels,
+      labels,
       datasets: [{
         label: 'Monthly Working time (hrs)',
-        data: monthlyHours, // 더 이상 slice 필요 없음
+        data: monthlyHours,
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1
@@ -634,11 +694,11 @@ function renderMonthlyWorkHoursChart(monthlyHours) {
       plugins: {
         tooltip: {
           callbacks: {
-            label: (context) => `${context.raw.toFixed(1)}h`
+            label: (context) => `${Number(context.raw || 0).toFixed(1)}h`
           }
         },
         datalabels: {
-          formatter: (value) => `${value.toFixed(1)}h`,
+          formatter: (value) => `${Number(value || 0).toFixed(1)}h`,
           color: 'black',
           anchor: 'end',
           align: 'end'
@@ -648,6 +708,13 @@ function renderMonthlyWorkHoursChart(monthlyHours) {
     plugins: [ChartDataLabels]
   });
 }
+
+/* =========================
+   사용 예시 (이렇게 호출)
+   ========================= */
+// const { labels, monthlyHours } = calculateMonthlyWorkHoursByMonth(workLogs, 16, new Date());
+// renderMonthlyWorkHoursChart(labels, monthlyHours);
+
 
 async function calculateAndRenderUserRanking() {
   const token = localStorage.getItem('x-access-token');
