@@ -48,7 +48,6 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
       COUNT(*) AS total_steps,
       MAX(CASE WHEN s.status='IN_PROGRESS' THEN s.step_no ELSE NULL END) AS in_progress_step_no,
 
-      /* ✅ JSON_OBJECTAGG 대신: JSON 문자열 직접 생성 */
       CONCAT(
         '{',
         GROUP_CONCAT(
@@ -66,13 +65,12 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
     ${whereSql}
     GROUP BY p.id
     ORDER BY ${orderSql}
-    LIMIT ?, ?
+    LIMIT ${off}, ${lim}
   `;
 
-  const [rows] = await pool.execute(sql, [...params, lim, off]);
+  const [rows] = await pool.query(sql, params); // ✅ execute → query
   return rows;
 };
-
 
 
 // ---------- Detail ----------
