@@ -1,28 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SET UP STATUS BOARD</title>
-  <link rel="stylesheet" href="./css/setupboard.css" />
+  <title>SETUP BOARD</title>
+  <link rel="stylesheet" href="./css/setupboard.css"/>
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-title">SET UP STATUS BOARD</div>
-        <div class="brand-sub">열=설비 / 행=작업항목(1~17) · 설비 클릭 시 상세</div>
+        <div class="brand-title">SETUP BOARD</div>
+        <div class="brand-sub">행=설비 · 열=작업항목(1~17) · 셀 클릭으로 상태 변경</div>
       </div>
-
-      <div class="topbar-actions">
+      <div class="top-actions">
         <button id="btnRefresh" class="btn">새로고침</button>
-        <button id="btnNewProject" class="btn primary">+ 설비(프로젝트) 추가</button>
       </div>
     </div>
   </header>
 
   <main class="page">
-    <!-- Filters -->
     <section class="filters card">
       <div class="filters-grid">
         <div class="field">
@@ -58,7 +55,7 @@
         </div>
 
         <div class="field">
-          <label>Status</label>
+          <label>Board Status</label>
           <select id="fStatus">
             <option value="">ALL</option>
             <option value="PLANNED">PLANNED</option>
@@ -70,7 +67,7 @@
 
         <div class="field wide">
           <label>설비명 검색</label>
-          <input id="fQ" type="text" placeholder="예) SUPRA XP #12 / DRY STRIP ..." />
+          <input id="fQ" type="text" placeholder="예) SUPRA XP #12"/>
         </div>
 
         <div class="field">
@@ -85,160 +82,144 @@
 
         <div class="field">
           <label>&nbsp;</label>
-          <button id="btnApply" class="btn">적용</button>
+          <button id="btnApply" class="btn primary">적용</button>
         </div>
       </div>
 
-      <div class="filters-footer">
-        <div class="legend">
-          <span class="chip"><span class="dot ns"></span>NOT_STARTED</span>
-          <span class="chip"><span class="dot ip"></span>IN_PROGRESS</span>
-          <span class="chip"><span class="dot dn"></span>DONE</span>
-          <span class="chip"><span class="dot hd"></span>HOLD</span>
-          <span class="chip"><span class="badge issue">!</span>OPEN ISSUE</span>
-        </div>
-        <div class="hint">
-          설비(열 헤더)를 클릭하면 오른쪽에 상세가 표시됩니다.
-        </div>
+      <div class="legend">
+        <span class="chip"><span class="dot ns"></span>NOT_STARTED</span>
+        <span class="chip"><span class="dot ip"></span>IN_PROGRESS</span>
+        <span class="chip"><span class="dot dn"></span>DONE</span>
+        <span class="chip"><span class="dot hd"></span>HOLD</span>
+        <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
+        <span class="muted small">· 설비명 클릭: 상세 모달 / 셀 클릭: 상태 토글 & 저장</span>
       </div>
     </section>
 
-    <!-- Content -->
-    <section class="content">
-      <div class="matrix-wrap card">
-        <div class="matrix-head">
-          <div class="matrix-title">
-            <span id="statCount">-</span>
-            <span class="muted">| 스크롤로 전체 설비를 확인하세요 (가로 스크롤)</span>
-          </div>
-          <div class="matrix-tools">
-            <label class="toggle">
-              <input type="checkbox" id="toggleCompact" checked />
-              <span>컴팩트</span>
-            </label>
-          </div>
+    <section class="board card">
+      <div class="board-head">
+        <div class="board-title">
+          <b id="statCount">-</b>
+          <span class="muted small">가로 스크롤로 Step 1~17 전체 확인</span>
         </div>
-
-        <div id="matrixHost" class="matrix-host">
-          <!-- table will render here -->
+        <div class="board-tools">
+          <label class="toggle">
+            <input type="checkbox" id="toggleCompact" checked/>
+            <span>컴팩트</span>
+          </label>
         </div>
       </div>
 
-      <!-- Detail side panel -->
-      <aside id="detailPanel" class="detail card hidden">
-        <div class="detail-head">
-          <div class="detail-title">
-            <div id="dTitle" class="title">설비 상세</div>
-            <div id="dMeta" class="meta muted">-</div>
-          </div>
-          <div class="detail-actions">
-            <button id="btnCloseDetail" class="btn">닫기</button>
-          </div>
-        </div>
-
-        <div class="detail-body">
-          <div class="detail-kpis" id="dKpis"></div>
-
-          <div class="section">
-            <div class="section-title">Step 상세 (1~17)</div>
-            <div id="dSteps" class="steps"></div>
-          </div>
-
-          <div class="section">
-            <div class="section-title">Issues</div>
-            <div id="dIssues" class="issues"></div>
-          </div>
-        </div>
-      </aside>
+      <div id="tableHost" class="table-host"></div>
     </section>
   </main>
 
-  <!-- New Project Modal -->
-  <div id="modalNew" class="modal hidden">
+  <!-- Detail Modal -->
+  <div id="modal" class="modal hidden">
     <div class="modal-backdrop" data-close="1"></div>
+
     <div class="modal-card">
       <div class="modal-head">
-        <div class="modal-title">설비(프로젝트) 추가</div>
-        <button class="icon-btn" data-close="1" aria-label="close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-grid">
-          <div class="field wide">
-            <label>설비명(equipment_name) *</label>
-            <input id="nEquipmentName" type="text" placeholder="예) SUPRA XP #12" />
-          </div>
-
-          <div class="field">
-            <label>설비타입(equipment_type)</label>
-            <input id="nEquipmentType" type="text" placeholder="SUPRA XP" />
-          </div>
-
-          <div class="field">
-            <label>Customer</label>
-            <select id="nCustomer">
-              <option value="">SELECT</option>
-              <option value="SAMSUNG">SAMSUNG</option>
-              <option value="HYNIX">HYNIX</option>
-              <option value="ETC">ETC</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Site *</label>
-            <select id="nSite">
-              <option value="">SELECT</option>
-              <option value="PT">평택(PT)</option>
-              <option value="HS">화성(HS)</option>
-              <option value="IC">이천(IC)</option>
-              <option value="CJ">청주(CJ)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Line *</label>
-            <select id="nLine">
-              <option value="">SELECT</option>
-              <option value="P1">P1</option>
-              <option value="P2">P2</option>
-              <option value="P3">P3</option>
-              <option value="P4">P4</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Location</label>
-            <input id="nLocation" type="text" placeholder="Bay / Tool 위치 등" />
-          </div>
-
-          <div class="field">
-            <label>Start Date</label>
-            <input id="nStartDate" type="date" />
-          </div>
-
-          <div class="field">
-            <label>Target Date</label>
-            <input id="nTargetDate" type="date" />
-          </div>
-
-          <div class="field">
-            <label>Owner(Main)</label>
-            <input id="nOwnerMain" type="text" placeholder="정현우" />
-          </div>
-
-          <div class="field">
-            <label>Owner(Support)</label>
-            <input id="nOwnerSupport" type="text" placeholder="김동한" />
-          </div>
-
-          <div class="field wide">
-            <label>비고(last_note)</label>
-            <textarea id="nLastNote" rows="3" placeholder="특이사항 / 요청사항"></textarea>
-          </div>
+        <div>
+          <div id="mTitle" class="modal-title">설비 상세</div>
+          <div id="mMeta" class="modal-meta muted">-</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btnClose" class="btn">닫기</button>
         </div>
       </div>
-      <div class="modal-foot">
-        <button class="btn" data-close="1">취소</button>
-        <button id="btnCreate" class="btn primary">생성</button>
+
+      <div class="modal-body">
+        <div class="section">
+          <div class="section-title">Project 정보</div>
+
+          <div class="form-grid">
+            <div class="field wide">
+              <label>설비명</label>
+              <input id="p_equipment_name" type="text"/>
+            </div>
+
+            <div class="field">
+              <label>설비타입</label>
+              <input id="p_equipment_type" type="text"/>
+            </div>
+
+            <div class="field">
+              <label>Customer</label>
+              <select id="p_customer">
+                <option value="">(null)</option>
+                <option value="SAMSUNG">SAMSUNG</option>
+                <option value="HYNIX">HYNIX</option>
+                <option value="ETC">ETC</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Site</label>
+              <input id="p_site" type="text" placeholder="PT/HS/IC/CJ"/>
+            </div>
+
+            <div class="field">
+              <label>Line</label>
+              <input id="p_line" type="text" placeholder="P1/P2/P3/P4"/>
+            </div>
+
+            <div class="field">
+              <label>Location</label>
+              <input id="p_location" type="text"/>
+            </div>
+
+            <div class="field">
+              <label>Board Status</label>
+              <select id="p_board_status">
+                <option value="PLANNED">PLANNED</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="DONE">DONE</option>
+                <option value="HOLD">HOLD</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Start Date</label>
+              <input id="p_start_date" type="date"/>
+            </div>
+
+            <div class="field">
+              <label>Target Date</label>
+              <input id="p_target_date" type="date"/>
+            </div>
+
+            <div class="field">
+              <label>Owner(Main)</label>
+              <input id="p_owner_main" type="text"/>
+            </div>
+
+            <div class="field">
+              <label>Owner(Support)</label>
+              <input id="p_owner_support" type="text"/>
+            </div>
+
+            <div class="field wide">
+              <label>Last Note</label>
+              <textarea id="p_last_note" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="row-actions">
+            <button id="btnSaveProject" class="btn primary">Project 저장</button>
+            <span id="projSaveHint" class="muted small"></span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Steps (1~17)</div>
+          <div id="stepsHost" class="steps-host"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Issues</div>
+          <div id="issuesHost" class="issues-host muted">-</div>
+        </div>
       </div>
     </div>
   </div>
