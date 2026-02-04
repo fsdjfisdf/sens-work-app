@@ -34,7 +34,6 @@
   const el = {
     btnRefresh: $('#btnRefresh'),
     btnApply: $('#btnApply'),
-    toggleCompact: $('#toggleCompact'),
     tableHost: $('#tableHost'),
     statCount: $('#statCount'),
 
@@ -69,6 +68,7 @@
     stepsHost: $('#stepsHost'),
     issuesHost: $('#issuesHost'),
 
+    tooltip: $('#tooltip'),
     toast: $('#toast')
   };
 
@@ -77,10 +77,10 @@
    * ========================= */
   const state = {
     list: [],
-    // setupId -> detail cache
-    detailCache: new Map(),
+    detailCache: new Map(), // setupId -> {project, steps, issues}
     selectedSetupId: null,
-    compact: true
+    hoverTimer: null,
+    hoverKey: null
   };
 
   /* =========================
@@ -95,15 +95,11 @@
       'Content-Type': 'application/json',
       'x-access-token': getToken()
     };
-    const res = await fetch(path, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : null
-    });
+    const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
 
     const text = await res.text();
     let json = null;
-    try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+    try { json = text ? JSON.parse(text) : null; } catch {}
 
     if (!res.ok) {
       const msg = json?.error || json?.message || text || `HTTP ${res.status}`;
@@ -166,8 +162,17 @@
     return STATUS_ORDER[(idx + 1 + STATUS_ORDER.length) % STATUS_ORDER.length];
   }
 
+  function firstNonEmpty(...vals) {
+    for (const v of vals) {
+      if (v === null || typeof v === 'undefined') continue;
+      const s = String(v).trim();
+      if (s) return s;
+    }
+    return '';
+  }
+
   /* =========================
-   * Load board list
+   * Board list
    * ========================= */
   async function loadBoard() {
     const q = buildQuery({
@@ -193,24 +198,9 @@
   }
 
   /* =========================
-   * Step status source
-   * - 매트릭스에서 "정확한 step별 상태"를 표시/수정하려면
-   *   setup_project_steps를 이미 가지고 있어야 함.
-   * - 여기서는:
-   *   1) 보드 리스트는 가볍게 표시(추정) 가능하지만
-   *   2) 수정하려면 "현재 상태"를 알아야 하므로
-   *   3) 첫 렌더 시 각 설비 detail을 병렬로 일부 가져오는 전략(최대 200이면 무거움)
-   *
-   * 현실적인 타협:
-   * - 화면 렌더는 "추정(진행 step 기준)"으로 먼저 표시
-   * - 사용자가 셀 클릭하면, 그 설비의 detail을 한 번 가져와서
-   *   정확한 상태 기반으로 토글 후 PATCH.
-   *
-   * => 속도/정확도/서버부하 균형
+   * Estimation (초기 표시용)
    * ========================= */
-
   function estimateStatusForCell(projectRow, stepNo) {
-    // listBoard 응답에 in_progress_step_no / board_status가 있으므로 "초기 표시"만 추정
     const boardStatus = String(projectRow.board_status || '').toUpperCase();
     if (boardStatus === 'DONE') return 'DONE';
     if (boardStatus === 'HOLD') return 'HOLD';
@@ -223,7 +213,7 @@
   }
 
   /* =========================
-   * Render table (행=설비, 열=스텝)
+   * Render: 행=설비, 열=작업명
    * ========================= */
   function renderTable() {
     const list = state.list;
@@ -237,7 +227,14 @@
       <thead>
         <tr>
           <th class="eq-col">설비</th>
-          ${STEPS.map(s => `<th>Step ${s.no}</th>`).join('')}
+          ${STEPS.map(s => `
+            <th>
+              <div class="step-head" title="${escapeHtml(s.name)}">
+                <div class="step-no">STEP ${s.no}</div>
+                <div class="step-name">${escapeHtml(s.name)}</div>
+              </div>
+            </th>
+          `).join('')}
         </tr>
       </thead>
     `;
@@ -255,7 +252,7 @@
       </table>
     `;
 
-    // bind row title click -> open modal
+    // 설비명 클릭 -> 모달
     el.tableHost.querySelectorAll('[data-open-detail="1"]').forEach(a => {
       a.addEventListener('click', () => {
         const setupId = a.getAttribute('data-setup-id');
@@ -263,20 +260,20 @@
       });
     });
 
-    // bind cell click -> toggle status + patch
+    // 셀 클릭 -> 상태 토글 PATCH
     el.tableHost.querySelectorAll('[data-cell="1"]').forEach(td => {
       td.addEventListener('click', async () => {
         const setupId = td.getAttribute('data-setup-id');
         const stepNo = Number(td.getAttribute('data-step-no'));
         if (!setupId || !stepNo) return;
-
         await toggleCellStatus(td, setupId, stepNo);
       });
-    });
 
-    // compact toggle class
-    const card = el.tableHost.closest('.board');
-    card.classList.toggle('compact', el.toggleCompact.checked);
+      // hover tooltip
+      td.addEventListener('mouseenter', onCellEnter);
+      td.addEventListener('mousemove', onCellMove);
+      td.addEventListener('mouseleave', onCellLeave);
+    });
   }
 
   function renderRow(p) {
@@ -289,7 +286,10 @@
       const cls = statusToClass(st);
       const short = statusShort(st);
       return `
-        <td class="cell" data-cell="1" data-setup-id="${p.setup_id}" data-step-no="${s.no}" title="클릭: 상태 변경">
+        <td class="cell"
+            data-cell="1"
+            data-setup-id="${p.setup_id}"
+            data-step-no="${s.no}">
           <span class="pill ${cls}">${short}</span>
         </td>
       `;
@@ -307,17 +307,19 @@
   }
 
   /* =========================
-   * Toggle cell status (정확 상태 기반)
+   * Detail cache
    * ========================= */
   async function ensureDetail(setupId) {
     if (state.detailCache.has(setupId)) return state.detailCache.get(setupId);
-
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`);
     const data = json?.data;
     state.detailCache.set(setupId, data);
     return data;
   }
 
+  /* =========================
+   * Toggle cell status
+   * ========================= */
   function updateCellUI(td, status, savingText = '') {
     const pill = td.querySelector('.pill');
     if (!pill) return;
@@ -340,7 +342,7 @@
 
   async function toggleCellStatus(td, setupId, stepNo) {
     try {
-      updateCellUI(td, 'IN_PROGRESS', 'saving...'); // 임시 표시
+      updateCellUI(td, 'IN_PROGRESS', 'saving...');
 
       const detail = await ensureDetail(setupId);
       const steps = detail?.steps || [];
@@ -349,31 +351,114 @@
       const cur = row?.status || 'NOT_STARTED';
       const nxt = nextStatus(cur);
 
-      // PATCH step
       await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
         method: 'PATCH',
         body: { status: nxt }
       });
 
-      // 캐시 업데이트
       if (row) row.status = nxt;
-      else steps.push({ step_no: stepNo, status: nxt }); // 비정상일 때 방어
+      else steps.push({ step_no: stepNo, status: nxt });
 
       updateCellUI(td, nxt, '');
-      toast(`Step ${stepNo} → ${nxt}`);
+      toast(`STEP ${stepNo} → ${nxt}`);
     } catch (e) {
-      // 실패 시 UI 복구: 추정값으로 되돌리기(정확 복구는 detail reload가 필요)
       updateCellUI(td, 'NOT_STARTED', '');
       toast(`상태 변경 실패: ${e.message}`);
     }
   }
 
   /* =========================
-   * Modal: open/close & render detail
+   * Tooltip (hover)
    * ========================= */
-  function openModalShell() {
-    el.modal.classList.remove('hidden');
+  function hideTooltip() {
+    el.tooltip.classList.add('hidden');
+    el.tooltip.innerHTML = '';
+    clearTimeout(state.hoverTimer);
+    state.hoverTimer = null;
+    state.hoverKey = null;
   }
+
+  function placeTooltip(x, y) {
+    const pad = 14;
+    const maxX = window.innerWidth - pad;
+    const maxY = window.innerHeight - pad;
+
+    el.tooltip.style.left = Math.min(x + 14, maxX) + 'px';
+    el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
+  }
+
+  async function showTooltipForCell(td, clientX, clientY) {
+    const setupId = td.getAttribute('data-setup-id');
+    const stepNo = Number(td.getAttribute('data-step-no'));
+    if (!setupId || !stepNo) return;
+
+    const key = `${setupId}:${stepNo}`;
+    state.hoverKey = key;
+
+    // 로딩 표시
+    el.tooltip.classList.remove('hidden');
+    el.tooltip.innerHTML = `<div class="tip-title">Loading...</div>`;
+    placeTooltip(clientX, clientY);
+
+    try {
+      const detail = await ensureDetail(setupId);
+      if (state.hoverKey !== key) return; // 다른 셀로 이동했으면 무시
+
+      const stepName = STEPS.find(s => s.no === stepNo)?.name || `STEP ${stepNo}`;
+      const steps = detail?.steps || [];
+      const row = steps.find(x => Number(x.step_no) === stepNo) || {};
+
+      const planDate   = firstNonEmpty(fmtDate(row.plan_start), fmtDate(row.plan_end), '-');
+      const actualDate = firstNonEmpty(fmtDate(row.actual_start), fmtDate(row.actual_end), '-');
+      const workers    = firstNonEmpty(row.workers, '-');
+      const note       = firstNonEmpty(row.note, '-');
+
+      el.tooltip.innerHTML = `
+        <div class="tip-title">STEP ${stepNo} · ${escapeHtml(stepName)}</div>
+        <div class="tip-grid">
+          <div class="tip-k">예정일</div><div class="tip-v">${escapeHtml(planDate || '-')}</div>
+          <div class="tip-k">실행일</div><div class="tip-v">${escapeHtml(actualDate || '-')}</div>
+          <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers || '-')}</div>
+          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note || '-')}</div>
+        </div>
+      `;
+      placeTooltip(clientX, clientY);
+    } catch (e) {
+      if (state.hoverKey !== key) return;
+      el.tooltip.innerHTML = `
+        <div class="tip-title">Tooltip Error</div>
+        <div class="tip-grid">
+          <div class="tip-k">msg</div><div class="tip-v">${escapeHtml(e.message)}</div>
+        </div>
+      `;
+    }
+  }
+
+  function onCellEnter(e) {
+    const td = e.currentTarget;
+    const setupId = td.getAttribute('data-setup-id');
+    const stepNo = td.getAttribute('data-step-no');
+    if (!setupId || !stepNo) return;
+
+    clearTimeout(state.hoverTimer);
+    state.hoverTimer = setTimeout(() => {
+      showTooltipForCell(td, e.clientX, e.clientY);
+    }, 180); // 살짝 딜레이
+  }
+
+  function onCellMove(e) {
+    if (el.tooltip.classList.contains('hidden')) return;
+    placeTooltip(e.clientX, e.clientY);
+  }
+
+  function onCellLeave() {
+    hideTooltip();
+  }
+
+  /* =========================
+   * Modal open/close
+   * ========================= */
+  function openModalShell() { el.modal.classList.remove('hidden'); }
   function closeModal() {
     el.modal.classList.add('hidden');
     state.selectedSetupId = null;
@@ -399,6 +484,10 @@
     }
   }
 
+  /* =========================
+   * Render modal (Plan Date 1개, Actual Date 1개)
+   *  - 서버 컬럼은 plan_start / actual_start에 저장
+   * ========================= */
   function renderModal(data) {
     const p = data?.project || {};
     const steps = data?.steps || [];
@@ -413,7 +502,7 @@
       p.location ? `@${p.location}` : ''
     ].filter(Boolean).join(' · ');
 
-    // fill project fields
+    // project fields
     el.p_equipment_name.value = p.equipment_name || '';
     el.p_equipment_type.value = p.equipment_type || '';
     el.p_customer.value = p.customer || '';
@@ -427,21 +516,23 @@
     el.p_owner_support.value = p.owner_support || '';
     el.p_last_note.value = p.last_note || '';
 
-    // steps map
     const byNo = new Map();
     for (const s of steps) byNo.set(Number(s.step_no), s);
 
     el.stepsHost.innerHTML = STEPS.map(t => {
       const s = byNo.get(t.no) || {};
       const st = (s.status || 'NOT_STARTED').toUpperCase();
-
       const desc = s.step_description ? String(s.step_description) : '';
+
+      // plan_date = plan_start만 사용 / actual_date = actual_start만 사용
+      const planDate = fmtDate(s.plan_start);
+      const actualDate = fmtDate(s.actual_start);
 
       return `
         <div class="step-card" data-step-card="1" data-step-no="${t.no}">
           <div class="step-top">
             <div>
-              <div class="step-name">${t.no}. ${escapeHtml(t.name)}</div>
+              <div class="step-card-title">${t.no}. ${escapeHtml(t.name)}</div>
               ${desc ? `<div class="step-desc">${escapeHtml(desc)}</div>` : ``}
             </div>
             <div>
@@ -459,42 +550,37 @@
                 <option value="HOLD" ${st==='HOLD'?'selected':''}>HOLD</option>
               </select>
             </div>
+
             <div class="field">
-              <label>Plan Start</label>
-              <input type="date" data-field="plan_start" value="${escapeHtml(fmtDate(s.plan_start))}"/>
+              <label>Plan Date</label>
+              <input type="date" data-field="plan_start" value="${escapeHtml(planDate)}"/>
             </div>
+
             <div class="field">
-              <label>Plan End</label>
-              <input type="date" data-field="plan_end" value="${escapeHtml(fmtDate(s.plan_end))}"/>
+              <label>Actual Date</label>
+              <input type="date" data-field="actual_start" value="${escapeHtml(actualDate)}"/>
             </div>
+
             <div class="field">
               <label>Workers</label>
               <input type="text" data-field="workers" value="${escapeHtml(s.workers || '')}" placeholder="정현우,김동한"/>
             </div>
 
-            <div class="field">
-              <label>Actual Start</label>
-              <input type="date" data-field="actual_start" value="${escapeHtml(fmtDate(s.actual_start))}"/>
-            </div>
-            <div class="field">
-              <label>Actual End</label>
-              <input type="date" data-field="actual_end" value="${escapeHtml(fmtDate(s.actual_end))}"/>
-            </div>
-            <div class="field wide" style="grid-column: span 2;">
+            <div class="field wide" style="grid-column: span 4;">
               <label>Note</label>
-              <input type="text" data-field="note" value="${escapeHtml(s.note || '')}" placeholder="메모"/>
+              <input type="text" data-field="note" value="${escapeHtml(s.note || '')}" placeholder="특이사항"/>
             </div>
           </div>
 
           <div class="step-actions">
             <span class="muted small" data-hint="1"></span>
-            <button class="btn primary" data-save-step="1">이 Step 저장</button>
+            <button class="btn primary" data-save-step="1">SAVE</button>
           </div>
         </div>
       `;
     }).join('');
 
-    // bind step card events
+    // step save events
     el.stepsHost.querySelectorAll('[data-step-card="1"]').forEach(card => {
       const stepNo = Number(card.getAttribute('data-step-no'));
       const selStatus = card.querySelector('[data-field="status"]');
@@ -502,7 +588,6 @@
       const hint = card.querySelector('[data-hint="1"]');
       const btn = card.querySelector('[data-save-step="1"]');
 
-      // change status UI instantly
       selStatus.addEventListener('change', () => {
         const st = selStatus.value;
         pill.classList.remove('ns','ip','dn','hd');
@@ -521,6 +606,9 @@
           patch[k] = v === '' ? null : v;
         });
 
+        // 불필요 컬럼 제거(서버에 보내지 않음)
+        // (현재 UI에 plan_end/actual_end가 없으므로 굳이 안 보냄)
+
         try {
           hint.textContent = 'saving...';
           await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
@@ -528,7 +616,7 @@
             body: patch
           });
 
-          // cache update (최소한 status는 반영)
+          // cache update
           const data = state.detailCache.get(setupId);
           if (data && Array.isArray(data.steps)) {
             const row = data.steps.find(x => Number(x.step_no) === stepNo);
@@ -537,20 +625,22 @@
 
           hint.textContent = 'saved ✅';
 
-          // 보드(매트릭스)도 즉시 반영: 같은 셀 찾아 업데이트
-          const td = el.tableHost.querySelector(`[data-cell="1"][data-setup-id="${setupId}"][data-step-no="${stepNo}"]`);
+          // 보드 셀도 즉시 반영(status만)
+          const td = el.tableHost.querySelector(
+            `[data-cell="1"][data-setup-id="${setupId}"][data-step-no="${stepNo}"]`
+          );
           if (td && patch.status) updateCellUI(td, patch.status, '');
 
-          toast(`Step ${stepNo} 저장 완료`);
+          toast(`STEP ${stepNo} 저장 완료`);
           setTimeout(() => (hint.textContent = ''), 1500);
         } catch (e) {
           hint.textContent = `fail: ${e.message}`;
-          toast(`Step 저장 실패: ${e.message}`);
+          toast(`STEP 저장 실패: ${e.message}`);
         }
       });
     });
 
-    // issues render
+    // issues
     if (!issues.length) {
       el.issuesHost.innerHTML = `<div class="muted">등록된 이슈가 없습니다.</div>`;
     } else {
@@ -608,12 +698,12 @@
         body: patch
       });
 
-      // 캐시 무효화 후 재조회(정확하게)
+      // 캐시 무효화 후 재조회(정확히)
       state.detailCache.delete(setupId);
       const data = await ensureDetail(setupId);
       renderModal(data);
 
-      // 리스트도 재로드(헤더/정렬/필터 반영)
+      // 리스트도 재로드
       await loadBoard();
 
       el.projSaveHint.textContent = 'saved ✅';
@@ -636,11 +726,6 @@
       if (e.key === 'Enter') loadBoard();
     });
 
-    el.toggleCompact.addEventListener('change', () => {
-      const card = el.tableHost.closest('.board');
-      card.classList.toggle('compact', el.toggleCompact.checked);
-    });
-
     el.btnClose.addEventListener('click', closeModal);
 
     el.modal.addEventListener('click', (e) => {
@@ -649,6 +734,11 @@
     });
 
     el.btnSaveProject.addEventListener('click', saveProject);
+
+    window.addEventListener('scroll', () => {
+      // 스크롤 시 떠있는 툴팁 위치가 어색해져서 숨김
+      hideTooltip();
+    }, { passive: true });
   }
 
   document.addEventListener('DOMContentLoaded', async () => {

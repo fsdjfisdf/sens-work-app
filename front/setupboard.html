@@ -11,7 +11,7 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-title">SETUP BOARD</div>
-        <div class="brand-sub">행=설비 · 열=작업항목(1~17) · 셀 클릭으로 상태 변경</div>
+        <div class="brand-sub">행=설비 · 열=작업항목 · 셀 클릭으로 상태 변경</div>
       </div>
       <div class="top-actions">
         <button id="btnRefresh" class="btn">새로고침</button>
@@ -92,7 +92,7 @@
         <span class="chip"><span class="dot dn"></span>DONE</span>
         <span class="chip"><span class="dot hd"></span>HOLD</span>
         <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
-        <span class="muted small">· 설비명 클릭: 상세 모달 / 셀 클릭: 상태 토글 & 저장</span>
+        <span class="muted small">· 설비명 클릭: 상세 모달 / 셀 클릭: 상태 토글 & 저장 / 셀 호버: 상세 정보</span>
       </div>
     </section>
 
@@ -100,13 +100,7 @@
       <div class="board-head">
         <div class="board-title">
           <b id="statCount">-</b>
-          <span class="muted small">가로 스크롤로 Step 1~17 전체 확인</span>
-        </div>
-        <div class="board-tools">
-          <label class="toggle">
-            <input type="checkbox" id="toggleCompact" checked/>
-            <span>컴팩트</span>
-          </label>
+          <span class="muted small">가로 스크롤로 전체 Step 확인</span>
         </div>
       </div>
 
@@ -206,13 +200,13 @@
           </div>
 
           <div class="row-actions">
-            <button id="btnSaveProject" class="btn primary">Project 저장</button>
+            <button id="btnSaveProject" class="btn primary">SAVE</button>
             <span id="projSaveHint" class="muted small"></span>
           </div>
         </div>
 
         <div class="section">
-          <div class="section-title">Steps (1~17)</div>
+          <div class="section-title">Steps</div>
           <div id="stepsHost" class="steps-host"></div>
         </div>
 
@@ -223,6 +217,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Hover Tooltip -->
+  <div id="tooltip" class="tooltip hidden"></div>
 
   <div id="toast" class="toast hidden"></div>
 

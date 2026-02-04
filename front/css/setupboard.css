@@ -127,14 +127,6 @@ body{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   margin-bottom:10px;
 }
-.toggle{
-  display:flex; gap:8px; align-items:center;
-  padding:6px 10px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:#fff;
-  font-size:12px;
-}
 
 .table-host{
   border:1px solid var(--line);
@@ -147,7 +139,7 @@ body{
   width:100%;
   border-collapse:separate;
   border-spacing:0;
-  min-width: 1200px;
+  min-width: 1700px;
 }
 .table th, .table td{
   border-bottom:1px solid var(--line);
@@ -162,11 +154,12 @@ body{
   background:#fafafa;
   font-weight:1000;
 }
+
 .eq-col{
   position:sticky; left:0; z-index:2;
   background:#fff;
   font-weight:1000;
-  width: 320px;
+  width: 340px;
   cursor:pointer;
 }
 .table thead .eq-col{
@@ -175,11 +168,26 @@ body{
   cursor:default;
 }
 
+.step-head{
+  max-width: 200px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.step-no{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:900;
+}
+.step-name{
+  margin-top:2px;
+  font-weight:1000;
+}
+
 .eq-name{
   font-weight:1000;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width: 300px;
+  max-width: 320px;
 }
 .eq-sub{
   margin-top:3px;
@@ -188,7 +196,7 @@ body{
   font-size:11px;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width: 300px;
+  max-width: 320px;
 }
 
 .cell{
@@ -217,9 +225,6 @@ body{
   color:var(--muted);
   font-weight:900;
 }
-
-.compact .table th, .compact .table td{padding:6px 6px; font-size:11px}
-.compact .pill{height:20px; min-width:30px}
 
 .modal{
   position:fixed; inset:0; z-index:200;
@@ -285,7 +290,7 @@ body{
   gap:12px;
   align-items:flex-start;
 }
-.step-name{font-weight:1000}
+.step-card-title{font-weight:1000}
 .step-desc{margin-top:4px; font-size:12px; color:var(--muted); white-space:pre-wrap}
 .step-grid{
   margin-top:10px;
@@ -314,6 +319,33 @@ body{
   box-shadow:var(--shadow);
 }
 .toast.hidden{display:none}
+
+/* Hover tooltip */
+.tooltip{
+  position:fixed;
+  z-index:260;
+  pointer-events:none;
+  background:#111827;
+  color:#fff;
+  border-radius:12px;
+  padding:10px 12px;
+  box-shadow:var(--shadow);
+  max-width: 340px;
+  font-size:12px;
+  line-height:1.35;
+}
+.tooltip.hidden{display:none}
+.tip-title{
+  font-weight:1000;
+  margin-bottom:6px;
+}
+.tip-grid{
+  display:grid;
+  grid-template-columns: 90px 1fr;
+  gap:6px 10px;
+}
+.tip-k{color: rgba(255,255,255,.70); font-weight:900}
+.tip-v{color:#fff; font-weight:700; white-space:pre-wrap}
 
 @media (max-width: 1100px){
   .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
