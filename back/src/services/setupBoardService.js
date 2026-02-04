@@ -1,13 +1,10 @@
-cat > /home/ubuntu/sens-work-app/back/src/services/setupBoardService.js <<'EOF'
 'use strict';
 
 const { pool } = require('../../config/database');
 const dao = require('../dao/setupBoardDao');
 
 /**
- * 프로젝트 생성 + 템플릿 step 17개 생성 (트랜잭션)
- * - payload: setup_projects에 들어갈 필드
- * - actor: 변경자(로그 남김)
+ * 프로젝트 생성 + 템플릿 step 생성 (트랜잭션)
  */
 exports.createProjectWithSteps = async ({ payload, actor }) => {
   if (!payload?.equipment_name) throw new Error('equipment_name is required');
@@ -18,16 +15,13 @@ exports.createProjectWithSteps = async ({ payload, actor }) => {
   try {
     await conn.beginTransaction();
 
-    // created_by를 payload에 주입
     const setupId = await dao.insertProject(conn, {
       ...payload,
       created_by: actor
     });
 
-    // 템플릿 기반 step 생성
     await dao.insertStepsFromTemplate(conn, { setupId, actor });
 
-    // audit 로그 (PROJECT CREATE)
     await dao.insertAudit(conn, {
       entity_type: 'PROJECT',
       entity_id: setupId,
@@ -54,7 +48,6 @@ exports.updateProject = async ({ id, patch, actor }) => {
   const setupId = Number(id);
   if (!setupId) throw new Error('invalid setup id');
 
-  // patch에서 undefined 제거 (필드가 undefined면 UPDATE에 들어가면 안 됨)
   const cleanPatch = {};
   for (const [k, v] of Object.entries(patch || {})) {
     if (typeof v !== 'undefined') cleanPatch[k] = v;
@@ -71,7 +64,6 @@ exports.updateProject = async ({ id, patch, actor }) => {
     if (!before) throw new Error('project not found');
 
     await dao.updateProject(conn, setupId, cleanPatch);
-
     const after = await dao.getProjectOne(conn, setupId);
 
     await dao.insertAudit(conn, {
@@ -95,7 +87,6 @@ exports.updateProject = async ({ id, patch, actor }) => {
 
 /**
  * Step 업데이트 (트랜잭션)
- * - 정책: 같은 설비에서 다른 IN_PROGRESS는 HOLD로 내림
  */
 exports.updateStep = async ({ setupId, stepNo, patch, actor }) => {
   const sid = Number(setupId);
@@ -103,7 +94,6 @@ exports.updateStep = async ({ setupId, stepNo, patch, actor }) => {
   if (!sid) throw new Error('invalid setup id');
   if (!sn || sn < 1 || sn > 17) throw new Error('stepNo must be 1~17');
 
-  // undefined 제거
   const cleanPatch = {};
   for (const [k, v] of Object.entries(patch || {})) {
     if (typeof v !== 'undefined') cleanPatch[k] = v;
@@ -119,15 +109,11 @@ exports.updateStep = async ({ setupId, stepNo, patch, actor }) => {
     const before = await dao.getStepOne(conn, { setupId: sid, stepNo: sn });
     if (!before) throw new Error('step not found');
 
-    // IN_PROGRESS로 올리는 경우 다른 step IN_PROGRESS 정리
+    // 같은 설비에서 다른 IN_PROGRESS는 HOLD로 내림
     if (cleanPatch.status === 'IN_PROGRESS') {
       await dao.clearOtherInProgress(conn, { setupId: sid, stepNo: sn, actor });
-      // 프로젝트 상태도 IN_PROGRESS로 동기화하고 싶다면:
       await dao.updateProject(conn, sid, { board_status: 'IN_PROGRESS' });
     }
-
-    // DONE이면 실제 종료일이 없으면 자동으로 채우고 싶다면(선택):
-    // if (cleanPatch.status === 'DONE' && !cleanPatch.actual_end) cleanPatch.actual_end = new Date();
 
     await dao.updateStep(conn, { setupId: sid, stepNo: sn, patch: cleanPatch, actor });
 
@@ -135,7 +121,7 @@ exports.updateStep = async ({ setupId, stepNo, patch, actor }) => {
 
     await dao.insertAudit(conn, {
       entity_type: 'STEP',
-      entity_id: after.id || 0, // step row PK가 있다면 id 기록, 없으면 0
+      entity_id: after.id || 0,
       action: 'UPDATE',
       before,
       after,
@@ -165,7 +151,6 @@ exports.createIssue = async ({ setupId, payload, actor }) => {
     await conn.beginTransaction();
 
     const issueId = await dao.insertIssue(conn, { setupId: sid, payload, actor });
-
     const created = await dao.getIssueOne(conn, issueId);
 
     await dao.insertAudit(conn, {
@@ -210,7 +195,6 @@ exports.updateIssue = async ({ issueId, patch, actor }) => {
     if (!before) throw new Error('issue not found');
 
     await dao.updateIssue(conn, iid, cleanPatch, actor);
-
     const after = await dao.getIssueOne(conn, iid);
 
     await dao.insertAudit(conn, {
@@ -231,4 +215,3 @@ exports.updateIssue = async ({ issueId, patch, actor }) => {
     conn.release();
   }
 };
-EOF
