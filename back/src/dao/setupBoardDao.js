@@ -66,7 +66,7 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
     ${whereSql}
     GROUP BY p.id
     ORDER BY ${orderSql}
-    LIMIT ? OFFSET ?
+    LIMIT ?, ?
   `;
 
   const [rows] = await pool.execute(sql, [...params, lim, off]);
