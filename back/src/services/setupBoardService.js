@@ -1,212 +1,234 @@
-// back/src/controllers/setupBoardController.js
+cat > /home/ubuntu/sens-work-app/back/src/services/setupBoardService.js <<'EOF'
 'use strict';
 
+const { pool } = require('../../config/database');
 const dao = require('../dao/setupBoardDao');
-const svc = require('../services/setupBoardService');
 
-function safeInt(v, def = 0) {
-  const n = parseInt(v, 10);
-  return Number.isFinite(n) ? n : def;
-}
+/**
+ * 프로젝트 생성 + 템플릿 step 17개 생성 (트랜잭션)
+ * - payload: setup_projects에 들어갈 필드
+ * - actor: 변경자(로그 남김)
+ */
+exports.createProjectWithSteps = async ({ payload, actor }) => {
+  if (!payload?.equipment_name) throw new Error('equipment_name is required');
+  if (!payload?.site) throw new Error('site is required');
+  if (!payload?.line) throw new Error('line is required');
 
-exports.listBoard = async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    const {
-      customer = '',
-      site = '',
-      line = '',
-      status = '', // board_status
-      q = '',
-      sort = 'updated_desc',
-      limit = '50',
-      offset = '0'
-    } = req.query;
+    await conn.beginTransaction();
 
-    const data = await dao.listBoard({
-      customer,
-      site,
-      line,
-      status,
-      q,
-      sort,
-      limit: safeInt(limit, 50),
-      offset: safeInt(offset, 0)
+    // created_by를 payload에 주입
+    const setupId = await dao.insertProject(conn, {
+      ...payload,
+      created_by: actor
     });
 
-    res.json({ ok: true, data });
-  } catch (err) {
-    console.error('[setupBoardController.listBoard] error:', err);
-    res.status(500).json({ ok: false, error: err.message || 'list board failed' });
+    // 템플릿 기반 step 생성
+    await dao.insertStepsFromTemplate(conn, { setupId, actor });
+
+    // audit 로그 (PROJECT CREATE)
+    await dao.insertAudit(conn, {
+      entity_type: 'PROJECT',
+      entity_id: setupId,
+      action: 'CREATE',
+      before: null,
+      after: { id: setupId, ...payload },
+      actor
+    });
+
+    await conn.commit();
+    return { setup_id: setupId };
+  } catch (e) {
+    try { await conn.rollback(); } catch (_e) {}
+    throw e;
+  } finally {
+    conn.release();
   }
 };
 
-exports.createProject = async (req, res) => {
+/**
+ * 프로젝트 수정 (트랜잭션)
+ */
+exports.updateProject = async ({ id, patch, actor }) => {
+  const setupId = Number(id);
+  if (!setupId) throw new Error('invalid setup id');
+
+  // patch에서 undefined 제거 (필드가 undefined면 UPDATE에 들어가면 안 됨)
+  const cleanPatch = {};
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (typeof v !== 'undefined') cleanPatch[k] = v;
+  }
+  if (!Object.keys(cleanPatch).length) {
+    return { setup_id: setupId, changed: 0 };
+  }
+
+  const conn = await pool.getConnection();
   try {
-    const actor = req.user?.nickname || req.user?.userID || 'unknown';
+    await conn.beginTransaction();
 
-    const payload = {
-      equipment_name: req.body.equipment_name,
-      equipment_type: req.body.equipment_type || null,
-      customer: req.body.customer || null,
-      site: req.body.site,
-      line: req.body.line,
-      location: req.body.location || null,
-      start_date: req.body.start_date || null,
-      target_date: req.body.target_date || null,
-      owner_main: req.body.owner_main || null,
-      owner_support: req.body.owner_support || null,
-      last_note: req.body.last_note || null
-    };
+    const before = await dao.getProjectOne(conn, setupId);
+    if (!before) throw new Error('project not found');
 
-    const result = await svc.createProjectWithSteps({ payload, actor });
-    res.status(201).json({ ok: true, setup_id: result.setup_id });
-  } catch (err) {
-    console.error('[setupBoardController.createProject] error:', err);
-    res.status(400).json({ ok: false, error: err.message || 'create failed' });
+    await dao.updateProject(conn, setupId, cleanPatch);
+
+    const after = await dao.getProjectOne(conn, setupId);
+
+    await dao.insertAudit(conn, {
+      entity_type: 'PROJECT',
+      entity_id: setupId,
+      action: 'UPDATE',
+      before,
+      after,
+      actor
+    });
+
+    await conn.commit();
+    return { setup_id: setupId, changed: 1 };
+  } catch (e) {
+    try { await conn.rollback(); } catch (_e) {}
+    throw e;
+  } finally {
+    conn.release();
   }
 };
 
-exports.getProjectDetail = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const detail = await dao.getProjectDetail(id);
-    if (!detail) return res.status(404).json({ ok: false, error: 'not found' });
-    res.json({ ok: true, data: detail });
-  } catch (err) {
-    console.error('[setupBoardController.getProjectDetail] error:', err);
-    res.status(500).json({ ok: false, error: err.message || 'detail failed' });
+/**
+ * Step 업데이트 (트랜잭션)
+ * - 정책: 같은 설비에서 다른 IN_PROGRESS는 HOLD로 내림
+ */
+exports.updateStep = async ({ setupId, stepNo, patch, actor }) => {
+  const sid = Number(setupId);
+  const sn = Number(stepNo);
+  if (!sid) throw new Error('invalid setup id');
+  if (!sn || sn < 1 || sn > 17) throw new Error('stepNo must be 1~17');
+
+  // undefined 제거
+  const cleanPatch = {};
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (typeof v !== 'undefined') cleanPatch[k] = v;
   }
-};
-
-exports.updateProject = async (req, res) => {
-  try {
-    const actor = req.user?.nickname || req.user?.userID || 'unknown';
-    const id = req.params.id;
-
-    const patch = {
-      equipment_name: req.body.equipment_name,
-      equipment_type: req.body.equipment_type,
-      customer: req.body.customer,
-      site: req.body.site,
-      line: req.body.line,
-      location: req.body.location,
-      board_status: req.body.board_status,
-      start_date: req.body.start_date,
-      target_date: req.body.target_date,
-      owner_main: req.body.owner_main,
-      owner_support: req.body.owner_support,
-      last_note: req.body.last_note
-    };
-
-    const updated = await svc.updateProject({ id, patch, actor });
-    res.json({ ok: true, updated });
-  } catch (err) {
-    console.error('[setupBoardController.updateProject] error:', err);
-    res.status(400).json({ ok: false, error: err.message || 'update project failed' });
+  if (!Object.keys(cleanPatch).length) {
+    return { setup_id: sid, step_no: sn, changed: 0 };
   }
-};
 
-exports.updateStep = async (req, res) => {
+  const conn = await pool.getConnection();
   try {
-    const actor = req.user?.nickname || req.user?.userID || 'unknown';
-    const setupId = req.params.id;
-    const stepNo = safeInt(req.params.stepNo, 0);
-    if (!stepNo || stepNo < 1 || stepNo > 17) {
-      return res.status(400).json({ ok: false, error: 'stepNo must be 1~17' });
+    await conn.beginTransaction();
+
+    const before = await dao.getStepOne(conn, { setupId: sid, stepNo: sn });
+    if (!before) throw new Error('step not found');
+
+    // IN_PROGRESS로 올리는 경우 다른 step IN_PROGRESS 정리
+    if (cleanPatch.status === 'IN_PROGRESS') {
+      await dao.clearOtherInProgress(conn, { setupId: sid, stepNo: sn, actor });
+      // 프로젝트 상태도 IN_PROGRESS로 동기화하고 싶다면:
+      await dao.updateProject(conn, sid, { board_status: 'IN_PROGRESS' });
     }
 
-    const patch = {
-      status: req.body.status,
-      plan_start: req.body.plan_start,
-      plan_end: req.body.plan_end,
-      actual_start: req.body.actual_start,
-      actual_end: req.body.actual_end,
-      workers: req.body.workers, // "정현우,김동한"
-      note: req.body.note
-    };
+    // DONE이면 실제 종료일이 없으면 자동으로 채우고 싶다면(선택):
+    // if (cleanPatch.status === 'DONE' && !cleanPatch.actual_end) cleanPatch.actual_end = new Date();
 
-    const updated = await svc.updateStep({ setupId, stepNo, patch, actor });
-    res.json({ ok: true, updated });
-  } catch (err) {
-    console.error('[setupBoardController.updateStep] error:', err);
-    res.status(400).json({ ok: false, error: err.message || 'update step failed' });
-  }
-};
+    await dao.updateStep(conn, { setupId: sid, stepNo: sn, patch: cleanPatch, actor });
 
-exports.createIssue = async (req, res) => {
-  try {
-    const actor = req.user?.nickname || req.user?.userID || 'unknown';
-    const setupId = req.params.id;
+    const after = await dao.getStepOne(conn, { setupId: sid, stepNo: sn });
 
-    const payload = {
-      step_no: req.body.step_no || null,
-      severity: req.body.severity || 'MAJOR',
-      category: req.body.category || 'ETC',
-      title: req.body.title,
-      content: req.body.content || null,
-      owner: req.body.owner || null
-    };
-
-    const created = await svc.createIssue({ setupId, payload, actor });
-    res.status(201).json({ ok: true, issue_id: created.issue_id });
-  } catch (err) {
-    console.error('[setupBoardController.createIssue] error:', err);
-    res.status(400).json({ ok: false, error: err.message || 'create issue failed' });
-  }
-};
-
-exports.updateIssue = async (req, res) => {
-  try {
-    const actor = req.user?.nickname || req.user?.userID || 'unknown';
-    const issueId = req.params.issueId;
-
-    const patch = {
-      step_no: req.body.step_no,
-      severity: req.body.severity,
-      category: req.body.category,
-      title: req.body.title,
-      content: req.body.content,
-      state: req.body.state,
-      owner: req.body.owner,
-      resolved_at: req.body.resolved_at
-    };
-
-    const updated = await svc.updateIssue({ issueId, patch, actor });
-    res.json({ ok: true, updated });
-  } catch (err) {
-    console.error('[setupBoardController.updateIssue] error:', err);
-    res.status(400).json({ ok: false, error: err.message || 'update issue failed' });
-  }
-};
-
-exports.listAudit = async (req, res) => {
-  try {
-    const { entity_type, entity_id, limit='100', offset='0' } = req.query;
-    const data = await dao.listAudit({
-      entity_type,
-      entity_id,
-      limit: safeInt(limit, 100),
-      offset: safeInt(offset, 0)
+    await dao.insertAudit(conn, {
+      entity_type: 'STEP',
+      entity_id: after.id || 0, // step row PK가 있다면 id 기록, 없으면 0
+      action: 'UPDATE',
+      before,
+      after,
+      actor
     });
-    res.json({ ok: true, data });
-  } catch (err) {
-    console.error('[setupBoardController.listAudit] error:', err);
-    res.status(500).json({ ok: false, error: err.message || 'audit failed' });
+
+    await conn.commit();
+    return { setup_id: sid, step_no: sn, changed: 1 };
+  } catch (e) {
+    try { await conn.rollback(); } catch (_e) {}
+    throw e;
+  } finally {
+    conn.release();
   }
 };
 
-exports.listProjectAudit = async (req, res) => {
+/**
+ * Issue 생성 (트랜잭션)
+ */
+exports.createIssue = async ({ setupId, payload, actor }) => {
+  const sid = Number(setupId);
+  if (!sid) throw new Error('invalid setup id');
+  if (!payload?.title) throw new Error('title is required');
+
+  const conn = await pool.getConnection();
   try {
-    const setupId = req.params.id;
-    const { limit='200', offset='0' } = req.query;
-    const data = await dao.listProjectAudit({
-      setupId,
-      limit: safeInt(limit, 200),
-      offset: safeInt(offset, 0)
+    await conn.beginTransaction();
+
+    const issueId = await dao.insertIssue(conn, { setupId: sid, payload, actor });
+
+    const created = await dao.getIssueOne(conn, issueId);
+
+    await dao.insertAudit(conn, {
+      entity_type: 'ISSUE',
+      entity_id: issueId,
+      action: 'CREATE',
+      before: null,
+      after: created,
+      actor
     });
-    res.json({ ok: true, data });
-  } catch (err) {
-    console.error('[setupBoardController.listProjectAudit] error:', err);
-    res.status(500).json({ ok: false, error: err.message || 'project audit failed' });
+
+    await conn.commit();
+    return { issue_id: issueId };
+  } catch (e) {
+    try { await conn.rollback(); } catch (_e) {}
+    throw e;
+  } finally {
+    conn.release();
   }
 };
+
+/**
+ * Issue 수정 (트랜잭션)
+ */
+exports.updateIssue = async ({ issueId, patch, actor }) => {
+  const iid = Number(issueId);
+  if (!iid) throw new Error('invalid issue id');
+
+  const cleanPatch = {};
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (typeof v !== 'undefined') cleanPatch[k] = v;
+  }
+  if (!Object.keys(cleanPatch).length) {
+    return { issue_id: iid, changed: 0 };
+  }
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const before = await dao.getIssueOne(conn, iid);
+    if (!before) throw new Error('issue not found');
+
+    await dao.updateIssue(conn, iid, cleanPatch, actor);
+
+    const after = await dao.getIssueOne(conn, iid);
+
+    await dao.insertAudit(conn, {
+      entity_type: 'ISSUE',
+      entity_id: iid,
+      action: 'UPDATE',
+      before,
+      after,
+      actor
+    });
+
+    await conn.commit();
+    return { issue_id: iid, changed: 1 };
+  } catch (e) {
+    try { await conn.rollback(); } catch (_e) {}
+    throw e;
+  } finally {
+    conn.release();
+  }
+};
+EOF
