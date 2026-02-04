@@ -62,6 +62,63 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
   return rows;
 };
 
+function toInt(v, def) {
+  const n = Number.parseInt(String(v ?? ''), 10);
+  return Number.isFinite(n) ? n : def;
+}
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+exports.listBoard = async ({ sort, limit, offset, customer, site, line, status, q }) => {
+  // ✅ limit/offset을 확실히 숫자로
+  const lim = clamp(toInt(limit, 200), 1, 500);
+  const off = Math.max(toInt(offset, 0), 0);
+
+  let sql = `
+    SELECT
+      p.id AS setup_id,
+      p.equipment_name, p.equipment_type, p.customer, p.site, p.line, p.location,
+      p.board_status, p.start_date, p.target_date, p.owner_main, p.owner_support,
+      p.last_note, p.updated_at,
+
+      SUM(CASE WHEN s.status='DONE' THEN 1 ELSE 0 END) AS done_steps,
+      COUNT(*) AS total_steps,
+      MAX(CASE WHEN s.status='IN_PROGRESS' THEN s.step_no ELSE NULL END) AS in_progress_step_no,
+
+      (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN') AS open_issues,
+      (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN' AND i.severity='CRITICAL') AS critical_open_issues
+    FROM setup_projects p
+    JOIN setup_project_steps s ON s.setup_id = p.id
+  `;
+
+  const params = [];
+
+  // (여기서 customer/site/line/status/q 필터를 붙인다면)
+  // 예시:
+  // const where = [];
+  // if (customer) { where.push('p.customer=?'); params.push(customer); }
+  // ...
+  // if (where.length) sql += ' WHERE ' + where.join(' AND ');
+
+  // ✅ 정렬 (화이트리스트)
+  const orderMap = {
+    updated_desc: 'p.updated_at DESC',
+    updated_asc:  'p.updated_at ASC',
+    target_asc:   'p.target_date ASC',
+    target_desc:  'p.target_date DESC'
+  };
+  sql += ` GROUP BY p.id ORDER BY ${orderMap[sort] || orderMap.updated_desc} `;
+
+  sql += ` LIMIT ? OFFSET ? `;
+  params.push(lim, off);
+
+  const [rows] = await pool.execute(sql, params);
+  return rows;
+};
+
+
 // ---------- Detail ----------
 exports.getProjectDetail = async (setupId) => {
   const [pRows] = await pool.execute(`SELECT * FROM setup_projects WHERE id = ?`, [setupId]);
