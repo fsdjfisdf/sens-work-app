@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 
-const jwtMiddleware = require('../../config/scripts/jwtMiddleware'); // 경로가 다르면 맞춰줘
+const jwtMiddleware = require('../../config/jwtMiddleware'); // ✅
 const controller = require('../controllers/setupBoardController');
 
 // 헬스체크
