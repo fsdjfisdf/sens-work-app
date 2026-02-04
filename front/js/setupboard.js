@@ -180,6 +180,14 @@ async function apiFetch(path, { method='GET', body=null } = {}) {
     return '';
   }
 
+  function parseStepMap(p) {
+  const raw = p?.step_status_map;
+  if (!raw) return {};
+  if (typeof raw === 'object') return raw; // 혹시 DB가 JSON으로 주면 그대로
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
+
   /* =========================
    * Board list
    * ========================= */
@@ -206,20 +214,6 @@ async function apiFetch(path, { method='GET', body=null } = {}) {
     }
   }
 
-  /* =========================
-   * Estimation (초기 표시용)
-   * ========================= */
-  function estimateStatusForCell(projectRow, stepNo) {
-    const boardStatus = String(projectRow.board_status || '').toUpperCase();
-    if (boardStatus === 'DONE') return 'DONE';
-    if (boardStatus === 'HOLD') return 'HOLD';
-
-    const ip = Number(projectRow.in_progress_step_no || 0);
-    if (!ip) return 'NOT_STARTED';
-    if (stepNo < ip) return 'DONE';
-    if (stepNo === ip) return 'IN_PROGRESS';
-    return 'NOT_STARTED';
-  }
 
   /* =========================
    * Render: 행=설비, 열=작업명
@@ -285,37 +279,42 @@ async function apiFetch(path, { method='GET', body=null } = {}) {
     });
   }
 
-  function renderRow(p) {
-    const name = escapeHtml(p.equipment_name || '(no name)');
-    const sub = escapeHtml([p.customer || '-', p.site || '-', p.line || '-'].join(' · '));
-    const issues = Number(p.open_issues || 0) > 0 ? `<span class="issueMark" title="OPEN ISSUE">!</span>` : '';
+function renderRow(p) {
+  const name = escapeHtml(p.equipment_name || '(no name)');
+  const sub = escapeHtml([p.customer || '-', p.site || '-', p.line || '-'].join(' · '));
+  const issues = Number(p.open_issues || 0) > 0 ? `<span class="issueMark" title="OPEN ISSUE">!</span>` : '';
 
-const cells = STEPS.map(s => {
-  const st = estimateStatusForCell(p, s.no);     // 초기 표시용(정확도는 기존과 동일)
-  const cls = statusToClass(st);
-  const short = statusShort(st);
+  // ✅ 추가: step_status_map 파싱
+  const stepMap = parseStepMap(p);
 
-  return `
-    <td class="cell"
-        data-cell="1"
-        data-setup-id="${p.setup_id}"
-        data-step-no="${s.no}"
-        data-status="${st}">
-      <span class="pill ${cls}">${short}</span>
-    </td>
-  `;
-}).join('');
+  const cells = STEPS.map(s => {
+    // ✅ 핵심: DB에서 내려온 상태를 그대로 사용
+    const st = String(stepMap[String(s.no)] || 'NOT_STARTED').toUpperCase();
+    const cls = statusToClass(st);
+    const short = statusShort(st);
 
     return `
-      <tr>
-        <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}" title="클릭: 상세 보기">
-          <div class="eq-name">${name} ${issues}</div>
-          <div class="eq-sub">${sub} · Updated: ${escapeHtml(fmtDate(p.updated_at) || '-')}</div>
-        </td>
-        ${cells}
-      </tr>
+      <td class="cell"
+          data-cell="1"
+          data-setup-id="${p.setup_id}"
+          data-step-no="${s.no}"
+          data-status="${st}">
+        <span class="pill ${cls}">${short}</span>
+      </td>
     `;
-  }
+  }).join('');
+
+  return `
+    <tr>
+      <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}" title="클릭: 상세 보기">
+        <div class="eq-name">${name} ${issues}</div>
+        <div class="eq-sub">${sub} · Updated: ${escapeHtml(fmtDate(p.updated_at) || '-')}</div>
+      </td>
+      ${cells}
+    </tr>
+  `;
+}
+
 
   /* =========================
    * Detail cache

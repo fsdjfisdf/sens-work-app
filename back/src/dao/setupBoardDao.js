@@ -1,29 +1,24 @@
 // back/src/dao/setupBoardDao.js
+// back/src/dao/setupBoardDao.js
 'use strict';
 
 const { pool } = require('../../config/database');
-
-// ---------- Board List ----------
-function buildSort(sort) {
-  // 안전한 화이트리스트
-  switch (sort) {
-    case 'target_asc': return 'p.target_date ASC, p.updated_at DESC';
-    case 'target_desc': return 'p.target_date DESC, p.updated_at DESC';
-    case 'updated_asc': return 'p.updated_at ASC';
-    case 'updated_desc':
-    default: return 'p.updated_at DESC';
-  }
-}
-
-
 
 function toInt(v, def) {
   const n = Number.parseInt(String(v ?? ''), 10);
   return Number.isFinite(n) ? n : def;
 }
-
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
+}
+function buildSort(sort) {
+  const orderMap = {
+    updated_desc: 'p.updated_at DESC',
+    updated_asc:  'p.updated_at ASC',
+    target_asc:   'p.target_date ASC, p.updated_at DESC',
+    target_desc:  'p.target_date DESC, p.updated_at DESC'
+  };
+  return orderMap[sort] || orderMap.updated_desc;
 }
 
 exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offset }) => {
@@ -34,12 +29,13 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
   const params = [];
 
   if (customer) { where.push('p.customer = ?'); params.push(customer); }
-  if (site)     { where.push('p.site = ?'); params.push(site); }
-  if (line)     { where.push('p.line = ?'); params.push(line); }
+  if (site)     { where.push('p.site = ?');     params.push(site); }
+  if (line)     { where.push('p.line = ?');     params.push(line); }
   if (status)   { where.push('p.board_status = ?'); params.push(status); }
   if (q)        { where.push('p.equipment_name LIKE ?'); params.push(`%${q}%`); }
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const orderSql = buildSort(sort);
 
   const sql = `
     SELECT
@@ -52,8 +48,15 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
       COUNT(*) AS total_steps,
       MAX(CASE WHEN s.status='IN_PROGRESS' THEN s.step_no ELSE NULL END) AS in_progress_step_no,
 
-      -- ✅ 핵심: step_no -> status 맵을 JSON으로 내려줌
-      JSON_OBJECTAGG(s.step_no, s.status) AS step_status_map,
+      /* ✅ JSON_OBJECTAGG 대신: JSON 문자열 직접 생성 */
+      CONCAT(
+        '{',
+        GROUP_CONCAT(
+          CONCAT('"', s.step_no, '":"', s.status, '"')
+          ORDER BY s.step_no SEPARATOR ','
+        ),
+        '}'
+      ) AS step_status_map,
 
       (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN') AS open_issues,
       (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN' AND i.severity='CRITICAL') AS critical_open_issues
@@ -62,13 +65,14 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
     JOIN setup_project_steps s ON s.setup_id = p.id
     ${whereSql}
     GROUP BY p.id
-    ORDER BY ${buildSort(sort)}
+    ORDER BY ${orderSql}
     LIMIT ? OFFSET ?
   `;
 
   const [rows] = await pool.execute(sql, [...params, lim, off]);
   return rows;
 };
+
 
 
 // ---------- Detail ----------
