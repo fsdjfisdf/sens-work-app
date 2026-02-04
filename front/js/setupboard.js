@@ -90,23 +90,32 @@
     return localStorage.getItem('x-access-token') || '';
   }
 
-  async function apiFetch(path, { method='GET', body=null } = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      'x-access-token': getToken()
-    };
-    const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
+async function apiFetch(path, { method='GET', body=null } = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-access-token': getToken()
+  };
 
-    const text = await res.text();
-    let json = null;
-    try { json = text ? JSON.parse(text) : null; } catch {}
+  const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
 
-    if (!res.ok) {
-      const msg = json?.error || json?.message || text || `HTTP ${res.status}`;
-      throw new Error(msg);
-    }
-    return json;
+  // ✅ 인증 만료/검증 실패 처리
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('x-access-token');
+    alert('로그인이 만료되었습니다. 다시 로그인 해주세요.');
+    window.location.replace('/signin.html');
+    throw new Error('인증 만료');
   }
+
+  const text = await res.text();
+  let json = null;
+  try { json = text ? JSON.parse(text) : null; } catch {}
+
+  if (!res.ok) {
+    const msg = json?.error || json?.message || text || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return json;
+}
 
   function escapeHtml(s) {
     return String(s ?? '')

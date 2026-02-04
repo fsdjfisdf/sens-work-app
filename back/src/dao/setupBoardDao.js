@@ -27,25 +27,19 @@ function clamp(n, min, max) {
 }
 
 exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offset }) => {
+  const lim = clamp(toInt(limit, 200), 1, 500);
+  const off = Math.max(toInt(offset, 0), 0);
+
   const where = [];
   const params = [];
 
   if (customer) { where.push('p.customer = ?'); params.push(customer); }
-  if (site)     { where.push('p.site = ?');     params.push(site); }
-  if (line)     { where.push('p.line = ?');     params.push(line); }
+  if (site)     { where.push('p.site = ?'); params.push(site); }
+  if (line)     { where.push('p.line = ?'); params.push(line); }
   if (status)   { where.push('p.board_status = ?'); params.push(status); }
-
-  if (q) {
-    where.push('p.equipment_name LIKE ?');
-    params.push(`%${q}%`);
-  }
+  if (q)        { where.push('p.equipment_name LIKE ?'); params.push(`%${q}%`); }
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
-  const orderSql = buildSort(sort);
-
-  // ✅ LIMIT/OFFSET은 prepared bind 하지 말고 안전하게 숫자로 만들어 인라인
-  const lim = clamp(toInt(limit, 200), 1, 500);
-  const off = Math.max(toInt(offset, 0), 0);
 
   const sql = `
     SELECT
@@ -58,6 +52,9 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
       COUNT(*) AS total_steps,
       MAX(CASE WHEN s.status='IN_PROGRESS' THEN s.step_no ELSE NULL END) AS in_progress_step_no,
 
+      -- ✅ 핵심: step_no -> status 맵을 JSON으로 내려줌
+      JSON_OBJECTAGG(s.step_no, s.status) AS step_status_map,
+
       (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN') AS open_issues,
       (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN' AND i.severity='CRITICAL') AS critical_open_issues
 
@@ -65,12 +62,11 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
     JOIN setup_project_steps s ON s.setup_id = p.id
     ${whereSql}
     GROUP BY p.id
-    ORDER BY ${orderSql}
-    LIMIT ${lim} OFFSET ${off}
+    ORDER BY ${buildSort(sort)}
+    LIMIT ? OFFSET ?
   `;
 
-  // ✅ 여기서는 where 조건들만 바인딩됨 (LIMIT/OFFSET 없음)
-  const [rows] = await pool.execute(sql, params);
+  const [rows] = await pool.execute(sql, [...params, lim, off]);
   return rows;
 };
 
