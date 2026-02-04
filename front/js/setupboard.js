@@ -281,19 +281,21 @@
     const sub = escapeHtml([p.customer || '-', p.site || '-', p.line || '-'].join(' · '));
     const issues = Number(p.open_issues || 0) > 0 ? `<span class="issueMark" title="OPEN ISSUE">!</span>` : '';
 
-    const cells = STEPS.map(s => {
-      const st = estimateStatusForCell(p, s.no);
-      const cls = statusToClass(st);
-      const short = statusShort(st);
-      return `
-        <td class="cell"
-            data-cell="1"
-            data-setup-id="${p.setup_id}"
-            data-step-no="${s.no}">
-          <span class="pill ${cls}">${short}</span>
-        </td>
-      `;
-    }).join('');
+const cells = STEPS.map(s => {
+  const st = estimateStatusForCell(p, s.no);     // 초기 표시용(정확도는 기존과 동일)
+  const cls = statusToClass(st);
+  const short = statusShort(st);
+
+  return `
+    <td class="cell"
+        data-cell="1"
+        data-setup-id="${p.setup_id}"
+        data-step-no="${s.no}"
+        data-status="${st}">
+      <span class="pill ${cls}">${short}</span>
+    </td>
+  `;
+}).join('');
 
     return `
       <tr>
@@ -340,32 +342,42 @@
     s.textContent = savingText;
   }
 
-  async function toggleCellStatus(td, setupId, stepNo) {
-    try {
-      updateCellUI(td, 'IN_PROGRESS', 'saving...');
+async function toggleCellStatus(td, setupId, stepNo) {
+  // ✅ 현재 상태를 "셀 자체"가 알고 있도록
+  const cur = (td.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
+  const nxt = nextStatus(cur);
 
-      const detail = await ensureDetail(setupId);
-      const steps = detail?.steps || [];
-      const row = steps.find(x => Number(x.step_no) === Number(stepNo));
+  // UI 먼저 "saving..." 표시 (DB 반영 시도)
+  updateCellUI(td, nxt, 'saving...');
 
-      const cur = row?.status || 'NOT_STARTED';
-      const nxt = nextStatus(cur);
+  try {
+    // ✅ detail 조회 없이 바로 DB PATCH
+    await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
+      method: 'PATCH',
+      body: { status: nxt }
+    });
 
-      await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
-        method: 'PATCH',
-        body: { status: nxt }
-      });
+    // ✅ 성공했으면 셀 상태 확정(= DB 반영 완료)
+    td.setAttribute('data-status', nxt);
+    updateCellUI(td, nxt, '');
 
+    // 캐시가 있으면 같이 갱신 (있을 때만)
+    const cached = state.detailCache.get(String(setupId));
+    if (cached?.steps) {
+      const row = cached.steps.find(x => Number(x.step_no) === Number(stepNo));
       if (row) row.status = nxt;
-      else steps.push({ step_no: stepNo, status: nxt });
-
-      updateCellUI(td, nxt, '');
-      toast(`STEP ${stepNo} → ${nxt}`);
-    } catch (e) {
-      updateCellUI(td, 'NOT_STARTED', '');
-      toast(`상태 변경 실패: ${e.message}`);
+      else cached.steps.push({ step_no: stepNo, status: nxt });
     }
+
+    toast(`STEP ${stepNo} → ${nxt} 저장됨`);
+  } catch (e) {
+    // 실패 시 원복
+    updateCellUI(td, cur, '');
+    td.setAttribute('data-status', cur);
+    toast(`DB 저장 실패: ${e.message}`);
   }
+}
+
 
   /* =========================
    * Tooltip (hover)
