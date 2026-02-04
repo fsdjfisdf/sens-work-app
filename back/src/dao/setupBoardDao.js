@@ -15,19 +15,27 @@ function buildSort(sort) {
   }
 }
 
+
+
+function toInt(v, def) {
+  const n = Number.parseInt(String(v ?? ''), 10);
+  return Number.isFinite(n) ? n : def;
+}
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
 exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offset }) => {
   const where = [];
   const params = [];
 
   if (customer) { where.push('p.customer = ?'); params.push(customer); }
-  if (site) { where.push('p.site = ?'); params.push(site); }
-  if (line) { where.push('p.line = ?'); params.push(line); }
-  if (status) { where.push('p.board_status = ?'); params.push(status); }
+  if (site)     { where.push('p.site = ?');     params.push(site); }
+  if (line)     { where.push('p.line = ?');     params.push(line); }
+  if (status)   { where.push('p.board_status = ?'); params.push(status); }
 
   if (q) {
-    // FULLTEXT가 있으면 MATCH 사용, 없으면 LIKE로 대체 가능
-    // where.push('MATCH(p.equipment_name) AGAINST (? IN BOOLEAN MODE)');
-    // params.push(q + '*');
     where.push('p.equipment_name LIKE ?');
     params.push(`%${q}%`);
   }
@@ -35,7 +43,10 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const orderSql = buildSort(sort);
 
-  // v_setup_board 뷰가 있으면 더 깔끔하지만, 여기서는 조인으로 작성
+  // ✅ LIMIT/OFFSET은 prepared bind 하지 말고 안전하게 숫자로 만들어 인라인
+  const lim = clamp(toInt(limit, 200), 1, 500);
+  const off = Math.max(toInt(offset, 0), 0);
+
   const sql = `
     SELECT
       p.id AS setup_id,
@@ -55,65 +66,10 @@ exports.listBoard = async ({ customer, site, line, status, q, sort, limit, offse
     ${whereSql}
     GROUP BY p.id
     ORDER BY ${orderSql}
-    LIMIT ? OFFSET ?
+    LIMIT ${lim} OFFSET ${off}
   `;
 
-  const [rows] = await pool.execute(sql, [...params, limit, offset]);
-  return rows;
-};
-
-function toInt(v, def) {
-  const n = Number.parseInt(String(v ?? ''), 10);
-  return Number.isFinite(n) ? n : def;
-}
-
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
-
-exports.listBoard = async ({ sort, limit, offset, customer, site, line, status, q }) => {
-  // ✅ limit/offset을 확실히 숫자로
-  const lim = clamp(toInt(limit, 200), 1, 500);
-  const off = Math.max(toInt(offset, 0), 0);
-
-  let sql = `
-    SELECT
-      p.id AS setup_id,
-      p.equipment_name, p.equipment_type, p.customer, p.site, p.line, p.location,
-      p.board_status, p.start_date, p.target_date, p.owner_main, p.owner_support,
-      p.last_note, p.updated_at,
-
-      SUM(CASE WHEN s.status='DONE' THEN 1 ELSE 0 END) AS done_steps,
-      COUNT(*) AS total_steps,
-      MAX(CASE WHEN s.status='IN_PROGRESS' THEN s.step_no ELSE NULL END) AS in_progress_step_no,
-
-      (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN') AS open_issues,
-      (SELECT COUNT(*) FROM setup_issues i WHERE i.setup_id=p.id AND i.state='OPEN' AND i.severity='CRITICAL') AS critical_open_issues
-    FROM setup_projects p
-    JOIN setup_project_steps s ON s.setup_id = p.id
-  `;
-
-  const params = [];
-
-  // (여기서 customer/site/line/status/q 필터를 붙인다면)
-  // 예시:
-  // const where = [];
-  // if (customer) { where.push('p.customer=?'); params.push(customer); }
-  // ...
-  // if (where.length) sql += ' WHERE ' + where.join(' AND ');
-
-  // ✅ 정렬 (화이트리스트)
-  const orderMap = {
-    updated_desc: 'p.updated_at DESC',
-    updated_asc:  'p.updated_at ASC',
-    target_asc:   'p.target_date ASC',
-    target_desc:  'p.target_date DESC'
-  };
-  sql += ` GROUP BY p.id ORDER BY ${orderMap[sort] || orderMap.updated_desc} `;
-
-  sql += ` LIMIT ? OFFSET ? `;
-  params.push(lim, off);
-
+  // ✅ 여기서는 where 조건들만 바인딩됨 (LIMIT/OFFSET 없음)
   const [rows] = await pool.execute(sql, params);
   return rows;
 };
