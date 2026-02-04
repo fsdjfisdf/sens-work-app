@@ -6,36 +6,28 @@
   <title>SET UP STATUS BOARD</title>
   <link rel="stylesheet" href="./css/setupboard.css" />
 </head>
-
 <body>
-  <!-- 상단 네비 (S-WORKS 스타일 간단 버전) -->
-  <nav class="top-nav">
-    <div class="nav-inner">
-      <div class="nav-left">
-        <a class="brand" href="./index.html">S-WORKS</a>
-        <span class="divider"></span>
-        <span class="page-title">SET UP STATUS BOARD</span>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-title">SET UP STATUS BOARD</div>
+        <div class="brand-sub">열=설비 / 행=작업항목(1~17) · 설비 클릭 시 상세</div>
       </div>
 
-      <div class="nav-right unsigned" id="navUnsigned">
-        <a href="./signin.html" class="nav-link">Login</a>
-      </div>
-
-      <div class="nav-right signed hidden" id="navSigned">
-        <span class="user-chip" id="meChip">-</span>
-        <button class="btn btn-ghost" id="btnLogout">Logout</button>
+      <div class="topbar-actions">
+        <button id="btnRefresh" class="btn">새로고침</button>
+        <button id="btnNewProject" class="btn primary">+ 설비(프로젝트) 추가</button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="container">
-
-    <!-- 상단 컨트롤 -->
-    <section class="controls card">
-      <div class="controls-row">
-        <div class="control">
+  <main class="page">
+    <!-- Filters -->
+    <section class="filters card">
+      <div class="filters-grid">
+        <div class="field">
           <label>Customer</label>
-          <select id="filterCustomer">
+          <select id="fCustomer">
             <option value="">ALL</option>
             <option value="SAMSUNG">SAMSUNG</option>
             <option value="HYNIX">HYNIX</option>
@@ -43,21 +35,20 @@
           </select>
         </div>
 
-        <div class="control">
+        <div class="field">
           <label>Site</label>
-          <select id="filterSite">
+          <select id="fSite">
             <option value="">ALL</option>
-            <option value="PYEONGTAEK">평택</option>
-            <option value="HWASEONG">화성</option>
-            <option value="ICHEON">이천</option>
-            <option value="CHEONGJU">청주</option>
-            <option value="ETC">기타</option>
+            <option value="PT">평택(PT)</option>
+            <option value="HS">화성(HS)</option>
+            <option value="IC">이천(IC)</option>
+            <option value="CJ">청주(CJ)</option>
           </select>
         </div>
 
-        <div class="control">
+        <div class="field">
           <label>Line</label>
-          <select id="filterLine">
+          <select id="fLine">
             <option value="">ALL</option>
             <option value="P1">P1</option>
             <option value="P2">P2</option>
@@ -66,116 +57,125 @@
           </select>
         </div>
 
-        <div class="control">
+        <div class="field">
           <label>Status</label>
-          <select id="filterStatus">
+          <select id="fStatus">
             <option value="">ALL</option>
             <option value="PLANNED">PLANNED</option>
             <option value="IN_PROGRESS">IN_PROGRESS</option>
             <option value="DONE">DONE</option>
             <option value="HOLD">HOLD</option>
-            <option value="CANCELLED">CANCELLED</option>
           </select>
         </div>
 
-        <div class="control search">
-          <label>Search (설비명)</label>
-          <div class="search-wrap">
-            <input id="filterQ" type="text" placeholder="예: SUPRA XP #12" />
-            <button class="btn btn-secondary" id="btnSearch">Search</button>
-          </div>
+        <div class="field wide">
+          <label>설비명 검색</label>
+          <input id="fQ" type="text" placeholder="예) SUPRA XP #12 / DRY STRIP ..." />
         </div>
 
-        <div class="control">
-          <label>Sort</label>
-          <select id="filterSort">
+        <div class="field">
+          <label>정렬</label>
+          <select id="fSort">
             <option value="updated_desc">최근 업데이트</option>
-            <option value="target_asc">목표일 빠른 순</option>
-            <option value="target_desc">목표일 늦은 순</option>
-            <option value="updated_asc">업데이트 오래된 순</option>
+            <option value="updated_asc">오래된 업데이트</option>
+            <option value="target_asc">목표일 빠른순</option>
+            <option value="target_desc">목표일 늦은순</option>
           </select>
         </div>
 
-        <div class="control actions">
+        <div class="field">
           <label>&nbsp;</label>
-          <div class="actions-wrap">
-            <button class="btn btn-primary" id="btnRefresh">Refresh</button>
-            <button class="btn btn-primary" id="btnCreate">+ Add Setup</button>
-          </div>
+          <button id="btnApply" class="btn">적용</button>
         </div>
       </div>
 
-      <div class="controls-foot">
-        <div class="hint">
-          • 설비를 클릭하면 상세(17 Step / 이슈)를 수정할 수 있어요. (권한은 JWT 기반)
+      <div class="filters-footer">
+        <div class="legend">
+          <span class="chip"><span class="dot ns"></span>NOT_STARTED</span>
+          <span class="chip"><span class="dot ip"></span>IN_PROGRESS</span>
+          <span class="chip"><span class="dot dn"></span>DONE</span>
+          <span class="chip"><span class="dot hd"></span>HOLD</span>
+          <span class="chip"><span class="badge issue">!</span>OPEN ISSUE</span>
         </div>
-        <div class="small" id="lastLoaded">-</div>
+        <div class="hint">
+          설비(열 헤더)를 클릭하면 오른쪽에 상세가 표시됩니다.
+        </div>
       </div>
     </section>
 
-    <!-- 레이아웃: 좌측 보드 / 우측 상세 -->
-    <section class="board-layout">
-      <!-- Board List -->
-      <section class="board card">
-        <div class="card-head">
-          <h2>Board</h2>
-          <div class="pill" id="boardCount">0</div>
+    <!-- Content -->
+    <section class="content">
+      <div class="matrix-wrap card">
+        <div class="matrix-head">
+          <div class="matrix-title">
+            <span id="statCount">-</span>
+            <span class="muted">| 스크롤로 전체 설비를 확인하세요 (가로 스크롤)</span>
+          </div>
+          <div class="matrix-tools">
+            <label class="toggle">
+              <input type="checkbox" id="toggleCompact" checked />
+              <span>컴팩트</span>
+            </label>
+          </div>
         </div>
 
-        <div id="boardList" class="board-list">
-          <!-- JS render -->
+        <div id="matrixHost" class="matrix-host">
+          <!-- table will render here -->
         </div>
+      </div>
 
-        <div class="empty hidden" id="boardEmpty">
-          조회 결과가 없습니다.
-        </div>
-      </section>
-
-      <!-- Detail Panel -->
-      <aside class="detail card" id="detailPanel">
+      <!-- Detail side panel -->
+      <aside id="detailPanel" class="detail card hidden">
         <div class="detail-head">
-          <div>
-            <h2 id="detailTitle">설비를 선택하세요</h2>
-            <div class="detail-sub" id="detailSub">-</div>
+          <div class="detail-title">
+            <div id="dTitle" class="title">설비 상세</div>
+            <div id="dMeta" class="meta muted">-</div>
           </div>
-          <div class="detail-head-actions">
-            <button class="btn btn-ghost" id="btnCloseDetail">Close</button>
+          <div class="detail-actions">
+            <button id="btnCloseDetail" class="btn">닫기</button>
           </div>
         </div>
 
-        <!-- detail body -->
-        <div class="detail-body" id="detailBody" aria-live="polite">
-          <div class="placeholder">
-            왼쪽 보드에서 설비를 선택하면 상세가 표시됩니다.
+        <div class="detail-body">
+          <div class="detail-kpis" id="dKpis"></div>
+
+          <div class="section">
+            <div class="section-title">Step 상세 (1~17)</div>
+            <div id="dSteps" class="steps"></div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Issues</div>
+            <div id="dIssues" class="issues"></div>
           </div>
         </div>
       </aside>
     </section>
   </main>
 
-  <!-- Create Modal -->
-  <div class="modal hidden" id="createModal">
+  <!-- New Project Modal -->
+  <div id="modalNew" class="modal hidden">
     <div class="modal-backdrop" data-close="1"></div>
     <div class="modal-card">
       <div class="modal-head">
-        <h3>+ Add Setup</h3>
-        <button class="icon-btn" id="btnCloseCreate" title="close">✕</button>
+        <div class="modal-title">설비(프로젝트) 추가</div>
+        <button class="icon-btn" data-close="1" aria-label="close">✕</button>
       </div>
-
       <div class="modal-body">
-        <div class="grid2">
-          <div class="control">
-            <label>Equipment Name *</label>
-            <input id="c_equipment_name" type="text" placeholder="예: SUPRA XP #12" />
-          </div>
-          <div class="control">
-            <label>Equipment Type</label>
-            <input id="c_equipment_type" type="text" placeholder="예: SUPRA XP" />
+        <div class="form-grid">
+          <div class="field wide">
+            <label>설비명(equipment_name) *</label>
+            <input id="nEquipmentName" type="text" placeholder="예) SUPRA XP #12" />
           </div>
 
-          <div class="control">
+          <div class="field">
+            <label>설비타입(equipment_type)</label>
+            <input id="nEquipmentType" type="text" placeholder="SUPRA XP" />
+          </div>
+
+          <div class="field">
             <label>Customer</label>
-            <select id="c_customer">
+            <select id="nCustomer">
               <option value="">SELECT</option>
               <option value="SAMSUNG">SAMSUNG</option>
               <option value="HYNIX">HYNIX</option>
@@ -183,21 +183,20 @@
             </select>
           </div>
 
-          <div class="control">
+          <div class="field">
             <label>Site *</label>
-            <select id="c_site">
+            <select id="nSite">
               <option value="">SELECT</option>
-              <option value="PYEONGTAEK">평택</option>
-              <option value="HWASEONG">화성</option>
-              <option value="ICHEON">이천</option>
-              <option value="CHEONGJU">청주</option>
-              <option value="ETC">기타</option>
+              <option value="PT">평택(PT)</option>
+              <option value="HS">화성(HS)</option>
+              <option value="IC">이천(IC)</option>
+              <option value="CJ">청주(CJ)</option>
             </select>
           </div>
 
-          <div class="control">
+          <div class="field">
             <label>Line *</label>
-            <select id="c_line">
+            <select id="nLine">
               <option value="">SELECT</option>
               <option value="P1">P1</option>
               <option value="P2">P2</option>
@@ -206,41 +205,45 @@
             </select>
           </div>
 
-          <div class="control">
+          <div class="field">
             <label>Location</label>
-            <input id="c_location" type="text" placeholder="예: BAY-3" />
+            <input id="nLocation" type="text" placeholder="Bay / Tool 위치 등" />
           </div>
 
-          <div class="control">
+          <div class="field">
+            <label>Start Date</label>
+            <input id="nStartDate" type="date" />
+          </div>
+
+          <div class="field">
             <label>Target Date</label>
-            <input id="c_target_date" type="date" />
+            <input id="nTargetDate" type="date" />
           </div>
 
-          <div class="control">
+          <div class="field">
             <label>Owner(Main)</label>
-            <input id="c_owner_main" type="text" placeholder="예: 정현우" />
+            <input id="nOwnerMain" type="text" placeholder="정현우" />
           </div>
 
-          <div class="control">
+          <div class="field">
             <label>Owner(Support)</label>
-            <input id="c_owner_support" type="text" placeholder="예: 김동한" />
+            <input id="nOwnerSupport" type="text" placeholder="김동한" />
           </div>
 
-          <div class="control span2">
-            <label>Last Note</label>
-            <input id="c_last_note" type="text" placeholder="예: FAB IN 일정 확정" />
+          <div class="field wide">
+            <label>비고(last_note)</label>
+            <textarea id="nLastNote" rows="3" placeholder="특이사항 / 요청사항"></textarea>
           </div>
         </div>
-
-        <div class="modal-foot">
-          <button class="btn btn-secondary" id="btnCreateCancel">Cancel</button>
-          <button class="btn btn-primary" id="btnCreateSubmit">Create</button>
-        </div>
-
-        <div class="small error hidden" id="createError">-</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" data-close="1">취소</button>
+        <button id="btnCreate" class="btn primary">생성</button>
       </div>
     </div>
   </div>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script src="./js/setupboard.js"></script>
 </body>
