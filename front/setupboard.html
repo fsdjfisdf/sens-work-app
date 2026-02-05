@@ -11,9 +11,12 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-title">SETUP BOARD</div>
-        <div class="brand-sub">행=설비 · 열=작업항목 · 셀 클릭으로 상태 변경</div>
+        <!-- ✅ 1) 기존 설명 문구 삭제 -->
+        <div class="brand-sub">설비 Setup 진행 현황 보드</div>
       </div>
       <div class="top-actions">
+        <!-- ✅ 신규 설비 추가 -->
+        <button id="btnNew" class="btn primary">+ 설비 추가</button>
         <button id="btnRefresh" class="btn">새로고침</button>
       </div>
     </div>
@@ -22,13 +25,18 @@
   <main class="page">
     <section class="filters card">
       <div class="filters-grid">
+        <!-- ✅ 2) Customer 필터 삭제 / EQ TYPE 필터 추가 -->
         <div class="field">
-          <label>Customer</label>
-          <select id="fCustomer">
+          <label>EQ TYPE</label>
+          <select id="fEqType">
             <option value="">ALL</option>
-            <option value="SAMSUNG">SAMSUNG</option>
-            <option value="HYNIX">HYNIX</option>
-            <option value="ETC">ETC</option>
+            <option value="SUPRA N">SUPRA N</option>
+            <option value="SUPRA XP">SUPRA XP</option>
+            <option value="INTEGER">INTEGER</option>
+            <option value="PRECIA">PRECIA</option>
+            <option value="ECOLITE">ECOLITE</option>
+            <option value="GENEVA">GENEVA</option>
+            <option value="HDW">HDW</option>
           </select>
         </div>
 
@@ -80,7 +88,8 @@
           </select>
         </div>
 
-        <div class="field">
+        <!-- ✅ 3) 적용 버튼을 필터들과 같은 행에 (grid 마지막 칸 고정) -->
+        <div class="field field-apply">
           <label>&nbsp;</label>
           <button id="btnApply" class="btn primary">적용</button>
         </div>
@@ -92,7 +101,7 @@
         <span class="chip"><span class="dot dn"></span>DONE</span>
         <span class="chip"><span class="dot hd"></span>HOLD</span>
         <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
-        <span class="muted small">· 설비명 클릭: 상세 모달 / 셀 클릭: 상태 토글 & 저장 / 셀 호버: 상세 정보</span>
+        <!-- ✅ 4) 안내 문구 삭제 -->
       </div>
     </section>
 
@@ -135,17 +144,7 @@
 
             <div class="field">
               <label>설비타입</label>
-              <input id="p_equipment_type" type="text"/>
-            </div>
-
-            <div class="field">
-              <label>Customer</label>
-              <select id="p_customer">
-                <option value="">(null)</option>
-                <option value="SAMSUNG">SAMSUNG</option>
-                <option value="HYNIX">HYNIX</option>
-                <option value="ETC">ETC</option>
-              </select>
+              <input id="p_equipment_type" type="text" placeholder="SUPRA N / INTEGER ..."/>
             </div>
 
             <div class="field">
@@ -173,9 +172,11 @@
               </select>
             </div>
 
+            <!-- ✅ 8) Start Date 자동(읽기 전용 표시) -->
             <div class="field">
-              <label>Start Date</label>
-              <input id="p_start_date" type="date"/>
+              <label>Start Date (Auto)</label>
+              <input id="p_start_date_auto" type="date" disabled/>
+              <div class="muted small" style="margin-top:6px;">STEP 1 날짜(Actual 우선) 기준으로 자동 반영</div>
             </div>
 
             <div class="field">
@@ -183,15 +184,7 @@
               <input id="p_target_date" type="date"/>
             </div>
 
-            <div class="field">
-              <label>Owner(Main)</label>
-              <input id="p_owner_main" type="text"/>
-            </div>
-
-            <div class="field">
-              <label>Owner(Support)</label>
-              <input id="p_owner_support" type="text"/>
-            </div>
+            <!-- ✅ 7) Owner(Main/Support) 삭제 -->
 
             <div class="field wide">
               <label>Last Note</label>
@@ -220,7 +213,6 @@
 
   <!-- Hover Tooltip -->
   <div id="tooltip" class="tooltip hidden"></div>
-
   <div id="toast" class="toast hidden"></div>
 
   <script src="./js/setupboard.js"></script>

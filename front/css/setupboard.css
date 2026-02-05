@@ -64,6 +64,7 @@ body{
 .filters{padding:14px}
 .filters-grid{
   display:grid;
+  /* ✅ 필터 + 적용 버튼이 같은 줄에 안정적으로 들어가도록 */
   grid-template-columns: repeat(7, minmax(0,1fr));
   gap:12px;
 }
@@ -86,6 +87,9 @@ body{
   box-shadow: 0 0 0 4px rgba(37,99,235,.12);
 }
 .field.wide{grid-column: span 2}
+
+/* ✅ 적용 버튼 칸 고정 느낌(너무 좁아지지 않게) */
+.field-apply{min-width:140px}
 
 .legend{
   margin-top:12px;
@@ -139,7 +143,7 @@ body{
   width:100%;
   border-collapse:separate;
   border-spacing:0;
-  min-width: 1700px;
+  min-width: 1650px;
 }
 .table th, .table td{
   border-bottom:1px solid var(--line);
@@ -168,19 +172,15 @@ body{
   cursor:default;
 }
 
+/* ✅ 5) step header: 번호 제거한 전용 스타일 */
 .step-head{
-  max-width: 200px;
+  max-width: 170px;
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.step-no{
-  font-size:11px;
-  color:var(--muted);
-  font-weight:900;
-}
-.step-name{
-  margin-top:2px;
+.step-name-only{
   font-weight:1000;
+  font-size:12px;
 }
 
 .eq-name{
