@@ -1,17 +1,62 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SETUP BOARD</title>
-  <link rel="stylesheet" href="./css/setupboard.css"/>
+  <meta charset="UTF-8" />
+  <title>S-WORKS · SET UP STATUS BOARD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 설비 전용 CSS -->
+  <link rel="stylesheet" href="./css/setupboard.css" />
+
+
+  <link rel="stylesheet" href="./css/user_info.css" />
+
 </head>
+<body>
+  <!-- 🔹 상단 네비게이션 (네가 준 구조 그대로) -->
+  <nav>
+    <div class="inner">
+      <div class="nav-container">
+        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+        <div class="sign-container unsigned">
+          <a href="./signin.html" class="sign-link">Login</a>
+        </div>
+        <div class="sign-container signed hidden">
+          <button class="menu-btn">
+            <div class="menu-icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-content">
+        <a href="./user_info.html" class="menu-item">SECM</a>
+        <a href="./worklog.html" class="menu-item">Create Worklog</a>
+        <a href="./approval.html" class="menu-item">Worklog Approval</a>
+        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
+        <!-- ⚠️ 나중에 equipment_signal2.html로 교체할 거면 여기 링크만 바꿔주면 됨 -->
+        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+        <a href="./PCI.html" class="menu-item">PCI</a>
+        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+        <a href="./business.html" class="menu-item">Business trip</a>
+        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+        <a href="./update.html" class="menu-item">Update</a>
+        <button id="sign-out" class="menu-item">Logout</button>
+      </div>
+    </div>
+  </nav>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-title">SETUP BOARD</div>
-        <div class="brand-sub">설비별 Setup Step 진행상황</div>
+        <div class="brand-title">SET UP 설비 진행 상황</div>
       </div>
       <div class="top-actions">
         <button id="btnNew" class="btn primary">+ 신규 설비</button>
@@ -89,12 +134,12 @@
       </div>
 
       <div class="legend">
-        <span class="chip"><span class="dot ns"></span>NOT_STARTED(-)</span>
+        <span class="chip"><span class="dot ns"></span>NOT STARTE(-)</span>
         <span class="chip"><span class="dot pl"></span>PLANNED(P)</span>
-        <span class="chip"><span class="dot ip"></span>IN_PROGRESS(I)</span>
+        <span class="chip"><span class="dot ip"></span>IN PROGRESS(I)</span>
         <span class="chip"><span class="dot dn"></span>DONE(D)</span>
         <span class="chip"><span class="dot hd"></span>HOLD(H)</span>
-        <span class="muted small">· 설비명 클릭: 상세 모달</span>
+        <span class="muted small">· 설비명 클릭: 설비 정보 변경 및 진행 사항 수정</span>
       </div>
     </section>
 
