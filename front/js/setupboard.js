@@ -1369,16 +1369,15 @@
 
     el.logsHost.innerHTML = `
       <table class="table">
-        <thead>
-          <tr>
-            <th>DATE</th>
-            <th>WORKER</th>
-            <th>TASK</th>
-            <th>EQ</th>
-            <th>TIME</th>
-            <th>DESCRIPTION</th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th>DATE</th>
+    <th>TASK</th>
+    <th>WORKER</th>
+    <th>TIME</th>
+    <th>DESCRIPTION</th>
+  </tr>
+</thead>
         <tbody>${rows}</tbody>
       </table>
     `;
