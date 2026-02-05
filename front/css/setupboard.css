@@ -16,7 +16,7 @@
   --pr:#8b5cf6;
 
   /* ✅ nav 높이 */
-  --nav-h:56px;
+  --nav-h:40px;
 
   /* ✅ nav 색(흰색 유지) */
   --nav-bg:#ffffff;
@@ -99,8 +99,8 @@ nav{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  height:34px;
-  padding:0 12px;
+  height:25px;
+  padding:0 10px;
   border-radius:10px;
   border:1px solid var(--nav-border);
   background:#fff;
