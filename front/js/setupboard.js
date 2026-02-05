@@ -21,7 +21,7 @@
     { no: 17, name: 'PROCESS CONFIRM' }
   ];
 
-  // ✅ 상태에 PLANNED 추가 + 토글 순서 포함
+  // 상태 토글 순서
   const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -31,6 +31,7 @@
     btnApply: $('#btnApply'),
     tableHost: $('#tableHost'),
     statCount: $('#statCount'),
+    statHint: $('#statHint'),
 
     fEqType: $('#fEqType'),
     fSite: $('#fSite'),
@@ -56,6 +57,9 @@
     btnSaveProject: $('#btnSaveProject'),
     projSaveHint: $('#projSaveHint'),
 
+    prereqHost: $('#prereqHost'),
+    prSummary: $('#prSummary'),
+
     stepsHost: $('#stepsHost'),
 
     tooltip: $('#tooltip'),
@@ -64,11 +68,13 @@
 
   const state = {
     list: [],
-    detailCache: new Map(),
+    detailCache: new Map(),     // setupId -> {project, steps, prereqs}
+    rowMeta: new Map(),         // setupId -> computed meta for locks/prereqProgress
     selectedSetupId: null,
     createMode: false,
     hoverTimer: null,
-    hoverKey: null
+    hoverKey: null,
+    bgHydrateRunning: false
   };
 
   function getToken() {
@@ -116,11 +122,10 @@
     return s.length >= 10 ? s.slice(0, 10) : s;
   }
 
-  // ✅ 26.02.05 포맷
+  // 26.02.05
   function fmtYYMMDD(d) {
     const iso = fmtDateISO(d);
     if (!iso) return '';
-    // iso: YYYY-MM-DD
     const yy = iso.slice(2,4);
     const mm = iso.slice(5,7);
     const dd = iso.slice(8,10);
@@ -143,7 +148,6 @@
     return 'ns';
   }
 
-  // ✅ 이니셜: NOT_STARTED(-), PLANNED(P), IN_PROGRESS(I), DONE(D), HOLD(H)
   function statusShort(st) {
     const s = String(st || '').toUpperCase();
     if (s === 'DONE') return 'D';
@@ -185,7 +189,6 @@
     try { return JSON.parse(raw); } catch { return {}; }
   }
 
-  // ✅ 셀 아래 날짜 표시 규칙
   // DONE: actual_end 우선, 없으면 actual_start
   // PLANNED: plan_end
   // IN_PROGRESS: actual_start ~ actual_end(있으면) / 없으면 actual_start~
@@ -202,14 +205,11 @@
       if (as) return `${as}~`;
       return '';
     }
-    if (st === 'HOLD') {
-      // HOLD는 날짜가 있으면 actual_start만이라도 보여주기
-      return firstNonEmpty(as, planEnd, '');
-    }
+    if (st === 'HOLD') return firstNonEmpty(as, planEnd, '');
     return '';
   }
 
-  // ✅ 진행율: DONE 비율(전체 Step 대비)
+  // Step 진행율: DONE 비율
   function calcProgressFromBoardRow(p) {
     const total = Number(p.total_steps || STEPS.length || 1);
     const done  = Number(p.done_steps || 0);
@@ -217,6 +217,71 @@
     return { pct, done, total };
   }
 
+  // ===========================
+  // ✅ Prereq 메타 계산 (락/진행률)
+  // ===========================
+  function computePrereqMeta(detail) {
+    const prereqs = Array.isArray(detail?.prereqs) ? detail.prereqs : [];
+
+    // active만
+    const active = prereqs.filter(p => Number(p.is_active ?? 1) === 1);
+
+    // 필수만(잠금 기준)
+    const required = active.filter(p => Number(p.is_required ?? 1) === 1);
+
+    const total = required.length;
+    const done = required.filter(p => Number(p.is_done ?? 0) === 1).length;
+    const pct = total ? Math.round((done / total) * 100) : 100;
+
+    // step별 필요한 prereq 미완료 목록
+    // 규칙: required_before_step_no <= stepNo 인 필수 조건이 done이 아니면 그 step은 잠김
+    const missingByStepNo = new Map(); // stepNo -> [prereqName...]
+    for (const step of STEPS) {
+      const stepNo = step.no;
+      const miss = required
+        .filter(p => p.required_before_step_no !== null && p.required_before_step_no !== undefined)
+        .filter(p => Number(p.required_before_step_no) <= stepNo)
+        .filter(p => Number(p.is_done ?? 0) !== 1)
+        .map(p => String(p.prereq_name || p.prereq_key || 'PREREQ'));
+
+      missingByStepNo.set(stepNo, miss);
+    }
+
+    // 전체 미완료(필수)
+    const missingRequiredNames = required
+      .filter(p => Number(p.is_done ?? 0) !== 1)
+      .map(p => String(p.prereq_name || p.prereq_key || 'PREREQ'));
+
+    return {
+      prRequiredTotal: total,
+      prRequiredDone: done,
+      prRequiredPct: pct,
+      missingByStepNo,
+      missingRequiredNames
+    };
+  }
+
+  function isStepLocked(setupId, stepNo) {
+    const meta = state.rowMeta.get(String(setupId));
+    if (!meta) return false;
+    const miss = meta.missingByStepNo.get(Number(stepNo)) || [];
+    return miss.length > 0;
+  }
+
+  function missingTextForStep(setupId, stepNo) {
+    const meta = state.rowMeta.get(String(setupId));
+    if (!meta) return '';
+    const miss = meta.missingByStepNo.get(Number(stepNo)) || [];
+    if (!miss.length) return '';
+    // 너무 길면 줄이기
+    const head = miss.slice(0, 3).join(', ');
+    const tail = miss.length > 3 ? ` 외 ${miss.length - 3}개` : '';
+    return `${head}${tail}`;
+  }
+
+  // ===========================
+  // Board Load / Render
+  // ===========================
   async function loadBoard() {
     const q = buildQuery({
       equipment_type: el.fEqType.value,
@@ -232,21 +297,27 @@
       const json = await apiFetch(`/api/setup-board?${q}`);
       const list = json?.data || [];
 
-      // ✅ 진행율 낮은 설비부터 정렬
+      // 진행율 낮은 설비부터 정렬
       list.sort((a, b) => {
         const pa = calcProgressFromBoardRow(a).pct;
         const pb = calcProgressFromBoardRow(b).pct;
         if (pa !== pb) return pa - pb;
-        // 동률이면 updated_at 오래된 것부터(좀 더 “밀린 것”이 위)
         const ta = String(a.updated_at || '');
         const tb = String(b.updated_at || '');
         return ta.localeCompare(tb);
       });
 
       state.list = list;
-
       renderTable();
+
       el.statCount.textContent = `설비 ${state.list.length}대`;
+      el.statHint.textContent = `· Prereq 잠금/진행률은 자동 로딩 후 반영됩니다.`;
+
+      // ✅ 백그라운드로 detail을 일부 미리 불러서:
+      // - Prereq 진행률/락 표시
+      // - 날짜 라벨
+      hydrateDetailsInBackground();
+
     } catch (e) {
       el.tableHost.innerHTML = `<div style="padding:16px;color:#b91c1c;">보드 로드 실패: ${escapeHtml(e.message)}</div>`;
       toast(`보드 로드 실패: ${e.message}`);
@@ -297,16 +368,24 @@
       });
     });
 
-    // 셀 클릭 -> 상태 토글 PATCH (필요 없으면 여기만 주석처리하면 됨)
+    // 셀 클릭 -> 상태 토글 PATCH
     el.tableHost.querySelectorAll('[data-cell="1"]').forEach(td => {
       td.addEventListener('click', async () => {
         const setupId = td.getAttribute('data-setup-id');
         const stepNo = Number(td.getAttribute('data-step-no'));
         if (!setupId || !stepNo) return;
+
+        // ✅ 잠김이면 토스트 안내 후 종료
+        if (isStepLocked(setupId, stepNo)) {
+          const msg = missingTextForStep(setupId, stepNo);
+          toast(`🔒 Prereq 미완료: ${msg}`);
+          return;
+        }
+
         await toggleCellStatus(td, setupId, stepNo);
       });
 
-      // hover tooltip (상세 날짜/작업자 등)
+      // hover tooltip
       td.addEventListener('mouseenter', onCellEnter);
       td.addEventListener('mousemove', onCellMove);
       td.addEventListener('mouseleave', onCellLeave);
@@ -316,21 +395,26 @@
   function renderRow(p) {
     const name = escapeHtml(p.equipment_name || '(no name)');
     const sub = escapeHtml([p.equipment_type || '-', p.site || '-', p.line || '-'].join(' · '));
-    const issues = Number(p.open_issues || 0) > 0 ? `<span class="issueMark" title="OPEN ISSUE">!</span>` : '';
 
     const stepMap = parseStepMap(p);
 
-    // ✅ 진행율 표시(센스 있게): % + 바 + done/total
+    // Step 진행율
     const prog = calcProgressFromBoardRow(p);
-    const progText = `${prog.pct}%`;
-    const progSub  = `${prog.done}/${prog.total}`;
+
+    // Prereq 진행율(상세 로드 전에는 unknown)
+    const meta = state.rowMeta.get(String(p.setup_id)) || null;
+    const prPct = meta ? meta.prRequiredPct : null;
+    const prDone = meta ? meta.prRequiredDone : null;
+    const prTot = meta ? meta.prRequiredTotal : null;
+
+    const prText = (prPct === null) ? '—' : `${prPct}%`;
+    const prSub  = (prPct === null) ? '' : `${prDone}/${prTot}`;
 
     const cells = STEPS.map(s => {
       const st = String(stepMap[String(s.no)] || 'NOT_STARTED').toUpperCase();
       const cls = statusToClass(st);
       const short = statusShort(st);
 
-      // ✅ 보드 리스트는 step 날짜가 없어서 “캐시 상세가 있으면” 그걸로 날짜 표시
       let dateLabel = '';
       const cached = state.detailCache.get(String(p.setup_id));
       if (cached?.steps) {
@@ -338,35 +422,58 @@
         if (row) dateLabel = buildStepDateLabel(row, st);
       }
 
+      const locked = isStepLocked(p.setup_id, s.no);
+      const lockTitle = locked ? `Prereq 미완료: ${missingTextForStep(p.setup_id, s.no)}` : '';
+
       return `
-        <td class="cell"
+        <td class="cell ${locked ? 'locked' : ''}"
             data-cell="1"
             data-setup-id="${p.setup_id}"
             data-step-no="${s.no}"
-            data-status="${st}">
+            data-status="${st}"
+            title="${escapeHtml(lockTitle)}">
           <div class="pillWrap">
             <span class="pill ${cls}">${short}</span>
             <div class="cellDate">${escapeHtml(dateLabel)}</div>
           </div>
+          ${locked ? `<div class="lockOverlay" aria-label="locked"><span class="lockEmoji">🔒</span></div>` : ``}
         </td>
       `;
     }).join('');
 
     return `
-      <tr>
+      <tr data-row="1" data-setup-id="${p.setup_id}">
         <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}">
           <div class="eq-top">
-            <div class="eq-name">${name} ${issues}</div>
+            <div class="eq-name">${name}</div>
+
             <div class="eq-progress">
-              <div class="progressBar" aria-label="progress ${prog.pct}%">
-                <div class="progressFill" style="width:${prog.pct}%;"></div>
+              <!-- ✅ Dual progress: Step / Prereq -->
+              <div class="dual">
+                <div class="dualRow">
+                  <span class="dualLabel">STEP</span>
+                  <div class="progressBar" aria-label="step progress ${prog.pct}%">
+                    <div class="progressFill" style="width:${prog.pct}%;"></div>
+                  </div>
+                  <span class="dualPct">${escapeHtml(`${prog.pct}%`)}</span>
+                </div>
+
+                <div class="dualRow">
+                  <span class="dualLabel pr">PR</span>
+                  <div class="progressBar prBar" aria-label="prereq progress">
+                    <div class="progressFill prFill" style="width:${prPct === null ? 0 : prPct}%;"></div>
+                  </div>
+                  <span class="dualPct prText">${escapeHtml(prText)}</span>
+                </div>
               </div>
+
               <div class="progressMeta">
-                <span class="progressPct">${escapeHtml(progText)}</span>
-                <span class="progressSub muted">${escapeHtml(progSub)}</span>
+                <span class="progressSub muted">${escapeHtml(`${prog.done}/${prog.total}`)}</span>
+                <span class="progressSub muted prSubText">${escapeHtml(prSub)}</span>
               </div>
             </div>
           </div>
+
           <div class="eq-sub">${sub}</div>
         </td>
         ${cells}
@@ -379,10 +486,92 @@
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`);
     const data = json?.data;
     state.detailCache.set(setupId, data);
+
+    // ✅ Prereq 메타 계산 저장
+    try {
+      const meta = computePrereqMeta(data);
+      state.rowMeta.set(String(setupId), meta);
+    } catch {}
+
     return data;
   }
 
-  // ✅ Start Date Auto: STEP1 Actual Start 우선 → 없으면 Plan End(예정이라도) → 빈값
+  // ✅ 보드 row DOM에 detail 기반(Prereq/락/날짜) 반영
+  function applyDetailToBoardRow(setupId, detail) {
+    const sid = String(setupId);
+    const row = el.tableHost.querySelector(`[data-row="1"][data-setup-id="${sid}"]`);
+    if (!row) return;
+
+    const meta = state.rowMeta.get(sid) || computePrereqMeta(detail);
+    state.rowMeta.set(sid, meta);
+
+    // Prereq bar/텍스트 업데이트
+    const prFill = row.querySelector('.prFill');
+    const prTextEl = row.querySelector('.prText');
+    const prSubText = row.querySelector('.prSubText');
+    if (prFill) prFill.style.width = `${meta.prRequiredPct}%`;
+    if (prTextEl) prTextEl.textContent = `${meta.prRequiredPct}%`;
+    if (prSubText) prSubText.textContent = `${meta.prRequiredDone}/${meta.prRequiredTotal}`;
+
+    // 각 셀 락 + 날짜 라벨 업데이트
+    const stepRows = Array.isArray(detail?.steps) ? detail.steps : [];
+    row.querySelectorAll('[data-cell="1"]').forEach(td => {
+      const stepNo = Number(td.getAttribute('data-step-no'));
+      const st = String(td.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
+
+      // 날짜
+      const srow = stepRows.find(x => Number(x.step_no) === stepNo) || null;
+      const label = srow ? buildStepDateLabel(srow, st) : '';
+      const dateEl = td.querySelector('.cellDate');
+      if (dateEl) dateEl.textContent = label || '';
+
+      // 락
+      const locked = isStepLocked(sid, stepNo);
+      td.classList.toggle('locked', locked);
+
+      const title = locked ? `Prereq 미완료: ${missingTextForStep(sid, stepNo)}` : '';
+      td.setAttribute('title', title);
+
+      const overlay = td.querySelector('.lockOverlay');
+      if (locked && !overlay) {
+        td.insertAdjacentHTML('beforeend', `<div class="lockOverlay" aria-label="locked"><span class="lockEmoji">🔒</span></div>`);
+      }
+      if (!locked && overlay) overlay.remove();
+    });
+  }
+
+  // ✅ 백그라운드로 일부 detail을 미리 로드(Prereq/락/날짜 반영)
+  async function hydrateDetailsInBackground() {
+    if (state.bgHydrateRunning) return;
+    state.bgHydrateRunning = true;
+
+    const ids = state.list.map(x => String(x.setup_id)).filter(Boolean);
+
+    // 너무 과하게 때리지 않도록 상위 60개만(스크롤/필터에 따라 충분)
+    const target = ids.slice(0, 60);
+
+    const concurrency = 6;
+    let idx = 0;
+
+    async function worker() {
+      while (idx < target.length) {
+        const my = target[idx++];
+        try {
+          const detail = await ensureDetail(my);
+          applyDetailToBoardRow(my, detail);
+        } catch {}
+      }
+    }
+
+    const tasks = Array.from({ length: concurrency }, worker);
+    await Promise.all(tasks);
+
+    state.bgHydrateRunning = false;
+  }
+
+  // ===========================
+  // Project Start Date Auto
+  // ===========================
   function computeAutoStartDate(detail) {
     const p = detail?.project || {};
     const steps = detail?.steps || [];
@@ -420,12 +609,16 @@
     const cur = (td.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
     const nxt = nextStatus(cur);
 
-    // 날짜는 "상세 캐시" 기준으로만 계산 가능
+    // detail 기반 날짜 계산(없으면 빈)
     let dateLabel = '';
     const cached = state.detailCache.get(String(setupId));
     if (cached?.steps) {
       const row = cached.steps.find(x => Number(x.step_no) === Number(stepNo)) || null;
-      if (row) dateLabel = buildStepDateLabel(row, nxt);
+      if (row) {
+        // nxt 상태를 적용했을 때의 날짜 라벨을 추정
+        // (실제 날짜는 저장 후 다시 detail 로드/캐시 갱신으로 반영됨)
+        dateLabel = buildStepDateLabel(row, nxt);
+      }
     }
 
     updateCellUI(td, nxt, dateLabel, 'saving...');
@@ -437,15 +630,19 @@
       });
 
       td.setAttribute('data-status', nxt);
-      updateCellUI(td, nxt, dateLabel, '');
 
-      // 캐시 있으면 반영
+      // 캐시 업데이트
       if (cached?.steps) {
         const row = cached.steps.find(x => Number(x.step_no) === Number(stepNo));
         if (row) row.status = nxt;
       }
 
-      // 진행율 재정렬을 위해 리스트 재로드(가볍게)
+      // 최신 detail 다시 불러서(날짜/락/Prereq 모두 정합)
+      state.detailCache.delete(String(setupId));
+      const detail = await ensureDetail(String(setupId));
+      applyDetailToBoardRow(String(setupId), detail);
+
+      // 진행율 정렬 반영 위해 보드 리로드
       await loadBoard();
 
       toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} → ${nxt} 저장됨`);
@@ -491,18 +688,8 @@
       const detail = await ensureDetail(setupId);
       if (state.hoverKey !== key) return;
 
-      // ✅ 보드 셀 하단 날짜를 채우기 위해: 상세 캐시 확보 후 테이블 날짜도 갱신
-      // (현재 hover가 발생한 setupId는 이미 detailCache에 들어있음)
-      // 날짜 표시 업데이트(현재 행만)
-      const rowTds = document.querySelectorAll(`[data-cell="1"][data-setup-id="${setupId}"]`);
-      rowTds.forEach(cell => {
-        const no = Number(cell.getAttribute('data-step-no'));
-        const st = String(cell.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
-        const stepRow = (detail?.steps || []).find(x => Number(x.step_no) === no) || null;
-        const label = stepRow ? buildStepDateLabel(stepRow, st) : '';
-        const dateEl = cell.querySelector('.cellDate');
-        if (dateEl) dateEl.textContent = label || '';
-      });
+      // 보드 row 반영(Prereq/락/날짜)
+      applyDetailToBoardRow(setupId, detail);
 
       const stepName = STEPS.find(s => s.no === stepNo)?.name || `STEP ${stepNo}`;
       const steps = detail?.steps || [];
@@ -514,8 +701,13 @@
       const workers = firstNonEmpty(row.workers, '-');
       const note = firstNonEmpty(row.note, '-');
 
+      // 해당 step 잠김 안내
+      const locked = isStepLocked(setupId, stepNo);
+      const miss = locked ? missingTextForStep(setupId, stepNo) : '';
+
       el.tooltip.innerHTML = `
-        <div class="tip-title">${escapeHtml(stepName)}</div>
+        <div class="tip-title">${escapeHtml(stepName)} ${locked ? `<span class="tip-lock">🔒</span>` : ``}</div>
+        ${locked ? `<div class="tip-warn">Prereq 미완료: ${escapeHtml(miss)}</div>` : ``}
         <div class="tip-grid">
           <div class="tip-k">Plan End</div><div class="tip-v">${escapeHtml(planEnd)}</div>
           <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(as)}</div>
@@ -565,6 +757,8 @@
     state.selectedSetupId = null;
     state.createMode = false;
     el.btnSaveProject.textContent = 'SAVE';
+    el.prereqHost.innerHTML = '';
+    el.prSummary.textContent = '-';
   }
 
   function openCreateModal() {
@@ -584,7 +778,9 @@
     el.p_last_note.value = '';
     el.p_start_date_auto.value = '';
 
-    // ✅ 신규 설비 추가 모달에서 Steps 안내문/Issues 안내문 제거
+    // 신규 생성에서는 prereq/steps 표시 안내 제거(요구사항)
+    el.prereqHost.innerHTML = '';
+    el.prSummary.textContent = '· 생성 후 자동 생성됩니다.';
     el.stepsHost.innerHTML = '';
 
     el.btnSaveProject.textContent = 'CREATE';
@@ -603,12 +799,15 @@
 
     el.mTitle.textContent = '로딩 중...';
     el.mMeta.textContent = '';
+    el.prereqHost.innerHTML = '';
+    el.prSummary.textContent = '';
     el.stepsHost.innerHTML = '';
     el.projSaveHint.textContent = '';
 
     try {
       const data = await ensureDetail(String(setupId));
       renderModal(data);
+      applyDetailToBoardRow(String(setupId), data);
     } catch (e) {
       el.mTitle.textContent = '상세 로드 실패';
       el.mMeta.textContent = e.message;
@@ -619,6 +818,7 @@
   function renderModal(data) {
     const p = data?.project || {};
     const steps = data?.steps || [];
+    const prereqs = Array.isArray(data?.prereqs) ? data.prereqs : [];
 
     el.mTitle.textContent = p.equipment_name || `SETUP #${p.id || ''}`;
     el.mMeta.textContent = [
@@ -638,25 +838,160 @@
 
     el.p_start_date_auto.value = computeAutoStartDate(data) || '';
 
+    // ===========================
+    // ✅ Prereq 렌더
+    // ===========================
+    const meta = computePrereqMeta(data);
+    state.rowMeta.set(String(p.id), meta);
+
+    el.prSummary.textContent = `· 필수 ${meta.prRequiredDone}/${meta.prRequiredTotal} (${meta.prRequiredPct}%)`;
+
+    // 정렬: sort_order, 없으면 required_before_step_no, 없으면 name
+    const sorted = prereqs.slice().sort((a, b) => {
+      const sa = Number(a.sort_order ?? 999);
+      const sb = Number(b.sort_order ?? 999);
+      if (sa !== sb) return sa - sb;
+      const ra = Number(a.required_before_step_no ?? 999);
+      const rb = Number(b.required_before_step_no ?? 999);
+      if (ra !== rb) return ra - rb;
+      return String(a.prereq_name || a.prereq_key || '').localeCompare(String(b.prereq_name || b.prereq_key || ''));
+    });
+
+    el.prereqHost.innerHTML = sorted.map(pr => {
+      const key = String(pr.prereq_key || '');
+      const name = String(pr.prereq_name || pr.prereq_key || 'PREREQ');
+      const desc = String(pr.description || '');
+      const isRequired = Number(pr.is_required ?? 1) === 1;
+      const beforeNo = pr.required_before_step_no === null || typeof pr.required_before_step_no === 'undefined'
+        ? null
+        : Number(pr.required_before_step_no);
+      const isDone = Number(pr.is_done ?? 0) === 1;
+
+      const beforeLabel = beforeNo ? `STEP ${beforeNo} (${STEPS.find(s=>s.no===beforeNo)?.name || ''}) 전` : '—';
+      const badge = isRequired ? `<span class="tag req">필수</span>` : `<span class="tag opt">권장</span>`;
+
+      return `
+        <div class="pr-item" data-pr-key="${escapeHtml(key)}">
+          <label class="pr-check">
+            <input type="checkbox" ${isDone ? 'checked' : ''} data-pr-done="1"/>
+            <span class="pr-title">${escapeHtml(name)}</span>
+          </label>
+
+          <div class="pr-meta">
+            ${badge}
+            <span class="muted small">· ${escapeHtml(beforeLabel)}</span>
+          </div>
+
+          ${desc ? `<div class="pr-desc">${escapeHtml(desc)}</div>` : ``}
+
+          <div class="pr-actions">
+            <input class="pr-note" type="text" placeholder="메모(선택)" value="${escapeHtml(pr.note || '')}" data-pr-note="1"/>
+            <button class="btn prBtn" data-pr-save="1">저장</button>
+            <span class="muted small prHint" data-pr-hint="1"></span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // prereq 이벤트
+    el.prereqHost.querySelectorAll('.pr-item').forEach(item => {
+      const key = item.getAttribute('data-pr-key');
+      const chk = item.querySelector('[data-pr-done="1"]');
+      const note = item.querySelector('[data-pr-note="1"]');
+      const btn = item.querySelector('[data-pr-save="1"]');
+      const hint = item.querySelector('[data-pr-hint="1"]');
+
+      const save = async () => {
+        const setupId = state.selectedSetupId;
+        if (!setupId) return;
+
+        const is_done = chk.checked ? 1 : 0;
+        const payload = { is_done, note: note.value.trim() || null };
+
+        try {
+          hint.textContent = 'saving...';
+          await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs/${encodeURIComponent(key)}`, {
+            method: 'PATCH',
+            body: payload
+          });
+
+          // cache 업데이트(최소 반영)
+          const cached = state.detailCache.get(String(setupId));
+          if (cached?.prereqs) {
+            const row = cached.prereqs.find(x => String(x.prereq_key) === String(key));
+            if (row) {
+              row.is_done = is_done;
+              row.note = payload.note;
+              row.done_at = is_done ? (row.done_at || new Date().toISOString().slice(0,19).replace('T',' ')) : null;
+            }
+          }
+
+          // 메타 재계산 후 UI 반영
+          const detailNow = state.detailCache.get(String(setupId)) || data;
+          const metaNow = computePrereqMeta(detailNow);
+          state.rowMeta.set(String(setupId), metaNow);
+          el.prSummary.textContent = `· 필수 ${metaNow.prRequiredDone}/${metaNow.prRequiredTotal} (${metaNow.prRequiredPct}%)`;
+
+          // Step 카드들 잠금 안내/보드 락 반영
+          renderStepsWithLocks(detailNow);
+
+          // 보드 row 반영
+          applyDetailToBoardRow(String(setupId), detailNow);
+
+          hint.textContent = 'saved ✅';
+          toast('Prereq 저장 완료');
+
+          setTimeout(() => (hint.textContent = ''), 1200);
+        } catch (e) {
+          hint.textContent = `fail: ${e.message}`;
+          toast(`Prereq 저장 실패: ${e.message}`);
+        }
+      };
+
+      btn.addEventListener('click', save);
+      // 체크만 바꿔도 바로 저장하고 싶으면(UX 더 좋음)
+      chk.addEventListener('change', save);
+    });
+
+    // ===========================
+    // ✅ Steps 렌더 (Prereq 잠금 포함)
+    // ===========================
+    renderStepsWithLocks(data);
+  }
+
+  function renderStepsWithLocks(data) {
+    const steps = data?.steps || [];
+    const setupId = state.selectedSetupId || String(data?.project?.id || '');
+
     const byNo = new Map();
     for (const s of steps) byNo.set(Number(s.step_no), s);
+
+    // step별 미완료 prereq 계산
+    const meta = state.rowMeta.get(String(setupId)) || computePrereqMeta(data);
 
     el.stepsHost.innerHTML = STEPS.map(t => {
       const s = byNo.get(t.no) || {};
       const st = (s.status || 'NOT_STARTED').toUpperCase();
       const desc = s.step_description ? String(s.step_description) : '';
 
-      // ✅ Plan Start 제거 → Plan End만
       const planEnd = fmtDateISO(s.plan_end);
       const actualStart = fmtDateISO(s.actual_start);
       const actualEnd = fmtDateISO(s.actual_end);
 
+      const missing = meta.missingByStepNo.get(t.no) || [];
+      const locked = missing.length > 0;
+
+      const missText = missing.length
+        ? `${missing.slice(0, 4).join(', ')}${missing.length > 4 ? ` 외 ${missing.length - 4}개` : ''}`
+        : '';
+
       return `
-        <div class="step-card" data-step-card="1" data-step-no="${t.no}">
+        <div class="step-card ${locked ? 'stepLocked' : ''}" data-step-card="1" data-step-no="${t.no}">
           <div class="step-top">
             <div>
               <div class="step-card-title">${escapeHtml(t.name)}</div>
               ${desc ? `<div class="step-desc">${escapeHtml(desc)}</div>` : ``}
+              ${locked ? `<div class="step-lock-hint">🔒 Prereq 미완료: ${escapeHtml(missText)}</div>` : ``}
             </div>
             <div>
               <span class="pill ${statusToClass(st)}" data-pill="1">${statusShort(st)}</span>
@@ -666,7 +1001,7 @@
           <div class="step-grid step-grid-planend">
             <div class="field">
               <label>Status</label>
-              <select data-field="status">
+              <select data-field="status" ${locked ? 'disabled' : ''}>
                 <option value="NOT_STARTED" ${st==='NOT_STARTED'?'selected':''}>NOT_STARTED</option>
                 <option value="PLANNED" ${st==='PLANNED'?'selected':''}>PLANNED</option>
                 <option value="IN_PROGRESS" ${st==='IN_PROGRESS'?'selected':''}>IN_PROGRESS</option>
@@ -677,38 +1012,39 @@
 
             <div class="field">
               <label>Plan End</label>
-              <input type="date" data-field="plan_end" value="${escapeHtml(planEnd)}"/>
+              <input type="date" data-field="plan_end" value="${escapeHtml(planEnd)}" ${locked ? 'disabled' : ''}/>
             </div>
 
             <div class="field">
               <label>Actual Start</label>
-              <input type="date" data-field="actual_start" value="${escapeHtml(actualStart)}"/>
+              <input type="date" data-field="actual_start" value="${escapeHtml(actualStart)}" ${locked ? 'disabled' : ''}/>
             </div>
 
             <div class="field">
               <label>Actual End</label>
-              <input type="date" data-field="actual_end" value="${escapeHtml(actualEnd)}"/>
+              <input type="date" data-field="actual_end" value="${escapeHtml(actualEnd)}" ${locked ? 'disabled' : ''}/>
             </div>
 
             <div class="field">
               <label>Workers</label>
-              <input type="text" data-field="workers" value="${escapeHtml(s.workers || '')}" placeholder="정현우,김동한"/>
+              <input type="text" data-field="workers" value="${escapeHtml(s.workers || '')}" placeholder="정현우,김동한" ${locked ? 'disabled' : ''}/>
             </div>
 
             <div class="field wide note-wide">
               <label>Note</label>
-              <input type="text" data-field="note" value="${escapeHtml(s.note || '')}" placeholder="특이사항"/>
+              <input type="text" data-field="note" value="${escapeHtml(s.note || '')}" placeholder="특이사항" ${locked ? 'disabled' : ''}/>
             </div>
           </div>
 
           <div class="step-actions">
             <span class="muted small" data-hint="1"></span>
-            <button class="btn primary" data-save-step="1">SAVE</button>
+            <button class="btn primary" data-save-step="1" ${locked ? 'disabled' : ''}>SAVE</button>
           </div>
         </div>
       `;
     }).join('');
 
+    // step 이벤트 바인딩
     el.stepsHost.querySelectorAll('[data-step-card="1"]').forEach(card => {
       const stepNo = Number(card.getAttribute('data-step-no'));
       const selStatus = card.querySelector('[data-field="status"]');
@@ -716,83 +1052,88 @@
       const hint = card.querySelector('[data-hint="1"]');
       const btn = card.querySelector('[data-save-step="1"]');
 
-      selStatus.addEventListener('change', () => {
-        const st = selStatus.value;
-        pill.classList.remove('ns','pl','ip','dn','hd');
-        pill.classList.add(statusToClass(st));
-        pill.textContent = statusShort(st);
-      });
-
-      btn.addEventListener('click', async () => {
-        const setupId = state.selectedSetupId;
-        if (!setupId) return;
-
-        const patch = {};
-        card.querySelectorAll('[data-field]').forEach(inp => {
-          const k = inp.getAttribute('data-field');
-          const v = inp.value;
-          patch[k] = v === '' ? null : v;
+      if (selStatus) {
+        selStatus.addEventListener('change', () => {
+          const st = selStatus.value;
+          pill.classList.remove('ns','pl','ip','dn','hd');
+          pill.classList.add(statusToClass(st));
+          pill.textContent = statusShort(st);
         });
+      }
 
-        // 간단 검증
-        if (patch.actual_start && patch.actual_end && patch.actual_end < patch.actual_start) {
-          toast('Actual End가 Actual Start보다 빠를 수 없습니다.');
-          return;
-        }
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          const setupId = state.selectedSetupId;
+          if (!setupId) return;
 
-        try {
-          hint.textContent = 'saving...';
-          await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
-            method: 'PATCH',
-            body: patch
+          // ✅ 잠김이면 저장 막고 안내
+          if (isStepLocked(setupId, stepNo)) {
+            toast(`🔒 Prereq 미완료: ${missingTextForStep(setupId, stepNo)}`);
+            return;
+          }
+
+          const patch = {};
+          card.querySelectorAll('[data-field]').forEach(inp => {
+            const k = inp.getAttribute('data-field');
+            const v = inp.value;
+            patch[k] = v === '' ? null : v;
           });
 
-          // cache update
-          const cached = state.detailCache.get(setupId);
-          if (cached && Array.isArray(cached.steps)) {
-            const row = cached.steps.find(x => Number(x.step_no) === stepNo);
-            if (row) Object.assign(row, patch);
+          if (patch.actual_start && patch.actual_end && patch.actual_end < patch.actual_start) {
+            toast('Actual End가 Actual Start보다 빠를 수 없습니다.');
+            return;
           }
 
-          // ✅ STEP1 날짜가 생기면 start_date 자동 반영(서버에 start_date 컬럼이 있을 때)
-          if (stepNo === 1) {
-            const autoISO = firstNonEmpty(patch.actual_start, patch.plan_end, null);
-            if (autoISO) {
-              try {
-                await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`, {
-                  method: 'PATCH',
-                  body: { start_date: autoISO }
-                });
-              } catch {}
+          try {
+            hint.textContent = 'saving...';
+            await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
+              method: 'PATCH',
+              body: patch
+            });
+
+            // cache update
+            const cached = state.detailCache.get(setupId);
+            if (cached && Array.isArray(cached.steps)) {
+              const row = cached.steps.find(x => Number(x.step_no) === stepNo);
+              if (row) Object.assign(row, patch);
             }
+
+            // STEP1 날짜가 생기면 start_date 자동 반영
+            if (stepNo === 1) {
+              const autoISO = firstNonEmpty(patch.actual_start, patch.plan_end, null);
+              if (autoISO) {
+                try {
+                  await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`, {
+                    method: 'PATCH',
+                    body: { start_date: autoISO }
+                  });
+                } catch {}
+              }
+            }
+
+            hint.textContent = 'saved ✅';
+
+            // 최신 detail 재반영
+            state.detailCache.delete(setupId);
+            const fresh = await ensureDetail(setupId);
+
+            // 모달 재렌더(Prereq 잠금 포함)
+            renderModal(fresh);
+
+            // 보드 반영
+            applyDetailToBoardRow(setupId, fresh);
+
+            // 진행율 정렬 반영 위해 리로드
+            await loadBoard();
+
+            toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
+            setTimeout(() => (hint.textContent = ''), 1300);
+          } catch (e) {
+            hint.textContent = `fail: ${e.message}`;
+            toast(`STEP 저장 실패: ${e.message}`);
           }
-
-          hint.textContent = 'saved ✅';
-
-          // 보드 셀 즉시 반영 + 하단 날짜 표시 업데이트
-          const td = el.tableHost.querySelector(
-            `[data-cell="1"][data-setup-id="${setupId}"][data-step-no="${stepNo}"]`
-          );
-          if (td) {
-            const nowStatus = patch.status || td.getAttribute('data-status') || 'NOT_STARTED';
-            td.setAttribute('data-status', String(nowStatus).toUpperCase());
-
-            const cached2 = state.detailCache.get(setupId);
-            const stepRow = cached2?.steps?.find(x => Number(x.step_no) === stepNo) || {};
-            const label = buildStepDateLabel(stepRow, nowStatus);
-            updateCellUI(td, nowStatus, label, '');
-          }
-
-          // 진행율 정렬 반영 위해 리로드
-          await loadBoard();
-
-          toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
-          setTimeout(() => (hint.textContent = ''), 1500);
-        } catch (e) {
-          hint.textContent = `fail: ${e.message}`;
-          toast(`STEP 저장 실패: ${e.message}`);
-        }
-      });
+        });
+      }
     });
   }
 

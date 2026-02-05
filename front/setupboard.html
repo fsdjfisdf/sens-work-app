@@ -93,8 +93,19 @@
         <span class="chip"><span class="dot ip"></span>IN_PROGRESS(I)</span>
         <span class="chip"><span class="dot dn"></span>DONE(D)</span>
         <span class="chip"><span class="dot hd"></span>HOLD(H)</span>
-        <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
+
+        <span class="chip prereqChip">
+          <span class="prIcon">✓</span>
+          Prereq
+        </span>
+
+        <span class="chip lockChip">
+          <span class="lockIcon">🔒</span>
+          Prereq 미완료로 잠김
+        </span>
+
         <span class="muted small">· 설비명 클릭: 상세 모달</span>
+        <span class="muted small">· 셀 클릭: 상태 토글/저장 (잠김이면 안내)</span>
       </div>
     </section>
 
@@ -102,6 +113,7 @@
       <div class="board-head">
         <div class="board-title">
           <b id="statCount">-</b>
+          <span class="muted small" id="statHint"></span>
         </div>
       </div>
 
@@ -181,12 +193,19 @@
           </div>
         </div>
 
+        <!-- ✅ Prereq 섹션 (외부 선행조건 체크) -->
+        <div class="section">
+          <div class="section-title">
+            Prereq (타업체 선행조건)
+            <span class="muted small" id="prSummary">-</span>
+          </div>
+          <div id="prereqHost" class="prereq-host"></div>
+        </div>
+
         <div class="section">
           <div class="section-title">Steps</div>
           <div id="stepsHost" class="steps-host"></div>
         </div>
-
-        <!-- ✅ Issues 섹션 제거 -->
       </div>
     </div>
   </div>

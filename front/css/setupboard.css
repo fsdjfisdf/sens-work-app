@@ -12,7 +12,13 @@
   --ip:#fbbf24;
   --dn:#22c55e;
   --hd:#94a3b8;
+
   --danger:#ef4444;
+
+  /* prereq accent */
+  --pr:#8b5cf6;
+  --prBg: rgba(139,92,246,.15);
+  --lockBg: rgba(15,23,42,.06);
 }
 
 *{box-sizing:border-box}
@@ -24,6 +30,7 @@ body{
   color:var(--text);
 }
 
+/* ========== Topbar ========== */
 .topbar{
   position:sticky; top:0; z-index:50;
   background:rgba(255,255,255,.92);
@@ -40,13 +47,13 @@ body{
 
 .page{padding:16px 18px 26px; max-width:100%}
 
+/* ========== Card / Button ========== */
 .card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:16px;
   box-shadow:var(--shadow);
 }
-
 .btn{
   border:1px solid var(--line);
   background:#fff;
@@ -63,6 +70,7 @@ body{
 .muted{color:var(--muted)}
 .small{font-size:12px}
 
+/* ========== Filters ========== */
 .filters{padding:14px}
 .filters-grid{
   display:grid;
@@ -89,6 +97,7 @@ body{
 }
 .field.wide{grid-column: span 2}
 
+/* ========== Legend Chips ========== */
 .legend{
   margin-top:12px;
   padding-top:12px;
@@ -115,30 +124,37 @@ body{
 .dot.dn{background:var(--dn)}
 .dot.hd{background:var(--hd)}
 
-.issueMark{
+.prereqChip .prIcon{
   display:inline-flex;
   width:18px;height:18px;
-  border-radius:6px;
   align-items:center; justify-content:center;
-  background: rgba(239,68,68,.12);
-  color: var(--danger);
-  border:1px solid rgba(239,68,68,.25);
+  border-radius:6px;
+  background: var(--prBg);
+  color: var(--pr);
+  border:1px solid rgba(139,92,246,.25);
   font-weight:1000;
 }
+.lockChip .lockIcon{
+  display:inline-flex;
+  width:18px;height:18px;
+  align-items:center; justify-content:center;
+  border-radius:6px;
+  background: rgba(15,23,42,.06);
+  border:1px solid rgba(15,23,42,.14);
+}
 
+/* ========== Board/Table ========== */
 .board{padding:12px; margin-top:14px}
 .board-head{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   margin-bottom:10px;
 }
-
 .table-host{
   border:1px solid var(--line);
   border-radius:12px;
   overflow:auto;
   background:#fff;
 }
-
 .table{
   width:100%;
   border-collapse:separate;
@@ -177,10 +193,9 @@ body{
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.step-name-only{
-  font-weight:1000;
-}
+.step-name-only{font-weight:1000}
 
+/* ========== Equipment cell header ========== */
 .eq-top{
   display:flex;
   align-items:flex-start;
@@ -203,16 +218,45 @@ body{
   max-width: 340px;
 }
 
-/* ✅ 진행율 UI */
+/* ✅ Dual progress (STEP + PREREQ) */
 .eq-progress{
   display:flex;
   flex-direction:column;
   align-items:flex-end;
   gap:6px;
-  min-width: 120px;
+  min-width: 170px;
 }
+.dual{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width: 170px;
+}
+.dualRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.dualLabel{
+  width:36px;
+  font-size:10px;
+  font-weight:1000;
+  color: rgba(17,24,39,.65);
+  text-align:right;
+}
+.dualLabel.pr{ color: rgba(139,92,246,.90); }
+
+.dualPct{
+  width:44px;
+  text-align:left;
+  font-weight:1000;
+  font-size:11px;
+  color: rgba(17,24,39,.75);
+}
+.dualPct.prText{ color: rgba(139,92,246,.90); }
+
 .progressBar{
-  width: 120px;
+  width: 92px;
   height: 8px;
   border-radius: 999px;
   background: rgba(17,24,39,.08);
@@ -223,25 +267,31 @@ body{
   height: 100%;
   background: rgba(37,99,235,.80);
 }
+.prBar{
+  background: rgba(139,92,246,.10);
+  border-color: rgba(139,92,246,.18);
+}
+.prFill{
+  background: rgba(139,92,246,.80);
+}
 .progressMeta{
   display:flex;
   align-items:center;
-  gap:8px;
-}
-.progressPct{
-  font-weight:1000;
-  font-size:12px;
+  justify-content:flex-end;
+  gap:10px;
 }
 .progressSub{
   font-weight:900;
   font-size:11px;
 }
 
+/* ========== Step cells ========== */
 .cell{
   text-align:center;
   cursor:pointer;
   user-select:none;
   padding:6px 6px;
+  position:relative;
 }
 .cell:hover{background: rgba(37,99,235,.05)}
 
@@ -251,7 +301,6 @@ body{
   align-items:center;
   gap:4px;
 }
-
 .pill{
   display:inline-flex;
   align-items:center; justify-content:center;
@@ -271,7 +320,7 @@ body{
   font-size:10px;
   color: var(--muted);
   font-weight:900;
-  min-height: 12px; /* 빈칸이어도 높이 유지 */
+  min-height: 12px;
 }
 
 .cell .saving{
@@ -281,6 +330,25 @@ body{
   font-weight:900;
 }
 
+/* ✅ Locked overlay */
+.cell.locked{background: var(--lockBg)}
+.cell.locked:hover{background: rgba(15,23,42,.08)}
+.lockOverlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(255,255,255,.40);
+  backdrop-filter: blur(1px);
+  border-radius: 6px;
+}
+.lockEmoji{
+  font-size:16px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.12));
+}
+
+/* ========== Modal ========== */
 .modal{
   position:fixed; inset:0; z-index:200;
   display:flex; align-items:center; justify-content:center;
@@ -328,6 +396,88 @@ body{
   justify-content:flex-end;
 }
 
+/* ========== Prereq Section ========== */
+.prereq-host{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.pr-item{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+}
+.pr-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:1000;
+}
+.pr-check input{
+  width:18px;height:18px;
+  accent-color: var(--pr);
+}
+.pr-title{
+  font-weight:1000;
+}
+.pr-meta{
+  margin-top:6px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.tag{
+  font-size:11px;
+  font-weight:1000;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+}
+.tag.req{
+  background: var(--prBg);
+  color: var(--pr);
+  border-color: rgba(139,92,246,.25);
+}
+.tag.opt{
+  background: rgba(17,24,39,.06);
+  color: rgba(17,24,39,.70);
+  border-color: rgba(17,24,39,.12);
+}
+.pr-desc{
+  margin-top:8px;
+  font-size:12px;
+  color: var(--muted);
+  white-space:pre-wrap;
+}
+.pr-actions{
+  margin-top:10px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+.pr-note{
+  flex: 1 1 240px;
+  min-width: 220px;
+  padding:10px 10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  outline:none;
+  background:#fff;
+}
+.pr-note:focus{
+  border-color: rgba(139,92,246,.45);
+  box-shadow: 0 0 0 4px rgba(139,92,246,.12);
+}
+.prBtn{
+  border-color: rgba(139,92,246,.25);
+}
+
+/* ========== Steps cards ========== */
 .steps-host{
   display:flex;
   flex-direction:column;
@@ -346,9 +496,30 @@ body{
   align-items:flex-start;
 }
 .step-card-title{font-weight:1000}
-.step-desc{margin-top:4px; font-size:12px; color:var(--muted); white-space:pre-wrap}
+.step-desc{
+  margin-top:4px;
+  font-size:12px;
+  color:var(--muted);
+  white-space:pre-wrap;
+}
 
-/* ✅ Plan Start 제거 -> Plan End/Actual S/Actual E/Workers + Note */
+/* ✅ locked step card */
+.stepLocked{
+  background: rgba(15,23,42,.03);
+  border-color: rgba(15,23,42,.12);
+}
+.step-lock-hint{
+  margin-top:8px;
+  font-size:12px;
+  font-weight:900;
+  color: rgba(15,23,42,.75);
+  background: rgba(15,23,42,.06);
+  border: 1px solid rgba(15,23,42,.10);
+  padding:8px 10px;
+  border-radius: 12px;
+}
+
+/* Plan End / Actual S/E / Workers + Note */
 .step-grid.step-grid-planend{
   margin-top:10px;
   display:grid;
@@ -367,6 +538,7 @@ body{
   align-items:center;
 }
 
+/* ========== Toast ========== */
 .toast{
   position:fixed;
   bottom:18px;
@@ -381,7 +553,7 @@ body{
 }
 .toast.hidden{display:none}
 
-/* Hover tooltip */
+/* ========== Hover tooltip ========== */
 .tooltip{
   position:fixed;
   z-index:260;
@@ -399,6 +571,26 @@ body{
 .tip-title{
   font-weight:1000;
   margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.tip-lock{
+  display:inline-flex;
+  padding:2px 6px;
+  border-radius:999px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.18);
+  font-size:11px;
+  font-weight:1000;
+}
+.tip-warn{
+  margin-bottom:8px;
+  padding:8px 10px;
+  border-radius:12px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  font-weight:900;
 }
 .tip-grid{
   display:grid;
@@ -408,6 +600,7 @@ body{
 .tip-k{color: rgba(255,255,255,.70); font-weight:900}
 .tip-v{color:#fff; font-weight:700; white-space:pre-wrap}
 
+/* ========== Responsive ========== */
 @media (max-width: 1100px){
   .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .field.wide{grid-column: span 2}
