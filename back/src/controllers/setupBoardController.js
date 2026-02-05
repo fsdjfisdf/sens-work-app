@@ -211,20 +211,44 @@ exports.listProjectAudit = async (req, res) => {
   }
 };
 
+exports.getPrereqs = async (req, res) => {
+  try {
+    const setupId = req.params.id;
+    const data = await dao.getPrereqsMap(setupId); // { [prereq_key]: {...} }
+    res.json({ ok: true, data });
+  } catch (err) {
+    console.error('[setupBoardController.getPrereqs] error:', err);
+    res.status(500).json({ ok: false, error: err.message || 'get prereqs failed' });
+  }
+};
+
+// 프론트 경로(:code) 대응용
+exports.updatePrereqByCode = async (req, res) => {
+  req.params.key = req.params.code;
+  return exports.updatePrereq(req, res);
+};
+
 exports.updatePrereq = async (req, res) => {
   try {
     const actor = req.user?.nickname || req.user?.userID || 'unknown';
     const setupId = req.params.id;
     const key = req.params.key;
 
+    // ✅ 프론트(done/done_date) + 백엔드(is_done) 둘 다 허용
+    const done = (typeof req.body.done !== 'undefined')
+      ? !!req.body.done
+      : !!req.body.is_done;
+
     const patch = {
-      is_done: req.body.is_done ? 1 : 0,
-      note: req.body.note
+      is_done: done ? 1 : 0,
+      note: req.body.note ?? null,
+      // done_at/done_by는 서비스에서 정책적으로 세팅
     };
 
     const updated = await svc.updatePrereq({ setupId, key, patch, actor });
-    res.json({ ok:true, updated });
+    res.json({ ok: true, updated });
   } catch (err) {
-    res.status(400).json({ ok:false, error: err.message || 'update prereq failed' });
+    console.error('[setupBoardController.updatePrereq] error:', err);
+    res.status(400).json({ ok: false, error: err.message || 'update prereq failed' });
   }
 };

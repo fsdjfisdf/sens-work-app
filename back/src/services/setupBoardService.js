@@ -215,3 +215,53 @@ exports.updateIssue = async ({ issueId, patch, actor }) => {
     conn.release();
   }
 };
+
+exports.updatePrereq = async ({ setupId, key, patch, actor }) => {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const [exist] = await conn.execute(
+      `SELECT * FROM setup_project_prereqs WHERE setup_id=? AND prereq_key=? LIMIT 1`,
+      [setupId, key]
+    );
+
+    const isDone = patch.is_done ? 1 : 0;
+    const doneAt = isDone ? new Date() : null;
+    const doneBy = isDone ? actor : null;
+
+    if (!exist.length) {
+      await conn.execute(
+        `INSERT INTO setup_project_prereqs
+           (setup_id, prereq_key, is_done, done_at, done_by, note, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        [setupId, key, isDone, doneAt, doneBy, patch.note ?? null]
+      );
+    } else {
+      await conn.execute(
+        `UPDATE setup_project_prereqs
+         SET is_done=?,
+             done_at=?,
+             done_by=?,
+             note=?,
+             updated_at=CURRENT_TIMESTAMP
+         WHERE setup_id=? AND prereq_key=?`,
+        [isDone, doneAt, doneBy, patch.note ?? null, setupId, key]
+      );
+    }
+
+    await conn.commit();
+
+    // 최신 상태 리턴(프론트가 바로 UI 갱신 가능)
+    const [rows] = await conn.execute(
+      `SELECT * FROM setup_project_prereqs WHERE setup_id=? AND prereq_key=? LIMIT 1`,
+      [setupId, key]
+    );
+    return rows[0] || null;
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+};
