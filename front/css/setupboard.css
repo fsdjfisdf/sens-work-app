@@ -1,3 +1,11 @@
+/* ==========================================================================
+   setupboard.css (Mobile-Ready / Responsive / Keep-white-topbar)
+   - ✅ nav/menu-bar fixed + 모바일에서 높이/레이아웃 안정
+   - ✅ topbar sticky(흰색 유지) + nav 간섭 방지
+   - ✅ table / logs / modal / tooltip 모바일 최적화
+   - ✅ iOS 안전영역(safe-area) 대응
+   ========================================================================== */
+
 :root{
   --bg:#f6f7fb;
   --card:#ffffff;
@@ -15,13 +23,21 @@
 
   --pr:#8b5cf6;
 
-  /* ✅ nav 높이 */
-  --nav-h:90px;
+  /* ✅ nav 높이 (데스크탑 기본) */
+  --nav-h: 64px;
 
   /* ✅ nav 색(흰색 유지) */
   --nav-bg:#ffffff;
   --nav-fg:#111827;
   --nav-border:#e5e7eb;
+
+  /* 안전 영역(노치) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* layout spacing */
+  --page-x: 18px;
+  --page-y: 16px;
 
   /* 기존에 쓰던 변수들(없어서 깨지는 것 방지) */
   --surface: var(--bg);
@@ -32,10 +48,27 @@
   --shadow-sm: 0 4px 14px rgba(2,6,23,.10);
   --ring-inner: 0 0 0 2px rgba(255,255,255,.75);
   --ring-outer: 0 0 0 6px rgba(37,99,235,.12);
+
+  /* table */
+  --table-min: 1600px;
+  --log-min: 920px;
+
+  /* z-index map */
+  --z-nav: 8000;
+  --z-menu: 8010;
+  --z-topbar: 50;
+  --z-modal: 9500;
+  --z-toast: 9600;
+  --z-tip: 9601;
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
+
+html{
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
 body{
   margin:0;
@@ -45,8 +78,9 @@ body{
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 
-  /* ✅ nav fixed 보정 */
-  padding-top: var(--nav-h);
+  /* ✅ nav fixed 보정 (노치 포함) */
+  padding-top: calc(var(--nav-h) + var(--safe-top));
+  padding-bottom: var(--safe-bottom);
 }
 
 a{ color:var(--accent); text-decoration:none; text-underline-offset:2px; }
@@ -62,15 +96,22 @@ a:hover{ text-decoration:underline; }
   border-color: rgba(37,99,235,.55) !important;
 }
 
+/* iOS에서 input 확대 방지(16px 이상 권장) */
+input, select, textarea{ font-size:16px; }
+@media (min-width: 1101px){
+  input, select, textarea{ font-size:14px; }
+}
+
 /* ---------- Nav (✅ 완전 고정) --------------------------------------------------------- */
 nav{
   position:fixed;
   top:0; left:0; right:0;
-  z-index:8000;
+  z-index: var(--z-nav);
   background:var(--nav-bg);
   color:var(--nav-fg);
   border-bottom:1px solid var(--nav-border);
   box-shadow:var(--shadow);
+  padding-top: var(--safe-top);
 }
 
 .nav-container{
@@ -81,25 +122,32 @@ nav{
   min-height: var(--nav-h);
 }
 
+.nav-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
 .nav-title a{
   display:inline-block;
-  font-weight:800;
+  font-weight:900;
   letter-spacing:.2px;
   font-size:18px;
   color:var(--nav-fg);
   padding:4px 6px;
   border-radius:8px;
+  white-space:nowrap;
 }
 .nav-title a:hover{ color:var(--accent); }
 
-.sign-container{ display:flex; align-items:center; gap:8px; }
+.sign-container{ display:flex; align-items:center; gap:8px; min-width:0; }
 
 /* Nav actions / links */
 .sign-link, .menu-item, .menu-btn{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  height:25px;
+  height:32px;
   padding:0 10px;
   border-radius:10px;
   border:1px solid var(--nav-border);
@@ -109,6 +157,7 @@ nav{
   cursor:pointer;
   transition:background .2s,border-color .2s,color .2s,transform .06s, box-shadow .2s;
   box-shadow: var(--shadow-xs);
+  white-space:nowrap;
 }
 .sign-link:hover, .menu-item:hover, .menu-btn:hover{
   background:#f1f5f9;
@@ -118,7 +167,7 @@ nav{
 }
 .menu-btn:active{ transform:translateY(1px); }
 
-.menu-icon{ width:22px; height:14px; position:relative; }
+.menu-icon{ width:22px; height:14px; position:relative; flex:0 0 auto; }
 .menu-icon span{
   position:absolute; left:0; right:0; height:2px;
   border-radius:2px; background:currentColor;
@@ -129,10 +178,10 @@ nav{
 .menu-icon span:nth-child(2){ top:6px }
 .menu-icon span:nth-child(3){ top:12px }
 
-/* ✅ menu-bar도 고정(열렸을 때 스크롤에 따라 움직이지 않게) */
+/* ✅ menu-bar도 고정 */
 .menu-bar{
   position:fixed;
-  top: var(--nav-h);
+  top: calc(var(--nav-h) + var(--safe-top));
   left:0; right:0;
   background:#fff;
   border-top:1px solid var(--nav-border);
@@ -141,41 +190,46 @@ nav{
   transition:max-height .28s ease;
   will-change:max-height;
   box-shadow: 0 6px 18px rgba(2,6,23,.06) inset;
-  z-index:8000;
+  z-index: var(--z-menu);
 }
-.menu-bar.open{ max-height:640px; }
+.menu-bar.open{ max-height: 70vh; }
 .menu-bar-content{
   max-width:2048px;
   margin:0 auto;
-  padding:8px 12px;
+  padding:10px 12px;
   display:flex;
   flex-wrap:wrap;
   gap:8px;
 }
 .menu-item.admin-only::after{ content:"• admin"; font-size:11px; margin-left:6px; opacity:.55 }
 
-/* Topbar */
+/* Topbar (페이지 내부 상단바) */
 .topbar{
   position:sticky;
-  top: var(--nav-h); /* ✅ nav 아래로 */
-  z-index:50;
+  top: calc(var(--nav-h) + var(--safe-top)); /* ✅ nav 아래로 */
+  z-index: var(--z-topbar);
   background:rgba(255,255,255,.92);
   backdrop-filter: blur(10px);
   border-bottom:1px solid var(--line);
 }
-
 .topbar-inner{
-  padding:14px 18px;
+  padding: 12px var(--page-x);
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:14px;
+  gap:12px;
+  min-width:0;
 }
-.brand-title{font-weight:900; letter-spacing:.2px}
-.top-actions{display:flex; gap:10px; align-items:center}
+.brand-title{font-weight:900; letter-spacing:.2px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.top-actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
 
-.page{padding:16px 18px 26px; max-width:100%}
+/* Page */
+.page{
+  padding: var(--page-y) var(--page-x) calc(26px + var(--safe-bottom));
+  max-width:100%;
+}
 
+/* Cards */
 .card{
   background:var(--card);
   border:1px solid var(--line);
@@ -183,6 +237,7 @@ nav{
   box-shadow:var(--shadow);
 }
 
+/* Buttons */
 .btn{
   border:1px solid var(--line);
   background:#fff;
@@ -191,6 +246,7 @@ nav{
   border-radius:12px;
   font-weight:900;
   cursor:pointer;
+  line-height:1;
 }
 .btn.primary{background:var(--primary); border-color:var(--primary); color:#fff}
 .btn:hover{filter:brightness(.98)}
@@ -225,12 +281,14 @@ nav{
   outline:none;
   background:#fff;
 }
+.field textarea{ min-height: 44px; resize:vertical; }
 .field input:focus, .field select:focus, .field textarea:focus{
   border-color:rgba(37,99,235,.45);
   box-shadow: 0 0 0 4px rgba(37,99,235,.12);
 }
 .field.wide{grid-column: span 2}
 
+/* Legend */
 .legend{
   margin-top:12px;
   padding-top:12px;
@@ -260,20 +318,28 @@ nav{
 
 /* Board */
 .board{padding:12px; margin-top:14px}
-.board-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px}
+.board-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
 
 .table-host{
   border:1px solid var(--line);
   border-radius:12px;
   overflow:auto;
   background:#fff;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table{
   width:100%;
   border-collapse:separate;
   border-spacing:0;
-  min-width: 1600px;
+  min-width: var(--table-min);
 }
 .table th, .table td{
   border-bottom:1px solid var(--line);
@@ -339,10 +405,11 @@ nav{
   background: rgba(17,24,39,.08);
   border: 1px solid rgba(17,24,39,.10);
   overflow:hidden;
+  flex:0 0 auto;
 }
 .progressFill{height:100%; background: rgba(37,99,235,.80)}
-.progressMeta{display:flex; align-items:center; gap:8px}
-.progressSub{font-weight:900; font-size:11px}
+.progressMeta{display:flex; align-items:center; gap:8px; min-width:0}
+.progressSub{font-weight:900; font-size:11px; white-space:nowrap}
 
 /* Cells */
 .cell{
@@ -382,17 +449,22 @@ nav{
   font-weight:900;
 }
 
-/* Modal (✅ 모달이 nav/topbar 가려도 OK: z-index를 nav보다 크게) */
+/* Modal (✅ 모달이 nav/topbar 가려도 OK) */
 .modal{
   position:fixed;
   inset:0;
-  z-index:9500;
+  z-index: var(--z-modal);
   display:flex;
   align-items:center;
   justify-content:center;
+  padding: 12px;
 }
 .modal.hidden{display:none}
-.modal-backdrop{position:absolute; inset:0; background: rgba(15,23,42,.35)}
+.modal-backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(15,23,42,.35);
+}
 .modal-card{
   position:relative;
   width: min(1100px, calc(100vw - 24px));
@@ -402,15 +474,17 @@ nav{
   border:1px solid var(--line);
   border-radius:18px;
   box-shadow:var(--shadow);
+  -webkit-overflow-scrolling: touch;
 }
 .modal-head{
   padding:12px 14px;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
+  gap:10px;
   border-bottom:1px solid var(--line);
 }
-.modal-title{font-weight:1000; font-size:16px}
+.modal-title{font-weight:1000; font-size:16px; min-width:0}
 .modal-meta{margin-top:4px; font-size:12px}
 .modal-body{padding:14px}
 
@@ -422,6 +496,7 @@ nav{
   align-items:center;
   justify-content:space-between;
   gap:10px;
+  flex-wrap:wrap;
 }
 
 .form-grid{
@@ -437,6 +512,7 @@ nav{
   gap:10px;
   align-items:center;
   justify-content:flex-end;
+  flex-wrap:wrap;
 }
 
 /* Seg */
@@ -469,7 +545,13 @@ nav{
   padding:12px;
   background:#fff;
 }
-.step-top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
+.step-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
 .step-card-title{font-weight:1000}
 .step-desc{margin-top:6px; font-size:12px; color:var(--muted); white-space:pre-wrap; line-height:1.45}
 
@@ -480,10 +562,24 @@ nav{
   gap:10px;
 }
 .step-grid.step-grid-planend .note-wide{grid-column: span 5}
-.step-actions{margin-top:10px; display:flex; justify-content:flex-end; gap:10px; align-items:center}
+.step-actions{
+  margin-top:10px;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 
 /* Prereq */
-.pr-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px}
+.pr-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
 .badge{
   display:inline-flex;
   align-items:center;
@@ -513,33 +609,34 @@ nav{
 .tag.req{background: rgba(139,92,246,.12); color: var(--pr); border-color: rgba(139,92,246,.25)}
 .tag.opt{background: rgba(17,24,39,.06); color: rgba(17,24,39,.70); border-color: rgba(17,24,39,.12)}
 .pr-desc{margin-top:8px; font-size:12px; color: var(--muted); white-space:pre-wrap}
-.pr-actions{margin-top:10px; display:flex; justify-content:flex-end}
+.pr-actions{margin-top:10px; display:flex; justify-content:flex-end; flex-wrap:wrap}
 
 /* Toast / Tooltip */
 .toast{
   position:fixed;
-  bottom:18px;
+  bottom: calc(18px + var(--safe-bottom));
   left:50%;
   transform:translateX(-50%);
   background:#111827;
   color:#fff;
   padding:10px 12px;
   border-radius:12px;
-  z-index:9600;
+  z-index: var(--z-toast);
   box-shadow:var(--shadow);
+  max-width: min(520px, calc(100vw - 24px));
 }
 .toast.hidden{display:none}
 
 .tooltip{
   position:fixed;
-  z-index:9601;
+  z-index: var(--z-tip);
   pointer-events:none;
   background:#111827;
   color:#fff;
   border-radius:12px;
   padding:10px 12px;
   box-shadow:var(--shadow);
-  max-width: 360px;
+  max-width: min(360px, calc(100vw - 24px));
   font-size:12px;
   line-height:1.35;
 }
@@ -636,7 +733,7 @@ nav{
 }
 .prpill.req{border-color: rgba(139,92,246,.25); background: rgba(139,92,246,.06)}
 .prpill.opt{background: rgba(17,24,39,.03)}
-.prpill-top{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.prpill-top{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
 .prpill-name{font-weight:1000}
 .prpill-tag{
   font-size:11px;
@@ -663,18 +760,20 @@ nav{
   justify-content:space-between;
   gap:10px;
   margin-bottom:10px;
+  flex-wrap:wrap;
 }
 .log-table-wrap{
   border:1px solid var(--line);
   border-radius:12px;
   overflow:auto;
   background:#fff;
+  -webkit-overflow-scrolling: touch;
 }
 .log-table{
   width:100%;
   border-collapse:separate;
   border-spacing:0;
-  min-width: 920px;
+  min-width: var(--log-min);
 }
 .log-table th, .log-table td{
   border-bottom:1px solid var(--line);
@@ -696,14 +795,120 @@ nav{
 }
 .log-foot{margin-top:10px}
 
-/* Responsive */
+/* ==========================================================================
+   ✅ Responsive: Tablet
+   ========================================================================== */
 @media (max-width: 1100px){
-  .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
-  .field.wide{grid-column: span 2}
-  .form-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
-  .form-grid .wide{grid-column: span 2}
-  .step-grid.step-grid-planend{grid-template-columns: repeat(2, minmax(0,1fr))}
-  .step-grid.step-grid-planend .note-wide{grid-column: span 2}
-  .help-grid{grid-template-columns: 1fr}
-  .log-tools{grid-template-columns: 1fr 1fr; }
+  :root{
+    --page-x: 14px;
+    --page-y: 12px;
+    --nav-h: 58px;
+    --table-min: 1280px;
+    --log-min: 760px;
+  }
+
+  .filters-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .field.wide{ grid-column: span 2; }
+
+  .form-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .form-grid .wide{ grid-column: span 2; }
+
+  .step-grid.step-grid-planend{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .step-grid.step-grid-planend .note-wide{ grid-column: span 2; }
+
+  .help-grid{ grid-template-columns: 1fr; }
+
+  .log-tools{ grid-template-columns: 1fr 1fr; }
+}
+
+/* ==========================================================================
+   ✅ Responsive: Mobile (핵심)
+   - nav 높이/버튼/타이포 축소
+   - 필터/헤더/액션 줄바꿈 안정
+   - 테이블은 가로 스크롤 유지 + sticky EQ 폭 축소
+   ========================================================================== */
+@media (max-width: 640px){
+  :root{
+    --page-x: 12px;
+    --page-y: 10px;
+    --nav-h: 52px;
+    --table-min: 1120px;
+    --log-min: 680px;
+  }
+
+  .inner{ padding: 0 12px; }
+
+  .nav-title a{ font-size:16px; }
+  .sign-link, .menu-item, .menu-btn{
+    height:30px;
+    padding:0 10px;
+    font-size:12px;
+    border-radius:10px;
+  }
+
+  .topbar-inner{
+    padding: 10px var(--page-x);
+    gap:10px;
+  }
+  .brand-title{ font-size:14px; }
+
+  .btn{ padding:10px 12px; border-radius:12px; }
+  .btn.icon{ width:38px; }
+
+  .filters{ padding:12px; }
+  .filters-grid{ grid-template-columns: 1fr; gap:10px; }
+  .field.wide{ grid-column: auto; }
+
+  .board{ padding:10px; }
+  .board-head{ gap:10px; }
+
+  /* sticky EQ 폭 줄여서 모바일에서 덜 답답 */
+  .eq-col{ width: 220px; }
+  .eq-name{ max-width: 200px; }
+  .eq-sub{ max-width: 200px; }
+
+  .progressBar{ width: 130px; }
+
+  /* 모달은 화면 꽉 차게 */
+  .modal{ padding: 10px; }
+  .modal-card{
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+    border-radius:16px;
+  }
+  .modal-head{ padding: 10px 12px; }
+  .modal-body{ padding: 12px; }
+
+  .section-title{ gap:8px; }
+
+  .seg-btn{ padding: 8px 10px; font-size:12px; }
+
+  /* tooltip은 너무 커지지 않게 */
+  .tooltip{ font-size:12px; padding:10px 10px; }
+
+  /* logs: 툴 영역 한 칸 */
+  .log-tools{ grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   ✅ Ultra small (<= 380px): 더 작은 폰
+   ========================================================================== */
+@media (max-width: 380px){
+  :root{
+    --nav-h: 50px;
+  }
+  .nav-title a{ font-size:15px; }
+  .sign-link, .menu-item, .menu-btn{ font-size:11px; padding:0 9px; }
+  .tip-grid{ grid-template-columns: 78px 1fr; }
+}
+
+/* ==========================================================================
+   ✅ Reduced motion (접근성)
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  *{
+    scroll-behavior:auto !important;
+    transition:none !important;
+    animation:none !important;
+  }
 }
