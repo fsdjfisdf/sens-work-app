@@ -1,13 +1,3 @@
-/* ==========================================================================
-   setupboard.css (FULL) — nav/topbar 고정 간섭 해결 버전
-   - 디자인(흰색/크기/스타일)은 그대로 유지
-   - nav는 top:0 sticky
-   - topbar는 nav 아래로 sticky
-   - 본문은 nav+topbar 높이만큼 padding-top 부여(겹침 방지)
-   - 모달이 뜨면 nav/topbar가 가려져도 되도록 modal z-index를 더 높게
-   - 테이블 thead sticky가 nav/topbar와 충돌하지 않도록 top 오프셋 조정
-   ========================================================================== */
-
 :root{
   --bg:#f6f7fb;
   --card:#ffffff;
@@ -25,9 +15,23 @@
 
   --pr:#8b5cf6;
 
-  /* ✅ 고정 레이아웃 핵심 값(현재 디자인 유지용) */
+  /* ✅ nav 높이 */
   --nav-h:56px;
-  --topbar-h:64px; /* topbar-inner(14px+14px) 등 포함 대략값: 필요 시 62~68로만 미세조정 */
+
+  /* ✅ nav 색(흰색 유지) */
+  --nav-bg:#ffffff;
+  --nav-fg:#111827;
+  --nav-border:#e5e7eb;
+
+  /* 기존에 쓰던 변수들(없어서 깨지는 것 방지) */
+  --surface: var(--bg);
+  --accent: var(--primary);
+  --accent-weak: rgba(37,99,235,.14);
+  --dim: var(--muted);
+  --shadow-xs: 0 2px 8px rgba(2,6,23,.06);
+  --shadow-sm: 0 4px 14px rgba(2,6,23,.10);
+  --ring-inner: 0 0 0 2px rgba(255,255,255,.75);
+  --ring-outer: 0 0 0 6px rgba(37,99,235,.12);
 }
 
 *{box-sizing:border-box}
@@ -41,8 +45,8 @@ body{
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 
-  /* ✅ nav + topbar가 sticky로 화면 상단을 점유하므로 본문이 깔리지 않게 */
-  padding-top: calc(var(--nav-h) + var(--topbar-h));
+  /* ✅ nav fixed 보정 */
+  padding-top: var(--nav-h);
 }
 
 a{ color:var(--accent); text-decoration:none; text-underline-offset:2px; }
@@ -58,50 +62,66 @@ a:hover{ text-decoration:underline; }
   border-color: rgba(37,99,235,.55) !important;
 }
 
-/* ---------- Nav --------------------------------------------------------- */
+/* ---------- Nav (✅ 완전 고정) --------------------------------------------------------- */
 nav{
-  position:sticky;
-  top:0;
+  position:fixed;
+  top:0; left:0; right:0;
   z-index:8000;
   background:var(--nav-bg);
   color:var(--nav-fg);
   border-bottom:1px solid var(--nav-border);
   box-shadow:var(--shadow);
-
-  /* ✅ 높이 고정(겹침 계산 안정화) */
-  height: var(--nav-h);
 }
+
 .nav-container{
-  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
   min-height: var(--nav-h);
 }
+
 .nav-title a{
   display:inline-block;
-  font-weight:800; letter-spacing:.2px; font-size:18px;
+  font-weight:800;
+  letter-spacing:.2px;
+  font-size:18px;
   color:var(--nav-fg);
-  padding:4px 6px; border-radius:8px;
+  padding:4px 6px;
+  border-radius:8px;
 }
 .nav-title a:hover{ color:var(--accent); }
+
 .sign-container{ display:flex; align-items:center; gap:8px; }
 
 /* Nav actions / links */
 .sign-link, .menu-item, .menu-btn{
-  display:inline-flex; align-items:center; gap:8px;
-  height:34px; padding:0 12px; border-radius:10px;
-  border:1px solid var(--nav-border); background:#fff; color:var(--nav-fg);
-  font-size:13px; cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  height:34px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid var(--nav-border);
+  background:#fff;
+  color:var(--nav-fg);
+  font-size:13px;
+  cursor:pointer;
   transition:background .2s,border-color .2s,color .2s,transform .06s, box-shadow .2s;
   box-shadow: var(--shadow-xs);
 }
 .sign-link:hover, .menu-item:hover, .menu-btn:hover{
-  background:#f1f5f9; border-color:var(--accent); color:var(--accent);
+  background:#f1f5f9;
+  border-color:var(--accent);
+  color:var(--accent);
   box-shadow: var(--shadow-sm);
 }
 .menu-btn:active{ transform:translateY(1px); }
+
 .menu-icon{ width:22px; height:14px; position:relative; }
 .menu-icon span{
-  position:absolute; left:0; right:0;
-  height:2px; border-radius:2px; background:currentColor;
+  position:absolute; left:0; right:0; height:2px;
+  border-radius:2px; background:currentColor;
   transform-origin:center;
   transition:transform .2s,opacity .2s,top .2s;
 }
@@ -109,12 +129,19 @@ nav{
 .menu-icon span:nth-child(2){ top:6px }
 .menu-icon span:nth-child(3){ top:12px }
 
+/* ✅ menu-bar도 고정(열렸을 때 스크롤에 따라 움직이지 않게) */
 .menu-bar{
-  background:#fff; border-top:1px solid var(--nav-border);
-  overflow:hidden; max-height:0;
+  position:fixed;
+  top: var(--nav-h);
+  left:0; right:0;
+  background:#fff;
+  border-top:1px solid var(--nav-border);
+  overflow:hidden;
+  max-height:0;
   transition:max-height .28s ease;
   will-change:max-height;
   box-shadow: 0 6px 18px rgba(2,6,23,.06) inset;
+  z-index:8000;
 }
 .menu-bar.open{ max-height:640px; }
 .menu-bar-content{
@@ -125,28 +152,24 @@ nav{
   flex-wrap:wrap;
   gap:8px;
 }
-.menu-item.admin-only::after{
-  content:"• admin";
-  font-size:11px;
-  margin-left:6px;
-  opacity:.55;
-}
+.menu-item.admin-only::after{ content:"• admin"; font-size:11px; margin-left:6px; opacity:.55 }
 
-/* ---------- Topbar ------------------------------------------------------ */
+/* Topbar */
 .topbar{
   position:sticky;
-  top: var(--nav-h); /* ✅ nav 아래에 붙어서 따라오게 */
-  z-index:60;
+  top: var(--nav-h); /* ✅ nav 아래로 */
+  z-index:50;
   background:rgba(255,255,255,.92);
   backdrop-filter: blur(10px);
   border-bottom:1px solid var(--line);
-
-  /* ✅ 높이 계산 안정화(본문 padding-top과 맞추기 위함) */
-  min-height: var(--topbar-h);
 }
+
 .topbar-inner{
   padding:14px 18px;
-  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
 }
 .brand-title{font-weight:900; letter-spacing:.2px}
 .top-actions{display:flex; gap:10px; align-items:center}
@@ -180,7 +203,7 @@ nav{
   font-weight:1000;
 }
 
-/* ---------- Filters ----------------------------------------------------- */
+/* Filters */
 .filters{padding:14px}
 .filters-grid{
   display:grid;
@@ -235,15 +258,9 @@ nav{
 .dot.dn{background:var(--dn)}
 .dot.hd{background:var(--hd)}
 
-/* ---------- Board ------------------------------------------------------- */
+/* Board */
 .board{padding:12px; margin-top:14px}
-.board-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:10px;
-}
+.board-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px}
 
 .table-host{
   border:1px solid var(--line);
@@ -266,11 +283,9 @@ nav{
   white-space:nowrap;
 }
 .table th:first-child, .table td:first-child{border-left:1px solid var(--line)}
-
-/* ✅ thead sticky가 nav/topbar와 겹치지 않게 top 오프셋을 내려준다 */
 .table thead th{
   position:sticky;
-  top: calc(var(--nav-h) + var(--topbar-h));
+  top:0;
   z-index:3;
   background:#fafafa;
   font-weight:1000;
@@ -278,9 +293,7 @@ nav{
 
 /* 설비열 */
 .eq-col{
-  position:sticky;
-  left:0;
-  z-index:2;
+  position:sticky; left:0; z-index:2;
   background:#fff;
   font-weight:1000;
   width: 260px;
@@ -343,10 +356,8 @@ nav{
 .pillWrap{display:flex; flex-direction:column; align-items:center; gap:4px}
 .pill{
   display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:34px;
-  height:22px;
+  align-items:center; justify-content:center;
+  min-width:34px; height:22px;
   border-radius:999px;
   border:1px solid var(--line);
   font-weight:1000;
@@ -371,12 +382,11 @@ nav{
   font-weight:900;
 }
 
-/* ---------- Modal ------------------------------------------------------- */
-/* ✅ 모달이 nav/topbar를 덮어도 되므로 z-index를 nav보다 크게 */
+/* Modal (✅ 모달이 nav/topbar 가려도 OK: z-index를 nav보다 크게) */
 .modal{
   position:fixed;
   inset:0;
-  z-index:9000; /* ✅ 핵심: nav(8000) 위 */
+  z-index:9500;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -461,13 +471,8 @@ nav{
 }
 .step-top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
 .step-card-title{font-weight:1000}
-.step-desc{
-  margin-top:6px;
-  font-size:12px;
-  color:var(--muted);
-  white-space:pre-wrap;
-  line-height:1.45;
-}
+.step-desc{margin-top:6px; font-size:12px; color:var(--muted); white-space:pre-wrap; line-height:1.45}
+
 .step-grid.step-grid-planend{
   margin-top:10px;
   display:grid;
@@ -475,22 +480,10 @@ nav{
   gap:10px;
 }
 .step-grid.step-grid-planend .note-wide{grid-column: span 5}
-.step-actions{
-  margin-top:10px;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  align-items:center;
-}
+.step-actions{margin-top:10px; display:flex; justify-content:flex-end; gap:10px; align-items:center}
 
 /* Prereq */
-.pr-top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
+.pr-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px}
 .badge{
   display:inline-flex;
   align-items:center;
@@ -501,19 +494,11 @@ nav{
   font-size:12px;
   font-weight:1000;
 }
-.badge.pr{
-  border-color: rgba(139,92,246,.25);
-  background: rgba(139,92,246,.12);
-  color: var(--pr)
-}
+.badge.pr{border-color: rgba(139,92,246,.25); background: rgba(139,92,246,.12); color: var(--pr)}
 
+/* Prereq list */
 .prereq-host{display:flex; flex-direction:column; gap:10px}
-.pr-item{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  background:#fff
-}
+.pr-item{border:1px solid var(--line); border-radius:14px; padding:12px; background:#fff}
 .pr-check{display:flex; align-items:center; gap:10px; font-weight:1000}
 .pr-check input{width:18px;height:18px; accent-color: var(--pr)}
 .pr-meta{margin-top:6px; display:flex; gap:10px; align-items:center; flex-wrap:wrap}
@@ -525,50 +510,12 @@ nav{
   border:1px solid var(--line);
   background:#fff;
 }
-.tag.req{
-  background: rgba(139,92,246,.12);
-  color: var(--pr);
-  border-color: rgba(139,92,246,.25)
-}
-.tag.opt{
-  background: rgba(17,24,39,.06);
-  color: rgba(17,24,39,.70);
-  border-color: rgba(17,24,39,.12)
-}
-.pr-desc{
-  margin-top:8px;
-  font-size:12px;
-  color: var(--muted);
-  white-space:pre-wrap;
-}
+.tag.req{background: rgba(139,92,246,.12); color: var(--pr); border-color: rgba(139,92,246,.25)}
+.tag.opt{background: rgba(17,24,39,.06); color: rgba(17,24,39,.70); border-color: rgba(17,24,39,.12)}
+.pr-desc{margin-top:8px; font-size:12px; color: var(--muted); white-space:pre-wrap}
 .pr-actions{margin-top:10px; display:flex; justify-content:flex-end}
 
-/* Logs tools */
-.log-tools{
-  display:grid;
-  grid-template-columns: 2fr 1fr 1fr 140px;
-  gap:12px;
-  margin-bottom:10px;
-}
-.log-tools .wide{grid-column:auto}
-
-.log-more{
-  font-size:11px;
-  font-weight:900;
-  color:#1e3a8a;
-  cursor:pointer;
-  user-select:none;
-}
-.log-desc{
-  margin-top:6px;
-  color:var(--muted);
-  white-space:normal; /* ✅ <br> 기반 줄바꿈과 자연스럽게 */
-  line-height:1.45;
-  display:none;
-}
-.log-desc.open{display:block}
-
-/* ---------- Toast ------------------------------------------------------- */
+/* Toast / Tooltip */
 .toast{
   position:fixed;
   bottom:18px;
@@ -578,16 +525,14 @@ nav{
   color:#fff;
   padding:10px 12px;
   border-radius:12px;
-  z-index:9100; /* modal(9000) 위에 뜨도록 */
+  z-index:9600;
   box-shadow:var(--shadow);
 }
 .toast.hidden{display:none}
 
-/* ---------- Tooltip ----------------------------------------------------- */
-/* ✅ tooltip은 모달과 별개로(모달 위에도 필요하면) z-index를 더 높게 */
 .tooltip{
   position:fixed;
-  z-index:9500;
+  z-index:9601;
   pointer-events:none;
   background:#111827;
   color:#fff;
@@ -605,7 +550,7 @@ nav{
 .tip-v{color:#fff; font-weight:700; white-space:pre-wrap}
 .tip-foot{margin-top:8px; font-size:11px; color: rgba(255,255,255,.65); font-weight:800}
 
-/* ---------- Help modal styles ------------------------------------------ */
+/* Help modal styles */
 .help-card{width: min(1100px, calc(100vw - 24px))}
 .help-grid{
   display:grid;
@@ -705,6 +650,53 @@ nav{
 .prpill.opt .prpill-tag{color: rgba(17,24,39,.70); background: rgba(17,24,39,.06)}
 .prpill-desc{margin-top:6px; font-size:12px; color: var(--muted); line-height:1.45}
 
+/* ✅ Logs (작업이력 탭) */
+.log-tools{
+  display:grid;
+  grid-template-columns: 2fr 1fr 1fr 140px;
+  gap:12px;
+  margin-bottom:10px;
+}
+.log-stat{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.log-table-wrap{
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:auto;
+  background:#fff;
+}
+.log-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width: 920px;
+}
+.log-table th, .log-table td{
+  border-bottom:1px solid var(--line);
+  padding:10px 10px;
+  font-size:12px;
+  vertical-align:top;
+}
+.log-table thead th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  background:#fafafa;
+  font-weight:1000;
+}
+.log-desc{
+  white-space:normal;
+  line-height:1.45;
+  color: rgba(17,24,39,.92);
+}
+.log-foot{margin-top:10px}
+
+/* Responsive */
 @media (max-width: 1100px){
   .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .field.wide{grid-column: span 2}

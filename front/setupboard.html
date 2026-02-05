@@ -5,7 +5,6 @@
   <title>S-WORKS · SET UP STATUS BOARD</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- 설비 전용 CSS -->
   <link rel="stylesheet" href="./css/setupboard.css" />
 </head>
 
@@ -50,12 +49,13 @@
     </div>
   </nav>
 
-  <!-- ✅ nav는 fixed, topbar는 nav 아래 sticky -->
+  <!-- 🔹 페이지 상단바 (nav 아래 sticky) -->
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-title">SET UP 설비 진행 상황</div>
       </div>
+
       <div class="top-actions">
         <button id="btnNew" class="btn primary" type="button">+ 신규 설비</button>
         <button id="btnHelp" class="btn icon" type="button" title="셋업 진행 순서도">?</button>
@@ -145,7 +145,6 @@
       <div class="board-head">
         <div class="board-title"><b id="statCount">-</b></div>
       </div>
-
       <div id="tableHost" class="table-host"></div>
     </section>
   </main>
@@ -166,33 +165,34 @@
       </div>
 
       <div class="modal-body">
+        <!-- Project -->
         <div class="section">
           <div class="section-title">Project 정보</div>
 
           <div class="form-grid">
             <div class="field wide">
               <label>설비명</label>
-              <input id="p_equipment_name" type="text"/>
+              <input id="p_equipment_name" type="text" />
             </div>
 
             <div class="field">
               <label>설비타입</label>
-              <input id="p_equipment_type" type="text"/>
+              <input id="p_equipment_type" type="text" />
             </div>
 
             <div class="field">
               <label>Site</label>
-              <input id="p_site" type="text" placeholder="PT/HS/IC/CJ"/>
+              <input id="p_site" type="text" placeholder="PT/HS/IC/CJ" />
             </div>
 
             <div class="field">
               <label>Line</label>
-              <input id="p_line" type="text" placeholder="P1/P2/P3/P4"/>
+              <input id="p_line" type="text" placeholder="P1/P2/P3/P4" />
             </div>
 
             <div class="field">
               <label>Location</label>
-              <input id="p_location" type="text"/>
+              <input id="p_location" type="text" />
             </div>
 
             <div class="field">
@@ -207,7 +207,7 @@
 
             <div class="field">
               <label>Start Date (Auto)</label>
-              <input id="p_start_date_auto" type="text" readonly/>
+              <input id="p_start_date_auto" type="text" readonly />
             </div>
 
             <div class="field wide">
@@ -247,33 +247,60 @@
 
           <!-- Logs -->
           <div id="viewLogs" class="view hidden">
-            <div class="pr-top">
-              <div class="muted small">
-                * 설비명(eq name) 매칭 로그를 불러오며, Step 선택 시 키워드 기반으로 필터됩니다.
-              </div>
-              <span id="logBadge" class="badge">0</span>
-            </div>
-
             <div class="log-tools">
               <div class="field wide">
-                <label>로그 검색</label>
-                <input id="logQ" type="text" placeholder="예) 정현우 / PUMP / 방치압 / HOOK UP"/>
+                <label>검색</label>
+                <input id="logQ" type="text" placeholder="TASK/WORKER/DESCRIPTION 검색" />
               </div>
 
               <div class="field">
-                <label>Step 필터</label>
+                <label>Step 매칭</label>
                 <select id="logStep">
                   <option value="">ALL</option>
                 </select>
               </div>
 
               <div class="field">
+                <label>정렬</label>
+                <select id="logSort">
+                  <option value="date_desc">DATE 최신순</option>
+                  <option value="date_asc">DATE 오래된순</option>
+                  <option value="time_desc">TIME 긴순</option>
+                  <option value="time_asc">TIME 짧은순</option>
+                </select>
+              </div>
+
+              <div class="field">
                 <label>&nbsp;</label>
-                <button id="btnReloadLogs" class="btn" type="button">새로고침</button>
+                <button id="btnLogReload" class="btn" type="button">새로고침</button>
               </div>
             </div>
 
-            <div id="logsHost" class="table-host"></div>
+            <div class="log-stat">
+              <span class="badge" id="logStat">0건</span>
+              <span class="muted small" id="logHint"></span>
+            </div>
+
+            <div class="log-table-wrap">
+              <table class="log-table">
+                <thead>
+                  <tr>
+                    <th style="width:110px;">DATE</th>
+                    <th style="width:180px;">TASK</th>
+                    <th style="width:140px;">WORKER</th>
+                    <th style="width:80px;">TIME</th>
+                    <th>DESCRIPTION</th>
+                  </tr>
+                </thead>
+                <tbody id="logTbody">
+                  <tr><td colspan="5" class="muted" style="padding:12px;">설비를 선택하면 작업이력을 불러옵니다.</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="muted small log-foot">
+              * DESCRIPTION은 Worklog의 task_description을 기반으로 표시됩니다. (`&lt;br&gt;` 포함 시 줄바꿈)
+            </div>
           </div>
         </div>
 
@@ -309,40 +336,36 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Hover Tooltip + Toast -->
+  <!-- Hover Tooltip / Toast -->
   <div id="tooltip" class="tooltip hidden"></div>
   <div id="toast" class="toast hidden"></div>
 
   <script src="./js/setupboard.js"></script>
 
-  <!-- nav/login 상태 토글(기존 네 코드 유지, 충돌 없게 정리) -->
+  <!-- 네비게이션 로그인/로그아웃/메뉴 공통 스크립트 -->
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       const token = localStorage.getItem("x-access-token");
       const userRole = localStorage.getItem("user-role");
 
-      const unsigned = document.querySelector(".unsigned");
-      const signed = document.querySelector(".signed");
-
       if (!token) {
-        unsigned && unsigned.classList.remove("hidden");
-        signed && signed.classList.add("hidden");
+        document.querySelector(".unsigned").classList.remove("hidden");
+        document.querySelector(".signed").classList.add("hidden");
       } else {
-        unsigned && unsigned.classList.add("hidden");
-        signed && signed.classList.remove("hidden");
+        document.querySelector(".unsigned").classList.add("hidden");
+        document.querySelector(".signed").classList.remove("hidden");
       }
 
-      if (!token || userRole !== "admin") {
-        document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+      if (!token || userRole !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
       }
 
       const signOutButton = document.querySelector("#sign-out");
       if (signOutButton) {
-        signOutButton.addEventListener("click", function() {
+        signOutButton.addEventListener("click", function () {
           localStorage.removeItem("x-access-token");
           localStorage.removeItem("user-role");
           alert("로그아웃 되었습니다.");
@@ -350,17 +373,17 @@
         });
       }
 
-      const menuBtn = document.querySelector(".menu-btn");
-      const menuBar = document.querySelector(".menu-bar");
+      const menuBtn = document.querySelector('.menu-btn');
+      const menuBar = document.querySelector('.menu-bar');
 
       if (menuBtn && menuBar) {
-        menuBtn.addEventListener("click", function() {
-          menuBar.classList.toggle("open");
+        menuBtn.addEventListener('click', function () {
+          menuBar.classList.toggle('open');
         });
 
-        document.addEventListener("click", function(event) {
+        document.addEventListener('click', function (event) {
           if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-            menuBar.classList.remove("open");
+            menuBar.classList.remove('open');
           }
         });
       }

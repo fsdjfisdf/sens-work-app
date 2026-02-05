@@ -2,18 +2,8 @@
   'use strict';
 
   /* =========================
-   * CONFIG
+   * Step template
    * ========================= */
-
-  // ✅ 작업이력 API
-  // 네가 현재 쓰는 엔드포인트 그대로 기본값으로 둠.
-  // 만약 백엔드가 /work-logs 로 제공한다면 아래 URL만 바꾸면 됨.
-  const WORKLOG_API_URL = 'http://3.37.73.151:3001/logs';
-  // 예) const WORKLOG_API_URL = '/api/work-logs';
-
-  /**
-   * ✅ STEP 순서
-   */
   const STEPS = [
     { no: 1,  name: 'TEMPLATE DRAW', desc: '설비/랙/펌프 타공부 도면 작성(OHT LINE 기준)' },
     { no: 2,  name: 'TEMPLATE 확인', desc: '업체 타공부 도면 대조 및 정상 여부 확인' },
@@ -26,7 +16,7 @@
     { no: 9,  name: 'CHILLER T/O', desc: 'CHILLER TURN ON' },
     { no: 10, name: 'HEAT EX T/O', desc: 'WALL TEMP 조절 HEAT EXCHANGER TURN ON' },
     { no: 11, name: 'PUMP T/O', desc: 'TM/PM/AM/LL PUMPING 위해 PUMP TURN ON(방치압 TEST)' },
-    { no: 12, name: 'TEACHING', desc: 'EFEM/TM 로봇 및 모듈 WAFER TEACHING(LOAD PORT/OHT/TM BLADE/CASSETTE 선행)' },
+    { no: 12, name: 'TEACHING', desc: 'EFEM/TM 로봇 및 모듈 WAFER TEACHING' },
     { no: 13, name: 'GAS T/O', desc: 'H2/NF3 사용, GAS LINE 가압 PASS 선행' },
     { no: 14, name: 'TTTM', desc: '고객 SPEC에 맞춰 GAS/PCW/CDA/PUMP/FFU/VAC 등 조절' },
     { no: 15, name: '인증 준비', desc: '고객 인증 전 설비 안전 상태 등 점검' },
@@ -34,36 +24,34 @@
     { no: 17, name: 'PROCESS CONFIRM', desc: 'AGING 진행으로 설비 이상 여부 검증(고객 진행)' }
   ];
 
-  /**
-   * ✅ STEP 키워드(작업이력 매칭용)
-   * - description 뿐 아니라 task_name/setup_item/transfer_item/work_type 등에 포함될 수 있어서
-   *   "haystack"으로 묶어 검색함.
-   */
-  const STEP_KEYWORDS = {
-    1:  ['TEMPLATE','DRAW','타공'],
-    2:  ['TEMPLATE','DRAW','타공'],
-    3:  ['FAB IN','PACKING LIST','PACKING'],
-    4:  ['DOCKING','내부 HOOK UP'],
-    5:  ['CABLE HOOK UP','HOOK UP'],
-    6:  ['SILICON'],
-    7:  ['POWER TURN ON','SYCON','RACK'],
-    8:  ['UTILITY TURN ON','UTILITY','VAC','CDA','PCW'],
-    9:  ['CHILLER'],
-    10: ['HEAT EX'],
-    11: ['PUMP TURN ON','방치압'],
-    12: ['ROBOT','TEACHING'],
-    13: ['GAS TURN ON','GAS'],
-    14: ['TTTM','REPORT'],
-    15: ['중간 인증','가동 인증','중간 가동 인증'],
-    16: ['PROCESS CONFIRM'],
-    17: ['PROCESS CONFIRM']
-  };
-
   const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
-  /**
-   * ✅ 선행조건 순서
-   */
+  /* =========================
+   * Step ↔ Worklog 매칭 키워드(요청 반영)
+   * - description(task_description)에 포함되면 해당 step과 연관 로그로 분류
+   * ========================= */
+  const STEP_KEYWORDS = {
+    1:  ['TEMPLATE', 'DRAW', '타공'],
+    2:  ['TEMPLATE', 'DRAW', '타공'],
+    3:  ['FAB IN', 'PACKING LIST', 'PACKING'],
+    4:  ['DOCKING', '내부 HOOK UP'],
+    5:  ['CABLE HOOK UP', 'HOOK UP'],
+    6:  ['SILICON'],
+    7:  ['POWER TURN ON', 'SYCON', 'RACK'],
+    8:  ['UTILITY TURN ON', 'UTILITY', 'VAC', 'CDA', 'PCW'],
+    9:  ['CHILLER'],
+    10: ['HEAT EX'],
+    11: ['PUMP TURN ON', '방치압'],
+    12: ['ROBOT', 'TEACHING'],
+    13: ['GAS TURN ON', 'GAS'],
+    14: ['TTTM', 'REPORT'],
+    15: ['중간 인증', '가동 인증', '중간 가동 인증'],
+    16: ['PROCESS CONFIRM']
+  };
+
+  /* =========================
+   * Prereqs
+   * ========================= */
   const PREREQS = [
     { code:'TRAY_INSTALL',          title:'TRAY 설치',           required:true,  beforeStepNo:5,  requiredBefore:'CABLE HOOK UP',   desc:'CABLE HOOK UP 전 필수' },
     { code:'THREE_PHASE',           title:'3상 설치',            required:true,  beforeStepNo:7,  requiredBefore:'POWER TURN ON',    desc:'POWER TURN ON 전 필수' },
@@ -110,7 +98,7 @@
     btnSaveProject: $('#btnSaveProject'),
     projSaveHint: $('#projSaveHint'),
 
-    // modal tabs
+    // tabs
     tabSteps: $('#tabSteps'),
     tabPrereq: $('#tabPrereq'),
     tabLogs: $('#tabLogs'),
@@ -122,13 +110,14 @@
     prereqHost: $('#prereqHost'),
     prBadge: $('#prBadge'),
 
-    // logs UI
-    logsHost: $('#logsHost'),
-    logBadge: $('#logBadge'),
+    // logs tab
     logQ: $('#logQ'),
     logStep: $('#logStep'),
-    logLimit: $('#logLimit'),
-    btnReloadLogs: $('#btnReloadLogs'),
+    logSort: $('#logSort'),
+    btnLogReload: $('#btnLogReload'),
+    logTbody: $('#logTbody'),
+    logStat: $('#logStat'),
+    logHint: $('#logHint'),
 
     // help modal
     helpModal: $('#helpModal'),
@@ -142,22 +131,24 @@
 
   const state = {
     list: [],
-    detailCache: new Map(),  // setupId -> {project, steps, prereqs}
-    prereqCache: new Map(),  // setupId -> map(code->row)
+    detailCache: new Map(),   // setupId -> {project, steps, prereqs}
+    prereqCache: new Map(),   // setupId -> map(code->row)
     selectedSetupId: null,
     createMode: false,
 
+    // tooltip
     hoverTimer: null,
     hoverKey: null,
 
-    // worklogs
-    workLogsCache: null,
-    workLogsFetchedAt: 0,
-    equipmentLogs: []
+    // logs
+    logsAllCache: null,       // 전체 /logs 원본
+    logsByEqCache: new Map(), // eqNameKey -> filtered logs[]
+    logsLastEqName: '',
+    logsLastStepFilter: '',
   };
 
   /* =========================================================
-   * Utils
+   * 공통 유틸
    * ========================================================= */
   function getToken() {
     return localStorage.getItem('x-access-token') || '';
@@ -293,9 +284,7 @@
   }
 
   /* =========================================================
-   * Tooltip (잔상/작은 점 남는 현상 방지)
-   * - hidden 클래스 + display + 좌표 원복을 함께 처리
-   * - mouseout/mouseleave 중복 호출에도 안전
+   * Tooltip
    * ========================================================= */
   function ensureTooltipEl() {
     if (el.tooltip) return;
@@ -303,7 +292,7 @@
     div.id = 'tooltip';
     div.className = 'tooltip hidden';
     div.style.position = 'fixed';
-    div.style.zIndex = '9500';
+    div.style.zIndex = '9601';
     div.style.pointerEvents = 'none';
     document.body.appendChild(div);
     el.tooltip = div;
@@ -315,18 +304,11 @@
     state.hoverTimer = null;
     state.hoverKey = null;
 
-    // ✅ 확실한 숨김(잔상 방지)
     el.tooltip.classList.add('hidden');
     el.tooltip.innerHTML = '';
     el.tooltip.style.display = 'none';
     el.tooltip.style.left = '-9999px';
     el.tooltip.style.top = '-9999px';
-  }
-
-  function forceShowTooltip() {
-    ensureTooltipEl();
-    el.tooltip.style.display = 'block';
-    el.tooltip.classList.remove('hidden');
   }
 
   function placeTooltip(x, y) {
@@ -336,6 +318,12 @@
     const maxY = window.innerHeight - pad - 10;
     el.tooltip.style.left = Math.min(x + 14, maxX) + 'px';
     el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
+  }
+
+  function forceShowTooltip() {
+    ensureTooltipEl();
+    el.tooltip.style.display = 'block';
+    el.tooltip.classList.remove('hidden');
   }
 
   async function showTooltipForCell(td, clientX, clientY) {
@@ -365,8 +353,12 @@
       const as = firstNonEmpty(fmtYYMMDD(row.actual_start), '-');
       const ae = firstNonEmpty(fmtYYMMDD(row.actual_end), '-');
 
-      const workers = firstNonEmpty(row.workers, row.worker, row.worker_names, row.task_man, row.owner, '-');
-      const note = firstNonEmpty(row.note, row.memo, row.remark, row.comment, '-', '');
+      const workers = firstNonEmpty(
+        row.workers, row.worker, row.worker_names, row.task_man, row.owner, '-'
+      );
+      const note = firstNonEmpty(
+        row.note, row.memo, row.remark, row.comment, row.last_note, '-'
+      );
 
       el.tooltip.innerHTML = `
         <div class="tip-title">${escapeHtml(stepName)}</div>
@@ -375,7 +367,7 @@
           <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(as)}</div>
           <div class="tip-k">Actual E</div><div class="tip-v">${escapeHtml(ae)}</div>
           <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers)}</div>
-          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note || '-')}</div>
+          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note)}</div>
         </div>
         <div class="tip-foot">클릭: 상태 변경(확인 후 저장)</div>
       `;
@@ -388,7 +380,6 @@
           <div class="tip-k">msg</div><div class="tip-v">${escapeHtml(e.message)}</div>
         </div>
       `;
-      placeTooltip(clientX, clientY);
     }
   }
 
@@ -410,9 +401,9 @@
     hideTooltip();
   }
 
-  /* =========================================================
-   * Help (순서도)
-   * ========================================================= */
+  /* =========================
+   * Help (순서도) 렌더링
+   * ========================= */
   function renderHelpFlowchart() {
     el.helpFlowHost.innerHTML = `
       <div class="flowchart-track">
@@ -465,9 +456,9 @@
     `;
   }
 
-  /* =========================================================
+  /* =========================
    * Board
-   * ========================================================= */
+   * ========================= */
   async function loadBoard() {
     const q = buildQuery({
       equipment_type: el.fEqType?.value,
@@ -493,7 +484,6 @@
       state.list = list;
       renderTable();
       prefetchDetailsForBoard();
-
       if (el.statCount) el.statCount.textContent = `설비 ${state.list.length}대`;
     } catch (e) {
       if (el.tableHost) {
@@ -551,7 +541,6 @@
       </table>
     `;
 
-    // 설비 클릭 -> 모달
     el.tableHost.querySelectorAll('[data-open-detail="1"]').forEach(a => {
       a.addEventListener('click', () => {
         const setupId = a.getAttribute('data-setup-id');
@@ -559,7 +548,6 @@
       });
     });
 
-    // 셀 클릭/hover
     const tds = el.tableHost.querySelectorAll('[data-cell="1"]');
     tds.forEach(td => {
       td.addEventListener('click', async () => {
@@ -574,7 +562,7 @@
       td.addEventListener('mouseleave', onCellLeave);
     });
 
-    // 이벤트 위임(보험)
+    // 보조 위임
     el.tableHost.addEventListener('mouseover', (e) => {
       const td = e.target?.closest?.('[data-cell="1"]');
       if (!td) return;
@@ -725,28 +713,25 @@
     }
   }
 
-  /* =========================================================
+  /* =========================
    * Modal + Tabs
-   * ========================================================= */
+   * ========================= */
   function openModalShell() {
     if (el.modal) {
       el.modal.classList.remove('hidden');
-      el.modal.setAttribute('aria-hidden','false');
+      el.modal.setAttribute('aria-hidden', 'false');
     }
   }
 
   function closeModal() {
     if (el.modal) {
       el.modal.classList.add('hidden');
-      el.modal.setAttribute('aria-hidden','true');
+      el.modal.setAttribute('aria-hidden', 'true');
     }
     state.selectedSetupId = null;
     state.createMode = false;
-    state.equipmentLogs = [];
-
     if (el.btnSaveProject) el.btnSaveProject.textContent = 'SAVE';
     setTab('steps');
-    hideTooltip();
   }
 
   function setTab(mode) {
@@ -761,6 +746,9 @@
     el.viewSteps?.classList?.toggle('hidden', !isSteps);
     el.viewPrereq?.classList?.toggle('hidden', !isPrereq);
     el.viewLogs?.classList?.toggle('hidden', !isLogs);
+
+    // 탭 전환 시 tooltip 제거(겹침 방지)
+    hideTooltip();
   }
 
   function openCreateModal() {
@@ -783,12 +771,10 @@
 
     if (el.stepsHost) el.stepsHost.innerHTML = `<div class="muted small">설비 생성 후 STEP이 자동 생성됩니다.</div>`;
     if (el.prereqHost) el.prereqHost.innerHTML = `<div class="muted small">설비 생성 후 선행조건 체크가 가능합니다.</div>`;
-    if (el.logsHost) el.logsHost.innerHTML = `<div class="muted small" style="padding:12px;">설비 생성 후 작업이력을 볼 수 있습니다.</div>`;
-
     if (el.prBadge) el.prBadge.textContent = `0/0`;
-    if (el.logBadge) el.logBadge.textContent = `0`;
 
-    fillLogStepSelect();
+    // logs 초기화
+    resetLogsView();
 
     if (el.btnSaveProject) el.btnSaveProject.textContent = 'CREATE';
     if (el.projSaveHint) el.projSaveHint.textContent = '';
@@ -809,24 +795,24 @@
     if (el.mMeta) el.mMeta.textContent = '';
     if (el.stepsHost) el.stepsHost.innerHTML = '';
     if (el.prereqHost) el.prereqHost.innerHTML = '';
-    if (el.logsHost) el.logsHost.innerHTML = '';
     if (el.prBadge) el.prBadge.textContent = `0/0`;
-    if (el.logBadge) el.logBadge.textContent = `0`;
     if (el.projSaveHint) el.projSaveHint.textContent = '';
 
-    fillLogStepSelect();
+    resetLogsView();
 
     try {
       const data = await ensureDetail(String(setupId));
       renderModal(data);
 
-      // prereq
       const prMap = await fetchPrereqs(String(setupId));
       renderPrereqs(String(setupId), prMap);
 
-      // logs (미리 로딩해두기)
-      await loadEquipmentLogsForModal();
-      renderLogsUI();
+      // logs 탭 Step filter 옵션 구성
+      ensureLogStepOptions();
+
+      // logs 선로딩(필요하면 탭 눌렀을 때만 해도 됨)
+      // 여기서는 UX 위해 캐시만 워밍업
+      warmupLogsCache().catch(()=>{});
     } catch (e) {
       if (el.mTitle) el.mTitle.textContent = '상세 로드 실패';
       if (el.mMeta) el.mMeta.textContent = e.message;
@@ -927,7 +913,6 @@
           <div class="step-actions">
             <span class="muted small" data-hint="1"></span>
             <button class="btn primary" data-save-step="1" type="button">SAVE</button>
-            <button class="btn" data-open-logs="1" type="button" title="이 Step 관련 작업이력 보기">관련 이력</button>
           </div>
         </div>
       `;
@@ -939,7 +924,6 @@
       const pill = card.querySelector('[data-pill="1"]');
       const hint = card.querySelector('[data-hint="1"]');
       const btn = card.querySelector('[data-save-step="1"]');
-      const btnLogs = card.querySelector('[data-open-logs="1"]');
 
       selStatus?.addEventListener('change', () => {
         const st = selStatus.value;
@@ -990,24 +974,9 @@
           await loadBoard();
           toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
           setTimeout(() => { if (hint) hint.textContent = ''; }, 1500);
-
-          // logs 최신화(저장 후 바로 반영되게)
-          try { await loadEquipmentLogsForModal(); renderLogsUI(); } catch {}
         } catch (e) {
           if (hint) hint.textContent = `fail: ${e.message}`;
           toast(`STEP 저장 실패: ${e.message}`);
-        }
-      });
-
-      // ✅ step에서 바로 “관련 이력” 보기 -> 작업이력 탭으로 이동 + step 필터 자동
-      btnLogs?.addEventListener('click', async () => {
-        setTab('logs');
-        if (el.logStep) el.logStep.value = String(stepNo);
-        try {
-          await loadEquipmentLogsForModal();
-          renderLogsUI();
-        } catch (e) {
-          toast(`작업이력 로드 실패: ${e.message}`);
         }
       });
     });
@@ -1070,18 +1039,15 @@
       if (el.projSaveHint) el.projSaveHint.textContent = 'saved ✅';
       toast('Project 저장 완료');
       setTimeout(() => { if (el.projSaveHint) el.projSaveHint.textContent = ''; }, 1500);
-
-      // logs도 다시 로드(설비명 변경했을 수 있음)
-      try { await loadEquipmentLogsForModal(); renderLogsUI(); } catch {}
     } catch (e) {
       if (el.projSaveHint) el.projSaveHint.textContent = `fail: ${e.message}`;
       toast(`Project 저장 실패: ${e.message}`);
     }
   }
 
-  /* =========================================================
+  /* =========================
    * Prereq (DB ONLY)
-   * ========================================================= */
+   * ========================= */
   function normalizePrereqResponse(json) {
     const data = json?.data;
 
@@ -1222,196 +1188,263 @@
   }
 
   /* =========================================================
-   * Work Logs (설비명 매칭 + Step 키워드 매칭)
+   * ✅ 작업이력(Logs) 탭
+   * - /logs 전체를 가져와 eq name 매칭
+   * - step keyword로 분류/필터
+   * - 컬럼: DATE, TASK, WORKER, TIME, DESCRIPTION
+   * - DESCRIPTION: <br> 줄바꿈 처리
    * ========================================================= */
-  function normText(s){
-    return String(s ?? '')
-      .toUpperCase()
-      .replaceAll(/\s+/g,' ')
-      .trim();
-  }
-
-  function eqNameMatch(logEqName, targetEqName){
-    const a = normText(logEqName);
-    const b = normText(targetEqName);
-    if (!a || !b) return false;
-    if (a === b) return true;
-    if (a.includes(b) || b.includes(a)) return true;
-    return false;
-  }
-
-  function logHaystack(log){
-    return normText([
-      log.task_description,
-      log.task_name,
-      log.setup_item,
-      log.transfer_item,
-      log.work_type,
-      log.work_type2,
-      log.task_cause,
-      log.task_result,
-      log.status,
-      log.SOP,
-      log.tsguide
-    ].filter(Boolean).join(' | '));
-  }
-
-  async function fetchAllWorkLogs({ force=false } = {}){
-    const now = Date.now();
-    const TTL = 1000 * 60 * 3; // 3분 캐시
-    if (!force && state.workLogsCache && (now - state.workLogsFetchedAt) < TTL) {
-      return state.workLogsCache;
-    }
-
-    const res = await fetch(WORKLOG_API_URL);
-    if (!res.ok) throw new Error('작업 이력을 가져오지 못했습니다.');
-    const workLogs = await res.json();
-
-    state.workLogsCache = Array.isArray(workLogs) ? workLogs : [];
-    state.workLogsFetchedAt = now;
-    return state.workLogsCache;
-  }
-
-  function fillLogStepSelect(){
+  function ensureLogStepOptions() {
     if (!el.logStep) return;
-    el.logStep.innerHTML = `
-      <option value="">ALL</option>
-      ${STEPS.map(s => `<option value="${s.no}">${s.no}. ${escapeHtml(s.name)}</option>`).join('')}
-    `;
+    // 이미 채워져 있으면 스킵
+    if (el.logStep.options && el.logStep.options.length > 1) return;
+
+    const opts = ['<option value="">ALL</option>']
+      .concat(STEPS.map(s => `<option value="${s.no}">${escapeHtml(`${s.no}. ${s.name}`)}</option>`));
+    el.logStep.innerHTML = opts.join('');
   }
 
-  async function loadEquipmentLogsForModal({ force=false } = {}){
-    const setupId = state.selectedSetupId;
-    if (!setupId) return [];
-
-    const detail = await ensureDetail(setupId);
-    const eqName = detail?.project?.equipment_name || '';
-
-    const all = await fetchAllWorkLogs({ force });
-    const matched = all.filter(l => eqNameMatch(l.equipment_name, eqName));
-
-    matched.sort((a,b) => String(b.task_date||'').localeCompare(String(a.task_date||'')));
-
-    state.equipmentLogs = matched;
-    return matched;
+  function resetLogsView() {
+    if (el.logQ) el.logQ.value = '';
+    if (el.logSort) el.logSort.value = 'date_desc';
+    if (el.logStep) el.logStep.value = '';
+    if (el.logStat) el.logStat.textContent = '0건';
+    if (el.logHint) el.logHint.textContent = '';
+    if (el.logTbody) {
+      el.logTbody.innerHTML = `<tr><td colspan="5" class="muted" style="padding:12px;">설비를 선택하면 작업이력을 불러옵니다.</td></tr>`;
+    }
+    state.logsLastEqName = '';
+    state.logsLastStepFilter = '';
   }
 
-  function filterLogs(logs, stepNo, q){
-    let out = logs.slice();
+  function normalizeEqKey(name) {
+    return String(name || '').trim().toLowerCase();
+  }
 
-    const query = normText(q);
-    if (stepNo) {
-      const kws = (STEP_KEYWORDS[Number(stepNo)] || []).map(normText).filter(Boolean);
-      if (kws.length) {
-        out = out.filter(l => {
-          const hay = logHaystack(l);
-          return kws.some(kw => hay.includes(kw));
-        });
+  function containsKeyword(hay, kw) {
+    if (!hay || !kw) return false;
+    return String(hay).toLowerCase().includes(String(kw).toLowerCase());
+  }
+
+  function matchStepNoByDescription(desc) {
+    const text = String(desc || '');
+    const matched = [];
+    for (const stepNoStr of Object.keys(STEP_KEYWORDS)) {
+      const stepNo = Number(stepNoStr);
+      const kws = STEP_KEYWORDS[stepNo] || [];
+      if (kws.some(k => containsKeyword(text, k))) matched.push(stepNo);
+    }
+    return matched; // 여러 step에 걸릴 수 있음
+  }
+
+  function parseDurationToMinutes(task_duration) {
+    if (task_duration == null) return 0;
+
+    // 이미 숫자면(분)이라고 가정
+    if (typeof task_duration === 'number') return Math.max(0, Math.round(task_duration));
+
+    const s = String(task_duration).trim();
+    if (!s) return 0;
+
+    // "HH:MM:SS" or "HH:MM"
+    if (s.includes(':')) {
+      const parts = s.split(':').map(x => parseInt(x, 10));
+      if (parts.some(n => Number.isNaN(n))) return 0;
+      if (parts.length === 3) {
+        const [hh, mm, ss] = parts;
+        return Math.max(0, Math.round(hh * 60 + mm + (ss / 60)));
+      }
+      if (parts.length === 2) {
+        const [hh, mm] = parts;
+        return Math.max(0, Math.round(hh * 60 + mm));
       }
     }
 
-    if (query) {
+    // "120" 같은 문자열이면 분으로
+    const n = Number(s);
+    if (!Number.isNaN(n)) return Math.max(0, Math.round(n));
+    return 0;
+  }
+
+  function safeDescToHtml(descRaw) {
+    // 요구사항: <br> 기준 줄바꿈
+    // 보안: desc를 escape한 후, "&lt;br&gt;" / "&lt;br/&gt;" / "&lt;br /&gt;"만 <br>로 변환
+    const escaped = escapeHtml(descRaw ?? '');
+
+    return escaped
+      .replaceAll('&lt;br&gt;', '<br>')
+      .replaceAll('&lt;br/&gt;', '<br>')
+      .replaceAll('&lt;br /&gt;', '<br>');
+  }
+
+  async function warmupLogsCache() {
+    if (state.logsAllCache) return state.logsAllCache;
+
+    const res = await fetch('http://3.37.73.151:3001/logs');
+    if (!res.ok) throw new Error('작업 이력을 가져오지 못했습니다.');
+    const logs = await res.json();
+    if (!Array.isArray(logs)) throw new Error('작업 이력 응답 형식이 올바르지 않습니다.');
+
+    state.logsAllCache = logs;
+    return logs;
+  }
+
+  function filterLogsByEqName(allLogs, equipmentName) {
+    const key = normalizeEqKey(equipmentName);
+    if (!key) return [];
+    if (state.logsByEqCache.has(key)) return state.logsByEqCache.get(key);
+
+    const filtered = allLogs.filter(log => {
+      const eq = normalizeEqKey(log?.equipment_name || log?.equipment || log?.eq_name);
+      return eq && eq === key;
+    });
+
+    // step 매칭 정보 붙이기
+    const enhanced = filtered.map(log => {
+      const desc = log?.task_description || '';
+      const stepsMatched = matchStepNoByDescription(desc);
+      return { ...log, __stepsMatched: stepsMatched };
+    });
+
+    state.logsByEqCache.set(key, enhanced);
+    return enhanced;
+  }
+
+  function applyLogsFilters(logs) {
+    let out = Array.isArray(logs) ? logs.slice() : [];
+
+    const q = (el.logQ?.value || '').trim().toLowerCase();
+    const stepNo = Number(el.logStep?.value || 0) || 0;
+    const sort = el.logSort?.value || 'date_desc';
+
+    if (stepNo) {
+      out = out.filter(l => Array.isArray(l.__stepsMatched) && l.__stepsMatched.includes(stepNo));
+      state.logsLastStepFilter = String(stepNo);
+    } else {
+      state.logsLastStepFilter = '';
+    }
+
+    if (q) {
       out = out.filter(l => {
-        const hay = normText([
-          l.task_man, l.group, l.site, l.line, l.equipment_type,
-          l.equipment_name, logHaystack(l)
-        ].filter(Boolean).join(' | '));
-        return hay.includes(query);
+        const date = String(l.task_date || '').toLowerCase();
+        const task = String(l.task_name || '').toLowerCase();
+        const worker = String(l.task_man || '').toLowerCase();
+        const desc = String(l.task_description || '').toLowerCase();
+        return date.includes(q) || task.includes(q) || worker.includes(q) || desc.includes(q);
       });
     }
+
+    const minutes = (l) => parseDurationToMinutes(l.task_duration);
+
+    out.sort((a, b) => {
+      const da = fmtDateISO(a.task_date);
+      const db = fmtDateISO(b.task_date);
+
+      if (sort === 'date_asc') return da.localeCompare(db);
+      if (sort === 'time_desc') return minutes(b) - minutes(a);
+      if (sort === 'time_asc') return minutes(a) - minutes(b);
+      // date_desc default
+      return db.localeCompare(da);
+    });
 
     return out;
   }
 
-  function renderLogsUI(){
-    if (!el.logsHost) return;
+  function renderLogsTable(logs, equipmentName) {
+    if (!el.logTbody) return;
 
-    const stepNo = el.logStep?.value ? Number(el.logStep.value) : null;
-    const q = el.logQ?.value || '';
-    const limit = Number(el.logLimit?.value || 100);
+    const list = Array.isArray(logs) ? logs : [];
+    if (el.logStat) el.logStat.textContent = `${list.length}건`;
 
-    const base = state.equipmentLogs || [];
-    const filtered = filterLogs(base, stepNo, q).slice(0, limit);
+    const stepHint = (() => {
+      const stepNo = Number(el.logStep?.value || 0) || 0;
+      if (!stepNo) return '';
+      const stepName = STEPS.find(s => s.no === stepNo)?.name || `STEP ${stepNo}`;
+      return `Step 매칭: ${stepNo}. ${stepName}`;
+    })();
 
-    if (el.logBadge) el.logBadge.textContent = String(filtered.length);
+    if (el.logHint) {
+      const eq = equipmentName ? `EQ: ${equipmentName}` : '';
+      el.logHint.textContent = [eq, stepHint].filter(Boolean).join(' · ');
+    }
 
-    if (!filtered.length) {
-      el.logsHost.innerHTML = `<div style="padding:16px;color:#6b7280;">매칭되는 작업 이력이 없습니다.</div>`;
+    if (!list.length) {
+      el.logTbody.innerHTML = `<tr><td colspan="5" class="muted" style="padding:12px;">조건에 맞는 작업이력이 없습니다.</td></tr>`;
       return;
     }
 
-    const rows = filtered.map(l => {
-      const date = (l.task_date ? String(l.task_date).split('T')[0] : '');
-      const man = escapeHtml(l.task_man || '');
-      const tname = escapeHtml(l.task_name || '');
-      const mins = escapeHtml(String(l.task_duration || ''));
-      const eqt = escapeHtml(l.equipment_type || '');
-      const site = escapeHtml(l.site || '');
-      const line = escapeHtml(l.line || '');
-      const desc = escapeHtml(l.task_description || '');
-
-      const id = escapeHtml(String(l.id));
+    el.logTbody.innerHTML = list.map(l => {
+      const date = fmtDateISO(l.task_date);
+      const task = String(l.task_name || '');
+      const worker = String(l.task_man || '');
+      const timeMin = parseDurationToMinutes(l.task_duration);
+      const descHtml = safeDescToHtml(l.task_description || '');
 
       return `
         <tr>
-          <td style="min-width:96px;">${escapeHtml(date)}</td>
-          <td style="min-width:110px;">${man}</td>
-          <td style="min-width:140px;"><b>${tname}</b></td>
-          <td style="min-width:130px;">${eqt} · ${site} · ${line}</td>
-          <td style="min-width:80px;text-align:right;">${mins}</td>
-          <td style="min-width:280px;">
-            <span class="log-more" data-log-more="1" data-id="${id}">내용 보기</span>
-            <div class="log-desc" data-log-desc="1" data-id="${id}">${desc || '-'}</div>
-          </td>
+          <td>${escapeHtml(date)}</td>
+          <td>${escapeHtml(task)}</td>
+          <td>${escapeHtml(worker)}</td>
+          <td>${escapeHtml(timeMin ? `${timeMin}m` : '')}</td>
+          <td class="log-desc">${descHtml}</td>
         </tr>
       `;
     }).join('');
-
-    el.logsHost.innerHTML = `
-      <table class="table">
-<thead>
-  <tr>
-    <th>DATE</th>
-    <th>TASK</th>
-    <th>WORKER</th>
-    <th>TIME</th>
-    <th>DESCRIPTION</th>
-  </tr>
-</thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-
-    el.logsHost.querySelectorAll('[data-log-more="1"]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const box = el.logsHost.querySelector(`[data-log-desc="1"][data-id="${CSS.escape(id)}"]`);
-        if (!box) return;
-        box.classList.toggle('open');
-        btn.textContent = box.classList.contains('open') ? '내용 닫기' : '내용 보기';
-      });
-    });
   }
 
-  /* =========================================================
+  async function loadLogsForSelectedEquipment(forceReloadAll=false) {
+    const setupId = state.selectedSetupId;
+    if (!setupId) return;
+
+    // 현재 모달의 설비명 기준 (project input이 수정 중이어도 일단 현재 값으로)
+    const equipmentName = (el.p_equipment_name?.value || '').trim();
+    state.logsLastEqName = equipmentName;
+
+    if (!equipmentName) {
+      if (el.logTbody) el.logTbody.innerHTML = `<tr><td colspan="5" class="muted" style="padding:12px;">설비명이 없어 작업이력을 불러올 수 없습니다.</td></tr>`;
+      if (el.logStat) el.logStat.textContent = '0건';
+      return;
+    }
+
+    try {
+      if (el.logTbody) el.logTbody.innerHTML = `<tr><td colspan="5" class="muted" style="padding:12px;">불러오는 중...</td></tr>`;
+      if (el.logStat) el.logStat.textContent = '...';
+
+      if (forceReloadAll) {
+        state.logsAllCache = null;
+        state.logsByEqCache.clear();
+      }
+
+      const allLogs = await warmupLogsCache();
+      const eqLogs = filterLogsByEqName(allLogs, equipmentName);
+      const filtered = applyLogsFilters(eqLogs);
+
+      renderLogsTable(filtered, equipmentName);
+    } catch (e) {
+      if (el.logTbody) el.logTbody.innerHTML = `<tr><td colspan="5" style="padding:12px;color:#b91c1c;">로드 실패: ${escapeHtml(e.message)}</td></tr>`;
+      if (el.logStat) el.logStat.textContent = '0건';
+      toast(`작업이력 로드 실패: ${e.message}`);
+    }
+  }
+
+  /* =========================
    * Help modal
-   * ========================================================= */
+   * ========================= */
   function openHelp() {
     renderHelpFlowchart();
     el.helpModal?.classList?.remove('hidden');
-    el.helpModal?.setAttribute('aria-hidden','false');
+    el.helpModal?.setAttribute('aria-hidden', 'false');
   }
   function closeHelp() {
     el.helpModal?.classList?.add('hidden');
-    el.helpModal?.setAttribute('aria-hidden','true');
+    el.helpModal?.setAttribute('aria-hidden', 'true');
   }
 
-  /* =========================================================
+  /* =========================
    * Events
-   * ========================================================= */
+   * ========================= */
   function bindEvents() {
     ensureTooltipEl();
-    hideTooltip();
 
     el.btnNew?.addEventListener('click', openCreateModal);
     el.btnApply?.addEventListener('click', loadBoard);
@@ -1456,13 +1489,23 @@
 
     el.tabLogs?.addEventListener('click', async () => {
       setTab('logs');
-      fillLogStepSelect();
-      try {
-        await loadEquipmentLogsForModal();
-        renderLogsUI();
-      } catch (e) {
-        toast(`작업이력 로드 실패: ${e.message}`);
-      }
+      ensureLogStepOptions();
+      await loadLogsForSelectedEquipment(false);
+    });
+
+    // logs filters
+    el.logQ?.addEventListener('input', () => {
+      // 현재 캐시를 사용해서 즉시 필터링
+      loadLogsForSelectedEquipment(false);
+    });
+    el.logStep?.addEventListener('change', () => {
+      loadLogsForSelectedEquipment(false);
+    });
+    el.logSort?.addEventListener('change', () => {
+      loadLogsForSelectedEquipment(false);
+    });
+    el.btnLogReload?.addEventListener('click', () => {
+      loadLogsForSelectedEquipment(true);
     });
 
     el.btnSaveProject?.addEventListener('click', saveProject);
@@ -1474,25 +1517,7 @@
       if (close === '1') closeHelp();
     });
 
-    // logs filters
-    el.logQ?.addEventListener('input', () => renderLogsUI());
-    el.logStep?.addEventListener('change', () => renderLogsUI());
-    el.logLimit?.addEventListener('change', () => renderLogsUI());
-
-    el.btnReloadLogs?.addEventListener('click', async () => {
-      try {
-        await loadEquipmentLogsForModal({ force:true });
-        renderLogsUI();
-        toast('작업이력 새로고침 완료');
-      } catch (e) {
-        toast(`새로고침 실패: ${e.message}`);
-      }
-    });
-
-    // tooltip 안정성
     window.addEventListener('scroll', () => hideTooltip(), { passive: true });
-    window.addEventListener('resize', () => hideTooltip(), { passive: true });
-    document.addEventListener('visibilitychange', () => hideTooltip());
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
