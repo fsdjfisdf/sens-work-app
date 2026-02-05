@@ -12,13 +12,15 @@
   --ip:#fbbf24;
   --dn:#22c55e;
   --hd:#94a3b8;
-
   --danger:#ef4444;
 
   /* prereq accent */
   --pr:#8b5cf6;
-  --prBg: rgba(139,92,246,.15);
-  --lockBg: rgba(15,23,42,.06);
+  --prBg: rgba(139,92,246,.14);
+
+  /* neutral accents */
+  --soft: rgba(17,24,39,.06);
+  --soft2: rgba(17,24,39,.10);
 }
 
 *{box-sizing:border-box}
@@ -30,7 +32,7 @@ body{
   color:var(--text);
 }
 
-/* ========== Topbar ========== */
+/* ===================== Topbar ===================== */
 .topbar{
   position:sticky; top:0; z-index:50;
   background:rgba(255,255,255,.92);
@@ -47,7 +49,7 @@ body{
 
 .page{padding:16px 18px 26px; max-width:100%}
 
-/* ========== Card / Button ========== */
+/* ===================== Card / Button ===================== */
 .card{
   background:var(--card);
   border:1px solid var(--line);
@@ -70,7 +72,7 @@ body{
 .muted{color:var(--muted)}
 .small{font-size:12px}
 
-/* ========== Filters ========== */
+/* ===================== Filters ===================== */
 .filters{padding:14px}
 .filters-grid{
   display:grid;
@@ -97,7 +99,7 @@ body{
 }
 .field.wide{grid-column: span 2}
 
-/* ========== Legend Chips ========== */
+/* ===================== Legend ===================== */
 .legend{
   margin-top:12px;
   padding-top:12px;
@@ -123,32 +125,24 @@ body{
 .dot.ip{background:var(--ip)}
 .dot.dn{background:var(--dn)}
 .dot.hd{background:var(--hd)}
-
-.prereqChip .prIcon{
+.issueMark{
   display:inline-flex;
   width:18px;height:18px;
-  align-items:center; justify-content:center;
   border-radius:6px;
-  background: var(--prBg);
-  color: var(--pr);
-  border:1px solid rgba(139,92,246,.25);
+  align-items:center; justify-content:center;
+  background: rgba(239,68,68,.12);
+  color: var(--danger);
+  border:1px solid rgba(239,68,68,.25);
   font-weight:1000;
 }
-.lockChip .lockIcon{
-  display:inline-flex;
-  width:18px;height:18px;
-  align-items:center; justify-content:center;
-  border-radius:6px;
-  background: rgba(15,23,42,.06);
-  border:1px solid rgba(15,23,42,.14);
-}
 
-/* ========== Board/Table ========== */
+/* ===================== Board/Table ===================== */
 .board{padding:12px; margin-top:14px}
 .board-head{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   margin-bottom:10px;
 }
+
 .table-host{
   border:1px solid var(--line);
   border-radius:12px;
@@ -180,7 +174,7 @@ body{
   background:#fff;
   font-weight:1000;
   width: 360px;
-  cursor:pointer;
+  cursor:pointer; /* 설비명 클릭 -> 모달 */
 }
 .table thead .eq-col{
   z-index:4;
@@ -188,14 +182,10 @@ body{
   cursor:default;
 }
 
-.step-head{
-  max-width: 180px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+.step-head{max-width:180px; overflow:hidden; text-overflow:ellipsis}
 .step-name-only{font-weight:1000}
 
-/* ========== Equipment cell header ========== */
+/* 설비 셀 내부(진행율 표시는 테이블에선 제거) */
 .eq-top{
   display:flex;
   align-items:flex-start;
@@ -206,7 +196,7 @@ body{
   font-weight:1000;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width: 220px;
+  max-width: 320px;
 }
 .eq-sub{
   margin-top:6px;
@@ -218,82 +208,15 @@ body{
   max-width: 340px;
 }
 
-/* ✅ Dual progress (STEP + PREREQ) */
-.eq-progress{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:6px;
-  min-width: 170px;
-}
-.dual{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  min-width: 170px;
-}
-.dualRow{
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.dualLabel{
-  width:36px;
-  font-size:10px;
-  font-weight:1000;
-  color: rgba(17,24,39,.65);
-  text-align:right;
-}
-.dualLabel.pr{ color: rgba(139,92,246,.90); }
-
-.dualPct{
-  width:44px;
-  text-align:left;
-  font-weight:1000;
-  font-size:11px;
-  color: rgba(17,24,39,.75);
-}
-.dualPct.prText{ color: rgba(139,92,246,.90); }
-
-.progressBar{
-  width: 92px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(17,24,39,.08);
-  border: 1px solid rgba(17,24,39,.10);
-  overflow:hidden;
-}
-.progressFill{
-  height: 100%;
-  background: rgba(37,99,235,.80);
-}
-.prBar{
-  background: rgba(139,92,246,.10);
-  border-color: rgba(139,92,246,.18);
-}
-.prFill{
-  background: rgba(139,92,246,.80);
-}
-.progressMeta{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:10px;
-}
-.progressSub{
-  font-weight:900;
-  font-size:11px;
-}
-
-/* ========== Step cells ========== */
+/* ===================== Step cells ===================== */
+/* ✅ 셀 클릭으로 상태 토글 안함 -> 커서/호버 최소화 */
 .cell{
   text-align:center;
-  cursor:pointer;
   user-select:none;
   padding:6px 6px;
-  position:relative;
+  cursor:default;
 }
-.cell:hover{background: rgba(37,99,235,.05)}
+.cell:hover{background: transparent}
 
 .pillWrap{
   display:flex;
@@ -323,32 +246,7 @@ body{
   min-height: 12px;
 }
 
-.cell .saving{
-  margin-left:6px;
-  font-size:11px;
-  color:var(--muted);
-  font-weight:900;
-}
-
-/* ✅ Locked overlay */
-.cell.locked{background: var(--lockBg)}
-.cell.locked:hover{background: rgba(15,23,42,.08)}
-.lockOverlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background: rgba(255,255,255,.40);
-  backdrop-filter: blur(1px);
-  border-radius: 6px;
-}
-.lockEmoji{
-  font-size:16px;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,.12));
-}
-
-/* ========== Modal ========== */
+/* ===================== Modal ===================== */
 .modal{
   position:fixed; inset:0; z-index:200;
   display:flex; align-items:center; justify-content:center;
@@ -378,8 +276,62 @@ body{
 .modal-title{font-weight:1000; font-size:16px}
 .modal-meta{margin-top:4px; font-size:12px}
 .modal-body{padding:14px}
+
 .section{margin-bottom:18px}
-.section-title{font-weight:1000; margin-bottom:10px}
+.section-title{
+  font-weight:1000;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.section-sub{
+  font-size:12px;
+  color: var(--muted);
+  font-weight:900;
+}
+
+/* 설비정보 아래 STEP 진행율(모달에서만) */
+.modal-progress{
+  margin:10px 0 2px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background: rgba(17,24,39,.03);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.mp-left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.mp-title{font-weight:1000; font-size:12px}
+.mp-sub{font-weight:900; font-size:11px; color: var(--muted)}
+.mp-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.mp-bar{
+  width: 220px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(17,24,39,.08);
+  border: 1px solid rgba(17,24,39,.10);
+  overflow:hidden;
+}
+.mp-fill{
+  height:100%;
+  background: rgba(37,99,235,.80);
+}
+.mp-pct{
+  font-weight:1000;
+  font-size:12px;
+}
 
 .form-grid{
   display:grid;
@@ -396,7 +348,47 @@ body{
   justify-content:flex-end;
 }
 
-/* ========== Prereq Section ========== */
+/* ===================== 타업체 선행조건: 모달 섹션 분리 ===================== */
+.split-grid{
+  display:grid;
+  grid-template-columns: 1.2fr 1.8fr; /* 좌:선행조건 / 우:스텝 */
+  gap:12px;
+}
+.panel{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  overflow:hidden;
+}
+.panel-head{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  background:#fafafa;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.panel-title{font-weight:1000}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-size:11px;
+  font-weight:1000;
+}
+.badge.pr{
+  border-color: rgba(139,92,246,.25);
+  background: var(--prBg);
+  color: var(--pr);
+}
+.panel-body{padding:12px}
+
+/* prereq list */
 .prereq-host{
   display:flex;
   flex-direction:column;
@@ -418,9 +410,7 @@ body{
   width:18px;height:18px;
   accent-color: var(--pr);
 }
-.pr-title{
-  font-weight:1000;
-}
+.pr-title{font-weight:1000}
 .pr-meta{
   margin-top:6px;
   display:flex;
@@ -473,11 +463,8 @@ body{
   border-color: rgba(139,92,246,.45);
   box-shadow: 0 0 0 4px rgba(139,92,246,.12);
 }
-.prBtn{
-  border-color: rgba(139,92,246,.25);
-}
 
-/* ========== Steps cards ========== */
+/* ===================== Steps ===================== */
 .steps-host{
   display:flex;
   flex-direction:column;
@@ -502,33 +489,13 @@ body{
   color:var(--muted);
   white-space:pre-wrap;
 }
-
-/* ✅ locked step card */
-.stepLocked{
-  background: rgba(15,23,42,.03);
-  border-color: rgba(15,23,42,.12);
-}
-.step-lock-hint{
-  margin-top:8px;
-  font-size:12px;
-  font-weight:900;
-  color: rgba(15,23,42,.75);
-  background: rgba(15,23,42,.06);
-  border: 1px solid rgba(15,23,42,.10);
-  padding:8px 10px;
-  border-radius: 12px;
-}
-
-/* Plan End / Actual S/E / Workers + Note */
 .step-grid.step-grid-planend{
   margin-top:10px;
   display:grid;
   grid-template-columns: repeat(5, minmax(0,1fr));
   gap:10px;
 }
-.step-grid.step-grid-planend .note-wide{
-  grid-column: span 5;
-}
+.step-grid.step-grid-planend .note-wide{grid-column: span 5}
 
 .step-actions{
   margin-top:10px;
@@ -538,7 +505,7 @@ body{
   align-items:center;
 }
 
-/* ========== Toast ========== */
+/* ===================== Toast ===================== */
 .toast{
   position:fixed;
   bottom:18px;
@@ -553,7 +520,7 @@ body{
 }
 .toast.hidden{display:none}
 
-/* ========== Hover tooltip ========== */
+/* ===================== Tooltip ===================== */
 .tooltip{
   position:fixed;
   z-index:260;
@@ -568,30 +535,7 @@ body{
   line-height:1.35;
 }
 .tooltip.hidden{display:none}
-.tip-title{
-  font-weight:1000;
-  margin-bottom:6px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-.tip-lock{
-  display:inline-flex;
-  padding:2px 6px;
-  border-radius:999px;
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.18);
-  font-size:11px;
-  font-weight:1000;
-}
-.tip-warn{
-  margin-bottom:8px;
-  padding:8px 10px;
-  border-radius:12px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.14);
-  font-weight:900;
-}
+.tip-title{font-weight:1000; margin-bottom:6px}
 .tip-grid{
   display:grid;
   grid-template-columns: 90px 1fr;
@@ -600,12 +544,17 @@ body{
 .tip-k{color: rgba(255,255,255,.70); font-weight:900}
 .tip-v{color:#fff; font-weight:700; white-space:pre-wrap}
 
-/* ========== Responsive ========== */
+/* ===================== Responsive ===================== */
 @media (max-width: 1100px){
   .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .field.wide{grid-column: span 2}
+
   .form-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .form-grid .wide{grid-column: span 2}
+
   .step-grid.step-grid-planend{grid-template-columns: repeat(2, minmax(0,1fr))}
   .step-grid.step-grid-planend .note-wide{grid-column: span 2}
+
+  .split-grid{grid-template-columns: 1fr}
+  .mp-bar{width: 180px}
 }
