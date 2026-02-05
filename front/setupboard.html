@@ -15,6 +15,7 @@
       </div>
       <div class="top-actions">
         <button id="btnNew" class="btn primary">+ 신규 설비</button>
+        <button id="btnHelp" class="btn icon" title="셋업 진행 순서도">?</button>
       </div>
     </div>
   </header>
@@ -93,16 +94,13 @@
         <span class="chip"><span class="dot ip"></span>IN_PROGRESS(I)</span>
         <span class="chip"><span class="dot dn"></span>DONE(D)</span>
         <span class="chip"><span class="dot hd"></span>HOLD(H)</span>
-        <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
         <span class="muted small">· 설비명 클릭: 상세 모달</span>
       </div>
     </section>
 
     <section class="board card">
       <div class="board-head">
-        <div class="board-title">
-          <b id="statCount">-</b>
-        </div>
+        <div class="board-title"><b id="statCount">-</b></div>
       </div>
 
       <div id="tableHost" class="table-host"></div>
@@ -182,7 +180,7 @@
           </div>
         </div>
 
-        <!-- ✅ 토글 바 -->
+        <!-- toggle -->
         <div class="section">
           <div class="section-title">
             <span>진행 관리</span>
@@ -192,15 +190,13 @@
             </div>
           </div>
 
-          <!-- Steps View -->
           <div id="viewSteps" class="view">
             <div id="stepsHost" class="steps-host"></div>
           </div>
 
-          <!-- Prereq View -->
           <div id="viewPrereq" class="view hidden">
             <div class="pr-top">
-              <div class="muted small">* 체크 후 “저장” 버튼을 눌러 반영</div>
+              <div class="muted small">* 체크/해제 후 “저장”을 눌러 DB에 반영됩니다.</div>
               <span id="prBadge" class="badge pr">0/0</span>
             </div>
             <div id="prereqHost" class="prereq-host"></div>
@@ -211,9 +207,79 @@
     </div>
   </div>
 
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal hidden">
+    <div class="modal-backdrop" data-help-close="1"></div>
+
+    <div class="modal-card help-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">SETUP 진행 순서도</div>
+          <div class="modal-meta muted">현장 기준 흐름(기본 가이드) · 설비/라인에 따라 일부 변형 가능</div>
+        </div>
+        <div class="modal-actions">
+          <button id="btnHelpClose" class="btn">닫기</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="help-grid">
+          <div class="help-col">
+            <div class="help-h">메인 플로우</div>
+            <div class="flow">
+              <div class="node">1. TEMPLATE DRAW</div>
+              <div class="arrow">↓</div>
+              <div class="node">2. TEMPLATE 확인</div>
+              <div class="arrow">↓</div>
+              <div class="node">3. FAB IN</div>
+              <div class="arrow">↓</div>
+              <div class="node">4. DOCKING</div>
+              <div class="arrow">↓</div>
+              <div class="node">5. CABLE H/U</div>
+              <div class="arrow">↓</div>
+              <div class="node">6. SILICON</div>
+              <div class="arrow">↓</div>
+              <div class="node">7~13. T/O 세트 (POWER/UTILITY/…)</div>
+              <div class="arrow">↓</div>
+              <div class="node">14. TTTM</div>
+              <div class="arrow">↓</div>
+              <div class="node">15. 인증 준비</div>
+              <div class="arrow">↓</div>
+              <div class="node">16. 중간 인증</div>
+              <div class="arrow">↓</div>
+              <div class="node strong">17. PROCESS CONFIRM</div>
+            </div>
+          </div>
+
+          <div class="help-col">
+            <div class="help-h">타업체 선행조건(권장 포인트)</div>
+            <div class="callout">
+              <div class="callout-title">실수 방지 체크</div>
+              <ul class="callout-list">
+                <li><b>POWER T/O 전</b> : 3상 설치 확인</li>
+                <li><b>UTILITY T/O 전</b> : PCW LINE 가압 PASS</li>
+                <li><b>GAS T/O 전</b> : GAS LINE 가압 PASS</li>
+                <li><b>TEACHING 전</b> : LP SET UP / OHT 인증 확인</li>
+                <li><b>중간 인증 전</b> : RF CAL / 환경 QUAL / MFC 인증 / 지진방지 BKT</li>
+              </ul>
+              <div class="muted small">* 상세 항목은 “타업체 선행조건” 탭에서 체크 관리</div>
+            </div>
+
+            <div class="help-h">사용 팁</div>
+            <div class="tips">
+              <div class="tip">보드 셀 클릭 시 <b>확인창</b>이 뜬 후 상태 저장됩니다.</div>
+              <div class="tip">셀 hover 시 <b>Plan/Actual/작업자/특이사항</b> 확인 가능</div>
+              <div class="tip">진행률 바는 <b>DONE 기준</b>으로 계산됩니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Hover Tooltip -->
   <div id="tooltip" class="tooltip hidden"></div>
-
   <div id="toast" class="toast hidden"></div>
 
   <script src="./js/setupboard.js"></script>

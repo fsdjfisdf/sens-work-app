@@ -23,7 +23,7 @@
 
   const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
-  // 타업체 선행조건(프론트 기준 템플릿) - API 없으면 localStorage fallback
+  // ✅ 선행조건 템플릿(표시는 프론트에서 하되, 저장/조회는 DB API만)
   const PREREQS = [
     { code:'AGV_INSTALL', title:'AGV 설치', required:false, requiredBefore:'SILICON', desc:'SILICON 전 설치 권장' },
     { code:'LP_SETUP', title:'LP SET UP', required:true, requiredBefore:'TEACHING', desc:'TEACHING 전 필수' },
@@ -42,6 +42,7 @@
 
   const el = {
     btnNew: $('#btnNew'),
+    btnHelp: $('#btnHelp'),
     btnApply: $('#btnApply'),
     tableHost: $('#tableHost'),
     statCount: $('#statCount'),
@@ -79,14 +80,18 @@
     prereqHost: $('#prereqHost'),
     prBadge: $('#prBadge'),
 
+    // help modal
+    helpModal: $('#helpModal'),
+    btnHelpClose: $('#btnHelpClose'),
+
     tooltip: $('#tooltip'),
     toast: $('#toast')
   };
 
   const state = {
     list: [],
-    detailCache: new Map(),  // setupId -> {project, steps, issues}
-    prereqCache: new Map(),  // setupId -> { [code]: {...} }
+    detailCache: new Map(),  // setupId -> {project, steps}
+    prereqCache: new Map(),  // setupId -> map from code to row
     selectedSetupId: null,
     createMode: false,
 
@@ -142,10 +147,7 @@
   function fmtYYMMDD(d) {
     const iso = fmtDateISO(d);
     if (!iso) return '';
-    const yy = iso.slice(2,4);
-    const mm = iso.slice(5,7);
-    const dd = iso.slice(8,10);
-    return `${yy}.${mm}.${dd}`;
+    return `${iso.slice(2,4)}.${iso.slice(5,7)}.${iso.slice(8,10)}`;
   }
 
   function toast(msg) {
@@ -205,9 +207,6 @@
     try { return JSON.parse(raw); } catch { return {}; }
   }
 
-  // DONE: actual_end 우선, 없으면 actual_start
-  // PLANNED: plan_end
-  // IN_PROGRESS: actual_start ~ actual_end(있으면) / 없으면 actual_start~
   function buildStepDateLabel(stepRow, status) {
     const st = String(status || '').toUpperCase();
     const planEnd = fmtYYMMDD(stepRow?.plan_end);
@@ -250,7 +249,6 @@
       const json = await apiFetch(`/api/setup-board?${q}`);
       const list = json?.data || [];
 
-      // 진행율 낮은순 + updated_at 오래된 순
       list.sort((a, b) => {
         const pa = calcProgressFromBoardRow(a).pct;
         const pb = calcProgressFromBoardRow(b).pct;
@@ -269,7 +267,6 @@
 
   function renderTable() {
     const list = state.list;
-
     if (!list.length) {
       el.tableHost.innerHTML = `<div style="padding:16px;color:#6b7280;">데이터가 없습니다.</div>`;
       return;
@@ -303,7 +300,6 @@
       </table>
     `;
 
-    // 설비명 클릭 -> 모달
     el.tableHost.querySelectorAll('[data-open-detail="1"]').forEach(a => {
       a.addEventListener('click', () => {
         const setupId = a.getAttribute('data-setup-id');
@@ -311,7 +307,6 @@
       });
     });
 
-    // ✅ 셀 클릭 -> confirm 후 상태 토글 PATCH
     el.tableHost.querySelectorAll('[data-cell="1"]').forEach(td => {
       td.addEventListener('click', async () => {
         const setupId = td.getAttribute('data-setup-id');
@@ -320,7 +315,6 @@
         await toggleCellStatusWithConfirm(td, setupId, stepNo);
       });
 
-      // ✅ hover tooltip 복원
       td.addEventListener('mouseenter', onCellEnter);
       td.addEventListener('mousemove', onCellMove);
       td.addEventListener('mouseleave', onCellLeave);
@@ -330,11 +324,8 @@
   function renderRow(p) {
     const name = escapeHtml(p.equipment_name || '(no name)');
     const sub = escapeHtml([p.equipment_type || '-', p.site || '-', p.line || '-'].join(' · '));
-    const issues = Number(p.open_issues || 0) > 0 ? `<span class="issueMark" title="OPEN ISSUE">!</span>` : '';
 
     const stepMap = parseStepMap(p);
-
-    // ✅ 보드 설비 컬럼 하단 진행율 바
     const prog = calcProgressFromBoardRow(p);
 
     const cells = STEPS.map(s => {
@@ -342,7 +333,6 @@
       const cls = statusToClass(st);
       const short = statusShort(st);
 
-      // ✅ 날짜는 detail cache가 있으면 표시(hover/모달로 채워짐)
       let dateLabel = '';
       const cached = state.detailCache.get(String(p.setup_id));
       if (cached?.steps) {
@@ -368,7 +358,7 @@
       <tr>
         <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}">
           <div class="eq-top">
-            <div class="eq-name">${name} ${issues}</div>
+            <div class="eq-name">${name}</div>
           </div>
           <div class="eq-sub">${sub}</div>
 
@@ -377,7 +367,6 @@
               <div class="progressFill" style="width:${prog.pct}%;"></div>
             </div>
             <div class="progressMeta">
-              <span class="progressPct">${escapeHtml(String(prog.pct))}%</span>
               <span class="progressSub muted">${escapeHtml(`${prog.done}/${prog.total}`)}</span>
             </div>
           </div>
@@ -416,10 +405,7 @@
     if (dateEl) dateEl.textContent = dateLabel || '';
 
     let s = td.querySelector('.saving');
-    if (!savingText) {
-      if (s) s.remove();
-      return;
-    }
+    if (!savingText) { if (s) s.remove(); return; }
     if (!s) {
       s = document.createElement('span');
       s.className = 'saving';
@@ -436,7 +422,6 @@
     const ok = confirm(`[${stepName}]\n${cur} → ${nxt}\n상태를 변경할까요?`);
     if (!ok) return;
 
-    // date label 계산(상세 캐시 기반)
     let dateLabel = '';
     const cached = state.detailCache.get(String(setupId));
     if (cached?.steps) {
@@ -455,7 +440,6 @@
       td.setAttribute('data-status', nxt);
       updateCellUI(td, nxt, dateLabel, '');
 
-      // cache 반영
       if (cached?.steps) {
         const row = cached.steps.find(x => Number(x.step_no) === Number(stepNo));
         if (row) row.status = nxt;
@@ -471,7 +455,7 @@
   }
 
   /* =========================
-   * Tooltip (hover)
+   * Tooltip
    * ========================= */
   function hideTooltip() {
     el.tooltip.classList.add('hidden');
@@ -505,7 +489,6 @@
       const detail = await ensureDetail(setupId);
       if (state.hoverKey !== key) return;
 
-      // ✅ hover 시: 해당 설비 행의 날짜 라벨들을 한 번 채워줌
       const rowTds = document.querySelectorAll(`[data-cell="1"][data-setup-id="${setupId}"]`);
       rowTds.forEach(cell => {
         const no = Number(cell.getAttribute('data-step-no'));
@@ -535,7 +518,7 @@
           <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers)}</div>
           <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note)}</div>
         </div>
-        <div class="tip-foot muted">클릭: 상태 변경(확인 후 저장)</div>
+        <div class="tip-foot">클릭: 상태 변경(확인 후 저장)</div>
       `;
       placeTooltip(clientX, clientY);
     } catch (e) {
@@ -550,29 +533,21 @@
   }
 
   function onCellEnter(e) {
-    const td = e.currentTarget;
-    const setupId = td.getAttribute('data-setup-id');
-    const stepNo = td.getAttribute('data-step-no');
-    if (!setupId || !stepNo) return;
-
     clearTimeout(state.hoverTimer);
     state.hoverTimer = setTimeout(() => {
-      showTooltipForCell(td, e.clientX, e.clientY);
+      showTooltipForCell(e.currentTarget, e.clientX, e.clientY);
     }, 180);
   }
-
   function onCellMove(e) {
     if (el.tooltip.classList.contains('hidden')) return;
     placeTooltip(e.clientX, e.clientY);
   }
-
   function onCellLeave() { hideTooltip(); }
 
   /* =========================
-   * Modal + Toggle
+   * Modal + Tabs
    * ========================= */
   function openModalShell() { el.modal.classList.remove('hidden'); }
-
   function closeModal() {
     el.modal.classList.add('hidden');
     state.selectedSetupId = null;
@@ -637,7 +612,7 @@
       const data = await ensureDetail(String(setupId));
       renderModal(data);
 
-      // prereq도 미리 로딩(탭 전환 시 빠르게)
+      // prereq preload (DB)
       const prMap = await fetchPrereqs(String(setupId));
       renderPrereqs(String(setupId), prMap);
     } catch (e) {
@@ -775,14 +750,12 @@
             body: patch
           });
 
-          // cache update
           const cached = state.detailCache.get(setupId);
           if (cached && Array.isArray(cached.steps)) {
             const row = cached.steps.find(x => Number(x.step_no) === stepNo);
             if (row) Object.assign(row, patch);
           }
 
-          // STEP1 auto start_date
           if (stepNo === 1) {
             const autoISO = firstNonEmpty(patch.actual_start, patch.plan_end, null);
             if (autoISO) {
@@ -796,7 +769,6 @@
           }
 
           hint.textContent = 'saved ✅';
-
           await loadBoard();
           toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
           setTimeout(() => (hint.textContent = ''), 1500);
@@ -829,11 +801,7 @@
       el.projSaveHint.textContent = 'saving...';
 
       if (isCreate) {
-        const json = await apiFetch(`/api/setup-projects`, {
-          method: 'POST',
-          body: payloadBase
-        });
-
+        const json = await apiFetch(`/api/setup-projects`, { method: 'POST', body: payloadBase });
         const newId = json?.setup_id || json?.setupId || json?.id;
 
         el.projSaveHint.textContent = 'created ✅';
@@ -853,10 +821,7 @@
 
       if (!setupId) return toast('setupId가 없습니다.');
 
-      const patch = {
-        ...payloadBase,
-        board_status: el.p_board_status.value
-      };
+      const patch = { ...payloadBase, board_status: el.p_board_status.value };
 
       await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`, {
         method: 'PATCH',
@@ -879,62 +844,15 @@
   }
 
   /* =========================
-   * Prereq (API + fallback)
+   * Prereq (DB ONLY)
    * ========================= */
-  function prereqLocalKey(setupId) { return `setup_prereq:${String(setupId)}`; }
-
-  function loadPrereqLocal(setupId) {
-    try {
-      const raw = localStorage.getItem(prereqLocalKey(setupId));
-      if (!raw) return {};
-      const obj = JSON.parse(raw);
-      return obj && typeof obj === 'object' ? obj : {};
-    } catch { return {}; }
-  }
-
-  function savePrereqLocal(setupId, data) {
-    try { localStorage.setItem(prereqLocalKey(setupId), JSON.stringify(data || {})); } catch {}
-  }
-
   async function fetchPrereqs(setupId) {
     if (state.prereqCache.has(setupId)) return state.prereqCache.get(setupId);
-
-    try {
-      const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs`);
-      const data = json?.data && typeof json.data === 'object' ? json.data : {};
-      state.prereqCache.set(setupId, data);
-      return data;
-    } catch {
-      const local = loadPrereqLocal(setupId);
-      state.prereqCache.set(setupId, local);
-      return local;
-    }
-  }
-
-  async function updatePrereq(setupId, code, patch) {
-    const cur = state.prereqCache.get(setupId) || {};
-    const next = { ...cur };
-    const prev = next[code] && typeof next[code] === 'object' ? next[code] : {};
-    const merged = { ...prev, ...patch };
-
-    if (typeof merged.done === 'boolean') {
-      if (merged.done) merged.done_date = merged.done_date || fmtDateISO(new Date().toISOString());
-      else merged.done_date = null;
-    }
-
-    next[code] = merged;
-    state.prereqCache.set(setupId, next);
-
-    try {
-      await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs/${encodeURIComponent(code)}`, {
-        method: 'PATCH',
-        body: merged
-      });
-      return { ok:true, via:'api' };
-    } catch {
-      savePrereqLocal(setupId, next);
-      return { ok:true, via:'local' };
-    }
+    // ✅ DB에서만 가져옴 (API 없으면 에러로 표시)
+    const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs`);
+    const data = json?.data && typeof json.data === 'object' ? json.data : {};
+    state.prereqCache.set(setupId, data);
+    return data;
   }
 
   function calcPrereqProgress(prMap) {
@@ -947,6 +865,27 @@
     return { total, done };
   }
 
+  async function savePrereq(setupId, code, done) {
+    // ✅ 최소 PATCH payload (메모 없음)
+    const payload = {
+      done: !!done,
+      done_date: done ? fmtDateISO(new Date().toISOString()) : null
+    };
+
+    await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      body: payload
+    });
+
+    // cache update
+    const cur = state.prereqCache.get(setupId) || {};
+    const prev = cur[code] && typeof cur[code] === 'object' ? cur[code] : {};
+    const next = { ...cur, [code]: { ...prev, ...payload } };
+    state.prereqCache.set(setupId, next);
+
+    return next;
+  }
+
   function renderPrereqs(setupId, prMap) {
     const prog = calcPrereqProgress(prMap);
     el.prBadge.textContent = `${prog.done}/${prog.total}`;
@@ -954,7 +893,6 @@
     el.prereqHost.innerHTML = PREREQS.map(it => {
       const row = prMap?.[it.code] || {};
       const done = row?.done === true || row?.done === 1 || row?.done === '1';
-      const note = row?.note || '';
       const doneDate = row?.done_date ? fmtYYMMDD(row.done_date) : '';
 
       return `
@@ -973,7 +911,6 @@
           <div class="pr-desc">${escapeHtml(it.desc)}</div>
 
           <div class="pr-actions">
-            <input class="pr-note" type="text" data-pr-field="note" value="${escapeHtml(note)}" placeholder="메모(선택)"/>
             <button class="btn" data-pr-save="1">저장</button>
           </div>
         </div>
@@ -983,27 +920,31 @@
     el.prereqHost.querySelectorAll('[data-pr-item="1"]').forEach(card => {
       const code = card.getAttribute('data-code');
       const chk = card.querySelector('[data-pr-field="done"]');
-      const inp = card.querySelector('[data-pr-field="note"]');
       const btn = card.querySelector('[data-pr-save="1"]');
 
       btn.addEventListener('click', async () => {
         if (!setupId || !code) return;
-        const done = !!chk.checked;
-        const note = String(inp.value || '').trim();
 
         btn.disabled = true;
         btn.textContent = '저장중...';
         try {
-          const r = await updatePrereq(setupId, code, { done, note });
-          const latest = state.prereqCache.get(setupId) || {};
-          renderPrereqs(setupId, latest);
-          toast(r.via === 'api' ? '선행조건 저장 완료' : '선행조건 저장 완료(로컬)');
+          const next = await savePrereq(setupId, code, chk.checked);
+          renderPrereqs(setupId, next);
+          toast('선행조건 저장 완료(DB)');
         } catch (e) {
           toast(`선행조건 저장 실패: ${e.message}`);
+          btn.disabled = false;
+          btn.textContent = '저장';
         }
       });
     });
   }
+
+  /* =========================
+   * Help modal
+   * ========================= */
+  function openHelp() { el.helpModal.classList.remove('hidden'); }
+  function closeHelp() { el.helpModal.classList.add('hidden'); }
 
   /* =========================
    * Events
@@ -1023,17 +964,38 @@
       if (close === '1') closeModal();
     });
 
-    el.btnSaveProject.addEventListener('click', saveProject);
-
-    // modal tabs
+    // tabs
     el.tabSteps.addEventListener('click', () => setTab('steps'));
     el.tabPrereq.addEventListener('click', async () => {
       setTab('prereq');
       const setupId = state.selectedSetupId;
       if (!setupId) return;
-      // 탭 전환 시 최신 한번 더 보장
-      const prMap = await fetchPrereqs(setupId);
-      renderPrereqs(setupId, prMap);
+      try {
+        const prMap = await fetchPrereqs(setupId);
+        renderPrereqs(setupId, prMap);
+      } catch (e) {
+        el.prereqHost.innerHTML = `
+          <div class="api-missing">
+            <div class="api-title">선행조건 API가 필요합니다</div>
+            <div class="api-desc muted">
+              GET /api/setup-projects/:id/prereqs<br/>
+              PATCH /api/setup-projects/:id/prereqs/:code
+            </div>
+            <div class="api-desc muted small">현재 응답: ${escapeHtml(e.message)}</div>
+          </div>
+        `;
+        toast(`선행조건 로드 실패: ${e.message}`);
+      }
+    });
+
+    el.btnSaveProject.addEventListener('click', saveProject);
+
+    // help
+    el.btnHelp.addEventListener('click', openHelp);
+    el.btnHelpClose.addEventListener('click', closeHelp);
+    el.helpModal.addEventListener('click', (e) => {
+      const close = e.target?.getAttribute?.('data-help-close');
+      if (close === '1') closeHelp();
     });
 
     window.addEventListener('scroll', () => hideTooltip(), { passive: true });
