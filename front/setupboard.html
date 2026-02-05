@@ -93,19 +93,8 @@
         <span class="chip"><span class="dot ip"></span>IN_PROGRESS(I)</span>
         <span class="chip"><span class="dot dn"></span>DONE(D)</span>
         <span class="chip"><span class="dot hd"></span>HOLD(H)</span>
-
-        <span class="chip prereqChip">
-          <span class="prIcon">✓</span>
-          Prereq
-        </span>
-
-        <span class="chip lockChip">
-          <span class="lockIcon">🔒</span>
-          Prereq 미완료로 잠김
-        </span>
-
+        <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
         <span class="muted small">· 설비명 클릭: 상세 모달</span>
-        <span class="muted small">· 셀 클릭: 상태 토글/저장 (잠김이면 안내)</span>
       </div>
     </section>
 
@@ -113,7 +102,6 @@
       <div class="board-head">
         <div class="board-title">
           <b id="statCount">-</b>
-          <span class="muted small" id="statHint"></span>
         </div>
       </div>
 
@@ -138,7 +126,10 @@
 
       <div class="modal-body">
         <div class="section">
-          <div class="section-title">Project 정보</div>
+          <div class="section-title">
+            <span>Project 정보</span>
+            <span id="projSaveHint" class="muted small"></span>
+          </div>
 
           <div class="form-grid">
             <div class="field wide">
@@ -148,7 +139,7 @@
 
             <div class="field">
               <label>설비타입</label>
-              <input id="p_equipment_type" type="text"/>
+              <input id="p_equipment_type" type="text" placeholder="SUPRA XP"/>
             </div>
 
             <div class="field">
@@ -187,31 +178,61 @@
             </div>
           </div>
 
+          <!-- ✅ 모달에서만 STEP 진행율 -->
+          <div id="modalProgress" class="modal-progress" aria-label="steps progress">
+            <div class="mp-left">
+              <div class="mp-title">STEP 진행율</div>
+              <div id="mpSub" class="mp-sub">-</div>
+            </div>
+            <div class="mp-right">
+              <div class="mp-bar">
+                <div id="mpFill" class="mp-fill" style="width:0%"></div>
+              </div>
+              <div id="mpPct" class="mp-pct">0%</div>
+            </div>
+          </div>
+
           <div class="row-actions">
             <button id="btnSaveProject" class="btn primary">SAVE</button>
-            <span id="projSaveHint" class="muted small"></span>
           </div>
         </div>
 
-        <!-- ✅ Prereq 섹션 (외부 선행조건 체크) -->
+        <!-- ✅ 선행조건 + Steps 섹션 분리 -->
         <div class="section">
           <div class="section-title">
-            Prereq (타업체 선행조건)
-            <span class="muted small" id="prSummary">-</span>
+            <span>진행 관리</span>
+            <span class="section-sub">타업체 선행조건 체크 + 우리 STEP 관리</span>
           </div>
-          <div id="prereqHost" class="prereq-host"></div>
+
+          <div class="split-grid">
+            <!-- Left: Prerequisites -->
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">타업체 선행조건</div>
+                <span id="prBadge" class="badge pr">0/0</span>
+              </div>
+              <div class="panel-body">
+                <div id="prereqHost" class="prereq-host"></div>
+              </div>
+            </div>
+
+            <!-- Right: Steps -->
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">Steps</div>
+                <span class="badge">Plan End / Actual Start / Actual End</span>
+              </div>
+              <div class="panel-body">
+                <div id="stepsHost" class="steps-host"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Steps</div>
-          <div id="stepsHost" class="steps-host"></div>
-        </div>
+        <!-- ✅ Issues 섹션 제거 -->
       </div>
     </div>
   </div>
-
-  <!-- Hover Tooltip -->
-  <div id="tooltip" class="tooltip hidden"></div>
 
   <div id="toast" class="toast hidden"></div>
 
