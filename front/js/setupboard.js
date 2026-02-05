@@ -1,6 +1,7 @@
 (() => {
   'use strict';
 
+  // ✅ SET UP STEP 순서 변경(요청 반영, 17개 고정)
   const STEPS = [
     { no: 1,  name: 'TEMPLATE DRAW' },
     { no: 2,  name: 'TEMPLATE 확인' },
@@ -10,11 +11,11 @@
     { no: 6,  name: 'SILICON' },
     { no: 7,  name: 'POWER T/O' },
     { no: 8,  name: 'UTILITY T/O' },
-    { no: 9,  name: 'TEACHING' },
-    { no: 10, name: 'GAS T/O' },
+    { no: 9,  name: 'CHILLER T/O' },
+    { no: 10, name: 'HEAT EX T/O' },
     { no: 11, name: 'PUMP T/O' },
-    { no: 12, name: 'CHILLER T/O' },
-    { no: 13, name: 'HEAT EX T/O' },
+    { no: 12, name: 'TEACHING' },
+    { no: 13, name: 'GAS T/O' },
     { no: 14, name: 'TTTM' },
     { no: 15, name: '인증 준비' },
     { no: 16, name: '중간 인증' },
@@ -23,19 +24,19 @@
 
   const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
-  // ✅ 선행조건 템플릿(표시는 프론트에서 하되, 저장/조회는 DB API만)
+  // ✅ 타업체 선행조건 순서 변경(요청 반영, 표시 순서 그대로)
   const PREREQS = [
-    { code:'AGV_INSTALL', title:'AGV 설치', required:false, requiredBefore:'SILICON', desc:'SILICON 전 설치 권장' },
-    { code:'LP_SETUP', title:'LP SET UP', required:true, requiredBefore:'TEACHING', desc:'TEACHING 전 필수' },
-    { code:'OHT_CERT', title:'OHT 가동 인증', required:true, requiredBefore:'TEACHING', desc:'TEACHING 전 필수' },
-    { code:'TRAY_INSTALL', title:'Tray 설치', required:true, requiredBefore:'CABLE H/U', desc:'CABLE H/U 전 필수' },
-    { code:'THREE_PHASE', title:'3상 설치', required:true, requiredBefore:'POWER T/O', desc:'POWER T/O 전 필수' },
-    { code:'PCW_PRESSURE_PASS', title:'PCW LINE 가압 PASS', required:true, requiredBefore:'UTILITY T/O', desc:'UTILITY T/O 전 필수' },
-    { code:'GAS_PRESSURE_PASS', title:'GAS LINE 가압 PASS', required:true, requiredBefore:'GAS T/O', desc:'GAS T/O 전 필수' },
-    { code:'RF_CAL', title:'RF CAL', required:true, requiredBefore:'중간 인증', desc:'중간 인증 전 필수' },
-    { code:'ENV_QUAL', title:'환경 QUAL', required:true, requiredBefore:'중간 인증', desc:'중간 인증 전 필수' },
-    { code:'MFC_CERT', title:'MFC 인증', required:true, requiredBefore:'중간 인증', desc:'중간 인증 전 필수' },
-    { code:'SEISMIC_BKT', title:'지진방지 BKT 체결', required:true, requiredBefore:'중간 인증', desc:'중간 인증 전 필수' },
+    { code:'TRAY_INSTALL',        title:'TRAY 설치',            required:true,  requiredBefore:'CABLE H/U',   desc:'CABLE H/U 전 필수' },
+    { code:'THREE_PHASE',         title:'3상 설치',             required:true,  requiredBefore:'POWER T/O',   desc:'POWER T/O 전 필수' },
+    { code:'AGV_INSTALL',         title:'AGV 설치',             required:false, requiredBefore:'SILICON',     desc:'SILICON 전 설치 권장' },
+    { code:'PCW_PRESSURE_PASS',   title:'PCW LINE 가압 PASS',   required:true,  requiredBefore:'UTILITY T/O', desc:'UTILITY T/O 전 필수' },
+    { code:'LP_SETUP',            title:'LP SET UP',            required:true,  requiredBefore:'TEACHING',    desc:'TEACHING 전 필수' },
+    { code:'OHT_CERT',            title:'OHT 가동 인증',         required:true,  requiredBefore:'TEACHING',    desc:'TEACHING 전 필수' },
+    { code:'GAS_PRESSURE_PASS',   title:'GAS LINE 가압 PASS',   required:true,  requiredBefore:'GAS T/O',     desc:'GAS T/O 전 필수' },
+    { code:'RF_CAL',              title:'RF CAL',               required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
+    { code:'ENV_QUAL',            title:'환경 QUAL',            required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
+    { code:'MFC_CERT',            title:'MFC 인증',             required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
+    { code:'SEISMIC_BKT',         title:'지진방지 BKT 체결',     required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
   ];
 
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -267,14 +268,14 @@
   }
 
   async function prefetchDetailsForBoard() {
-  const ids = state.list.slice(0, 80).map(p => String(p.setup_id)); // 너무 많으면 제한
-  for (const id of ids) {
-    if (!state.detailCache.has(id)) {
-      try { await ensureDetail(id); } catch {}
+    const ids = state.list.slice(0, 80).map(p => String(p.setup_id));
+    for (const id of ids) {
+      if (!state.detailCache.has(id)) {
+        try { await ensureDetail(id); } catch {}
+      }
     }
+    renderTable();
   }
-  renderTable(); // ✅ 캐시 채워졌으니 날짜 다시 그림
-}
 
   function renderTable() {
     hideTooltip();
@@ -469,13 +470,13 @@
   /* =========================
    * Tooltip
    * ========================= */
-function hideTooltip() {
-  el.tooltip.classList.add('hidden');
-  el.tooltip.innerHTML = '';
-  clearTimeout(state.hoverTimer);
-  state.hoverTimer = null;
-  state.hoverKey = null;
-}
+  function hideTooltip() {
+    el.tooltip.classList.add('hidden');
+    el.tooltip.innerHTML = '';
+    clearTimeout(state.hoverTimer);
+    state.hoverTimer = null;
+    state.hoverKey = null;
+  }
 
   function placeTooltip(x, y) {
     const pad = 14;
@@ -485,13 +486,13 @@ function hideTooltip() {
     el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
   }
 
-async function showTooltipForCell(td, clientX, clientY) {
-  // ✅ td가 사라졌으면(리렌더 됐으면) 그냥 종료
-  if (!td || !td.isConnected) return;
+  async function showTooltipForCell(td, clientX, clientY) {
+    // ✅ 리렌더로 td가 사라진 경우 방어
+    if (!td || !td.isConnected) return;
 
-  const setupId = td.getAttribute('data-setup-id');
-  const stepNo = Number(td.getAttribute('data-step-no'));
-  if (!setupId || !stepNo) return;
+    const setupId = td.getAttribute('data-setup-id');
+    const stepNo = Number(td.getAttribute('data-step-no'));
+    if (!setupId || !stepNo) return;
 
     const key = `${setupId}:${stepNo}`;
     state.hoverKey = key;
@@ -627,7 +628,6 @@ async function showTooltipForCell(td, clientX, clientY) {
       const data = await ensureDetail(String(setupId));
       renderModal(data);
 
-      // prereq preload (DB)
       const prMap = await fetchPrereqs(String(setupId));
       renderPrereqs(String(setupId), prMap);
     } catch (e) {
@@ -863,7 +863,6 @@ async function showTooltipForCell(td, clientX, clientY) {
    * ========================= */
   async function fetchPrereqs(setupId) {
     if (state.prereqCache.has(setupId)) return state.prereqCache.get(setupId);
-    // ✅ DB에서만 가져옴 (API 없으면 에러로 표시)
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs`);
     const data = json?.data && typeof json.data === 'object' ? json.data : {};
     state.prereqCache.set(setupId, data);
@@ -881,7 +880,6 @@ async function showTooltipForCell(td, clientX, clientY) {
   }
 
   async function savePrereq(setupId, code, done) {
-    // ✅ 최소 PATCH payload (메모 없음)
     const payload = {
       done: !!done,
       done_date: done ? fmtDateISO(new Date().toISOString()) : null
@@ -892,7 +890,6 @@ async function showTooltipForCell(td, clientX, clientY) {
       body: payload
     });
 
-    // cache update
     const cur = state.prereqCache.get(setupId) || {};
     const prev = cur[code] && typeof cur[code] === 'object' ? cur[code] : {};
     const next = { ...cur, [code]: { ...prev, ...payload } };
@@ -979,7 +976,6 @@ async function showTooltipForCell(td, clientX, clientY) {
       if (close === '1') closeModal();
     });
 
-    // tabs
     el.tabSteps.addEventListener('click', () => setTab('steps'));
     el.tabPrereq.addEventListener('click', async () => {
       setTab('prereq');
