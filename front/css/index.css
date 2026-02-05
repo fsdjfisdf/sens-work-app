@@ -261,6 +261,10 @@ img,svg{ display:block; max-width:100%; }
 .grid > *:nth-child(10) { animation-delay: 400ms; }
 .grid > *:nth-child(11) { animation-delay: 440ms; }
 .grid > *:nth-child(12) { animation-delay: 480ms; }
+.grid > *:nth-child(13) { animation-delay: 520ms; }
+.grid > *:nth-child(14) { animation-delay: 560ms; }
+.grid > *:nth-child(15) { animation-delay: 600ms; }
+.grid > *:nth-child(16) { animation-delay: 640ms; }
 
 /* Touch ergonomics (larger hit-area on coarse pointers) */
 @media (pointer: coarse){
