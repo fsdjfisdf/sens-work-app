@@ -475,6 +475,8 @@ nav{
   border-radius:18px;
   box-shadow:var(--shadow);
   -webkit-overflow-scrolling: touch;
+  position: relative;        /* sticky z-index 계산 안정 */
+  overscroll-behavior: contain; /* iOS/모바일에서 바운스 스크롤 튐 방지 */
 }
 .modal-head{
   padding:12px 14px;
@@ -483,6 +485,11 @@ nav{
   justify-content:space-between;
   gap:10px;
   border-bottom:1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;                /* modal-body보다 위 */
+  background: rgba(255,255,255,.96); /* 뒤에 내용 비치지 않게 */
+  backdrop-filter: blur(10px);       /* 선택: topbar 느낌 */
 }
 .modal-title{font-weight:1000; font-size:16px; min-width:0}
 .modal-meta{margin-top:4px; font-size:12px}
