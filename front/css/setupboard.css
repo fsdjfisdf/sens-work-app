@@ -362,7 +362,7 @@ nav{
   position:sticky; left:0; z-index:2;
   background:#fff;
   font-weight:1000;
-  width: 200px;
+  width: 180px;
   cursor:pointer;
 }
 .table thead .eq-col{
