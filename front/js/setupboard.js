@@ -626,7 +626,7 @@
               <div class="progressFill" style="width:${prog.pct}%;"></div>
             </div>
             <div class="progressMeta">
-              <span class="progressSub muted">${escapeHtml(`${prog.done}/${prog.total}`)}</span>
+              <span class="progressSub muted">${escapeHtml(`${prog.pct}%`)}</span>
             </div>
           </div>
         </td>
