@@ -1,10 +1,6 @@
 (() => {
   'use strict';
 
-  /* =========================
-   * Step template (표시용)
-   * ✅ 5,6) STEP 번호 표시 제거 + 출력명 변경
-   * ========================= */
   const STEPS = [
     { no: 1,  name: 'TEMPLATE DRAW' },
     { no: 2,  name: 'TEMPLATE 확인' },
@@ -27,9 +23,6 @@
 
   const STATUS_ORDER = ['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
-  /* =========================
-   * DOM
-   * ========================= */
   const $ = (sel, root=document) => root.querySelector(sel);
 
   const el = {
@@ -39,7 +32,6 @@
     tableHost: $('#tableHost'),
     statCount: $('#statCount'),
 
-    // ✅ filters
     fEqType: $('#fEqType'),
     fSite: $('#fSite'),
     fLine: $('#fLine'),
@@ -52,7 +44,6 @@
     mTitle: $('#mTitle'),
     mMeta: $('#mMeta'),
 
-    // project form
     p_equipment_name: $('#p_equipment_name'),
     p_equipment_type: $('#p_equipment_type'),
     p_site: $('#p_site'),
@@ -72,22 +63,15 @@
     toast: $('#toast')
   };
 
-  /* =========================
-   * State
-   * ========================= */
   const state = {
     list: [],
-    detailCache: new Map(), // setupId -> {project, steps, issues}
+    detailCache: new Map(),
     selectedSetupId: null,
     createMode: false,
-
     hoverTimer: null,
     hoverKey: null
   };
 
-  /* =========================
-   * Helpers
-   * ========================= */
   function getToken() {
     return localStorage.getItem('x-access-token') || '';
   }
@@ -188,22 +172,19 @@
     try { return JSON.parse(raw); } catch { return {}; }
   }
 
+  // ✅ Start Date Auto: STEP1 Actual Start 우선 → 없으면 Plan Start
   function computeAutoStartDate(detail) {
     const p = detail?.project || {};
     const steps = detail?.steps || [];
     if (p.start_date) return fmtDate(p.start_date);
 
     const s1 = steps.find(x => Number(x.step_no) === 1) || {};
-    const d = firstNonEmpty(fmtDate(s1.actual_start), fmtDate(s1.plan_start), '');
-    return d;
+    return firstNonEmpty(fmtDate(s1.actual_start), fmtDate(s1.plan_start), '');
   }
 
-  /* =========================
-   * Board list
-   * ========================= */
   async function loadBoard() {
     const q = buildQuery({
-      equipment_type: el.fEqType.value,  // ✅ 2) EQ TYPE 필터 파라미터
+      equipment_type: el.fEqType.value,
       site: el.fSite.value,
       line: el.fLine.value,
       status: el.fStatus.value,
@@ -224,9 +205,6 @@
     }
   }
 
-  /* =========================
-   * Render: 행=설비, 열=작업항목
-   * ========================= */
   function renderTable() {
     const list = state.list;
 
@@ -241,7 +219,6 @@
           <th class="eq-col">설비</th>
           ${STEPS.map(s => `
             <th>
-              <!-- ✅ 5) STEP 번호 제거, 이름만 -->
               <div class="step-head" title="${escapeHtml(s.name)}">
                 <div class="step-name-only">${escapeHtml(s.name)}</div>
               </div>
@@ -264,7 +241,6 @@
       </table>
     `;
 
-    // 설비명 클릭 -> 상세 모달
     el.tableHost.querySelectorAll('[data-open-detail="1"]').forEach(a => {
       a.addEventListener('click', () => {
         const setupId = a.getAttribute('data-setup-id');
@@ -272,7 +248,6 @@
       });
     });
 
-    // 셀 클릭 -> 상태 토글 PATCH (기능은 유지)
     el.tableHost.querySelectorAll('[data-cell="1"]').forEach(td => {
       td.addEventListener('click', async () => {
         const setupId = td.getAttribute('data-setup-id');
@@ -281,7 +256,6 @@
         await toggleCellStatus(td, setupId, stepNo);
       });
 
-      // hover tooltip 유지(요청에서 기능 삭제 요구는 없음)
       td.addEventListener('mouseenter', onCellEnter);
       td.addEventListener('mousemove', onCellMove);
       td.addEventListener('mouseleave', onCellLeave);
@@ -290,7 +264,6 @@
 
   function renderRow(p) {
     const name = escapeHtml(p.equipment_name || '(no name)');
-    // ✅ Customer 삭제, EQ TYPE 포함해서 표시
     const sub = escapeHtml([p.equipment_type || '-', p.site || '-', p.line || '-'].join(' · '));
     const issues = Number(p.open_issues || 0) > 0 ? `<span class="issueMark" title="OPEN ISSUE">!</span>` : '';
 
@@ -314,7 +287,7 @@
 
     return `
       <tr>
-        <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}" title="클릭: 상세 보기">
+        <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}">
           <div class="eq-name">${name} ${issues}</div>
           <div class="eq-sub">${sub} · Updated: ${escapeHtml(fmtDate(p.updated_at) || '-')}</div>
         </td>
@@ -323,9 +296,6 @@
     `;
   }
 
-  /* =========================
-   * Detail cache
-   * ========================= */
   async function ensureDetail(setupId) {
     if (state.detailCache.has(setupId)) return state.detailCache.get(setupId);
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`);
@@ -334,9 +304,6 @@
     return data;
   }
 
-  /* =========================
-   * Toggle cell status
-   * ========================= */
   function updateCellUI(td, status, savingText = '') {
     const pill = td.querySelector('.pill');
     if (!pill) return;
@@ -389,6 +356,7 @@
 
   /* =========================
    * Tooltip (hover)
+   * ✅ Actual End 표시 추가
    * ========================= */
   function hideTooltip() {
     el.tooltip.classList.add('hidden');
@@ -427,18 +395,22 @@
       const steps = detail?.steps || [];
       const row = steps.find(x => Number(x.step_no) === stepNo) || {};
 
-      const planDate   = firstNonEmpty(fmtDate(row.plan_start), fmtDate(row.plan_end), '-');
-      const actualDate = firstNonEmpty(fmtDate(row.actual_start), fmtDate(row.actual_end), '-');
+      const planStart  = firstNonEmpty(fmtDate(row.plan_start), '-');
+      const planEnd    = firstNonEmpty(fmtDate(row.plan_end), '-');
+      const actualStart= firstNonEmpty(fmtDate(row.actual_start), '-');
+      const actualEnd  = firstNonEmpty(fmtDate(row.actual_end), '-');
       const workers    = firstNonEmpty(row.workers, '-');
       const note       = firstNonEmpty(row.note, '-');
 
       el.tooltip.innerHTML = `
         <div class="tip-title">${escapeHtml(stepName)}</div>
         <div class="tip-grid">
-          <div class="tip-k">예정일</div><div class="tip-v">${escapeHtml(planDate || '-')}</div>
-          <div class="tip-k">실행일</div><div class="tip-v">${escapeHtml(actualDate || '-')}</div>
-          <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers || '-')}</div>
-          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note || '-')}</div>
+          <div class="tip-k">Plan S</div><div class="tip-v">${escapeHtml(planStart)}</div>
+          <div class="tip-k">Plan E</div><div class="tip-v">${escapeHtml(planEnd)}</div>
+          <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(actualStart)}</div>
+          <div class="tip-k">Actual E</div><div class="tip-v">${escapeHtml(actualEnd)}</div>
+          <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers)}</div>
+          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note)}</div>
         </div>
       `;
       placeTooltip(clientX, clientY);
@@ -474,9 +446,6 @@
     hideTooltip();
   }
 
-  /* =========================
-   * Modal open/close
-   * ========================= */
   function openModalShell() { el.modal.classList.remove('hidden'); }
 
   function closeModal() {
@@ -539,8 +508,7 @@
 
   /* =========================
    * Render modal
-   * 7) Owner 필드 제거 완료
-   * 8) Start Date 자동 표시 + Step1 저장 시 프로젝트 start_date 반영
+   * ✅ Actual Start/End 둘 다 입력/저장
    * ========================= */
   function renderModal(data) {
     const p = data?.project || {};
@@ -564,7 +532,6 @@
     el.p_target_date.value = fmtDate(p.target_date);
     el.p_last_note.value = p.last_note || '';
 
-    // ✅ 8) Start Date 자동(프로젝트 start_date 없으면 STEP1 actual/plan에서)
     el.p_start_date_auto.value = computeAutoStartDate(data) || '';
 
     const byNo = new Map();
@@ -575,8 +542,10 @@
       const st = (s.status || 'NOT_STARTED').toUpperCase();
       const desc = s.step_description ? String(s.step_description) : '';
 
-      const planDate = fmtDate(s.plan_start);
-      const actualDate = fmtDate(s.actual_start);
+      const planStart = fmtDate(s.plan_start);
+      const planEnd   = fmtDate(s.plan_end);
+      const actualStart = fmtDate(s.actual_start);
+      const actualEnd   = fmtDate(s.actual_end);
 
       return `
         <div class="step-card" data-step-card="1" data-step-no="${t.no}">
@@ -590,7 +559,7 @@
             </div>
           </div>
 
-          <div class="step-grid">
+          <div class="step-grid step-grid-actual2">
             <div class="field">
               <label>Status</label>
               <select data-field="status">
@@ -602,13 +571,23 @@
             </div>
 
             <div class="field">
-              <label>Plan Date</label>
-              <input type="date" data-field="plan_start" value="${escapeHtml(planDate)}"/>
+              <label>Plan Start</label>
+              <input type="date" data-field="plan_start" value="${escapeHtml(planStart)}"/>
             </div>
 
             <div class="field">
-              <label>Actual Date</label>
-              <input type="date" data-field="actual_start" value="${escapeHtml(actualDate)}"/>
+              <label>Plan End</label>
+              <input type="date" data-field="plan_end" value="${escapeHtml(planEnd)}"/>
+            </div>
+
+            <div class="field">
+              <label>Actual Start</label>
+              <input type="date" data-field="actual_start" value="${escapeHtml(actualStart)}"/>
+            </div>
+
+            <div class="field">
+              <label>Actual End</label>
+              <input type="date" data-field="actual_end" value="${escapeHtml(actualEnd)}"/>
             </div>
 
             <div class="field">
@@ -616,7 +595,7 @@
               <input type="text" data-field="workers" value="${escapeHtml(s.workers || '')}" placeholder="정현우,김동한"/>
             </div>
 
-            <div class="field wide" style="grid-column: span 4;">
+            <div class="field wide note-wide">
               <label>Note</label>
               <input type="text" data-field="note" value="${escapeHtml(s.note || '')}" placeholder="특이사항"/>
             </div>
@@ -630,7 +609,6 @@
       `;
     }).join('');
 
-    // step save events
     el.stepsHost.querySelectorAll('[data-step-card="1"]').forEach(card => {
       const stepNo = Number(card.getAttribute('data-step-no'));
       const selStatus = card.querySelector('[data-field="status"]');
@@ -656,6 +634,14 @@
           patch[k] = v === '' ? null : v;
         });
 
+        // ✅ 안전장치: actual_end < actual_start 같은 케이스 잡기(원하면 제거 가능)
+        const as = patch.actual_start;
+        const ae = patch.actual_end;
+        if (as && ae && ae < as) {
+          toast('Actual End가 Actual Start보다 빠를 수 없습니다.');
+          return;
+        }
+
         try {
           hint.textContent = 'saving...';
           await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
@@ -663,14 +649,13 @@
             body: patch
           });
 
-          // cache update
-          const data = state.detailCache.get(setupId);
-          if (data && Array.isArray(data.steps)) {
-            const row = data.steps.find(x => Number(x.step_no) === stepNo);
+          const cached = state.detailCache.get(setupId);
+          if (cached && Array.isArray(cached.steps)) {
+            const row = cached.steps.find(x => Number(x.step_no) === stepNo);
             if (row) Object.assign(row, patch);
           }
 
-          // ✅ 8) STEP 1 날짜가 들어오면 프로젝트 start_date 자동 반영(PATCH)
+          // ✅ 8) STEP 1의 Actual Start(우선) / Plan Start로 프로젝트 start_date 자동 반영
           if (stepNo === 1) {
             const auto = firstNonEmpty(patch.actual_start, patch.plan_start, null);
             if (auto) {
@@ -679,17 +664,13 @@
                   method: 'PATCH',
                   body: { start_date: auto }
                 });
-                // 모달 표시값도 즉시 반영
                 el.p_start_date_auto.value = auto;
-              } catch (_) {
-                // start_date 반영 실패는 step 저장 자체 실패보다 중요도 낮음
-              }
+              } catch (_) {}
             }
           }
 
           hint.textContent = 'saved ✅';
 
-          // 보드 셀도 즉시 반영(status만)
           const td = el.tableHost.querySelector(
             `[data-cell="1"][data-setup-id="${setupId}"][data-step-no="${stepNo}"]`
           );
@@ -704,7 +685,6 @@
       });
     });
 
-    // issues
     if (!issues.length) {
       el.issuesHost.innerHTML = `<div class="muted">등록된 이슈가 없습니다.</div>`;
     } else {
@@ -733,11 +713,6 @@
     }
   }
 
-  /* =========================
-   * Save project (CREATE / SAVE)
-   * ✅ 7) owner 제거
-   * ✅ 8) start_date는 자동(수정 시 payload에서 제거, step1로 반영)
-   * ========================= */
   async function saveProject() {
     const isCreate = state.createMode === true;
     const setupId = state.selectedSetupId;
@@ -786,7 +761,6 @@
       const patch = {
         ...payloadBase,
         board_status: el.p_board_status.value
-        // start_date는 여기서 보내지 않음 (STEP1 저장시 자동 반영)
       };
 
       await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`, {
@@ -809,9 +783,6 @@
     }
   }
 
-  /* =========================
-   * Events
-   * ========================= */
   function bindEvents() {
     el.btnNew.addEventListener('click', openCreateModal);
     el.btnRefresh.addEventListener('click', loadBoard);
@@ -837,10 +808,7 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     bindEvents();
-
-    if (!getToken()) {
-      toast('로그인이 필요합니다. (x-access-token 없음)');
-    }
+    if (!getToken()) toast('로그인이 필요합니다. (x-access-token 없음)');
     await loadBoard();
   });
 
