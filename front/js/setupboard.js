@@ -1,42 +1,68 @@
 (() => {
   'use strict';
 
-  // ✅ SET UP STEP 순서 변경(요청 반영, 17개 고정)
+  /**
+   * ✅ STEP 순서(요청 반영)
+   * 1 TEMPLATE DRAWING
+   * 2 TEMPLATE 타공 확인
+   * 3 FAB IN
+   * 4 DOCKING
+   * 5 CABLE HOOK UP
+   * 6 SILICON
+   * 7 POWER TURN ON
+   * 8 UTILITY TURN ON
+   * 9 CHILLER TURN ON
+   * 10 HEAT EXCHANGER TURN ON
+   * 11 PUMP TURN ON
+   * 12 TEACHING
+   * 13 GAS TURN ON
+   * 14 TTTM
+   * 15 인증 준비
+   * 16 중간 인증
+   * 17 PROCESS CONFIRM
+   */
   const STEPS = [
-    { no: 1,  name: 'TEMPLATE DRAW' },
-    { no: 2,  name: 'TEMPLATE 확인' },
-    { no: 3,  name: 'FAB IN' },
-    { no: 4,  name: 'DOCKING' },
-    { no: 5,  name: 'CABLE H/U' },
-    { no: 6,  name: 'SILICON' },
-    { no: 7,  name: 'POWER T/O' },
-    { no: 8,  name: 'UTILITY T/O' },
-    { no: 9,  name: 'CHILLER T/O' },
-    { no: 10, name: 'HEAT EX T/O' },
-    { no: 11, name: 'PUMP T/O' },
-    { no: 12, name: 'TEACHING' },
-    { no: 13, name: 'GAS T/O' },
-    { no: 14, name: 'TTTM' },
-    { no: 15, name: '인증 준비' },
-    { no: 16, name: '중간 인증' },
-    { no: 17, name: 'PROCESS CONFIRM' }
+    { no: 1,  name: 'TEMPLATE DRAWING', desc: '설비/랙/펌프 타공부 도면 작성(OHT LINE 기준)' },
+    { no: 2,  name: 'TEMPLATE 타공 확인', desc: '업체 타공부 도면 대조 및 정상 여부 확인' },
+    { no: 3,  name: 'FAB IN', desc: '설비/랙 반입 및 BOX PART 반입 체크리스트 진행' },
+    { no: 4,  name: 'DOCKING', desc: '모듈 도킹 + 내부 CABLE HOOK UP + ROBOT LEVELING' },
+    { no: 5,  name: 'CABLE HOOK UP', desc: '설비/랙/펌프 간 케이블 연결' },
+    { no: 6,  name: 'SILICON 작업', desc: '이물 유입 방지(랙: POWER ON 전, 펌프: AGV CABLE 후 마감)' },
+    { no: 7,  name: 'POWER TURN ON', desc: 'AC RACK 및 설비 TURN ON(특이사항 다발 구간)' },
+    { no: 8,  name: 'UTILITY TURN ON', desc: 'PCW/CDA/VAC TURN ON(PCW LINE 가압 PASS 선행)' },
+    { no: 9,  name: 'CHILLER TURN ON', desc: 'CHILLER TURN ON' },
+    { no: 10, name: 'HEAT EXCHANGER TURN ON', desc: 'WALL TEMP 조절 HEAT EXCHANGER TURN ON' },
+    { no: 11, name: 'PUMP TURN ON', desc: 'TM/PM/AM/LL PUMPING 위해 PUMP TURN ON(방치압 TEST)' },
+    { no: 12, name: 'TEACHING', desc: 'EFEM/TM 로봇 및 모듈 WAFER TEACHING(LOAD PORT/OHT/TM BLADE/CASSETTE 선행)' },
+    { no: 13, name: 'GAS TURN ON', desc: 'H2/NF3 사용, GAS LINE 가압 PASS 선행' },
+    { no: 14, name: 'TTTM', desc: '고객 SPEC에 맞춰 GAS/PCW/CDA/PUMP/FFU/VAC 등 조절' },
+    { no: 15, name: '인증 준비', desc: '고객 인증 전 설비 안전 상태 등 점검' },
+    { no: 16, name: '중간 인증', desc: '고객사 인증(지진방지/환경QUAL/RF CAL/MFC 인증 선행)' },
+    { no: 17, name: 'PROCESS CONFIRM', desc: 'AGING 진행으로 설비 이상 여부 검증(고객 진행)' }
   ];
 
   const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
-  // ✅ 타업체 선행조건 순서 변경(요청 반영, 표시 순서 그대로)
+  /**
+   * ✅ 선행조건 순서(요청 반영)
+   * TRAY → 3상 → AGV → PCW → LP → OHT → GAS → RF → 환경 → MFC → 지진방지
+   *
+   * - beforeStepNo: Help/표시/정렬에 사용
+   * - requiredBefore: 표시용(사람이 보는 문자열)
+   * - code: DB 키(저장/조회 기준)
+   */
   const PREREQS = [
-    { code:'TRAY_INSTALL',        title:'TRAY 설치',            required:true,  requiredBefore:'CABLE H/U',   desc:'CABLE H/U 전 필수' },
-    { code:'THREE_PHASE',         title:'3상 설치',             required:true,  requiredBefore:'POWER T/O',   desc:'POWER T/O 전 필수' },
-    { code:'AGV_INSTALL',         title:'AGV 설치',             required:false, requiredBefore:'SILICON',     desc:'SILICON 전 설치 권장' },
-    { code:'PCW_PRESSURE_PASS',   title:'PCW LINE 가압 PASS',   required:true,  requiredBefore:'UTILITY T/O', desc:'UTILITY T/O 전 필수' },
-    { code:'LP_SETUP',            title:'LP SET UP',            required:true,  requiredBefore:'TEACHING',    desc:'TEACHING 전 필수' },
-    { code:'OHT_CERT',            title:'OHT 가동 인증',         required:true,  requiredBefore:'TEACHING',    desc:'TEACHING 전 필수' },
-    { code:'GAS_PRESSURE_PASS',   title:'GAS LINE 가압 PASS',   required:true,  requiredBefore:'GAS T/O',     desc:'GAS T/O 전 필수' },
-    { code:'RF_CAL',              title:'RF CAL',               required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
-    { code:'ENV_QUAL',            title:'환경 QUAL',            required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
-    { code:'MFC_CERT',            title:'MFC 인증',             required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
-    { code:'SEISMIC_BKT',         title:'지진방지 BKT 체결',     required:true,  requiredBefore:'중간 인증',   desc:'중간 인증 전 필수' },
+    { code:'TRAY_INSTALL',         title:'TRAY 설치',          required:true,  beforeStepNo:5,  requiredBefore:'CABLE HOOK UP', desc:'CABLE HOOK UP 전 필수' },
+    { code:'THREE_PHASE',          title:'3상 설치',           required:true,  beforeStepNo:7,  requiredBefore:'POWER TURN ON', desc:'POWER TURN ON 전 필수' },
+    { code:'AGV_INSTALL',          title:'AGV 설치',           required:false, beforeStepNo:6,  requiredBefore:'SILICON 작업',  desc:'SILICON 작업 전 설치 권장' },
+    { code:'PCW_PRESSURE_PASS',    title:'PCW LINE 가압 PASS', required:true,  beforeStepNo:8,  requiredBefore:'UTILITY TURN ON', desc:'UTILITY TURN ON 전 필수(LEAK 확인)' },
+    { code:'LP_SETUP',             title:'LP SET UP',          required:true,  beforeStepNo:12, requiredBefore:'TEACHING',      desc:'TEACHING 전 필수' },
+    { code:'OHT_CERT',             title:'OHT 가동 인증',      required:true,  beforeStepNo:12, requiredBefore:'TEACHING',      desc:'TEACHING 전 필수' },
+    { code:'GAS_PRESSURE_PASS',    title:'GAS LINE 가압 PASS', required:true,  beforeStepNo:13, requiredBefore:'GAS TURN ON',   desc:'GAS TURN ON 전 필수' },
+    { code:'RF_CAL',               title:'RF CAL',             required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
+    { code:'ENV_QUAL',             title:'환경 QUAL',          required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
+    { code:'MFC_CERT',             title:'MFC 인증',           required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
+    { code:'SEISMIC_BKT',           title:'지진방지 BKT 체결',  required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
   ];
 
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -84,6 +110,8 @@
     // help modal
     helpModal: $('#helpModal'),
     btnHelpClose: $('#btnHelpClose'),
+    helpFlowHost: $('#helpFlowHost'),
+    helpPrereqHost: $('#helpPrereqHost'),
 
     tooltip: $('#tooltip'),
     toast: $('#toast')
@@ -233,6 +261,64 @@
   }
 
   /* =========================
+   * Help (순서도) 렌더링
+   * ========================= */
+  function renderHelpFlowchart() {
+    // 메인 플로우: 타임라인/노드형 순서도
+    el.helpFlowHost.innerHTML = `
+      <div class="flowchart-track">
+        ${STEPS.map((s, idx) => `
+          <div class="fc-row">
+            <div class="fc-left">
+              <div class="fc-badge">${s.no}</div>
+              ${idx < STEPS.length - 1 ? `<div class="fc-line"></div>` : ``}
+            </div>
+            <div class="fc-card">
+              <div class="fc-title">${escapeHtml(s.name)}</div>
+              <div class="fc-desc">${escapeHtml(s.desc || '')}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    // 선행조건: "어느 Step 전에" 그룹핑
+    const groups = new Map(); // beforeStepNo -> items
+    for (const it of PREREQS) {
+      const k = Number(it.beforeStepNo || 0);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(it);
+    }
+
+    const sortedKeys = Array.from(groups.keys()).sort((a,b)=>a-b);
+    el.helpPrereqHost.innerHTML = `
+      ${sortedKeys.map(stepNo => {
+        const stepName = STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`;
+        const items = groups.get(stepNo) || [];
+        return `
+          <div class="prgrp">
+            <div class="prgrp-head">
+              <div class="prgrp-title">Before STEP ${stepNo}</div>
+              <div class="prgrp-sub muted">${escapeHtml(stepName)}</div>
+            </div>
+            <div class="prgrp-body">
+              ${items.map(it => `
+                <div class="prpill ${it.required ? 'req' : 'opt'}">
+                  <div class="prpill-top">
+                    <span class="prpill-name">${escapeHtml(it.title)}</span>
+                    <span class="prpill-tag">${it.required ? '필수' : '옵션'}</span>
+                  </div>
+                  <div class="prpill-desc">${escapeHtml(it.desc)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `;
+  }
+
+  /* =========================
    * Board
    * ========================= */
   async function loadBoard() {
@@ -274,7 +360,7 @@
         try { await ensureDetail(id); } catch {}
       }
     }
-    renderTable();
+    renderTable(); // 캐시 채워졌으니 날짜 다시 그림
   }
 
   function renderTable() {
@@ -487,7 +573,6 @@
   }
 
   async function showTooltipForCell(td, clientX, clientY) {
-    // ✅ 리렌더로 td가 사라진 경우 방어
     if (!td || !td.isConnected) return;
 
     const setupId = td.getAttribute('data-setup-id');
@@ -505,6 +590,7 @@
       const detail = await ensureDetail(setupId);
       if (state.hoverKey !== key) return;
 
+      // 같은 row 날짜 라벨 동기화
       const rowTds = document.querySelectorAll(`[data-cell="1"][data-setup-id="${setupId}"]`);
       rowTds.forEach(cell => {
         const no = Number(cell.getAttribute('data-step-no'));
@@ -628,6 +714,7 @@
       const data = await ensureDetail(String(setupId));
       renderModal(data);
 
+      // prereq preload
       const prMap = await fetchPrereqs(String(setupId));
       renderPrereqs(String(setupId), prMap);
     } catch (e) {
@@ -664,7 +751,9 @@
     el.stepsHost.innerHTML = STEPS.map(t => {
       const s = byNo.get(t.no) || {};
       const st = (s.status || 'NOT_STARTED').toUpperCase();
-      const desc = s.step_description ? String(s.step_description) : '';
+
+      // ✅ DB description이 없으면 도움말용 desc를 디폴트로 보여주기(알맹이 가독성)
+      const desc = firstNonEmpty(s.step_description, t.desc, '');
 
       const planEnd = fmtDateISO(s.plan_end);
       const actualStart = fmtDateISO(s.actual_start);
@@ -674,7 +763,7 @@
         <div class="step-card" data-step-card="1" data-step-no="${t.no}">
           <div class="step-top">
             <div>
-              <div class="step-card-title">${escapeHtml(t.name)}</div>
+              <div class="step-card-title">${escapeHtml(t.no)}. ${escapeHtml(t.name)}</div>
               ${desc ? `<div class="step-desc">${escapeHtml(desc)}</div>` : ``}
             </div>
             <div>
@@ -859,14 +948,54 @@
   }
 
   /* =========================
-   * Prereq (DB ONLY)
+   * Prereq (DB ONLY) - ✅ 백엔드 서비스(updatePrereq) 형태에 맞춤
+   * - PATCH payload: { is_done: boolean, note?: string }
+   * - rows: { prereq_key, is_done, done_at, done_by, note }
    * ========================= */
+  function normalizePrereqResponse(json) {
+    const data = json?.data;
+
+    // 1) 이미 map 형태인 경우
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      return data;
+    }
+
+    // 2) 배열 형태(레코드 리스트)라면 prereq_key로 map
+    if (Array.isArray(data)) {
+      const map = {};
+      for (const r of data) {
+        const k = r?.prereq_key || r?.code || r?.key;
+        if (k) map[k] = r;
+      }
+      return map;
+    }
+
+    return {};
+  }
+
   async function fetchPrereqs(setupId) {
     if (state.prereqCache.has(setupId)) return state.prereqCache.get(setupId);
+
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs`);
-    const data = json?.data && typeof json.data === 'object' ? json.data : {};
-    state.prereqCache.set(setupId, data);
-    return data;
+    const map = normalizePrereqResponse(json);
+
+    state.prereqCache.set(setupId, map);
+    return map;
+  }
+
+  function isPrereqDone(row) {
+    // 백엔드: is_done
+    if (!row) return false;
+    if (row.is_done === 1 || row.is_done === '1' || row.is_done === true) return true;
+    // 혹시 프론트/구버전: done
+    if (row.done === 1 || row.done === '1' || row.done === true) return true;
+    return false;
+  }
+
+  function getPrereqDoneDate(row) {
+    // 백엔드: done_at
+    const d = row?.done_at || row?.done_date || row?.doneAt || null;
+    return d ? fmtYYMMDD(d) : '';
   }
 
   function calcPrereqProgress(prMap) {
@@ -874,27 +1003,26 @@
     let done = 0;
     for (const it of PREREQS) {
       const row = prMap?.[it.code];
-      if (row?.done === true || row?.done === 1 || row?.done === '1') done++;
+      if (isPrereqDone(row)) done++;
     }
     return { total, done };
   }
 
   async function savePrereq(setupId, code, done) {
-    const payload = {
-      done: !!done,
-      done_date: done ? fmtDateISO(new Date().toISOString()) : null
-    };
+    // ✅ 서비스(updatePrereq)에 맞게 is_done 사용
+    const payload = { is_done: !!done };
 
-    await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/prereqs/${encodeURIComponent(code)}`, {
-      method: 'PATCH',
-      body: payload
-    });
+    const json = await apiFetch(
+      `/api/setup-projects/${encodeURIComponent(setupId)}/prereqs/${encodeURIComponent(code)}`,
+      { method: 'PATCH', body: payload }
+    );
+
+    // ✅ 백엔드가 row를 반환하면 그걸 반영
+    const row = json?.data || json || null;
 
     const cur = state.prereqCache.get(setupId) || {};
-    const prev = cur[code] && typeof cur[code] === 'object' ? cur[code] : {};
-    const next = { ...cur, [code]: { ...prev, ...payload } };
+    const next = { ...cur, [code]: row || { ...(cur[code]||{}), ...payload } };
     state.prereqCache.set(setupId, next);
-
     return next;
   }
 
@@ -904,8 +1032,8 @@
 
     el.prereqHost.innerHTML = PREREQS.map(it => {
       const row = prMap?.[it.code] || {};
-      const done = row?.done === true || row?.done === 1 || row?.done === '1';
-      const doneDate = row?.done_date ? fmtYYMMDD(row.done_date) : '';
+      const done = isPrereqDone(row);
+      const doneDate = getPrereqDoneDate(row);
 
       return `
         <div class="pr-item" data-pr-item="1" data-code="${escapeHtml(it.code)}">
@@ -955,7 +1083,10 @@
   /* =========================
    * Help modal
    * ========================= */
-  function openHelp() { el.helpModal.classList.remove('hidden'); }
+  function openHelp() {
+    renderHelpFlowchart();
+    el.helpModal.classList.remove('hidden');
+  }
   function closeHelp() { el.helpModal.classList.add('hidden'); }
 
   /* =========================
@@ -976,11 +1107,13 @@
       if (close === '1') closeModal();
     });
 
+    // tabs
     el.tabSteps.addEventListener('click', () => setTab('steps'));
     el.tabPrereq.addEventListener('click', async () => {
       setTab('prereq');
       const setupId = state.selectedSetupId;
       if (!setupId) return;
+
       try {
         const prMap = await fetchPrereqs(setupId);
         renderPrereqs(setupId, prMap);

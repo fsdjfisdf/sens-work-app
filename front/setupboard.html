@@ -123,7 +123,6 @@
       </div>
 
       <div class="modal-body">
-
         <div class="section">
           <div class="section-title">Project 정보</div>
 
@@ -223,323 +222,27 @@
       </div>
 
       <div class="modal-body">
-        <div class="help-grid2">
-          <!-- LEFT: Main Flow -->
-          <div class="help-panel">
-            <div class="help-panel-head">
-              <div class="help-h">메인 플로우</div>
-              <div class="muted small">* 아래 순서대로 진행 (T/O 구간은 묶음으로 표시)</div>
-            </div>
-
-            <div class="flowchart">
-              <!-- Phase 1 -->
-              <div class="flow-phase">
-                <div class="phase-title">PHASE 1 · 준비/반입</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">1</div>
-                  <div class="fc-body">
-                    <div class="fc-title">TEMPLATE DRAW</div>
-                    <div class="fc-tags">
-                      <span class="tag2">문서/도면</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">2</div>
-                  <div class="fc-body">
-                    <div class="fc-title">TEMPLATE 확인</div>
-                    <div class="fc-tags">
-                      <span class="tag2">검증</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">3</div>
-                  <div class="fc-body">
-                    <div class="fc-title">FAB IN</div>
-                    <div class="fc-tags">
-                      <span class="tag2">반입</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">4</div>
-                  <div class="fc-body">
-                    <div class="fc-title">DOCKING</div>
-                    <div class="fc-tags">
-                      <span class="tag2">설치</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">5</div>
-                  <div class="fc-body">
-                    <div class="fc-title">CABLE H/U</div>
-                    <div class="fc-tags">
-                      <span class="tag2">케이블</span>
-                      <span class="tag2 warn">선행: TRAY</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">6</div>
-                  <div class="fc-body">
-                    <div class="fc-title">SILICON</div>
-                    <div class="fc-tags">
-                      <span class="tag2">자재</span>
-                      <span class="tag2">선행: AGV</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Phase 2: T/O Bundle -->
-              <div class="flow-phase">
-                <div class="phase-title">PHASE 2 · T/O (전원/유틸/냉각/열교환/펌프)</div>
-
-                <div class="fc-bundle">
-                  <div class="bundle-head">
-                    <div class="bundle-title">T/O 세트</div>
-                    <div class="bundle-sub muted small">순서대로 진행</div>
-                  </div>
-
-                  <div class="bundle-grid">
-                    <div class="bundle-item">
-                      <div class="bn">7</div>
-                      <div class="bt">
-                        POWER T/O
-                        <span class="mini warn">선행: 3상</span>
-                      </div>
-                    </div>
-                    <div class="bundle-item">
-                      <div class="bn">8</div>
-                      <div class="bt">
-                        UTILITY T/O
-                        <span class="mini warn">선행: PCW PASS</span>
-                      </div>
-                    </div>
-                    <div class="bundle-item">
-                      <div class="bn">9</div>
-                      <div class="bt">CHILLER T/O</div>
-                    </div>
-                    <div class="bundle-item">
-                      <div class="bn">10</div>
-                      <div class="bt">HEAT EX T/O</div>
-                    </div>
-                    <div class="bundle-item">
-                      <div class="bn">11</div>
-                      <div class="bt">PUMP T/O</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Phase 3 -->
-              <div class="flow-phase">
-                <div class="phase-title">PHASE 3 · 구동/가스/인증</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">12</div>
-                  <div class="fc-body">
-                    <div class="fc-title">TEACHING</div>
-                    <div class="fc-tags">
-                      <span class="tag2 warn">선행: LP SET UP</span>
-                      <span class="tag2 warn">선행: OHT 인증</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">13</div>
-                  <div class="fc-body">
-                    <div class="fc-title">GAS T/O</div>
-                    <div class="fc-tags">
-                      <span class="tag2 warn">선행: GAS PASS</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">14</div>
-                  <div class="fc-body">
-                    <div class="fc-title">TTTM</div>
-                    <div class="fc-tags">
-                      <span class="tag2">가동</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">15</div>
-                  <div class="fc-body">
-                    <div class="fc-title">인증 준비</div>
-                    <div class="fc-tags">
-                      <span class="tag2">준비</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node">
-                  <div class="fc-no">16</div>
-                  <div class="fc-body">
-                    <div class="fc-title">중간 인증</div>
-                    <div class="fc-tags">
-                      <span class="tag2 warn">선행: RF/환경/MFC/BKT</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="fc-arrow">↓</div>
-
-                <div class="fc-node strong">
-                  <div class="fc-no">17</div>
-                  <div class="fc-body">
-                    <div class="fc-title">PROCESS CONFIRM</div>
-                    <div class="fc-tags">
-                      <span class="tag2 ok">완료</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div class="help-grid">
+          <!-- Main Flow -->
+          <div class="help-col">
+            <div class="help-h">메인 플로우(Flowchart)</div>
+            <div class="flowchart" id="helpFlowHost">
+              <!-- JS로 자동 렌더링 -->
             </div>
           </div>
 
-          <!-- RIGHT: Prereqs -->
-          <div class="help-panel">
-            <div class="help-panel-head">
-              <div class="help-h">타업체 선행조건</div>
-              <div class="muted small">* 순서대로 체크 권장 · 상세 항목은 “타업체 선행조건” 탭에서 관리</div>
+          <!-- Prereq Flow -->
+          <div class="help-col">
+            <div class="help-h">타업체 선행조건(체크 포인트)</div>
+            <div class="pr-flow" id="helpPrereqHost">
+              <!-- JS로 자동 렌더링 -->
             </div>
 
-            <div class="pr-flow">
-              <div class="prf-item">
-                <div class="prf-no">1</div>
-                <div class="prf-body">
-                  <div class="prf-title">TRAY 설치</div>
-                  <div class="prf-sub muted">Before: CABLE H/U</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">2</div>
-                <div class="prf-body">
-                  <div class="prf-title">3상 설치</div>
-                  <div class="prf-sub muted">Before: POWER T/O</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">3</div>
-                <div class="prf-body">
-                  <div class="prf-title">AGV 설치</div>
-                  <div class="prf-sub muted">Before: SILICON</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">4</div>
-                <div class="prf-body">
-                  <div class="prf-title">PCW LINE 가압 PASS</div>
-                  <div class="prf-sub muted">Before: UTILITY T/O</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">5</div>
-                <div class="prf-body">
-                  <div class="prf-title">LP SET UP</div>
-                  <div class="prf-sub muted">Before: TEACHING</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">6</div>
-                <div class="prf-body">
-                  <div class="prf-title">OHT 가동 인증</div>
-                  <div class="prf-sub muted">Before: TEACHING</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">7</div>
-                <div class="prf-body">
-                  <div class="prf-title">GAS LINE 가압 PASS</div>
-                  <div class="prf-sub muted">Before: GAS T/O</div>
-                </div>
-              </div>
-
-              <div class="prf-divider"></div>
-
-              <div class="prf-item">
-                <div class="prf-no">8</div>
-                <div class="prf-body">
-                  <div class="prf-title">RF CAL</div>
-                  <div class="prf-sub muted">Before: 중간 인증</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">9</div>
-                <div class="prf-body">
-                  <div class="prf-title">환경 QUAL</div>
-                  <div class="prf-sub muted">Before: 중간 인증</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">10</div>
-                <div class="prf-body">
-                  <div class="prf-title">MFC 인증</div>
-                  <div class="prf-sub muted">Before: 중간 인증</div>
-                </div>
-              </div>
-
-              <div class="prf-item">
-                <div class="prf-no">11</div>
-                <div class="prf-body">
-                  <div class="prf-title">지진방지 BKT 체결</div>
-                  <div class="prf-sub muted">Before: 중간 인증</div>
-                </div>
-              </div>
-
-              <div class="tips2">
-                <div class="tip2">
-                  <div class="tip2-title">사용 팁</div>
-                  <ul class="tip2-list">
-                    <li>보드 셀 클릭 시 확인창 후 저장됩니다.</li>
-                    <li>셀 hover 시 Plan/Actual/작업자/특이사항 확인 가능</li>
-                    <li>진행률 바는 DONE 기준으로 계산</li>
-                  </ul>
-                </div>
-                <div class="tip2 small muted">
-                  * 실제 현장 상황에 따라 순서 일부 변형 가능
-                </div>
-              </div>
-
+            <div class="help-h" style="margin-top:14px;">사용 팁</div>
+            <div class="tips">
+              <div class="tip">보드 셀 클릭 시 <b>확인창</b>이 뜬 후 상태 저장됩니다.</div>
+              <div class="tip">셀 hover 시 <b>Plan/Actual/작업자/특이사항</b> 확인 가능</div>
+              <div class="tip">진행률 바는 <b>DONE 기준</b>으로 계산됩니다.</div>
             </div>
           </div>
         </div>

@@ -332,7 +332,7 @@ body{
 }
 .step-top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
 .step-card-title{font-weight:1000}
-.step-desc{margin-top:4px; font-size:12px; color:var(--muted); white-space:pre-wrap}
+.step-desc{margin-top:6px; font-size:12px; color:var(--muted); white-space:pre-wrap; line-height:1.45}
 
 .step-grid.step-grid-planend{
   margin-top:10px;
@@ -417,217 +417,122 @@ body{
 .tip-v{color:#fff; font-weight:700; white-space:pre-wrap}
 .tip-foot{margin-top:8px; font-size:11px; color: rgba(255,255,255,.65); font-weight:800}
 
-/* =========================
-   Help modal (NEW FLOWCHART)
-   ========================= */
+/* Help modal styles */
 .help-card{width: min(1100px, calc(100vw - 24px))}
-.help-grid2{
+.help-grid{
   display:grid;
-  grid-template-columns: 1.08fr .92fr;
+  grid-template-columns: 1.05fr .95fr;
   gap:14px;
 }
-.help-panel{
+.help-h{font-weight:1000; margin-bottom:10px}
+
+/* ✅ 진짜 순서도 느낌: 타임라인 + 카드 */
+.flowchart{
   border:1px solid var(--line);
   border-radius:16px;
-  padding:12px;
+  padding:14px;
   background:#fff;
 }
-.help-panel-head{
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
+.flowchart-track{display:flex; flex-direction:column; gap:0}
+.fc-row{
+  display:grid;
+  grid-template-columns: 48px 1fr;
   gap:10px;
-  margin-bottom:10px;
 }
-.help-h{font-weight:1000}
-
-/* left flowchart */
-.flowchart{
+.fc-left{
+  position:relative;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  align-items:center;
 }
-.flow-phase{
-  border:1px dashed rgba(17,24,39,.14);
-  border-radius:14px;
-  padding:12px;
-  background: rgba(17,24,39,.02);
-}
-.phase-title{
-  font-weight:1000;
-  margin-bottom:10px;
-  color: rgba(17,24,39,.82);
-  font-size:12px;
-  letter-spacing:.2px;
-}
-
-.fc-node{
-  display:flex;
-  gap:10px;
-  align-items:stretch;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:10px 12px;
-  background:#fff;
-}
-.fc-node.strong{
-  border-color: rgba(34,197,94,.40);
-  background: rgba(34,197,94,.10);
-}
-.fc-no{
-  width:32px;
-  min-width:32px;
-  height:32px;
+.fc-badge{
+  width:34px;
+  height:34px;
   border-radius:999px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:1000;
+  border:1px solid rgba(37,99,235,.25);
   background: rgba(37,99,235,.10);
-  border: 1px solid rgba(37,99,235,.18);
   color:#1e3a8a;
+  margin-top:2px;
 }
-.fc-body{flex:1}
-.fc-title{font-weight:1000}
-.fc-tags{margin-top:6px; display:flex; gap:6px; flex-wrap:wrap}
-
-.tag2{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
+.fc-line{
+  width:2px;
+  flex:1;
+  background: rgba(17,24,39,.12);
+  margin:6px 0 0;
   border-radius:999px;
+}
+.fc-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px 12px;
+  background:#fff;
+  margin-bottom:12px;
+}
+.fc-title{font-weight:1000}
+.fc-desc{margin-top:6px; color:var(--muted); font-size:12px; line-height:1.45}
+
+/* ✅ 선행조건 flow */
+.pr-flow{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.prgrp{
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+}
+.prgrp-head{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  background:#fafafa;
+}
+.prgrp-title{font-weight:1000}
+.prgrp-sub{margin-top:4px; font-size:12px}
+.prgrp-body{
+  padding:10px 12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.prpill{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px 12px;
+  background:#fff;
+}
+.prpill.req{border-color: rgba(139,92,246,.25); background: rgba(139,92,246,.06)}
+.prpill.opt{background: rgba(17,24,39,.03)}
+.prpill-top{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.prpill-name{font-weight:1000}
+.prpill-tag{
   font-size:11px;
   font-weight:1000;
-  border:1px solid rgba(17,24,39,.12);
-  background:#fff;
-  color: rgba(17,24,39,.75);
-}
-.tag2.warn{
-  border-color: rgba(251,191,36,.35);
-  background: rgba(251,191,36,.18);
-  color: rgba(124,91,0,.95);
-}
-.tag2.ok{
-  border-color: rgba(34,197,94,.30);
-  background: rgba(34,197,94,.16);
-  color:#0f5132;
-}
-
-.fc-arrow{
-  text-align:center;
-  font-weight:1000;
-  color: rgba(17,24,39,.35);
-  padding:4px 0;
-}
-
-/* bundle */
-.fc-bundle{
-  border:1px solid rgba(37,99,235,.18);
-  border-radius:16px;
-  background: rgba(37,99,235,.06);
-  padding:12px;
-}
-.bundle-head{
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-.bundle-title{font-weight:1000}
-.bundle-grid{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-}
-.bundle-item{
-  border:1px solid rgba(17,24,39,.12);
-  border-radius:14px;
-  padding:10px 10px;
-  background:#fff;
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-}
-.bn{
-  width:28px;
-  min-width:28px;
-  height:28px;
+  padding:4px 8px;
   border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:1000;
-  background: rgba(37,99,235,.10);
-  border: 1px solid rgba(37,99,235,.18);
-  color:#1e3a8a;
-  font-size:12px;
-}
-.bt{
-  font-weight:1000;
-  font-size:12px;
-  line-height:1.25;
-}
-.mini{
-  display:inline-flex;
-  margin-left:8px;
-  padding:2px 6px;
-  border-radius:999px;
-  font-size:10px;
-  font-weight:1000;
-  border:1px solid rgba(17,24,39,.12);
-  background:#fff;
-  color: rgba(17,24,39,.75);
-}
-.mini.warn{
-  border-color: rgba(251,191,36,.35);
-  background: rgba(251,191,36,.18);
-  color: rgba(124,91,0,.95);
-}
-
-/* right prereq flow */
-.pr-flow{display:flex; flex-direction:column; gap:10px}
-.prf-item{
-  display:flex;
-  gap:10px;
-  align-items:stretch;
   border:1px solid var(--line);
-  border-radius:14px;
-  padding:10px 12px;
   background:#fff;
 }
-.prf-no{
-  width:30px; min-width:30px; height:30px;
-  border-radius:999px;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:1000;
-  background: rgba(139,92,246,.12);
-  border: 1px solid rgba(139,92,246,.22);
-  color: var(--pr);
-}
-.prf-title{font-weight:1000}
-.prf-sub{margin-top:4px; font-size:12px}
-.prf-divider{
-  height:1px;
-  background: rgba(17,24,39,.10);
-  border-radius:999px;
-  margin:4px 0;
-}
+.prpill.req .prpill-tag{border-color: rgba(139,92,246,.25); color: var(--pr); background: rgba(139,92,246,.10)}
+.prpill.opt .prpill-tag{color: rgba(17,24,39,.70); background: rgba(17,24,39,.06)}
+.prpill-desc{margin-top:6px; font-size:12px; color: var(--muted); line-height:1.45}
 
 /* tips */
-.tips2{margin-top:10px; display:flex; flex-direction:column; gap:10px}
-.tip2{
+.tips{display:flex; flex-direction:column; gap:10px; margin-top:10px}
+.tip{
   border:1px solid var(--line);
   border-radius:14px;
   padding:10px 12px;
   background:#fff;
+  font-weight:800;
+  color: rgba(17,24,39,.85);
 }
-.tip2-title{font-weight:1000; margin-bottom:6px}
-.tip2-list{margin:0; padding-left:18px}
-.tip2-list li{margin:6px 0}
 
-/* responsive */
 @media (max-width: 1100px){
   .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .field.wide{grid-column: span 2}
@@ -635,7 +540,5 @@ body{
   .form-grid .wide{grid-column: span 2}
   .step-grid.step-grid-planend{grid-template-columns: repeat(2, minmax(0,1fr))}
   .step-grid.step-grid-planend .note-wide{grid-column: span 2}
-
-  .help-grid2{grid-template-columns: 1fr}
-  .bundle-grid{grid-template-columns: 1fr}
+  .help-grid{grid-template-columns: 1fr}
 }
