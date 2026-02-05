@@ -14,13 +14,7 @@
   --hd:#94a3b8;
   --danger:#ef4444;
 
-  /* prereq accent */
   --pr:#8b5cf6;
-  --prBg: rgba(139,92,246,.14);
-
-  /* neutral accents */
-  --soft: rgba(17,24,39,.06);
-  --soft2: rgba(17,24,39,.10);
 }
 
 *{box-sizing:border-box}
@@ -32,7 +26,6 @@ body{
   color:var(--text);
 }
 
-/* ===================== Topbar ===================== */
 .topbar{
   position:sticky; top:0; z-index:50;
   background:rgba(255,255,255,.92);
@@ -49,13 +42,13 @@ body{
 
 .page{padding:16px 18px 26px; max-width:100%}
 
-/* ===================== Card / Button ===================== */
 .card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:16px;
   box-shadow:var(--shadow);
 }
+
 .btn{
   border:1px solid var(--line);
   background:#fff;
@@ -72,7 +65,7 @@ body{
 .muted{color:var(--muted)}
 .small{font-size:12px}
 
-/* ===================== Filters ===================== */
+/* Filters */
 .filters{padding:14px}
 .filters-grid{
   display:grid;
@@ -99,7 +92,7 @@ body{
 }
 .field.wide{grid-column: span 2}
 
-/* ===================== Legend ===================== */
+/* Legend */
 .legend{
   margin-top:12px;
   padding-top:12px;
@@ -125,6 +118,7 @@ body{
 .dot.ip{background:var(--ip)}
 .dot.dn{background:var(--dn)}
 .dot.hd{background:var(--hd)}
+
 .issueMark{
   display:inline-flex;
   width:18px;height:18px;
@@ -136,7 +130,7 @@ body{
   font-weight:1000;
 }
 
-/* ===================== Board/Table ===================== */
+/* Board */
 .board{padding:12px; margin-top:14px}
 .board-head{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -149,6 +143,7 @@ body{
   overflow:auto;
   background:#fff;
 }
+
 .table{
   width:100%;
   border-collapse:separate;
@@ -174,7 +169,7 @@ body{
   background:#fff;
   font-weight:1000;
   width: 360px;
-  cursor:pointer; /* 설비명 클릭 -> 모달 */
+  cursor:pointer;
 }
 .table thead .eq-col{
   z-index:4;
@@ -182,10 +177,9 @@ body{
   cursor:default;
 }
 
-.step-head{max-width:180px; overflow:hidden; text-overflow:ellipsis}
+.step-head{max-width: 180px; overflow:hidden; text-overflow:ellipsis}
 .step-name-only{font-weight:1000}
 
-/* 설비 셀 내부(진행율 표시는 테이블에선 제거) */
 .eq-top{
   display:flex;
   align-items:flex-start;
@@ -196,7 +190,7 @@ body{
   font-weight:1000;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width: 320px;
+  max-width: 340px;
 }
 .eq-sub{
   margin-top:6px;
@@ -208,15 +202,41 @@ body{
   max-width: 340px;
 }
 
-/* ===================== Step cells ===================== */
-/* ✅ 셀 클릭으로 상태 토글 안함 -> 커서/호버 최소화 */
+/* ✅ 진행율을 eq-sub 아래로 */
+.eq-progress-under{
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.progressBar{
+  width: 160px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(17,24,39,.08);
+  border: 1px solid rgba(17,24,39,.10);
+  overflow:hidden;
+}
+.progressFill{
+  height: 100%;
+  background: rgba(37,99,235,.80);
+}
+.progressMeta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.progressPct{font-weight:1000; font-size:12px}
+.progressSub{font-weight:900; font-size:11px}
+
+/* Cells */
 .cell{
   text-align:center;
+  cursor:pointer;
   user-select:none;
   padding:6px 6px;
-  cursor:default;
 }
-.cell:hover{background: transparent}
+.cell:hover{background: rgba(37,99,235,.05)}
 
 .pillWrap{
   display:flex;
@@ -245,8 +265,14 @@ body{
   font-weight:900;
   min-height: 12px;
 }
+.cell .saving{
+  margin-left:6px;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:900;
+}
 
-/* ===================== Modal ===================== */
+/* Modal */
 .modal{
   position:fixed; inset:0; z-index:200;
   display:flex; align-items:center; justify-content:center;
@@ -286,52 +312,6 @@ body{
   justify-content:space-between;
   gap:10px;
 }
-.section-sub{
-  font-size:12px;
-  color: var(--muted);
-  font-weight:900;
-}
-
-/* 설비정보 아래 STEP 진행율(모달에서만) */
-.modal-progress{
-  margin:10px 0 2px;
-  padding:10px 12px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  background: rgba(17,24,39,.03);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-.mp-left{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
-.mp-title{font-weight:1000; font-size:12px}
-.mp-sub{font-weight:900; font-size:11px; color: var(--muted)}
-.mp-right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.mp-bar{
-  width: 220px;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(17,24,39,.08);
-  border: 1px solid rgba(17,24,39,.10);
-  overflow:hidden;
-}
-.mp-fill{
-  height:100%;
-  background: rgba(37,99,235,.80);
-}
-.mp-pct{
-  font-weight:1000;
-  font-size:12px;
-}
 
 .form-grid{
   display:grid;
@@ -348,52 +328,87 @@ body{
   justify-content:flex-end;
 }
 
-/* ===================== 타업체 선행조건: 모달 섹션 분리 ===================== */
-.split-grid{
-  display:grid;
-  grid-template-columns: 1.2fr 1.8fr; /* 좌:선행조건 / 우:스텝 */
-  gap:12px;
-}
-.panel{
+/* ✅ Segmented toggle */
+.seg{
+  display:inline-flex;
   border:1px solid var(--line);
-  border-radius:14px;
+  border-radius:999px;
   background:#fff;
   overflow:hidden;
 }
-.panel-head{
-  padding:10px 12px;
-  border-bottom:1px solid var(--line);
-  background:#fafafa;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-.panel-title{font-weight:1000}
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background:#fff;
-  font-size:11px;
+.seg-btn{
+  border:0;
+  background:transparent;
+  padding:8px 12px;
   font-weight:1000;
+  cursor:pointer;
+  color: var(--muted);
 }
-.badge.pr{
-  border-color: rgba(139,92,246,.25);
-  background: var(--prBg);
-  color: var(--pr);
+.seg-btn.active{
+  background: rgba(37,99,235,.12);
+  color: #1e3a8a;
 }
-.panel-body{padding:12px}
+.view.hidden{display:none}
 
-/* prereq list */
-.prereq-host{
+/* Steps */
+.steps-host{
   display:flex;
   flex-direction:column;
   gap:10px;
 }
+.step-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+}
+.step-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.step-card-title{font-weight:1000}
+.step-desc{margin-top:4px; font-size:12px; color:var(--muted); white-space:pre-wrap}
+.step-grid.step-grid-planend{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0,1fr));
+  gap:10px;
+}
+.step-grid.step-grid-planend .note-wide{grid-column: span 5}
+.step-actions{
+  margin-top:10px;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  align-items:center;
+}
+
+/* Prereq */
+.pr-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-size:12px;
+  font-weight:1000;
+}
+.badge.pr{
+  border-color: rgba(139,92,246,.25);
+  background: rgba(139,92,246,.12);
+  color: var(--pr);
+}
+.prereq-host{display:flex; flex-direction:column; gap:10px}
 .pr-item{
   border:1px solid var(--line);
   border-radius:14px;
@@ -410,7 +425,6 @@ body{
   width:18px;height:18px;
   accent-color: var(--pr);
 }
-.pr-title{font-weight:1000}
 .pr-meta{
   margin-top:6px;
   display:flex;
@@ -427,7 +441,7 @@ body{
   background:#fff;
 }
 .tag.req{
-  background: var(--prBg);
+  background: rgba(139,92,246,.12);
   color: var(--pr);
   border-color: rgba(139,92,246,.25);
 }
@@ -464,48 +478,7 @@ body{
   box-shadow: 0 0 0 4px rgba(139,92,246,.12);
 }
 
-/* ===================== Steps ===================== */
-.steps-host{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.step-card{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  background:#fff;
-}
-.step-top{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:flex-start;
-}
-.step-card-title{font-weight:1000}
-.step-desc{
-  margin-top:4px;
-  font-size:12px;
-  color:var(--muted);
-  white-space:pre-wrap;
-}
-.step-grid.step-grid-planend{
-  margin-top:10px;
-  display:grid;
-  grid-template-columns: repeat(5, minmax(0,1fr));
-  gap:10px;
-}
-.step-grid.step-grid-planend .note-wide{grid-column: span 5}
-
-.step-actions{
-  margin-top:10px;
-  display:flex;
-  justify-content:flex-end;
-  gap:10px;
-  align-items:center;
-}
-
-/* ===================== Toast ===================== */
+/* Toast */
 .toast{
   position:fixed;
   bottom:18px;
@@ -520,7 +493,7 @@ body{
 }
 .toast.hidden{display:none}
 
-/* ===================== Tooltip ===================== */
+/* Tooltip */
 .tooltip{
   position:fixed;
   z-index:260;
@@ -530,7 +503,7 @@ body{
   border-radius:12px;
   padding:10px 12px;
   box-shadow:var(--shadow);
-  max-width: 340px;
+  max-width: 360px;
   font-size:12px;
   line-height:1.35;
 }
@@ -543,18 +516,19 @@ body{
 }
 .tip-k{color: rgba(255,255,255,.70); font-weight:900}
 .tip-v{color:#fff; font-weight:700; white-space:pre-wrap}
+.tip-foot{
+  margin-top:8px;
+  font-size:11px;
+  color: rgba(255,255,255,.65);
+  font-weight:800;
+}
 
-/* ===================== Responsive ===================== */
 @media (max-width: 1100px){
   .filters-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .field.wide{grid-column: span 2}
-
   .form-grid{grid-template-columns: repeat(2, minmax(0,1fr))}
   .form-grid .wide{grid-column: span 2}
-
   .step-grid.step-grid-planend{grid-template-columns: repeat(2, minmax(0,1fr))}
   .step-grid.step-grid-planend .note-wide{grid-column: span 2}
-
-  .split-grid{grid-template-columns: 1fr}
-  .mp-bar{width: 180px}
+  .progressBar{width: 140px}
 }
