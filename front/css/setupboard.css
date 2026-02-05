@@ -874,7 +874,7 @@ nav{
   .eq-name{ max-width: 200px; }
   .eq-sub{ max-width: 200px; }
 
-  .progressBar{ width: 130px; }
+  .progressBar{ width: 90px; }
 
   /* 모달은 화면 꽉 차게 */
   .modal{ padding: 10px; }
