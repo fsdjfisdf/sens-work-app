@@ -7,35 +7,35 @@
 
   <!-- 설비 전용 CSS -->
   <link rel="stylesheet" href="./css/setupboard.css" />
-
 </head>
+
 <body>
-  <!-- 🔹 상단 네비게이션 (네가 준 구조 그대로) -->
+  <!-- 🔹 상단 네비게이션 -->
   <nav>
     <div class="inner">
       <div class="nav-container">
         <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+
         <div class="sign-container unsigned">
           <a href="./signin.html" class="sign-link">Login</a>
         </div>
+
         <div class="sign-container signed hidden">
-          <button class="menu-btn">
+          <button class="menu-btn" type="button" aria-label="menu">
             <div class="menu-icon">
-              <span></span>
-              <span></span>
-              <span></span>
+              <span></span><span></span><span></span>
             </div>
           </button>
         </div>
       </div>
     </div>
+
     <div class="menu-bar">
       <div class="menu-bar-content">
         <a href="./user_info.html" class="menu-item">SECM</a>
         <a href="./worklog.html" class="menu-item">Create Worklog</a>
         <a href="./approval.html" class="menu-item">Worklog Approval</a>
         <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-        <!-- ⚠️ 나중에 equipment_signal2.html로 교체할 거면 여기 링크만 바꿔주면 됨 -->
         <a href="./equipment_signal.html" class="menu-item">Equipment</a>
         <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
         <a href="./PCI.html" class="menu-item">PCI</a>
@@ -45,19 +45,20 @@
         <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
         <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
         <a href="./update.html" class="menu-item">Update</a>
-        <button id="sign-out" class="menu-item">Logout</button>
+        <button id="sign-out" class="menu-item" type="button">Logout</button>
       </div>
     </div>
   </nav>
-<body>
+
+  <!-- ✅ nav는 fixed, topbar는 nav 아래 sticky -->
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-title">SET UP 설비 진행 상황</div>
       </div>
       <div class="top-actions">
-        <button id="btnNew" class="btn primary">+ 신규 설비</button>
-        <button id="btnHelp" class="btn icon" title="셋업 진행 순서도">?</button>
+        <button id="btnNew" class="btn primary" type="button">+ 신규 설비</button>
+        <button id="btnHelp" class="btn icon" type="button" title="셋업 진행 순서도">?</button>
       </div>
     </div>
   </header>
@@ -114,7 +115,7 @@
 
         <div class="field wide">
           <label>설비명 검색</label>
-          <input id="fQ" type="text" placeholder="예) DPCB713"/>
+          <input id="fQ" type="text" placeholder="예) DPCB713" />
         </div>
 
         <div class="field">
@@ -126,7 +127,7 @@
 
         <div class="field">
           <label>&nbsp;</label>
-          <button id="btnApply" class="btn primary">적용</button>
+          <button id="btnApply" class="btn primary" type="button">적용</button>
         </div>
       </div>
 
@@ -150,7 +151,7 @@
   </main>
 
   <!-- Detail Modal -->
-  <div id="modal" class="modal hidden">
+  <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" data-close="1"></div>
 
     <div class="modal-card">
@@ -160,7 +161,7 @@
           <div id="mMeta" class="modal-meta muted">-</div>
         </div>
         <div class="modal-actions">
-          <button id="btnClose" class="btn">닫기</button>
+          <button id="btnClose" class="btn" type="button">닫기</button>
         </div>
       </div>
 
@@ -216,18 +217,19 @@
           </div>
 
           <div class="row-actions">
-            <button id="btnSaveProject" class="btn primary">SAVE</button>
+            <button id="btnSaveProject" class="btn primary" type="button">SAVE</button>
             <span id="projSaveHint" class="muted small"></span>
           </div>
         </div>
 
-        <!-- toggle -->
+        <!-- Tabs -->
         <div class="section">
           <div class="section-title">
             <span>진행 관리</span>
             <div class="seg" role="tablist" aria-label="mode">
               <button id="tabSteps" class="seg-btn active" type="button">Steps</button>
               <button id="tabPrereq" class="seg-btn" type="button">타업체 선행조건</button>
+              <button id="tabLogs" class="seg-btn" type="button">작업이력</button>
             </div>
           </div>
 
@@ -242,6 +244,46 @@
             </div>
             <div id="prereqHost" class="prereq-host"></div>
           </div>
+
+          <!-- Logs -->
+          <div id="viewLogs" class="view hidden">
+            <div class="pr-top">
+              <div class="muted small">
+                * 설비명(eq name) 매칭 로그를 불러오며, Step 선택 시 키워드 기반으로 필터됩니다.
+              </div>
+              <span id="logBadge" class="badge">0</span>
+            </div>
+
+            <div class="log-tools">
+              <div class="field wide">
+                <label>로그 검색</label>
+                <input id="logQ" type="text" placeholder="예) 정현우 / PUMP / 방치압 / HOOK UP"/>
+              </div>
+
+              <div class="field">
+                <label>Step 필터</label>
+                <select id="logStep">
+                  <option value="">ALL</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>건수</label>
+                <select id="logLimit">
+                  <option value="50">50</option>
+                  <option value="100" selected>100</option>
+                  <option value="200">200</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>&nbsp;</label>
+                <button id="btnReloadLogs" class="btn" type="button">새로고침</button>
+              </div>
+            </div>
+
+            <div id="logsHost" class="table-host"></div>
+          </div>
         </div>
 
       </div>
@@ -249,7 +291,7 @@
   </div>
 
   <!-- Help Modal -->
-  <div id="helpModal" class="modal hidden">
+  <div id="helpModal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" data-help-close="1"></div>
 
     <div class="modal-card help-card">
@@ -259,26 +301,20 @@
           <div class="modal-meta muted">현장 기준 흐름(기본 가이드) · 설비/라인에 따라 일부 변형 가능</div>
         </div>
         <div class="modal-actions">
-          <button id="btnHelpClose" class="btn">닫기</button>
+          <button id="btnHelpClose" class="btn" type="button">닫기</button>
         </div>
       </div>
 
       <div class="modal-body">
         <div class="help-grid">
-          <!-- Main Flow -->
           <div class="help-col">
             <div class="help-h">메인 플로우(Flowchart)</div>
-            <div class="flowchart" id="helpFlowHost">
-              <!-- JS로 자동 렌더링 -->
-            </div>
+            <div class="flowchart" id="helpFlowHost"></div>
           </div>
 
-          <!-- Prereq Flow -->
           <div class="help-col">
             <div class="help-h">타업체 선행조건(체크 포인트)</div>
-            <div class="pr-flow" id="helpPrereqHost">
-              <!-- JS로 자동 렌더링 -->
-            </div>
+            <div class="pr-flow" id="helpPrereqHost"></div>
           </div>
         </div>
       </div>
@@ -286,53 +322,58 @@
     </div>
   </div>
 
-  <!-- Hover Tooltip -->
+  <!-- Hover Tooltip + Toast -->
   <div id="tooltip" class="tooltip hidden"></div>
   <div id="toast" class="toast hidden"></div>
 
   <script src="./js/setupboard.js"></script>
-        <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-            const userRole = localStorage.getItem("user-role");
 
-            if (!token) {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            }
+  <!-- nav/login 상태 토글(기존 네 코드 유지, 충돌 없게 정리) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const token = localStorage.getItem("x-access-token");
+      const userRole = localStorage.getItem("user-role");
 
-            if (!token || userRole !== 'admin') {
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = 'none';
-                });
-            }
+      const unsigned = document.querySelector(".unsigned");
+      const signed = document.querySelector(".signed");
 
-            const signOutButton = document.querySelector("#sign-out");
+      if (!token) {
+        unsigned && unsigned.classList.remove("hidden");
+        signed && signed.classList.add("hidden");
+      } else {
+        unsigned && unsigned.classList.add("hidden");
+        signed && signed.classList.remove("hidden");
+      }
 
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    localStorage.removeItem("user-role");
-                    alert("로그아웃 되었습니다.");
-                    window.location.replace("./signin.html");
-                });
-            }
-            const menuBtn = document.querySelector('.menu-btn');
-            const menuBar = document.querySelector('.menu-bar');
+      if (!token || userRole !== "admin") {
+        document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+      }
 
-            menuBtn.addEventListener('click', function() {
-                menuBar.classList.toggle('open');
-            });
-
-            document.addEventListener('click', function(event) {
-                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                    menuBar.classList.remove('open');
-                }
-            });
+      const signOutButton = document.querySelector("#sign-out");
+      if (signOutButton) {
+        signOutButton.addEventListener("click", function() {
+          localStorage.removeItem("x-access-token");
+          localStorage.removeItem("user-role");
+          alert("로그아웃 되었습니다.");
+          window.location.replace("./signin.html");
         });
-    </script>
+      }
+
+      const menuBtn = document.querySelector(".menu-btn");
+      const menuBar = document.querySelector(".menu-bar");
+
+      if (menuBtn && menuBar) {
+        menuBtn.addEventListener("click", function() {
+          menuBar.classList.toggle("open");
+        });
+
+        document.addEventListener("click", function(event) {
+          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
+            menuBar.classList.remove("open");
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

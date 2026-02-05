@@ -1,25 +1,18 @@
 (() => {
   'use strict';
 
+  /* =========================
+   * CONFIG
+   * ========================= */
+
+  // ✅ 작업이력 API
+  // 네가 현재 쓰는 엔드포인트 그대로 기본값으로 둠.
+  // 만약 백엔드가 /work-logs 로 제공한다면 아래 URL만 바꾸면 됨.
+  const WORKLOG_API_URL = 'http://3.37.73.151:3001/logs';
+  // 예) const WORKLOG_API_URL = '/api/work-logs';
+
   /**
-   * ✅ STEP 순서(요청 반영)
-   * 1 TEMPLATE DRAWING
-   * 2 TEMPLATE 타공 확인
-   * 3 FAB IN
-   * 4 DOCKING
-   * 5 CABLE HOOK UP
-   * 6 SILICON
-   * 7 POWER TURN ON
-   * 8 UTILITY TURN ON
-   * 9 CHILLER TURN ON
-   * 10 HEAT EXCHANGER TURN ON
-   * 11 PUMP TURN ON
-   * 12 TEACHING
-   * 13 GAS TURN ON
-   * 14 TTTM
-   * 15 인증 준비
-   * 16 중간 인증
-   * 17 PROCESS CONFIRM
+   * ✅ STEP 순서
    */
   const STEPS = [
     { no: 1,  name: 'TEMPLATE DRAW', desc: '설비/랙/펌프 타공부 도면 작성(OHT LINE 기준)' },
@@ -41,11 +34,35 @@
     { no: 17, name: 'PROCESS CONFIRM', desc: 'AGING 진행으로 설비 이상 여부 검증(고객 진행)' }
   ];
 
+  /**
+   * ✅ STEP 키워드(작업이력 매칭용)
+   * - description 뿐 아니라 task_name/setup_item/transfer_item/work_type 등에 포함될 수 있어서
+   *   "haystack"으로 묶어 검색함.
+   */
+  const STEP_KEYWORDS = {
+    1:  ['TEMPLATE','DRAW','타공'],
+    2:  ['TEMPLATE','DRAW','타공'],
+    3:  ['FAB IN','PACKING LIST','PACKING'],
+    4:  ['DOCKING','내부 HOOK UP'],
+    5:  ['CABLE HOOK UP','HOOK UP'],
+    6:  ['SILICON'],
+    7:  ['POWER TURN ON','SYCON','RACK'],
+    8:  ['UTILITY TURN ON','UTILITY','VAC','CDA','PCW'],
+    9:  ['CHILLER'],
+    10: ['HEAT EX'],
+    11: ['PUMP TURN ON','방치압'],
+    12: ['ROBOT','TEACHING'],
+    13: ['GAS TURN ON','GAS'],
+    14: ['TTTM','REPORT'],
+    15: ['중간 인증','가동 인증','중간 가동 인증'],
+    16: ['PROCESS CONFIRM'],
+    17: ['PROCESS CONFIRM']
+  };
+
   const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
   /**
-   * ✅ 선행조건 순서(요청 반영)
-   * TRAY → 3상 → AGV → PCW → LP → OHT → GAS → RF → 환경 → MFC → 지진방지
+   * ✅ 선행조건 순서
    */
   const PREREQS = [
     { code:'TRAY_INSTALL',          title:'TRAY 설치',           required:true,  beforeStepNo:5,  requiredBefore:'CABLE HOOK UP',   desc:'CABLE HOOK UP 전 필수' },
@@ -96,12 +113,22 @@
     // modal tabs
     tabSteps: $('#tabSteps'),
     tabPrereq: $('#tabPrereq'),
+    tabLogs: $('#tabLogs'),
     viewSteps: $('#viewSteps'),
     viewPrereq: $('#viewPrereq'),
+    viewLogs: $('#viewLogs'),
 
     stepsHost: $('#stepsHost'),
     prereqHost: $('#prereqHost'),
     prBadge: $('#prBadge'),
+
+    // logs UI
+    logsHost: $('#logsHost'),
+    logBadge: $('#logBadge'),
+    logQ: $('#logQ'),
+    logStep: $('#logStep'),
+    logLimit: $('#logLimit'),
+    btnReloadLogs: $('#btnReloadLogs'),
 
     // help modal
     helpModal: $('#helpModal'),
@@ -121,11 +148,16 @@
     createMode: false,
 
     hoverTimer: null,
-    hoverKey: null
+    hoverKey: null,
+
+    // worklogs
+    workLogsCache: null,
+    workLogsFetchedAt: 0,
+    equipmentLogs: []
   };
 
   /* =========================================================
-   * 공통 유틸
+   * Utils
    * ========================================================= */
   function getToken() {
     return localStorage.getItem('x-access-token') || '';
@@ -261,9 +293,9 @@
   }
 
   /* =========================================================
-   * ✅ Tooltip "강제 복구" 포인트
-   * - hover가 안 뜨는 이유 1순위: el.tooltip이 null이거나 CSS로 display:none/opacity:0
-   * - 여기서는 null 체크 + body에 tooltip을 자동 생성해버림
+   * Tooltip (잔상/작은 점 남는 현상 방지)
+   * - hidden 클래스 + display + 좌표 원복을 함께 처리
+   * - mouseout/mouseleave 중복 호출에도 안전
    * ========================================================= */
   function ensureTooltipEl() {
     if (el.tooltip) return;
@@ -271,24 +303,116 @@
     div.id = 'tooltip';
     div.className = 'tooltip hidden';
     div.style.position = 'fixed';
-    div.style.zIndex = '99999';
-    // CSS가 꼬여도 보이게 최소 스타일을 주입 (기존 CSS 있으면 덮어씌워도 OK)
-    div.style.maxWidth = '360px';
-    div.style.background = 'rgba(17,24,39,0.95)';
-    div.style.color = '#fff';
-    div.style.borderRadius = '10px';
-    div.style.padding = '10px 12px';
-    div.style.fontSize = '12px';
-    div.style.lineHeight = '1.35';
-    div.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
+    div.style.zIndex = '9500';
     div.style.pointerEvents = 'none';
     document.body.appendChild(div);
     el.tooltip = div;
   }
 
-  /* =========================
-   * Help (순서도) 렌더링
-   * ========================= */
+  function hideTooltip() {
+    ensureTooltipEl();
+    clearTimeout(state.hoverTimer);
+    state.hoverTimer = null;
+    state.hoverKey = null;
+
+    // ✅ 확실한 숨김(잔상 방지)
+    el.tooltip.classList.add('hidden');
+    el.tooltip.innerHTML = '';
+    el.tooltip.style.display = 'none';
+    el.tooltip.style.left = '-9999px';
+    el.tooltip.style.top = '-9999px';
+  }
+
+  function forceShowTooltip() {
+    ensureTooltipEl();
+    el.tooltip.style.display = 'block';
+    el.tooltip.classList.remove('hidden');
+  }
+
+  function placeTooltip(x, y) {
+    ensureTooltipEl();
+    const pad = 14;
+    const maxX = window.innerWidth - pad - 10;
+    const maxY = window.innerHeight - pad - 10;
+    el.tooltip.style.left = Math.min(x + 14, maxX) + 'px';
+    el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
+  }
+
+  async function showTooltipForCell(td, clientX, clientY) {
+    ensureTooltipEl();
+    if (!td || !td.isConnected) return;
+
+    const setupId = td.getAttribute('data-setup-id');
+    const stepNo = Number(td.getAttribute('data-step-no'));
+    if (!setupId || !stepNo) return;
+
+    const key = `${setupId}:${stepNo}`;
+    state.hoverKey = key;
+
+    forceShowTooltip();
+    el.tooltip.innerHTML = `<div class="tip-title">Loading...</div>`;
+    placeTooltip(clientX, clientY);
+
+    try {
+      const detail = await ensureDetail(setupId);
+      if (state.hoverKey !== key) return;
+
+      const stepName = STEPS.find(s => s.no === stepNo)?.name || `STEP ${stepNo}`;
+      const steps = detail?.steps || [];
+      const row = steps.find(x => Number(x.step_no) === stepNo) || {};
+
+      const planEnd = firstNonEmpty(fmtYYMMDD(row.plan_end), '-');
+      const as = firstNonEmpty(fmtYYMMDD(row.actual_start), '-');
+      const ae = firstNonEmpty(fmtYYMMDD(row.actual_end), '-');
+
+      const workers = firstNonEmpty(row.workers, row.worker, row.worker_names, row.task_man, row.owner, '-');
+      const note = firstNonEmpty(row.note, row.memo, row.remark, row.comment, '-', '');
+
+      el.tooltip.innerHTML = `
+        <div class="tip-title">${escapeHtml(stepName)}</div>
+        <div class="tip-grid">
+          <div class="tip-k">Plan End</div><div class="tip-v">${escapeHtml(planEnd)}</div>
+          <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(as)}</div>
+          <div class="tip-k">Actual E</div><div class="tip-v">${escapeHtml(ae)}</div>
+          <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers)}</div>
+          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note || '-')}</div>
+        </div>
+        <div class="tip-foot">클릭: 상태 변경(확인 후 저장)</div>
+      `;
+      placeTooltip(clientX, clientY);
+    } catch (e) {
+      if (state.hoverKey !== key) return;
+      el.tooltip.innerHTML = `
+        <div class="tip-title">Tooltip Error</div>
+        <div class="tip-grid">
+          <div class="tip-k">msg</div><div class="tip-v">${escapeHtml(e.message)}</div>
+        </div>
+      `;
+      placeTooltip(clientX, clientY);
+    }
+  }
+
+  function onCellEnter(e) {
+    clearTimeout(state.hoverTimer);
+    const td = e.currentTarget;
+    state.hoverTimer = setTimeout(() => {
+      showTooltipForCell(td, e.clientX, e.clientY);
+    }, 120);
+  }
+
+  function onCellMove(e) {
+    ensureTooltipEl();
+    if (el.tooltip.classList.contains('hidden')) return;
+    placeTooltip(e.clientX, e.clientY);
+  }
+
+  function onCellLeave() {
+    hideTooltip();
+  }
+
+  /* =========================================================
+   * Help (순서도)
+   * ========================================================= */
   function renderHelpFlowchart() {
     el.helpFlowHost.innerHTML = `
       <div class="flowchart-track">
@@ -341,9 +465,9 @@
     `;
   }
 
-  /* =========================
+  /* =========================================================
    * Board
-   * ========================= */
+   * ========================================================= */
   async function loadBoard() {
     const q = buildQuery({
       equipment_type: el.fEqType?.value,
@@ -369,6 +493,7 @@
       state.list = list;
       renderTable();
       prefetchDetailsForBoard();
+
       if (el.statCount) el.statCount.textContent = `설비 ${state.list.length}대`;
     } catch (e) {
       if (el.tableHost) {
@@ -426,6 +551,7 @@
       </table>
     `;
 
+    // 설비 클릭 -> 모달
     el.tableHost.querySelectorAll('[data-open-detail="1"]').forEach(a => {
       a.addEventListener('click', () => {
         const setupId = a.getAttribute('data-setup-id');
@@ -433,8 +559,7 @@
       });
     });
 
-    // ✅ hover 이벤트를 "개별 td 바인딩" + "이벤트 위임" 둘 다 걸어서
-    // 어떤 이유로 개별 바인딩이 깨져도 tooltip은 뜨게 만든다.
+    // 셀 클릭/hover
     const tds = el.tableHost.querySelectorAll('[data-cell="1"]');
     tds.forEach(td => {
       td.addEventListener('click', async () => {
@@ -449,7 +574,7 @@
       td.addEventListener('mouseleave', onCellLeave);
     });
 
-    // 이벤트 위임(보조)
+    // 이벤트 위임(보험)
     el.tableHost.addEventListener('mouseover', (e) => {
       const td = e.target?.closest?.('[data-cell="1"]');
       if (!td) return;
@@ -525,7 +650,7 @@
   async function ensureDetail(setupId) {
     if (state.detailCache.has(setupId)) return state.detailCache.get(setupId);
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`);
-    const data = json?.data || json; // 혹시 data 없이 내려오는 케이스 방어
+    const data = json?.data || json;
     state.detailCache.set(setupId, data);
     return data;
   }
@@ -600,153 +725,42 @@
     }
   }
 
-  /* =========================
-   * Tooltip
-   * ========================= */
-function hideTooltip() {
-  ensureTooltipEl();
-
-  clearTimeout(state.hoverTimer);
-  state.hoverTimer = null;
-  state.hoverKey = null;
-
-  el.tooltip.classList.add('hidden');
-  el.tooltip.innerHTML = '';
-
-  // ✅ forceShowTooltip()에서 켠 인라인 강제표시를 원복
-  el.tooltip.style.display = 'none';
-  el.tooltip.style.opacity = '';
-  el.tooltip.style.visibility = '';
-  el.tooltip.style.left = '-9999px';
-  el.tooltip.style.top = '-9999px';
-}
-
-
-  function placeTooltip(x, y) {
-    ensureTooltipEl();
-    const pad = 14;
-    const maxX = window.innerWidth - pad - 10;
-    const maxY = window.innerHeight - pad - 10;
-    el.tooltip.style.left = Math.min(x + 14, maxX) + 'px';
-    el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
-  }
-
-function forceShowTooltip() {
-  ensureTooltipEl();
-  el.tooltip.style.display = 'block';
-  el.tooltip.classList.remove('hidden');
-}
-
-  async function showTooltipForCell(td, clientX, clientY) {
-    ensureTooltipEl();
-    if (!td || !td.isConnected) return;
-
-    const setupId = td.getAttribute('data-setup-id');
-    const stepNo = Number(td.getAttribute('data-step-no'));
-    if (!setupId || !stepNo) return;
-
-    const key = `${setupId}:${stepNo}`;
-    state.hoverKey = key;
-
-    forceShowTooltip();
-    el.tooltip.innerHTML = `<div class="tip-title">Loading...</div>`;
-    placeTooltip(clientX, clientY);
-
-    try {
-      const detail = await ensureDetail(setupId);
-      if (state.hoverKey !== key) return;
-
-      // 같은 row 날짜 라벨 동기화
-      const rowTds = document.querySelectorAll(`[data-cell="1"][data-setup-id="${setupId}"]`);
-      rowTds.forEach(cell => {
-        const no = Number(cell.getAttribute('data-step-no'));
-        const st = String(cell.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
-        const stepRow = (detail?.steps || []).find(x => Number(x.step_no) === no) || null;
-        const label = stepRow ? buildStepDateLabel(stepRow, st) : '';
-        const dateEl = cell.querySelector('.cellDate');
-        if (dateEl) dateEl.textContent = label || '';
-      });
-
-      const stepName = STEPS.find(s => s.no === stepNo)?.name || `STEP ${stepNo}`;
-      const steps = detail?.steps || [];
-      const row = steps.find(x => Number(x.step_no) === stepNo) || {};
-
-      const planEnd = firstNonEmpty(fmtYYMMDD(row.plan_end), '-');
-      const as = firstNonEmpty(fmtYYMMDD(row.actual_start), '-');
-      const ae = firstNonEmpty(fmtYYMMDD(row.actual_end), '-');
-
-      const workers = firstNonEmpty(
-        row.workers, row.worker, row.worker_names, row.task_man, row.owner, '-'
-      );
-      const note = firstNonEmpty(
-        row.note, row.memo, row.remark, row.comment, row.last_note, '-'
-      );
-
-      // ✅ "아무것도 안 뜬다" 케이스를 잡기 위해 stepRow 자체가 비어있으면 경고도 표기
-      const debug = (!steps.length || !Object.keys(row).length)
-        ? `<div style="margin-top:8px;opacity:.8;">(detail.steps/row 비어있음: API 응답 확인 필요)</div>`
-        : ``;
-
-      el.tooltip.innerHTML = `
-        <div class="tip-title">${escapeHtml(stepName)}</div>
-        <div class="tip-grid">
-          <div class="tip-k">Plan End</div><div class="tip-v">${escapeHtml(planEnd)}</div>
-          <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(as)}</div>
-          <div class="tip-k">Actual E</div><div class="tip-v">${escapeHtml(ae)}</div>
-          <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers)}</div>
-          <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note)}</div>
-        </div>
-        <div class="tip-foot">클릭: 상태 변경(확인 후 저장)</div>
-        ${debug}
-      `;
-      placeTooltip(clientX, clientY);
-    } catch (e) {
-      if (state.hoverKey !== key) return;
-      el.tooltip.innerHTML = `
-        <div class="tip-title">Tooltip Error</div>
-        <div class="tip-grid">
-          <div class="tip-k">msg</div><div class="tip-v">${escapeHtml(e.message)}</div>
-        </div>
-      `;
+  /* =========================================================
+   * Modal + Tabs
+   * ========================================================= */
+  function openModalShell() {
+    if (el.modal) {
+      el.modal.classList.remove('hidden');
+      el.modal.setAttribute('aria-hidden','false');
     }
   }
 
-  function onCellEnter(e) {
-    clearTimeout(state.hoverTimer);
-    const td = e.currentTarget;
-    state.hoverTimer = setTimeout(() => {
-      showTooltipForCell(td, e.clientX, e.clientY);
-    }, 120);
-  }
-
-  function onCellMove(e) {
-    ensureTooltipEl();
-    if (el.tooltip.classList.contains('hidden')) return;
-    placeTooltip(e.clientX, e.clientY);
-  }
-
-  function onCellLeave() {
-    hideTooltip();
-  }
-
-  /* =========================
-   * Modal + Tabs
-   * ========================= */
-  function openModalShell() { if (el.modal) el.modal.classList.remove('hidden'); }
   function closeModal() {
-    if (el.modal) el.modal.classList.add('hidden');
+    if (el.modal) {
+      el.modal.classList.add('hidden');
+      el.modal.setAttribute('aria-hidden','true');
+    }
     state.selectedSetupId = null;
     state.createMode = false;
+    state.equipmentLogs = [];
+
     if (el.btnSaveProject) el.btnSaveProject.textContent = 'SAVE';
     setTab('steps');
+    hideTooltip();
   }
 
   function setTab(mode) {
     const isSteps = mode === 'steps';
+    const isPrereq = mode === 'prereq';
+    const isLogs = mode === 'logs';
+
     el.tabSteps?.classList?.toggle('active', isSteps);
-    el.tabPrereq?.classList?.toggle('active', !isSteps);
+    el.tabPrereq?.classList?.toggle('active', isPrereq);
+    el.tabLogs?.classList?.toggle('active', isLogs);
+
     el.viewSteps?.classList?.toggle('hidden', !isSteps);
-    el.viewPrereq?.classList?.toggle('hidden', isSteps);
+    el.viewPrereq?.classList?.toggle('hidden', !isPrereq);
+    el.viewLogs?.classList?.toggle('hidden', !isLogs);
   }
 
   function openCreateModal() {
@@ -769,7 +783,12 @@ function forceShowTooltip() {
 
     if (el.stepsHost) el.stepsHost.innerHTML = `<div class="muted small">설비 생성 후 STEP이 자동 생성됩니다.</div>`;
     if (el.prereqHost) el.prereqHost.innerHTML = `<div class="muted small">설비 생성 후 선행조건 체크가 가능합니다.</div>`;
+    if (el.logsHost) el.logsHost.innerHTML = `<div class="muted small" style="padding:12px;">설비 생성 후 작업이력을 볼 수 있습니다.</div>`;
+
     if (el.prBadge) el.prBadge.textContent = `0/0`;
+    if (el.logBadge) el.logBadge.textContent = `0`;
+
+    fillLogStepSelect();
 
     if (el.btnSaveProject) el.btnSaveProject.textContent = 'CREATE';
     if (el.projSaveHint) el.projSaveHint.textContent = '';
@@ -790,15 +809,24 @@ function forceShowTooltip() {
     if (el.mMeta) el.mMeta.textContent = '';
     if (el.stepsHost) el.stepsHost.innerHTML = '';
     if (el.prereqHost) el.prereqHost.innerHTML = '';
+    if (el.logsHost) el.logsHost.innerHTML = '';
     if (el.prBadge) el.prBadge.textContent = `0/0`;
+    if (el.logBadge) el.logBadge.textContent = `0`;
     if (el.projSaveHint) el.projSaveHint.textContent = '';
+
+    fillLogStepSelect();
 
     try {
       const data = await ensureDetail(String(setupId));
       renderModal(data);
 
+      // prereq
       const prMap = await fetchPrereqs(String(setupId));
       renderPrereqs(String(setupId), prMap);
+
+      // logs (미리 로딩해두기)
+      await loadEquipmentLogsForModal();
+      renderLogsUI();
     } catch (e) {
       if (el.mTitle) el.mTitle.textContent = '상세 로드 실패';
       if (el.mMeta) el.mMeta.textContent = e.message;
@@ -898,7 +926,8 @@ function forceShowTooltip() {
 
           <div class="step-actions">
             <span class="muted small" data-hint="1"></span>
-            <button class="btn primary" data-save-step="1">SAVE</button>
+            <button class="btn primary" data-save-step="1" type="button">SAVE</button>
+            <button class="btn" data-open-logs="1" type="button" title="이 Step 관련 작업이력 보기">관련 이력</button>
           </div>
         </div>
       `;
@@ -910,6 +939,7 @@ function forceShowTooltip() {
       const pill = card.querySelector('[data-pill="1"]');
       const hint = card.querySelector('[data-hint="1"]');
       const btn = card.querySelector('[data-save-step="1"]');
+      const btnLogs = card.querySelector('[data-open-logs="1"]');
 
       selStatus?.addEventListener('change', () => {
         const st = selStatus.value;
@@ -941,7 +971,6 @@ function forceShowTooltip() {
             body: patch
           });
 
-          // ✅ 캐시를 갱신: detail 전체가 오래된 상태면 hover에서도 안 뜨는 경우가 있어 강제로 삭제
           state.detailCache.delete(setupId);
           await ensureDetail(setupId);
 
@@ -961,9 +990,24 @@ function forceShowTooltip() {
           await loadBoard();
           toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
           setTimeout(() => { if (hint) hint.textContent = ''; }, 1500);
+
+          // logs 최신화(저장 후 바로 반영되게)
+          try { await loadEquipmentLogsForModal(); renderLogsUI(); } catch {}
         } catch (e) {
           if (hint) hint.textContent = `fail: ${e.message}`;
           toast(`STEP 저장 실패: ${e.message}`);
+        }
+      });
+
+      // ✅ step에서 바로 “관련 이력” 보기 -> 작업이력 탭으로 이동 + step 필터 자동
+      btnLogs?.addEventListener('click', async () => {
+        setTab('logs');
+        if (el.logStep) el.logStep.value = String(stepNo);
+        try {
+          await loadEquipmentLogsForModal();
+          renderLogsUI();
+        } catch (e) {
+          toast(`작업이력 로드 실패: ${e.message}`);
         }
       });
     });
@@ -1026,15 +1070,18 @@ function forceShowTooltip() {
       if (el.projSaveHint) el.projSaveHint.textContent = 'saved ✅';
       toast('Project 저장 완료');
       setTimeout(() => { if (el.projSaveHint) el.projSaveHint.textContent = ''; }, 1500);
+
+      // logs도 다시 로드(설비명 변경했을 수 있음)
+      try { await loadEquipmentLogsForModal(); renderLogsUI(); } catch {}
     } catch (e) {
       if (el.projSaveHint) el.projSaveHint.textContent = `fail: ${e.message}`;
       toast(`Project 저장 실패: ${e.message}`);
     }
   }
 
-  /* =========================
+  /* =========================================================
    * Prereq (DB ONLY)
-   * ========================= */
+   * ========================================================= */
   function normalizePrereqResponse(json) {
     const data = json?.data;
 
@@ -1049,7 +1096,6 @@ function forceShowTooltip() {
       return map;
     }
 
-    // controller가 {ok:true, updated:...}로 준 경우 대비
     if (json && typeof json === 'object' && json.updated && typeof json.updated === 'object') {
       return json.updated;
     }
@@ -1089,16 +1135,13 @@ function forceShowTooltip() {
   }
 
   function normalizePrereqRowForCache(code, anyRow, doneBool) {
-    // DAO(map) 형식(done/done_date)과 PATCH(updated) 형식(is_done/done_at)을 모두 통일
     const isDone = (typeof doneBool === 'boolean') ? doneBool : isPrereqDone(anyRow);
     const doneDate = anyRow?.done_at || anyRow?.done_date || anyRow?.doneAt || null;
 
     return {
       ...(anyRow || {}),
-      // 통일 필드
       done: isDone,
       done_date: doneDate,
-      // 참고용(혹시 UI에서 쓰면)
       is_done: isDone ? 1 : 0,
       done_at: doneDate,
       prereq_key: anyRow?.prereq_key || code
@@ -1113,7 +1156,6 @@ function forceShowTooltip() {
       { method: 'PATCH', body: payload }
     );
 
-    // controller가 {ok:true, updated: ...}
     const rawRow = json?.data || json?.updated || json || null;
 
     const cur = state.prereqCache.get(setupId) || {};
@@ -1150,7 +1192,7 @@ function forceShowTooltip() {
           <div class="pr-desc">${escapeHtml(it.desc)}</div>
 
           <div class="pr-actions">
-            <button class="btn" data-pr-save="1">저장</button>
+            <button class="btn" data-pr-save="1" type="button">저장</button>
           </div>
         </div>
       `;
@@ -1179,22 +1221,198 @@ function forceShowTooltip() {
     });
   }
 
-  /* =========================
+  /* =========================================================
+   * Work Logs (설비명 매칭 + Step 키워드 매칭)
+   * ========================================================= */
+  function normText(s){
+    return String(s ?? '')
+      .toUpperCase()
+      .replaceAll(/\s+/g,' ')
+      .trim();
+  }
+
+  function eqNameMatch(logEqName, targetEqName){
+    const a = normText(logEqName);
+    const b = normText(targetEqName);
+    if (!a || !b) return false;
+    if (a === b) return true;
+    if (a.includes(b) || b.includes(a)) return true;
+    return false;
+  }
+
+  function logHaystack(log){
+    return normText([
+      log.task_description,
+      log.task_name,
+      log.setup_item,
+      log.transfer_item,
+      log.work_type,
+      log.work_type2,
+      log.task_cause,
+      log.task_result,
+      log.status,
+      log.SOP,
+      log.tsguide
+    ].filter(Boolean).join(' | '));
+  }
+
+  async function fetchAllWorkLogs({ force=false } = {}){
+    const now = Date.now();
+    const TTL = 1000 * 60 * 3; // 3분 캐시
+    if (!force && state.workLogsCache && (now - state.workLogsFetchedAt) < TTL) {
+      return state.workLogsCache;
+    }
+
+    const res = await fetch(WORKLOG_API_URL);
+    if (!res.ok) throw new Error('작업 이력을 가져오지 못했습니다.');
+    const workLogs = await res.json();
+
+    state.workLogsCache = Array.isArray(workLogs) ? workLogs : [];
+    state.workLogsFetchedAt = now;
+    return state.workLogsCache;
+  }
+
+  function fillLogStepSelect(){
+    if (!el.logStep) return;
+    el.logStep.innerHTML = `
+      <option value="">ALL</option>
+      ${STEPS.map(s => `<option value="${s.no}">${s.no}. ${escapeHtml(s.name)}</option>`).join('')}
+    `;
+  }
+
+  async function loadEquipmentLogsForModal({ force=false } = {}){
+    const setupId = state.selectedSetupId;
+    if (!setupId) return [];
+
+    const detail = await ensureDetail(setupId);
+    const eqName = detail?.project?.equipment_name || '';
+
+    const all = await fetchAllWorkLogs({ force });
+    const matched = all.filter(l => eqNameMatch(l.equipment_name, eqName));
+
+    matched.sort((a,b) => String(b.task_date||'').localeCompare(String(a.task_date||'')));
+
+    state.equipmentLogs = matched;
+    return matched;
+  }
+
+  function filterLogs(logs, stepNo, q){
+    let out = logs.slice();
+
+    const query = normText(q);
+    if (stepNo) {
+      const kws = (STEP_KEYWORDS[Number(stepNo)] || []).map(normText).filter(Boolean);
+      if (kws.length) {
+        out = out.filter(l => {
+          const hay = logHaystack(l);
+          return kws.some(kw => hay.includes(kw));
+        });
+      }
+    }
+
+    if (query) {
+      out = out.filter(l => {
+        const hay = normText([
+          l.task_man, l.group, l.site, l.line, l.equipment_type,
+          l.equipment_name, logHaystack(l)
+        ].filter(Boolean).join(' | '));
+        return hay.includes(query);
+      });
+    }
+
+    return out;
+  }
+
+  function renderLogsUI(){
+    if (!el.logsHost) return;
+
+    const stepNo = el.logStep?.value ? Number(el.logStep.value) : null;
+    const q = el.logQ?.value || '';
+    const limit = Number(el.logLimit?.value || 100);
+
+    const base = state.equipmentLogs || [];
+    const filtered = filterLogs(base, stepNo, q).slice(0, limit);
+
+    if (el.logBadge) el.logBadge.textContent = String(filtered.length);
+
+    if (!filtered.length) {
+      el.logsHost.innerHTML = `<div style="padding:16px;color:#6b7280;">매칭되는 작업 이력이 없습니다.</div>`;
+      return;
+    }
+
+    const rows = filtered.map(l => {
+      const date = (l.task_date ? String(l.task_date).split('T')[0] : '');
+      const man = escapeHtml(l.task_man || '');
+      const tname = escapeHtml(l.task_name || '');
+      const mins = escapeHtml(String(l.task_duration || ''));
+      const eqt = escapeHtml(l.equipment_type || '');
+      const site = escapeHtml(l.site || '');
+      const line = escapeHtml(l.line || '');
+      const desc = escapeHtml(l.task_description || '');
+
+      const id = escapeHtml(String(l.id));
+
+      return `
+        <tr>
+          <td style="min-width:96px;">${escapeHtml(date)}</td>
+          <td style="min-width:110px;">${man}</td>
+          <td style="min-width:140px;"><b>${tname}</b></td>
+          <td style="min-width:130px;">${eqt} · ${site} · ${line}</td>
+          <td style="min-width:80px;text-align:right;">${mins}</td>
+          <td style="min-width:280px;">
+            <span class="log-more" data-log-more="1" data-id="${id}">내용 보기</span>
+            <div class="log-desc" data-log-desc="1" data-id="${id}">${desc || '-'}</div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    el.logsHost.innerHTML = `
+      <table class="table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>WORKER</th>
+            <th>TASK</th>
+            <th>EQ</th>
+            <th>TIME</th>
+            <th>DESCRIPTION</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    el.logsHost.querySelectorAll('[data-log-more="1"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const box = el.logsHost.querySelector(`[data-log-desc="1"][data-id="${CSS.escape(id)}"]`);
+        if (!box) return;
+        box.classList.toggle('open');
+        btn.textContent = box.classList.contains('open') ? '내용 닫기' : '내용 보기';
+      });
+    });
+  }
+
+  /* =========================================================
    * Help modal
-   * ========================= */
+   * ========================================================= */
   function openHelp() {
     renderHelpFlowchart();
     el.helpModal?.classList?.remove('hidden');
+    el.helpModal?.setAttribute('aria-hidden','false');
   }
   function closeHelp() {
     el.helpModal?.classList?.add('hidden');
+    el.helpModal?.setAttribute('aria-hidden','true');
   }
 
-  /* =========================
+  /* =========================================================
    * Events
-   * ========================= */
+   * ========================================================= */
   function bindEvents() {
-    ensureTooltipEl(); // ✅ tooltip이 DOM에 없으면 강제 생성
+    ensureTooltipEl();
+    hideTooltip();
 
     el.btnNew?.addEventListener('click', openCreateModal);
     el.btnApply?.addEventListener('click', loadBoard);
@@ -1211,6 +1429,7 @@ function forceShowTooltip() {
     });
 
     el.tabSteps?.addEventListener('click', () => setTab('steps'));
+
     el.tabPrereq?.addEventListener('click', async () => {
       setTab('prereq');
       const setupId = state.selectedSetupId;
@@ -1236,6 +1455,17 @@ function forceShowTooltip() {
       }
     });
 
+    el.tabLogs?.addEventListener('click', async () => {
+      setTab('logs');
+      fillLogStepSelect();
+      try {
+        await loadEquipmentLogsForModal();
+        renderLogsUI();
+      } catch (e) {
+        toast(`작업이력 로드 실패: ${e.message}`);
+      }
+    });
+
     el.btnSaveProject?.addEventListener('click', saveProject);
 
     el.btnHelp?.addEventListener('click', openHelp);
@@ -1245,7 +1475,25 @@ function forceShowTooltip() {
       if (close === '1') closeHelp();
     });
 
+    // logs filters
+    el.logQ?.addEventListener('input', () => renderLogsUI());
+    el.logStep?.addEventListener('change', () => renderLogsUI());
+    el.logLimit?.addEventListener('change', () => renderLogsUI());
+
+    el.btnReloadLogs?.addEventListener('click', async () => {
+      try {
+        await loadEquipmentLogsForModal({ force:true });
+        renderLogsUI();
+        toast('작업이력 새로고침 완료');
+      } catch (e) {
+        toast(`새로고침 실패: ${e.message}`);
+      }
+    });
+
+    // tooltip 안정성
     window.addEventListener('scroll', () => hideTooltip(), { passive: true });
+    window.addEventListener('resize', () => hideTooltip(), { passive: true });
+    document.addEventListener('visibilitychange', () => hideTooltip());
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
