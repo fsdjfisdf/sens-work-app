@@ -11,13 +11,10 @@
     <div class="topbar-inner">
       <div class="brand">
         <div class="brand-title">SETUP BOARD</div>
-        <!-- ✅ 1) 기존 설명 문구 삭제 -->
-        <div class="brand-sub">설비 Setup 진행 현황 보드</div>
+        <div class="brand-sub">설비별 Setup Step 진행상황</div>
       </div>
       <div class="top-actions">
-        <!-- ✅ 신규 설비 추가 -->
-        <button id="btnNew" class="btn primary">+ 설비 추가</button>
-        <button id="btnRefresh" class="btn">새로고침</button>
+        <button id="btnNew" class="btn primary">+ 신규 설비</button>
       </div>
     </div>
   </header>
@@ -25,7 +22,6 @@
   <main class="page">
     <section class="filters card">
       <div class="filters-grid">
-        <!-- ✅ 2) Customer 필터 삭제 / EQ TYPE 필터 추가 -->
         <div class="field">
           <label>EQ TYPE</label>
           <select id="fEqType">
@@ -75,33 +71,30 @@
 
         <div class="field wide">
           <label>설비명 검색</label>
-          <input id="fQ" type="text" placeholder="예) SUPRA XP #12"/>
+          <input id="fQ" type="text" placeholder="예) DPCB713"/>
         </div>
 
         <div class="field">
           <label>정렬</label>
-          <select id="fSort">
-            <option value="updated_desc">최근 업데이트</option>
-            <option value="updated_asc">오래된 업데이트</option>
-            <option value="target_asc">목표일 빠른순</option>
-            <option value="target_desc">목표일 늦은순</option>
+          <select id="fSort" disabled>
+            <option value="progress_asc">진행율 낮은순</option>
           </select>
         </div>
 
-        <!-- ✅ 3) 적용 버튼을 필터들과 같은 행에 (grid 마지막 칸 고정) -->
-        <div class="field field-apply">
+        <div class="field">
           <label>&nbsp;</label>
           <button id="btnApply" class="btn primary">적용</button>
         </div>
       </div>
 
       <div class="legend">
-        <span class="chip"><span class="dot ns"></span>NOT_STARTED</span>
-        <span class="chip"><span class="dot ip"></span>IN_PROGRESS</span>
-        <span class="chip"><span class="dot dn"></span>DONE</span>
-        <span class="chip"><span class="dot hd"></span>HOLD</span>
+        <span class="chip"><span class="dot ns"></span>NOT_STARTED(-)</span>
+        <span class="chip"><span class="dot pl"></span>PLANNED(P)</span>
+        <span class="chip"><span class="dot ip"></span>IN_PROGRESS(I)</span>
+        <span class="chip"><span class="dot dn"></span>DONE(D)</span>
+        <span class="chip"><span class="dot hd"></span>HOLD(H)</span>
         <span class="chip"><span class="issueMark">!</span>OPEN ISSUE</span>
-        <!-- ✅ 4) 안내 문구 삭제 -->
+        <span class="muted small">· 설비명 클릭: 상세 모달</span>
       </div>
     </section>
 
@@ -109,7 +102,6 @@
       <div class="board-head">
         <div class="board-title">
           <b id="statCount">-</b>
-          <span class="muted small">가로 스크롤로 전체 Step 확인</span>
         </div>
       </div>
 
@@ -144,7 +136,7 @@
 
             <div class="field">
               <label>설비타입</label>
-              <input id="p_equipment_type" type="text" placeholder="SUPRA N / INTEGER ..."/>
+              <input id="p_equipment_type" type="text"/>
             </div>
 
             <div class="field">
@@ -172,19 +164,10 @@
               </select>
             </div>
 
-            <!-- ✅ 8) Start Date 자동(읽기 전용 표시) -->
             <div class="field">
               <label>Start Date (Auto)</label>
-              <input id="p_start_date_auto" type="date" disabled/>
-              <div class="muted small" style="margin-top:6px;">STEP 1 날짜(Actual 우선) 기준으로 자동 반영</div>
+              <input id="p_start_date_auto" type="text" readonly/>
             </div>
-
-            <div class="field">
-              <label>Target Date</label>
-              <input id="p_target_date" type="date"/>
-            </div>
-
-            <!-- ✅ 7) Owner(Main/Support) 삭제 -->
 
             <div class="field wide">
               <label>Last Note</label>
@@ -203,16 +186,14 @@
           <div id="stepsHost" class="steps-host"></div>
         </div>
 
-        <div class="section">
-          <div class="section-title">Issues</div>
-          <div id="issuesHost" class="issues-host muted">-</div>
-        </div>
+        <!-- ✅ Issues 섹션 제거 -->
       </div>
     </div>
   </div>
 
   <!-- Hover Tooltip -->
   <div id="tooltip" class="tooltip hidden"></div>
+
   <div id="toast" class="toast hidden"></div>
 
   <script src="./js/setupboard.js"></script>

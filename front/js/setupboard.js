@@ -21,13 +21,13 @@
     { no: 17, name: 'PROCESS CONFIRM' }
   ];
 
-  const STATUS_ORDER = ['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'HOLD'];
+  // ✅ 상태에 PLANNED 추가 + 토글 순서 포함
+  const STATUS_ORDER = ['NOT_STARTED', 'PLANNED', 'IN_PROGRESS', 'DONE', 'HOLD'];
 
   const $ = (sel, root=document) => root.querySelector(sel);
 
   const el = {
     btnNew: $('#btnNew'),
-    btnRefresh: $('#btnRefresh'),
     btnApply: $('#btnApply'),
     tableHost: $('#tableHost'),
     statCount: $('#statCount'),
@@ -44,6 +44,7 @@
     mTitle: $('#mTitle'),
     mMeta: $('#mMeta'),
 
+    // project form
     p_equipment_name: $('#p_equipment_name'),
     p_equipment_type: $('#p_equipment_type'),
     p_site: $('#p_site'),
@@ -51,13 +52,11 @@
     p_location: $('#p_location'),
     p_board_status: $('#p_board_status'),
     p_start_date_auto: $('#p_start_date_auto'),
-    p_target_date: $('#p_target_date'),
     p_last_note: $('#p_last_note'),
     btnSaveProject: $('#btnSaveProject'),
     projSaveHint: $('#projSaveHint'),
 
     stepsHost: $('#stepsHost'),
-    issuesHost: $('#issuesHost'),
 
     tooltip: $('#tooltip'),
     toast: $('#toast')
@@ -111,10 +110,21 @@
       .replaceAll("'", '&#039;');
   }
 
-  function fmtDate(d) {
+  function fmtDateISO(d) {
     if (!d) return '';
     const s = String(d);
     return s.length >= 10 ? s.slice(0, 10) : s;
+  }
+
+  // ✅ 26.02.05 포맷
+  function fmtYYMMDD(d) {
+    const iso = fmtDateISO(d);
+    if (!iso) return '';
+    // iso: YYYY-MM-DD
+    const yy = iso.slice(2,4);
+    const mm = iso.slice(5,7);
+    const dd = iso.slice(8,10);
+    return `${yy}.${mm}.${dd}`;
   }
 
   function toast(msg) {
@@ -129,14 +139,17 @@
     if (s === 'DONE') return 'dn';
     if (s === 'IN_PROGRESS') return 'ip';
     if (s === 'HOLD') return 'hd';
+    if (s === 'PLANNED') return 'pl';
     return 'ns';
   }
 
+  // ✅ 이니셜: NOT_STARTED(-), PLANNED(P), IN_PROGRESS(I), DONE(D), HOLD(H)
   function statusShort(st) {
     const s = String(st || '').toUpperCase();
     if (s === 'DONE') return 'D';
-    if (s === 'IN_PROGRESS') return 'P';
+    if (s === 'IN_PROGRESS') return 'I';
     if (s === 'HOLD') return 'H';
+    if (s === 'PLANNED') return 'P';
     return '-';
   }
 
@@ -172,14 +185,36 @@
     try { return JSON.parse(raw); } catch { return {}; }
   }
 
-  // ✅ Start Date Auto: STEP1 Actual Start 우선 → 없으면 Plan Start
-  function computeAutoStartDate(detail) {
-    const p = detail?.project || {};
-    const steps = detail?.steps || [];
-    if (p.start_date) return fmtDate(p.start_date);
+  // ✅ 셀 아래 날짜 표시 규칙
+  // DONE: actual_end 우선, 없으면 actual_start
+  // PLANNED: plan_end
+  // IN_PROGRESS: actual_start ~ actual_end(있으면) / 없으면 actual_start~
+  function buildStepDateLabel(stepRow, status) {
+    const st = String(status || '').toUpperCase();
+    const planEnd = fmtYYMMDD(stepRow?.plan_end);
+    const as = fmtYYMMDD(stepRow?.actual_start);
+    const ae = fmtYYMMDD(stepRow?.actual_end);
 
-    const s1 = steps.find(x => Number(x.step_no) === 1) || {};
-    return firstNonEmpty(fmtDate(s1.actual_start), fmtDate(s1.plan_start), '');
+    if (st === 'DONE') return firstNonEmpty(ae, as, '');
+    if (st === 'PLANNED') return firstNonEmpty(planEnd, '');
+    if (st === 'IN_PROGRESS') {
+      if (as && ae) return `${as}~${ae}`;
+      if (as) return `${as}~`;
+      return '';
+    }
+    if (st === 'HOLD') {
+      // HOLD는 날짜가 있으면 actual_start만이라도 보여주기
+      return firstNonEmpty(as, planEnd, '');
+    }
+    return '';
+  }
+
+  // ✅ 진행율: DONE 비율(전체 Step 대비)
+  function calcProgressFromBoardRow(p) {
+    const total = Number(p.total_steps || STEPS.length || 1);
+    const done  = Number(p.done_steps || 0);
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    return { pct, done, total };
   }
 
   async function loadBoard() {
@@ -189,14 +224,27 @@
       line: el.fLine.value,
       status: el.fStatus.value,
       q: el.fQ.value.trim(),
-      sort: el.fSort.value,
       limit: 200,
       offset: 0
     });
 
     try {
       const json = await apiFetch(`/api/setup-board?${q}`);
-      state.list = json?.data || [];
+      const list = json?.data || [];
+
+      // ✅ 진행율 낮은 설비부터 정렬
+      list.sort((a, b) => {
+        const pa = calcProgressFromBoardRow(a).pct;
+        const pb = calcProgressFromBoardRow(b).pct;
+        if (pa !== pb) return pa - pb;
+        // 동률이면 updated_at 오래된 것부터(좀 더 “밀린 것”이 위)
+        const ta = String(a.updated_at || '');
+        const tb = String(b.updated_at || '');
+        return ta.localeCompare(tb);
+      });
+
+      state.list = list;
+
       renderTable();
       el.statCount.textContent = `설비 ${state.list.length}대`;
     } catch (e) {
@@ -241,6 +289,7 @@
       </table>
     `;
 
+    // 설비명 클릭 -> 모달
     el.tableHost.querySelectorAll('[data-open-detail="1"]').forEach(a => {
       a.addEventListener('click', () => {
         const setupId = a.getAttribute('data-setup-id');
@@ -248,6 +297,7 @@
       });
     });
 
+    // 셀 클릭 -> 상태 토글 PATCH (필요 없으면 여기만 주석처리하면 됨)
     el.tableHost.querySelectorAll('[data-cell="1"]').forEach(td => {
       td.addEventListener('click', async () => {
         const setupId = td.getAttribute('data-setup-id');
@@ -256,6 +306,7 @@
         await toggleCellStatus(td, setupId, stepNo);
       });
 
+      // hover tooltip (상세 날짜/작업자 등)
       td.addEventListener('mouseenter', onCellEnter);
       td.addEventListener('mousemove', onCellMove);
       td.addEventListener('mouseleave', onCellLeave);
@@ -269,10 +320,23 @@
 
     const stepMap = parseStepMap(p);
 
+    // ✅ 진행율 표시(센스 있게): % + 바 + done/total
+    const prog = calcProgressFromBoardRow(p);
+    const progText = `${prog.pct}%`;
+    const progSub  = `${prog.done}/${prog.total}`;
+
     const cells = STEPS.map(s => {
       const st = String(stepMap[String(s.no)] || 'NOT_STARTED').toUpperCase();
       const cls = statusToClass(st);
       const short = statusShort(st);
+
+      // ✅ 보드 리스트는 step 날짜가 없어서 “캐시 상세가 있으면” 그걸로 날짜 표시
+      let dateLabel = '';
+      const cached = state.detailCache.get(String(p.setup_id));
+      if (cached?.steps) {
+        const row = cached.steps.find(x => Number(x.step_no) === Number(s.no)) || null;
+        if (row) dateLabel = buildStepDateLabel(row, st);
+      }
 
       return `
         <td class="cell"
@@ -280,7 +344,10 @@
             data-setup-id="${p.setup_id}"
             data-step-no="${s.no}"
             data-status="${st}">
-          <span class="pill ${cls}">${short}</span>
+          <div class="pillWrap">
+            <span class="pill ${cls}">${short}</span>
+            <div class="cellDate">${escapeHtml(dateLabel)}</div>
+          </div>
         </td>
       `;
     }).join('');
@@ -288,8 +355,19 @@
     return `
       <tr>
         <td class="eq-col" data-open-detail="1" data-setup-id="${p.setup_id}">
-          <div class="eq-name">${name} ${issues}</div>
-          <div class="eq-sub">${sub} · Updated: ${escapeHtml(fmtDate(p.updated_at) || '-')}</div>
+          <div class="eq-top">
+            <div class="eq-name">${name} ${issues}</div>
+            <div class="eq-progress">
+              <div class="progressBar" aria-label="progress ${prog.pct}%">
+                <div class="progressFill" style="width:${prog.pct}%;"></div>
+              </div>
+              <div class="progressMeta">
+                <span class="progressPct">${escapeHtml(progText)}</span>
+                <span class="progressSub muted">${escapeHtml(progSub)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="eq-sub">${sub}</div>
         </td>
         ${cells}
       </tr>
@@ -304,12 +382,26 @@
     return data;
   }
 
-  function updateCellUI(td, status, savingText = '') {
+  // ✅ Start Date Auto: STEP1 Actual Start 우선 → 없으면 Plan End(예정이라도) → 빈값
+  function computeAutoStartDate(detail) {
+    const p = detail?.project || {};
+    const steps = detail?.steps || [];
+    if (p.start_date) return fmtYYMMDD(p.start_date);
+
+    const s1 = steps.find(x => Number(x.step_no) === 1) || {};
+    return firstNonEmpty(fmtYYMMDD(s1.actual_start), fmtYYMMDD(s1.plan_end), '');
+  }
+
+  function updateCellUI(td, status, dateLabel, savingText = '') {
     const pill = td.querySelector('.pill');
-    if (!pill) return;
-    pill.classList.remove('ns', 'ip', 'dn', 'hd');
-    pill.classList.add(statusToClass(status));
-    pill.textContent = statusShort(status);
+    if (pill) {
+      pill.classList.remove('ns','pl','ip','dn','hd');
+      pill.classList.add(statusToClass(status));
+      pill.textContent = statusShort(status);
+    }
+
+    const dateEl = td.querySelector('.cellDate');
+    if (dateEl) dateEl.textContent = dateLabel || '';
 
     let s = td.querySelector('.saving');
     if (!savingText) {
@@ -328,7 +420,15 @@
     const cur = (td.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
     const nxt = nextStatus(cur);
 
-    updateCellUI(td, nxt, 'saving...');
+    // 날짜는 "상세 캐시" 기준으로만 계산 가능
+    let dateLabel = '';
+    const cached = state.detailCache.get(String(setupId));
+    if (cached?.steps) {
+      const row = cached.steps.find(x => Number(x.step_no) === Number(stepNo)) || null;
+      if (row) dateLabel = buildStepDateLabel(row, nxt);
+    }
+
+    updateCellUI(td, nxt, dateLabel, 'saving...');
 
     try {
       await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
@@ -337,18 +437,20 @@
       });
 
       td.setAttribute('data-status', nxt);
-      updateCellUI(td, nxt, '');
+      updateCellUI(td, nxt, dateLabel, '');
 
-      const cached = state.detailCache.get(String(setupId));
+      // 캐시 있으면 반영
       if (cached?.steps) {
         const row = cached.steps.find(x => Number(x.step_no) === Number(stepNo));
         if (row) row.status = nxt;
-        else cached.steps.push({ step_no: stepNo, status: nxt });
       }
 
-      toast(`STEP ${stepNo} → ${nxt} 저장됨`);
+      // 진행율 재정렬을 위해 리스트 재로드(가볍게)
+      await loadBoard();
+
+      toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} → ${nxt} 저장됨`);
     } catch (e) {
-      updateCellUI(td, cur, '');
+      updateCellUI(td, cur, '', '');
       td.setAttribute('data-status', cur);
       toast(`DB 저장 실패: ${e.message}`);
     }
@@ -356,7 +458,6 @@
 
   /* =========================
    * Tooltip (hover)
-   * ✅ Actual End 표시 추가
    * ========================= */
   function hideTooltip() {
     el.tooltip.classList.add('hidden');
@@ -370,7 +471,6 @@
     const pad = 14;
     const maxX = window.innerWidth - pad;
     const maxY = window.innerHeight - pad;
-
     el.tooltip.style.left = Math.min(x + 14, maxX) + 'px';
     el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
   }
@@ -391,24 +491,35 @@
       const detail = await ensureDetail(setupId);
       if (state.hoverKey !== key) return;
 
+      // ✅ 보드 셀 하단 날짜를 채우기 위해: 상세 캐시 확보 후 테이블 날짜도 갱신
+      // (현재 hover가 발생한 setupId는 이미 detailCache에 들어있음)
+      // 날짜 표시 업데이트(현재 행만)
+      const rowTds = document.querySelectorAll(`[data-cell="1"][data-setup-id="${setupId}"]`);
+      rowTds.forEach(cell => {
+        const no = Number(cell.getAttribute('data-step-no'));
+        const st = String(cell.getAttribute('data-status') || 'NOT_STARTED').toUpperCase();
+        const stepRow = (detail?.steps || []).find(x => Number(x.step_no) === no) || null;
+        const label = stepRow ? buildStepDateLabel(stepRow, st) : '';
+        const dateEl = cell.querySelector('.cellDate');
+        if (dateEl) dateEl.textContent = label || '';
+      });
+
       const stepName = STEPS.find(s => s.no === stepNo)?.name || `STEP ${stepNo}`;
       const steps = detail?.steps || [];
       const row = steps.find(x => Number(x.step_no) === stepNo) || {};
 
-      const planStart  = firstNonEmpty(fmtDate(row.plan_start), '-');
-      const planEnd    = firstNonEmpty(fmtDate(row.plan_end), '-');
-      const actualStart= firstNonEmpty(fmtDate(row.actual_start), '-');
-      const actualEnd  = firstNonEmpty(fmtDate(row.actual_end), '-');
-      const workers    = firstNonEmpty(row.workers, '-');
-      const note       = firstNonEmpty(row.note, '-');
+      const planEnd = firstNonEmpty(fmtYYMMDD(row.plan_end), '-');
+      const as = firstNonEmpty(fmtYYMMDD(row.actual_start), '-');
+      const ae = firstNonEmpty(fmtYYMMDD(row.actual_end), '-');
+      const workers = firstNonEmpty(row.workers, '-');
+      const note = firstNonEmpty(row.note, '-');
 
       el.tooltip.innerHTML = `
         <div class="tip-title">${escapeHtml(stepName)}</div>
         <div class="tip-grid">
-          <div class="tip-k">Plan S</div><div class="tip-v">${escapeHtml(planStart)}</div>
-          <div class="tip-k">Plan E</div><div class="tip-v">${escapeHtml(planEnd)}</div>
-          <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(actualStart)}</div>
-          <div class="tip-k">Actual E</div><div class="tip-v">${escapeHtml(actualEnd)}</div>
+          <div class="tip-k">Plan End</div><div class="tip-v">${escapeHtml(planEnd)}</div>
+          <div class="tip-k">Actual S</div><div class="tip-v">${escapeHtml(as)}</div>
+          <div class="tip-k">Actual E</div><div class="tip-v">${escapeHtml(ae)}</div>
           <div class="tip-k">작업자</div><div class="tip-v">${escapeHtml(workers)}</div>
           <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note)}</div>
         </div>
@@ -442,10 +553,11 @@
     placeTooltip(e.clientX, e.clientY);
   }
 
-  function onCellLeave() {
-    hideTooltip();
-  }
+  function onCellLeave() { hideTooltip(); }
 
+  /* =========================
+   * Modal
+   * ========================= */
   function openModalShell() { el.modal.classList.remove('hidden'); }
 
   function closeModal() {
@@ -469,12 +581,11 @@
     el.p_line.value = '';
     el.p_location.value = '';
     el.p_board_status.value = 'PLANNED';
-    el.p_target_date.value = '';
     el.p_last_note.value = '';
     el.p_start_date_auto.value = '';
 
-    el.stepsHost.innerHTML = `<div class="muted">저장하면 STEP 1~17이 자동 생성됩니다.</div>`;
-    el.issuesHost.innerHTML = `<div class="muted">프로젝트 생성 후 이슈 확인/등록 가능</div>`;
+    // ✅ 신규 설비 추가 모달에서 Steps 안내문/Issues 안내문 제거
+    el.stepsHost.innerHTML = '';
 
     el.btnSaveProject.textContent = 'CREATE';
     el.projSaveHint.textContent = '';
@@ -493,7 +604,6 @@
     el.mTitle.textContent = '로딩 중...';
     el.mMeta.textContent = '';
     el.stepsHost.innerHTML = '';
-    el.issuesHost.textContent = '-';
     el.projSaveHint.textContent = '';
 
     try {
@@ -506,14 +616,9 @@
     }
   }
 
-  /* =========================
-   * Render modal
-   * ✅ Actual Start/End 둘 다 입력/저장
-   * ========================= */
   function renderModal(data) {
     const p = data?.project || {};
     const steps = data?.steps || [];
-    const issues = data?.issues || [];
 
     el.mTitle.textContent = p.equipment_name || `SETUP #${p.id || ''}`;
     el.mMeta.textContent = [
@@ -529,7 +634,6 @@
     el.p_line.value = p.line || '';
     el.p_location.value = p.location || '';
     el.p_board_status.value = (p.board_status || 'PLANNED').toUpperCase();
-    el.p_target_date.value = fmtDate(p.target_date);
     el.p_last_note.value = p.last_note || '';
 
     el.p_start_date_auto.value = computeAutoStartDate(data) || '';
@@ -542,10 +646,10 @@
       const st = (s.status || 'NOT_STARTED').toUpperCase();
       const desc = s.step_description ? String(s.step_description) : '';
 
-      const planStart = fmtDate(s.plan_start);
-      const planEnd   = fmtDate(s.plan_end);
-      const actualStart = fmtDate(s.actual_start);
-      const actualEnd   = fmtDate(s.actual_end);
+      // ✅ Plan Start 제거 → Plan End만
+      const planEnd = fmtDateISO(s.plan_end);
+      const actualStart = fmtDateISO(s.actual_start);
+      const actualEnd = fmtDateISO(s.actual_end);
 
       return `
         <div class="step-card" data-step-card="1" data-step-no="${t.no}">
@@ -559,20 +663,16 @@
             </div>
           </div>
 
-          <div class="step-grid step-grid-actual2">
+          <div class="step-grid step-grid-planend">
             <div class="field">
               <label>Status</label>
               <select data-field="status">
                 <option value="NOT_STARTED" ${st==='NOT_STARTED'?'selected':''}>NOT_STARTED</option>
+                <option value="PLANNED" ${st==='PLANNED'?'selected':''}>PLANNED</option>
                 <option value="IN_PROGRESS" ${st==='IN_PROGRESS'?'selected':''}>IN_PROGRESS</option>
                 <option value="DONE" ${st==='DONE'?'selected':''}>DONE</option>
                 <option value="HOLD" ${st==='HOLD'?'selected':''}>HOLD</option>
               </select>
-            </div>
-
-            <div class="field">
-              <label>Plan Start</label>
-              <input type="date" data-field="plan_start" value="${escapeHtml(planStart)}"/>
             </div>
 
             <div class="field">
@@ -618,7 +718,7 @@
 
       selStatus.addEventListener('change', () => {
         const st = selStatus.value;
-        pill.classList.remove('ns','ip','dn','hd');
+        pill.classList.remove('ns','pl','ip','dn','hd');
         pill.classList.add(statusToClass(st));
         pill.textContent = statusShort(st);
       });
@@ -634,10 +734,8 @@
           patch[k] = v === '' ? null : v;
         });
 
-        // ✅ 안전장치: actual_end < actual_start 같은 케이스 잡기(원하면 제거 가능)
-        const as = patch.actual_start;
-        const ae = patch.actual_end;
-        if (as && ae && ae < as) {
+        // 간단 검증
+        if (patch.actual_start && patch.actual_end && patch.actual_end < patch.actual_start) {
           toast('Actual End가 Actual Start보다 빠를 수 없습니다.');
           return;
         }
@@ -649,32 +747,44 @@
             body: patch
           });
 
+          // cache update
           const cached = state.detailCache.get(setupId);
           if (cached && Array.isArray(cached.steps)) {
             const row = cached.steps.find(x => Number(x.step_no) === stepNo);
             if (row) Object.assign(row, patch);
           }
 
-          // ✅ 8) STEP 1의 Actual Start(우선) / Plan Start로 프로젝트 start_date 자동 반영
+          // ✅ STEP1 날짜가 생기면 start_date 자동 반영(서버에 start_date 컬럼이 있을 때)
           if (stepNo === 1) {
-            const auto = firstNonEmpty(patch.actual_start, patch.plan_start, null);
-            if (auto) {
+            const autoISO = firstNonEmpty(patch.actual_start, patch.plan_end, null);
+            if (autoISO) {
               try {
                 await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`, {
                   method: 'PATCH',
-                  body: { start_date: auto }
+                  body: { start_date: autoISO }
                 });
-                el.p_start_date_auto.value = auto;
-              } catch (_) {}
+              } catch {}
             }
           }
 
           hint.textContent = 'saved ✅';
 
+          // 보드 셀 즉시 반영 + 하단 날짜 표시 업데이트
           const td = el.tableHost.querySelector(
             `[data-cell="1"][data-setup-id="${setupId}"][data-step-no="${stepNo}"]`
           );
-          if (td && patch.status) updateCellUI(td, patch.status, '');
+          if (td) {
+            const nowStatus = patch.status || td.getAttribute('data-status') || 'NOT_STARTED';
+            td.setAttribute('data-status', String(nowStatus).toUpperCase());
+
+            const cached2 = state.detailCache.get(setupId);
+            const stepRow = cached2?.steps?.find(x => Number(x.step_no) === stepNo) || {};
+            const label = buildStepDateLabel(stepRow, nowStatus);
+            updateCellUI(td, nowStatus, label, '');
+          }
+
+          // 진행율 정렬 반영 위해 리로드
+          await loadBoard();
 
           toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
           setTimeout(() => (hint.textContent = ''), 1500);
@@ -684,33 +794,6 @@
         }
       });
     });
-
-    if (!issues.length) {
-      el.issuesHost.innerHTML = `<div class="muted">등록된 이슈가 없습니다.</div>`;
-    } else {
-      el.issuesHost.innerHTML = issues.map(i => {
-        const sev = escapeHtml(String(i.severity || 'MAJOR'));
-        const st = escapeHtml(String(i.state || 'OPEN'));
-        const cat = escapeHtml(String(i.category || 'ETC'));
-        const step = i.step_no ? `${STEPS.find(s=>s.no===Number(i.step_no))?.name || `STEP ${i.step_no}`}` : 'STEP -';
-        const title = escapeHtml(i.title || '(no title)');
-        const content = escapeHtml(i.content || '');
-        return `
-          <div class="step-card" style="border-color: rgba(239,68,68,.20); background: rgba(239,68,68,.05);">
-            <div style="font-weight:1000;">${title}</div>
-            <div class="muted small" style="margin-top:6px; white-space:pre-wrap;">${content}</div>
-            <div class="muted small" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-              <span class="issueMark">!</span>
-              <span>${escapeHtml(step)}</span>
-              <span>${sev}</span>
-              <span>${cat}</span>
-              <span>${st}</span>
-              ${i.owner ? `<span>Owner: ${escapeHtml(i.owner)}</span>` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
   }
 
   async function saveProject() {
@@ -723,7 +806,6 @@
       site: el.p_site.value.trim(),
       line: el.p_line.value.trim(),
       location: el.p_location.value.trim() || null,
-      target_date: el.p_target_date.value || null,
       last_note: el.p_last_note.value.trim() || null
     };
 
@@ -741,6 +823,7 @@
         });
 
         const newId = json?.setup_id || json?.setupId || json?.id;
+
         el.projSaveHint.textContent = 'created ✅';
         toast('설비가 생성되었습니다.');
 
@@ -785,7 +868,6 @@
 
   function bindEvents() {
     el.btnNew.addEventListener('click', openCreateModal);
-    el.btnRefresh.addEventListener('click', loadBoard);
     el.btnApply.addEventListener('click', loadBoard);
 
     el.fQ.addEventListener('keydown', (e) => {
@@ -801,9 +883,7 @@
 
     el.btnSaveProject.addEventListener('click', saveProject);
 
-    window.addEventListener('scroll', () => {
-      hideTooltip();
-    }, { passive: true });
+    window.addEventListener('scroll', () => hideTooltip(), { passive: true });
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
