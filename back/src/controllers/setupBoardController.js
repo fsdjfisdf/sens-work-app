@@ -211,22 +211,26 @@ exports.listProjectAudit = async (req, res) => {
   }
 };
 
+// back/src/controllers/setupBoardController.js
+
+// back/src/controllers/setupBoardController.js
+
 exports.getPrereqs = async (req, res) => {
   try {
     const setupId = req.params.id;
-    const data = await dao.getPrereqsMap(setupId); // { [prereq_key]: {...} }
+    const data = await dao.getPrereqsMap(setupId); // { [key]: {...} }
     res.json({ ok: true, data });
   } catch (err) {
-    console.error('[setupBoardController.getPrereqs] error:', err);
-    res.status(500).json({ ok: false, error: err.message || 'get prereqs failed' });
+    console.error('[getPrereqs] error:', err);
+    res.status(500).json({ ok:false, error: err.message || 'get prereqs failed' });
   }
 };
 
-// 프론트 경로(:code) 대응용
 exports.updatePrereqByCode = async (req, res) => {
-  req.params.key = req.params.code;
+  req.params.key = req.params.code; // ✅ code → key로 넘겨서 기존 로직 재사용
   return exports.updatePrereq(req, res);
 };
+
 
 exports.updatePrereq = async (req, res) => {
   try {

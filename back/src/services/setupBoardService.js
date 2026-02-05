@@ -21,6 +21,7 @@ exports.createProjectWithSteps = async ({ payload, actor }) => {
     });
 
     await dao.insertStepsFromTemplate(conn, { setupId, actor });
+    await dao.insertPrereqsFromTemplate(conn, { setupId, actor });
 
     await dao.insertAudit(conn, {
       entity_type: 'PROJECT',

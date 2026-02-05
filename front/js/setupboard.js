@@ -258,6 +258,7 @@
 
       state.list = list;
       renderTable();
+      prefetchDetailsForBoard();
       el.statCount.textContent = `설비 ${state.list.length}대`;
     } catch (e) {
       el.tableHost.innerHTML = `<div style="padding:16px;color:#b91c1c;">보드 로드 실패: ${escapeHtml(e.message)}</div>`;
@@ -265,7 +266,18 @@
     }
   }
 
+  async function prefetchDetailsForBoard() {
+  const ids = state.list.slice(0, 80).map(p => String(p.setup_id)); // 너무 많으면 제한
+  for (const id of ids) {
+    if (!state.detailCache.has(id)) {
+      try { await ensureDetail(id); } catch {}
+    }
+  }
+  renderTable(); // ✅ 캐시 채워졌으니 날짜 다시 그림
+}
+
   function renderTable() {
+    hideTooltip();
     const list = state.list;
     if (!list.length) {
       el.tableHost.innerHTML = `<div style="padding:16px;color:#6b7280;">데이터가 없습니다.</div>`;
@@ -457,13 +469,13 @@
   /* =========================
    * Tooltip
    * ========================= */
-  function hideTooltip() {
-    el.tooltip.classList.add('hidden');
-    el.tooltip.innerHTML = '';
-    clearTimeout(state.hoverTimer);
-    state.hoverTimer = null;
-    state.hoverKey = null;
-  }
+function hideTooltip() {
+  el.tooltip.classList.add('hidden');
+  el.tooltip.innerHTML = '';
+  clearTimeout(state.hoverTimer);
+  state.hoverTimer = null;
+  state.hoverKey = null;
+}
 
   function placeTooltip(x, y) {
     const pad = 14;
@@ -473,10 +485,13 @@
     el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
   }
 
-  async function showTooltipForCell(td, clientX, clientY) {
-    const setupId = td.getAttribute('data-setup-id');
-    const stepNo = Number(td.getAttribute('data-step-no'));
-    if (!setupId || !stepNo) return;
+async function showTooltipForCell(td, clientX, clientY) {
+  // ✅ td가 사라졌으면(리렌더 됐으면) 그냥 종료
+  if (!td || !td.isConnected) return;
+
+  const setupId = td.getAttribute('data-setup-id');
+  const stepNo = Number(td.getAttribute('data-step-no'));
+  if (!setupId || !stepNo) return;
 
     const key = `${setupId}:${stepNo}`;
     state.hoverKey = key;

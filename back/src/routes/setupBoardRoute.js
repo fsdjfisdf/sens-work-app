@@ -57,7 +57,17 @@ router.patch('/setup-issues/:issueId', jwtMiddleware, controller.updateIssue);
 router.get('/setup-audit', jwtMiddleware, controller.listAudit);
 router.get('/setup-projects/:id/audit', jwtMiddleware, controller.listProjectAudit);
 
+// back/src/routes/setupBoardRoute.js
+
+// ... existing
+router.get('/setup-projects/:id/prereqs', jwtMiddleware, controller.getPrereqs);
+
+// 프론트가 :code로 호출하니 별칭 추가(기존 key도 유지 가능)
+router.patch('/setup-projects/:id/prereqs/:code', jwtMiddleware, controller.updatePrereqByCode);
+
+// 기존 있던 라우트 유지해도 됨
 router.patch('/setup-projects/:id/prereqs/:key', jwtMiddleware, controller.updatePrereq);
+
 
 
 module.exports = router;

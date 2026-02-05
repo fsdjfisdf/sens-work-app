@@ -312,46 +312,40 @@ exports.insertPrereqsFromTemplate = async (conn, { setupId, actor }) => {
   await conn.execute(sql, [setupId]);
 };
 
+// back/src/dao/setupBoardDao.js
 exports.getPrereqsMap = async (setupId) => {
   const [rows] = await pool.execute(
-    `SELECT 
-       p.prereq_key,
-       p.is_done,
-       p.done_at,
-       p.done_by,
-       p.note,
-       p.updated_at,
+    `SELECT
+       t.prereq_key,
        t.prereq_name,
        t.description,
        t.required_before_step_no,
        t.is_required,
        t.sort_order,
-       t.is_active
+       p.is_done,
+       p.done_at,
+       p.done_by,
+       p.note
      FROM setup_prereq_template t
      LEFT JOIN setup_project_prereqs p
-       ON p.prereq_key = t.prereq_key
-      AND p.setup_id = ?
+       ON p.setup_id = ? AND p.prereq_key = t.prereq_key
      WHERE t.is_active = 1
      ORDER BY t.sort_order ASC`,
     [setupId]
   );
 
-  // ✅ 프론트가 기대하는 형태로 변환
   const map = {};
   for (const r of rows) {
     map[r.prereq_key] = {
-      code: r.prereq_key,
-      title: r.prereq_name,
+      done: r.is_done === 1,
+      done_date: r.done_at,
+      done_by: r.done_by,
+      note: r.note,
+      prereq_name: r.prereq_name,
       description: r.description,
       required_before_step_no: r.required_before_step_no,
-      required: r.is_required === 1,
-      sort_order: r.sort_order,
-
-      // 프론트에서 row.done / row.done_date 를 씀
-      done: r.is_done === 1,
-      done_date: r.done_at,      // 프론트에서 fmtYYMMDD(row.done_date)
-      done_by: r.done_by,
-      note: r.note
+      is_required: r.is_required === 1,
+      sort_order: r.sort_order
     };
   }
   return map;
