@@ -298,8 +298,7 @@
         return `
           <div class="prgrp">
             <div class="prgrp-head">
-              <div class="prgrp-title">Before STEP ${stepNo}</div>
-              <div class="prgrp-sub muted">${escapeHtml(stepName)}</div>
+                <div class="prgrp-title">Before ${escapeHtml(stepName)}</div>       
             </div>
             <div class="prgrp-body">
               ${items.map(it => `
@@ -608,8 +607,9 @@
       const planEnd = firstNonEmpty(fmtYYMMDD(row.plan_end), '-');
       const as = firstNonEmpty(fmtYYMMDD(row.actual_start), '-');
       const ae = firstNonEmpty(fmtYYMMDD(row.actual_end), '-');
-      const workers = firstNonEmpty(row.workers, '-');
-      const note = firstNonEmpty(row.note, '-');
+      const workers = firstNonEmpty(row.workers, row.worker, row.worker_names, row.task_man, '-');
+      const note    = firstNonEmpty(row.note, row.memo, row.remark, row.comment, '-');
+
 
       el.tooltip.innerHTML = `
         <div class="tip-title">${escapeHtml(stepName)}</div>
@@ -1018,7 +1018,7 @@
     );
 
     // ✅ 백엔드가 row를 반환하면 그걸 반영
-    const row = json?.data || json || null;
+    const row = json?.data || json?.updated || json || null;
 
     const cur = state.prereqCache.get(setupId) || {};
     const next = { ...cur, [code]: row || { ...(cur[code]||{}), ...payload } };
