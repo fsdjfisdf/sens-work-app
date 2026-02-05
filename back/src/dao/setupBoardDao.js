@@ -89,12 +89,17 @@ exports.getProjectDetail = async (setupId) => {
     [setupId]
   );
 
-  const [issues] = await pool.execute(
-    `SELECT * FROM setup_issues WHERE setup_id = ? ORDER BY state ASC, severity DESC, updated_at DESC`,
-    [setupId]
-  );
+const [prereqs] = await pool.execute(
+  `SELECT p.*, t.prereq_name, t.description, t.required_before_step_no, t.is_required, t.sort_order
+   FROM setup_project_prereqs p
+   JOIN setup_prereq_template t ON t.prereq_key = p.prereq_key
+   WHERE p.setup_id = ?
+   ORDER BY t.sort_order ASC`,
+  [setupId]
+);
 
-  return { project, steps, issues };
+return { project, steps, prereqs }; // issues 대신 prereqs
+
 };
 
 // ---------- Transaction-friendly helpers ----------
@@ -294,4 +299,15 @@ exports.listProjectAudit = async ({ setupId, limit, offset }) => {
   `;
   const [rows] = await pool.execute(sql, [setupId, limit, offset]);
   return rows;
+};
+
+exports.insertPrereqsFromTemplate = async (conn, { setupId, actor }) => {
+  const sql = `
+    INSERT INTO setup_project_prereqs (setup_id, prereq_key, is_done, done_at, done_by)
+    SELECT ?, t.prereq_key, 0, NULL, NULL
+    FROM setup_prereq_template t
+    WHERE t.is_active = 1
+    ORDER BY t.sort_order
+  `;
+  await conn.execute(sql, [setupId]);
 };

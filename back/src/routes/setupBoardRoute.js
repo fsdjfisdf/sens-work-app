@@ -57,4 +57,7 @@ router.patch('/setup-issues/:issueId', jwtMiddleware, controller.updateIssue);
 router.get('/setup-audit', jwtMiddleware, controller.listAudit);
 router.get('/setup-projects/:id/audit', jwtMiddleware, controller.listProjectAudit);
 
+router.patch('/setup-projects/:id/prereqs/:key', jwtMiddleware, controller.updatePrereq);
+
+
 module.exports = router;

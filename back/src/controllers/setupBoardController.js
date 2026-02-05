@@ -210,3 +210,21 @@ exports.listProjectAudit = async (req, res) => {
     res.status(500).json({ ok: false, error: err.message || 'project audit failed' });
   }
 };
+
+exports.updatePrereq = async (req, res) => {
+  try {
+    const actor = req.user?.nickname || req.user?.userID || 'unknown';
+    const setupId = req.params.id;
+    const key = req.params.key;
+
+    const patch = {
+      is_done: req.body.is_done ? 1 : 0,
+      note: req.body.note
+    };
+
+    const updated = await svc.updatePrereq({ setupId, key, patch, actor });
+    res.json({ ok:true, updated });
+  } catch (err) {
+    res.status(400).json({ ok:false, error: err.message || 'update prereq failed' });
+  }
+};
