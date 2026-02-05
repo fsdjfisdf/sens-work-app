@@ -603,14 +603,24 @@
   /* =========================
    * Tooltip
    * ========================= */
-  function hideTooltip() {
-    ensureTooltipEl();
-    el.tooltip.classList.add('hidden');
-    el.tooltip.innerHTML = '';
-    clearTimeout(state.hoverTimer);
-    state.hoverTimer = null;
-    state.hoverKey = null;
-  }
+function hideTooltip() {
+  ensureTooltipEl();
+
+  clearTimeout(state.hoverTimer);
+  state.hoverTimer = null;
+  state.hoverKey = null;
+
+  el.tooltip.classList.add('hidden');
+  el.tooltip.innerHTML = '';
+
+  // ✅ forceShowTooltip()에서 켠 인라인 강제표시를 원복
+  el.tooltip.style.display = 'none';
+  el.tooltip.style.opacity = '';
+  el.tooltip.style.visibility = '';
+  el.tooltip.style.left = '-9999px';
+  el.tooltip.style.top = '-9999px';
+}
+
 
   function placeTooltip(x, y) {
     ensureTooltipEl();
@@ -621,14 +631,11 @@
     el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
   }
 
-  function forceShowTooltip() {
-    ensureTooltipEl();
-    el.tooltip.classList.remove('hidden');
-    // CSS가 hidden을 display:none으로 만들었을 가능성 대비
-    el.tooltip.style.display = 'block';
-    el.tooltip.style.opacity = '1';
-    el.tooltip.style.visibility = 'visible';
-  }
+function forceShowTooltip() {
+  ensureTooltipEl();
+  el.tooltip.style.display = 'block';
+  el.tooltip.classList.remove('hidden');
+}
 
   async function showTooltipForCell(td, clientX, clientY) {
     ensureTooltipEl();
