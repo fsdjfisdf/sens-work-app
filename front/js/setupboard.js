@@ -46,23 +46,19 @@
   /**
    * ✅ 선행조건 순서(요청 반영)
    * TRAY → 3상 → AGV → PCW → LP → OHT → GAS → RF → 환경 → MFC → 지진방지
-   *
-   * - beforeStepNo: Help/표시/정렬에 사용
-   * - requiredBefore: 표시용(사람이 보는 문자열)
-   * - code: DB 키(저장/조회 기준)
    */
   const PREREQS = [
-    { code:'TRAY_INSTALL',         title:'TRAY 설치',          required:true,  beforeStepNo:5,  requiredBefore:'CABLE HOOK UP', desc:'CABLE HOOK UP 전 필수' },
-    { code:'THREE_PHASE',          title:'3상 설치',           required:true,  beforeStepNo:7,  requiredBefore:'POWER TURN ON', desc:'POWER TURN ON 전 필수' },
-    { code:'AGV_INSTALL',          title:'AGV 설치',           required:false, beforeStepNo:6,  requiredBefore:'SILICON 작업',  desc:'SILICON 작업 전 설치 권장' },
-    { code:'PCW_PRESSURE_PASS',    title:'PCW LINE 가압 PASS', required:true,  beforeStepNo:8,  requiredBefore:'UTILITY TURN ON', desc:'UTILITY TURN ON 전 필수(LEAK 확인)' },
-    { code:'LP_SETUP',             title:'LP SET UP',          required:true,  beforeStepNo:12, requiredBefore:'TEACHING',      desc:'TEACHING 전 필수' },
-    { code:'OHT_CERT',             title:'OHT 가동 인증',      required:true,  beforeStepNo:12, requiredBefore:'TEACHING',      desc:'TEACHING 전 필수' },
-    { code:'GAS_PRESSURE_PASS',    title:'GAS LINE 가압 PASS', required:true,  beforeStepNo:13, requiredBefore:'GAS TURN ON',   desc:'GAS TURN ON 전 필수' },
-    { code:'RF_CAL',               title:'RF CAL',             required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
-    { code:'ENV_QUAL',             title:'환경 QUAL',          required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
-    { code:'MFC_CERT',             title:'MFC 인증',           required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
-    { code:'SEISMIC_BKT',           title:'지진방지 BKT 체결',  required:true,  beforeStepNo:16, requiredBefore:'중간 인증',     desc:'중간 인증 전 필수' },
+    { code:'TRAY_INSTALL',          title:'TRAY 설치',           required:true,  beforeStepNo:5,  requiredBefore:'CABLE HOOK UP',   desc:'CABLE HOOK UP 전 필수' },
+    { code:'THREE_PHASE',           title:'3상 설치',            required:true,  beforeStepNo:7,  requiredBefore:'POWER TURN ON',    desc:'POWER TURN ON 전 필수' },
+    { code:'AGV_INSTALL',           title:'AGV 설치',            required:false, beforeStepNo:6,  requiredBefore:'SILICON 작업',     desc:'SILICON 작업 전 설치 권장' },
+    { code:'PCW_PRESSURE_PASS',     title:'PCW LINE 가압 PASS',  required:true,  beforeStepNo:8,  requiredBefore:'UTILITY TURN ON',  desc:'UTILITY TURN ON 전 필수(LEAK 확인)' },
+    { code:'LP_SETUP',              title:'LP SET UP',           required:true,  beforeStepNo:12, requiredBefore:'TEACHING',         desc:'TEACHING 전 필수' },
+    { code:'OHT_CERT',              title:'OHT 가동 인증',       required:true,  beforeStepNo:12, requiredBefore:'TEACHING',         desc:'TEACHING 전 필수' },
+    { code:'GAS_PRESSURE_PASS',     title:'GAS LINE 가압 PASS',  required:true,  beforeStepNo:13, requiredBefore:'GAS TURN ON',      desc:'GAS TURN ON 전 필수' },
+    { code:'RF_CAL',                title:'RF CAL',              required:true,  beforeStepNo:16, requiredBefore:'중간 인증',        desc:'중간 인증 전 필수' },
+    { code:'ENV_QUAL',              title:'환경 QUAL',           required:true,  beforeStepNo:16, requiredBefore:'중간 인증',        desc:'중간 인증 전 필수' },
+    { code:'MFC_CERT',              title:'MFC 인증',            required:true,  beforeStepNo:16, requiredBefore:'중간 인증',        desc:'중간 인증 전 필수' },
+    { code:'SEISMIC_BKT',           title:'지진방지 BKT 체결',   required:true,  beforeStepNo:16, requiredBefore:'중간 인증',        desc:'중간 인증 전 필수' },
   ];
 
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -119,8 +115,8 @@
 
   const state = {
     list: [],
-    detailCache: new Map(),  // setupId -> {project, steps}
-    prereqCache: new Map(),  // setupId -> map from code to row
+    detailCache: new Map(),  // setupId -> {project, steps, prereqs}
+    prereqCache: new Map(),  // setupId -> map(code->row)
     selectedSetupId: null,
     createMode: false,
 
@@ -128,6 +124,9 @@
     hoverKey: null
   };
 
+  /* =========================================================
+   * 공통 유틸
+   * ========================================================= */
   function getToken() {
     return localStorage.getItem('x-access-token') || '';
   }
@@ -180,6 +179,7 @@
   }
 
   function toast(msg) {
+    if (!el.toast) return;
     el.toast.textContent = msg;
     el.toast.classList.remove('hidden');
     clearTimeout(toast._t);
@@ -260,11 +260,36 @@
     return { pct, done, total };
   }
 
+  /* =========================================================
+   * ✅ Tooltip "강제 복구" 포인트
+   * - hover가 안 뜨는 이유 1순위: el.tooltip이 null이거나 CSS로 display:none/opacity:0
+   * - 여기서는 null 체크 + body에 tooltip을 자동 생성해버림
+   * ========================================================= */
+  function ensureTooltipEl() {
+    if (el.tooltip) return;
+    const div = document.createElement('div');
+    div.id = 'tooltip';
+    div.className = 'tooltip hidden';
+    div.style.position = 'fixed';
+    div.style.zIndex = '99999';
+    // CSS가 꼬여도 보이게 최소 스타일을 주입 (기존 CSS 있으면 덮어씌워도 OK)
+    div.style.maxWidth = '360px';
+    div.style.background = 'rgba(17,24,39,0.95)';
+    div.style.color = '#fff';
+    div.style.borderRadius = '10px';
+    div.style.padding = '10px 12px';
+    div.style.fontSize = '12px';
+    div.style.lineHeight = '1.35';
+    div.style.boxShadow = '0 10px 30px rgba(0,0,0,0.35)';
+    div.style.pointerEvents = 'none';
+    document.body.appendChild(div);
+    el.tooltip = div;
+  }
+
   /* =========================
    * Help (순서도) 렌더링
    * ========================= */
   function renderHelpFlowchart() {
-    // 메인 플로우: 타임라인/노드형 순서도
     el.helpFlowHost.innerHTML = `
       <div class="flowchart-track">
         ${STEPS.map((s, idx) => `
@@ -282,8 +307,7 @@
       </div>
     `;
 
-    // 선행조건: "어느 Step 전에" 그룹핑
-    const groups = new Map(); // beforeStepNo -> items
+    const groups = new Map();
     for (const it of PREREQS) {
       const k = Number(it.beforeStepNo || 0);
       if (!groups.has(k)) groups.set(k, []);
@@ -298,7 +322,7 @@
         return `
           <div class="prgrp">
             <div class="prgrp-head">
-                <div class="prgrp-title">Before ${escapeHtml(stepName)}</div>       
+              <div class="prgrp-title">Before ${escapeHtml(stepName)}</div>
             </div>
             <div class="prgrp-body">
               ${items.map(it => `
@@ -322,11 +346,11 @@
    * ========================= */
   async function loadBoard() {
     const q = buildQuery({
-      equipment_type: el.fEqType.value,
-      site: el.fSite.value,
-      line: el.fLine.value,
-      status: el.fStatus.value,
-      q: el.fQ.value.trim(),
+      equipment_type: el.fEqType?.value,
+      site: el.fSite?.value,
+      line: el.fLine?.value,
+      status: el.fStatus?.value,
+      q: el.fQ?.value?.trim?.() || '',
       limit: 200,
       offset: 0
     });
@@ -345,9 +369,11 @@
       state.list = list;
       renderTable();
       prefetchDetailsForBoard();
-      el.statCount.textContent = `설비 ${state.list.length}대`;
+      if (el.statCount) el.statCount.textContent = `설비 ${state.list.length}대`;
     } catch (e) {
-      el.tableHost.innerHTML = `<div style="padding:16px;color:#b91c1c;">보드 로드 실패: ${escapeHtml(e.message)}</div>`;
+      if (el.tableHost) {
+        el.tableHost.innerHTML = `<div style="padding:16px;color:#b91c1c;">보드 로드 실패: ${escapeHtml(e.message)}</div>`;
+      }
       toast(`보드 로드 실패: ${e.message}`);
     }
   }
@@ -359,12 +385,14 @@
         try { await ensureDetail(id); } catch {}
       }
     }
-    renderTable(); // 캐시 채워졌으니 날짜 다시 그림
+    renderTable();
   }
 
   function renderTable() {
     hideTooltip();
     const list = state.list;
+    if (!el.tableHost) return;
+
     if (!list.length) {
       el.tableHost.innerHTML = `<div style="padding:16px;color:#6b7280;">데이터가 없습니다.</div>`;
       return;
@@ -405,7 +433,10 @@
       });
     });
 
-    el.tableHost.querySelectorAll('[data-cell="1"]').forEach(td => {
+    // ✅ hover 이벤트를 "개별 td 바인딩" + "이벤트 위임" 둘 다 걸어서
+    // 어떤 이유로 개별 바인딩이 깨져도 tooltip은 뜨게 만든다.
+    const tds = el.tableHost.querySelectorAll('[data-cell="1"]');
+    tds.forEach(td => {
       td.addEventListener('click', async () => {
         const setupId = td.getAttribute('data-setup-id');
         const stepNo = Number(td.getAttribute('data-step-no'));
@@ -416,6 +447,23 @@
       td.addEventListener('mouseenter', onCellEnter);
       td.addEventListener('mousemove', onCellMove);
       td.addEventListener('mouseleave', onCellLeave);
+    });
+
+    // 이벤트 위임(보조)
+    el.tableHost.addEventListener('mouseover', (e) => {
+      const td = e.target?.closest?.('[data-cell="1"]');
+      if (!td) return;
+      onCellEnter({ currentTarget: td, clientX: e.clientX, clientY: e.clientY });
+    });
+    el.tableHost.addEventListener('mousemove', (e) => {
+      const td = e.target?.closest?.('[data-cell="1"]');
+      if (!td) return;
+      onCellMove(e);
+    });
+    el.tableHost.addEventListener('mouseout', (e) => {
+      const td = e.target?.closest?.('[data-cell="1"]');
+      if (!td) return;
+      onCellLeave();
     });
   }
 
@@ -477,7 +525,7 @@
   async function ensureDetail(setupId) {
     if (state.detailCache.has(setupId)) return state.detailCache.get(setupId);
     const json = await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`);
-    const data = json?.data;
+    const data = json?.data || json; // 혹시 data 없이 내려오는 케이스 방어
     state.detailCache.set(setupId, data);
     return data;
   }
@@ -556,6 +604,7 @@
    * Tooltip
    * ========================= */
   function hideTooltip() {
+    ensureTooltipEl();
     el.tooltip.classList.add('hidden');
     el.tooltip.innerHTML = '';
     clearTimeout(state.hoverTimer);
@@ -564,14 +613,25 @@
   }
 
   function placeTooltip(x, y) {
+    ensureTooltipEl();
     const pad = 14;
-    const maxX = window.innerWidth - pad;
-    const maxY = window.innerHeight - pad;
+    const maxX = window.innerWidth - pad - 10;
+    const maxY = window.innerHeight - pad - 10;
     el.tooltip.style.left = Math.min(x + 14, maxX) + 'px';
     el.tooltip.style.top  = Math.min(y + 14, maxY) + 'px';
   }
 
+  function forceShowTooltip() {
+    ensureTooltipEl();
+    el.tooltip.classList.remove('hidden');
+    // CSS가 hidden을 display:none으로 만들었을 가능성 대비
+    el.tooltip.style.display = 'block';
+    el.tooltip.style.opacity = '1';
+    el.tooltip.style.visibility = 'visible';
+  }
+
   async function showTooltipForCell(td, clientX, clientY) {
+    ensureTooltipEl();
     if (!td || !td.isConnected) return;
 
     const setupId = td.getAttribute('data-setup-id');
@@ -581,7 +641,7 @@
     const key = `${setupId}:${stepNo}`;
     state.hoverKey = key;
 
-    el.tooltip.classList.remove('hidden');
+    forceShowTooltip();
     el.tooltip.innerHTML = `<div class="tip-title">Loading...</div>`;
     placeTooltip(clientX, clientY);
 
@@ -607,9 +667,18 @@
       const planEnd = firstNonEmpty(fmtYYMMDD(row.plan_end), '-');
       const as = firstNonEmpty(fmtYYMMDD(row.actual_start), '-');
       const ae = firstNonEmpty(fmtYYMMDD(row.actual_end), '-');
-      const workers = firstNonEmpty(row.workers, row.worker, row.worker_names, row.task_man, '-');
-      const note    = firstNonEmpty(row.note, row.memo, row.remark, row.comment, '-');
 
+      const workers = firstNonEmpty(
+        row.workers, row.worker, row.worker_names, row.task_man, row.owner, '-'
+      );
+      const note = firstNonEmpty(
+        row.note, row.memo, row.remark, row.comment, row.last_note, '-'
+      );
+
+      // ✅ "아무것도 안 뜬다" 케이스를 잡기 위해 stepRow 자체가 비어있으면 경고도 표기
+      const debug = (!steps.length || !Object.keys(row).length)
+        ? `<div style="margin-top:8px;opacity:.8;">(detail.steps/row 비어있음: API 응답 확인 필요)</div>`
+        : ``;
 
       el.tooltip.innerHTML = `
         <div class="tip-title">${escapeHtml(stepName)}</div>
@@ -621,6 +690,7 @@
           <div class="tip-k">특이사항</div><div class="tip-v">${escapeHtml(note)}</div>
         </div>
         <div class="tip-foot">클릭: 상태 변경(확인 후 저장)</div>
+        ${debug}
       `;
       placeTooltip(clientX, clientY);
     } catch (e) {
@@ -636,34 +706,40 @@
 
   function onCellEnter(e) {
     clearTimeout(state.hoverTimer);
+    const td = e.currentTarget;
     state.hoverTimer = setTimeout(() => {
-      showTooltipForCell(e.currentTarget, e.clientX, e.clientY);
-    }, 180);
+      showTooltipForCell(td, e.clientX, e.clientY);
+    }, 120);
   }
+
   function onCellMove(e) {
+    ensureTooltipEl();
     if (el.tooltip.classList.contains('hidden')) return;
     placeTooltip(e.clientX, e.clientY);
   }
-  function onCellLeave() { hideTooltip(); }
+
+  function onCellLeave() {
+    hideTooltip();
+  }
 
   /* =========================
    * Modal + Tabs
    * ========================= */
-  function openModalShell() { el.modal.classList.remove('hidden'); }
+  function openModalShell() { if (el.modal) el.modal.classList.remove('hidden'); }
   function closeModal() {
-    el.modal.classList.add('hidden');
+    if (el.modal) el.modal.classList.add('hidden');
     state.selectedSetupId = null;
     state.createMode = false;
-    el.btnSaveProject.textContent = 'SAVE';
+    if (el.btnSaveProject) el.btnSaveProject.textContent = 'SAVE';
     setTab('steps');
   }
 
   function setTab(mode) {
     const isSteps = mode === 'steps';
-    el.tabSteps.classList.toggle('active', isSteps);
-    el.tabPrereq.classList.toggle('active', !isSteps);
-    el.viewSteps.classList.toggle('hidden', !isSteps);
-    el.viewPrereq.classList.toggle('hidden', isSteps);
+    el.tabSteps?.classList?.toggle('active', isSteps);
+    el.tabPrereq?.classList?.toggle('active', !isSteps);
+    el.viewSteps?.classList?.toggle('hidden', !isSteps);
+    el.viewPrereq?.classList?.toggle('hidden', isSteps);
   }
 
   function openCreateModal() {
@@ -672,29 +748,29 @@
     openModalShell();
     setTab('steps');
 
-    el.mTitle.textContent = '신규 설비 추가';
-    el.mMeta.textContent = '필수: 설비명, Site, Line';
+    if (el.mTitle) el.mTitle.textContent = '신규 설비 추가';
+    if (el.mMeta) el.mMeta.textContent = '필수: 설비명, Site, Line';
 
-    el.p_equipment_name.value = '';
-    el.p_equipment_type.value = '';
-    el.p_site.value = '';
-    el.p_line.value = '';
-    el.p_location.value = '';
-    el.p_board_status.value = 'PLANNED';
-    el.p_last_note.value = '';
-    el.p_start_date_auto.value = '';
+    if (el.p_equipment_name) el.p_equipment_name.value = '';
+    if (el.p_equipment_type) el.p_equipment_type.value = '';
+    if (el.p_site) el.p_site.value = '';
+    if (el.p_line) el.p_line.value = '';
+    if (el.p_location) el.p_location.value = '';
+    if (el.p_board_status) el.p_board_status.value = 'PLANNED';
+    if (el.p_last_note) el.p_last_note.value = '';
+    if (el.p_start_date_auto) el.p_start_date_auto.value = '';
 
-    el.stepsHost.innerHTML = `<div class="muted small">설비 생성 후 STEP이 자동 생성됩니다.</div>`;
-    el.prereqHost.innerHTML = `<div class="muted small">설비 생성 후 선행조건 체크가 가능합니다.</div>`;
-    el.prBadge.textContent = `0/0`;
+    if (el.stepsHost) el.stepsHost.innerHTML = `<div class="muted small">설비 생성 후 STEP이 자동 생성됩니다.</div>`;
+    if (el.prereqHost) el.prereqHost.innerHTML = `<div class="muted small">설비 생성 후 선행조건 체크가 가능합니다.</div>`;
+    if (el.prBadge) el.prBadge.textContent = `0/0`;
 
-    el.btnSaveProject.textContent = 'CREATE';
-    el.projSaveHint.textContent = '';
+    if (el.btnSaveProject) el.btnSaveProject.textContent = 'CREATE';
+    if (el.projSaveHint) el.projSaveHint.textContent = '';
   }
 
   function openEditModal(setupId) {
     state.createMode = false;
-    el.btnSaveProject.textContent = 'SAVE';
+    if (el.btnSaveProject) el.btnSaveProject.textContent = 'SAVE';
     openModal(setupId);
   }
 
@@ -703,23 +779,22 @@
     openModalShell();
     setTab('steps');
 
-    el.mTitle.textContent = '로딩 중...';
-    el.mMeta.textContent = '';
-    el.stepsHost.innerHTML = '';
-    el.prereqHost.innerHTML = '';
-    el.prBadge.textContent = `0/0`;
-    el.projSaveHint.textContent = '';
+    if (el.mTitle) el.mTitle.textContent = '로딩 중...';
+    if (el.mMeta) el.mMeta.textContent = '';
+    if (el.stepsHost) el.stepsHost.innerHTML = '';
+    if (el.prereqHost) el.prereqHost.innerHTML = '';
+    if (el.prBadge) el.prBadge.textContent = `0/0`;
+    if (el.projSaveHint) el.projSaveHint.textContent = '';
 
     try {
       const data = await ensureDetail(String(setupId));
       renderModal(data);
 
-      // prereq preload
       const prMap = await fetchPrereqs(String(setupId));
       renderPrereqs(String(setupId), prMap);
     } catch (e) {
-      el.mTitle.textContent = '상세 로드 실패';
-      el.mMeta.textContent = e.message;
+      if (el.mTitle) el.mTitle.textContent = '상세 로드 실패';
+      if (el.mMeta) el.mMeta.textContent = e.message;
       toast(`상세 로드 실패: ${e.message}`);
     }
   }
@@ -728,36 +803,41 @@
     const p = data?.project || {};
     const steps = data?.steps || [];
 
-    el.mTitle.textContent = p.equipment_name || `SETUP #${p.id || ''}`;
-    el.mMeta.textContent = [
-      p.equipment_type || '-',
-      p.site || '-',
-      p.line || '-',
-      p.location ? `@${p.location}` : ''
-    ].filter(Boolean).join(' · ');
+    if (el.mTitle) el.mTitle.textContent = p.equipment_name || `SETUP #${p.id || ''}`;
+    if (el.mMeta) {
+      el.mMeta.textContent = [
+        p.equipment_type || '-',
+        p.site || '-',
+        p.line || '-',
+        p.location ? `@${p.location}` : ''
+      ].filter(Boolean).join(' · ');
+    }
 
-    el.p_equipment_name.value = p.equipment_name || '';
-    el.p_equipment_type.value = p.equipment_type || '';
-    el.p_site.value = p.site || '';
-    el.p_line.value = p.line || '';
-    el.p_location.value = p.location || '';
-    el.p_board_status.value = (p.board_status || 'PLANNED').toUpperCase();
-    el.p_last_note.value = p.last_note || '';
-    el.p_start_date_auto.value = computeAutoStartDate(data) || '';
+    if (el.p_equipment_name) el.p_equipment_name.value = p.equipment_name || '';
+    if (el.p_equipment_type) el.p_equipment_type.value = p.equipment_type || '';
+    if (el.p_site) el.p_site.value = p.site || '';
+    if (el.p_line) el.p_line.value = p.line || '';
+    if (el.p_location) el.p_location.value = p.location || '';
+    if (el.p_board_status) el.p_board_status.value = (p.board_status || 'PLANNED').toUpperCase();
+    if (el.p_last_note) el.p_last_note.value = p.last_note || '';
+    if (el.p_start_date_auto) el.p_start_date_auto.value = computeAutoStartDate(data) || '';
 
     const byNo = new Map();
     for (const s of steps) byNo.set(Number(s.step_no), s);
 
+    if (!el.stepsHost) return;
+
     el.stepsHost.innerHTML = STEPS.map(t => {
       const s = byNo.get(t.no) || {};
       const st = (s.status || 'NOT_STARTED').toUpperCase();
-
-      // ✅ DB description이 없으면 도움말용 desc를 디폴트로 보여주기(알맹이 가독성)
       const desc = firstNonEmpty(s.step_description, t.desc, '');
 
       const planEnd = fmtDateISO(s.plan_end);
       const actualStart = fmtDateISO(s.actual_start);
       const actualEnd = fmtDateISO(s.actual_end);
+
+      const workersVal = firstNonEmpty(s.workers, s.worker, s.worker_names, '');
+      const noteVal = firstNonEmpty(s.note, s.memo, s.remark, '');
 
       return `
         <div class="step-card" data-step-card="1" data-step-no="${t.no}">
@@ -800,12 +880,12 @@
 
             <div class="field">
               <label>Workers</label>
-              <input type="text" data-field="workers" value="${escapeHtml(s.workers || '')}" placeholder="정현우,김동한"/>
+              <input type="text" data-field="workers" value="${escapeHtml(workersVal)}" placeholder="정현우,김동한"/>
             </div>
 
             <div class="field wide note-wide">
               <label>Note</label>
-              <input type="text" data-field="note" value="${escapeHtml(s.note || '')}" placeholder="특이사항"/>
+              <input type="text" data-field="note" value="${escapeHtml(noteVal)}" placeholder="특이사항"/>
             </div>
           </div>
 
@@ -824,14 +904,14 @@
       const hint = card.querySelector('[data-hint="1"]');
       const btn = card.querySelector('[data-save-step="1"]');
 
-      selStatus.addEventListener('change', () => {
+      selStatus?.addEventListener('change', () => {
         const st = selStatus.value;
         pill.classList.remove('ns','pl','ip','dn','hd');
         pill.classList.add(statusToClass(st));
         pill.textContent = statusShort(st);
       });
 
-      btn.addEventListener('click', async () => {
+      btn?.addEventListener('click', async () => {
         const setupId = state.selectedSetupId;
         if (!setupId) return;
 
@@ -848,17 +928,15 @@
         }
 
         try {
-          hint.textContent = 'saving...';
+          if (hint) hint.textContent = 'saving...';
           await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}/steps/${stepNo}`, {
             method: 'PATCH',
             body: patch
           });
 
-          const cached = state.detailCache.get(setupId);
-          if (cached && Array.isArray(cached.steps)) {
-            const row = cached.steps.find(x => Number(x.step_no) === stepNo);
-            if (row) Object.assign(row, patch);
-          }
+          // ✅ 캐시를 갱신: detail 전체가 오래된 상태면 hover에서도 안 뜨는 경우가 있어 강제로 삭제
+          state.detailCache.delete(setupId);
+          await ensureDetail(setupId);
 
           if (stepNo === 1) {
             const autoISO = firstNonEmpty(patch.actual_start, patch.plan_end, null);
@@ -872,12 +950,12 @@
             }
           }
 
-          hint.textContent = 'saved ✅';
+          if (hint) hint.textContent = 'saved ✅';
           await loadBoard();
           toast(`${STEPS.find(s=>s.no===stepNo)?.name || `STEP ${stepNo}`} 저장 완료`);
-          setTimeout(() => (hint.textContent = ''), 1500);
+          setTimeout(() => { if (hint) hint.textContent = ''; }, 1500);
         } catch (e) {
-          hint.textContent = `fail: ${e.message}`;
+          if (hint) hint.textContent = `fail: ${e.message}`;
           toast(`STEP 저장 실패: ${e.message}`);
         }
       });
@@ -889,12 +967,12 @@
     const setupId = state.selectedSetupId;
 
     const payloadBase = {
-      equipment_name: el.p_equipment_name.value.trim(),
-      equipment_type: el.p_equipment_type.value.trim() || null,
-      site: el.p_site.value.trim(),
-      line: el.p_line.value.trim(),
-      location: el.p_location.value.trim() || null,
-      last_note: el.p_last_note.value.trim() || null
+      equipment_name: el.p_equipment_name?.value?.trim?.() || '',
+      equipment_type: el.p_equipment_type?.value?.trim?.() || null,
+      site: el.p_site?.value?.trim?.() || '',
+      line: el.p_line?.value?.trim?.() || '',
+      location: el.p_location?.value?.trim?.() || null,
+      last_note: el.p_last_note?.value?.trim?.() || null
     };
 
     if (!payloadBase.equipment_name) return toast('설비명은 필수입니다.');
@@ -902,20 +980,20 @@
     if (!payloadBase.line) return toast('Line은 필수입니다.');
 
     try {
-      el.projSaveHint.textContent = 'saving...';
+      if (el.projSaveHint) el.projSaveHint.textContent = 'saving...';
 
       if (isCreate) {
         const json = await apiFetch(`/api/setup-projects`, { method: 'POST', body: payloadBase });
         const newId = json?.setup_id || json?.setupId || json?.id;
 
-        el.projSaveHint.textContent = 'created ✅';
+        if (el.projSaveHint) el.projSaveHint.textContent = 'created ✅';
         toast('설비가 생성되었습니다.');
 
         await loadBoard();
 
         if (newId) {
           state.createMode = false;
-          el.btnSaveProject.textContent = 'SAVE';
+          if (el.btnSaveProject) el.btnSaveProject.textContent = 'SAVE';
           await openModal(String(newId));
         } else {
           closeModal();
@@ -925,7 +1003,7 @@
 
       if (!setupId) return toast('setupId가 없습니다.');
 
-      const patch = { ...payloadBase, board_status: el.p_board_status.value };
+      const patch = { ...payloadBase, board_status: el.p_board_status?.value };
 
       await apiFetch(`/api/setup-projects/${encodeURIComponent(setupId)}`, {
         method: 'PATCH',
@@ -938,29 +1016,23 @@
 
       await loadBoard();
 
-      el.projSaveHint.textContent = 'saved ✅';
+      if (el.projSaveHint) el.projSaveHint.textContent = 'saved ✅';
       toast('Project 저장 완료');
-      setTimeout(() => (el.projSaveHint.textContent = ''), 1500);
+      setTimeout(() => { if (el.projSaveHint) el.projSaveHint.textContent = ''; }, 1500);
     } catch (e) {
-      el.projSaveHint.textContent = `fail: ${e.message}`;
+      if (el.projSaveHint) el.projSaveHint.textContent = `fail: ${e.message}`;
       toast(`Project 저장 실패: ${e.message}`);
     }
   }
 
   /* =========================
-   * Prereq (DB ONLY) - ✅ 백엔드 서비스(updatePrereq) 형태에 맞춤
-   * - PATCH payload: { is_done: boolean, note?: string }
-   * - rows: { prereq_key, is_done, done_at, done_by, note }
+   * Prereq (DB ONLY)
    * ========================= */
   function normalizePrereqResponse(json) {
     const data = json?.data;
 
-    // 1) 이미 map 형태인 경우
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      return data;
-    }
+    if (data && typeof data === 'object' && !Array.isArray(data)) return data;
 
-    // 2) 배열 형태(레코드 리스트)라면 prereq_key로 map
     if (Array.isArray(data)) {
       const map = {};
       for (const r of data) {
@@ -970,6 +1042,10 @@
       return map;
     }
 
+    // controller가 {ok:true, updated:...}로 준 경우 대비
+    if (json && typeof json === 'object' && json.updated && typeof json.updated === 'object') {
+      return json.updated;
+    }
     return {};
   }
 
@@ -984,16 +1060,13 @@
   }
 
   function isPrereqDone(row) {
-    // 백엔드: is_done
     if (!row) return false;
     if (row.is_done === 1 || row.is_done === '1' || row.is_done === true) return true;
-    // 혹시 프론트/구버전: done
     if (row.done === 1 || row.done === '1' || row.done === true) return true;
     return false;
   }
 
   function getPrereqDoneDate(row) {
-    // 백엔드: done_at
     const d = row?.done_at || row?.done_date || row?.doneAt || null;
     return d ? fmtYYMMDD(d) : '';
   }
@@ -1008,8 +1081,24 @@
     return { total, done };
   }
 
+  function normalizePrereqRowForCache(code, anyRow, doneBool) {
+    // DAO(map) 형식(done/done_date)과 PATCH(updated) 형식(is_done/done_at)을 모두 통일
+    const isDone = (typeof doneBool === 'boolean') ? doneBool : isPrereqDone(anyRow);
+    const doneDate = anyRow?.done_at || anyRow?.done_date || anyRow?.doneAt || null;
+
+    return {
+      ...(anyRow || {}),
+      // 통일 필드
+      done: isDone,
+      done_date: doneDate,
+      // 참고용(혹시 UI에서 쓰면)
+      is_done: isDone ? 1 : 0,
+      done_at: doneDate,
+      prereq_key: anyRow?.prereq_key || code
+    };
+  }
+
   async function savePrereq(setupId, code, done) {
-    // ✅ 서비스(updatePrereq)에 맞게 is_done 사용
     const payload = { is_done: !!done };
 
     const json = await apiFetch(
@@ -1017,18 +1106,21 @@
       { method: 'PATCH', body: payload }
     );
 
-    // ✅ 백엔드가 row를 반환하면 그걸 반영
-    const row = json?.data || json?.updated || json || null;
+    // controller가 {ok:true, updated: ...}
+    const rawRow = json?.data || json?.updated || json || null;
 
     const cur = state.prereqCache.get(setupId) || {};
-    const next = { ...cur, [code]: row || { ...(cur[code]||{}), ...payload } };
+    const merged = normalizePrereqRowForCache(code, rawRow || cur[code], !!done);
+
+    const next = { ...cur, [code]: merged };
     state.prereqCache.set(setupId, next);
     return next;
   }
 
   function renderPrereqs(setupId, prMap) {
     const prog = calcPrereqProgress(prMap);
-    el.prBadge.textContent = `${prog.done}/${prog.total}`;
+    if (el.prBadge) el.prBadge.textContent = `${prog.done}/${prog.total}`;
+    if (!el.prereqHost) return;
 
     el.prereqHost.innerHTML = PREREQS.map(it => {
       const row = prMap?.[it.code] || {};
@@ -1062,7 +1154,7 @@
       const chk = card.querySelector('[data-pr-field="done"]');
       const btn = card.querySelector('[data-pr-save="1"]');
 
-      btn.addEventListener('click', async () => {
+      btn?.addEventListener('click', async () => {
         if (!setupId || !code) return;
 
         btn.disabled = true;
@@ -1085,31 +1177,34 @@
    * ========================= */
   function openHelp() {
     renderHelpFlowchart();
-    el.helpModal.classList.remove('hidden');
+    el.helpModal?.classList?.remove('hidden');
   }
-  function closeHelp() { el.helpModal.classList.add('hidden'); }
+  function closeHelp() {
+    el.helpModal?.classList?.add('hidden');
+  }
 
   /* =========================
    * Events
    * ========================= */
   function bindEvents() {
-    el.btnNew.addEventListener('click', openCreateModal);
-    el.btnApply.addEventListener('click', loadBoard);
+    ensureTooltipEl(); // ✅ tooltip이 DOM에 없으면 강제 생성
 
-    el.fQ.addEventListener('keydown', (e) => {
+    el.btnNew?.addEventListener('click', openCreateModal);
+    el.btnApply?.addEventListener('click', loadBoard);
+
+    el.fQ?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') loadBoard();
     });
 
-    el.btnClose.addEventListener('click', closeModal);
+    el.btnClose?.addEventListener('click', closeModal);
 
-    el.modal.addEventListener('click', (e) => {
+    el.modal?.addEventListener('click', (e) => {
       const close = e.target?.getAttribute?.('data-close');
       if (close === '1') closeModal();
     });
 
-    // tabs
-    el.tabSteps.addEventListener('click', () => setTab('steps'));
-    el.tabPrereq.addEventListener('click', async () => {
+    el.tabSteps?.addEventListener('click', () => setTab('steps'));
+    el.tabPrereq?.addEventListener('click', async () => {
       setTab('prereq');
       const setupId = state.selectedSetupId;
       if (!setupId) return;
@@ -1118,26 +1213,27 @@
         const prMap = await fetchPrereqs(setupId);
         renderPrereqs(setupId, prMap);
       } catch (e) {
-        el.prereqHost.innerHTML = `
-          <div class="api-missing">
-            <div class="api-title">선행조건 API가 필요합니다</div>
-            <div class="api-desc muted">
-              GET /api/setup-projects/:id/prereqs<br/>
-              PATCH /api/setup-projects/:id/prereqs/:code
+        if (el.prereqHost) {
+          el.prereqHost.innerHTML = `
+            <div class="api-missing">
+              <div class="api-title">선행조건 API가 필요합니다</div>
+              <div class="api-desc muted">
+                GET /api/setup-projects/:id/prereqs<br/>
+                PATCH /api/setup-projects/:id/prereqs/:code
+              </div>
+              <div class="api-desc muted small">현재 응답: ${escapeHtml(e.message)}</div>
             </div>
-            <div class="api-desc muted small">현재 응답: ${escapeHtml(e.message)}</div>
-          </div>
-        `;
+          `;
+        }
         toast(`선행조건 로드 실패: ${e.message}`);
       }
     });
 
-    el.btnSaveProject.addEventListener('click', saveProject);
+    el.btnSaveProject?.addEventListener('click', saveProject);
 
-    // help
-    el.btnHelp.addEventListener('click', openHelp);
-    el.btnHelpClose.addEventListener('click', closeHelp);
-    el.helpModal.addEventListener('click', (e) => {
+    el.btnHelp?.addEventListener('click', openHelp);
+    el.btnHelpClose?.addEventListener('click', closeHelp);
+    el.helpModal?.addEventListener('click', (e) => {
       const close = e.target?.getAttribute?.('data-help-close');
       if (close === '1') closeHelp();
     });
