@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>작업이력 AI 검색</title>
+  <link rel="stylesheet" href="/css/aiservice.css" />
+</head>
+<body>
+
+  <!-- ── 헤더 ───────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-logo">
+        <span class="logo-mark">⚙</span>
+        <span class="logo-text">WORK<strong>LOG</strong> <span class="logo-ai">AI</span></span>
+      </div>
+      <nav class="header-nav">
+        <a href="/" class="nav-link">대시보드</a>
+        <a href="/readworklog" class="nav-link">작업이력</a>
+        <a href="/aiservice.html" class="nav-link active">AI 검색</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── 메인 ───────────────────────────────────────────────── -->
+  <main class="main-wrap">
+
+    <!-- 타이틀 -->
+    <section class="page-hero">
+      <h1 class="page-title">작업이력 <span class="title-accent">AI 질의응답</span></h1>
+      <p class="page-desc">설비 종류를 선택하고 질문을 입력하면 관련 작업이력을 찾아 AI가 분석·요약합니다.</p>
+    </section>
+
+    <!-- 검색 패널 -->
+    <section class="search-panel" id="searchPanel">
+
+      <!-- 질문 입력 -->
+      <div class="field-wrap">
+        <label class="field-label" for="question">
+          <span class="field-icon">💬</span> 질문
+        </label>
+        <textarea
+          id="question"
+          class="question-input"
+          rows="3"
+          maxlength="500"
+          placeholder="예) SUPRA XP에서 MFC 교체는 어떻게 하나요?&#10;예) EPE3801 설비에서 척 작업을 누가, 언제 했나요?&#10;예) Pirani Gauge 교체 원인과 결과를 알려줘"
+        ></textarea>
+        <div class="char-counter"><span id="charCount">0</span> / 500</div>
+      </div>
+
+      <!-- 필터 행 1 -->
+      <div class="filter-row">
+
+        <!-- 설비 종류 (필수) -->
+        <div class="field-wrap field-required">
+          <label class="field-label" for="equipmentType">
+            <span class="field-icon">🔧</span> 설비 종류
+            <span class="required-tag">필수</span>
+          </label>
+          <select id="equipmentType" class="filter-select">
+            <option value="">-- 설비 종류 선택 --</option>
+          </select>
+        </div>
+
+        <!-- 지역 (Site) -->
+        <div class="field-wrap">
+          <label class="field-label" for="site">
+            <span class="field-icon">📍</span> 지역 (Site)
+          </label>
+          <select id="site" class="filter-select">
+            <option value="">전체</option>
+          </select>
+        </div>
+
+        <!-- 라인 -->
+        <div class="field-wrap">
+          <label class="field-label" for="line">
+            <span class="field-icon">📌</span> 라인 (Line)
+          </label>
+          <input type="text" id="line" class="filter-input" placeholder="예) 17L, P3D (선택)" maxlength="20" />
+        </div>
+
+      </div>
+
+      <!-- 필터 행 2 -->
+      <div class="filter-row">
+
+        <div class="field-wrap">
+          <label class="field-label" for="dateFrom">
+            <span class="field-icon">📅</span> 시작일
+          </label>
+          <input type="date" id="dateFrom" class="filter-input" />
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label" for="dateTo">
+            <span class="field-icon">📅</span> 종료일
+          </label>
+          <input type="date" id="dateTo" class="filter-input" />
+        </div>
+
+        <div class="field-wrap field-sm">
+          <label class="field-label" for="topK">
+            <span class="field-icon">🔢</span> 최대 결과 수
+          </label>
+          <select id="topK" class="filter-select">
+            <option value="10" selected>10건</option>
+            <option value="20">20건</option>
+            <option value="30">30건</option>
+            <option value="50">50건</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- 실행 -->
+      <div class="action-row">
+        <button id="btnSearch" class="btn-primary" type="button">
+          <span class="btn-icon">🔍</span>
+          <span id="btnLabel">AI 검색</span>
+        </button>
+        <button id="btnReset" class="btn-ghost" type="button">초기화</button>
+        <span class="action-hint">Shift+Enter로 줄바꿈 / Enter로 검색</span>
+      </div>
+
+    </section>
+
+    <!-- 로딩 -->
+    <div id="loading" class="loading-wrap hidden">
+      <div class="loader-orbit">
+        <div class="orbit-ring"></div>
+        <div class="orbit-dot"></div>
+      </div>
+      <p class="loading-text">AI가 작업이력을 분석하고 있습니다<span class="dot-ani">...</span></p>
+    </div>
+
+    <!-- 에러 -->
+    <div id="errorBox" class="error-box hidden">
+      <span class="err-icon">⚠️</span>
+      <span id="errorMsg" class="err-text"></span>
+    </div>
+
+    <!-- 결과 영역 -->
+    <section id="resultSection" class="result-section hidden">
+
+      <!-- AI 요약 카드 -->
+      <div class="summary-card">
+        <div class="summary-head">
+          <div class="summary-badge-wrap">
+            <span class="summary-badge">✦ AI 분석 결과</span>
+            <span id="resultMeta" class="result-meta"></span>
+          </div>
+          <button id="btnCopySummary" class="btn-copy" title="요약 복사">📋 복사</button>
+        </div>
+        <pre id="summaryText" class="summary-body"></pre>
+      </div>
+
+      <!-- 상세 목록 -->
+      <div class="list-header">
+        <h2 class="list-title">상세 작업이력 목록</h2>
+        <span id="resultCount" class="count-badge"></span>
+      </div>
+
+      <div id="noResult" class="no-result hidden">
+        <div class="no-result-icon">📋</div>
+        <p class="no-result-msg">조건에 맞는 작업이력이 없습니다.</p>
+        <p class="no-result-sub">설비 종류나 날짜 범위를 조정해 보세요.</p>
+      </div>
+
+      <div class="table-wrap" id="tableWrap">
+        <table class="result-table" id="resultTable">
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>작업명</th>
+              <th>설비명</th>
+              <th>Site / Line</th>
+              <th>작업자</th>
+              <th>원인</th>
+              <th>작업 내용</th>
+              <th>결과</th>
+              <th>유형</th>
+              <th>소요시간</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main><!-- /.main-wrap -->
+
+  <!-- 상세 모달 -->
+  <div id="detailModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 id="modalTitle" class="modal-title"></h3>
+        <button id="modalClose" class="modal-close" aria-label="닫기">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="/js/aiservice.js"></script>
+</body>
+</html>

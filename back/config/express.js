@@ -169,8 +169,11 @@ module.exports = function () {
   // (위쪽 아무 데서든) 한 번만 선언
   const workLogController = require('../src/controllers/workLogController');
 
-const aiRagRoute = require("../src/routes/aiRagRoute");
-app.use("/api/rag", aiRagRoute);
+//const aiRagRoute = require("../src/routes/aiRagRoute");
+//app.use("/api/rag", aiRagRoute);
+
+const aiRoute = require('../src/routes/aiRoute');
+app.use('/api/ai', aiRoute);
 
 const tsRagRoute = require('../src/routes/tsRagRoute');
 app.use('/api/ts-rag', tsRagRoute);
