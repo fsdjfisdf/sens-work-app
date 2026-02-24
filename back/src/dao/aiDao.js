@@ -265,16 +265,31 @@ exports.saveRagChunk = async ({ work_log_id, chunk_index = 0, chunk_text, embedd
  * @param {number} [p.limit=50]   후보 청크 최대 수
  * @returns {Promise<Array<{id, work_log_id, chunk_text, embedding_json, equipment_type, site, line, task_date}>>}
  */
-exports.getRagChunkCandidates = async ({ equipment_type, site, limit = 50 }) => {
+exports.getRagChunkCandidates = async ({ equipment_type, site, line, date_from, date_to, limit = 50 }) => {
   const connection = await pool.getConnection(async (conn) => conn);
   try {
-    const conditions = ['equipment_type = ?', 'embedding_json IS NOT NULL'];
-    const values     = [equipment_type];
+const conditions = ['equipment_type = ?', 'embedding_json IS NOT NULL'];
+const values = [equipment_type];
 
-    if (site && site !== 'ALL') {
-      conditions.push('site = ?');
-      values.push(site);
-    }
+if (site && site !== 'ALL') {
+  conditions.push('site = ?');
+  values.push(site);
+}
+
+if (line && line.trim() !== '' && line !== 'ALL') {
+  conditions.push('`line` = ?');
+  values.push(line.trim());
+}
+
+if (date_from) {
+  conditions.push('task_date >= ?');
+  values.push(date_from);
+}
+
+if (date_to) {
+  conditions.push('task_date <= ?');
+  values.push(date_to);
+}
 
     const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
 

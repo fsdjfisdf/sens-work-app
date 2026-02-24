@@ -284,11 +284,26 @@ exports.query = async ({ question, equipment_type, site, line, date_from, date_t
   const t0 = Date.now();
 
   // 1. 키워드 추출 (규칙 기반)
-  const keyword = extractKeyword(question);
+let keyword = extractKeyword(question);
 
-  // 2. SQL 검색
-  const rawRows = await aiDao.searchWorkLogs({ keyword, equipment_type, site, line, date_from, date_to, top_k });
+// 키워드가 너무 길거나 '작업이력/찾아봐' 같은 일반어 위주면 키워드 검색 생략
+const genericWords = ['작업이력', '이력', '찾아봐', '찾아줘', '보여줘', '조회', '내역'];
+const normalized = (keyword || '').replace(/\s+/g, '');
+const onlyGeneric = genericWords.some(w => normalized.includes(w)) && normalized.length <= 20;
 
+if (!keyword || keyword.length >= 20 || onlyGeneric) {
+  keyword = '';
+}
+
+const rawRows = await aiDao.searchWorkLogs({
+  keyword,
+  equipment_type,
+  site,
+  line,
+  date_from,
+  date_to,
+  top_k
+});
   // 3. 포맷팅
   const results = rawRows.map(formatRow);
 
@@ -343,7 +358,7 @@ exports.query = async ({ question, equipment_type, site, line, date_from, date_t
  * @param {number} [p.top_k=10]
  * @param {string} [p.userAgent]
  */
-exports.ragQuery = async ({ question, equipment_type, site, line, top_k = 10, userAgent }) => {
+exports.ragQuery = async ({ question, equipment_type, site, line, date_from, date_to, top_k = 10, userAgent }) => {
   const t0 = Date.now();
 
   // 1. 질문 임베딩 생성
@@ -352,11 +367,14 @@ exports.ragQuery = async ({ question, equipment_type, site, line, top_k = 10, us
   // 2. DB에서 후보 청크 조회 (equipment_type + site로 pre-filter)
   //    후보를 넉넉하게 뽑은 뒤 코사인 유사도로 최종 선별
   const CANDIDATE_LIMIT = Math.max(top_k * 8, 80);
-  const chunks = await aiDao.getRagChunkCandidates({
-    equipment_type,
-    site,
-    limit: CANDIDATE_LIMIT,
-  });
+const chunks = await aiDao.getRagChunkCandidates({
+  equipment_type,
+  site,
+  line,
+  date_from,
+  date_to,
+  limit: CANDIDATE_LIMIT,
+});
 
   if (chunks.length === 0) {
     const summary = `[${equipment_type}] 설비에 대한 임베딩 데이터가 없습니다.\n` +

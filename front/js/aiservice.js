@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const API_QUERY = '/api/ai/worklog/query';
+  const API_QUERY = '/api/ai/worklog/rag-query';
   const API_OPTS  = '/api/ai/filter-options';
 
   // ── DOM ───────────────────────────────────────────────────
