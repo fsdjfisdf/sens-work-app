@@ -8,192 +8,148 @@
 </head>
 <body>
 
-  <!-- ── 헤더 ───────────────────────────────────────────────── -->
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="header-logo">
-        <span class="logo-mark">⚙</span>
-        <span class="logo-text">WORK<strong>LOG</strong> <span class="logo-ai">AI</span></span>
+  <!-- ── 사이드바 ────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <span class="logo-icon">⚙</span>
+        <span class="logo-text">WorkLog <strong>AI</strong></span>
       </div>
-      <nav class="header-nav">
-        <a href="/" class="nav-link">대시보드</a>
-        <a href="/readworklog" class="nav-link">작업이력</a>
-        <a href="/aiservice.html" class="nav-link active">AI 검색</a>
-      </nav>
+      <button class="btn-new-chat" id="btnNewChat" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        새 대화
+      </button>
     </div>
-  </header>
 
-  <!-- ── 메인 ───────────────────────────────────────────────── -->
-  <main class="main-wrap">
+    <!-- 필터 패널 -->
+    <div class="sidebar-filters">
+      <p class="filter-section-label">검색 필터</p>
 
-    <!-- 타이틀 -->
-    <section class="page-hero">
-      <h1 class="page-title">작업이력 <span class="title-accent">AI 질의응답</span></h1>
-      <p class="page-desc">설비 종류를 선택하고 질문을 입력하면 관련 작업이력을 찾아 AI가 분석·요약합니다.</p>
-    </section>
-
-    <!-- 검색 패널 -->
-    <section class="search-panel" id="searchPanel">
-
-      <!-- 질문 입력 -->
-      <div class="field-wrap">
-        <label class="field-label" for="question">
-          <span class="field-icon">💬</span> 질문
+      <div class="filter-item filter-required">
+        <label class="filter-label" for="equipmentType">
+          설비 종류 <span class="req-dot">*</span>
         </label>
+        <select id="equipmentType" class="filter-select">
+          <option value="">-- 선택 (필수) --</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label" for="site">지역 (Site)</label>
+        <select id="site" class="filter-select">
+          <option value="">전체</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label" for="line">라인 (Line)</label>
+        <input type="text" id="line" class="filter-input" placeholder="예) 17L, P3D" maxlength="20" />
+      </div>
+
+      <div class="filter-item">
+        <label class="filter-label" for="topK">최대 결과 수</label>
+        <select id="topK" class="filter-select">
+          <option value="10" selected>10건</option>
+          <option value="20">20건</option>
+          <option value="30">30건</option>
+          <option value="50">50건</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 대화 히스토리 -->
+    <div class="sidebar-history">
+      <p class="filter-section-label">최근 대화</p>
+      <ul class="history-list" id="historyList">
+        <!-- JS로 동적 생성 -->
+      </ul>
+    </div>
+
+    <!-- 사이드바 하단 -->
+    <div class="sidebar-bottom">
+      <a href="/" class="sidebar-nav-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        대시보드
+      </a>
+      <a href="/readworklog" class="sidebar-nav-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        작업이력
+      </a>
+    </div>
+  </aside>
+
+  <!-- 사이드바 토글 (모바일) -->
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="메뉴">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <!-- ── 메인 채팅 영역 ───────────────────────────────────── -->
+  <main class="chat-main" id="chatMain">
+
+    <!-- 웰컴 화면 (대화 전) -->
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-content">
+        <div class="welcome-icon">⚙</div>
+        <h1 class="welcome-title">작업이력 AI</h1>
+        <p class="welcome-sub">설비 종류를 선택하고 질문하면<br>관련 작업이력을 찾아 분석해드립니다.</p>
+
+        <!-- 예시 질문 카드 -->
+        <div class="example-cards">
+          <button class="example-card" data-q="MFC 교체는 어떻게 진행하나요?">
+            <span class="ex-icon">🔧</span>
+            <span class="ex-text">MFC 교체는 어떻게 진행하나요?</span>
+          </button>
+          <button class="example-card" data-q="Pirani Gauge 교체 원인과 결과를 알려줘">
+            <span class="ex-icon">📊</span>
+            <span class="ex-text">Pirani Gauge 교체 원인과 결과는?</span>
+          </button>
+          <button class="example-card" data-q="최근에 척(Chuck) 관련 작업을 누가 했나요?">
+            <span class="ex-icon">👤</span>
+            <span class="ex-text">최근 척(Chuck) 작업을 누가 했나요?</span>
+          </button>
+          <button class="example-card" data-q="He Leak 발생 시 어떻게 조치하나요?">
+            <span class="ex-icon">💨</span>
+            <span class="ex-text">He Leak 발생 시 조치 방법은?</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 대화 메시지 목록 -->
+    <div class="messages-wrap" id="messagesWrap">
+      <!-- JS로 동적 생성 -->
+    </div>
+
+    <!-- 에러 토스트 -->
+    <div id="errorToast" class="error-toast hidden">
+      <span class="toast-icon">⚠️</span>
+      <span id="errorMsg"></span>
+      <button id="toastClose" class="toast-close">✕</button>
+    </div>
+
+    <!-- 입력 영역 -->
+    <div class="input-area">
+      <div class="input-box-wrap">
         <textarea
           id="question"
-          class="question-input"
-          rows="3"
+          class="input-box"
+          rows="1"
           maxlength="500"
-          placeholder="예) SUPRA XP에서 MFC 교체는 어떻게 하나요?&#10;예) EPE3801 설비에서 척 작업을 누가, 언제 했나요?&#10;예) Pirani Gauge 교체 원인과 결과를 알려줘"
+          placeholder="작업이력에 대해 질문하세요... (Enter 전송 / Shift+Enter 줄바꿈)"
         ></textarea>
-        <div class="char-counter"><span id="charCount">0</span> / 500</div>
-      </div>
-
-      <!-- 필터 행 1 -->
-      <div class="filter-row">
-
-        <!-- 설비 종류 (필수) -->
-        <div class="field-wrap field-required">
-          <label class="field-label" for="equipmentType">
-            <span class="field-icon">🔧</span> 설비 종류
-            <span class="required-tag">필수</span>
-          </label>
-          <select id="equipmentType" class="filter-select">
-            <option value="">-- 설비 종류 선택 --</option>
-          </select>
-        </div>
-
-        <!-- 지역 (Site) -->
-        <div class="field-wrap">
-          <label class="field-label" for="site">
-            <span class="field-icon">📍</span> 지역 (Site)
-          </label>
-          <select id="site" class="filter-select">
-            <option value="">전체</option>
-          </select>
-        </div>
-
-        <!-- 라인 -->
-        <div class="field-wrap">
-          <label class="field-label" for="line">
-            <span class="field-icon">📌</span> 라인 (Line)
-          </label>
-          <input type="text" id="line" class="filter-input" placeholder="예) 17L, P3D (선택)" maxlength="20" />
-        </div>
-
-      </div>
-
-      <!-- 필터 행 2 -->
-      <div class="filter-row">
-
-        <div class="field-wrap">
-          <label class="field-label" for="dateFrom">
-            <span class="field-icon">📅</span> 시작일
-          </label>
-          <input type="date" id="dateFrom" class="filter-input" />
-        </div>
-
-        <div class="field-wrap">
-          <label class="field-label" for="dateTo">
-            <span class="field-icon">📅</span> 종료일
-          </label>
-          <input type="date" id="dateTo" class="filter-input" />
-        </div>
-
-        <div class="field-wrap field-sm">
-          <label class="field-label" for="topK">
-            <span class="field-icon">🔢</span> 최대 결과 수
-          </label>
-          <select id="topK" class="filter-select">
-            <option value="10" selected>10건</option>
-            <option value="20">20건</option>
-            <option value="30">30건</option>
-            <option value="50">50건</option>
-          </select>
-        </div>
-
-      </div>
-
-      <!-- 실행 -->
-      <div class="action-row">
-        <button id="btnSearch" class="btn-primary" type="button">
-          <span class="btn-icon">🔍</span>
-          <span id="btnLabel">AI 검색</span>
+        <button id="btnSearch" class="btn-send" type="button" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21L23 12 2 3v7l15 2-15 2v7z"/></svg>
         </button>
-        <button id="btnReset" class="btn-ghost" type="button">초기화</button>
-        <span class="action-hint">Shift+Enter로 줄바꿈 / Enter로 검색</span>
       </div>
-
-    </section>
-
-    <!-- 로딩 -->
-    <div id="loading" class="loading-wrap hidden">
-      <div class="loader-orbit">
-        <div class="orbit-ring"></div>
-        <div class="orbit-dot"></div>
-      </div>
-      <p class="loading-text">AI가 작업이력을 분석하고 있습니다<span class="dot-ani">...</span></p>
+      <p class="input-hint">
+        <span id="filterStatus" class="filter-status filter-missing">설비 종류를 선택해주세요</span>
+        <span class="char-count"><span id="charCount">0</span>/500</span>
+      </p>
     </div>
 
-    <!-- 에러 -->
-    <div id="errorBox" class="error-box hidden">
-      <span class="err-icon">⚠️</span>
-      <span id="errorMsg" class="err-text"></span>
-    </div>
+  </main>
 
-    <!-- 결과 영역 -->
-    <section id="resultSection" class="result-section hidden">
-
-      <!-- AI 요약 카드 -->
-      <div class="summary-card">
-        <div class="summary-head">
-          <div class="summary-badge-wrap">
-            <span class="summary-badge">✦ AI 분석 결과</span>
-            <span id="resultMeta" class="result-meta"></span>
-          </div>
-          <button id="btnCopySummary" class="btn-copy" title="요약 복사">📋 복사</button>
-        </div>
-        <pre id="summaryText" class="summary-body"></pre>
-      </div>
-
-      <!-- 상세 목록 -->
-      <div class="list-header">
-        <h2 class="list-title">상세 작업이력 목록</h2>
-        <span id="resultCount" class="count-badge"></span>
-      </div>
-
-      <div id="noResult" class="no-result hidden">
-        <div class="no-result-icon">📋</div>
-        <p class="no-result-msg">조건에 맞는 작업이력이 없습니다.</p>
-        <p class="no-result-sub">설비 종류나 날짜 범위를 조정해 보세요.</p>
-      </div>
-
-      <div class="table-wrap" id="tableWrap">
-        <table class="result-table" id="resultTable">
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>작업명</th>
-              <th>설비명</th>
-              <th>Site / Line</th>
-              <th>작업자</th>
-              <th>원인</th>
-              <th>작업 내용</th>
-              <th>결과</th>
-              <th>유형</th>
-              <th>소요시간</th>
-            </tr>
-          </thead>
-          <tbody id="resultBody"></tbody>
-        </table>
-      </div>
-
-    </section>
-
-  </main><!-- /.main-wrap -->
-
-  <!-- 상세 모달 -->
+  <!-- ── 상세 모달 ─────────────────────────────────────────── -->
   <div id="detailModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-box">
       <div class="modal-head">
