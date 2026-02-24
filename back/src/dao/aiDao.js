@@ -293,3 +293,36 @@ exports.getRagChunkCandidates = async ({ equipment_type, site, limit = 50 }) => 
     connection.release();
   }
 };
+
+
+// ─────────────────────────────────────────────────────────────
+// 6. work_log 복수 행 ID 기반 조회 (RAG 검색 후 원본 데이터 복원용)
+// ─────────────────────────────────────────────────────────────
+/**
+ * @param {number[]} ids  work_log.id 배열
+ * @returns {Promise<Array>}
+ */
+exports.getWorkLogsByIds = async (ids) => {
+  if (!ids || ids.length === 0) return [];
+  const connection = await pool.getConnection(async (conn) => conn);
+  try {
+    const placeholders = ids.map(() => '?').join(', ');
+    const [rows] = await connection.query(
+      `SELECT
+        id, task_name, task_date, task_man, \`group\`, site, \`line\`,
+        equipment_type, equipment_name, warranty, status,
+        task_description, task_cause, task_result,
+        SOP, tsguide, work_type, work_type2,
+        setup_item, maint_item, transfer_item,
+        task_duration, start_time, end_time, task_maint
+       FROM work_log
+       WHERE id IN (${placeholders})`,
+      ids
+    );
+    return rows;
+  } catch (err) {
+    throw new Error(`work_log ID 조회 오류: ${err.message}`);
+  } finally {
+    connection.release();
+  }
+};

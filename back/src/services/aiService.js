@@ -330,73 +330,168 @@ exports.query = async ({ question, equipment_type, site, line, date_from, date_t
 
 
 // ─────────────────────────────────────────────────────────────
-// 메인: RAG 검색 + GPT 요약 (Phase 2 - 향후 활성화)
+// 메인: RAG 검색 + GPT 요약 (Phase 2)
+// buildEmbeddings.js 실행 후 사용 가능
 // ─────────────────────────────────────────────────────────────
 /**
  * 벡터 유사도 기반 검색 + GPT 답변
- * TODO: work_log_rag_chunks 임베딩이 저장된 후 활성화
- * @param {Object} p - query()와 동일한 파라미터
+ * @param {Object} p
+ * @param {string} p.question
+ * @param {string} p.equipment_type  필수
+ * @param {string} [p.site]
+ * @param {string} [p.line]
+ * @param {number} [p.top_k=10]
+ * @param {string} [p.userAgent]
  */
-exports.ragQuery = async ({ question, equipment_type, site, line, date_from, date_to, top_k = 10, userAgent }) => {
+exports.ragQuery = async ({ question, equipment_type, site, line, top_k = 10, userAgent }) => {
   const t0 = Date.now();
 
   // 1. 질문 임베딩 생성
   const questionEmbedding = await createEmbedding(question);
 
-  // 2. DB에서 후보 청크 조회 (pre-filter)
-  const chunks = await aiDao.getRagChunkCandidates({ equipment_type, site, limit: 80 });
+  // 2. DB에서 후보 청크 조회 (equipment_type + site로 pre-filter)
+  //    후보를 넉넉하게 뽑은 뒤 코사인 유사도로 최종 선별
+  const CANDIDATE_LIMIT = Math.max(top_k * 8, 80);
+  const chunks = await aiDao.getRagChunkCandidates({
+    equipment_type,
+    site,
+    limit: CANDIDATE_LIMIT,
+  });
 
-  // 3. 코사인 유사도 계산 + 정렬
+  if (chunks.length === 0) {
+    const summary = `[${equipment_type}] 설비에 대한 임베딩 데이터가 없습니다.\n` +
+      `buildEmbeddings.js 스크립트를 실행하여 임베딩을 먼저 생성해주세요.`;
+    return {
+      summary,
+      results: [],
+      meta: { question, equipment_type, result_count: 0, elapsed_ms: Date.now() - t0, ai_model: `rag+${MODELS.chat}` },
+    };
+  }
+
+  // 3. 코사인 유사도 계산 + 내림차순 정렬 + top_k 선별
   const scored = chunks
     .filter((c) => c.embedding_json)
     .map((c) => {
       try {
-        const vec  = JSON.parse(c.embedding_json);
-        const sim  = cosineSimilarity(questionEmbedding, vec);
-        return { ...c, similarity: sim };
+        const vec = JSON.parse(c.embedding_json);
+        return { ...c, similarity: cosineSimilarity(questionEmbedding, vec) };
       } catch {
         return { ...c, similarity: 0 };
       }
     })
+    .filter((c) => c.similarity > 0.3)   // 유사도 0.3 미만 제거 (노이즈 필터)
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, top_k);
 
-  // 4. work_log_id 기반으로 실제 행 조회
-  // TODO: work_log_id IN (...) 쿼리 추가 필요
-  // 현재는 chunk_text를 context로 직접 사용
-  const contextText = scored.map((c, i) =>
-    `[${i + 1}] (유사도: ${c.similarity.toFixed(3)}) ${c.chunk_text}`
-  ).join('\n\n');
+  // 4. 선별된 work_log_id로 원본 work_log 행 조회 (formatRow 적용)
+  const workLogIds      = [...new Set(scored.map((c) => c.work_log_id))];
+  const rawWorkLogRows  = await aiDao.getWorkLogsByIds(workLogIds);
 
-  // 5. GPT 답변
-  let summary = '검색 결과 없음';
-  if (scored.length > 0) {
-    try {
-      const completion = await openai.chat.completions.create({
-        model:       MODELS.chat,
-        max_tokens:  1200,
-        temperature: 0.2,
-        messages: [
-          { role: 'system', content: '반도체 장비 유지보수 전문 AI입니다. 주어진 작업이력 데이터를 기반으로 질문에 한국어로 답변하세요. 데이터에 없는 내용은 추측하지 마세요.' },
-          { role: 'user',   content: `작업이력:\n${contextText}\n\n질문: ${question}` },
-        ],
-      });
-      summary = completion.choices?.[0]?.message?.content?.trim() || '응답 생성 실패';
-    } catch (err) {
-      summary = `RAG 검색 결과 ${scored.length}건 (GPT 오류: ${err.message})`;
-    }
-  }
+  // work_log_id → row 매핑 (순서 보존을 위해 Map 사용)
+  const rowMap = new Map(rawWorkLogRows.map((r) => [r.id, r]));
+
+  // scored 순서(유사도 내림차순) 유지하면서 work_log 원본 데이터 병합
+  const results = scored
+    .map((chunk) => {
+      const wlRow = rowMap.get(chunk.work_log_id);
+      if (!wlRow) return null;
+      return {
+        ...formatRow(wlRow),
+        similarity:   chunk.similarity,
+        chunk_text:   chunk.chunk_text,  // 검색에 사용된 텍스트
+      };
+    })
+    .filter(Boolean);
+
+  // 5. GPT 답변 생성 (chunk_text를 context로, 원본 데이터를 보조로 사용)
+  const filters = { equipment_type, site, line };
+  const summary = results.length > 0
+    ? await generateRagGptAnswer(question, results, scored, filters)
+    : `[${equipment_type}] 유사도 임계값(0.3) 이상의 관련 작업이력이 없습니다. 질문을 더 구체적으로 입력해 보세요.`;
 
   const elapsed_ms = Date.now() - t0;
 
+  // 6. 로그 저장
   aiDao.saveQueryLog({
-    question, equipment_type, site, line, date_from, date_to, top_k,
-    result_count: scored.length, response_text: summary,
-    used_embedding: 1, ai_model: `rag+${MODELS.chat}`, elapsed_ms, user_agent: userAgent,
+    question, equipment_type, site, line,
+    date_from: null, date_to: null, top_k,
+    result_count: results.length,
+    response_text: summary,
+    used_embedding: 1,
+    ai_model: `rag+${MODELS.chat}`,
+    elapsed_ms,
+    user_agent: userAgent,
   }).catch(() => {});
 
-  return { summary, results: scored, meta: { question, equipment_type, result_count: scored.length, elapsed_ms, ai_model: `rag+${MODELS.chat}` } };
+  return {
+    summary,
+    results,
+    meta: {
+      question,
+      equipment_type,
+      site:         site || null,
+      line:         line || null,
+      top_k,
+      result_count: results.length,
+      elapsed_ms,
+      ai_model:     `rag+${MODELS.chat}`,
+      candidate_count: chunks.length,  // 후보군 수 (디버깅용)
+    },
+  };
 };
+
+// ─────────────────────────────────────────────────────────────
+// RAG 전용 GPT 답변 생성
+// chunk_text(임베딩 대상 텍스트)를 context로 활용
+// ─────────────────────────────────────────────────────────────
+async function generateRagGptAnswer(question, results, scored, filters) {
+  // context: 유사도 순서대로, chunk_text 기반 (이미 임베딩에 최적화된 텍스트)
+  const contextItems = results.slice(0, 12).map((r, i) => {
+    const sim = scored[i]?.similarity?.toFixed(3) || '?';
+    return [
+      `[${i + 1}] 유사도:${sim} | 날짜:${r.task_date} | 설비:${r.equipment_name}(${r.equipment_type}) | Site:${r.site}`,
+      `    작업자(main):${r.task_man_main} / (support):${r.task_man_support}`,
+      `    원인: ${r.task_cause}`,
+      `    작업내용: ${r.task_description}`,
+      `    결과: ${r.task_result}`,
+    ].join('\n');
+  });
+
+  const systemPrompt = `당신은 반도체 장비 유지보수 작업이력 전문 AI 어시스턴트입니다.
+아래 작업이력 데이터(벡터 유사도 검색 결과)를 참고하여 사용자 질문에 한국어로 명확하고 실용적인 답변을 제공하세요.
+
+규칙:
+1. 데이터에 없는 정보는 절대 지어내지 마세요.
+2. task_description(작업내용)이 작업 방법의 핵심 정보입니다. 우선 활용하세요.
+3. 작업자의 (main)은 메인 수행자, (support)는 보조입니다.
+4. 유사도가 높은 항목을 우선 참고하세요.
+5. 날짜, 설비명, 작업자를 명시하여 구체적으로 답변하세요.
+6. 답변은 실무에 바로 활용 가능한 형태로 작성하세요.`;
+
+  const userPrompt = `## 벡터 검색 작업이력 (유사도 내림차순, 총 ${results.length}건)
+적용 필터: 설비종류=${filters.equipment_type}, 지역=${filters.site || '전체'}, 라인=${filters.line || '전체'}
+
+${contextItems.join('\n\n')}
+
+## 사용자 질문
+${question}`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model:       MODELS.chat,
+      max_tokens:  1200,
+      temperature: 0.2,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt   },
+      ],
+    });
+    return completion.choices?.[0]?.message?.content?.trim() || '응답 생성 실패';
+  } catch (err) {
+    console.error('[aiService.generateRagGptAnswer] OpenAI 오류:', err.message);
+    return buildFallbackSummary(question, results, filters);
+  }
+}
 
 
 // ─────────────────────────────────────────────────────────────
