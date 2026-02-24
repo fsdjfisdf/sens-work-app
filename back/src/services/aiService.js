@@ -171,7 +171,11 @@ async function generateGptAnswer(question, results, filters) {
 2. task_description 컬럼이 작업 방법의 핵심 정보입니다. 우선 활용하세요.
 3. 작업자 정보에서 (main)은 해당 작업의 메인 수행자, (support)는 보조 수행자입니다.
 4. 날짜, 설비명, 작업자를 명시하여 구체적으로 답변하세요.
-5. 답변은 간결하고 실무에 바로 활용할 수 있는 형태로 작성하세요.`;
+5. 답변은 간결하고 실무에 바로 활용할 수 있는 형태로 작성하세요.
+6. 답변 형식은 기본적으로 줄글(문단형)로 작성하세요.
+7. 1), 2), 3) 번호 목록이나 불릿 목록(-, •) 중심으로 나열하지 마세요.
+8. 여러 작업 사례를 설명할 때는 날짜/설비/작업자를 문장 안에 자연스럽게 이어서 서술하세요.
+9. 마지막에 실무 포인트가 있으면 한두 문장으로 덧붙이되, 목록 형태로 정리하지 마세요.`;
 
   const userPrompt = `## 작업이력 데이터 (총 ${results.length}건 중 최대 15건)
 적용된 필터: 설비종류=${filters.equipment_type}, 지역=${filters.site || '전체'}, 라인=${filters.line || '전체'}${filters.date_from ? `, 기간=${filters.date_from}~${filters.date_to}` : ''}
@@ -484,7 +488,10 @@ async function generateRagGptAnswer(question, results, scored, filters) {
 3. 작업자의 (main)은 메인 수행자, (support)는 보조입니다.
 4. 유사도가 높은 항목을 우선 참고하세요.
 5. 날짜, 설비명, 작업자를 명시하여 구체적으로 답변하세요.
-6. 답변은 실무에 바로 활용 가능한 형태로 작성하세요.`;
+6. 답변 형식은 기본적으로 줄글(문단형)로 작성하세요.
+7. 1), 2), 3) 번호 목록이나 불릿 목록(-, •) 중심으로 나열하지 마세요.
+8. 여러 작업 사례를 설명할 때는 날짜/설비/작업자를 문장 안에 자연스럽게 이어서 서술하세요.
+9. 마지막에 실무 포인트가 있으면 한두 문장으로 덧붙이되, 목록 형태로 정리하지 마세요.`;
 
   const userPrompt = `## 벡터 검색 작업이력 (유사도 내림차순, 총 ${results.length}건)
 적용 필터: 설비종류=${filters.equipment_type}, 지역=${filters.site || '전체'}, 라인=${filters.line || '전체'}
