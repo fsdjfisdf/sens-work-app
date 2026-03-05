@@ -63,17 +63,52 @@ exports.getEngineerLevel = async (name) => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Work Code 자동 생성
+// Work Code 자동 생성  (Node.js 구현 — MySQL 함수 collation 충돌 우회)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * wl_code_rule 테이블에서 매핑 코드를 조회하는 헬퍼.
+ * BINARY() 캐스팅으로 collation 충돌 완전 방지.
+ */
+async function lookupCode(conn, ruleType, sourceValue) {
+  const [rows] = await conn.query(
+    `SELECT code_value FROM wl_code_rule
+     WHERE rule_type = ? AND BINARY source_value = BINARY ?
+     LIMIT 1`,
+    [ruleType, sourceValue]
+  );
+  return rows[0]?.code_value ?? null;
+}
+
+/**
+ * work_code 생성 (Node.js 버전)
+ * conn: 이미 열린 커넥션 (트랜잭션 내부에서도 재사용 가능)
+ */
+async function buildWorkCode(conn, eqType, site, wtype, wtype2, taskDate, taskName) {
+  const vEq   = (await lookupCode(conn, 'EQ_TYPE',   eqType))  ?? 'Z';
+  const vSite = (await lookupCode(conn, 'SITE',       site))    ?? '6';
+  const vWt   = (await lookupCode(conn, 'WORK_TYPE',  wtype))   ?? 'X';
+  const vWt2  = (await lookupCode(conn, 'WORK_TYPE2', wtype2))  ?? 'X';
+
+  const prefix = `${vEq}${vSite}${vWt}${vWt2}`;
+
+  // 동일 날짜 + 동일 prefix 건수로 SEQ 결정
+  const [seqRows] = await conn.query(
+    `SELECT COUNT(*) + 1 AS seq FROM wl_event
+     WHERE task_date = ? AND LEFT(work_code, 4) = ?`,
+    [taskDate, prefix]
+  );
+  const seq = seqRows[0]?.seq ?? 1;
+
+  const suffix = (taskName || '').substring(0, 20);
+  return `${prefix}${seq} ${vWt2} - ${suffix}`;
+}
+
+/** 외부에서 단독 호출 가능한 exports (컨트롤러 등에서 필요 시 사용) */
 exports.generateWorkCode = async (eqType, site, wtype, wtype2, taskDate, taskName) => {
   const conn = await pool.getConnection(async c => c);
   try {
-    const [rows] = await conn.query(
-      `SELECT fn_gen_work_code(?, ?, ?, ?, ?, ?) AS code`,
-      [eqType, site, wtype, wtype2, taskDate, taskName]
-    );
-    return rows[0]?.code || null;
+    return await buildWorkCode(conn, eqType, site, wtype, wtype2, taskDate, taskName);
   } finally { conn.release(); }
 };
 
@@ -145,16 +180,13 @@ exports.submitEvent = async (payload) => {
   try {
     await conn.beginTransaction();
 
-    // 1) work_code 생성
-    const [codeRows] = await conn.query(
-      `SELECT fn_gen_work_code(?, ?, ?, ?, ?, ?) AS code`,
-      [
-        payload.equipment_type, payload.site,
-        payload.work_type, payload.work_type2,
-        payload.task_date, payload.task_name
-      ]
+    // 1) work_code 생성 (Node.js 구현 — collation 충돌 없음)
+    const workCode = await buildWorkCode(
+      conn,
+      payload.equipment_type, payload.site,
+      payload.work_type, payload.work_type2,
+      payload.task_date, payload.task_name
     );
-    const workCode = codeRows[0]?.code || null;
 
     // 2) wl_event INSERT (approval_status = 'DRAFT' → 제출 시 PENDING)
     const [evRes] = await conn.query(
