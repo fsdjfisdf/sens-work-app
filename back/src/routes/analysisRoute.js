@@ -27,4 +27,5 @@ router.get('/forecast',    normalizeTokenHeader, jwtMiddleware, analysisControll
 router.get('/headcount',   normalizeTokenHeader, jwtMiddleware, analysisController.getHeadcount);
 router.get('/hiring-plan', normalizeTokenHeader, jwtMiddleware, analysisController.getHiringPlan);
 
+
 module.exports = router;

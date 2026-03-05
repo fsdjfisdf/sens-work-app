@@ -181,6 +181,9 @@ app.use('/api/ts-rag', tsRagRoute);
 const setupBoardRoute = require('../src/routes/setupBoardRoute');
 app.use('/api', setupBoardRoute);
 
+const wlRoute = require('../src/routes/wlRoute');
+app.use('/wl', wlRoute);
+
 
 
 
