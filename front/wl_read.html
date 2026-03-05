@@ -1,166 +1,70 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Worklog 조회 — S-WORKS</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="./css/worklog.css">
   <link rel="stylesheet" href="./css/wl_read.css">
 </head>
 <body>
+<nav><div class="inner"><div class="nav-container">
+  <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
+  <div class="sign-container unsigned"><a href="./signin.html" class="sign-link">Login</a></div>
+  <div class="sign-container signed hidden"><button class="menu-btn"><div class="menu-icon"><span></span><span></span><span></span></div></button></div>
+</div></div>
+<div class="menu-bar"><div class="menu-bar-content">
+  <a href="./user_info.html" class="menu-item">SECM</a>
+  <a href="./worklog_new.html" class="menu-item">Create Worklog</a>
+  <a href="./wl_approval.html" class="menu-item">Worklog Approval</a>
+  <a href="./wl_read.html" class="menu-item active-page">Worklog 조회</a>
+  <a href="./equipment_signal.html" class="menu-item">Equipment</a>
+  <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
+  <a href="./PCI.html" class="menu-item">PCI</a>
+  <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
+  <a href="./business.html" class="menu-item">Business trip</a>
+  <a href="./report.html" class="menu-item">국내 출장 보고서</a>
+  <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
+  <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
+  <a href="./update.html" class="menu-item">Update</a>
+  <button id="sign-out" class="menu-item">Logout</button>
+</div></div></nav>
 
-<nav>
-  <div class="inner">
-    <div class="nav-container">
-      <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-      <div class="sign-container unsigned">
-        <a href="./signin.html" class="sign-link">Login</a>
-      </div>
-      <div class="sign-container signed hidden">
-        <button class="menu-btn">
-          <div class="menu-icon"><span></span><span></span><span></span></div>
-        </button>
-      </div>
+<main><section id="read-section"><div class="inner">
+  <div class="page-header"><h2>Worklog 조회</h2><p>승인된 작업 이력을 조회하고 필요 시 수정하거나 엑셀로 추출합니다.</p></div>
+  <div class="filter-card">
+    <div class="filter-grid">
+      <div class="filter-field"><label>기간 (From)</label><input type="date" id="f-date-from"></div>
+      <div class="filter-field"><label>기간 (To)</label><input type="date" id="f-date-to"></div>
+      <div class="filter-field"><label>Group</label><select id="f-group"><option value="">전체</option><option value="PEE1">PEE1</option><option value="PEE2">PEE2</option><option value="PSKH">PSKH</option></select></div>
+      <div class="filter-field"><label>Site</label><select id="f-site"><option value="">전체</option><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option></select></div>
+      <div class="filter-field"><label>Work Type</label><select id="f-work-type"><option value="">전체</option><option value="SET UP">SET UP</option><option value="MAINT">MAINT</option><option value="RELOCATION">RELOCATION</option></select></div>
+      <div class="filter-field"><label>EQ Name</label><input type="text" id="f-eq-name" placeholder="설비명"></div>
+      <div class="filter-field"><label>작업자</label><input type="text" id="f-worker" placeholder="작업자명"></div>
+      <div class="filter-field"><label>Title</label><input type="text" id="f-title" placeholder="제목"></div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn primary" id="btn-search"><i class="fas fa-search" style="margin-right:5px;"></i>검색</button>
+      <button class="btn" id="btn-reset"><i class="fas fa-undo" style="margin-right:5px;"></i>초기화</button>
+      <button class="btn btn-excel" id="btn-excel"><i class="fas fa-file-excel" style="margin-right:5px;"></i>Excel</button>
     </div>
   </div>
-  <div class="menu-bar">
-    <div class="menu-bar-content">
-      <a href="./user_info.html"        class="menu-item">SECM</a>
-      <a href="./worklog_new.html"      class="menu-item">Create Worklog</a>
-      <a href="./wl_approval.html"      class="menu-item">Worklog Approval</a>
-      <a href="./wl_read.html"          class="menu-item active-page">Worklog 조회</a>
-      <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-      <a href="./Setupeq.html"          class="menu-item">Setup EQ</a>
-      <a href="./PCI.html"              class="menu-item">PCI</a>
-      <a href="./CHECKLIST.html"        class="menu-item">Checklist</a>
-      <a href="./business.html"         class="menu-item">Business trip</a>
-      <a href="./report.html"           class="menu-item">국내 출장 보고서</a>
-      <a href="./workload.html"         class="menu-item admin-only">Operating Rate</a>
-      <a href="./analysis.html"         class="menu-item admin-only">Predicted Workers</a>
-      <a href="./update.html"           class="menu-item">Update</a>
-      <button id="sign-out"             class="menu-item">Logout</button>
-    </div>
-  </div>
-</nav>
+  <div class="result-summary" id="result-summary" style="display:none;"><span id="result-count">0</span>건 조회됨</div>
+  <div class="table-wrapper" id="table-wrapper"><div class="empty-state"><i class="fas fa-search" style="font-size:28px;color:var(--muted);"></i><p>검색 조건을 입력 후 검색하세요.</p></div></div>
+</div></section></main>
 
-<main>
-  <section id="read-section">
-    <div class="inner">
+<footer><div class="inner"><p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출·복사·배포를 금지합니다.</p></div></footer>
 
-      <div class="page-header">
-        <h2>Worklog 조회</h2>
-        <p>승인된 작업 이력을 조회하고 필요 시 수정하거나 엑셀로 추출합니다.</p>
-      </div>
-
-      <!-- 필터 -->
-      <div class="filter-card">
-        <div class="filter-grid">
-          <div class="filter-field">
-            <label>기간 (From)</label>
-            <input type="date" id="f-date-from">
-          </div>
-          <div class="filter-field">
-            <label>기간 (To)</label>
-            <input type="date" id="f-date-to">
-          </div>
-          <div class="filter-field">
-            <label>Group</label>
-            <select id="f-group">
-              <option value="">전체</option>
-              <option value="PEE1">PEE1</option>
-              <option value="PEE2">PEE2</option>
-              <option value="PSKH">PSKH</option>
-            </select>
-          </div>
-          <div class="filter-field">
-            <label>Site</label>
-            <select id="f-site">
-              <option value="">전체</option>
-              <option value="PT">PT</option><option value="HS">HS</option>
-              <option value="IC">IC</option><option value="CJ">CJ</option>
-              <option value="PSKH">PSKH</option>
-            </select>
-          </div>
-          <div class="filter-field">
-            <label>Work Type</label>
-            <select id="f-work-type">
-              <option value="">전체</option>
-              <option value="SET UP">SET UP</option>
-              <option value="MAINT">MAINT</option>
-              <option value="RELOCATION">RELOCATION</option>
-            </select>
-          </div>
-          <div class="filter-field">
-            <label>EQ Name</label>
-            <input type="text" id="f-eq-name" placeholder="설비명 검색">
-          </div>
-          <div class="filter-field">
-            <label>작업자</label>
-            <input type="text" id="f-worker" placeholder="작업자명 검색">
-          </div>
-          <div class="filter-field">
-            <label>Title</label>
-            <input type="text" id="f-title" placeholder="작업 제목 검색">
-          </div>
-        </div>
-        <div class="filter-actions">
-          <button class="btn primary" id="btn-search">
-            <i class="fas fa-search" style="margin-right:5px;"></i>검색
-          </button>
-          <button class="btn" id="btn-reset">
-            <i class="fas fa-undo" style="margin-right:5px;"></i>초기화
-          </button>
-          <button class="btn btn-excel" id="btn-excel">
-            <i class="fas fa-file-excel" style="margin-right:5px;"></i>Excel 다운로드
-          </button>
-        </div>
-      </div>
-
-      <!-- 결과 요약 -->
-      <div class="result-summary" id="result-summary" style="display:none;">
-        <span id="result-count">0</span>건 조회됨
-        <span id="result-total" style="margin-left:12px;color:var(--muted);font-size:12px;"></span>
-      </div>
-
-      <!-- 결과 테이블 -->
-      <div class="table-wrapper" id="table-wrapper">
-        <div class="empty-state" id="initial-state">
-          <i class="fas fa-search" style="font-size:28px;color:var(--muted);"></i>
-          <p>조회 조건을 입력한 후 검색 버튼을 눌러주세요.</p>
-        </div>
-      </div>
-
-    </div>
-  </section>
-</main>
-
-<footer>
-  <div class="inner">
-    <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출·복사·배포를 금지합니다.</p>
-  </div>
-</footer>
-
-<!-- OVERLAY -->
 <div class="overlay" id="modal-overlay"></div>
 
-<!-- 상세/수정 모달 -->
 <div id="detail-modal" role="dialog" aria-modal="true">
   <div class="modal-header">
-    <div class="modal-header-left">
-      <div class="modal-work-code" id="m-work-code">—</div>
-      <div class="modal-title" id="m-title">—</div>
-    </div>
+    <div class="modal-header-left"><div class="modal-work-code" id="m-work-code">—</div><div class="modal-title" id="m-title">—</div></div>
     <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <button class="btn sm" id="btn-edit-toggle" style="display:none;">
-        <i class="fas fa-edit"></i> 수정
-      </button>
+      <button class="btn sm" id="btn-edit-toggle" style="display:none;"><i class="fas fa-edit"></i> 수정</button>
       <button class="modal-close-btn" id="modal-close" aria-label="닫기">×</button>
     </div>
   </div>
-
   <div class="modal-body">
-    <!-- 읽기 모드 -->
     <div id="view-mode">
       <div class="info-grid">
         <div class="info-cell"><div class="info-cell-label">Date</div><div class="info-cell-value" id="m-date">—</div></div>
@@ -176,68 +80,44 @@
         <div class="info-cell"><div class="info-cell-label">SOP / TS</div><div class="info-cell-value" id="m-sop">—</div></div>
         <div class="info-cell wide"><div class="info-cell-label">Status</div><div class="info-cell-value" id="m-status-text">—</div></div>
       </div>
-
-      <div class="detail-section">
-        <div class="detail-section-title"><i class="fas fa-users" style="font-size:10px;"></i> Workers</div>
-        <table class="worker-table">
-          <thead><tr><th>이름</th><th>역할</th><th>시작</th><th>종료</th><th>논타임</th><th>무브</th><th>실작업(분)</th></tr></thead>
-          <tbody id="m-workers-tbody"></tbody>
-        </table>
+      <div class="detail-section"><div class="detail-section-title"><i class="fas fa-users" style="font-size:10px;"></i> Workers</div>
+        <table class="worker-table"><thead><tr><th>이름</th><th>역할</th><th>시작</th><th>종료</th><th>논타임</th><th>무브</th><th>실작업(분)</th></tr></thead><tbody id="m-workers-tbody"></tbody></table>
       </div>
-
-      <div class="detail-section">
-        <div class="detail-section-title"><i class="fas fa-wrench" style="font-size:10px;"></i> Action</div>
-        <div class="detail-text-block" id="m-action">—</div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-title"><i class="fas fa-search" style="font-size:10px;"></i> Cause</div>
-        <div class="detail-text-block" id="m-cause">—</div>
-      </div>
-      <div class="detail-section">
-        <div class="detail-section-title"><i class="fas fa-check-circle" style="font-size:10px;"></i> Result</div>
-        <div class="detail-text-block" id="m-result">—</div>
-      </div>
+      <div class="detail-section"><div class="detail-section-title"><i class="fas fa-wrench" style="font-size:10px;"></i> Action</div><div class="detail-text-block" id="m-action">—</div></div>
+      <div class="detail-section"><div class="detail-section-title"><i class="fas fa-search" style="font-size:10px;"></i> Cause</div><div class="detail-text-block" id="m-cause">—</div></div>
+      <div class="detail-section"><div class="detail-section-title"><i class="fas fa-check-circle" style="font-size:10px;"></i> Result</div><div class="detail-text-block" id="m-result">—</div></div>
     </div>
-
-    <!-- 수정 모드 -->
     <div id="edit-mode" style="display:none;">
-      <div class="edit-fields">
-        <div class="edit-row"><label>TITLE</label><input type="text" id="e-title"></div>
-        <div class="edit-row"><label>STATUS</label><input type="text" id="e-status"></div>
-        <div class="edit-row"><label>ACTION</label><textarea id="e-action" rows="4"></textarea></div>
-        <div class="edit-row"><label>CAUSE</label><textarea id="e-cause" rows="3"></textarea></div>
-        <div class="edit-row"><label>RESULT</label><textarea id="e-result" rows="3"></textarea></div>
+      <div class="edit-grid">
+        <div class="e-field"><label>DATE</label><input type="date" id="e-date"></div>
+        <div class="e-field"><label>GROUP</label><select id="e-group"><option value="PEE1">PEE1</option><option value="PEE2">PEE2</option><option value="PSKH">PSKH</option></select></div>
+        <div class="e-field"><label>SITE</label><select id="e-site"><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option></select></div>
+        <div class="e-field"><label>LINE</label><input type="text" id="e-line"></div>
+        <div class="e-field"><label>EQ NAME</label><input type="text" id="e-eq-name"></div>
+        <div class="e-field"><label>EQ TYPE</label><input type="text" id="e-eq-type"></div>
+        <div class="e-field"><label>WARRANTY</label><select id="e-warranty"><option value="WI">WI</option><option value="WO">WO</option></select></div>
+        <div class="e-field"><label>WORK TYPE</label><select id="e-work-type"><option value="SET UP">SET UP</option><option value="MAINT">MAINT</option><option value="RELOCATION">RELOCATION</option></select></div>
+        <div class="e-field"><label>WORK SORT</label><select id="e-work-type2"><option value="">—</option><option value="REP">REP</option><option value="ADJ">ADJ</option><option value="CLN">CLN</option><option value="MON">MON</option></select></div>
+        <div class="e-field"><label>REWORK</label><select id="e-rework"><option value="0">N</option><option value="1">Y</option></select></div>
+        <div class="e-field wide"><label>TITLE</label><input type="text" id="e-title"></div>
+        <div class="e-field wide"><label>STATUS</label><input type="text" id="e-status"></div>
+        <div class="e-field wide"><label>ACTION</label><textarea id="e-action" rows="4"></textarea></div>
+        <div class="e-field wide"><label>CAUSE</label><textarea id="e-cause" rows="3"></textarea></div>
+        <div class="e-field wide"><label>RESULT</label><textarea id="e-result" rows="3"></textarea></div>
       </div>
-
-      <!-- 작업자 수정 -->
-      <div class="detail-section">
-        <div class="detail-section-title"><i class="fas fa-users" style="font-size:10px;"></i> Workers 수정</div>
+      <div class="detail-section"><div class="detail-section-title"><i class="fas fa-users" style="font-size:10px;"></i> Workers 수정</div>
         <div id="e-workers-list"></div>
-        <button type="button" class="btn-add" id="e-add-worker">작업자 추가 +</button>
+        <button type="button" class="btn-add-sm" id="e-add-worker">작업자 추가 +</button>
       </div>
-
-      <div class="action-buttons" style="margin-top:16px;">
-        <button class="btn" id="btn-edit-cancel">취소</button>
-        <button class="btn primary" id="btn-edit-save">
-          <i class="fas fa-save" style="margin-right:5px;"></i>저장
-        </button>
-      </div>
+      <div class="action-buttons"><button class="btn" id="btn-edit-cancel">취소</button><button class="btn primary" id="btn-edit-save"><i class="fas fa-save" style="margin-right:5px;"></i>저장</button></div>
     </div>
-
-    <!-- 결재 이력 -->
-    <div class="detail-section">
-      <div class="detail-section-title"><i class="fas fa-history" style="font-size:10px;"></i> 결재 이력</div>
-      <div class="approval-history" id="m-history"></div>
-    </div>
+    <div class="detail-section"><div class="detail-section-title"><i class="fas fa-history" style="font-size:10px;"></i> 결재 이력</div><div class="approval-history" id="m-history"></div></div>
   </div>
 </div>
 
-<!-- 토스트 -->
 <div id="toast-root"></div>
-
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="./js/wl_read.js"></script>
-
 </body>
 </html>
