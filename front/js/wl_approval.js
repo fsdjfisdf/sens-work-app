@@ -5,8 +5,9 @@
 
 const API = 'http://3.37.73.151:3001';
 
-/* ── 인증 토큰 파싱 ── */
-const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+/* ── 인증 토큰 파싱
+     worklog_new.js와 동일하게 'x-access-token' 키 사용 ── */
+const token = localStorage.getItem('x-access-token') || sessionStorage.getItem('x-access-token') || '';
 const me = (() => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
@@ -14,8 +15,8 @@ const me = (() => {
   } catch { return null; }
 })();
 
-/* ── Axios 기본 헤더 ── */
-axios.defaults.headers.common['Authorization'] = token ? `Bearer ${token}` : '';
+/* ── Axios 기본 헤더 (jwtMiddleware는 x-access-token 헤더를 읽음) ── */
+axios.defaults.headers.common['x-access-token'] = token || '';
 
 /* ── 결재자 MAP (wlController.js와 동일하게 유지) ── */
 const APPROVER_MAP = {
@@ -48,8 +49,8 @@ function initNav() {
     document.querySelectorAll('.sign-container.signed').forEach(el => el.classList.remove('hidden'));
   }
   document.getElementById('sign-out')?.addEventListener('click', () => {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
+    localStorage.removeItem('x-access-token');
+    sessionStorage.removeItem('x-access-token');
     location.href = './signin.html';
   });
 }
