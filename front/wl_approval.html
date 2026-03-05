@@ -30,7 +30,7 @@
       <a href="./user_info.html"        class="menu-item">SECM</a>
       <a href="./worklog_new.html"      class="menu-item">Create Worklog</a>
       <a href="./wl_approval.html"      class="menu-item active-page">Worklog Approval</a>
-      <a href="./loadworklog.html"      class="menu-item">Load Worklog</a>
+      <a href="./wl_read.html"          class="menu-item">Worklog 조회</a>
       <a href="./equipment_signal.html" class="menu-item">Equipment</a>
       <a href="./Setupeq.html"          class="menu-item">Setup EQ</a>
       <a href="./PCI.html"              class="menu-item">PCI</a>
@@ -138,10 +138,6 @@
         <div class="info-cell-label">Date</div>
         <div class="info-cell-value" id="m-date">—</div>
       </div>
-      <div class="info-cell span2">
-        <div class="info-cell-label">Time</div>
-        <div class="info-cell-value" id="m-time">—</div>
-      </div>
       <div class="info-cell">
         <div class="info-cell-label">EMS</div>
         <div class="info-cell-value" id="m-ems">—</div>
@@ -182,6 +178,11 @@
         <div class="info-cell-label">SOP / TS Guide</div>
         <div class="info-cell-value" id="m-sop">—</div>
       </div>
+      <!-- Rework 표시 (요청 2) -->
+      <div class="info-cell">
+        <div class="info-cell-label">Rework</div>
+        <div class="info-cell-value" id="m-rework">—</div>
+      </div>
       <div class="info-cell wide">
         <div class="info-cell-label">Status</div>
         <div class="info-cell-value" id="m-status-text">—</div>
@@ -203,7 +204,7 @@
       </div>
       <table class="worker-table">
         <thead>
-          <tr><th>이름</th><th>역할</th><th>실작업(분)</th></tr>
+          <tr><th>이름</th><th>역할</th><th>시작</th><th>종료</th><th>논타임</th><th>무브</th><th>실작업(분)</th></tr>
         </thead>
         <tbody id="m-workers-tbody"></tbody>
       </table>
@@ -255,11 +256,36 @@
       </div>
     </div>
 
-    <!-- 재제출 (내 반려건만) -->
-    <div class="resubmit-wrapper" id="resubmit-wrapper" style="display:none;">
-      <button class="btn-resubmit" id="btn-resubmit">
-        <i class="fas fa-redo"></i> 재제출
-      </button>
+    <!-- 수정 + 재제출 (내 반려건 — 요청 5) -->
+    <div class="edit-resubmit-wrapper" id="edit-resubmit-wrapper" style="display:none;">
+      <div class="action-area-title">수정 후 재제출</div>
+      <div class="edit-fields">
+        <div class="edit-row">
+          <label>ACTION</label>
+          <textarea id="edit-action" rows="3"></textarea>
+        </div>
+        <div class="edit-row">
+          <label>CAUSE</label>
+          <textarea id="edit-cause" rows="3"></textarea>
+        </div>
+        <div class="edit-row">
+          <label>RESULT</label>
+          <textarea id="edit-result" rows="3"></textarea>
+        </div>
+        <div class="edit-row">
+          <label>STATUS</label>
+          <input type="text" id="edit-status">
+        </div>
+        <div class="edit-row">
+          <label>TITLE</label>
+          <input type="text" id="edit-title">
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-resubmit" id="btn-resubmit">
+          <i class="fas fa-redo"></i> 수정 후 재제출
+        </button>
+      </div>
     </div>
 
     <!-- 권한 없음 안내 -->
@@ -274,7 +300,6 @@
 <!-- 토스트 -->
 <div id="toast-root"></div>
 
-<!-- Scripts — site.js 제거 (approval 페이지에서 불필요) -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="./js/wl_approval.js"></script>
 

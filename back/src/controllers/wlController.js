@@ -1,13 +1,14 @@
 /**
  * wlController.js
  * 새 스키마(wl_event 등)용 컨트롤러
- * 기존 workLogController.js 구조·결재 로직 그대로 유지
+ * [추가] listEvents, updateEvent, exportExcel
+ * [수정] resubmit — workers 포함 재제출 지원
  */
 'use strict';
 
 const wlDao = require('../dao/wl_dao');
 
-// ─── 결재자 매핑 (기존과 동일) ────────────────────────────────────────────────
+// ─── 결재자 매핑 ────────────────────────────────────────────────────────────
 const APPROVER_MAP = {
   'PEE1:PT': ['조지훈', '전대영', '손석현'],
   'PEE1:HS': ['진덕장', '한정훈', '정대환'],
@@ -26,7 +27,6 @@ const isApprover = (user, g, s) => {
 
 
 // ─── 결재자 목록 ─────────────────────────────────────────────────────────────
-// GET /wl/approvers?group=PEE1&site=PT
 exports.getApprovers = async (req, res) => {
   const { group: g = '', site: s = '' } = req.query;
   if (!g) return res.status(400).json({ error: 'group is required' });
@@ -46,8 +46,7 @@ exports.getApprovers = async (req, res) => {
 };
 
 
-// ─── 작업 항목 마스터 (equipment_type별) ──────────────────────────────────────
-// GET /wl/master/work-items?equipment_type=SUPRA+N
+// ─── 마스터 데이터 ───────────────────────────────────────────────────────────
 exports.getWorkItemMaster = async (req, res) => {
   const { equipment_type } = req.query;
   if (!equipment_type) return res.status(400).json({ error: 'equipment_type required' });
@@ -59,7 +58,6 @@ exports.getWorkItemMaster = async (req, res) => {
   }
 };
 
-// GET /wl/master/parts?equipment_type=SUPRA+N
 exports.getPartMaster = async (req, res) => {
   const { equipment_type } = req.query;
   if (!equipment_type) return res.status(400).json({ error: 'equipment_type required' });
@@ -73,16 +71,12 @@ exports.getPartMaster = async (req, res) => {
 
 
 // ─── 제출 (PENDING 등록) ─────────────────────────────────────────────────────
-// POST /wl/submit
 exports.submit = async (req, res) => {
   try {
     const body = req.body || {};
-
-    // 제출자 정보 (JWT → req.user)
     const createdBy     = req.user?.userIdx   || null;
     const submitterName = req.user?.nickname  || body.submitter_name || 'unknown';
 
-    // 필수값 검증
     const required = ['task_name', 'task_date', 'equipment_type', 'equipment_name',
                       'work_type', 'site', 'group'];
     for (const f of required) {
@@ -91,7 +85,6 @@ exports.submit = async (req, res) => {
       }
     }
 
-    // workers 배열 검증: 제출자 본인이 포함되어야 함
     const workers = Array.isArray(body.workers) ? body.workers : [];
     if (!workers.length) {
       return res.status(400).json({ error: '작업자(workers)를 최소 1명 이상 입력하세요.' });
@@ -102,7 +95,6 @@ exports.submit = async (req, res) => {
     }
 
     const payload = {
-      // wl_event
       task_name:        body.task_name,
       task_date:        body.task_date,
       country:          body.country || 'KR',
@@ -131,8 +123,6 @@ exports.submit = async (req, res) => {
       rework_ref_id:    body.rework_ref_id || null,
       created_by:       createdBy,
       submitter_name:   submitterName,
-
-      // 관련 배열
       workers,
       workItems: Array.isArray(body.workItems) ? body.workItems : [],
       parts:     Array.isArray(body.parts)     ? body.parts     : [],
@@ -148,7 +138,6 @@ exports.submit = async (req, res) => {
 
 
 // ─── 대기 목록 ───────────────────────────────────────────────────────────────
-// GET /wl/pending?group=&site=&mine=1
 exports.listPending = async (req, res) => {
   try {
     const g    = req.query.group || '';
@@ -164,7 +153,6 @@ exports.listPending = async (req, res) => {
 
 
 // ─── 단건 조회 ────────────────────────────────────────────────────────────────
-// GET /wl/event/:id
 exports.getOne = async (req, res) => {
   try {
     const row = await wlDao.getEventById(req.params.id);
@@ -176,8 +164,7 @@ exports.getOne = async (req, res) => {
 };
 
 
-// ─── PATCH (결재자/제출자 수정) ───────────────────────────────────────────────
-// PATCH /wl/event/:id
+// ─── PATCH (결재자/제출자 수정 — 단순) ────────────────────────────────────────
 exports.patchOne = async (req, res) => {
   try {
     const id  = req.params.id;
@@ -204,7 +191,6 @@ exports.patchOne = async (req, res) => {
 
 
 // ─── 내 반려 목록 ─────────────────────────────────────────────────────────────
-// GET /wl/rejected/mine
 exports.listMyRejected = async (req, res) => {
   try {
     const userIdx = req.user?.userIdx;
@@ -217,8 +203,7 @@ exports.listMyRejected = async (req, res) => {
 };
 
 
-// ─── 재제출 ───────────────────────────────────────────────────────────────────
-// POST /wl/event/:id/resubmit
+// ─── 재제출 (workers 포함) ────────────────────────────────────────────────────
 exports.resubmit = async (req, res) => {
   try {
     const id  = req.params.id;
@@ -236,7 +221,8 @@ exports.resubmit = async (req, res) => {
       id,
       req.user?.userIdx,
       req.user?.nickname,
-      req.body?.patch || {}
+      req.body?.patch || {},
+      req.body?.workers || null
     );
     res.json({ message: '재제출 완료' });
   } catch (e) {
@@ -247,7 +233,6 @@ exports.resubmit = async (req, res) => {
 
 
 // ─── 승인 ─────────────────────────────────────────────────────────────────────
-// POST /wl/event/:id/approve
 exports.approve = async (req, res) => {
   try {
     const id  = req.params.id;
@@ -275,7 +260,6 @@ exports.approve = async (req, res) => {
 
 
 // ─── 반려 ─────────────────────────────────────────────────────────────────────
-// POST /wl/event/:id/reject
 exports.reject = async (req, res) => {
   try {
     const id  = req.params.id;
@@ -291,5 +275,85 @@ exports.reject = async (req, res) => {
     res.json({ message: '반려 처리 완료' });
   } catch (err) {
     res.status(500).json({ error: '반려 처리 오류' });
+  }
+};
+
+
+// ─── [추가] 전체 이벤트 조회 (wl_read 페이지용) ──────────────────────────────
+// GET /wl/events?group=&site=&date_from=&date_to=&status=APPROVED&limit=200&offset=0
+exports.listEvents = async (req, res) => {
+  try {
+    const filters = {
+      group:          req.query.group          || '',
+      site:           req.query.site           || '',
+      equipment_name: req.query.equipment_name || '',
+      work_type:      req.query.work_type      || '',
+      date_from:      req.query.date_from      || '',
+      date_to:        req.query.date_to        || '',
+      task_name:      req.query.task_name      || '',
+      worker_name:    req.query.worker_name    || '',
+      status:         req.query.status         || 'APPROVED',
+      limit:          req.query.limit           || 200,
+      offset:         req.query.offset          || 0,
+    };
+    const result = await wlDao.listEvents(filters);
+    res.json(result);
+  } catch (e) {
+    console.error('listEvents error:', e);
+    res.status(500).json({ error: '조회 오류' });
+  }
+};
+
+
+// ─── [추가] 승인된 이벤트 수정 ────────────────────────────────────────────────
+// PUT /wl/event/:id
+exports.updateEvent = async (req, res) => {
+  try {
+    const id  = req.params.id;
+    const row = await wlDao.getEventById(id);
+    if (!row) return res.status(404).json({ error: '없음' });
+
+    // 수정 권한: 결재자 또는 admin
+    const canApprove = isApprover(req.user, row.group, row.site);
+    if (!canApprove && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: '수정 권한이 없습니다. 결재자 또는 관리자만 수정할 수 있습니다.' });
+    }
+
+    const { patch = {}, workers = null } = req.body || {};
+
+    await wlDao.updateApprovedEvent(
+      id,
+      patch,
+      workers,
+      req.user?.userIdx,
+      req.user?.nickname
+    );
+    res.json({ message: '수정 완료' });
+  } catch (e) {
+    console.error('updateEvent error:', e);
+    res.status(500).json({ error: '수정 오류' });
+  }
+};
+
+
+// ─── [추가] 엑셀 데이터 조회 ──────────────────────────────────────────────────
+// GET /wl/export/excel?group=&site=&date_from=&date_to=
+exports.exportExcel = async (req, res) => {
+  try {
+    const filters = {
+      group:          req.query.group          || '',
+      site:           req.query.site           || '',
+      equipment_name: req.query.equipment_name || '',
+      work_type:      req.query.work_type      || '',
+      date_from:      req.query.date_from      || '',
+      date_to:        req.query.date_to        || '',
+      worker_name:    req.query.worker_name    || '',
+      status:         req.query.status         || 'APPROVED',
+    };
+    const rows = await wlDao.listEventsForExcel(filters);
+    res.json(rows);
+  } catch (e) {
+    console.error('exportExcel error:', e);
+    res.status(500).json({ error: '엑셀 데이터 조회 오류' });
   }
 };

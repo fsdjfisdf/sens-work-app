@@ -1,18 +1,20 @@
 /**
  * worklog_new.js
- * 새 스키마(wl_event / wl_worker / wl_work_item / wl_part) 대응 프론트엔드
- * 기존 worklog.js의 스텝·EMS·유효성·PASTE·미리보기 흐름을 그대로 계승
+ * [수정] 작업자별 개인 시간 (START, END, NONE, MOVE) — 공통 시간 제거, 4단계
+ * [수정] join('\n') — <br> 대신 줄바꿈 문자로 저장
  */
+'use strict';
 
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const API = 'http://3.37.73.151:3001'; // 서버 주소
+  const API = 'http://3.37.73.151:3001';
 
-  /* ── 공통 헬퍼 ──────────────────────────────────────────────────────── */
+  /* ── 헬퍼 ── */
   const $  = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const getV = id => (document.getElementById(id)?.value || '').trim();
 
+  /* ── 로그인 체크 ── */
   function checkLogin() {
     if (!localStorage.getItem('x-access-token')) {
       alert('로그인이 필요합니다.');
@@ -27,25 +29,40 @@ document.addEventListener('DOMContentLoaded', async () => {
     return { 'Content-Type': 'application/json', 'x-access-token': localStorage.getItem('x-access-token') };
   }
 
+  /* ── 오늘 날짜 ── */
   function getTodayDate() {
     const t = new Date();
     return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
   }
-
   const taskDateEl = document.getElementById('task_date');
   if (taskDateEl && !taskDateEl.value) taskDateEl.value = getTodayDate();
 
-  /* ── Enter 키 제출 방지 ─────────────────────────────────────────────── */
+  /* ── Enter 제출 방지 ── */
   $('#worklogForm')?.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.activeElement?.tagName !== 'TEXTAREA') e.preventDefault();
   });
 
+  /* ── NAV 초기화 ── */
+  const me = (() => {
+    try { return JSON.parse(atob(localStorage.getItem('x-access-token').split('.')[1])); } catch { return null; }
+  })();
+  if (me) {
+    $$('.sign-container.unsigned').forEach(el => el.classList.add('hidden'));
+    $$('.sign-container.signed').forEach(el => el.classList.remove('hidden'));
+    if (me.role !== 'admin') $$('.admin-only').forEach(el => el.style.display = 'none');
+  }
+  $('#sign-out')?.addEventListener('click', () => {
+    localStorage.removeItem('x-access-token');
+    location.replace('./signin.html');
+  });
+  $('.menu-btn')?.addEventListener('click', () => $('.menu-bar')?.classList.toggle('open'));
 
-  /* ══════════════════════════════════════════════════════════════════════
-     STEP 네비게이션
-  ══════════════════════════════════════════════════════════════════════ */
+
+  /* ══════════════════════════════════════════
+     STEP 네비게이션 (4단계)
+  ══════════════════════════════════════════ */
   let currentStep = 1;
-  const TOTAL_STEPS = 5;
+  const TOTAL_STEPS = 4;
 
   function goStep(n) {
     const cur = $(`.form-step[data-step="${currentStep}"]`);
@@ -55,278 +72,190 @@ document.addEventListener('DOMContentLoaded', async () => {
     nxt.classList.add('active');
     currentStep = n;
     updateStepIndicator();
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-
   function updateStepIndicator() {
     $$('.step-dot').forEach(dot => {
       const t = Number(dot.dataset.target);
       dot.classList.toggle('active',    t === currentStep);
       dot.classList.toggle('completed', t < currentStep);
     });
+    $$('.step-line').forEach((line, i) => {
+      line.classList.toggle('done', i + 1 < currentStep);
+    });
   }
-
   $$('.next-step').forEach(btn => btn.addEventListener('click', () => {
     if (validateStep(currentStep)) goStep(currentStep + 1);
   }));
   $$('.prev-step').forEach(btn => btn.addEventListener('click', () => goStep(currentStep - 1)));
 
 
-  /* ══════════════════════════════════════════════════════════════════════
+  /* ══════════════════════════════════════════
      TOAST
-  ══════════════════════════════════════════════════════════════════════ */
-  function showToast(type, title, msg) {
-    let root = document.getElementById('toast-root');
-    if (!root) {
-      root = document.createElement('div');
-      root.id = 'toast-root';
-      Object.assign(root.style, { position:'fixed', inset:'0', pointerEvents:'none', zIndex:'9999' });
-      document.body.appendChild(root);
-    }
-    const box = document.createElement('div');
-    box.className = `toast ${type}`;
-    box.style.pointerEvents = 'auto';
-    box.innerHTML = `<div class="toast-head"><span class="badge">${type==='error'?'오류':type==='warn'?'안내':'성공'}</span> ${title||''}</div><div class="toast-body">${msg||''}</div>`;
-    root.appendChild(box);
-    setTimeout(() => box.remove(), 5200);
+  ══════════════════════════════════════════ */
+  function showToast(type, msg) {
+    const root = document.getElementById('toast-root');
+    if (!root) return;
+    const el = document.createElement('div');
+    el.className = `toast ${type === 'error' ? 'danger' : type}`;
+    el.textContent = msg;
+    root.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
   }
 
 
-  /* ══════════════════════════════════════════════════════════════════════
-     EMS 자동 권고 (기존 로직 그대로)
-  ══════════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     EMS 자동 권고
+  ══════════════════════════════════════════ */
   let emsManualOverride = false;
   const emsHint = document.getElementById('ems-hint');
 
   function recommendEms() {
-    const warranty = getV('warranty');
-    if (!warranty || warranty === 'SELECT') return null;
-    return warranty === 'WO' ? 1 : 0;
+    const w = getV('warranty');
+    if (!w || w === 'SELECT') return null;
+    return w === 'WO' ? 1 : 0;
   }
-
   function applyEmsRecommend(force = false) {
     const rec = recommendEms();
-    if (rec === null) { emsHint && (emsHint.textContent = '권고: -'); return; }
-    emsHint && (emsHint.textContent = `권고: ${rec === 1 ? '유상' : '무상'}`);
+    if (rec === null) { if (emsHint) emsHint.textContent = '권고: -'; return; }
+    if (emsHint) emsHint.textContent = `권고: ${rec === 1 ? '유상' : '무상'}`;
     if (!emsManualOverride || force) {
       const radio = document.querySelector(`input[name="emsChoice"][value="${rec}"]`);
       if (radio) radio.checked = true;
     }
   }
-
   document.getElementById('warranty')?.addEventListener('change', () => { emsManualOverride = false; applyEmsRecommend(); });
   $$('input[name="emsChoice"]').forEach(r => r.addEventListener('change', () => { emsManualOverride = true; }));
   document.getElementById('ems-auto-btn')?.addEventListener('click', () => { emsManualOverride = false; applyEmsRecommend(true); });
-
   function currentEms() {
     const checked = document.querySelector('input[name="emsChoice"]:checked');
     return checked ? Number(checked.value) : null;
   }
 
 
-  /* ══════════════════════════════════════════════════════════════════════
-     Step 2 — 동적 표시 / 마스터 데이터 로드
-  ══════════════════════════════════════════════════════════════════════ */
-  let workItemMaster = [];  // { id, item_name }
-  let partMaster     = [];  // { id, part_name }
-
-  // 선택된 항목들 (배열로 관리)
-  const selectedWorkItems = []; // { master_id?, item_name_free?, label }
-  const selectedParts     = []; // { master_id?, part_name_free?, qty, label }
-
-  async function loadMasters(eqType) {
-    if (!eqType || eqType === 'SELECT') return;
-    try {
-      const [wi, p] = await Promise.all([
-        axios.get(`${API}/wl/master/work-items?equipment_type=${encodeURIComponent(eqType)}`, { headers: authHeaders() }),
-        axios.get(`${API}/wl/master/parts?equipment_type=${encodeURIComponent(eqType)}`,       { headers: authHeaders() }),
-      ]);
-      workItemMaster = wi.data.items || [];
-      partMaster     = p.data.parts  || [];
-      rebuildWorkItemSelect();
-      rebuildPartSelect();
-    } catch (e) {
-      console.warn('마스터 로드 실패:', e.message);
-    }
-  }
-
-  function rebuildWorkItemSelect() {
-    const sel = document.getElementById('work-item-select');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">-- 항목 선택 --</option>';
-    workItemMaster.forEach(i => {
-      const opt = document.createElement('option');
-      opt.value = i.id;
-      opt.textContent = i.item_name;
-      sel.appendChild(opt);
-    });
-  }
-
-  function rebuildPartSelect() {
-    const sel = document.getElementById('part-select');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">-- 파트 선택 --</option>';
-    partMaster.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.part_name;
-      sel.appendChild(opt);
-    });
-  }
-
-  // EQ TYPE 변경 → 마스터 로드
-  document.getElementById('equipment_type')?.addEventListener('change', async function() {
-    selectedWorkItems.length = 0;
-    selectedParts.length = 0;
-    renderChips('work-items-container', selectedWorkItems);
-    renderChips('parts-container', selectedParts);
-    await loadMasters(this.value);
+  /* ══════════════════════════════════════════
+     Step 2 — WORK TYPE
+  ══════════════════════════════════════════ */
+  document.getElementById('workType')?.addEventListener('change', function () {
+    const isSetup = this.value === 'SET UP' || this.value === 'RELOCATION';
+    const isMaint = this.value === 'MAINT';
+    document.getElementById('setup-item-row')?.classList.toggle('hidden', !isSetup);
+    document.getElementById('transfer-item-row')?.classList.toggle('hidden', !isMaint);
+    document.getElementById('worksort-row')?.classList.toggle('hidden', !isMaint);
   });
 
-  // WORK TYPE 변경 → 하위 옵션 표시/숨김
-  document.getElementById('work_type')?.addEventListener('change', function() {
-    const isSetup  = this.value === 'SET UP' || this.value === 'RELOCATION';
-    const isMaint  = this.value === 'MAINT';
 
-    toggleRow('setup-item-row',    isSetup);
-    toggleRow('work-type2-row',    isMaint);
-    toggleRow('work-items-row',    isMaint);
-    toggleRow('parts-row',         isMaint);
-  });
+  /* ══════════════════════════════════════════
+     Step 3 — 작업자 (개인별 시간 포함)
+  ══════════════════════════════════════════ */
 
-  function toggleRow(id, show) {
-    const el = document.getElementById(id);
+  function calcWorkerDuration(container) {
+    const s    = container.querySelector('.worker-start-time')?.value || '';
+    const e    = container.querySelector('.worker-end-time')?.value || '';
+    const none = Number(container.querySelector('.worker-none-time')?.value) || 0;
+    const move = Number(container.querySelector('.worker-move-time')?.value) || 0;
+    const el   = container.querySelector('.worker-calc-duration');
     if (!el) return;
-    el.classList.toggle('hidden', !show);
+    if (!s || !e) { el.textContent = '—'; return; }
+    const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const total = toMin(e) - toMin(s) - none - move;
+    el.textContent = total <= 0 ? '0분' : `${Math.floor(total / 60)}시간 ${total % 60}분`;
   }
 
-  /* 칩(태그) 렌더링 */
-  function renderChips(containerId, arr) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-    arr.forEach((item, idx) => {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.innerHTML = `${item.label} <button type="button" data-idx="${idx}">×</button>`;
-      chip.querySelector('button').addEventListener('click', () => {
-        arr.splice(idx, 1);
-        renderChips(containerId, arr);
-      });
-      container.appendChild(chip);
+  function bindWorkerTimeCalc(container) {
+    ['worker-start-time', 'worker-end-time', 'worker-none-time', 'worker-move-time'].forEach(cls => {
+      container.querySelector(`.${cls}`)?.addEventListener('input', () => calcWorkerDuration(container));
     });
   }
 
-  // 작업 항목 추가
-  document.getElementById('add-work-item')?.addEventListener('click', () => {
-    const sel = document.getElementById('work-item-select');
-    const id  = sel?.value;
-    if (!id) return;
-    const master = workItemMaster.find(i => String(i.id) === String(id));
-    if (!master) return;
-    if (selectedWorkItems.find(x => x.master_id === master.id)) return;
-    selectedWorkItems.push({ master_id: master.id, label: master.item_name });
-    renderChips('work-items-container', selectedWorkItems);
-    sel.value = '';
-  });
+  // 첫 번째 작업자 바인딩
+  const firstWorkerEl = $('.task-man-container');
+  if (firstWorkerEl) bindWorkerTimeCalc(firstWorkerEl);
 
-  document.getElementById('add-work-item-free')?.addEventListener('click', () => {
-    const val = document.getElementById('work-item-free')?.value.trim();
-    if (!val) return;
-    if (selectedWorkItems.find(x => x.item_name_free === val)) return;
-    selectedWorkItems.push({ item_name_free: val, label: val });
-    renderChips('work-items-container', selectedWorkItems);
-    document.getElementById('work-item-free').value = '';
-  });
-
-  // 파트 추가
-  document.getElementById('add-part')?.addEventListener('click', () => {
-    const sel = document.getElementById('part-select');
-    const id  = sel?.value;
-    if (!id) return;
-    const master = partMaster.find(p => String(p.id) === String(id));
-    if (!master) return;
-    if (selectedParts.find(x => x.master_id === master.id)) return;
-    selectedParts.push({ master_id: master.id, label: master.part_name, qty: 1 });
-    renderChips('parts-container', selectedParts);
-    sel.value = '';
-  });
-
-  document.getElementById('add-part-free')?.addEventListener('click', () => {
-    const val = document.getElementById('part-free')?.value.trim();
-    if (!val) return;
-    if (selectedParts.find(x => x.part_name_free === val)) return;
-    selectedParts.push({ part_name_free: val, label: val, qty: 1 });
-    renderChips('parts-container', selectedParts);
-    document.getElementById('part-free').value = '';
-  });
-
-
-  /* ══════════════════════════════════════════════════════════════════════
-     Step 3 — 작업자 추가/삭제
-  ══════════════════════════════════════════════════════════════════════ */
-  document.getElementById('add-worker')?.addEventListener('click', () => {
-    const container = document.getElementById('task-mans-container');
-    const addBtn    = document.getElementById('add-worker');
+  function createWorkerRow(name = '', role = 'main') {
     const div = document.createElement('div');
     div.className = 'task-man-container';
     div.innerHTML = `
-      <input type="text" class="task-man-input" placeholder="이름" required>
-      <select class="task-man-role">
-        <option value="main">main</option>
-        <option value="support">support</option>
-      </select>
-      <button type="button" class="btn-remove remove-worker">−</button>
+      <div class="worker-main-row">
+        <input type="text" class="task-man-input" placeholder="이름" value="${name.replace(/"/g,'&quot;')}" required>
+        <select class="task-man-role">
+          <option value="main"${role === 'main' ? ' selected' : ''}>main</option>
+          <option value="support"${role === 'support' ? ' selected' : ''}>support</option>
+        </select>
+        <button type="button" class="btn-remove remove-worker">−</button>
+      </div>
+      <div class="worker-time-row">
+        <div>
+          <label>START</label>
+          <input type="time" class="worker-start-time">
+        </div>
+        <div>
+          <label>END</label>
+          <input type="time" class="worker-end-time">
+        </div>
+        <div>
+          <label>NONE(분)</label>
+          <input type="number" class="worker-none-time" min="0" value="0">
+        </div>
+        <div>
+          <label>MOVE(분)</label>
+          <input type="number" class="worker-move-time" min="0" value="0">
+        </div>
+      </div>
+      <div class="worker-duration-preview">
+        실 작업: <span class="worker-calc-duration">—</span>
+      </div>
     `;
-    div.querySelector('.remove-worker').addEventListener('click', () => div.remove());
-    container.insertBefore(div, addBtn);
-    updateFirstWorkerRemoveBtn();
-  });
+    div.querySelector('.remove-worker').addEventListener('click', () => {
+      div.remove();
+      updateWorkerRemoveBtns();
+    });
+    bindWorkerTimeCalc(div);
+    return div;
+  }
 
-  function updateFirstWorkerRemoveBtn() {
+  function updateWorkerRemoveBtns() {
     const btns = $$('.remove-worker');
-    btns.forEach((b, i) => { b.disabled = i === 0 && btns.length === 1; });
+    btns.forEach((b, i) => { b.disabled = (i === 0 && btns.length === 1); });
   }
 
-  $('#task-mans-container')?.addEventListener('click', e => {
-    if (e.target.classList.contains('remove-worker')) {
-      e.target.closest('.task-man-container')?.remove();
-      updateFirstWorkerRemoveBtn();
-    }
+  document.getElementById('add-worker')?.addEventListener('click', () => {
+    const container = document.getElementById('task-mans-container');
+    const bulkArea  = container.querySelector('.worker-bulk-actions');
+    container.insertBefore(createWorkerRow(), bulkArea);
+    updateWorkerRemoveBtns();
+  });
+
+  // 시간 전체 복사: 첫 번째 작업자의 시간을 나머지에 복사
+  document.getElementById('copy-time-all')?.addEventListener('click', () => {
+    const containers = $$('.task-man-container');
+    if (containers.length < 2) return;
+    const src = containers[0];
+    const sVal = src.querySelector('.worker-start-time')?.value || '';
+    const eVal = src.querySelector('.worker-end-time')?.value || '';
+    const nVal = src.querySelector('.worker-none-time')?.value || '0';
+    const mVal = src.querySelector('.worker-move-time')?.value || '0';
+    containers.slice(1).forEach(c => {
+      c.querySelector('.worker-start-time').value = sVal;
+      c.querySelector('.worker-end-time').value = eVal;
+      c.querySelector('.worker-none-time').value = nVal;
+      c.querySelector('.worker-move-time').value = mVal;
+      calcWorkerDuration(c);
+    });
+    showToast('success', '시간이 전체 복사되었습니다.');
   });
 
 
-  /* ══════════════════════════════════════════════════════════════════════
-     Step 4 — 실작업 시간 계산 미리보기
-  ══════════════════════════════════════════════════════════════════════ */
-  function calcAndShowDuration() {
-    const s = getV('start_time'), e = getV('end_time');
-    const none = Number(getV('noneTime')) || 0;
-    const move = Number(getV('moveTime')) || 0;
-    const el = document.getElementById('calc-duration');
-    if (!el) return;
-    if (!s || !e) { el.textContent = '—'; return; }
-    const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
-    const total = toMin(e) - toMin(s) - none - move;
-    if (total <= 0) { el.textContent = '0분'; return; }
-    el.textContent = `${Math.floor(total/60)}시간 ${total%60}분`;
-  }
-
-  ['start_time','end_time','noneTime','moveTime'].forEach(id =>
-    document.getElementById(id)?.addEventListener('input', calcAndShowDuration)
-  );
-
-
-  /* ══════════════════════════════════════════════════════════════════════
-     Step 5 — 동적 textarea (ACTION / CAUSE / RESULT)
-  ══════════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     Step 4 — 동적 textarea
+  ══════════════════════════════════════════ */
   function addDynField(containerId, itemClass, inputClass, removeClass, addBtnId) {
     document.getElementById(addBtnId)?.addEventListener('click', () => {
-      const c = document.getElementById(containerId);
+      const c   = document.getElementById(containerId);
       const btn = document.getElementById(addBtnId);
       const div = document.createElement('div');
       div.className = itemClass;
-      div.innerHTML = `<textarea class="${inputClass}"></textarea><button type="button" class="btn-remove ${removeClass}">−</button>`;
+      div.innerHTML = `<textarea class="${inputClass}" rows="3"></textarea><button type="button" class="btn-remove ${removeClass}">−</button>`;
       div.querySelector(`.${removeClass}`).addEventListener('click', () => div.remove());
       c.insertBefore(div, btn);
     });
@@ -336,38 +265,43 @@ document.addEventListener('DOMContentLoaded', async () => {
   addDynField('task-results-container',     'task-result-item','task-result-input','remove-result','add-result');
 
 
-  /* ══════════════════════════════════════════════════════════════════════
-     유효성 검사 (스텝별)
-  ══════════════════════════════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════
+     유효성 검사
+  ══════════════════════════════════════════ */
   function validateStep(step) {
     switch (step) {
       case 1: {
-        if (!getV('equipment_name')) { showToast('error','입력 오류','EQ NAME을 입력하세요.'); return false; }
-        if (getV('group') === 'SELECT') { showToast('error','입력 오류','GROUP을 선택하세요.'); return false; }
-        if (getV('site')  === 'SELECT') { showToast('error','입력 오류','SITE를 선택하세요.'); return false; }
-        if (getV('equipment_type') === 'SELECT') { showToast('error','입력 오류','EQ TYPE을 선택하세요.'); return false; }
-        if (getV('warranty') === 'SELECT') { showToast('error','입력 오류','WARRANTY를 선택하세요.'); return false; }
-        if (currentEms() === null) { showToast('error','입력 오류','EMS(유상/무상)를 선택하세요.'); return false; }
+        if (!getV('task_date')) { showToast('error','WORK DATE를 입력하세요.'); return false; }
+        if (!getV('equipment_name')) { showToast('error','EQ NAME을 입력하세요.'); return false; }
+        if (getV('group') === 'SELECT') { showToast('error','GROUP을 선택하세요.'); return false; }
+        if (getV('site')  === 'SELECT') { showToast('error','SITE를 선택하세요.'); return false; }
+        if (getV('equipment_type') === 'SELECT') { showToast('error','EQ TYPE을 선택하세요.'); return false; }
+        if (getV('warranty') === 'SELECT') { showToast('error','WARRANTY를 선택하세요.'); return false; }
+        if (currentEms() === null) { showToast('error','EMS(유상/무상)를 선택하세요.'); return false; }
         return true;
       }
       case 2: {
-        if (getV('work_type') === 'SELECT') { showToast('error','입력 오류','WORK TYPE을 선택하세요.'); return false; }
+        if (getV('workType') === 'SELECT') { showToast('error','WORK TYPE을 선택하세요.'); return false; }
         return true;
       }
       case 3: {
-        const names = $$('.task-man-input').map(el => el.value.trim()).filter(Boolean);
-        if (!names.length) { showToast('error','입력 오류','작업자를 1명 이상 입력하세요.'); return false; }
+        const containers = $$('.task-man-container');
+        const names = containers.map(c => c.querySelector('.task-man-input')?.value.trim()).filter(Boolean);
+        if (!names.length) { showToast('error','작업자를 1명 이상 입력하세요.'); return false; }
+        // 작업자별 시간 검증
+        for (const c of containers) {
+          const name = c.querySelector('.task-man-input')?.value.trim();
+          if (!name) continue;
+          const s = c.querySelector('.worker-start-time')?.value;
+          const e = c.querySelector('.worker-end-time')?.value;
+          if (!s || !e) { showToast('error', `${name}의 시작/종료 시간을 입력하세요.`); return false; }
+          const toSec = t => { const [h,m] = t.split(':').map(Number); return h*3600+m*60; };
+          if (toSec(e) <= toSec(s)) { showToast('error', `${name}의 종료 시간은 시작 시간보다 늦어야 합니다.`); return false; }
+        }
         return true;
       }
       case 4: {
-        const s = getV('start_time'), e = getV('end_time');
-        if (!s || !e) { showToast('error','시간 오류','시작/종료 시간을 입력하세요.'); return false; }
-        const toSec = t => { const [h,m] = t.split(':').map(Number); return h*3600+m*60; };
-        if (toSec(e) <= toSec(s)) { showToast('error','시간 오류','종료 시간은 시작 시간보다 늦어야 합니다.'); return false; }
-        return true;
-      }
-      case 5: {
-        if (!getV('task_name')) { showToast('error','입력 오류','TITLE을 입력하세요.'); return false; }
+        if (!getV('task_name')) { showToast('error','TITLE을 입력하세요.'); return false; }
         return true;
       }
       default: return true;
@@ -375,38 +309,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 
-  /* ══════════════════════════════════════════════════════════════════════
+  /* ══════════════════════════════════════════
      미리보기 모달
-  ══════════════════════════════════════════════════════════════════════ */
+  ══════════════════════════════════════════ */
   document.getElementById('preview-save')?.addEventListener('click', () => {
     for (let i = 1; i <= TOTAL_STEPS; i++) {
       if (!validateStep(i)) { goStep(i); return; }
     }
-    // 오전 11시 이전 + 오늘 날짜 경고 (기존 로직 유지)
     const now = new Date();
     if (now.getHours() < 11 && getV('task_date') === getTodayDate()) {
-      if (!confirm('현재 시간이 오전 11시 이전입니다. 오늘 작업이 맞습니까?')) { goStep(4); return; }
+      if (!confirm('현재 시간이 오전 11시 이전입니다. 오늘 작업이 맞습니까?')) { goStep(1); return; }
     }
 
-    // 미리보기 채우기
+    // 작업자 미리보기
     const workers = $$('.task-man-container').map(c => {
       const name = c.querySelector('.task-man-input')?.value.trim() || '';
       const role = c.querySelector('.task-man-role')?.value || 'main';
-      return `${name}(${role})`;
+      const ws   = c.querySelector('.worker-start-time')?.value || '';
+      const we   = c.querySelector('.worker-end-time')?.value || '';
+      const wn   = c.querySelector('.worker-none-time')?.value || '0';
+      const wm   = c.querySelector('.worker-move-time')?.value || '0';
+      return name ? `${name}(${role}) ${ws}~${we} 논:${wn}분 무브:${wm}분` : '';
     }).filter(Boolean);
 
-    document.getElementById('pv-date').textContent     = getV('task_date');
-    document.getElementById('pv-time').textContent     = `${getV('start_time')} ~ ${getV('end_time')} (none:${getV('noneTime')} move:${getV('moveTime')})`;
-    document.getElementById('pv-ems').textContent      = currentEms() === 1 ? '유상' : '무상';
-    document.getElementById('pv-site').textContent     = `${getV('site')} / ${getV('line')}`;
-    document.getElementById('pv-eqname').textContent   = getV('equipment_name');
-    document.getElementById('pv-eqtype').textContent   = getV('equipment_type');
-    document.getElementById('pv-worktype').textContent = `${getV('work_type')} / ${getV('work_type2') || getV('setup_item') || '-'}`;
-    document.getElementById('pv-workitems').textContent = selectedWorkItems.map(x=>x.label).join(', ') || '-';
-    document.getElementById('pv-parts').textContent    = selectedParts.map(x=>x.label).join(', ') || '-';
-    document.getElementById('pv-workers').textContent  = workers.join(', ');
-    document.getElementById('pv-title').textContent    = getV('task_name');
-    document.getElementById('pv-rework').textContent   = document.getElementById('is-rework')?.checked ? '✅ Rework' : '-';
+    document.getElementById('pv-date').textContent    = getV('task_date');
+    document.getElementById('pv-ems').textContent     = currentEms() === 1 ? '유상 (EMS)' : '무상 (WI)';
+    document.getElementById('pv-site').textContent    = `${getV('site')} / ${getV('line')}`;
+    document.getElementById('pv-eqname').textContent  = getV('equipment_name');
+    document.getElementById('pv-eqtype').textContent  = getV('equipment_type');
+    document.getElementById('pv-worktype').textContent= `${getV('workType')} / ${getV('workType2') || getV('additionalWorkType') || '-'}`;
+    document.getElementById('pv-workers').textContent = workers.join('\n');
+    document.getElementById('pv-title').textContent   = getV('task_name');
+    document.getElementById('pv-rework').textContent  = document.getElementById('is-rework')?.checked ? '✅ Rework' : '-';
 
     document.getElementById('modal-overlay').style.display = 'block';
     document.getElementById('preview-modal').style.display = 'block';
@@ -420,20 +354,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 
-  /* ══════════════════════════════════════════════════════════════════════
+  /* ══════════════════════════════════════════
      최종 제출
-  ══════════════════════════════════════════════════════════════════════ */
+  ══════════════════════════════════════════ */
   document.getElementById('confirm-save')?.addEventListener('click', async () => {
     closePreview();
 
+    // 작업자 배열 (개인별 시간 포함)
     const workers = $$('.task-man-container').map(c => ({
-      name: c.querySelector('.task-man-input')?.value.trim() || '',
-      role: c.querySelector('.task-man-role')?.value || 'main',
+      name:       c.querySelector('.task-man-input')?.value.trim() || '',
+      role:       c.querySelector('.task-man-role')?.value || 'main',
+      start_time: c.querySelector('.worker-start-time')?.value
+                    ? c.querySelector('.worker-start-time').value + ':00' : null,
+      end_time:   c.querySelector('.worker-end-time')?.value
+                    ? c.querySelector('.worker-end-time').value + ':00' : null,
+      none_time:  Number(c.querySelector('.worker-none-time')?.value) || 0,
+      move_time:  Number(c.querySelector('.worker-move-time')?.value) || 0,
     })).filter(w => w.name);
 
-    const task_description = $$('.task-description-input').map(el => el.value.trim()).filter(Boolean).join('<br>');
-    const task_cause       = $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('<br>');
-    const task_result      = $$('.task-result-input').map(el => el.value.trim()).filter(Boolean).join('<br>');
+    const task_description = $$('.task-description-input').map(el => el.value.trim()).filter(Boolean).join('\n');
+    const task_cause       = $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
+    const task_result      = $$('.task-result-input').map(el => el.value.trim()).filter(Boolean).join('\n');
 
     const payload = {
       task_name:        getV('task_name'),
@@ -446,23 +387,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       equipment_name:   getV('equipment_name'),
       warranty:         getV('warranty'),
       ems:              currentEms(),
-      work_type:        getV('work_type'),
-      work_type2:       getV('work_type2') || null,
-      setup_item:       getV('setup_item') || null,
+      work_type:        getV('workType'),
+      work_type2:       getV('workType2') || null,
+      setup_item:       getV('additionalWorkType') || null,
       status:           getV('status'),
       task_description,
       task_cause,
       task_result,
       SOP:              getV('SOP'),
       tsguide:          getV('tsguide'),
-      start_time:       getV('start_time') ? getV('start_time')+':00' : null,
-      end_time:         getV('end_time')   ? getV('end_time')  +':00' : null,
-      none_time:        Number(getV('noneTime')) || 0,
-      move_time:        Number(getV('moveTime')) || 0,
+      // 공통 시간은 비워서 보냄 (하위호환 — 서버에서 첫 작업자 시간으로 대체)
+      start_time:       null,
+      end_time:         null,
+      none_time:        0,
+      move_time:        0,
       is_rework:        document.getElementById('is-rework')?.checked ? 1 : 0,
       workers,
-      workItems: selectedWorkItems.map(({ label, ...rest }) => rest),
-      parts:     selectedParts.map(({ label, ...rest }) => rest),
     };
 
     try {
@@ -481,7 +421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (status === 400) title = '입력 오류';
       if (status === 403) title = '권한 없음';
       if (status >= 500)  title = '서버 오류';
-      showToast('error', title, msg);
+      showToast('error', `${title}: ${msg}`);
     }
   });
 
@@ -489,43 +429,131 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('modal-overlay').style.display = 'none';
     document.getElementById('result-modal').style.display  = 'none';
     $('#worklogForm')?.reset();
-    selectedWorkItems.length = 0;
-    selectedParts.length = 0;
-    renderChips('work-items-container', selectedWorkItems);
-    renderChips('parts-container', selectedParts);
     goStep(1);
   });
 
 
-  /* ══════════════════════════════════════════════════════════════════════
-     PASTE 팝업 — 기존 paste.js 와 연동 (파싱 후 폼에 값 세팅)
-     paste.js가 workers 배열을 채울 수 있도록 커스텀 이벤트 수신
-  ══════════════════════════════════════════════════════════════════════ */
-  document.addEventListener('worklog:paste', (e) => {
-    const { workers: pastedWorkers } = e.detail || {};
-    if (!Array.isArray(pastedWorkers)) return;
+  /* ══════════════════════════════════════════
+     PASTE 팝업
+  ══════════════════════════════════════════ */
+  const pasteTA = document.getElementById('paste-textarea');
+  document.getElementById('paste-button')?.addEventListener('click', () => {
+    document.getElementById('popup').style.display = 'block';
+  });
+  document.getElementById('paste-cancel')?.addEventListener('click', () => {
+    document.getElementById('popup').style.display = 'none';
+  });
+  pasteTA?.addEventListener('input', () => {
+    const lines = pasteTA.value.split('\n').length;
+    const chars = pasteTA.value.length;
+    document.getElementById('paste-lines').textContent = lines;
+    document.getElementById('paste-chars').textContent = chars;
+  });
+  document.getElementById('paste-submit')?.addEventListener('click', () => {
+    const text = pasteTA?.value || '';
+    if (!text.trim()) return;
+    parsePaste(text);
+    document.getElementById('popup').style.display = 'none';
+  });
 
-    const container = document.getElementById('task-mans-container');
-    const addBtn    = document.getElementById('add-worker');
-    // 기존 작업자 제거 (첫 번째만 남김)
-    $$('.task-man-container').slice(1).forEach(el => el.remove());
+  function parsePaste(raw) {
+    const lines = raw.split('\n');
+    let titleLine = '', statusLines = [], actionLines = [], causeLines = [], resultLines = [];
+    let workerLine = '', timeLine = '';
+    let section = '';
 
-    pastedWorkers.forEach((name, i) => {
-      if (i === 0) {
-        const first = $('.task-man-container');
-        if (first) first.querySelector('.task-man-input').value = name;
-        return;
+    for (const line of lines) {
+      const t = line.trim();
+      if (!t) continue;
+      if (!titleLine && !t.match(/^\d\)/)) { titleLine = t; continue; }
+      if (t.match(/^1\)\s*STATUS/i))  { section = 'status'; continue; }
+      if (t.match(/^2\)\s*ACTION/i))  { section = 'action'; continue; }
+      if (t.match(/^3\)\s*CAUSE/i))   { section = 'cause';  continue; }
+      if (t.match(/^4\)\s*RESULT/i))  { section = 'result'; continue; }
+      if (t.match(/^5\)/))             { section = '';       continue; }
+      if (t.match(/^작업자\s*[:：]/))  { workerLine = t; continue; }
+      if (t.match(/^작업\s*시간\s*[:：]/)) { timeLine = t; continue; }
+      if (section === 'status') statusLines.push(t);
+      else if (section === 'action') actionLines.push(t);
+      else if (section === 'cause')  causeLines.push(t);
+      else if (section === 'result') resultLines.push(t);
+    }
+
+    if (titleLine) { const el = document.getElementById('task_name'); if (el) el.value = titleLine; }
+    if (statusLines.length) { const el = document.getElementById('status'); if (el) el.value = statusLines.join('\n'); }
+
+    fillDynField('task-descriptions-container', '.task-description-input', 'task-desc-item', 'remove-desc', 'add-desc', actionLines);
+    fillDynField('task-causes-container', '.task-cause-input', 'task-cause-item', 'remove-cause', 'add-cause', causeLines);
+    fillDynField('task-results-container', '.task-result-input', 'task-result-item', 'remove-result', 'add-result', resultLines);
+
+    // 작업자 + 시간 파싱
+    let parsedStartTime = '', parsedEndTime = '', parsedNone = 0, parsedMove = 0;
+    if (timeLine) {
+      const m = timeLine.match(/(\d{1,2}:\d{2})\s*[-~]\s*(\d{1,2}:\d{2})/);
+      if (m) {
+        parsedStartTime = m[1].padStart(5, '0');
+        parsedEndTime   = m[2].padStart(5, '0');
       }
-      const div = document.createElement('div');
-      div.className = 'task-man-container';
-      div.innerHTML = `
-        <input type="text" class="task-man-input" value="${name}" required>
-        <select class="task-man-role"><option value="main">main</option><option value="support">support</option></select>
-        <button type="button" class="btn-remove remove-worker">−</button>`;
-      div.querySelector('.remove-worker').addEventListener('click', () => div.remove());
-      container.insertBefore(div, addBtn);
-    });
-    updateFirstWorkerRemoveBtn();
+      const noneM = timeLine.match(/논\s*(\d+)/);
+      const moveM = timeLine.match(/무브\s*(\d+)/);
+      if (noneM) parsedNone = Number(noneM[1]);
+      if (moveM) parsedMove = Number(moveM[1]);
+    }
+
+    if (workerLine) {
+      const names = workerLine.replace(/^작업자\s*[:：]\s*/,'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean);
+      const container = document.getElementById('task-mans-container');
+      const bulkArea  = container.querySelector('.worker-bulk-actions');
+      $$('.task-man-container').slice(1).forEach(el => el.remove());
+      if (names[0]) {
+        const first = $('.task-man-container');
+        if (first) {
+          first.querySelector('.task-man-input').value = names[0];
+          if (parsedStartTime) first.querySelector('.worker-start-time').value = parsedStartTime;
+          if (parsedEndTime) first.querySelector('.worker-end-time').value = parsedEndTime;
+          first.querySelector('.worker-none-time').value = parsedNone;
+          first.querySelector('.worker-move-time').value = parsedMove;
+          calcWorkerDuration(first);
+        }
+      }
+      names.slice(1).forEach(name => {
+        const row = createWorkerRow(name);
+        row.querySelector('.worker-start-time').value = parsedStartTime;
+        row.querySelector('.worker-end-time').value   = parsedEndTime;
+        row.querySelector('.worker-none-time').value  = parsedNone;
+        row.querySelector('.worker-move-time').value  = parsedMove;
+        container.insertBefore(row, bulkArea);
+        calcWorkerDuration(row);
+      });
+      updateWorkerRemoveBtns();
+    }
+
+    goStep(4);
+  }
+
+  function fillDynField(containerId, inputSel, itemClass, removeClass, addBtnId, lines) {
+    if (!lines.length) return;
+    const c      = document.getElementById(containerId);
+    const addBtn = document.getElementById(addBtnId);
+    c.querySelectorAll(`.${itemClass}`).forEach(el => el.remove());
+    const joined = lines.join('\n');
+    const div = document.createElement('div');
+    div.className = itemClass;
+    div.innerHTML = `<textarea class="${inputSel.replace('.','')}" rows="4"></textarea><button type="button" class="btn-remove ${removeClass}">−</button>`;
+    div.querySelector('textarea').value = joined;
+    div.querySelector(`.${removeClass}`).addEventListener('click', () => div.remove());
+    c.insertBefore(div, addBtn);
+  }
+
+
+  /* ══════════════════════════════════════════
+     설비 추가 모달
+  ══════════════════════════════════════════ */
+  document.querySelector('.equipment-add-modal-close')?.addEventListener('click', () => {
+    document.getElementById('equipment-add-modal')?.classList.remove('active');
+  });
+  document.getElementById('cancel-equipment-add')?.addEventListener('click', () => {
+    document.getElementById('equipment-add-modal')?.classList.remove('active');
   });
 
 });

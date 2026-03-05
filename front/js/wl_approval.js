@@ -1,24 +1,24 @@
 /* ================================================================
    wl_approval.js  —  Worklog Approval Page
+   [수정] 날짜 포맷 (요청 3)
+   [수정] BR → 줄바꿈 (요청 4)
+   [추가] Rework 표시 (요청 2)
+   [추가] 반려건 수정 후 재제출 (요청 5)
    ================================================================ */
 'use strict';
 
 const API = 'http://3.37.73.151:3001';
 
-/* ── 인증 토큰 파싱
-     worklog_new.js와 동일하게 'x-access-token' 키 사용 ── */
 const token = localStorage.getItem('x-access-token') || sessionStorage.getItem('x-access-token') || '';
 const me = (() => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload; // { userIdx, nickname, role }
+    return payload;
   } catch { return null; }
 })();
 
-/* ── Axios 기본 헤더 (jwtMiddleware는 x-access-token 헤더를 읽음) ── */
 axios.defaults.headers.common['x-access-token'] = token || '';
 
-/* ── 결재자 MAP (wlController.js와 동일하게 유지) ── */
 const APPROVER_MAP = {
   'PEE1:PT': ['조지훈', '전대영', '손석현'],
   'PEE1:HS': ['진덕장', '한정훈', '정대환'],
@@ -36,12 +36,39 @@ function isApprover(group, site) {
   return (APPROVER_MAP[key] || []).includes(me.nickname);
 }
 
-/* ── 상태 ── */
 let currentEventId = null;
 let currentEvent   = null;
 
+
+/* ── 날짜 포맷 헬퍼 (요청 3) ── */
+function fmtDate(raw) {
+  if (!raw) return '—';
+  // ISO 문자열 또는 "2026-03-05T00:00:00.000Z" → "2026-03-05"
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return String(raw);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+
+function fmtTime(raw) {
+  if (!raw) return '';
+  // "HH:MM:SS" → "HH:MM"
+  return String(raw).substring(0, 5);
+}
+
+/* ── 텍스트 출력 헬퍼 (요청 4) — <br> → 줄바꿈 처리 ── */
+function renderText(text) {
+  if (!text || text === '—') return '—';
+  // DB에 <br>로 저장된 레거시 데이터 처리
+  const cleaned = String(text).replace(/<br\s*\/?>/gi, '\n');
+  return cleaned;
+}
+
+
 /* ================================================================
-   NAV 초기화
+   NAV
    ================================================================ */
 function initNav() {
   if (me) {
@@ -54,6 +81,7 @@ function initNav() {
     location.href = './signin.html';
   });
 }
+
 
 /* ================================================================
    탭 전환
@@ -71,8 +99,9 @@ function initTabs() {
   });
 }
 
+
 /* ================================================================
-   필터 이벤트
+   필터
    ================================================================ */
 function initFilters() {
   ['filter-group', 'filter-site', 'filter-mine'].forEach(id => {
@@ -81,8 +110,9 @@ function initFilters() {
   document.getElementById('btn-refresh')?.addEventListener('click', loadPending);
 }
 
+
 /* ================================================================
-   결재 대기 목록 로드
+   대기 목록 로드
    ================================================================ */
 async function loadPending() {
   const list = document.getElementById('approval-list');
@@ -110,8 +140,9 @@ async function loadPending() {
   }
 }
 
+
 /* ================================================================
-   반려 목록 로드 (내 반려건)
+   반려 목록
    ================================================================ */
 async function loadRejected() {
   const list = document.getElementById('rejected-list');
@@ -128,6 +159,7 @@ async function loadRejected() {
     </div>`;
   }
 }
+
 
 /* ================================================================
    카드 렌더링
@@ -165,7 +197,7 @@ function renderList(container, rows, type) {
         <span class="card-status-badge ${statusClass[ev.approval_status] || ''}">${statusMap[ev.approval_status] || ev.approval_status}</span>
       </div>
       <div class="card-meta">
-        <span><i class="fas fa-calendar-alt"></i>${escHtml(ev.task_date || '')}</span>
+        <span><i class="fas fa-calendar-alt"></i>${fmtDate(ev.task_date)}</span>
         <span><i class="fas fa-map-marker-alt"></i>${escHtml(ev.group || '')} · ${escHtml(ev.site || '')}</span>
         <span><i class="fas fa-microchip"></i>${escHtml(ev.equipment_name || '')}</span>
         <span><i class="fas fa-tools"></i>${escHtml(ev.work_type || '')}${ev.work_type2 ? ' / ' + escHtml(ev.work_type2) : ''}</span>
@@ -183,6 +215,7 @@ function renderList(container, rows, type) {
   });
 }
 
+
 /* ================================================================
    상세 모달 열기
    ================================================================ */
@@ -193,7 +226,6 @@ async function openDetail(id) {
   document.getElementById('detail-modal').style.display  = 'block';
   document.body.style.overflow = 'hidden';
 
-  // 헤더 초기화
   document.getElementById('m-work-code').textContent = '불러오는 중...';
   document.getElementById('m-title').textContent     = '';
 
@@ -206,6 +238,7 @@ async function openDetail(id) {
     closeModal();
   }
 }
+
 
 /* ================================================================
    모달 채우기
@@ -221,16 +254,8 @@ function fillModal(ev) {
   badge.textContent = statusMap[ev.approval_status] || ev.approval_status;
   badge.className   = `card-status-badge ${statusClass[ev.approval_status] || ''}`;
 
-  // 기본 정보
-  document.getElementById('m-date').textContent      = ev.task_date || '—';
-
-  let timeStr = '—';
-  if (ev.start_time && ev.end_time) {
-    timeStr = `${ev.start_time.substring(0,5)} ~ ${ev.end_time.substring(0,5)}`;
-    if (ev.none_time  > 0) timeStr += ` (논${ev.none_time}분)`;
-    if (ev.move_time  > 0) timeStr += ` (무브${ev.move_time}분)`;
-  }
-  document.getElementById('m-time').textContent      = timeStr;
+  // 기본 정보 — 날짜 포맷 수정 (요청 3)
+  document.getElementById('m-date').textContent      = fmtDate(ev.task_date);
   document.getElementById('m-ems').textContent       = ev.ems == 1 ? '유상 (EMS)' : '무상 (WI)';
   document.getElementById('m-group-site').textContent= `${ev.group || '—'} / ${ev.site || '—'}`;
   document.getElementById('m-line').textContent      = ev.line || '—';
@@ -242,6 +267,14 @@ function fillModal(ev) {
   document.getElementById('m-work-type2').textContent= ev.work_type2 || '—';
   document.getElementById('m-sop').textContent       = `${ev.SOP || '—'} / ${ev.tsguide || '—'}`;
   document.getElementById('m-status-text').textContent = ev.status || '—';
+
+  // Rework 표시 (요청 2)
+  const reworkEl = document.getElementById('m-rework');
+  if (ev.is_rework) {
+    reworkEl.innerHTML = `<span class="rework-yes">✅ Rework ${ev.rework_seq > 0 ? '(' + ev.rework_seq + '차)' : ''}</span>`;
+  } else {
+    reworkEl.textContent = 'N';
+  }
 
   // Work Items
   const wiEl = document.getElementById('m-work-items');
@@ -263,7 +296,7 @@ function fillModal(ev) {
     }</div>`;
   } else { partsEl.textContent = '—'; }
 
-  // 작업자 테이블
+  // 작업자 테이블 (작업자별 시간 포함)
   const tbody = document.getElementById('m-workers-tbody');
   tbody.innerHTML = '';
   (ev.workers || []).forEach(w => {
@@ -271,15 +304,24 @@ function fillModal(ev) {
     tr.innerHTML = `
       <td>${escHtml(w.engineer_name || '')}</td>
       <td><span class="role-badge role-${escHtml(w.role || 'main')}">${escHtml(w.role || 'main')}</span></td>
-      <td>${w.task_duration ?? '—'} 분</td>
+      <td>${fmtTime(w.start_time) || '—'}</td>
+      <td>${fmtTime(w.end_time) || '—'}</td>
+      <td>${w.none_time ?? 0}분</td>
+      <td>${w.move_time ?? 0}분</td>
+      <td>${w.task_duration ?? '—'}분</td>
     `;
     tbody.appendChild(tr);
   });
 
-  // 내용
-  document.getElementById('m-action').textContent = ev.task_description || '—';
-  document.getElementById('m-cause').textContent  = ev.task_cause       || '—';
-  document.getElementById('m-result').textContent = ev.task_result      || '—';
+  // 내용 — 줄바꿈 처리 (요청 4)
+  const actionEl = document.getElementById('m-action');
+  const causeEl  = document.getElementById('m-cause');
+  const resultEl = document.getElementById('m-result');
+
+  // white-space: pre-wrap 스타일이 CSS에 있으므로 textContent 사용
+  actionEl.textContent = renderText(ev.task_description);
+  causeEl.textContent  = renderText(ev.task_cause);
+  resultEl.textContent = renderText(ev.task_result);
 
   // 결재 이력
   const histEl = document.getElementById('m-history');
@@ -309,14 +351,23 @@ function fillModal(ev) {
   const isPending  = ev.approval_status === 'PENDING';
   const isRejected = ev.approval_status === 'REJECTED';
 
-  document.getElementById('action-area').style.display          = (canApprove && isPending)  ? '' : 'none';
-  document.getElementById('resubmit-wrapper').style.display     = (isMyEvent  && isRejected) ? 'flex' : 'none';
-  document.getElementById('no-permission-notice').style.display =
+  document.getElementById('action-area').style.display              = (canApprove && isPending)  ? '' : 'none';
+  document.getElementById('edit-resubmit-wrapper').style.display    = (isMyEvent  && isRejected) ? '' : 'none';
+  document.getElementById('no-permission-notice').style.display     =
     (!canApprove && !isMyEvent && isPending) ? '' : 'none';
 
-  // 코멘트 초기화
+  // 반려건 편집 필드 채우기 (요청 5)
+  if (isMyEvent && isRejected) {
+    document.getElementById('edit-action').value = renderText(ev.task_description);
+    document.getElementById('edit-cause').value  = renderText(ev.task_cause);
+    document.getElementById('edit-result').value = renderText(ev.task_result);
+    document.getElementById('edit-status').value = ev.status || '';
+    document.getElementById('edit-title').value  = ev.task_name || '';
+  }
+
   document.getElementById('action-note').value = '';
 }
+
 
 /* ================================================================
    모달 닫기
@@ -328,6 +379,7 @@ function closeModal() {
   currentEventId = null;
   currentEvent   = null;
 }
+
 
 /* ================================================================
    승인
@@ -345,6 +397,7 @@ async function doApprove() {
     toast('error', '승인 실패', e.response?.data?.error || e.message);
   } finally { setActionLoading(false); }
 }
+
 
 /* ================================================================
    반려
@@ -368,26 +421,36 @@ async function doReject() {
   } finally { setActionLoading(false); }
 }
 
+
 /* ================================================================
-   재제출
+   수정 후 재제출 (요청 5)
    ================================================================ */
 async function doResubmit() {
   if (!currentEventId) return;
-  if (!confirm('이 작업 이력을 재제출하시겠습니까?')) return;
+  if (!confirm('수정된 내용으로 재제출하시겠습니까?')) return;
+
+  const patch = {
+    task_name:        document.getElementById('edit-title').value.trim(),
+    status:           document.getElementById('edit-status').value.trim(),
+    task_description: document.getElementById('edit-action').value.trim(),
+    task_cause:       document.getElementById('edit-cause').value.trim(),
+    task_result:      document.getElementById('edit-result').value.trim(),
+  };
+
   try {
-    await axios.post(`${API}/wl/event/${currentEventId}/resubmit`, {});
-    toast('success', '재제출 완료', '다시 결재 대기 상태로 등록되었습니다.');
+    await axios.post(`${API}/wl/event/${currentEventId}/resubmit`, { patch });
+    toast('success', '재제출 완료', '수정된 내용으로 다시 결재 대기 상태로 등록되었습니다.');
     closeModal();
     loadRejected();
-    // 대기 탭 카운트도 갱신
     loadPending();
   } catch (e) {
     toast('error', '재제출 실패', e.response?.data?.error || e.message);
   }
 }
 
+
 /* ================================================================
-   버튼 로딩 토글
+   유틸
    ================================================================ */
 function setActionLoading(on) {
   const btnA = document.getElementById('btn-approve');
@@ -396,9 +459,6 @@ function setActionLoading(on) {
   if (btnR) btnR.disabled = on;
 }
 
-/* ================================================================
-   토스트
-   ================================================================ */
 function toast(type, title, msg) {
   const root = document.getElementById('toast-root');
   if (!root) return;
@@ -415,9 +475,6 @@ function toast(type, title, msg) {
   setTimeout(() => el.remove(), 4500);
 }
 
-/* ================================================================
-   HTML 이스케이프
-   ================================================================ */
 function escHtml(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -426,19 +483,18 @@ function escHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+
 /* ================================================================
    이벤트 바인딩
    ================================================================ */
 function bindEvents() {
-  // 모달 닫기
   document.getElementById('modal-close')?.addEventListener('click', closeModal);
   document.getElementById('modal-overlay')?.addEventListener('click', closeModal);
-
-  // 승인 / 반려 / 재제출
   document.getElementById('btn-approve')?.addEventListener('click', doApprove);
   document.getElementById('btn-reject')?.addEventListener('click', doReject);
   document.getElementById('btn-resubmit')?.addEventListener('click', doResubmit);
 }
+
 
 /* ================================================================
    초기화
