@@ -1,266 +1,135 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Work Log — S-WORKS</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/worklog.css">
   <link rel="stylesheet" href="./css/worklog_new.css">
 </head>
 <body>
+<nav><div class="nav-container"><h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1><div class="sign-container unsigned"><a href="./signin.html" class="sign-link">Login</a></div><div class="sign-container signed hidden"><button class="menu-btn" aria-label="메뉴"><div class="menu-icon"><span></span><span></span><span></span></div></button></div></div>
+<div class="menu-bar"><div class="menu-bar-content"><a href="./user_info.html" class="menu-item">SECM</a><a href="./worklog_new.html" class="menu-item active-page">Create Worklog</a><a href="./wl_approval.html" class="menu-item">Worklog Approval</a><a href="./wl_read.html" class="menu-item">Worklog 조회</a><a href="./equipment_signal.html" class="menu-item">Equipment</a><a href="./Setupeq.html" class="menu-item">Setup EQ</a><a href="./PCI.html" class="menu-item">PCI</a><a href="./CHECKLIST.html" class="menu-item">Checklist</a><a href="./business.html" class="menu-item">Business trip</a><a href="./report.html" class="menu-item">국내 출장 보고서</a><a href="./workload.html" class="menu-item admin-only">Operating Rate</a><a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a><a href="./update.html" class="menu-item">Update</a><button id="sign-out" class="menu-item">Logout</button></div></div></nav>
 
-<nav>
-  <div class="nav-container">
-    <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-    <div class="sign-container unsigned"><a href="./signin.html" class="sign-link">Login</a></div>
-    <div class="sign-container signed hidden">
-      <button class="menu-btn" aria-label="메뉴"><div class="menu-icon"><span></span><span></span><span></span></div></button>
-    </div>
+<main><section id="worklog-form"><div class="inner">
+  <div class="step-indicator">
+    <div class="step-dot active" data-target="1">1</div><div class="step-line"></div>
+    <div class="step-dot" data-target="2">2</div><div class="step-line"></div>
+    <div class="step-dot" data-target="3">3</div><div class="step-line"></div>
+    <div class="step-dot" data-target="4">4</div>
   </div>
-  <div class="menu-bar">
-    <div class="menu-bar-content">
-      <a href="./user_info.html" class="menu-item">SECM</a>
-      <a href="./worklog_new.html" class="menu-item active-page">Create Worklog</a>
-      <a href="./wl_approval.html" class="menu-item">Worklog Approval</a>
-      <a href="./wl_read.html" class="menu-item">Worklog 조회</a>
-      <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-      <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-      <a href="./PCI.html" class="menu-item">PCI</a>
-      <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-      <a href="./business.html" class="menu-item">Business trip</a>
-      <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-      <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-      <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
-      <a href="./update.html" class="menu-item">Update</a>
-      <button id="sign-out" class="menu-item">Logout</button>
-    </div>
-  </div>
-</nav>
+  <button id="paste-button" type="button">⎘ PASTE</button>
 
-<main>
-  <section id="worklog-form">
-    <div class="inner">
-      <div class="step-indicator">
-        <div class="step-dot active" data-target="1">1</div><div class="step-line"></div>
-        <div class="step-dot" data-target="2">2</div><div class="step-line"></div>
-        <div class="step-dot" data-target="3">3</div><div class="step-line"></div>
-        <div class="step-dot" data-target="4">4</div>
+  <form id="worklogForm">
+    <!-- Step 1: 설비+날짜 -->
+    <div class="form-step active" data-step="1">
+      <h3>Step 1 · 설비 정보 및 날짜</h3>
+      <div class="form-row"><label>WORK DATE</label><input type="date" id="task_date" name="task_date" required></div>
+      <div class="form-row"><label>EQ NAME</label><div class="input-button-row"><input type="text" id="equipment_name" name="equipment_name" required><button type="button" id="check-warranty" class="btn primary sm">CHECK</button></div></div>
+      <div class="form-row"><label>GROUP</label><select id="group" name="group" required><option value="SELECT">SELECT</option><option value="PEE1">PEE1 (SUPRA)</option><option value="PEE2">PEE2 (INTEGER)</option><option value="PSKH">PSKH</option></select></div>
+      <div class="form-row"><label>SITE</label><select id="site" name="site" required><option value="SELECT">SELECT</option><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option><option value="USA-Portland">USA-Portland</option><option value="USA-Arizona">USA-Arizona</option><option value="USA-Texas">USA-Texas</option><option value="Ireland">Ireland</option><option value="Japan-Hiroshima">Japan-Hiroshima</option><option value="China-Wuxi">China-Wuxi</option><option value="China-Xian">China-Xian</option><option value="China-Shanghai">China-Shanghai</option><option value="China-Beijing">China-Beijing</option><option value="Taiwan-Taichoung">Taiwan-Taichoung</option><option value="Taiwan-Linkou">Taiwan-Linkou</option><option value="Singapore">Singapore</option><option value="Training">Training</option></select></div>
+      <div class="form-row"><label>COUNTRY</label><select id="country" name="country"><option value="KR">🇰🇷 KR</option><option value="JP">🇯🇵 JP</option><option value="CN">🇨🇳 CN</option><option value="US">🇺🇸 US</option><option value="TW">🇹🇼 TW</option><option value="SG">🇸🇬 SG</option><option value="IE">🇮🇪 IE</option></select></div>
+      <div class="form-row"><label>LINE</label><select id="line" name="line" required><option value="SELECT">SELECT</option><option>P1F</option><option>P1D</option><option>P2F</option><option>P2D</option><option>P2-S5</option><option>P3F</option><option>P3D</option><option>P3-S5</option><option>P4F</option><option>P4D</option><option>P4-S5</option><option>12L</option><option>13L</option><option>15L</option><option>16L</option><option>17L</option><option>S1</option><option>S3</option><option>S4</option><option>S3V</option><option>NRD</option><option>NRDK</option><option>NRD-V</option><option>G1L</option><option>U4</option><option>M1</option><option>5L</option><option>M10</option><option>M14</option><option>M16</option><option>R3</option><option>M11</option><option>M12</option><option>M15</option><option>PSKH</option><option>C1</option><option>C2</option><option>C3</option><option>C5</option><option>INTEL</option><option>MICRON</option><option>HYNIX</option><option>SAMSUNG</option><option>GTX</option><option>JIDIAN</option><option>Texas Instrument</option><option>Training</option></select></div>
+      <div class="form-row"><label>EQ TYPE</label><select id="equipment_type" name="equipment_type" required><option value="SELECT">SELECT</option><option>SUPRA N</option><option>SUPRA NM</option><option>SUPRA III</option><option>SUPRA IV</option><option>SUPRA V</option><option>SUPRA Vplus</option><option>SUPRA VM</option><option>SUPRA XP</option><option>SUPRA Q</option><option>SUPRA XQ</option><option>TERA21</option><option>INTEGER IVr</option><option>INTEGER Plus</option><option>INTEGER XP</option><option>PRECIA</option><option>ECOLITE 300</option><option>ECOLITE 400</option><option>ECOLITE 3000</option><option>ECOLITE XP</option><option>GENEVA</option><option>HDW</option></select></div>
+      <div class="form-row"><label>WARRANTY</label><select id="warranty" name="warranty" required><option value="SELECT">SELECT</option><option value="WI">WI</option><option value="WO">WO</option></select></div>
+      <div class="form-row" id="ems-row"><label>EMS</label><div class="ems-wrap"><div class="ems-seg"><input type="radio" id="ems-paid" name="emsChoice" value="1"><label for="ems-paid">유상</label><input type="radio" id="ems-free" name="emsChoice" value="0"><label for="ems-free">무상</label></div><div class="ems-tools"><span class="ems-hint" id="ems-hint">권고: -</span><button type="button" id="ems-auto-btn" class="btn sm">AUTO</button></div></div><small class="help">⚠️ WARRANTY가 WO라도 반드시 유상이 아닙니다.</small></div>
+      <div class="form-row info-container"><textarea id="info" placeholder="설비 특이사항" disabled></textarea><button id="edit-info" type="button" class="btn sm icon"><i class="fas fa-pencil-alt"></i></button></div>
+      <div class="form-row"><button id="save-info" type="button" class="btn sm hidden">SAVE</button></div>
+      <div class="form-buttons"><button type="button" class="btn primary next-step">다음 →</button></div>
+    </div>
+
+    <!-- Step 2: 작업분류 + Work Items/Parts -->
+    <div class="form-step" data-step="2">
+      <h3>Step 2 · 작업 분류</h3>
+      <div class="form-row"><label>WORK TYPE</label><select id="workType" name="workType" required><option value="SELECT">SELECT</option><option value="SET UP">SET UP</option><option value="RELOCATION">RELOCATION</option><option value="MAINT">MAINT</option></select></div>
+      <div id="setup-item-row" class="form-row hidden"><label>SET UP ITEM</label><select id="additionalWorkType"><option value="SELECT">SELECT</option><option>INSTALLATION PREPARATION</option><option>FAB IN</option><option>DOCKING</option><option>CABLE HOOK UP</option><option>POWER TURN ON</option><option>UTILITY TURN ON</option><option>GAS TURN ON</option><option>LEVELING</option><option>TEACHING</option><option>PART INSTALLATION</option><option>LEAK CHECK</option><option>TTTM</option><option>CUSTOMER CERTIFICATION</option><option>PROCESS CONFIRM</option></select></div>
+      <div id="worksort-row" class="form-row hidden"><label>WORK SORT</label><select id="workType2"><option value="SELECT">SELECT</option><option value="REP">REP — 교체</option><option value="ADJ">ADJ — 값 변경</option><option value="CLN">CLN — 클리닝</option><option value="MON">MON — 점검</option></select></div>
+
+      <!-- WORK ITEMS — 버튼 클릭 → Picker 모달 -->
+      <div id="work-items-section" class="form-group hidden">
+        <label class="group-label">WORK ITEMS</label>
+        <div class="sel-chip-area" id="wi-chips"><span class="sel-placeholder">선택된 항목 없음</span></div>
+        <button type="button" class="btn-select-open" id="wi-open-btn"><i class="fas fa-list"></i> 작업항목 선택</button>
       </div>
 
-      <button id="paste-button" type="button">⎘ PASTE</button>
+      <!-- REPLACEMENT PARTS — 버튼 클릭 → Picker 모달 -->
+      <div id="parts-section" class="form-group hidden">
+        <label class="group-label">REPLACEMENT PARTS</label>
+        <div class="sel-chip-area" id="part-chips"><span class="sel-placeholder">선택된 항목 없음</span></div>
+        <button type="button" class="btn-select-open" id="part-open-btn"><i class="fas fa-cogs"></i> 교체파트 선택</button>
+      </div>
 
-      <form id="worklogForm">
-
-        <!-- Step 1: 설비 + 날짜 -->
-        <div class="form-step active" data-step="1">
-          <h3>Step 1 · 설비 정보 및 날짜</h3>
-          <div class="form-row"><label>WORK DATE</label><input type="date" id="task_date" name="task_date" required></div>
-          <div class="form-row"><label>EQ NAME</label>
-            <div class="input-button-row">
-              <input type="text" id="equipment_name" name="equipment_name" required>
-              <button type="button" id="check-warranty" class="btn primary sm">CHECK</button>
-            </div>
-          </div>
-          <div class="form-row"><label>GROUP</label>
-            <select id="group" name="group" required><option value="SELECT">SELECT</option><option value="PEE1">PEE1 (SUPRA)</option><option value="PEE2">PEE2 (INTEGER)</option><option value="PSKH">PSKH</option></select>
-          </div>
-          <div class="form-row"><label>SITE</label>
-            <select id="site" name="site" required><option value="SELECT">SELECT</option><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option><option value="USA-Portland">USA-Portland</option><option value="USA-Arizona">USA-Arizona</option><option value="USA-Texas">USA-Texas</option><option value="Ireland">Ireland</option><option value="Japan-Hiroshima">Japan-Hiroshima</option><option value="China-Wuxi">China-Wuxi</option><option value="China-Xian">China-Xian</option><option value="China-Shanghai">China-Shanghai</option><option value="China-Beijing">China-Beijing</option><option value="Taiwan-Taichoung">Taiwan-Taichoung</option><option value="Taiwan-Linkou">Taiwan-Linkou</option><option value="Singapore">Singapore</option><option value="Training">Training</option></select>
-          </div>
-          <div class="form-row"><label>COUNTRY</label>
-            <select id="country" name="country"><option value="KR">🇰🇷 KR</option><option value="JP">🇯🇵 JP</option><option value="CN">🇨🇳 CN</option><option value="US">🇺🇸 US</option><option value="TW">🇹🇼 TW</option><option value="SG">🇸🇬 SG</option><option value="IE">🇮🇪 IE</option></select>
-          </div>
-          <div class="form-row"><label>LINE</label>
-            <select id="line" name="line" required><option value="SELECT">SELECT</option><option>P1F</option><option>P1D</option><option>P2F</option><option>P2D</option><option>P2-S5</option><option>P3F</option><option>P3D</option><option>P3-S5</option><option>P4F</option><option>P4D</option><option>P4-S5</option><option>12L</option><option>13L</option><option>15L</option><option>16L</option><option>17L</option><option>S1</option><option>S3</option><option>S4</option><option>S3V</option><option>NRD</option><option>NRDK</option><option>NRD-V</option><option>G1L</option><option>U4</option><option>M1</option><option>5L</option><option>M10</option><option>M14</option><option>M16</option><option>R3</option><option>M11</option><option>M12</option><option>M15</option><option>PSKH</option><option>C1</option><option>C2</option><option>C3</option><option>C5</option><option>INTEL</option><option>MICRON</option><option>HYNIX</option><option>SAMSUNG</option><option>GTX</option><option>JIDIAN</option><option>Texas Instrument</option><option>Training</option></select>
-          </div>
-          <div class="form-row"><label>EQ TYPE</label>
-            <select id="equipment_type" name="equipment_type" required><option value="SELECT">SELECT</option><option>SUPRA N</option><option>SUPRA NM</option><option>SUPRA III</option><option>SUPRA IV</option><option>SUPRA V</option><option>SUPRA Vplus</option><option>SUPRA VM</option><option>SUPRA XP</option><option>SUPRA Q</option><option>SUPRA XQ</option><option>TERA21</option><option>INTEGER IVr</option><option>INTEGER Plus</option><option>INTEGER XP</option><option>PRECIA</option><option>ECOLITE 300</option><option>ECOLITE 400</option><option>ECOLITE 3000</option><option>ECOLITE XP</option><option>GENEVA</option><option>HDW</option></select>
-          </div>
-          <div class="form-row"><label>WARRANTY</label>
-            <select id="warranty" name="warranty" required><option value="SELECT">SELECT</option><option value="WI">WI</option><option value="WO">WO</option></select>
-          </div>
-          <div class="form-row" id="ems-row">
-            <label>EMS (유상 / 무상)</label>
-            <div class="ems-wrap">
-              <div class="ems-seg">
-                <input type="radio" id="ems-paid" name="emsChoice" value="1"><label for="ems-paid">유상 (EMS / WO)</label>
-                <input type="radio" id="ems-free" name="emsChoice" value="0"><label for="ems-free">무상 (WI)</label>
-              </div>
-              <div class="ems-tools"><span class="ems-hint" id="ems-hint">권고: -</span><button type="button" id="ems-auto-btn" class="btn sm">AUTO</button></div>
-            </div>
-            <small class="help">⚠️ WARRANTY가 WO라도 반드시 유상이 아닙니다.</small>
-          </div>
-          <div class="form-row info-container">
-            <textarea id="info" placeholder="설비 특이사항" disabled></textarea>
-            <button id="edit-info" type="button" class="btn sm icon"><i class="fas fa-pencil-alt"></i></button>
-          </div>
-          <div class="form-row"><button id="save-info" type="button" class="btn sm hidden">SAVE</button></div>
-          <div class="form-buttons"><button type="button" class="btn primary next-step">다음 →</button></div>
-        </div>
-
-        <!-- Step 2: 작업 분류 + Work Items + Parts -->
-        <div class="form-step" data-step="2">
-          <h3>Step 2 · 작업 분류</h3>
-          <div class="form-row"><label>WORK TYPE</label>
-            <select id="workType" name="workType" required><option value="SELECT">SELECT</option><option value="SET UP">SET UP</option><option value="RELOCATION">RELOCATION</option><option value="MAINT">MAINT</option></select>
-          </div>
-          <div id="setup-item-row" class="form-row hidden"><label>SET UP ITEM</label>
-            <select id="additionalWorkType" name="additionalWorkType"><option value="SELECT">SELECT</option><option>INSTALLATION PREPARATION</option><option>FAB IN</option><option>DOCKING</option><option>CABLE HOOK UP</option><option>POWER TURN ON</option><option>UTILITY TURN ON</option><option>GAS TURN ON</option><option>LEVELING</option><option>TEACHING</option><option>PART INSTALLATION</option><option>LEAK CHECK</option><option>TTTM</option><option>CUSTOMER CERTIFICATION</option><option>PROCESS CONFIRM</option></select>
-          </div>
-          <div id="worksort-row" class="form-row hidden"><label>WORK SORT</label>
-            <select id="workType2" name="workType2"><option value="SELECT">SELECT</option><option value="REP">REP — 교체</option><option value="ADJ">ADJ — 값 변경</option><option value="CLN">CLN — 클리닝</option><option value="MON">MON — 점검</option></select>
-          </div>
-
-          <!-- MAINT 선택 시: Work Items -->
-          <div id="work-items-section" class="form-group hidden">
-            <label class="group-label">WORK ITEMS <small>(복수 선택 가능)</small></label>
-            <div class="ms-section" id="ms-work-items">
-              <div class="ms-chips" id="wi-chips"></div>
-              <div class="ms-dropdown">
-                <input type="text" id="wi-search" placeholder="작업항목 검색..." autocomplete="off">
-                <div class="ms-list" id="wi-list"></div>
-              </div>
-              <div class="ms-free-row">
-                <input type="text" id="wi-free" placeholder="목록에 없는 항목 직접 입력">
-                <button type="button" class="btn sm" id="wi-free-add">추가</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- MAINT 선택 시: Parts -->
-          <div id="parts-section" class="form-group hidden">
-            <label class="group-label">REPLACEMENT PARTS <small>(복수 선택 가능)</small></label>
-            <div id="parts-list"></div>
-            <div class="ms-free-row">
-              <input type="text" id="part-name" placeholder="파트명 (검색 또는 직접 입력)">
-              <input type="number" id="part-qty" min="1" value="1" style="width:64px;" placeholder="수량">
-              <button type="button" class="btn sm" id="part-add-btn">추가</button>
-            </div>
-            <div class="ms-dropdown" style="margin-top:4px;">
-              <div class="ms-list" id="part-master-list"></div>
-            </div>
-          </div>
-
-          <p class="form-description">REP: 교체 | ADJ: 값 변경 | CLN: 클리닝 | MON: 점검</p>
-          <div class="form-buttons">
-            <button type="button" class="btn prev-step">← 이전</button>
-            <button type="button" class="btn primary next-step">다음 →</button>
-          </div>
-        </div>
-
-        <!-- Step 3: 작업자 + SOP -->
-        <div class="form-step" data-step="3">
-          <h3>Step 3 · 작업자 및 시간</h3>
-          <p class="form-description" style="margin-bottom:14px;">📌 각 작업자별로 START / END / NONE TIME / MOVE TIME을 입력합니다.</p>
-          <div id="task-mans-container" class="form-group">
-            <label class="group-label">WORKER</label>
-            <div class="task-man-container" data-idx="0">
-              <div class="worker-main-row">
-                <input type="text" class="task-man-input" placeholder="이름" required>
-                <select class="task-man-role"><option value="main">main</option><option value="support">support</option></select>
-                <button type="button" class="btn-remove remove-worker" disabled>−</button>
-              </div>
-              <div class="worker-time-row">
-                <div><label>START</label><input type="time" class="worker-start-time"></div>
-                <div><label>END</label><input type="time" class="worker-end-time"></div>
-                <div><label>NONE(분)</label><input type="number" class="worker-none-time" min="0" value="0"></div>
-                <div><label>MOVE(분)</label><input type="number" class="worker-move-time" min="0" value="0"></div>
-              </div>
-              <div class="worker-duration-preview">실 작업: <span class="worker-calc-duration">—</span></div>
-            </div>
-            <div class="worker-bulk-actions">
-              <button type="button" id="add-worker" class="btn-add">작업자 추가 +</button>
-              <button type="button" id="copy-time-all" class="btn-chip" title="첫 번째 작업자의 시간을 전체 복사"><i class="fas fa-copy" style="font-size:11px;margin-right:4px;"></i>시간 전체 복사</button>
-            </div>
-          </div>
-          <div class="form-row"><label>SOP</label><select id="SOP" name="SOP"><option value="Not Utilized (No Need)">Not Utilized (No Need)</option><option value="Utilized">Utilized</option><option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option><option value="No document (Need)">No document (Need)</option></select></div>
-          <div class="form-row"><label>TS GUIDE</label><select id="tsguide" name="tsguide"><option value="Not Utilized (No Need)">Not Utilized (No Need)</option><option value="Utilized">Utilized</option><option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option><option value="No document (Need)">No document (Need)</option></select></div>
-          <div class="form-buttons">
-            <button type="button" class="btn prev-step">← 이전</button>
-            <button type="button" class="btn primary next-step">다음 →</button>
-          </div>
-        </div>
-
-        <!-- Step 4: 작업 내용 -->
-        <div class="form-step" data-step="4">
-          <h3>Step 4 · 작업 내용</h3>
-          <div class="form-row"><label>TITLE</label><input type="text" id="task_name" name="task_name" required></div>
-          <div class="form-row"><label>STATUS</label><input type="text" id="status" name="status" required></div>
-          <div id="task-descriptions-container" class="form-group"><label class="group-label">ACTION</label><div class="task-desc-item"><textarea class="task-description-input" rows="3" required></textarea><button type="button" class="btn-remove remove-desc" disabled>−</button></div><button type="button" id="add-desc" class="btn-add">내용 추가 +</button></div>
-          <div id="task-causes-container" class="form-group"><label class="group-label">CAUSE</label><div class="task-cause-item"><textarea class="task-cause-input" rows="3" required></textarea><button type="button" class="btn-remove remove-cause" disabled>−</button></div><button type="button" id="add-cause" class="btn-add">원인 추가 +</button></div>
-          <div id="task-results-container" class="form-group"><label class="group-label">RESULT</label><div class="task-result-item"><textarea class="task-result-input" rows="3" required></textarea><button type="button" class="btn-remove remove-result" disabled>−</button></div><button type="button" id="add-result" class="btn-add">결과 추가 +</button></div>
-          <div class="form-row rework-row"><label><input type="checkbox" id="is-rework">&nbsp;이 작업은 <strong>Rework</strong>입니다</label><small class="help">동일 설비 + 동일 원인으로 14일 이내 재작업 시 체크</small></div>
-          <div class="form-buttons">
-            <button type="button" class="btn prev-step">← 이전</button>
-            <button type="button" id="preview-save" class="btn primary">미리보기</button>
-            <button type="submit" id="save-button" style="display:none">저장</button>
-          </div>
-        </div>
-      </form>
+      <p class="form-description">REP: 교체 | ADJ: 값 변경 | CLN: 클리닝 | MON: 점검</p>
+      <div class="form-buttons"><button type="button" class="btn prev-step">← 이전</button><button type="button" class="btn primary next-step">다음 →</button></div>
     </div>
-  </section>
-</main>
+
+    <!-- Step 3: 작업자+SOP -->
+    <div class="form-step" data-step="3">
+      <h3>Step 3 · 작업자 및 시간</h3>
+      <p class="form-description" style="margin-bottom:14px;">📌 각 작업자별 시간을 입력합니다.</p>
+      <div id="task-mans-container" class="form-group">
+        <label class="group-label">WORKER</label>
+        <div class="task-man-container" data-idx="0">
+          <div class="worker-main-row"><input type="text" class="task-man-input" placeholder="이름" required><select class="task-man-role"><option value="main">main</option><option value="support">support</option></select><button type="button" class="btn-remove remove-worker" disabled>−</button></div>
+          <div class="worker-time-row"><div><label>START</label><input type="time" class="worker-start-time"></div><div><label>END</label><input type="time" class="worker-end-time"></div><div><label>NONE(분)</label><input type="number" class="worker-none-time" min="0" value="0"></div><div><label>MOVE(분)</label><input type="number" class="worker-move-time" min="0" value="0"></div></div>
+          <div class="worker-duration-preview">실 작업: <span class="worker-calc-duration">—</span></div>
+        </div>
+        <div class="worker-bulk-actions"><button type="button" id="add-worker" class="btn-add">작업자 추가 +</button><button type="button" id="copy-time-all" class="btn-chip"><i class="fas fa-copy" style="font-size:11px;margin-right:4px;"></i>시간 복사</button></div>
+      </div>
+      <div class="form-row"><label>SOP</label><select id="SOP"><option value="Not Utilized (No Need)">Not Utilized (No Need)</option><option value="Utilized">Utilized</option><option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option><option value="No document (Need)">No document (Need)</option></select></div>
+      <div class="form-row"><label>TS GUIDE</label><select id="tsguide"><option value="Not Utilized (No Need)">Not Utilized (No Need)</option><option value="Utilized">Utilized</option><option value="Utilized (Need Rev.)">Utilized (Need Rev.)</option><option value="No document (Need)">No document (Need)</option></select></div>
+      <div class="form-buttons"><button type="button" class="btn prev-step">← 이전</button><button type="button" class="btn primary next-step">다음 →</button></div>
+    </div>
+
+    <!-- Step 4: 작업 내용 -->
+    <div class="form-step" data-step="4">
+      <h3>Step 4 · 작업 내용</h3>
+      <div class="form-row"><label>TITLE</label><input type="text" id="task_name" required></div>
+      <div class="form-row"><label>STATUS</label><input type="text" id="status" required></div>
+      <div id="task-descriptions-container" class="form-group"><label class="group-label">ACTION</label><div class="task-desc-item"><textarea class="task-description-input" rows="3" required></textarea><button type="button" class="btn-remove remove-desc" disabled>−</button></div><button type="button" id="add-desc" class="btn-add">내용 추가 +</button></div>
+      <div id="task-causes-container" class="form-group"><label class="group-label">CAUSE</label><div class="task-cause-item"><textarea class="task-cause-input" rows="3" required></textarea><button type="button" class="btn-remove remove-cause" disabled>−</button></div><button type="button" id="add-cause" class="btn-add">원인 추가 +</button></div>
+      <div id="task-results-container" class="form-group"><label class="group-label">RESULT</label><div class="task-result-item"><textarea class="task-result-input" rows="3" required></textarea><button type="button" class="btn-remove remove-result" disabled>−</button></div><button type="button" id="add-result" class="btn-add">결과 추가 +</button></div>
+      <div class="form-row rework-row"><label><input type="checkbox" id="is-rework">&nbsp;이 작업은 <strong>Rework</strong>입니다</label><small class="help">동일 설비+동일 원인 14일 이내 재작업 시 체크</small></div>
+      <div class="form-buttons"><button type="button" class="btn prev-step">← 이전</button><button type="button" id="preview-save" class="btn primary">미리보기</button><button type="submit" id="save-button" style="display:none">저장</button></div>
+    </div>
+  </form>
+</div></section></main>
 
 <footer><div class="inner"><p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출·복사·배포를 금지합니다.</p></div></footer>
 
 <div class="overlay" id="modal-overlay"></div>
 
+<!-- ══ Picker 모달 (Work Items / Parts 겸용) ══ -->
+<div class="picker-modal" id="picker-modal">
+  <div class="picker-header">
+    <span class="picker-title" id="picker-title">항목 선택</span>
+    <button class="picker-close-btn" id="picker-close">×</button>
+  </div>
+  <div class="picker-search-bar">
+    <i class="fas fa-search"></i>
+    <input type="text" id="picker-search" placeholder="검색..." autocomplete="off">
+  </div>
+  <div class="picker-body" id="picker-list"></div>
+  <div class="picker-free-bar">
+    <input type="text" id="picker-free-input" placeholder="목록에 없으면 직접 입력">
+    <button type="button" class="btn sm primary" id="picker-free-add">추가</button>
+  </div>
+  <div class="picker-footer">
+    <button class="btn primary" id="picker-done">완료</button>
+  </div>
+</div>
+
+<!-- Preview -->
 <div class="print-container" id="preview-modal">
   <h2>최종 확인</h2>
-  <table class="preview-table">
-    <tr><th>Date</th><td id="pv-date"></td></tr>
-    <tr><th>EMS</th><td id="pv-ems"></td></tr>
-    <tr><th>Site / Line</th><td id="pv-site"></td></tr>
-    <tr><th>EQ Name</th><td id="pv-eqname"></td></tr>
-    <tr><th>EQ Type</th><td id="pv-eqtype"></td></tr>
-    <tr><th>Work Type</th><td id="pv-worktype"></td></tr>
-    <tr><th>Work Items</th><td id="pv-workitems"></td></tr>
-    <tr><th>Parts</th><td id="pv-parts"></td></tr>
-    <tr><th>Workers</th><td id="pv-workers" style="white-space:pre-wrap;"></td></tr>
-    <tr><th>Title</th><td id="pv-title"></td></tr>
-    <tr><th>Rework</th><td id="pv-rework"></td></tr>
-  </table>
-  <div class="modal-buttons">
-    <button type="button" id="confirm-save" class="btn primary">결재 요청</button>
-    <button type="button" id="cancel-save" class="btn">CANCEL</button>
-  </div>
+  <table class="preview-table"><tr><th>Date</th><td id="pv-date"></td></tr><tr><th>EMS</th><td id="pv-ems"></td></tr><tr><th>Site/Line</th><td id="pv-site"></td></tr><tr><th>EQ Name</th><td id="pv-eqname"></td></tr><tr><th>EQ Type</th><td id="pv-eqtype"></td></tr><tr><th>Work Type</th><td id="pv-worktype"></td></tr><tr><th>Work Items</th><td id="pv-workitems"></td></tr><tr><th>Parts</th><td id="pv-parts"></td></tr><tr><th>Workers</th><td id="pv-workers" style="white-space:pre-wrap;"></td></tr><tr><th>Title</th><td id="pv-title"></td></tr><tr><th>Rework</th><td id="pv-rework"></td></tr></table>
+  <div class="modal-buttons"><button type="button" id="confirm-save" class="btn primary">결재 요청</button><button type="button" id="cancel-save" class="btn">CANCEL</button></div>
 </div>
+<div class="print-container" id="result-modal"><h2>완료</h2><p><span id="result-msg"></span></p><p id="result-code" style="font-size:.9em;color:var(--muted);"></p><div class="modal-buttons"><button type="button" id="result-ok" class="btn primary">확인</button></div></div>
 
-<div class="print-container" id="result-modal">
-  <h2>완료</h2>
-  <p><span id="result-msg">결재 대기 등록이 완료되었습니다.</span></p>
-  <p id="result-code" style="font-size:.9em;color:var(--muted);"></p>
-  <div class="modal-buttons"><button type="button" id="result-ok" class="btn primary">확인</button></div>
-</div>
+<div id="popup"><h3>PASTE INFORM</h3><div class="guide">붙여넣기 형식으로 입력 후 WRITE 클릭</div><textarea id="paste-textarea" placeholder="EPAB515 PM1 ..."></textarea><div class="toolbar"><div class="left"><button id="paste-submit" class="btn primary sm">WRITE</button><button id="paste-cancel" class="btn sm">CANCEL</button></div><div class="meta"><span id="paste-lines">0</span> lines · <span id="paste-chars">0</span> chars</div></div></div>
 
-<div id="popup">
-  <h3>PASTE INFORM</h3>
-  <div class="guide">붙여넣기 안내 — 기존과 동일한 형식으로 붙여넣으세요.<br><kbd>Ctrl</kbd>+<kbd>V</kbd> 후 <strong>WRITE</strong> 클릭</div>
-  <textarea id="paste-textarea" placeholder="EPAB515 PM1 Wafer Broken 점검&#10;&#10;1) STATUS&#10;-. ...&#10;&#10;2) ACTION&#10;-. ...&#10;&#10;3) CAUSE&#10;-. ...&#10;&#10;4) RESULT&#10;-. ...&#10;&#10;작업자 : 홍길동, 김철수&#10;작업 시간 : 14:30 - 17:00(논10 무브 40)"></textarea>
-  <div class="toolbar">
-    <div class="left"><button id="paste-submit" class="btn primary sm">WRITE</button><button id="paste-cancel" class="btn sm">CANCEL</button></div>
-    <div class="meta"><span id="paste-lines">0</span> lines · <span id="paste-chars">0</span> chars</div>
-  </div>
-</div>
-
-<div id="equipment-add-modal" class="equipment-add-modal">
-  <div class="equipment-add-modal-content">
-    <button class="equipment-add-modal-close">×</button>
-    <p style="font-weight:700;margin:0 0 14px;">설비 정보가 없습니다. 등록해주세요.</p>
-    <div class="form-row"><label>EQ NAME</label><input type="text" id="new_eqname"></div>
-    <div class="form-row"><label>GROUP</label><select id="new_group"><option value="">SELECT</option><option value="PEE1">PEE1</option><option value="PEE2">PEE2</option><option value="PSKH">PSKH</option></select></div>
-    <div class="form-row"><label>SITE</label><select id="new_site"><option value="">SELECT</option><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option></select></div>
-    <div class="form-row"><label>LINE</label><select id="new_line"><option value="">SELECT</option></select></div>
-    <div class="form-row"><label>EQ TYPE</label><select id="new_type"><option value="">SELECT</option><option>SUPRA N</option><option>SUPRA NM</option><option>SUPRA XP</option><option>INTEGER Plus</option><option>INTEGER IVr</option><option>INTEGER XP</option><option>PRECIA</option><option>ECOLITE 300</option><option>ECOLITE XP</option><option>GENEVA</option><option>HDW</option></select></div>
-    <div class="form-row"><label>FLOOR</label><input type="text" id="new_floor"></div>
-    <div class="form-row"><label>BAY</label><input type="text" id="new_bay"></div>
-    <div class="form-row"><label>START DATE</label><input type="date" id="new_start_date"></div>
-    <div class="form-row"><label>END DATE</label><input type="date" id="new_end_date"></div>
-    <div class="form-row"><label>WARRANTY</label><select id="new_warranty"><option value="">SELECT</option><option value="WI">WI</option><option value="WO">WO</option></select></div>
-    <div class="form-row"><label>INFO</label><textarea id="new_info"></textarea></div>
-    <div class="modal-buttons"><button id="confirm-equipment-add" class="btn primary">ADD</button><button id="cancel-equipment-add" class="btn">CANCEL</button></div>
-  </div>
-</div>
+<div id="equipment-add-modal" class="equipment-add-modal"><div class="equipment-add-modal-content"><button class="equipment-add-modal-close">×</button><p style="font-weight:700;margin:0 0 14px;">설비 정보가 없습니다. 등록해주세요.</p><div class="form-row"><label>EQ NAME</label><input type="text" id="new_eqname"></div><div class="form-row"><label>GROUP</label><select id="new_group"><option value="">SELECT</option><option value="PEE1">PEE1</option><option value="PEE2">PEE2</option><option value="PSKH">PSKH</option></select></div><div class="form-row"><label>SITE</label><select id="new_site"><option value="">SELECT</option><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option></select></div><div class="form-row"><label>LINE</label><select id="new_line"><option value="">SELECT</option></select></div><div class="form-row"><label>EQ TYPE</label><select id="new_type"><option value="">SELECT</option><option>SUPRA N</option><option>INTEGER Plus</option><option>PRECIA</option><option>ECOLITE 300</option><option>GENEVA</option><option>HDW</option></select></div><div class="form-row"><label>WARRANTY</label><select id="new_warranty"><option value="">SELECT</option><option value="WI">WI</option><option value="WO">WO</option></select></div><div class="modal-buttons"><button id="confirm-equipment-add" class="btn primary">ADD</button><button id="cancel-equipment-add" class="btn">CANCEL</button></div></div></div>
 
 <div id="toast-root"></div>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

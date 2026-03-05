@@ -826,6 +826,12 @@ exports.listEventsForExcel = async (filters = {}) => {
         e.tsguide,
         CASE WHEN e.is_rework = 1 THEN 'Y' ELSE 'N' END AS is_rework,
         e.rework_seq,
+        (SELECT GROUP_CONCAT(IFNULL(m.item_name, wi.item_name_free) ORDER BY wi.id SEPARATOR ', ')
+         FROM wl_work_item wi LEFT JOIN wl_work_item_master m ON m.id = wi.master_id
+         WHERE wi.event_id = e.id) AS work_items_str,
+        (SELECT GROUP_CONCAT(CONCAT(IFNULL(pm.part_name, p.part_name_free), ' x', p.qty) ORDER BY p.id SEPARATOR ', ')
+         FROM wl_part p LEFT JOIN wl_part_master pm ON pm.id = p.master_id
+         WHERE p.event_id = e.id) AS parts_str,
         w.engineer_name,
         w.role,
         w.eng_level,
