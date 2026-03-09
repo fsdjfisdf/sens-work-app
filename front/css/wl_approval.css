@@ -60,6 +60,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:var(--z-nav);background:var(--na
 .modal-header-left{min-width:0}.modal-work-code{font-size:11px;color:var(--muted);font-weight:800}.modal-title{font-size:15px;font-weight:900;margin-top:2px}
 .modal-close-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:20px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
 .modal-body{padding:20px;padding-bottom:calc(20px + var(--safe-bottom))}
+
+/* Rework 강조 배너 */
+.rework-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--r);margin-bottom:16px;border:2px solid rgba(239,68,68,.3);background:rgba(239,68,68,.06);animation:reworkPulse 2s ease-in-out infinite}
+.rework-banner.human-error{border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.1);animation:reworkPulse 1.2s ease-in-out infinite}
+.rework-banner-icon{width:36px;height:36px;border-radius:999px;background:rgba(239,68,68,.15);color:#dc2626;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.rework-banner.human-error .rework-banner-icon{background:rgba(220,38,38,.25);color:#991b1b}
+.rework-banner-text{font-size:14px;font-weight:700;color:#991b1b}
+.rework-banner-text strong{font-size:15px;display:block;margin-bottom:2px}
+.rework-banner.human-error .rework-banner-text{color:#7f1d1d;font-weight:900}
+@keyframes reworkPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 0 4px rgba(239,68,68,.12)}}
+
 .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
 .info-cell{padding:10px 12px;background:#fafbfc;border:1px solid var(--line);border-radius:var(--r)}.info-cell.wide{grid-column:span 2}
 .info-cell-label{font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}.info-cell-value{font-size:14px;font-weight:700}

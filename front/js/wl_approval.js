@@ -54,9 +54,21 @@ document.getElementById('m-eq-type').textContent=ev.equipment_type||'—';
 document.getElementById('m-warranty').textContent=ev.warranty||'—';
 document.getElementById('m-work-type').textContent=ev.work_type||'—';
 document.getElementById('m-work-type2').textContent=ev.work_type2||'—';
+document.getElementById('m-setup-item').textContent=ev.setup_item||'—';
 document.getElementById('m-sop').textContent=`${ev.SOP||'—'} / ${ev.tsguide||'—'}`;
 document.getElementById('m-status-text').textContent=ev.status||'—';
-const rwEl=document.getElementById('m-rework');rwEl.innerHTML=ev.is_rework?`<span class="rework-yes">✅ Rework${ev.rework_seq>0?' ('+ev.rework_seq+'차)':''}</span>`:'N';
+
+// Rework 배너 (눈에 띄게)
+const rwBanner=document.getElementById('m-rework-banner');
+if(ev.is_rework){
+  rwBanner.style.display='flex';
+  const reason=ev.rework_reason||'사유 미입력';
+  const isHuman=reason==='Human error';
+  rwBanner.className='rework-banner'+(isHuman?' human-error':'');
+  document.getElementById('m-rework-reason-text').textContent=`사유: ${reason}${ev.rework_seq>0?' ('+ev.rework_seq+'차)':''}`;
+}else{
+  rwBanner.style.display='none';
+}
 
 // Work Items
 const wiEl=document.getElementById('m-work-items');
@@ -67,7 +79,18 @@ if(ev.parts?.length){ptEl.innerHTML=`<div class="chip-list">${ev.parts.map(p=>`<
 
 // Workers
 const tb=document.getElementById('m-workers-tbody');tb.innerHTML='';
-(ev.workers||[]).forEach(w=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${escHtml(w.engineer_name)}</td><td><span class="role-badge role-${w.role||'main'}">${w.role||'main'}</span></td><td>${fmtTime(w.start_time)}</td><td>${fmtTime(w.end_time)}</td><td>${w.none_time??0}분</td><td>${w.move_time??0}분</td><td>${w.task_duration??'—'}분</td>`;tb.appendChild(tr);});
+(ev.workers||[]).forEach(w=>{
+  // 실작업 = END - START - NONE (MOVE 제외)
+  let durDisplay = w.task_duration ?? '—';
+  if(w.start_time && w.end_time){
+    const toM=t=>{const p=String(t).split(':').map(Number);return p[0]*60+p[1];};
+    const realMin=toM(w.end_time)-toM(w.start_time)-(w.none_time||0);
+    durDisplay=Math.max(0,realMin);
+  }
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${escHtml(w.engineer_name)}</td><td><span class="role-badge role-${w.role||'main'}">${w.role||'main'}</span></td><td>${fmtTime(w.start_time)}</td><td>${fmtTime(w.end_time)}</td><td>${w.none_time??0}분</td><td>${w.move_time??0}분</td><td>${durDisplay}분</td>`;
+  tb.appendChild(tr);
+});
 
 // Content (pre-wrap)
 document.getElementById('m-action').textContent=renderText(ev.task_description);
@@ -127,9 +150,6 @@ async function doReject(){if(!curId)return;const n=document.getElementById('acti
 async function doResubmit(){if(!curId)return;if(!confirm('수정된 내용으로 재제출하시겠습니까?'))return;const patch=collectEditPatch();const workers=collectEditWorkers();if(!workers.length){toast('error','오류','작업자를 1명 이상 입력하세요.');return;}
 try{await axios.post(`${API}/wl/event/${curId}/resubmit`,{patch,workers});toast('success','재제출 완료','결재 대기 상태로 등록되었습니다.');closeModal();loadRejected();loadPending();}catch(e){toast('error','실패',e.response?.data?.error||e.message);}}
 
-async function doDelete(){if(!curId)return;if(!confirm('이 작업이력을 완전히 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.'))return;
-try{await axios.delete(`${API}/wl/event/${curId}`);toast('success','삭제 완료','작업이력이 삭제되었습니다.');closeModal();loadRejected();loadPending();}catch(e){toast('error','삭제 실패',e.response?.data?.error||e.message);}}
-
 function setBtnLoad(on){const a=document.getElementById('btn-approve'),r=document.getElementById('btn-reject');if(a)a.disabled=on;if(r)r.disabled=on;}
 
 /* Bind */
@@ -142,7 +162,6 @@ document.getElementById('btn-resubmit')?.addEventListener('click',doResubmit);
 document.getElementById('btn-edit-toggle')?.addEventListener('click',()=>setEditMode(true));
 document.getElementById('btn-edit-cancel')?.addEventListener('click',()=>setEditMode(false));
 document.getElementById('e-add-worker')?.addEventListener('click',()=>{document.getElementById('e-workers-list').appendChild(mkEWRow({}));});
-document.getElementById('btn-delete')?.addEventListener('click',doDelete);
 }
 
 /* Init */
