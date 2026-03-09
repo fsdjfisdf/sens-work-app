@@ -34,6 +34,7 @@ router.get('/export/excel', jwt, ctrl.exportExcel);
 router.get('/event/:id',   jwt, ctrl.getOne);
 router.patch('/event/:id', jwt, ctrl.patchOne);
 router.put('/event/:id',   jwt, ctrl.updateEvent);  // [추가] 승인 후 수정
+router.delete('/event/:id', jwt, ctrl.deleteEvent); // [추가] 삭제
 
 // 재제출 / 승인 / 반려
 router.post('/event/:id/resubmit', jwt, ctrl.resubmit);

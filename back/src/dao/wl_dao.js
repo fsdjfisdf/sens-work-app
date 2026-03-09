@@ -165,7 +165,7 @@ exports.submitEvent = async (payload) => {
         status, task_description, task_cause, task_result,
         SOP, tsguide,
         start_time, end_time, none_time, move_time,
-        is_rework, rework_seq, rework_ref_id,
+        is_rework, rework_reason, rework_seq, rework_ref_id,
         approval_status, created_by
       ) VALUES (
         ?, ?, ?, ?,
@@ -175,7 +175,7 @@ exports.submitEvent = async (payload) => {
         ?, ?, ?, ?,
         ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?,
+        ?, ?, ?, ?,
         'PENDING', ?
       )`,
       [
@@ -201,6 +201,7 @@ exports.submitEvent = async (payload) => {
         payload.tsguide,
         evStartTime, evEndTime, evNoneTime, evMoveTime,
         payload.is_rework ? 1 : 0,
+        payload.rework_reason || null,
         Number(payload.rework_seq) || 0,
         payload.rework_ref_id || null,
         payload.created_by || null,
@@ -366,7 +367,7 @@ const ALLOWED_PATCH_FIELDS = [
   'status', 'task_description', 'task_cause', 'task_result',
   'SOP', 'tsguide',
   'start_time', 'end_time', 'none_time', 'move_time',
-  'is_rework', 'rework_seq', 'rework_ref_id',
+  'is_rework', 'rework_reason', 'rework_seq', 'rework_ref_id',
 ];
 
 exports.patchEvent = async (id, patch) => {
@@ -849,6 +850,18 @@ exports.listEventsForExcel = async (filters = {}) => {
 
     const [rows] = await conn.query(sql, vals);
     return rows;
+  } finally { conn.release(); }
+};
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// [추가] 삭제 (CASCADE로 worker, work_item, part, approval 같이 삭제됨)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.deleteEvent = async (id) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    await conn.query(`DELETE FROM wl_event WHERE id = ?`, [id]);
   } finally { conn.release(); }
 };
 

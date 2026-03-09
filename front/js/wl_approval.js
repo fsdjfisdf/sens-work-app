@@ -127,6 +127,9 @@ async function doReject(){if(!curId)return;const n=document.getElementById('acti
 async function doResubmit(){if(!curId)return;if(!confirm('수정된 내용으로 재제출하시겠습니까?'))return;const patch=collectEditPatch();const workers=collectEditWorkers();if(!workers.length){toast('error','오류','작업자를 1명 이상 입력하세요.');return;}
 try{await axios.post(`${API}/wl/event/${curId}/resubmit`,{patch,workers});toast('success','재제출 완료','결재 대기 상태로 등록되었습니다.');closeModal();loadRejected();loadPending();}catch(e){toast('error','실패',e.response?.data?.error||e.message);}}
 
+async function doDelete(){if(!curId)return;if(!confirm('이 작업이력을 완전히 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.'))return;
+try{await axios.delete(`${API}/wl/event/${curId}`);toast('success','삭제 완료','작업이력이 삭제되었습니다.');closeModal();loadRejected();loadPending();}catch(e){toast('error','삭제 실패',e.response?.data?.error||e.message);}}
+
 function setBtnLoad(on){const a=document.getElementById('btn-approve'),r=document.getElementById('btn-reject');if(a)a.disabled=on;if(r)r.disabled=on;}
 
 /* Bind */
@@ -139,6 +142,7 @@ document.getElementById('btn-resubmit')?.addEventListener('click',doResubmit);
 document.getElementById('btn-edit-toggle')?.addEventListener('click',()=>setEditMode(true));
 document.getElementById('btn-edit-cancel')?.addEventListener('click',()=>setEditMode(false));
 document.getElementById('e-add-worker')?.addEventListener('click',()=>{document.getElementById('e-workers-list').appendChild(mkEWRow({}));});
+document.getElementById('btn-delete')?.addEventListener('click',doDelete);
 }
 
 /* Init */

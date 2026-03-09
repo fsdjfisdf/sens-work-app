@@ -89,10 +89,6 @@ exports.submit = async (req, res) => {
     if (!workers.length) {
       return res.status(400).json({ error: '작업자(workers)를 최소 1명 이상 입력하세요.' });
     }
-    const workerNames = workers.map(w => w.name?.trim()).filter(Boolean);
-    if (!workerNames.includes(submitterName)) {
-      return res.status(400).json({ error: '제출자는 작업자 목록에 본인 이름이 포함되어야 합니다.' });
-    }
 
     const payload = {
       task_name:        body.task_name,
@@ -119,6 +115,7 @@ exports.submit = async (req, res) => {
       none_time:        Number(body.none_time) || 0,
       move_time:        Number(body.move_time) || 0,
       is_rework:        body.is_rework ? 1 : 0,
+      rework_reason:    body.rework_reason || null,
       rework_seq:       Number(body.rework_seq) || 0,
       rework_ref_id:    body.rework_ref_id || null,
       created_by:       createdBy,
@@ -275,6 +272,32 @@ exports.reject = async (req, res) => {
     res.json({ message: '반려 처리 완료' });
   } catch (err) {
     res.status(500).json({ error: '반려 처리 오류' });
+  }
+};
+
+
+// ─── [추가] 삭제 ──────────────────────────────────────────────────────────────
+// DELETE /wl/event/:id
+exports.deleteEvent = async (req, res) => {
+  try {
+    const id  = req.params.id;
+    const row = await wlDao.getEventById(id);
+    if (!row) return res.status(404).json({ error: '없음' });
+
+    // 삭제 권한: 본인이 작성한 반려건, 또는 본인 이름이 포함된 승인건(+admin)
+    const isAdmin = req.user?.role === 'admin';
+    const isCreator = req.user?.userIdx === row.created_by;
+    const isWorker = (row.workers || []).some(w => w.engineer_name === req.user?.nickname);
+
+    if (!isAdmin && !isCreator && !isWorker) {
+      return res.status(403).json({ error: '삭제 권한이 없습니다.' });
+    }
+
+    await wlDao.deleteEvent(id);
+    res.json({ message: '삭제 완료' });
+  } catch (e) {
+    console.error('deleteEvent error:', e);
+    res.status(500).json({ error: '삭제 오류' });
   }
 };
 

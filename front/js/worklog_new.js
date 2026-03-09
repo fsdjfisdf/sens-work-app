@@ -36,8 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let curStep = 1; const STEPS = 4;
   function goStep(n) { const c = $(`.form-step[data-step="${curStep}"]`), x = $(`.form-step[data-step="${n}"]`); if (!x || c === x) return; c?.classList.remove('active'); x.classList.add('active'); curStep = n; updInd(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   function updInd() { $$('.step-dot').forEach(d => { const t = +d.dataset.target; d.classList.toggle('active', t === curStep); d.classList.toggle('completed', t < curStep); }); $$('.step-line').forEach((l, i) => l.classList.toggle('done', i + 1 < curStep)); }
-  $$('.next-step').forEach(b => b.addEventListener('click', () => { if (valStep(curStep)) goStep(curStep + 1); }));
+  $$('.next-step').forEach(b => b.addEventListener('click', () => { goStep(curStep + 1); }));
   $$('.prev-step').forEach(b => b.addEventListener('click', () => goStep(curStep - 1)));
+  // Step dot 직접 클릭으로 이동 허용
+  $$('.step-dot').forEach(d => d.addEventListener('click', () => goStep(+d.dataset.target)));
 
   /* ══ EMS ══ */
   let emsOvr = false;
@@ -232,8 +234,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const el = c.querySelector('.worker-calc-duration'); if (!el) return;
     if (!s || !e) { el.textContent = '—'; return; }
     const toM = t => { const [h, mm] = t.split(':').map(Number); return h * 60 + mm; };
-    const tot = toM(e) - toM(s) - n - m;
-    el.textContent = tot <= 0 ? '0분' : `${Math.floor(tot/60)}시간 ${tot%60}분`;
+    const realWork = toM(e) - toM(s) - n;      // 실작업 = END - START - NONE
+    const totalWork = toM(e) - toM(s) + m - n;  // 전체 = END - START + MOVE - NONE
+    const fmtM = v => v <= 0 ? '0분' : `${Math.floor(v/60)}시간 ${v%60}분`;
+    el.textContent = `실작업 ${fmtM(realWork)} / 전체 ${fmtM(totalWork)}`;
   }
   function bindWTC(c) { ['worker-start-time','worker-end-time','worker-none-time','worker-move-time'].forEach(cls => c.querySelector(`.${cls}`)?.addEventListener('input', () => calcWD(c))); }
   const firstW = $('.task-man-container'); if (firstW) bindWTC(firstW);
@@ -292,9 +296,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   function hideAll() { overlay.style.display = 'none'; ['preview-modal','result-modal','popup','picker-modal'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); activeModal = null; }
   overlay.addEventListener('click', hideAll);
 
+  /* ══ 최종 검증 (결재 요청 시에만) — 누락 시 해당 Step으로 이동 ══ */
+  function validateAll() {
+    // Step 1
+    if (!getV('task_date')) { showToast('error','WORK DATE를 입력하세요.'); goStep(1); return false; }
+    if (!getV('equipment_name')) { showToast('error','EQ NAME을 입력하세요.'); goStep(1); return false; }
+    if (getV('group') === 'SELECT') { showToast('error','GROUP을 선택하세요.'); goStep(1); return false; }
+    if (getV('site') === 'SELECT') { showToast('error','SITE를 선택하세요.'); goStep(1); return false; }
+    if (getV('equipment_type') === 'SELECT') { showToast('error','EQ TYPE을 선택하세요.'); goStep(1); return false; }
+    if (getV('warranty') === 'SELECT') { showToast('error','WARRANTY를 선택하세요.'); goStep(1); return false; }
+    if (curEms() === null) { showToast('error','EMS를 선택하세요.'); goStep(1); return false; }
+    // Step 2
+    if (getV('workType') === 'SELECT') { showToast('error','WORK TYPE을 선택하세요.'); goStep(2); return false; }
+    // Step 3
+    const cs = $$('.task-man-container');
+    const ns = cs.map(c => c.querySelector('.task-man-input')?.value.trim()).filter(Boolean);
+    if (!ns.length) { showToast('error','작업자를 1명 이상 입력하세요.'); goStep(3); return false; }
+    for (const c of cs) {
+      const n = c.querySelector('.task-man-input')?.value.trim(); if (!n) continue;
+      const s = c.querySelector('.worker-start-time')?.value, e = c.querySelector('.worker-end-time')?.value;
+      if (!s || !e) { showToast('error', `${n}의 시작/종료 시간을 입력하세요.`); goStep(3); return false; }
+    }
+    // Step 4
+    if (!getV('task_name')) { showToast('error','TITLE을 입력하세요.'); goStep(4); return false; }
+    // Rework reason
+    if (document.getElementById('is-rework')?.checked && !getV('rework-reason')) {
+      showToast('error','Rework 사유를 선택하세요.'); goStep(4); return false;
+    }
+    return true;
+  }
+
+  // Rework 체크박스 → 사유 표시
+  document.getElementById('is-rework')?.addEventListener('change', function() {
+    document.getElementById('rework-reason-row')?.classList.toggle('hidden', !this.checked);
+  });
+
   /* ══ Preview ══ */
   document.getElementById('preview-save')?.addEventListener('click', () => {
-    for (let i = 1; i <= STEPS; i++) { if (!valStep(i)) { goStep(i); return; } }
+    if (!validateAll()) return;
     const now = new Date(); if (now.getHours() < 11 && getV('task_date') === today()) { if (!confirm('오전 11시 이전입니다. 오늘 작업이 맞습니까?')) { goStep(1); return; } }
     const ws = $$('.task-man-container').map(c => { const n = c.querySelector('.task-man-input')?.value.trim() || '', r = c.querySelector('.task-man-role')?.value || 'main', s = c.querySelector('.worker-start-time')?.value || '', e = c.querySelector('.worker-end-time')?.value || '', nn = c.querySelector('.worker-none-time')?.value || '0', mm = c.querySelector('.worker-move-time')?.value || '0'; return n ? `${n}(${r}) ${s}~${e} 논:${nn}분 무브:${mm}분` : ''; }).filter(Boolean);
     const wiStr = selectedWI.map(s => s.master_id ? (masterItems.find(m => m.id === s.master_id)?.item_name || '') : s.item_name_free).join(', ');
@@ -309,7 +348,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pv-parts').textContent = ptStr || '—';
     document.getElementById('pv-workers').textContent = ws.join('\n');
     document.getElementById('pv-title').textContent = getV('task_name');
-    document.getElementById('pv-rework').textContent = document.getElementById('is-rework')?.checked ? '✅ Rework' : '-';
+    const isRw = document.getElementById('is-rework')?.checked;
+    document.getElementById('pv-rework').textContent = isRw ? `✅ Rework (${getV('rework-reason')})` : '-';
     showOverlay('preview-modal');
   });
   document.getElementById('cancel-save')?.addEventListener('click', hideAll);
@@ -321,7 +361,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_description = $$('.task-description-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_cause = $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_result = $$('.task-result-input').map(el => el.value.trim()).filter(Boolean).join('\n');
-    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, workers, workItems: selectedWI, parts: selectedParts };
+    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, rework_reason: getV('rework-reason') || null, workers, workItems: selectedWI, parts: selectedParts };
     try {
       const res = await axios.post(`${API}/wl/submit`, payload, { headers: authH() });
       if (res.status === 201) { document.getElementById('result-msg').textContent = '결재 대기 등록이 완료되었습니다.'; document.getElementById('result-code').textContent = `Work Code: ${res.data.work_code || '-'}`; showOverlay('result-modal'); }
@@ -342,8 +382,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (title) { const el = document.getElementById('task_name'); if (el) el.value = title; }
     if (statusL.length) { const el = document.getElementById('status'); if (el) el.value = statusL.join('\n'); }
     fillDyn('task-descriptions-container', '.task-description-input', 'task-desc-item', 'remove-desc', 'add-desc', actL);
-    fillDyn('task-causes-container', '.task-cause-input', 'task-cause-item', 'remove-cause', 'add-cause', cauL);
-    fillDyn('task-results-container', '.task-result-input', 'task-result-item', 'remove-result', 'add-result', resL);
+    fillDyn('task-causes-container', '.task-cause-input', 'task-cause-item', 'remove-cause', 'add-cause', [...new Set(cauL)]);
+    fillDyn('task-results-container', '.task-result-input', 'task-result-item', 'remove-result', 'add-result', [...new Set(resL)]);
     let pS = '', pE = '', pN = 0, pM = 0;
     if (tLine) { const m = tLine.match(/(\d{1,2}:\d{2})\s*[-~]\s*(\d{1,2}:\d{2})/); if (m) { pS = m[1].padStart(5,'0'); pE = m[2].padStart(5,'0'); } const nm = tLine.match(/논\s*(\d+)/); const mm = tLine.match(/무브\s*(\d+)/); if (nm) pN = +nm[1]; if (mm) pM = +mm[1]; }
     if (wLine) { const names = wLine.replace(/^작업자\s*[:：]\s*/,'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean); const con = document.getElementById('task-mans-container'), ba = con.querySelector('.worker-bulk-actions'); $$('.task-man-container').slice(1).forEach(el => el.remove()); if (names[0]) { const f = $('.task-man-container'); if (f) { f.querySelector('.task-man-input').value = names[0]; if (pS) f.querySelector('.worker-start-time').value = pS; if (pE) f.querySelector('.worker-end-time').value = pE; f.querySelector('.worker-none-time').value = pN; f.querySelector('.worker-move-time').value = pM; calcWD(f); } } names.slice(1).forEach(name => { const r = mkWorker(name); r.querySelector('.worker-start-time').value = pS; r.querySelector('.worker-end-time').value = pE; r.querySelector('.worker-none-time').value = pN; r.querySelector('.worker-move-time').value = pM; con.insertBefore(r, ba); calcWD(r); }); updRmBtns(); }
