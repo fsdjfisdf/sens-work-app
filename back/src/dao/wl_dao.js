@@ -856,6 +856,18 @@ exports.listEventsForExcel = async (filters = {}) => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 삭제 (CASCADE로 worker, work_item, part, approval 같이 삭제됨)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.deleteEvent = async (id) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    await conn.query(`DELETE FROM wl_event WHERE id = ?`, [id]);
+  } finally { conn.release(); }
+};
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 결재자 조회
 // ─────────────────────────────────────────────────────────────────────────────
 

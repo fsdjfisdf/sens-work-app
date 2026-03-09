@@ -63,15 +63,6 @@
   <div class="modal-body">
     <!-- VIEW MODE -->
     <div id="view-mode">
-      <!-- Rework 강조 배너 (JS에서 표시/숨김) -->
-      <div class="rework-banner" id="m-rework-banner" style="display:none;">
-        <div class="rework-banner-icon"><i class="fas fa-exclamation-triangle"></i></div>
-        <div class="rework-banner-text">
-          <strong>REWORK</strong>
-          <span id="m-rework-reason-text"></span>
-        </div>
-      </div>
-
       <div class="info-grid">
         <div class="info-cell"><div class="info-cell-label">Date</div><div class="info-cell-value" id="m-date">—</div></div>
         <div class="info-cell"><div class="info-cell-label">EMS</div><div class="info-cell-value" id="m-ems">—</div></div>
@@ -83,8 +74,8 @@
         <div class="info-cell"><div class="info-cell-label">Warranty</div><div class="info-cell-value" id="m-warranty">—</div></div>
         <div class="info-cell"><div class="info-cell-label">Work Type</div><div class="info-cell-value" id="m-work-type">—</div></div>
         <div class="info-cell"><div class="info-cell-label">Work Sort</div><div class="info-cell-value" id="m-work-type2">—</div></div>
-        <div class="info-cell"><div class="info-cell-label">Setup Item</div><div class="info-cell-value" id="m-setup-item">—</div></div>
         <div class="info-cell"><div class="info-cell-label">SOP / TS</div><div class="info-cell-value" id="m-sop">—</div></div>
+        <div class="info-cell"><div class="info-cell-label">Rework</div><div class="info-cell-value" id="m-rework">—</div></div>
         <div class="info-cell wide"><div class="info-cell-label">Status</div><div class="info-cell-value" id="m-status-text">—</div></div>
         <div class="info-cell wide"><div class="info-cell-label">Work Items</div><div class="info-cell-value" id="m-work-items">—</div></div>
         <div class="info-cell wide"><div class="info-cell-label">Parts</div><div class="info-cell-value" id="m-parts">—</div></div>
@@ -138,6 +129,7 @@
         <button class="btn-resubmit" id="btn-edit-toggle" style="background:var(--warn);"><i class="fas fa-edit"></i> 수정 모드</button>
         <button class="btn-resubmit" id="btn-resubmit" style="display:none;"><i class="fas fa-redo"></i> 수정 후 재제출</button>
         <button class="btn-reject" id="btn-edit-cancel" style="display:none;background:var(--muted);"><i class="fas fa-times"></i> 취소</button>
+        <button class="btn-reject" id="btn-delete" style="background:#991b1b;"><i class="fas fa-trash"></i> 삭제</button>
       </div>
     </div>
 
