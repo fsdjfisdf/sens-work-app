@@ -184,8 +184,8 @@ app.use('/api', setupBoardRoute);
 const wlRoute = require('../src/routes/wlRoute');
 app.use('/wl', wlRoute);
 
-const analyticsRoute = require('../src/routes/analyticsRoute');
-app.use('/analytics', analyticsRoute);
+const analysisRoute = require('../src/routes/analysisRoute');
+app.use('/analysis', analysisRoute);
 
 
 
