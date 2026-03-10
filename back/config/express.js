@@ -183,6 +183,9 @@ app.use('/wl', wlRoute);
 const analysisRoute = require('../src/routes/analysisRoute');
 app.use('/analysis', analysisRoute);
 
+const analyticsRoute = require('../src/routes/analyticsRoute');
+app.use('/analytics', analyticsRoute);
+
 
 
 
