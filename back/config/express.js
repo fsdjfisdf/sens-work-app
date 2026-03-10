@@ -189,6 +189,8 @@ app.use('/analytics', analyticsRoute);
 
 
 
+
+
   // 권한 가드: DB ENUM에 맞게 (중복 선언 방지: 한 번만 정의)
   function requireRole(roles = ['admin', 'editor']) {
     return (req, res, next) => {
