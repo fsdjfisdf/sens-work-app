@@ -115,10 +115,6 @@ module.exports = function () {
   const editRoutes = require("../src/routes/editRoute");
   app.use("/api", editRoutes);
 
-  // 분석
-  const analysisRoute = require('../src/routes/analysisRoute');
-  app.use('/analysis', analysisRoute);
-
   // EMS 유상/무상 판별
   const workLogPaidRoute = require('../src/routes/workLogPaidRoute');
   app.use('/api/work-log-paid', workLogPaidRoute);
