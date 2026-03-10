@@ -98,7 +98,6 @@ exports.getLevelTrend = async (filters) => {
 exports.getCapability = async (filters) => {
   const { where, vals } = buildWhere(filters);
   const months = [];
-  for (const m of ['SEP','OCT','NOV','DEC']) months.push({ col:`24Y${m}`, setup:`24Y${m}_SETUP`, maint:`24Y${m}_MAINT`, ym:`2024-${String(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf(m)+1).padStart(2,'0')}` });
   for (const m of ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']) months.push({ col:`25Y${m}`, setup:`25Y${m}_SETUP`, maint:`25Y${m}_MAINT`, ym:`2025-${String(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf(m)+1).padStart(2,'0')}` });
   for (const m of ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP']) {
     const sc = m==='AUG'?'26AUG_SETUP':`26Y${m}_SETUP`;
@@ -111,7 +110,7 @@ exports.getCapability = async (filters) => {
      FROM userDB u ${where} AND u.\`${m.col}\` IS NOT NULL AND u.\`${m.col}\` > 0`
   ).join('\nUNION ALL\n');
   const [rows] = await pool.query(selects, Array(months.length).fill(vals).flat());
-  const [goals] = await pool.query(`SELECT AVG(\`24Y CAPA GOAL\`) AS g24, AVG(\`25Y CAPA GOAL\`) AS g25, AVG(\`26Y CAPA GOAL\`) AS g26 FROM userDB u ${where}`, vals);
+  const [goals] = await pool.query(`SELECT AVG(\`25Y CAPA GOAL\`) AS g25, AVG(\`26Y CAPA GOAL\`) AS g26 FROM userDB u ${where}`, vals);
   return { monthly: rows.filter(r=>r.avg_total), goals: goals[0]||{} };
 };
 
