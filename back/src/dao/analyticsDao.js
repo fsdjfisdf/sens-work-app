@@ -2,7 +2,7 @@
  * analyticsDao.js — Analytics Dashboard DAO (v2)
  */
 'use strict';
-const pool = require('./db');
+const { pool } = require('../../config/database');
 
 function buildWhere(filters, prefix = 'u') {
   const cond = ['1=1'], vals = [];
