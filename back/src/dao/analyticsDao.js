@@ -151,8 +151,6 @@ exports.getCapability = async (filters) => {
   const { where, vals } = buildWhere(filters);
   // 컬럼 기반 → 행 변환
   const months = [];
-  // 24Y SEP ~ DEC
-  for (const m of ['SEP','OCT','NOV','DEC']) months.push({ col: `24Y${m}`, setup: `24Y${m}_SETUP`, maint: `24Y${m}_MAINT`, ym: `2024-${String(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf(m)+1).padStart(2,'0')}` });
   // 25Y JAN ~ DEC
   for (const m of ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']) months.push({ col: `25Y${m}`, setup: `25Y${m}_SETUP`, maint: `25Y${m}_MAINT`, ym: `2025-${String(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf(m)+1).padStart(2,'0')}` });
   // 26Y JAN ~ SEP
@@ -169,7 +167,7 @@ exports.getCapability = async (filters) => {
 
   // 목표
   const [goals] = await pool.query(
-    `SELECT AVG(\`24Y CAPA GOAL\`) AS g24, AVG(\`25Y CAPA GOAL\`) AS g25, AVG(\`26Y CAPA GOAL\`) AS g26 FROM userDB u ${where}`, vals);
+    `SELECT AVG(\`25Y CAPA GOAL\`) AS g25, AVG(\`26Y CAPA GOAL\`) AS g26 FROM userDB u ${where}`, vals);
 
   return { monthly: rows.filter(r => r.avg_total), goals: goals[0] || {} };
 };
