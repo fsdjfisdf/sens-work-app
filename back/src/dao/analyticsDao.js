@@ -3,7 +3,7 @@
  * userDB + wl_event/wl_worker 기반
  */
 'use strict';
-const pool = require('../../config/database');
+const { pool } = require('../../config/database');
 
 /* ── 헬퍼 ── */
 function buildWhere(filters, prefix = 'u') {
