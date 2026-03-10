@@ -1,9 +1,6 @@
 /**
  * analyticsRoute.js
- * 
- * express.js에 추가할 내용:
- *   const analyticsRoute = require('./src/routes/analyticsRoute');
- *   app.use('/analytics', analyticsRoute);
+ * express.js: const analyticsRoute = require('./src/routes/analyticsRoute'); app.use('/analytics', analyticsRoute);
  */
 'use strict';
 const express = require('express');
@@ -23,5 +20,6 @@ router.get('/mpi',                jwt, ctrl.getMPI);
 router.get('/worklog-stats',      jwt, ctrl.getWorklogStats);
 router.get('/engineer-info',      jwt, ctrl.getEngineerInfo);
 router.get('/export/excel',       jwt, ctrl.getExportData);
+router.post('/engineer',          jwt, ctrl.addEngineer);
 
 module.exports = router;
