@@ -10,6 +10,7 @@ const DEFAULT_EQ_ORDER = ['SUPRA N', 'SUPRA XP', 'INTEGER', 'PRECIA', 'ECOLITE',
 
 let _tableCache = null;
 let _eqCache = null;
+const _colCache = new Map();
 
 function nullIfEmpty(v) {
   return v === '' || v === undefined ? null : v;
@@ -75,6 +76,24 @@ async function getTables() {
 async function hasTable(name) {
   const tables = await getTables();
   return tables.has(name);
+}
+
+async function getTableColumns(name) {
+  if (_colCache.has(name)) return _colCache.get(name);
+  const [rows] = await pool.query(
+    `SELECT COLUMN_NAME AS c
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
+    [name]
+  );
+  const cols = new Set(rows.map(r => r.c));
+  _colCache.set(name, cols);
+  return cols;
+}
+
+async function hasColumn(tableName, columnName) {
+  const cols = await getTableColumns(tableName);
+  return cols.has(columnName);
 }
 
 async function getEqRows() {
@@ -898,6 +917,73 @@ function normKey(s) {
   return (s || '').toString().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 }
 
+function normalizeMonthlyRows(rows) {
+  return (rows || [])
+    .map(r => ({
+      ym: r.ym,
+      setup: r.setup == null ? null : Number(r.setup),
+      maint: r.maint == null ? null : Number(r.maint),
+      total: r.total == null ? null : Number(r.total),
+    }))
+    .filter(r => r.setup != null || r.maint != null || r.total != null);
+}
+
+async function getMonthlyEqSeries({ engineerId, eqId, eqName, engineerName }) {
+  if (!eqName) return { rows: [], unit: 'capa', source: 'none' };
+
+  const eqTables = [
+    { table: 'monthly_eq_capability', eqCols: ['eq_id', 'equipment_id'] },
+    { table: 'monthly_capability', eqCols: ['eq_id', 'equipment_id'] },
+  ];
+
+  for (const cfg of eqTables) {
+    if (!(await hasTable(cfg.table))) continue;
+    const cols = await getTableColumns(cfg.table);
+    if (!cols.has('engineer_id') || !cols.has('ym') || !cols.has('setup_score') || !cols.has('maint_score')) continue;
+    const eqCol = cfg.eqCols.find(c => cols.has(c));
+    if (!eqCol) continue;
+
+    const totalExpr = cols.has('total_score')
+      ? 'total_score AS total'
+      : `(CASE
+            WHEN setup_score IS NULL AND maint_score IS NULL THEN NULL
+            WHEN setup_score IS NOT NULL AND maint_score IS NOT NULL THEN (setup_score + maint_score) / 2
+            ELSE COALESCE(setup_score, maint_score)
+          END) AS total`;
+
+    const [rows] = await pool.query(
+      `SELECT ym, setup_score AS setup, maint_score AS maint, ${totalExpr}
+       FROM ${cfg.table}
+       WHERE engineer_id = ? AND ${eqCol} = ?
+       ORDER BY ym`,
+      [engineerId, eqId]
+    );
+
+    if (rows.length) return { rows: normalizeMonthlyRows(rows), unit: 'capa', source: cfg.table };
+  }
+
+  if (!engineerName || !eqName || !(await hasTable('wl_event')) || !(await hasTable('wl_worker'))) {
+    return { rows: [], unit: 'capa', source: 'none' };
+  }
+
+  const [rows] = await pool.query(
+    `SELECT DATE_FORMAT(e.task_date, '%Y-%m') AS ym,
+            SUM(CASE WHEN REPLACE(UPPER(TRIM(COALESCE(e.work_type, ''))), ' ', '') = 'SETUP' THEN COALESCE(w.task_duration, 0) ELSE 0 END) AS setup,
+            SUM(CASE WHEN REPLACE(UPPER(TRIM(COALESCE(e.work_type, ''))), ' ', '') = 'MAINT' THEN COALESCE(w.task_duration, 0) ELSE 0 END) AS maint,
+            SUM(COALESCE(w.task_duration, 0)) AS total
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     WHERE e.approval_status = 'APPROVED'
+       AND w.engineer_name = ?
+       AND e.equipment_type = ?
+     GROUP BY ym
+     ORDER BY ym`,
+    [engineerName, eqName]
+  );
+
+  return { rows: normalizeMonthlyRows(rows).filter(r => Number(r.total || 0) > 0), unit: 'minutes', source: 'worklog' };
+}
+
 exports.getMyDashboard = async (me) => {
   const where = [];
   const vals = [];
@@ -907,6 +993,7 @@ exports.getMyDashboard = async (me) => {
 
   const [rows] = await pool.query(
     `SELECT e.id, e.name, e.company, e.employee_id, e.\`group\`, e.site, e.hire_date, e.role,
+            e.main_eq_id, e.multi_eq_id,
             e.level_report, e.level_internal, e.level_psk, e.multi_level, e.multi_level_psk,
             meq.eq_name AS main_eq, mueq.eq_name AS multi_eq
      FROM engineer e
@@ -935,20 +1022,22 @@ exports.getMyDashboard = async (me) => {
     [engineerId]
   );
   const [eqRows] = await pool.query(
-    `SELECT em.eq_name AS eq, cs.setup_score AS setup, cs.maint_score AS maint
+    `SELECT em.id AS eq_id, em.eq_name AS eq, cs.setup_score AS setup, cs.maint_score AS maint
      FROM capability_score cs
      JOIN eq_master em ON em.id = cs.eq_id
      WHERE cs.engineer_id = ?
      ORDER BY COALESCE(em.display_order, 9999), em.id`,
     [engineerId]
   );
-  const [monthlyMain] = await pool.query(
+  const [overallMonthlyRows] = await pool.query(
     `SELECT ym, setup_score AS setup, maint_score AS maint, total_score AS total
      FROM monthly_capability
      WHERE engineer_id = ?
      ORDER BY ym`,
     [engineerId]
   );
+  const overallMonthly = normalizeMonthlyRows(overallMonthlyRows);
+
   const [monthlyHours] = await pool.query(
     `SELECT DATE_FORMAT(e.task_date,'%Y-%m') AS ym,
             SUM(w.task_duration) AS total_minutes,
@@ -1071,7 +1160,7 @@ exports.getMyDashboard = async (me) => {
 
   const eqCapability = eqRows.map(r => {
     const total = r.setup != null && r.maint != null ? (Number(r.setup) + Number(r.maint)) / 2 : (r.setup ?? r.maint ?? null);
-    return { eq: r.eq, setup: r.setup, maint: r.maint, total };
+    return { eq_id: r.eq_id, eq: r.eq, setup: r.setup, maint: r.maint, total };
   });
 
   function pickEqCap(eq) {
@@ -1079,7 +1168,12 @@ exports.getMyDashboard = async (me) => {
     return row || { eq, setup: null, maint: null, total: null };
   }
 
-  const monthlyAvg = monthlyMain.map(r => ({
+  const mainCap = pickEqCap(u.main_eq);
+  const multiCap = pickEqCap(u.multi_eq);
+  const mainMonthlySeries = await getMonthlyEqSeries({ engineerId, eqId: u.main_eq_id, eqName: u.main_eq, engineerName: u.name });
+  const multiMonthlySeries = await getMonthlyEqSeries({ engineerId, eqId: u.multi_eq_id, eqName: u.multi_eq, engineerName: u.name });
+
+  const monthlyAvg = overallMonthly.map(r => ({
     ym: r.ym,
     total: r.total,
     goal: goalMap[Number(String(r.ym).slice(0, 4))]?.capa_goal ?? null,
@@ -1104,6 +1198,7 @@ exports.getMyDashboard = async (me) => {
       multi_level_psk: u.multi_level_psk,
       setup_capa: cap.setup_capa ?? null,
       maint_capa: cap.maint_capa ?? null,
+      multi_capa: multiCap.total ?? null,
       capa: cap.capa ?? null,
       goal25: goalMap[2025]?.capa_goal ?? null,
       goal26: goalMap[2026]?.capa_goal ?? null,
@@ -1111,11 +1206,14 @@ exports.getMyDashboard = async (me) => {
     },
     capability: {
       eqCapability,
-      main: pickEqCap(u.main_eq),
-      multi: pickEqCap(u.multi_eq),
-      monthlyMain,
-      monthlyMulti: [],
-      monthlyMultiUnit: 'capa',
+      main: mainCap,
+      multi: multiCap,
+      monthlyMain: mainMonthlySeries.rows,
+      monthlyMainUnit: mainMonthlySeries.unit,
+      monthlyMainSource: mainMonthlySeries.source,
+      monthlyMulti: multiMonthlySeries.rows,
+      monthlyMultiUnit: multiMonthlySeries.unit,
+      monthlyMultiSource: multiMonthlySeries.source,
       monthlyAvg,
     },
     work: {

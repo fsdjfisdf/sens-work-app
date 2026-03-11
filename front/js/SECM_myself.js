@@ -55,14 +55,16 @@ Chart.defaults.set('plugins.datalabels', { display: false });
 /* Palette (muted, premium) */
 const C = {
   blue:'rgba(37,99,235,.70)',
-  red:'rgba(239,68,68,.75)',
+  red:'rgba(239,68,68,.78)',
   green:'rgba(34,197,94,.70)',
   amber:'rgba(245,158,11,.70)',
   slate:'rgba(100,116,139,.70)',
+  rankGray:'rgba(148,163,184,.78)',
   fillBlue:'rgba(37,99,235,.18)',
   fillRed:'rgba(239,68,68,.18)',
   fillSlate:'rgba(100,116,139,.16)',
-  set:['rgba(37,99,235,.65)','rgba(100,116,139,.65)','rgba(34,197,94,.65)','rgba(245,158,11,.65)','rgba(239,68,68,.65)','rgba(139,92,246,.65)','rgba(6,182,212,.65)']
+  set:['rgba(37,99,235,.65)','rgba(100,116,139,.65)','rgba(34,197,94,.65)','rgba(245,158,11,.65)','rgba(239,68,68,.65)','rgba(139,92,246,.65)','rgba(6,182,212,.65)'],
+  worksort:['rgba(79,70,229,.68)','rgba(71,85,105,.68)','rgba(14,165,233,.68)','rgba(139,92,246,.68)','rgba(217,119,6,.68)','rgba(148,163,184,.72)','rgba(15,118,110,.68)']
 };
 
 const charts = {};
@@ -255,7 +257,7 @@ function area(id, labels, dataset, opts={}){
   });
 }
 
-function donut(id, labels, values){
+function donut(id, labels, values, opts={}){
   destroyChart(id);
   const el = document.getElementById(id);
   if(!el) return;
@@ -267,7 +269,7 @@ function donut(id, labels, values){
 
   charts[id] = new Chart(el,{
     type:'doughnut',
-    data:{ labels, datasets:[{ data: values, backgroundColor: labels.map((_,i)=>C.set[i % C.set.length]), borderWidth:0 }]},
+    data:{ labels, datasets:[{ data: values, backgroundColor: labels.map((_,i)=>(opts.colors || C.set)[i % (opts.colors || C.set).length]), borderWidth:0 }]},
     options:{
       responsive:true,
       maintainAspectRatio:false,
@@ -368,11 +370,29 @@ function computeLevelTimeline(profile){
   return { labels, values, points, labelMap };
 }
 
+function unitLabel(unit, fallback='CAPA'){
+  return unit === 'minutes' ? '작업시간(분)' : fallback;
+}
+
+function buildRankSeries(list, myName, valueKey, limit=30){
+  const ranked = (list || []).map((row, idx) => ({
+    rank: idx + 1,
+    name: row.name,
+    value: Number(row[valueKey] || 0),
+  }));
+  const top = ranked.slice(0, limit);
+  if (!top.some(x => x.name === myName)) {
+    const mine = ranked.find(x => x.name === myName);
+    if (mine) top.push(mine);
+  }
+  return top;
+}
+
 async function load(){
   try{
     const { data } = await axios.get(`${API}/analytics/myself/dashboard`);
     if(!data?.profile){
-      toast('error','내 정보를 찾을 수 없습니다. (userDB 매칭 실패)');
+      toast('error','내 정보를 찾을 수 없습니다. (engineer 매칭 실패)');
       return;
     }
 
@@ -458,21 +478,30 @@ async function load(){
 
     // 3) Monthly main setup/maint
     const mMain = data.capability?.monthlyMain || [];
+    const mainUnit = data.capability?.monthlyMainUnit || 'capa';
     const mLabels = mMain.map(r=>r.ym);
     const mSetupRaw = mMain.map(r=>r.setup==null?null:Number(r.setup));
     const mMaintRaw = mMain.map(r=>r.maint==null?null:Number(r.maint));
-    const mRatio = isRatioLike([...mSetupRaw.filter(v=>v!=null), ...mMaintRaw.filter(v=>v!=null)]);
+    const mRatio = (mainUnit==='capa') && isRatioLike([...mSetupRaw.filter(v=>v!=null), ...mMaintRaw.filter(v=>v!=null)]);
     const mSetup = mRatio ? mSetupRaw.map(v=>v==null?null:toPct(v)) : mSetupRaw;
     const mMaint = mRatio ? mMaintRaw.map(v=>v==null?null:toPct(v)) : mMaintRaw;
+    const mainMeta = qs('#meta-monthly-main');
+    if(mainMeta) mainMeta.textContent = unitLabel(mainUnit);
 
     line('chart-monthly-main', mLabels, [
-      { label:'SET UP', data:mSetup, borderColor:C.blue, backgroundColor:C.fillBlue, tension:.35, fill:false },
-      { label:'MAINT', data:mMaint, borderColor:C.slate, backgroundColor:C.fillSlate, tension:.35, fill:false },
-    ], { labelMode:'last', formatter:(v)=> mRatio?`${fmt1(v)}%`:fmt1(v) });
+      { label: mainUnit==='minutes' ? 'SET UP (분)' : 'SET UP', data:mSetup, borderColor:C.blue, backgroundColor:C.fillBlue, tension:.35, fill:false },
+      { label: mainUnit==='minutes' ? 'MAINT (분)' : 'MAINT', data:mMaint, borderColor:C.slate, backgroundColor:C.fillSlate, tension:.35, fill:false },
+    ], { labelMode:'last', formatter:(v)=> {
+      if(v==null) return '';
+      if(mainUnit==='minutes') return `${Math.round(Number(v))}`;
+      return mRatio?`${fmt1(v)}%`:fmt1(v);
+    } });
 
     // 5) Monthly multi setup/maint
     const mMulti = data.capability?.monthlyMulti || [];
     const multiUnit = data.capability?.monthlyMultiUnit || 'capa';
+    const multiMeta = qs('#meta-monthly-multi');
+    if(multiMeta) multiMeta.textContent = unitLabel(multiUnit);
     const mmLabels2 = mMulti.map(r=>r.ym);
     const mmSetup2 = mMulti.map(r=>r.setup==null?null:Number(r.setup));
     const mmMaint2 = mMulti.map(r=>r.maint==null?null:Number(r.maint));
@@ -540,31 +569,25 @@ async function load(){
 
     // 10) Work Sort donut
     const ws = data.work?.byWorkSort || [];
-    donut('chart-worksort', ws.map(r=>r.label||'N/A'), ws.map(r=>Number(r.cnt||0)));
+    donut('chart-worksort', ws.map(r=>r.label||'N/A'), ws.map(r=>Number(r.cnt||0)), { colors:C.worksort });
 
-    // 11) Time rank (horizontal)
-    const timeList = timeRank.slice(0, 30); // top 30
-    const myInTop = timeList.some(x=>x.name===myName);
-    if(!myInTop){
-      const myRow = timeRank.find(x=>x.name===myName);
-      if(myRow) timeList.push(myRow);
-    }
-    const tLabels = timeList.map(x=>x.name);
-    const tVals = timeList.map(x=> minutesToHours(x.v));
-    const tColors = timeList.map(x=> x.name===myName ? C.red : C.blue);
-    barH('chart-time-rank', tLabels, tVals, { colors:tColors, formatter:(v)=> `${fmt1(v)}h` });
+    // 11) Time rank (vertical / anonymized)
+    const timeList = buildRankSeries(data.rank?.timeRank || [], myName, 'total_minutes', 30);
+    const tLabels = timeList.map(x=>`#${x.rank}`);
+    const tVals = timeList.map(x=> minutesToHours(x.value));
+    const tColors = timeList.map(x=> x.name===myName ? C.red : C.rankGray);
+    barV('chart-time-rank', tLabels, [
+      { label:'근무시간(h)', data:tVals, backgroundColor:tColors, borderRadius:8 }
+    ], { formatter:(v)=> `${fmt1(v)}h` });
 
-    // 12) Task rank (horizontal)
-    const taskList = taskRank.slice(0, 30);
-    const myInTop2 = taskList.some(x=>x.name===myName);
-    if(!myInTop2){
-      const myRow2 = taskRank.find(x=>x.name===myName);
-      if(myRow2) taskList.push(myRow2);
-    }
-    const kLabels = taskList.map(x=>x.name);
-    const kVals = taskList.map(x=>x.v);
-    const kColors = taskList.map(x=> x.name===myName ? C.red : C.blue);
-    barH('chart-task-rank', kLabels, kVals, { colors:kColors });
+    // 12) Task rank (vertical / anonymized)
+    const taskList = buildRankSeries(data.rank?.taskRank || [], myName, 'cnt', 30);
+    const kLabels = taskList.map(x=>`#${x.rank}`);
+    const kVals = taskList.map(x=>x.value);
+    const kColors = taskList.map(x=> x.name===myName ? C.red : C.rankGray);
+    barV('chart-task-rank', kLabels, [
+      { label:'작업건수', data:kVals, backgroundColor:kColors, borderRadius:8 }
+    ], { formatter:(v)=> `${v}` });
 
     // 13~15 Group/Site/Line (horizontal)
     const g = data.work?.byGroup || [];
