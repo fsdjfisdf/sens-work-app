@@ -418,10 +418,25 @@ function initEditEngineer(){
 }
 
 async function loadAll(){
-  const f=getFilters();
-  document.getElementById('btn-edit-eng').disabled=!f.name;
-  if(f.name)showEngineerInfo(f.name);else document.getElementById('eng-info').style.display='none';
-  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderWorklog(f)]);
+  const f = getFilters();
+
+  const editBtn = document.getElementById('btn-edit-eng');
+  if (editBtn) editBtn.disabled = !f.name;   // ✅ null 체크
+
+  const info = document.getElementById('eng-info');
+  if (f.name) showEngineerInfo(f.name);
+  else if (info) info.style.display = 'none';
+
+  await Promise.allSettled([
+    renderHeadCount(f),
+    renderHR(f),
+    renderLevelDist(f),
+    renderLevelAchieve(f),
+    renderLevelTrend(f),
+    renderCapability(f),
+    renderEqCapa(f),
+    renderWorklog(f),
+  ]);
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{

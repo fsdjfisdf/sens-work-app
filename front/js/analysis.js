@@ -73,7 +73,6 @@ const GROUP_ORDER = ['PEE1','PEE2','PSKH'];
 const PAIRS = GROUP_ORDER.flatMap(g => GROUPS[g]); // 렌더 순서
 
 /* ===== DOM 헬퍼 ===== */
-function qs(sel){ return document.querySelector(sel); }
 function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
 function on(sel, evt, cb){ const el = typeof sel==='string' ? qs(sel) : sel; el && el.addEventListener(evt, cb); }
 function setText(id, v){ const el = document.getElementById(id); if (el) el.textContent = v; }
