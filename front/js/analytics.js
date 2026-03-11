@@ -5,6 +5,17 @@ const token = localStorage.getItem('x-access-token') || '';
 axios.defaults.headers.common['x-access-token'] = token;
 const me = (() => { try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; } })();
 
+function isAdminUser(u){
+  const role = (u?.role || u?.ROLE || u?.user_role || '').toString().toLowerCase();
+  return role==='admin' || role==='administrator' || u?.is_admin===1 || u?.isAdmin===true || u?.admin===true;
+}
+if(!token){ location.href='./signin.html'; }
+if(token && !isAdminUser(me)){
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;">관리자만 접근 가능한 페이지입니다.</div>';
+  throw new Error('admin_only');
+}
+
+
 // Register datalabels plugin
 Chart.register(ChartDataLabels);
 Chart.defaults.set('plugins.datalabels', { display: false }); // off by default
@@ -16,7 +27,7 @@ const C = {
   purple:'rgba(139,92,246,.7)', purpleF:'rgba(139,92,246,.25)', cyan:'rgba(6,182,212,.7)', pink:'rgba(236,72,153,.7)',
   slate:'rgba(100,116,139,.7)', slateF:'rgba(100,116,139,.25)',
   set:['rgba(37,99,235,.65)','rgba(34,197,94,.65)','rgba(245,158,11,.65)','rgba(239,68,68,.65)','rgba(139,92,246,.65)','rgba(6,182,212,.65)','rgba(236,72,153,.65)','rgba(100,116,139,.65)','rgba(249,115,22,.65)','rgba(20,184,166,.65)'],
-  solid:['#2563eb','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#64748b']
+  solid:['rgba(37,99,235,.85)','rgba(34,197,94,.85)','rgba(245,158,11,.85)','rgba(239,68,68,.85)','rgba(139,92,246,.85)','rgba(6,182,212,.85)','rgba(236,72,153,.85)','rgba(100,116,139,.85)']
 };
 const charts = {};
 let allEngineers = [];
@@ -115,9 +126,9 @@ async function renderHeadCount(f) {
     labels.forEach(l=>{running += (hireMap[l]||0) - (resignMap[l]||0); cumulative.push(Math.max(0,running));});
     charts['chart-headcount']=new Chart(ctx,{type:'bar',data:{labels,datasets:[
       {type:'line',label:'재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.blueF,tension:.3,yAxisID:'y',fill:true,pointRadius:1,datalabels:DL_LINE},
-      {label:'입사',data:labels.map(l=>hireMap[l]||0),backgroundColor:C.green,yAxisID:'y1'},
-      {label:'퇴사',data:labels.map(l=>resignMap[l]||0),backgroundColor:C.red,yAxisID:'y1'}
-    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:true},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+      {label:'입사',data:labels.map(l=>hireMap[l]||0),backgroundColor:C.green,yAxisID:'y1',datalabels:{display:false}},
+      {label:'퇴사',data:labels.map(l=>resignMap[l]||0),backgroundColor:C.red,yAxisID:'y1',datalabels:{display:false}}
+    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
   }catch{}
 }
 
@@ -204,7 +215,7 @@ async function renderCapability(f) {
 
     if(ctxS){
       charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:true,tension:.3,pointRadius:2},
+        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2},
         {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2},
         {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2}
       ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
@@ -247,6 +258,7 @@ async function renderMPICoverage(f) {
 async function renderWorklog(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/worklog-stats?${qs(f)}`);
+    const ALLOWED_GS=['PEE1-PT','PEE1-HS','PEE1-IC','PEE1-CJ','PEE2-PT','PEE2-HS','PSKH-PSKH'];
     // Monthly hours
     let ctx=getCtx('chart-monthly-hours');if(ctx){
       charts['chart-monthly-hours']=new Chart(ctx,{type:'bar',data:{labels:data.monthlyHours.map(r=>r.ym),datasets:[
@@ -261,8 +273,9 @@ async function renderWorklog(f) {
       const labels=ORDER.filter(k=>map[k]);
       const vals=labels.map(k=>map[k]||0);
       const t=vals.reduce((s,x)=>s+x,0);
-      charts['chart-worktype']=new Chart(ctx,{type:'bar',data:{labels, datasets:[{data:vals,backgroundColor:[C.blue,C.green,C.amber],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>t?`${v}건 (${Math.round(v/t*100)}%)`:`${v}건`}}}});
+      charts['chart-worktype']=new Chart(ctx,{type:'bar',data:{labels, datasets:[{data:vals,backgroundColor:[C.blue,C.green,C.amber],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>t?`${v}건 (${Math.round(v/t*100)}%)`:''}},scales:{x:{ticks:{stepSize:1}}}}});
     }
+
     // Work Sort — horizontal bar (fix 8)
     ctx=getCtx('chart-worksort');if(ctx){
       charts['chart-worksort']=new Chart(ctx,{type:'bar',data:{labels:data.byWorkType2.map(r=>r.label),datasets:[{data:data.byWorkType2.map(r=>r.cnt),backgroundColor:[C.red,C.blue,C.green,C.amber,C.slate],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v,c)=>{const t=data.byWorkType2.reduce((s,r)=>s+r.cnt,0);return`${v}건 (${Math.round(v/t*100)}%)`;}}}}});
@@ -278,7 +291,8 @@ async function renderWorklog(f) {
 
     // Group/Site - Shift ratio
     ctx=getCtx('chart-shift-gs');if(ctx){
-      const rows=(data.shiftByGroupSite||[]).filter(r=>r.total_cnt>0);
+      const rows=(data.shiftByGroupSite||[]).filter(r=>r.total_cnt>0 && ALLOWED_GS.includes(r.label))
+        .sort((a,b)=>ALLOWED_GS.indexOf(a.label)-ALLOWED_GS.indexOf(b.label));
       const labels=rows.map(r=>r.label);
       const vals=rows.map(r=>+(r.afternoon_cnt/r.total_cnt*100).toFixed(1));
       charts['chart-shift-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'오후 근무 비율(%)',data:vals,backgroundColor:C.blue,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
@@ -286,7 +300,8 @@ async function renderWorklog(f) {
 
     // Group/Site - Overtime ratio
     ctx=getCtx('chart-overtime-gs');if(ctx){
-      const rows=(data.overtimeByGroupSite||[]).filter(r=>r.total_cnt>0);
+      const rows=(data.overtimeByGroupSite||[]).filter(r=>r.total_cnt>0 && ALLOWED_GS.includes(r.label))
+        .sort((a,b)=>ALLOWED_GS.indexOf(a.label)-ALLOWED_GS.indexOf(b.label));
       const labels=rows.map(r=>r.label);
       const vals=rows.map(r=>+(r.overtime_cnt/r.total_cnt*100).toFixed(1));
       charts['chart-overtime-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'초과 근무 비율(%)',data:vals,backgroundColor:C.red,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
@@ -335,12 +350,22 @@ async function doExport() {
       'SUPRA N SETUP','SUPRA N MAINT','SUPRA XP SETUP','SUPRA XP MAINT','INTEGER SETUP','INTEGER MAINT','PRECIA SETUP','PRECIA MAINT','ECOLITE SETUP','ECOLITE MAINT','GENEVA SETUP','GENEVA MAINT','HDW SETUP','HDW MAINT',
       'SETUP CAPA','MAINT CAPA','MULTI CAPA','CAPA','MPI',
       'SUPRA N MPI','SUPRA XP MPI','INTEGER MPI','PRECIA MPI','ECOLITE MPI','GENEVA MPI','HDW MPI',
-      'Lv1-1 취득','Lv1-2 취득','Lv1-3 취득','Lv2 취득','Lv2-2 취득','Lv2-3 취득','Role'];
+      'Lv1-1 취득','Lv1-2 취득','Lv1-3 취득','Lv2 취득','Lv2-2 취득','Lv2-3 취득','Role',
+      '25Y CAPA GOAL','26Y CAPA GOAL','25Y LEVEL GOAL','26Y LEVEL GOAL'];
+
+    const M25=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const M26=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP'];
+    const monthCols=[];
+    M25.forEach(m=>{monthCols.push(`25Y${m}`,`25Y${m}_SETUP`,`25Y${m}_MAINT`);});
+    M26.forEach(m=>{monthCols.push(`26Y${m}`, m==='AUG'?'26AUG_SETUP':`26Y${m}_SETUP`, `26Y${m}_MAINT`);});
+    hd.push(...monthCols);
     const rows=data.map(r=>[r.NAME,r.COMPANY,r.EMPLOYEE_ID,r.GROUP,r.SITE,fmtDate(r.HIRE),r.level_report,r.level_internal,r.level_psk,r.multi_level,r.multi_level_psk,r['MAIN EQ'],r['MULTI EQ'],
       r['SUPRA N SET UP'],r['SUPRA N MAINT'],r['SUPRA XP SET UP'],r['SUPRA XP MAINT'],r['INTEGER SET UP'],r['INTEGER MAINT'],r['PRECIA SET UP'],r['PRECIA MAINT'],r['ECOLITE SET UP'],r['ECOLITE MAINT'],r['GENEVA SET UP'],r['GENEVA MAINT'],r['HDW SET UP'],r['HDW MAINT'],
       r['SET UP CAPA'],r['MAINT CAPA'],r['MULTI CAPA'],r.CAPA,r.MPI,
       r['SUPRA N MPI'],r['SUPRA XP MPI'],r['INTEGER MPI'],r['PRECIA MPI'],r['ECOLITE MPI'],r['GENEVA MPI'],r['HDW MPI'],
-      fmtDate(r['Level1 Achieve']),fmtDate(r['Level2 Achieve']),fmtDate(r['Level3 Achieve']),fmtDate(r['Level4 Achieve']),fmtDate(r['Level2-2(B) Achieve']),fmtDate(r['Level2-2(A) Achieve']),r.role]);
+      fmtDate(r['Level1 Achieve']),fmtDate(r['Level2 Achieve']),fmtDate(r['Level3 Achieve']),fmtDate(r['Level4 Achieve']),fmtDate(r['Level2-2(B) Achieve']),fmtDate(r['Level2-2(A) Achieve']),r.role,
+      r['25Y CAPA GOAL']??'',r['26Y CAPA GOAL']??'',r['25Y LEVEL GOAL']??'',r['26Y LEVEL GOAL']??'',
+      ...monthCols.map(c=>r[c]??'')]);
     const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
     ws['!cols']=hd.map((h,i)=>({wch:Math.min(Math.max(h.length,...rows.slice(0,30).map(r=>String(r[i]||'').length))+2,25)}));
     XLSX.utils.book_append_sheet(wb,ws,'Engineers');
@@ -368,10 +393,8 @@ function initAddEngineer() {
       hire_date:document.getElementById('a-hire').value||null,
       main_eq:document.getElementById('a-maineq').value||null,
       multi_eq:document.getElementById('a-multieq').value||null,
-      g25: document.getElementById('a-g25')?.value ? Number(document.getElementById('a-g25').value) : null,
       g26: document.getElementById('a-g26')?.value ? Number(document.getElementById('a-g26').value) : null,
-      lv_goal_25: document.getElementById('a-lvgoal25')?.value ? Number(document.getElementById('a-lvgoal25').value) : null,
-      mlv_goal_25: document.getElementById('a-mlvgoal25')?.value ? Number(document.getElementById('a-mlvgoal25').value) : null,
+      lv_goal_26: document.getElementById('a-lvgoal26')?.value ? Number(document.getElementById('a-lvgoal26').value) : null,
     };
     if(!b.name){toast('error','이름을 입력하세요.');return;}
     try{await axios.post(`${API}/analytics/engineer`,b);toast('success',`${b.name} 등록 완료`);closeAdd();await initFilters();loadAll();}catch(e){toast('error',e.response?.data?.error||'등록 실패');}
@@ -407,7 +430,7 @@ function initEditEngineer() {
       document.getElementById('e-g25').value = (data.g25 ?? '');
       document.getElementById('e-g26').value = (data.g26 ?? '');
       document.getElementById('e-lvgoal25').value = (data.lv_goal_25 ?? '');
-      document.getElementById('e-mlvgoal25').value = (data.mlv_goal_25 ?? '');
+      document.getElementById('e-lvgoal26') && (document.getElementById('e-lvgoal26').value = (data.lv_goal_26 ?? ''));
       document.getElementById('e-status').value = 'ACTIVE';
       document.getElementById('e-resign').value = '';
       open();
@@ -433,7 +456,7 @@ function initEditEngineer() {
       g25: document.getElementById('e-g25').value===''?undefined:Number(document.getElementById('e-g25').value),
       g26: document.getElementById('e-g26').value===''?undefined:Number(document.getElementById('e-g26').value),
       lv_goal_25: document.getElementById('e-lvgoal25').value===''?undefined:Number(document.getElementById('e-lvgoal25').value),
-      mlv_goal_25: document.getElementById('e-mlvgoal25').value===''?undefined:Number(document.getElementById('e-mlvgoal25').value),
+      lv_goal_26: document.getElementById('e-lvgoal26')?.value===''?undefined:Number(document.getElementById('e-lvgoal26').value),
     };
     if(!body.name){toast('error','이름을 입력하세요.');return;}
     try {

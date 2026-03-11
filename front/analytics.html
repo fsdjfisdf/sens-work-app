@@ -71,7 +71,7 @@
       <div class="chart-card wide"><div class="chart-header"><h3>Head Count 추이</h3><button class="info-btn" data-desc="2023년 1월부터 현재까지 월별 재직 인원, 입사자, 퇴사자 추이. 막대에 마우스를 올리면 해당 인원을 확인할 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-headcount"></canvas></div>
       <div class="chart-card"><div class="chart-header"><h3>회사별 인원</h3><button class="info-btn" data-desc="SE&S와 SE&I의 인원 수 및 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-company"></canvas></div>
       <div class="chart-card"><div class="chart-header"><h3>연차별 인원</h3><button class="info-btn" data-desc="입사일 기준 연차별 인원 분포"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-experience"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>Group / Site별 인원</h3><button class="info-btn" data-desc="그룹·사이트 조합별 인원 분포"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-groupsite"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Group / Site별 인원</h3><button class="info-btn" data-desc="그룹·사이트 조합별 인원 분포"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-groupsite"></canvas></div>
     </div>
   </div>
 
@@ -125,10 +125,8 @@
     <div class="a-field"><label>입사일</label><input type="date" id="a-hire"></div>
     <div class="a-field"><label>MAIN EQ</label><select id="a-maineq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
     <div class="a-field"><label>MULTI EQ</label><select id="a-multieq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
-    <div class="a-field"><label>25Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="a-g25" placeholder="예: 0.75"></div>
     <div class="a-field"><label>26Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="a-g26" placeholder="예: 0.80"></div>
-    <div class="a-field"><label>25Y LEVEL 목표</label><input type="number" step="1" min="0" id="a-lvgoal25" placeholder="예: 2"></div>
-    <div class="a-field"><label>25Y MULTI LEVEL 목표</label><input type="number" step="1" min="0" id="a-mlvgoal25" placeholder="예: 1"></div>
+    <div class="a-field"><label>26Y LEVEL 목표</label><input type="number" step="1" min="0" id="a-lvgoal26" placeholder="예: 2"></div>
   </div>
   <div class="add-actions"><button class="btn primary" id="a-save">등록</button><button class="btn" id="a-cancel">취소</button></div>
 </div>
@@ -150,7 +148,7 @@
     <div class="a-field"><label>25Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="e-g25"></div>
     <div class="a-field"><label>26Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="e-g26"></div>
     <div class="a-field"><label>25Y LEVEL 목표</label><input type="number" step="1" min="0" id="e-lvgoal25"></div>
-    <div class="a-field"><label>25Y MULTI LEVEL 목표</label><input type="number" step="1" min="0" id="e-mlvgoal25"></div>
+    <div class="a-field"><label>26Y LEVEL 목표</label><input type="number" step="1" min="0" id="e-lvgoal26"></div>
     <div class="a-field"><label>재직 상태</label>
       <select id="e-status"><option value="ACTIVE">재직</option><option value="RESIGNED">퇴사</option></select>
     </div>
