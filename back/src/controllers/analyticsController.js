@@ -19,81 +19,122 @@ exports.getFilters = async (req, res) => {
 };
 exports.getHeadCount = async (req, res) => {
   try { res.json(await dao.getHeadCount(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'HeadCount 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: 'Head Count 조회 오류' }); }
 };
 exports.getHRDistribution = async (req, res) => {
   try { res.json(await dao.getHRDistribution(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'HR Distribution 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: 'HR 분포 조회 오류' }); }
 };
 exports.getLevelDistribution = async (req, res) => {
   try { res.json(await dao.getLevelDistribution(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Level Distribution 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '레벨 분포 조회 오류' }); }
 };
 exports.getLevelAchievement = async (req, res) => {
   try { res.json(await dao.getLevelAchievement(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Level Achievement 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '레벨 취득 기간 조회 오류' }); }
 };
 exports.getLevelTrend = async (req, res) => {
   try { res.json(await dao.getLevelTrend(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Level Trend 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '레벨 트렌드 조회 오류' }); }
 };
 exports.getCapability = async (req, res) => {
   try { res.json(await dao.getCapability(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Capability 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '역량 조회 오류' }); }
 };
 exports.getEqCapability = async (req, res) => {
   try { res.json(await dao.getEqCapability(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'EQ Capability 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '설비별 역량 조회 오류' }); }
 };
 exports.getWorklogStats = async (req, res) => {
   try { res.json(await dao.getWorklogStats(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Worklog stats 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '작업이력 통계 조회 오류' }); }
 };
 exports.getEngineerInfo = async (req, res) => {
-  try { res.json(await dao.getEngineerInfo(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Engineer info 조회 오류' }); }
-};
-exports.getMPICoverage = async (req, res) => {
-  try { res.json(await dao.getMPICoverage(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'MPI coverage 조회 오류' }); }
+  try {
+    const n = req.query.name;
+    if (!n) return res.json(null);
+    res.json(await dao.getEngineerInfo(n));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '엔지니어 상세 조회 오류' });
+  }
 };
 exports.getExportData = async (req, res) => {
   try { res.json(await dao.getExportData(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'Export data 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '내보내기 데이터 조회 오류' }); }
 };
-
-exports.getMyDashboard = async (req, res) => {
-  try {
-    const idt = req.verifiedToken || req.decodedToken || req.decoded || req.user || req.auth || {};
-    res.json(await dao.getMyDashboard(idt));
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: e.message || '내 대시보드 조회 오류' });
-  }
+exports.getMPICoverage = async (req, res) => {
+  try { res.json(await dao.getMPICoverage(getFilters(req.query))); }
+  catch (e) { console.error(e); res.status(500).json({ error: 'MPI 커버리지 조회 오류' }); }
 };
 
 exports.addEngineer = async (req, res) => {
   try {
-    if (!req.body?.name) return res.status(400).json({ error: 'name은 필수입니다.' });
-    res.status(201).json(await dao.addEngineer(req.body));
-  } catch (e) { console.error(e); res.status(500).json({ error: e.message || 'engineer 추가 오류' }); }
+    const b = req.body || {};
+    if (!b.name || !b.company || !b.group || !b.site) {
+      return res.status(400).json({ error: '이름, 회사, 그룹, 사이트는 필수입니다.' });
+    }
+    const id = await dao.addEngineer(b);
+    res.status(201).json({ message: '엔지니어 등록 완료', id });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '엔지니어 등록 오류' });
+  }
 };
+
 exports.updateEngineer = async (req, res) => {
   try {
-    res.json(await dao.updateEngineer(req.params.id, req.body || {}));
-  } catch (e) { console.error(e); res.status(500).json({ error: e.message || 'engineer 수정 오류' }); }
+    const id = req.params.id;
+    if (!id) return res.status(400).json({ error: 'id가 필요합니다.' });
+    await dao.updateEngineer(id, req.body || {});
+    res.json({ message: '엔지니어 수정 완료' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '엔지니어 수정 오류' });
+  }
 };
+
 exports.resignEngineer = async (req, res) => {
   try {
-    const { engineer_id, resign_date, reason } = req.body || {};
-    if (!engineer_id || !resign_date) return res.status(400).json({ error: 'engineer_id, resign_date는 필수입니다.' });
-    res.json(await dao.resignEngineer({ engineer_id, resign_date, reason }));
-  } catch (e) { console.error(e); res.status(500).json({ error: e.message || '퇴사 처리 오류' }); }
+    const b = req.body || {};
+    if (!b.id && !b.name) return res.status(400).json({ error: 'id 또는 name이 필요합니다.' });
+    if (!b.resign_date) return res.status(400).json({ error: 'resign_date가 필요합니다.' });
+    await dao.resignEngineer(b);
+    res.json({ message: '퇴사 처리 완료' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '퇴사 처리 오류' });
+  }
 };
+
 exports.reinstateEngineer = async (req, res) => {
   try {
-    const { engineer_id } = req.body || {};
-    if (!engineer_id) return res.status(400).json({ error: 'engineer_id는 필수입니다.' });
-    res.json(await dao.reinstateEngineer({ engineer_id }));
-  } catch (e) { console.error(e); res.status(500).json({ error: e.message || '복직 처리 오류' }); }
+    const b = req.body || {};
+    if (!b.name) return res.status(400).json({ error: 'name이 필요합니다.' });
+    await dao.reinstateEngineer(b.name);
+    res.json({ message: '복직 처리 완료' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '복직 처리 오류' });
+  }
+};
+
+function pickMe(req){
+  const t = req.verifiedToken || req.decodedToken || req.decoded || req.user || req.auth || {};
+  const employee_id = t.employee_id ?? t.EMPLOYEE_ID ?? t.emp_id ?? t.employeeId ?? t.person_id ?? t.personId ?? t.id;
+  const name = t.name ?? t.NAME ?? t.nickname ?? t.user_name ?? t.username ?? t.userName ?? t.NICKNAME;
+  return { employee_id, name };
+}
+
+exports.getMyDashboard = async (req, res) => {
+  try {
+    const me = pickMe(req);
+    if (!me.employee_id && !me.name) {
+      return res.status(401).json({ error: '로그인 정보를 확인할 수 없습니다.' });
+    }
+    res.json(await dao.getMyDashboard(me));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '내 정보 대시보드 조회 오류' });
+  }
 };
