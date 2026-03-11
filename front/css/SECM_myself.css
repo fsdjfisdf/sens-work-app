@@ -14,7 +14,7 @@ body{
   margin:0;background:var(--bg);color:var(--text);
   font-family:"Pretendard Variable",Pretendard,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   -webkit-font-smoothing:antialiased;
-  padding-top:calc(var(--nav-real, var(--nav-h))+var(--safe-top)+8px);
+  padding-top: calc(var(--nav-h) + var(--safe-top) + 60px);
   padding-bottom:var(--safe-bottom);
   line-height:1.5;font-size:14px;
 }
