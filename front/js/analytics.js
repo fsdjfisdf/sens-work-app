@@ -57,6 +57,8 @@ function getCtx(id) { destroyChart(id); return document.getElementById(id)?.getC
 const DL_BAR = { display:true, anchor:'end', align:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>v||'' };
 const DL_PCT = { display:true, font:{size:11,weight:'bold'}, color:'#fff', formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((s,x)=>s+x,0); return t?(Math.round(v/t*100)+'%'):''; } };
 const DL_LINE = { display:true, align:'top', anchor:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>(v??'') };
+const DL_PCT_LINE = { display:true, align:'top', anchor:'end', offset:2, clip:false, font:{size:9,weight:'bold'}, color:'#374151', formatter:v => v == null ? '' : `${(Number(v) * 100).toFixed(1)}%` };
+const DL_SCORE_LINE = { display:true, align:'top', anchor:'end', offset:2, clip:false, font:{size:9,weight:'bold'}, color:'#374151', formatter:v => v == null ? '' : Number(v).toFixed(2) };
 
 /* Nav */
 function initNav() {
@@ -165,10 +167,11 @@ async function renderHeadCount(f) {
     const ctx = getCtx('chart-headcount'); if(!ctx) return;
     const now = new Date(); const labels = []; let d = new Date(2023,0);
     while(d<=now){labels.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
-    const hireMap={},hireName={};data.hires.forEach(r=>{hireMap[r.ym]=r.cnt;hireName[r.ym]=r.names;});
-    const resignMap={},resignName={};data.resigns.forEach(r=>{resignMap[r.ym]=r.cnt;resignName[r.ym]=r.names;});
-    // forward 누적(입사 전=0, 1명 선택 시에도 자연스러운 형태)
-    let running=0;const cumulative=[];
+    const hireMap={},hireName={};data.hires.forEach(r=>{hireMap[r.ym]=Number(r.cnt)||0;hireName[r.ym]=r.names;});
+    const resignMap={},resignName={};(data.resigns||[]).forEach(r=>{resignMap[r.ym]=Number(r.cnt)||0;resignName[r.ym]=r.names;});
+    const netHiresInRange = labels.reduce((s,l)=>s+(hireMap[l]||0),0);
+    const netResignsInRange = labels.reduce((s,l)=>s+(resignMap[l]||0),0);
+    let running=Math.max(0,(Number(data.currentTotal)||0)-netHiresInRange+netResignsInRange);const cumulative=[];
     labels.forEach(l=>{running += (hireMap[l]||0) - (resignMap[l]||0); cumulative.push(Math.max(0,running));});
     charts['chart-headcount']=new Chart(ctx,{type:'bar',data:{labels,datasets:[
       {type:'line',label:'재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.blueF,tension:.3,yAxisID:'y',fill:true,pointRadius:1,datalabels:DL_LINE},
@@ -236,10 +239,10 @@ async function renderLevelTrend(f) {
     const datasets=[];
     if(isSingle) {
       // 개인: 레벨 점수만 꺾은선으로
-      datasets.push({type:'line',label:`${data[0].NAME} 레벨 점수`,data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.solid[0],fill:false});
+      datasets.push({type:'line',label:`${data[0].NAME} 레벨 점수`,data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.solid[0],fill:false,datalabels:DL_SCORE_LINE});
     } else {
       LEVELS.forEach(l=>datasets.push({label:`Lv.${l}`,data:levelCounts[l],backgroundColor:colors[l],stack:'a',yAxisID:'y1'}));
-      datasets.push({type:'line',label:'평균 점수',data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,yAxisID:'y',pointRadius:2});
+      datasets.push({type:'line',label:'평균 점수',data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,yAxisID:'y',pointRadius:2,datalabels:DL_SCORE_LINE});
     }
     const scales = isSingle
       ? {y:{title:{display:true,text:'레벨 점수',font:{size:11}},min:0,max:5.5},x:{ticks:{maxRotation:45,font:{size:9}}}}
@@ -256,25 +259,25 @@ async function renderCapability(f) {
     const ctxT=getCtx('chart-capability-total');
     if(!ctxS && !ctxT) return;
 
-    const m=(data.monthly||[]).filter(r=>r.ym>='2024-09');
+    const m=(data.monthly||[]).filter(r=>r.ym>='2024-11');
     const goalsByYear=data.goalsByYear||{};
     const hasMulti=(m||[]).some(r=>r.avg_multi!=null);
     const goalLine=m.map(r=>goalsByYear[String(r.ym).slice(0,4)] ?? null);
 
     if(ctxS){
       const datasets=[
-        {label:'SETUP',data:m.map(r=>r.avg_setup!=null?+Number(r.avg_setup).toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2},
-        {label:'MAINT',data:m.map(r=>r.avg_maint!=null?+Number(r.avg_maint).toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2}
+        {label:'SETUP',data:m.map(r=>r.avg_setup!=null?+Number(r.avg_setup).toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2,datalabels:DL_PCT_LINE},
+        {label:'MAINT',data:m.map(r=>r.avg_maint!=null?+Number(r.avg_maint).toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2,datalabels:DL_PCT_LINE}
       ];
       if(hasMulti){
-        datasets.push({label:'MULTI',data:m.map(r=>r.avg_multi!=null?+Number(r.avg_multi).toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2});
+        datasets.push({label:'MULTI',data:m.map(r=>r.avg_multi!=null?+Number(r.avg_multi).toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2,datalabels:DL_PCT_LINE});
       }
       charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
     if(ctxT){
       charts['chart-capability-total']=new Chart(ctxT,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'전체',data:m.map(r=>r.avg_total!=null?+Number(r.avg_total).toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2},
-        {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2}
+        {label:'전체',data:m.map(r=>r.avg_total!=null?+Number(r.avg_total).toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2,datalabels:DL_PCT_LINE},
+        {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2,datalabels:DL_PCT_LINE}
       ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
   }catch(e){console.error(e);}
@@ -313,8 +316,8 @@ async function renderWorklog(f) {
     // Monthly hours
     let ctx=getCtx('chart-monthly-hours');if(ctx){
       charts['chart-monthly-hours']=new Chart(ctx,{type:'bar',data:{labels:data.monthlyHours.map(r=>r.ym),datasets:[
-        {type:'line',label:'건수',data:data.monthlyHours.map(r=>r.event_count),borderColor:C.solid[0],yAxisID:'y1',tension:.3,pointRadius:2},
-        {label:'작업시간(분)',data:data.monthlyHours.map(r=>r.total_minutes),backgroundColor:C.greenF,borderColor:C.solid[1],borderWidth:1,borderRadius:3,yAxisID:'y'}
+        {type:'line',label:'건수',data:data.monthlyHours.map(r=>r.event_count),borderColor:C.solid[0],yAxisID:'y1',tension:.3,pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:9,weight:'bold'},color:'#374151',formatter:v=>v==null?'':`${v}건`}},
+        {label:'작업시간(분)',data:data.monthlyHours.map(r=>r.total_minutes),backgroundColor:C.greenF,borderColor:C.solid[1],borderWidth:1,borderRadius:3,yAxisID:'y',datalabels:{display:true,anchor:'end',align:'end',font:{size:9,weight:'bold'},color:'#374151',formatter:v=>v==null?'':`${Math.round(Number(v))}`}}
       ]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:false}},scales:{y:{position:'left',title:{display:true,text:'분',font:{size:11}}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'건',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
     // Work Type — MAINT / RELOCATION / SET UP만
@@ -346,7 +349,7 @@ async function renderWorklog(f) {
         .sort((a,b)=>ALLOWED_GS.indexOf(a.label)-ALLOWED_GS.indexOf(b.label));
       const labels=rows.map(r=>r.label);
       const vals=rows.map(r=>+(r.afternoon_cnt/r.total_cnt*100).toFixed(1));
-      charts['chart-shift-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'오후 근무 비율(%)',data:vals,backgroundColor:C.blue,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+      charts['chart-shift-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'오후 근무 비율(%)',data:vals,backgroundColor:C.blue,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{font:{size:10}}}}}});
     }
 
     // Group/Site - Overtime ratio
@@ -355,7 +358,7 @@ async function renderWorklog(f) {
         .sort((a,b)=>ALLOWED_GS.indexOf(a.label)-ALLOWED_GS.indexOf(b.label));
       const labels=rows.map(r=>r.label);
       const vals=rows.map(r=>+(r.overtime_cnt/r.total_cnt*100).toFixed(1));
-      charts['chart-overtime-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'초과 근무 비율(%)',data:vals,backgroundColor:C.red,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+      charts['chart-overtime-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'초과 근무 비율(%)',data:vals,backgroundColor:C.red,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{font:{size:10}}}}}});
     }
     // Rework
     ctx=getCtx('chart-rework');if(ctx){
@@ -528,7 +531,7 @@ async function loadAll() {
   const editBtn=document.getElementById('btn-edit-eng');
   if(editBtn) editBtn.disabled = !name;
   if(name)showEngineerInfo(name);else document.getElementById('eng-info').style.display='none';
-  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderMPICoverage(f),renderWorklog(f)]);
+  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderWorklog(f)]);
 }
 
 /* Init */
