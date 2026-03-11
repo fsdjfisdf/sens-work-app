@@ -65,7 +65,7 @@ exports.getExportData = async (req, res) => {
 };
 exports.getMPICoverage = async (req, res) => {
   try { res.json(await dao.getMPICoverage(getFilters(req.query))); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'MPI 커버리지 조회 오류' }); }
+  catch (e) { console.error(e); res.status(500).json({ error: '설비 커버리지 조회 오류' }); }
 };
 
 exports.addEngineer = async (req, res) => {

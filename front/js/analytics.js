@@ -116,12 +116,44 @@ function initEngSearch() {
 async function initFilters() {
   try {
     const {data} = await axios.get(`${API}/analytics/filters`);
-    const sel = (id, arr) => { const s = document.getElementById(id); arr.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; s.appendChild(o); }); };
-    sel('f-company', data.companies);
-    sel('f-group', data.groups);
-    sel('f-site', data.sites);
-    allEngineers = data.engineers;
-  } catch { toast('error','필터 로드 실패'); }
+
+    const refillSelect = (id, arr, keepFirst = true) => {
+      const s = document.getElementById(id);
+      if (!s) return;
+      const first = keepFirst ? s.querySelector('option')?.outerHTML || '<option value="">전체</option>' : '';
+      s.innerHTML = first;
+      arr.forEach(v => {
+        const o = document.createElement('option');
+        o.value = v;
+        o.textContent = v;
+        s.appendChild(o);
+      });
+    };
+
+    refillSelect('f-company', data.companies || []);
+    refillSelect('f-group', data.groups || []);
+    refillSelect('f-site', data.sites || []);
+
+    const eqSelects = ['a-maineq','a-multieq','e-maineq','e-multieq'];
+    eqSelects.forEach(id => {
+      const s = document.getElementById(id);
+      if (!s) return;
+      const selected = s.value;
+      s.innerHTML = '<option value="">—</option>';
+      (data.equipments || []).forEach(eq => {
+        const o = document.createElement('option');
+        o.value = eq.name;
+        o.textContent = eq.name;
+        s.appendChild(o);
+      });
+      if ([...s.options].some(o => o.value === selected)) s.value = selected;
+    });
+
+    allEngineers = data.engineers || [];
+  } catch (e) {
+    console.error(e);
+    toast('error','필터 로드 실패');
+  }
 }
 
 /* ══ CHARTS ══ */
@@ -223,24 +255,29 @@ async function renderCapability(f) {
     const ctxS=getCtx('chart-capability-smm');
     const ctxT=getCtx('chart-capability-total');
     if(!ctxS && !ctxT) return;
-    const m=data.monthly.filter(r=>r.ym>='2024-09');
-    const goals=data.goals;
-    const goalLine=m.map(r=>{const y=+r.ym.split('-')[0];return y===2025?goals.g25:goals.g26;});
+
+    const m=(data.monthly||[]).filter(r=>r.ym>='2024-09');
+    const goalsByYear=data.goalsByYear||{};
+    const hasMulti=(m||[]).some(r=>r.avg_multi!=null);
+    const goalLine=m.map(r=>goalsByYear[String(r.ym).slice(0,4)] ?? null);
 
     if(ctxS){
-      charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2},
-        {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2},
-        {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2}
-      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+      const datasets=[
+        {label:'SETUP',data:m.map(r=>r.avg_setup!=null?+Number(r.avg_setup).toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2},
+        {label:'MAINT',data:m.map(r=>r.avg_maint!=null?+Number(r.avg_maint).toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2}
+      ];
+      if(hasMulti){
+        datasets.push({label:'MULTI',data:m.map(r=>r.avg_multi!=null?+Number(r.avg_multi).toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2});
+      }
+      charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
     if(ctxT){
       charts['chart-capability-total']=new Chart(ctxT,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'전체',data:m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2},
+        {label:'전체',data:m.map(r=>r.avg_total!=null?+Number(r.avg_total).toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2},
         {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2}
       ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
-  }catch{}
+  }catch(e){console.error(e);}
 }
 
 /* 7. Equipment Capability (fix 6 — add avg, exclude non-users) */
@@ -344,14 +381,11 @@ async function showEngineerInfo(name) {
     document.getElementById('ei-company').textContent=data.COMPANY||'—';
     document.getElementById('ei-groupsite').textContent=`${data.GROUP} / ${data.SITE}`;
     document.getElementById('ei-hire').textContent=fmtDate(data.HIRE);
-    // Lv.2 (2-2) 형태 (fix 17)
     const lr = data['LEVEL(report)'] || '0';
-    const lvInternal = data.LEVEL || 0;
-    // level_report 그대로 표시
     document.getElementById('ei-level').textContent = `Lv.${lr}`;
-    document.getElementById('ei-capa').textContent=data.CAPA?`${(data.CAPA*100).toFixed(1)}%`:'—';
-    document.getElementById('ei-mpi').textContent=data.MPI??'—';
-  }catch{card.style.display='none';}
+    document.getElementById('ei-capa').textContent=data.CAPA!=null?`${(Number(data.CAPA)*100).toFixed(1)}%`:'—';
+    document.getElementById('ei-mpi').textContent=data['MULTI LEVEL'] ?? '—';
+  }catch(e){console.error(e);card.style.display='none';}
 }
 
 /* Excel (fix 16 — more data) */
@@ -359,33 +393,34 @@ async function doExport() {
   try {
     toast('success','엑셀 준비 중...');
     const {data}=await axios.get(`${API}/analytics/export/excel?${qs(getFilters())}`);
-    if(!data.length){toast('error','데이터 없음');return;}
-    const hd=['이름','회사','사번','Group','Site','입사일','Level(report)','Level(내부)','Level(PSK)','Multi Level','Multi Level(PSK)','MAIN EQ','MULTI EQ',
-      'SUPRA N SETUP','SUPRA N MAINT','SUPRA XP SETUP','SUPRA XP MAINT','INTEGER SETUP','INTEGER MAINT','PRECIA SETUP','PRECIA MAINT','ECOLITE SETUP','ECOLITE MAINT','GENEVA SETUP','GENEVA MAINT','HDW SETUP','HDW MAINT',
-      'SETUP CAPA','MAINT CAPA','MULTI CAPA','CAPA','MPI',
-      'SUPRA N MPI','SUPRA XP MPI','INTEGER MPI','PRECIA MPI','ECOLITE MPI','GENEVA MPI','HDW MPI',
-      'Lv1-1 취득','Lv1-2 취득','Lv1-3 취득','Lv2 취득','Lv2-2 취득','Lv2-3 취득','Role',
-      '25Y CAPA GOAL','26Y CAPA GOAL','25Y LEVEL GOAL','26Y LEVEL GOAL'];
+    const rowsSrc = data?.rows || [];
+    const monthlyKeys = data?.monthlyKeys || [];
+    if(!rowsSrc.length){toast('error','데이터 없음');return;}
 
-    const M25=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-    const M26=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP'];
-    const monthCols=[];
-    M25.forEach(m=>{monthCols.push(`25Y${m}`,`25Y${m}_SETUP`,`25Y${m}_MAINT`);});
-    M26.forEach(m=>{monthCols.push(`26Y${m}`, m==='AUG'?'26AUG_SETUP':`26Y${m}_SETUP`, `26Y${m}_MAINT`);});
-    hd.push(...monthCols);
-    const rows=data.map(r=>[r.NAME,r.COMPANY,r.EMPLOYEE_ID,r.GROUP,r.SITE,fmtDate(r.HIRE),r.level_report,r.level_internal,r.level_psk,r.multi_level,r.multi_level_psk,r['MAIN EQ'],r['MULTI EQ'],
-      r['SUPRA N SET UP'],r['SUPRA N MAINT'],r['SUPRA XP SET UP'],r['SUPRA XP MAINT'],r['INTEGER SET UP'],r['INTEGER MAINT'],r['PRECIA SET UP'],r['PRECIA MAINT'],r['ECOLITE SET UP'],r['ECOLITE MAINT'],r['GENEVA SET UP'],r['GENEVA MAINT'],r['HDW SET UP'],r['HDW MAINT'],
-      r['SET UP CAPA'],r['MAINT CAPA'],r['MULTI CAPA'],r.CAPA,r.MPI,
-      r['SUPRA N MPI'],r['SUPRA XP MPI'],r['INTEGER MPI'],r['PRECIA MPI'],r['ECOLITE MPI'],r['GENEVA MPI'],r['HDW MPI'],
-      fmtDate(r['Level1 Achieve']),fmtDate(r['Level2 Achieve']),fmtDate(r['Level3 Achieve']),fmtDate(r['Level4 Achieve']),fmtDate(r['Level2-2(B) Achieve']),fmtDate(r['Level2-2(A) Achieve']),r.role,
-      r['25Y CAPA GOAL']??'',r['26Y CAPA GOAL']??'',r['25Y LEVEL GOAL']??'',r['26Y LEVEL GOAL']??'',
-      ...monthCols.map(c=>r[c]??'')]);
+    const eqNames = [...new Set(rowsSrc.flatMap(r => Object.keys(r).filter(k => (/ SET UP$| MAINT$/.test(k)) && !/^\d{4}-\d{2} /.test(k)).map(k => k.replace(/ (SET UP|MAINT)$/,''))))].sort((a,b)=>a.localeCompare(b));
+    const eqCols = eqNames.flatMap(eq => [`${eq} SET UP`, `${eq} MAINT`]);
+
+    const hd=['이름','회사','사번','Group','Site','입사일','Role','Level(report)','Level(내부)','Level(PSK)','Multi Level','Multi Level(PSK)','MAIN EQ','MULTI EQ',
+      'SETUP CAPA','MAINT CAPA','CAPA','25Y CAPA GOAL','26Y CAPA GOAL','25Y LEVEL GOAL','26Y LEVEL GOAL',
+      'Lv1-1 취득','Lv1-2 취득','Lv1-3 취득','Lv2 취득','Lv2-2 취득','Lv2-3 취득','Lv2-4 취득',
+      ...eqCols,
+      ...monthlyKeys];
+
+    const rows = rowsSrc.map(r => [
+      r.NAME, r.COMPANY, r.EMPLOYEE_ID, r.GROUP, r.SITE, fmtDate(r.HIRE), r.role,
+      r.level_report, r.level_internal, r.level_psk, r.multi_level, r.multi_level_psk, r['MAIN EQ'], r['MULTI EQ'],
+      r['SET UP CAPA'], r['MAINT CAPA'], r.CAPA, r['25Y CAPA GOAL'], r['26Y CAPA GOAL'], r['25Y LEVEL GOAL'], r['26Y LEVEL GOAL'],
+      fmtDate(r['Level1 Achieve']), fmtDate(r['Level2 Achieve']), fmtDate(r['Level3 Achieve']), fmtDate(r['Level4 Achieve']), fmtDate(r['Level2-2(B) Achieve']), fmtDate(r['Level2-2(A) Achieve']), fmtDate(r['Level2-3(B) Achieve']),
+      ...eqCols.map(c => r[c] ?? ''),
+      ...monthlyKeys.map(c => r[c] ?? '')
+    ]);
+
     const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
     ws['!cols']=hd.map((h,i)=>({wch:Math.min(Math.max(h.length,...rows.slice(0,30).map(r=>String(r[i]||'').length))+2,25)}));
     XLSX.utils.book_append_sheet(wb,ws,'Engineers');
     XLSX.writeFile(wb,`engineers_${new Date().toISOString().split('T')[0]}.xlsx`);
     toast('success','다운로드 완료');
-  }catch{toast('error','엑셀 추출 실패');}
+  }catch(e){console.error(e);toast('error','엑셀 추출 실패');}
 }
 
 /* Add Engineer (fix 15) */
@@ -445,10 +480,9 @@ function initEditEngineer() {
       document.getElementById('e-g26').value = (data.g26 ?? '');
       document.getElementById('e-lvgoal25').value = (data.lv_goal_25 ?? '');
       document.getElementById('e-lvgoal26') && (document.getElementById('e-lvgoal26').value = (data.lv_goal_26 ?? ''));
-      document.getElementById('e-status').value = 'ACTIVE';
-      document.getElementById('e-resign').value = '';
       open();
     } catch (e) {
+      console.error(e);
       toast('error','엔지니어 정보 로드 실패');
     }
   });
@@ -457,7 +491,6 @@ function initEditEngineer() {
 
   document.getElementById('e-save')?.addEventListener('click', async ()=>{
     const id = document.getElementById('e-id').value;
-    const status = document.getElementById('e-status').value;
     const body = {
       name: document.getElementById('e-name').value.trim(),
       company: document.getElementById('e-company').value,
@@ -474,28 +507,15 @@ function initEditEngineer() {
     };
     if(!body.name){toast('error','이름을 입력하세요.');return;}
     try {
-      if(status==='RESIGNED'){
-        const resign_date = document.getElementById('e-resign').value;
-        if(!resign_date){toast('error','퇴사일을 입력하세요.');return;}
-        await axios.post(`${API}/analytics/engineer/resign`, { id, name: body.name, resign_date });
-        toast('success','퇴사 처리 완료');
-        close();
-        await initFilters();
-        // 선택 해제
-        const ni=document.getElementById('f-name-input');ni.value='';ni.dataset.selected='';
-        document.getElementById('btn-edit-eng').disabled=true;
-        loadAll();
-        return;
-      }
       await axios.put(`${API}/analytics/engineer/${id}`, body);
       toast('success','저장 완료');
       close();
       await initFilters();
-      // 선택 이름 유지
       document.getElementById('f-name-input').value = body.name;
       document.getElementById('f-name-input').dataset.selected = body.name;
       loadAll();
     } catch (e) {
+      console.error(e);
       toast('error', e.response?.data?.error || '저장 실패');
     }
   });
