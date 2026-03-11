@@ -40,6 +40,7 @@
       <button class="btn primary" id="btn-apply"><i class="fas fa-chart-bar"></i> 조회</button>
       <button class="btn" id="btn-reset"><i class="fas fa-undo"></i> 초기화</button>
       <button class="btn btn-excel" id="btn-export"><i class="fas fa-file-excel"></i> Excel</button>
+      <button class="btn" id="btn-edit-eng" disabled><i class="fas fa-user-edit"></i> 엔지니어 수정</button>
       <button class="btn" id="btn-add-eng" style="margin-left:auto;"><i class="fas fa-user-plus"></i> 엔지니어 추가</button>
     </div>
   </div>
@@ -86,11 +87,10 @@
   <!-- 역량 -->
   <div class="cat-section" data-cat="capa">
     <div class="chart-grid">
-      <div class="chart-card wide"><div class="chart-header"><h3>월별 역량 추이</h3><button class="info-btn" data-desc="24년 9월~현재. SETUP, MAINT, MULTI, 전체 역량. 점선=목표"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>월별 역량 추이 (SETUP/MAINT/MULTI)</h3><button class="info-btn" data-desc="24년 9월~현재. SETUP, MAINT, MULTI 역량만 표시"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-smm"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>월별 전체 역량 / 목표</h3><button class="info-btn" data-desc="24년 9월~현재. 전체 역량과 목표(점선)"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-total"></canvas></div>
       <div class="chart-card wide"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="설비별 SETUP/MAINT/평균. 해당 설비를 다루는 엔지니어만 평균 계산"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-capa"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>MPI 분포</h3><button class="info-btn" data-desc="MPI 값별 인원 수. MPI = SETUP 역량 70% 이상인 설비 수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mpi-dist"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>설비별 MPI 달성</h3><button class="info-btn" data-desc="각 설비의 MPI 달성(SETUP≥70%) 인원 수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mpi-eq"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>그룹별 MPI 현황</h3><button class="info-btn" data-desc="그룹별 평균 MPI와 총 MPI"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mpi-group"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>MPI ≥ 2 엔지니어 설비 커버리지</h3><button class="info-btn" data-desc="MPI가 2 이상인 엔지니어들이 각 설비를 커버할 수 있는 인원 수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mpi-coverage"></canvas></div>
     </div>
   </div>
 
@@ -102,6 +102,8 @@
       <div class="chart-card"><div class="chart-header"><h3>Work Sort별</h3><button class="info-btn" data-desc="MAINT 중 REP/ADJ/CLN/MON 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
       <div class="chart-card"><div class="chart-header"><h3>오전/오후 근무</h3><button class="info-btn" data-desc="시작시간 12시 기준"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
       <div class="chart-card"><div class="chart-header"><h3>일반/초과 근무</h3><button class="info-btn" data-desc="종료시간 18시 기준"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 오후 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별 오후 근무(12시 이후 시작) 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift-gs"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 초과 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별 초과 근무(18시 이후 종료) 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime-gs"></canvas></div>
       <div class="chart-card"><div class="chart-header"><h3>Rework 비율</h3><button class="info-btn" data-desc="전체 대비 Rework 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework"></canvas></div>
       <div class="chart-card"><div class="chart-header"><h3>Rework 사유</h3><button class="info-btn" data-desc="Rework 사유별 건수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-reason"></canvas></div>
     </div>
@@ -123,8 +125,41 @@
     <div class="a-field"><label>입사일</label><input type="date" id="a-hire"></div>
     <div class="a-field"><label>MAIN EQ</label><select id="a-maineq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
     <div class="a-field"><label>MULTI EQ</label><select id="a-multieq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
+    <div class="a-field"><label>25Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="a-g25" placeholder="예: 0.75"></div>
+    <div class="a-field"><label>26Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="a-g26" placeholder="예: 0.80"></div>
+    <div class="a-field"><label>25Y LEVEL 목표</label><input type="number" step="1" min="0" id="a-lvgoal25" placeholder="예: 2"></div>
+    <div class="a-field"><label>25Y MULTI LEVEL 목표</label><input type="number" step="1" min="0" id="a-mlvgoal25" placeholder="예: 1"></div>
   </div>
   <div class="add-actions"><button class="btn primary" id="a-save">등록</button><button class="btn" id="a-cancel">취소</button></div>
+</div>
+
+<!-- 엔지니어 수정 모달 -->
+<div class="overlay" id="edit-overlay" style="display:none;"></div>
+<div class="add-modal" id="edit-modal" style="display:none;">
+  <h3>엔지니어 수정</h3>
+  <div class="add-grid">
+    <input type="hidden" id="e-id">
+    <div class="a-field"><label>이름 *</label><input type="text" id="e-name"></div>
+    <div class="a-field"><label>회사 *</label><select id="e-company"><option value="SE&S">SE&S</option><option value="SE&I">SE&I</option></select></div>
+    <div class="a-field"><label>사번</label><input type="number" id="e-empid"></div>
+    <div class="a-field"><label>Group *</label><select id="e-group"><option value="PEE1">PEE1</option><option value="PEE2">PEE2</option><option value="PSKH">PSKH</option></select></div>
+    <div class="a-field"><label>Site *</label><select id="e-site"><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option></select></div>
+    <div class="a-field"><label>입사일</label><input type="date" id="e-hire"></div>
+    <div class="a-field"><label>MAIN EQ</label><select id="e-maineq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
+    <div class="a-field"><label>MULTI EQ</label><select id="e-multieq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
+    <div class="a-field"><label>25Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="e-g25"></div>
+    <div class="a-field"><label>26Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="e-g26"></div>
+    <div class="a-field"><label>25Y LEVEL 목표</label><input type="number" step="1" min="0" id="e-lvgoal25"></div>
+    <div class="a-field"><label>25Y MULTI LEVEL 목표</label><input type="number" step="1" min="0" id="e-mlvgoal25"></div>
+    <div class="a-field"><label>재직 상태</label>
+      <select id="e-status"><option value="ACTIVE">재직</option><option value="RESIGNED">퇴사</option></select>
+    </div>
+    <div class="a-field"><label>퇴사일</label><input type="date" id="e-resign" placeholder="퇴사 처리 시 입력"></div>
+  </div>
+  <div class="add-actions">
+    <button class="btn primary" id="e-save">저장</button>
+    <button class="btn" id="e-cancel">닫기</button>
+  </div>
 </div>
 
 <footer><div class="dash-inner"><p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출·복사·배포를 금지합니다.</p></div></footer>

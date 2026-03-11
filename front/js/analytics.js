@@ -31,6 +31,7 @@ function getCtx(id) { destroyChart(id); return document.getElementById(id)?.getC
 /* datalabel presets */
 const DL_BAR = { display:true, anchor:'end', align:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>v||'' };
 const DL_PCT = { display:true, font:{size:11,weight:'bold'}, color:'#fff', formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((s,x)=>s+x,0); return t?(Math.round(v/t*100)+'%'):''; } };
+const DL_LINE = { display:true, align:'top', anchor:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>(v??'') };
 
 /* Nav */
 function initNav() {
@@ -109,13 +110,14 @@ async function renderHeadCount(f) {
     while(d<=now){labels.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
     const hireMap={},hireName={};data.hires.forEach(r=>{hireMap[r.ym]=r.cnt;hireName[r.ym]=r.names;});
     const resignMap={},resignName={};data.resigns.forEach(r=>{resignMap[r.ym]=r.cnt;resignName[r.ym]=r.names;});
-    let running=data.currentTotal;const cumulative=labels.map(()=>0);
-    for(let i=labels.length-1;i>=0;i--){cumulative[i]=running;running=running-(hireMap[labels[i]]||0)+(resignMap[labels[i]]||0);}
+    // forward 누적(입사 전=0, 1명 선택 시에도 자연스러운 형태)
+    let running=0;const cumulative=[];
+    labels.forEach(l=>{running += (hireMap[l]||0) - (resignMap[l]||0); cumulative.push(Math.max(0,running));});
     charts['chart-headcount']=new Chart(ctx,{type:'bar',data:{labels,datasets:[
-      {type:'line',label:'재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.blueF,tension:.3,yAxisID:'y',fill:true,pointRadius:1},
+      {type:'line',label:'재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.blueF,tension:.3,yAxisID:'y',fill:true,pointRadius:1,datalabels:DL_LINE},
       {label:'입사',data:labels.map(l=>hireMap[l]||0),backgroundColor:C.green,yAxisID:'y1'},
       {label:'퇴사',data:labels.map(l=>resignMap[l]||0),backgroundColor:C.red,yAxisID:'y1'}
-    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:true},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
   }catch{}
 }
 
@@ -193,17 +195,26 @@ async function renderLevelTrend(f) {
 async function renderCapability(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/capability?${qs(f)}`);
-    const ctx=getCtx('chart-capability');if(!ctx)return;
+    const ctxS=getCtx('chart-capability-smm');
+    const ctxT=getCtx('chart-capability-total');
+    if(!ctxS && !ctxT) return;
     const m=data.monthly.filter(r=>r.ym>='2024-09');
     const goals=data.goals;
-    const goalLine=m.map(r=>{const y=+r.ym.split('-')[0];return y===2024?goals.g24:y===2025?goals.g25:goals.g26;});
-    charts['chart-capability']=new Chart(ctx,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-      {label:'전체',data:m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:true,tension:.3,pointRadius:2},
-      {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2},
-      {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[2],tension:.3,pointRadius:2},
-      {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2},
-      {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2}
-    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+    const goalLine=m.map(r=>{const y=+r.ym.split('-')[0];return y===2025?goals.g25:goals.g26;});
+
+    if(ctxS){
+      charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
+        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:true,tension:.3,pointRadius:2},
+        {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2},
+        {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2}
+      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+    }
+    if(ctxT){
+      charts['chart-capability-total']=new Chart(ctxT,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
+        {label:'전체',data:m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2},
+        {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2}
+      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+    }
   }catch{}
 }
 
@@ -221,27 +232,15 @@ async function renderEqCapa(f) {
   }catch{}
 }
 
-/* 8. MPI (fix 7 — more charts) */
-async function renderMPI(f) {
+/* 8. MPI Coverage (MPI>=2) */
+async function renderMPICoverage(f) {
   try {
-    const {data}=await axios.get(`${API}/analytics/mpi?${qs(f)}`);
-    // Distribution
-    let ctx=getCtx('chart-mpi-dist');if(ctx){
-      charts['chart-mpi-dist']=new Chart(ctx,{type:'bar',data:{labels:data.distribution.map(r=>`MPI ${r.label}`),datasets:[{label:'인원',data:data.distribution.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.distribution.length),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:DL_BAR},scales:{y:{ticks:{stepSize:1}}}}});
-    }
-    // By Equipment
-    ctx=getCtx('chart-mpi-eq');if(ctx){
-      const be=data.byEquipment.filter(r=>r.cnt>0);
-      charts['chart-mpi-eq']=new Chart(ctx,{type:'bar',data:{labels:be.map(r=>r.eq),datasets:[{label:'달성 인원',data:be.map(r=>r.cnt||0),backgroundColor:C.set.slice(0,be.length),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:DL_BAR},scales:{y:{ticks:{stepSize:1}}}}});
-    }
-    // By Group
-    ctx=getCtx('chart-mpi-group');if(ctx){
-      charts['chart-mpi-group']=new Chart(ctx,{type:'bar',data:{labels:data.byGroup.map(r=>r.label),datasets:[
-        {label:'평균 MPI',data:data.byGroup.map(r=>r.avg_mpi),backgroundColor:C.blue,borderRadius:4,yAxisID:'y'},
-        {label:'총 MPI',data:data.byGroup.map(r=>r.total_mpi),backgroundColor:C.green,borderRadius:4,yAxisID:'y1'}
-      ]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:true,anchor:'end',align:'end',font:{size:10,weight:'bold'},formatter:v=>v}},scales:{y:{position:'left',title:{display:true,text:'평균',font:{size:11}}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'합계',font:{size:11}}}}}});
-    }
-  }catch{}
+    const {data}=await axios.get(`${API}/analytics/mpi-coverage?${qs(f)}`);
+    const ctx=getCtx('chart-mpi-coverage');if(!ctx)return;
+    const rows=(data.byEquipment||[]).filter(r=>Number(r.cnt||0)>0);
+    charts['chart-mpi-coverage']=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.eq),datasets:[{label:'인원',data:rows.map(r=>r.cnt),backgroundColor:C.set.slice(0,rows.length),borderRadius:4}]},
+      options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>`${v}명`},tooltip:{callbacks:{afterLabel:(c)=>{const names=rows[c.dataIndex]?.names;return names?` ${names}`:'';}}}},scales:{x:{ticks:{stepSize:1}}}}});
+  }catch(e){console.error(e);}
 }
 
 /* 9. Worklog (fix 8,9,10) */
@@ -255,9 +254,14 @@ async function renderWorklog(f) {
         {label:'작업시간(분)',data:data.monthlyHours.map(r=>r.total_minutes),backgroundColor:C.greenF,borderColor:C.solid[1],borderWidth:1,borderRadius:3,yAxisID:'y'}
       ]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:false}},scales:{y:{position:'left',title:{display:true,text:'분',font:{size:11}}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'건',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
-    // Work Type — horizontal bar (fix 8)
+    // Work Type — MAINT / RELOCATION / SET UP만
     ctx=getCtx('chart-worktype');if(ctx){
-      charts['chart-worktype']=new Chart(ctx,{type:'bar',data:{labels:data.byWorkType.map(r=>r.label),datasets:[{data:data.byWorkType.map(r=>r.cnt),backgroundColor:[C.blue,C.green,C.amber,C.purple],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v,c)=>{const t=data.byWorkType.reduce((s,r)=>s+r.cnt,0);return`${v}건 (${Math.round(v/t*100)}%)`;}}}}});
+      const ORDER=['MAINT','RELOCATION','SET UP'];
+      const map={};(data.byWorkType||[]).forEach(r=>map[r.label]=r.cnt);
+      const labels=ORDER.filter(k=>map[k]);
+      const vals=labels.map(k=>map[k]||0);
+      const t=vals.reduce((s,x)=>s+x,0);
+      charts['chart-worktype']=new Chart(ctx,{type:'bar',data:{labels, datasets:[{data:vals,backgroundColor:[C.blue,C.green,C.amber],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>t?`${v}건 (${Math.round(v/t*100)}%)`:`${v}건`}}}});
     }
     // Work Sort — horizontal bar (fix 8)
     ctx=getCtx('chart-worksort');if(ctx){
@@ -270,6 +274,22 @@ async function renderWorklog(f) {
     // Overtime
     ctx=getCtx('chart-overtime');if(ctx){
       charts['chart-overtime']=new Chart(ctx,{type:'doughnut',data:{labels:data.byOvertime.map(r=>r.label),datasets:[{data:data.byOvertime.map(r=>r.cnt),backgroundColor:[C.green,C.red]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
+    }
+
+    // Group/Site - Shift ratio
+    ctx=getCtx('chart-shift-gs');if(ctx){
+      const rows=(data.shiftByGroupSite||[]).filter(r=>r.total_cnt>0);
+      const labels=rows.map(r=>r.label);
+      const vals=rows.map(r=>+(r.afternoon_cnt/r.total_cnt*100).toFixed(1));
+      charts['chart-shift-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'오후 근무 비율(%)',data:vals,backgroundColor:C.blue,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+    }
+
+    // Group/Site - Overtime ratio
+    ctx=getCtx('chart-overtime-gs');if(ctx){
+      const rows=(data.overtimeByGroupSite||[]).filter(r=>r.total_cnt>0);
+      const labels=rows.map(r=>r.label);
+      const vals=rows.map(r=>+(r.overtime_cnt/r.total_cnt*100).toFixed(1));
+      charts['chart-overtime-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'초과 근무 비율(%)',data:vals,backgroundColor:C.red,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
     }
     // Rework
     ctx=getCtx('chart-rework');if(ctx){
@@ -339,9 +359,108 @@ function initAddEngineer() {
   document.getElementById('a-cancel')?.addEventListener('click',closeAdd);
   document.getElementById('add-overlay')?.addEventListener('click',closeAdd);
   document.getElementById('a-save')?.addEventListener('click', async ()=>{
-    const b={name:document.getElementById('a-name').value.trim(),company:document.getElementById('a-company').value,employee_id:document.getElementById('a-empid').value||null,group:document.getElementById('a-group').value,site:document.getElementById('a-site').value,hire_date:document.getElementById('a-hire').value||null,main_eq:document.getElementById('a-maineq').value||null,multi_eq:document.getElementById('a-multieq').value||null};
+    const b={
+      name:document.getElementById('a-name').value.trim(),
+      company:document.getElementById('a-company').value,
+      employee_id:document.getElementById('a-empid').value||null,
+      group:document.getElementById('a-group').value,
+      site:document.getElementById('a-site').value,
+      hire_date:document.getElementById('a-hire').value||null,
+      main_eq:document.getElementById('a-maineq').value||null,
+      multi_eq:document.getElementById('a-multieq').value||null,
+      g25: document.getElementById('a-g25')?.value ? Number(document.getElementById('a-g25').value) : null,
+      g26: document.getElementById('a-g26')?.value ? Number(document.getElementById('a-g26').value) : null,
+      lv_goal_25: document.getElementById('a-lvgoal25')?.value ? Number(document.getElementById('a-lvgoal25').value) : null,
+      mlv_goal_25: document.getElementById('a-mlvgoal25')?.value ? Number(document.getElementById('a-mlvgoal25').value) : null,
+    };
     if(!b.name){toast('error','이름을 입력하세요.');return;}
     try{await axios.post(`${API}/analytics/engineer`,b);toast('success',`${b.name} 등록 완료`);closeAdd();await initFilters();loadAll();}catch(e){toast('error',e.response?.data?.error||'등록 실패');}
+  });
+}
+
+/* Edit Engineer */
+function initEditEngineer() {
+  const btn = document.getElementById('btn-edit-eng');
+  const open = () => {
+    document.getElementById('edit-overlay').style.display='block';
+    document.getElementById('edit-modal').style.display='block';
+  };
+  const close = () => {
+    document.getElementById('edit-overlay').style.display='none';
+    document.getElementById('edit-modal').style.display='none';
+  };
+  btn?.addEventListener('click', async ()=>{
+    const name = document.getElementById('f-name-input').dataset.selected || '';
+    if(!name) return;
+    try {
+      const {data} = await axios.get(`${API}/analytics/engineer-info?name=${encodeURIComponent(name)}`);
+      if(!data) { toast('error','엔지니어 정보를 찾을 수 없습니다.'); return; }
+      document.getElementById('e-id').value = data.ID;
+      document.getElementById('e-name').value = data.NAME||'';
+      document.getElementById('e-company').value = data.COMPANY||'SE&S';
+      document.getElementById('e-empid').value = data.EMPLOYEE_ID||'';
+      document.getElementById('e-group').value = data.GROUP||'';
+      document.getElementById('e-site').value = data.SITE||'';
+      document.getElementById('e-hire').value = fmtDate(data.HIRE)==='—'?'':fmtDate(data.HIRE);
+      document.getElementById('e-maineq').value = data['MAIN EQ']||'';
+      document.getElementById('e-multieq').value = data['MULTI EQ']||'';
+      document.getElementById('e-g25').value = (data.g25 ?? '');
+      document.getElementById('e-g26').value = (data.g26 ?? '');
+      document.getElementById('e-lvgoal25').value = (data.lv_goal_25 ?? '');
+      document.getElementById('e-mlvgoal25').value = (data.mlv_goal_25 ?? '');
+      document.getElementById('e-status').value = 'ACTIVE';
+      document.getElementById('e-resign').value = '';
+      open();
+    } catch (e) {
+      toast('error','엔지니어 정보 로드 실패');
+    }
+  });
+  document.getElementById('e-cancel')?.addEventListener('click', close);
+  document.getElementById('edit-overlay')?.addEventListener('click', close);
+
+  document.getElementById('e-save')?.addEventListener('click', async ()=>{
+    const id = document.getElementById('e-id').value;
+    const status = document.getElementById('e-status').value;
+    const body = {
+      name: document.getElementById('e-name').value.trim(),
+      company: document.getElementById('e-company').value,
+      employee_id: document.getElementById('e-empid').value||null,
+      group: document.getElementById('e-group').value,
+      site: document.getElementById('e-site').value,
+      hire_date: document.getElementById('e-hire').value||null,
+      main_eq: document.getElementById('e-maineq').value||null,
+      multi_eq: document.getElementById('e-multieq').value||null,
+      g25: document.getElementById('e-g25').value===''?undefined:Number(document.getElementById('e-g25').value),
+      g26: document.getElementById('e-g26').value===''?undefined:Number(document.getElementById('e-g26').value),
+      lv_goal_25: document.getElementById('e-lvgoal25').value===''?undefined:Number(document.getElementById('e-lvgoal25').value),
+      mlv_goal_25: document.getElementById('e-mlvgoal25').value===''?undefined:Number(document.getElementById('e-mlvgoal25').value),
+    };
+    if(!body.name){toast('error','이름을 입력하세요.');return;}
+    try {
+      if(status==='RESIGNED'){
+        const resign_date = document.getElementById('e-resign').value;
+        if(!resign_date){toast('error','퇴사일을 입력하세요.');return;}
+        await axios.post(`${API}/analytics/engineer/resign`, { id, name: body.name, resign_date });
+        toast('success','퇴사 처리 완료');
+        close();
+        await initFilters();
+        // 선택 해제
+        const ni=document.getElementById('f-name-input');ni.value='';ni.dataset.selected='';
+        document.getElementById('btn-edit-eng').disabled=true;
+        loadAll();
+        return;
+      }
+      await axios.put(`${API}/analytics/engineer/${id}`, body);
+      toast('success','저장 완료');
+      close();
+      await initFilters();
+      // 선택 이름 유지
+      document.getElementById('f-name-input').value = body.name;
+      document.getElementById('f-name-input').dataset.selected = body.name;
+      loadAll();
+    } catch (e) {
+      toast('error', e.response?.data?.error || '저장 실패');
+    }
   });
 }
 
@@ -349,20 +468,23 @@ function initAddEngineer() {
 async function loadAll() {
   const f=getFilters();
   const name=f.name;
+  const editBtn=document.getElementById('btn-edit-eng');
+  if(editBtn) editBtn.disabled = !name;
   if(name)showEngineerInfo(name);else document.getElementById('eng-info').style.display='none';
-  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderMPI(f),renderWorklog(f)]);
+  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderMPICoverage(f),renderWorklog(f)]);
 }
 
 /* Init */
 document.addEventListener('DOMContentLoaded', async ()=>{
   if(!token){alert('로그인이 필요합니다.');location.href='./signin.html';return;}
-  initNav();initTabs();initInfoBtns();initEngSearch();initAddEngineer();
+  initNav();initTabs();initInfoBtns();initEngSearch();initAddEngineer();initEditEngineer();
   await initFilters();
   document.getElementById('btn-apply')?.addEventListener('click',loadAll);
   document.getElementById('btn-reset')?.addEventListener('click',()=>{
     ['f-company','f-group','f-site'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
     const ni=document.getElementById('f-name-input');ni.value='';ni.dataset.selected='';
     document.getElementById('eng-info').style.display='none';
+    const eb=document.getElementById('btn-edit-eng'); if(eb) eb.disabled=true;
     loadAll();
   });
   document.getElementById('btn-export')?.addEventListener('click',doExport);

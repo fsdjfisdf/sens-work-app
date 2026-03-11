@@ -26,3 +26,50 @@ exports.addEngineer = async (req, res) => {
     res.status(201).json({ message: '엔지니어 등록 완료', id });
   } catch(e) { console.error(e); res.status(500).json({error:'엔지니어 등록 오류'}); }
 };
+
+exports.updateEngineer = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const b = req.body;
+    if (!id) return res.status(400).json({ error: 'id가 필요합니다.' });
+    await dao.updateEngineer(id, b);
+    res.json({ message: '엔지니어 수정 완료' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '엔지니어 수정 오류' });
+  }
+};
+
+exports.resignEngineer = async (req, res) => {
+  try {
+    const b = req.body;
+    if (!b.id && !b.name) return res.status(400).json({ error: 'id 또는 name이 필요합니다.' });
+    if (!b.resign_date) return res.status(400).json({ error: 'resign_date가 필요합니다.' });
+    await dao.resignEngineer(b);
+    res.json({ message: '퇴사 처리 완료' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '퇴사 처리 오류' });
+  }
+};
+
+exports.reinstateEngineer = async (req, res) => {
+  try {
+    const b = req.body;
+    if (!b.name) return res.status(400).json({ error: 'name이 필요합니다.' });
+    await dao.reinstateEngineer(b.name);
+    res.json({ message: '복직 처리 완료' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '복직 처리 오류' });
+  }
+};
+
+exports.getMPICoverage = async (req, res) => {
+  try {
+    res.json(await dao.getMPICoverage(getFilters(req.query)));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'MPI 커버리지 조회 오류' });
+  }
+};

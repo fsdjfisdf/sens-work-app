@@ -168,9 +168,30 @@ exports.getWorklogStats = async (filters) => {
   const [byWorkType2] = await pool.query(`SELECT IFNULL(e.work_type2,'N/A') AS label, COUNT(DISTINCT e.id) AS cnt FROM wl_event e JOIN wl_worker w ON w.event_id=e.id ${wWhere} AND e.work_type='MAINT' GROUP BY label`, wVals);
   const [byShift] = await pool.query(`SELECT CASE WHEN TIME(w.start_time)<'12:00:00' THEN '오전 근무' ELSE '오후 근무' END AS label, COUNT(*) AS cnt FROM wl_event e JOIN wl_worker w ON w.event_id=e.id ${wWhere} AND w.start_time IS NOT NULL GROUP BY label`, wVals);
   const [byOvertime] = await pool.query(`SELECT CASE WHEN TIME(w.end_time)<='18:00:00' THEN '일반 근무' ELSE '초과 근무' END AS label, COUNT(*) AS cnt FROM wl_event e JOIN wl_worker w ON w.event_id=e.id ${wWhere} AND w.end_time IS NOT NULL GROUP BY label`, wVals);
+  // 그룹-사이트별 오후근무/초과근무 비율
+  const [shiftByGroupSite] = await pool.query(
+    `SELECT CONCAT(e.\`group\`,' / ',e.site) AS label,
+            SUM(CASE WHEN TIME(w.start_time)>='12:00:00' THEN 1 ELSE 0 END) AS afternoon_cnt,
+            COUNT(*) AS total_cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     ${wWhere} AND w.start_time IS NOT NULL
+     GROUP BY e.\`group\`, e.site
+     ORDER BY e.\`group\`, e.site`,
+    wVals
+  );
+  const [overtimeByGroupSite] = await pool.query(
+    `SELECT CONCAT(e.\`group\`,' / ',e.site) AS label,
+            SUM(CASE WHEN TIME(w.end_time)>'18:00:00' THEN 1 ELSE 0 END) AS overtime_cnt,
+            COUNT(*) AS total_cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     ${wWhere} AND w.end_time IS NOT NULL
+     GROUP BY e.\`group\`, e.site
+     ORDER BY e.\`group\`, e.site`,
+    wVals
+  );
   const [reworkRatio] = await pool.query(`SELECT CASE WHEN e.is_rework=1 THEN 'Rework' ELSE '일반' END AS label, COUNT(DISTINCT e.id) AS cnt FROM wl_event e JOIN wl_worker w ON w.event_id=e.id ${wWhere} GROUP BY label`, wVals);
   const [reworkReason] = await pool.query(`SELECT IFNULL(e.rework_reason,'미입력') AS label, COUNT(DISTINCT e.id) AS cnt FROM wl_event e JOIN wl_worker w ON w.event_id=e.id ${wWhere} AND e.is_rework=1 GROUP BY label`, wVals);
-  return { monthlyHours, byWorkType, byWorkType2, byShift, byOvertime, reworkRatio, reworkReason };
+  return { monthlyHours, byWorkType, byWorkType2, byShift, byOvertime, shiftByGroupSite, overtimeByGroupSite, reworkRatio, reworkReason };
 };
 
 exports.getEngineerInfo = async (name) => {
@@ -178,6 +199,7 @@ exports.getEngineerInfo = async (name) => {
     `SELECT ID, NAME, COMPANY, EMPLOYEE_ID, \`GROUP\`, SITE, HIRE, role,
        \`LEVEL(report)\`, \`LEVEL\`, \`LEVEL(PSK)\`, \`MULTI LEVEL\`, \`MULTI LEVEL(PSK)\`,
        \`MAIN EQ\`, \`MULTI EQ\`, \`SET UP CAPA\`, \`MAINT CAPA\`, \`MULTI CAPA\`, CAPA, MPI
+      ,\`25Y CAPA GOAL\` AS g25, \`26Y CAPA GOAL\` AS g26, \`25Y LEVEL GOAL\` AS lv_goal_25, \`25Y MULTI LEVEL GOAL\` AS mlv_goal_25
      FROM userDB WHERE NAME=? LIMIT 1`, [name]);
   return rows[0]||null;
 };
@@ -185,10 +207,108 @@ exports.getEngineerInfo = async (name) => {
 // 엔지니어 추가
 exports.addEngineer = async (data) => {
   const [r] = await pool.query(
-    `INSERT INTO userDB (NAME, COMPANY, EMPLOYEE_ID, \`GROUP\`, SITE, HIRE, role, \`MAIN EQ\`, \`MULTI EQ\`, \`LEVEL\`, \`LEVEL(PSK)\`, \`LEVEL(report)\`, \`MULTI LEVEL\`, \`MULTI LEVEL(PSK)\`)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [data.name, data.company, data.employee_id||null, data.group, data.site, data.hire_date||null, data.role||'worker', data.main_eq||null, data.multi_eq||null, 0, 0, '0', 0, 0]);
+    `INSERT INTO userDB (
+        NAME, COMPANY, EMPLOYEE_ID, \`GROUP\`, SITE, HIRE, role, \`MAIN EQ\`, \`MULTI EQ\`,
+        \`LEVEL\`, \`LEVEL(PSK)\`, \`LEVEL(report)\`, \`MULTI LEVEL\`, \`MULTI LEVEL(PSK)\`,
+        \`25Y CAPA GOAL\`, \`26Y CAPA GOAL\`, \`25Y LEVEL GOAL\`, \`25Y MULTI LEVEL GOAL\`
+     ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [
+      data.name,
+      data.company,
+      data.employee_id||null,
+      data.group,
+      data.site,
+      data.hire_date||null,
+      data.role||'worker',
+      data.main_eq||null,
+      data.multi_eq||null,
+      0, 0, '0', 0, 0,
+      data.g25 ?? null,
+      data.g26 ?? null,
+      data.lv_goal_25 ?? null,
+      data.mlv_goal_25 ?? null
+    ]);
   return r.insertId;
+};
+
+exports.updateEngineer = async (id, data) => {
+  const fields = [
+    'NAME','COMPANY','EMPLOYEE_ID','`GROUP`','SITE','HIRE','role','`MAIN EQ`','`MULTI EQ`',
+    '`25Y CAPA GOAL`','`26Y CAPA GOAL`','`25Y LEVEL GOAL`','`25Y MULTI LEVEL GOAL`'
+  ];
+  const set = [];
+  const vals = [];
+  const map = {
+    NAME: data.name,
+    COMPANY: data.company,
+    EMPLOYEE_ID: data.employee_id,
+    '`GROUP`': data.group,
+    SITE: data.site,
+    HIRE: data.hire_date,
+    role: data.role,
+    '`MAIN EQ`': data.main_eq,
+    '`MULTI EQ`': data.multi_eq,
+    '`25Y CAPA GOAL`': data.g25,
+    '`26Y CAPA GOAL`': data.g26,
+    '`25Y LEVEL GOAL`': data.lv_goal_25,
+    '`25Y MULTI LEVEL GOAL`': data.mlv_goal_25,
+  };
+  for (const f of fields) {
+    if (Object.prototype.hasOwnProperty.call(map, f) && map[f] !== undefined) {
+      set.push(`${f} = ?`);
+      vals.push(map[f] === '' ? null : map[f]);
+    }
+  }
+  if (!set.length) return;
+  vals.push(id);
+  await pool.query(`UPDATE userDB SET ${set.join(', ')} WHERE ID = ?`, vals);
+};
+
+exports.resignEngineer = async ({ id, name, resign_date }) => {
+  // id가 있으면 userDB에서 정보 가져와 resigned_employee에 기록 후 삭제
+  let row = null;
+  if (id) {
+    const [r] = await pool.query(`SELECT NAME, COMPANY, \`GROUP\` AS grp, SITE FROM userDB WHERE ID=? LIMIT 1`, [id]);
+    row = r[0] || null;
+  } else if (name) {
+    const [r] = await pool.query(`SELECT ID, NAME, COMPANY, \`GROUP\` AS grp, SITE FROM userDB WHERE NAME=? LIMIT 1`, [name]);
+    row = r[0] || null;
+    id = row?.ID;
+  }
+  if (!row) throw new Error('대상 엔지니어를 찾을 수 없습니다.');
+  await pool.query(
+    `INSERT INTO resigned_employee (name, company, \`group\`, site, resign_date)
+     VALUES (?,?,?,?,?)
+     ON DUPLICATE KEY UPDATE company=VALUES(company), \`group\`=VALUES(\`group\`), site=VALUES(site), resign_date=VALUES(resign_date)`,
+    [row.NAME, row.COMPANY, row.grp, row.SITE, resign_date]
+  );
+  if (id) await pool.query(`DELETE FROM userDB WHERE ID=?`, [id]);
+};
+
+exports.reinstateEngineer = async (name) => {
+  await pool.query(`DELETE FROM resigned_employee WHERE name=?`, [name]);
+};
+
+exports.getMPICoverage = async (filters) => {
+  const { where, vals } = buildWhere(filters);
+  const eqs = [
+    { eq: 'SUPRA N', col: '`SUPRA N MPI`' },
+    { eq: 'SUPRA XP', col: '`SUPRA XP MPI`' },
+    { eq: 'INTEGER', col: '`INTEGER MPI`' },
+    { eq: 'PRECIA', col: '`PRECIA MPI`' },
+    { eq: 'ECOLITE', col: '`ECOLITE MPI`' },
+    { eq: 'GENEVA', col: '`GENEVA MPI`' },
+    { eq: 'HDW', col: '`HDW MPI`' },
+  ];
+  const selects = eqs.map(e =>
+    `SELECT '${e.eq}' AS eq,
+            SUM(CASE WHEN u.MPI>=2 AND IFNULL(u.${e.col},0)>=1 THEN 1 ELSE 0 END) AS cnt,
+            GROUP_CONCAT(CASE WHEN u.MPI>=2 AND IFNULL(u.${e.col},0)>=1 THEN u.NAME END ORDER BY u.NAME SEPARATOR ', ') AS names
+     FROM userDB u ${where}`
+  ).join('\nUNION ALL\n');
+  const [rows] = await pool.query(selects, Array(eqs.length).fill(vals).flat());
+  const [totalRows] = await pool.query(`SELECT COUNT(*) AS cnt FROM userDB u ${where} AND u.MPI>=2`, vals);
+  return { total_mpi2: totalRows[0]?.cnt || 0, byEquipment: rows };
 };
 
 exports.getExportData = async (filters) => {

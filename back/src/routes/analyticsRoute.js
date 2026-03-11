@@ -19,7 +19,11 @@ router.get('/eq-capability',      jwt, ctrl.getEqCapability);
 router.get('/mpi',                jwt, ctrl.getMPI);
 router.get('/worklog-stats',      jwt, ctrl.getWorklogStats);
 router.get('/engineer-info',      jwt, ctrl.getEngineerInfo);
+router.get('/mpi-coverage',       jwt, ctrl.getMPICoverage);
 router.get('/export/excel',       jwt, ctrl.getExportData);
 router.post('/engineer',          jwt, ctrl.addEngineer);
+router.put('/engineer/:id',       jwt, ctrl.updateEngineer);
+router.post('/engineer/resign',   jwt, ctrl.resignEngineer);
+router.post('/engineer/reinstate',jwt, ctrl.reinstateEngineer);
 
 module.exports = router;
