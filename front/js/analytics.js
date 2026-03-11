@@ -16,44 +16,32 @@ if(token && !isAdminUser(me)){
 }
 
 
+// Sync real nav height to avoid content being hidden under fixed nav
+function syncNavHeight(){
+  const nav = document.querySelector('nav');
+  if(!nav) return;
+  const h = Math.ceil(nav.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--nav-real', `${h}px`);
+}
+window.addEventListener('load', syncNavHeight);
+window.addEventListener('resize', syncNavHeight);
+window.addEventListener('orientationchange', syncNavHeight);
+document.addEventListener('click', (e)=>{
+  if(e.target.closest('.menu-btn')) setTimeout(syncNavHeight, 80);
+});
+
 // Register datalabels plugin
 Chart.register(ChartDataLabels);
 Chart.defaults.set('plugins.datalabels', { display: false }); // off by default
-Chart.defaults.set('layout', { padding: { top: 12, right: 10 } });
 
-/* Palette (muted / premium) */
+/* Semi-transparent palette */
 const C = {
-  blue:'rgba(37,99,235,.65)', blueF:'rgba(37,99,235,.18)',
-  indigo:'rgba(99,102,241,.62)', indigoF:'rgba(99,102,241,.16)',
-  emerald:'rgba(16,185,129,.62)', emeraldF:'rgba(16,185,129,.16)',
-  amber:'rgba(245,158,11,.60)', amberF:'rgba(245,158,11,.14)',
-  rose:'rgba(244,63,94,.60)', roseF:'rgba(244,63,94,.14)',
-  slate:'rgba(100,116,139,.62)', slateF:'rgba(100,116,139,.16)',
-  /* aliases for existing code */
-  green:'rgba(16,185,129,.62)', greenF:'rgba(16,185,129,.16)',
-  red:'rgba(244,63,94,.60)', redF:'rgba(244,63,94,.14)',
-  purple:'rgba(99,102,241,.62)', purpleF:'rgba(99,102,241,.16)',
-  cyan:'rgba(20,184,166,.56)', pink:'rgba(244,63,94,.50)',
-  set:[
-    'rgba(37,99,235,.60)',
-    'rgba(16,185,129,.58)',
-    'rgba(99,102,241,.56)',
-    'rgba(245,158,11,.54)',
-    'rgba(100,116,139,.52)',
-    'rgba(244,63,94,.52)',
-    'rgba(20,184,166,.50)',
-    'rgba(59,130,246,.50)',
-    'rgba(148,163,184,.48)',
-    'rgba(71,85,105,.46)'
-  ],
-  solid:[
-    'rgba(37,99,235,.86)',
-    'rgba(16,185,129,.84)',
-    'rgba(99,102,241,.82)',
-    'rgba(245,158,11,.80)',
-    'rgba(71,85,105,.82)',
-    'rgba(244,63,94,.78)'
-  ]
+  blue:'rgba(37,99,235,.7)', blueF:'rgba(37,99,235,.25)', red:'rgba(239,68,68,.7)', redF:'rgba(239,68,68,.25)',
+  green:'rgba(34,197,94,.7)', greenF:'rgba(34,197,94,.25)', amber:'rgba(245,158,11,.7)', amberF:'rgba(245,158,11,.25)',
+  purple:'rgba(139,92,246,.7)', purpleF:'rgba(139,92,246,.25)', cyan:'rgba(6,182,212,.7)', pink:'rgba(236,72,153,.7)',
+  slate:'rgba(100,116,139,.7)', slateF:'rgba(100,116,139,.25)',
+  set:['rgba(37,99,235,.65)','rgba(34,197,94,.65)','rgba(245,158,11,.65)','rgba(239,68,68,.65)','rgba(139,92,246,.65)','rgba(6,182,212,.65)','rgba(236,72,153,.65)','rgba(100,116,139,.65)','rgba(249,115,22,.65)','rgba(20,184,166,.65)'],
+  solid:['rgba(37,99,235,.85)','rgba(34,197,94,.85)','rgba(245,158,11,.85)','rgba(239,68,68,.85)','rgba(139,92,246,.85)','rgba(6,182,212,.85)','rgba(236,72,153,.85)','rgba(100,116,139,.85)']
 };
 const charts = {};
 let allEngineers = [];
@@ -65,48 +53,10 @@ function qs(f) { const p = new URLSearchParams(); for (const [k,v] of Object.ent
 function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
 function getCtx(id) { destroyChart(id); return document.getElementById(id)?.getContext('2d'); }
 
-/* helpers */
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
-const nums = (arr) => (arr || []).filter(isNum);
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-function autoRangeLinear(values, { pad = 0.12, hardMin, hardMax, minSpan } = {}) {
-  const n = nums(values);
-  if (!n.length) return {};
-  let lo = Math.min(...n);
-  let hi = Math.max(...n);
-  if (hardMin !== undefined) lo = Math.max(hardMin, lo);
-  if (hardMax !== undefined) hi = Math.min(hardMax, hi);
-  let span = hi - lo;
-  if (!Number.isFinite(span) || span === 0) span = (hi === 0 ? 1 : Math.abs(hi) * 0.2);
-  if (minSpan !== undefined && span < minSpan) {
-    const mid = (hi + lo) / 2;
-    lo = mid - minSpan / 2;
-    hi = mid + minSpan / 2;
-    span = hi - lo;
-  }
-  lo = lo - span * pad;
-  hi = hi + span * pad;
-  if (hardMin !== undefined) lo = Math.max(hardMin, lo);
-  if (hardMax !== undefined) hi = Math.min(hardMax, hi);
-  return { min: lo, max: hi };
-}
-function autoRangePercent(values) {
-  // values: 0~1
-  const r = autoRangeLinear(values, { pad: 0.18, hardMin: 0, hardMax: 1, minSpan: 0.10 });
-  if (r.min === undefined || r.max === undefined) return { min: 0, max: 1 };
-  return { min: clamp(r.min, 0, 1), max: clamp(r.max, 0, 1) };
-}
-const pct = (v, d = 0) => `${(v * 100).toFixed(d)}%`;
-
 /* datalabel presets */
-const DL_BAR = { display:true, anchor:'end', align:'end', clamp:true, clip:false, font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>v||'' };
-const DL_PCT = { display:true, clamp:true, clip:false, font:{size:11,weight:'bold'}, color:'#fff', formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((s,x)=>s+x,0); return t?(Math.round(v/t*100)+'%'):''; } };
-const DL_LINE = { display:true, align:'top', anchor:'end', clamp:true, clip:false, font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>(v??'') };
-const DL_LINE_PCT = (offset=0, digits=1) => ({
-  display:true, align:'top', anchor:'end', clamp:true, clip:false, offset,
-  font:{size:9,weight:'bold'}, color:'#374151',
-  formatter:(v)=> (v===null||v===undefined||!Number.isFinite(v)) ? '' : pct(v, digits)
-});
+const DL_BAR = { display:true, anchor:'end', align:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>v||'' };
+const DL_PCT = { display:true, font:{size:11,weight:'bold'}, color:'#fff', formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((s,x)=>s+x,0); return t?(Math.round(v/t*100)+'%'):''; } };
+const DL_LINE = { display:true, align:'top', anchor:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>(v??'') };
 
 /* Nav */
 function initNav() {
@@ -181,29 +131,18 @@ async function renderHeadCount(f) {
   try {
     const {data} = await axios.get(`${API}/analytics/headcount?${qs(f)}`);
     const ctx = getCtx('chart-headcount'); if(!ctx) return;
-    const startYm = data?.startYm || '2023-01';
-    const [sy, sm] = startYm.split('-').map(Number);
-    const now = new Date();
-    const labels = [];
-    let d = new Date(sy, (sm || 1) - 1);
+    const now = new Date(); const labels = []; let d = new Date(2023,0);
     while(d<=now){labels.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
     const hireMap={},hireName={};data.hires.forEach(r=>{hireMap[r.ym]=r.cnt;hireName[r.ym]=r.names;});
     const resignMap={},resignName={};data.resigns.forEach(r=>{resignMap[r.ym]=r.cnt;resignName[r.ym]=r.names;});
     // forward 누적(입사 전=0, 1명 선택 시에도 자연스러운 형태)
-    let running = Number(data?.baseline || 0);
-    const cumulative=[];
+    let running=0;const cumulative=[];
     labels.forEach(l=>{running += (hireMap[l]||0) - (resignMap[l]||0); cumulative.push(Math.max(0,running));});
-
-    const yMain = autoRangeLinear(cumulative, { pad: 0.10, hardMin: 0, minSpan: 5 });
-    const ySide = autoRangeLinear([
-      ...labels.map(l=>hireMap[l]||0),
-      ...labels.map(l=>resignMap[l]||0)
-    ], { pad: 0.25, hardMin: 0, minSpan: 3 });
     charts['chart-headcount']=new Chart(ctx,{type:'bar',data:{labels,datasets:[
       {type:'line',label:'재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.blueF,tension:.3,yAxisID:'y',fill:true,pointRadius:1,datalabels:DL_LINE},
       {label:'입사',data:labels.map(l=>hireMap[l]||0),backgroundColor:C.green,yAxisID:'y1',datalabels:{display:false}},
       {label:'퇴사',data:labels.map(l=>resignMap[l]||0),backgroundColor:C.red,yAxisID:'y1',datalabels:{display:false}}
-    ]},options:{responsive:true,layout:{padding:{top:18,right:8}},plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},min:yMain.min,max:yMain.max,grace:'12%',ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},min:ySide.min,max:ySide.max,grace:'25%',ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
   }catch{}
 }
 
@@ -215,12 +154,10 @@ async function renderHR(f) {
       charts['chart-company']=new Chart(ctx,{type:'doughnut',data:{labels:data.byCompany.map(r=>r.label),datasets:[{data:data.byCompany.map(r=>r.cnt),backgroundColor:[C.blue,C.green,C.amber]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
     }
     ctx=getCtx('chart-experience');if(ctx){
-      const maxV = Math.max(0, ...data.byExp.map(r=>Number(r.cnt||0)));
-      charts['chart-experience']=new Chart(ctx,{type:'bar',data:{labels:data.byExp.map(r=>r.label),datasets:[{label:'인원',data:data.byExp.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.byExp.length),borderRadius:4}]},options:{responsive:true,layout:{padding:{right:10}},indexAxis:'y',plugins:{legend:{display:false},datalabels:DL_BAR},scales:{x:{beginAtZero:true,suggestedMax:maxV+1,ticks:{stepSize:1}}}}});
+      charts['chart-experience']=new Chart(ctx,{type:'bar',data:{labels:data.byExp.map(r=>r.label),datasets:[{label:'인원',data:data.byExp.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.byExp.length),borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:DL_BAR}}});
     }
     ctx=getCtx('chart-groupsite');if(ctx){
-      const maxV = Math.max(0, ...data.byGroupSite.map(r=>Number(r.cnt||0)));
-      charts['chart-groupsite']=new Chart(ctx,{type:'bar',data:{labels:data.byGroupSite.map(r=>r.label),datasets:[{label:'인원',data:data.byGroupSite.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.byGroupSite.length),borderRadius:4}]},options:{responsive:true,layout:{padding:{top:14}},plugins:{legend:{display:false},datalabels:DL_BAR},scales:{y:{beginAtZero:true,suggestedMax:maxV+1,ticks:{stepSize:1}}}}});
+      charts['chart-groupsite']=new Chart(ctx,{type:'bar',data:{labels:data.byGroupSite.map(r=>r.label),datasets:[{label:'인원',data:data.byGroupSite.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.byGroupSite.length),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:DL_BAR},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
     }
   }catch{}
 }
@@ -231,13 +168,7 @@ async function renderLevelDist(f) {
     const {data}=await axios.get(`${API}/analytics/level-distribution?${qs(f)}`);
     const ctx=getCtx('chart-level-dist');if(!ctx)return;
     const total=data.reduce((s,r)=>s+r.cnt,0);
-    const SCORE={'0':0,'1':1,'2':2,'2-2':3,'2-3':4,'2-4':5};
-    const avg = total ? (data.reduce((s,r)=>s+(SCORE[r.label]??0)*r.cnt,0)/total) : null;
-    const el = document.getElementById('level-avg');
-    if (el) el.textContent = avg===null ? '평균 Lv.—' : `평균 Lv.${avg.toFixed(2)}`;
-
-    const maxV = Math.max(0, ...data.map(r=>Number(r.cnt||0)));
-    charts['chart-level-dist']=new Chart(ctx,{type:'bar',data:{labels:data.map(r=>`Lv.${r.label}`),datasets:[{label:'인원',data:data.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.length),borderRadius:4}]},options:{responsive:true,layout:{padding:{top:14}},plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',clamp:true,clip:false,font:{size:10,weight:'bold'},formatter:(v)=> total?`${v}명(${Math.round(v/total*100)}%)`:`${v}명`}},scales:{y:{beginAtZero:true,suggestedMax:maxV+1,ticks:{stepSize:1}}}}});
+    charts['chart-level-dist']=new Chart(ctx,{type:'bar',data:{labels:data.map(r=>`Lv.${r.label}`),datasets:[{label:'인원',data:data.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.length),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:10,weight:'bold'},formatter:(v,ctx2)=>`${v}명(${Math.round(v/total*100)}%)`}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
   }catch{}
 }
 
@@ -247,8 +178,7 @@ async function renderLevelAchieve(f) {
     const {data}=await axios.get(`${API}/analytics/level-achievement?${qs(f)}`);
     const ctx=getCtx('chart-level-achieve');if(!ctx)return;
     const valid=data.filter(r=>r.avg_days&&r.cnt>0);
-    const maxV = Math.max(0, ...valid.map(r=>Number(r.avg_days||0)));
-    charts['chart-level-achieve']=new Chart(ctx,{type:'bar',data:{labels:valid.map(r=>`Lv.${r.level_code}`),datasets:[{label:'평균 일수',data:valid.map(r=>r.avg_days),backgroundColor:C.set.slice(0,valid.length),borderRadius:4}]},options:{responsive:true,layout:{padding:{top:14}},plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',clamp:true,clip:false,font:{size:10,weight:'bold'},formatter:(v,c)=>`${v}일 (${valid[c.dataIndex].cnt}명)`}},scales:{y:{title:{display:true,text:'일수',font:{size:11}},beginAtZero:true,suggestedMax:maxV*1.15}}}});
+    charts['chart-level-achieve']=new Chart(ctx,{type:'bar',data:{labels:valid.map(r=>`Lv.${r.level_code}`),datasets:[{label:'평균 일수',data:valid.map(r=>r.avg_days),backgroundColor:C.set.slice(0,valid.length),borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:10,weight:'bold'},formatter:(v,c)=>`${v}일 (${valid[c.dataIndex].cnt}명)`}},scales:{y:{title:{display:true,text:'일수',font:{size:11}}}}}});
   }catch{}
 }
 
@@ -274,20 +204,15 @@ async function renderLevelTrend(f) {
     const datasets=[];
     if(isSingle) {
       // 개인: 레벨 점수만 꺾은선으로
-      datasets.push({type:'line',label:`${data[0].NAME} 레벨 점수`,data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.solid[0],fill:false,
-        datalabels:{...DL_LINE, formatter:(v)=> (v===null||v===undefined)?'':String(v)}
-      });
+      datasets.push({type:'line',label:`${data[0].NAME} 레벨 점수`,data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.solid[0],fill:false});
     } else {
       LEVELS.forEach(l=>datasets.push({label:`Lv.${l}`,data:levelCounts[l],backgroundColor:colors[l],stack:'a',yAxisID:'y1'}));
-      datasets.push({type:'line',label:'평균 점수',data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,yAxisID:'y',pointRadius:2,
-        datalabels:{...DL_LINE, formatter:(v)=> (v===null||v===undefined)?'':String(v)}
-      });
+      datasets.push({type:'line',label:'평균 점수',data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,yAxisID:'y',pointRadius:2});
     }
-    const yAvg = autoRangeLinear(avgLine.filter(v=>v!==null), { pad: 0.18, hardMin: 0, hardMax: 5.5, minSpan: 0.6 });
     const scales = isSingle
-      ? {y:{title:{display:true,text:'레벨 점수',font:{size:11}},min:0,max:5.5,grace:'12%'},x:{ticks:{maxRotation:45,font:{size:9}}}}
-      : {y:{position:'left',title:{display:true,text:'평균 점수',font:{size:11}},min:yAvg.min,max:yAvg.max,grace:'12%'},y1:{position:'right',stacked:true,grid:{drawOnChartArea:false},title:{display:true,text:'인원',font:{size:11}},ticks:{stepSize:1}},x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}}};
-    charts['chart-level-trend']=new Chart(ctx,{type:'bar',data:{labels:quarters,datasets},options:{responsive:true,layout:{padding:{top:18,right:10}},plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},datalabels:{display:false}},scales}});
+      ? {y:{title:{display:true,text:'레벨 점수',font:{size:11}},min:0,max:5.5},x:{ticks:{maxRotation:45,font:{size:9}}}}
+      : {y:{position:'left',title:{display:true,text:'평균 점수',font:{size:11}},min:0},y1:{position:'right',stacked:true,grid:{drawOnChartArea:false},title:{display:true,text:'인원',font:{size:11}},ticks:{stepSize:1}},x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}}};
+    charts['chart-level-trend']=new Chart(ctx,{type:'bar',data:{labels:quarters,datasets},options:{responsive:true,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},datalabels:{display:false}},scales}});
   }catch(e){console.error(e);}
 }
 
@@ -302,25 +227,18 @@ async function renderCapability(f) {
     const goals=data.goals;
     const goalLine=m.map(r=>{const y=+r.ym.split('-')[0];return y===2025?goals.g25:goals.g26;});
 
-    const sSetup = m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null);
-    const sMaint = m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null);
-    const sMulti = m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null);
-    const sTotal = m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null);
-
     if(ctxS){
-      const yr = autoRangePercent([...sSetup, ...sMaint, ...sMulti]);
       charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'SETUP',data:sSetup,borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2,datalabels:DL_LINE_PCT(6,1)},
-        {label:'MAINT',data:sMaint,borderColor:C.solid[1],tension:.3,pointRadius:2,datalabels:DL_LINE_PCT(16,1)},
-        {label:'MULTI',data:sMulti,borderColor:C.solid[2],borderDash:[4,4],tension:.3,pointRadius:2,datalabels:DL_LINE_PCT(26,1)}
-      ]},options:{responsive:true,layout:{padding:{top:18,right:10}},plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:yr.min,max:yr.max,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2},
+        {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2},
+        {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2}
+      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
     if(ctxT){
-      const yr = autoRangePercent([...sTotal, ...goalLine.filter(isNum)]);
       charts['chart-capability-total']=new Chart(ctxT,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'전체',data:sTotal,borderColor:C.solid[0],backgroundColor:C.emeraldF,fill:true,tension:.3,pointRadius:2,datalabels:DL_LINE_PCT(8,1)},
-        {label:'목표',data:goalLine.map(v=>isNum(v)?+Number(v).toFixed(3):null),borderColor:C.slate,borderDash:[6,4],pointRadius:0,borderWidth:2,datalabels:{display:false}}
-      ]},options:{responsive:true,layout:{padding:{top:18,right:10}},plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:yr.min,max:yr.max,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+        {label:'전체',data:m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2},
+        {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2}
+      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
   }catch{}
 }
@@ -339,7 +257,18 @@ async function renderEqCapa(f) {
   }catch{}
 }
 
-/* 8. Worklog (fix 8,9,10) */
+/* 8. MPI Coverage (MPI>=2) */
+async function renderMPICoverage(f) {
+  try {
+    const {data}=await axios.get(`${API}/analytics/mpi-coverage?${qs(f)}`);
+    const ctx=getCtx('chart-mpi-coverage');if(!ctx)return;
+    const rows=(data.byEquipment||[]).filter(r=>Number(r.cnt||0)>0);
+    charts['chart-mpi-coverage']=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.eq),datasets:[{label:'인원',data:rows.map(r=>r.cnt),backgroundColor:C.set.slice(0,rows.length),borderRadius:4}]},
+      options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>`${v}명`},tooltip:{callbacks:{afterLabel:(c)=>{const names=rows[c.dataIndex]?.names;return names?` ${names}`:'';}}}},scales:{x:{ticks:{stepSize:1}}}}});
+  }catch(e){console.error(e);}
+}
+
+/* 9. Worklog (fix 8,9,10) */
 async function renderWorklog(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/worklog-stats?${qs(f)}`);
@@ -512,20 +441,6 @@ function initEditEngineer() {
       document.getElementById('e-hire').value = fmtDate(data.HIRE)==='—'?'':fmtDate(data.HIRE);
       document.getElementById('e-maineq').value = data['MAIN EQ']||'';
       document.getElementById('e-multieq').value = data['MULTI EQ']||'';
-      // level achieved dates
-      const setDate = (id, v) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const s = fmtDate(v);
-        el.value = (s === '—') ? '' : s;
-      };
-      setDate('e-lv11', data.lv11);
-      setDate('e-lv12', data.lv12);
-      setDate('e-lv13', data.lv13);
-      setDate('e-lv2',  data.lv2);
-      setDate('e-lv22', data.lv22);
-      setDate('e-lv23', data.lv23);
-      setDate('e-lv24', data.lv24);
       document.getElementById('e-g25').value = (data.g25 ?? '');
       document.getElementById('e-g26').value = (data.g26 ?? '');
       document.getElementById('e-lvgoal25').value = (data.lv_goal_25 ?? '');
@@ -552,13 +467,6 @@ function initEditEngineer() {
       hire_date: document.getElementById('e-hire').value||null,
       main_eq: document.getElementById('e-maineq').value||null,
       multi_eq: document.getElementById('e-multieq').value||null,
-      lv11: document.getElementById('e-lv11')?.value ?? undefined,
-      lv12: document.getElementById('e-lv12')?.value ?? undefined,
-      lv13: document.getElementById('e-lv13')?.value ?? undefined,
-      lv2:  document.getElementById('e-lv2')?.value ?? undefined,
-      lv22: document.getElementById('e-lv22')?.value ?? undefined,
-      lv23: document.getElementById('e-lv23')?.value ?? undefined,
-      lv24: document.getElementById('e-lv24')?.value ?? undefined,
       g25: document.getElementById('e-g25').value===''?undefined:Number(document.getElementById('e-g25').value),
       g26: document.getElementById('e-g26').value===''?undefined:Number(document.getElementById('e-g26').value),
       lv_goal_25: document.getElementById('e-lvgoal25').value===''?undefined:Number(document.getElementById('e-lvgoal25').value),
@@ -600,7 +508,7 @@ async function loadAll() {
   const editBtn=document.getElementById('btn-edit-eng');
   if(editBtn) editBtn.disabled = !name;
   if(name)showEngineerInfo(name);else document.getElementById('eng-info').style.display='none';
-  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderWorklog(f)]);
+  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderMPICoverage(f),renderWorklog(f)]);
 }
 
 /* Init */

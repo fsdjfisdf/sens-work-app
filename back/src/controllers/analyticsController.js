@@ -63,6 +63,10 @@ exports.getExportData = async (req, res) => {
   try { res.json(await dao.getExportData(getFilters(req.query))); }
   catch (e) { console.error(e); res.status(500).json({ error: '내보내기 데이터 조회 오류' }); }
 };
+exports.getMPICoverage = async (req, res) => {
+  try { res.json(await dao.getMPICoverage(getFilters(req.query))); }
+  catch (e) { console.error(e); res.status(500).json({ error: 'MPI 커버리지 조회 오류' }); }
+};
 
 exports.addEngineer = async (req, res) => {
   try {
@@ -112,5 +116,25 @@ exports.reinstateEngineer = async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: '복직 처리 오류' });
+  }
+};
+
+function pickMe(req){
+  const t = req.verifiedToken || req.decodedToken || req.decoded || req.user || req.auth || {};
+  const employee_id = t.employee_id ?? t.EMPLOYEE_ID ?? t.emp_id ?? t.employeeId ?? t.person_id ?? t.personId ?? t.id;
+  const name = t.name ?? t.NAME ?? t.nickname ?? t.user_name ?? t.username ?? t.userName ?? t.NICKNAME;
+  return { employee_id, name };
+}
+
+exports.getMyDashboard = async (req, res) => {
+  try {
+    const me = pickMe(req);
+    if (!me.employee_id && !me.name) {
+      return res.status(401).json({ error: '로그인 정보를 확인할 수 없습니다.' });
+    }
+    res.json(await dao.getMyDashboard(me));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: '내 정보 대시보드 조회 오류' });
   }
 };

@@ -27,29 +27,6 @@ async function getUserDBCols() {
 }
 function hasCol(cols, name) { return cols.has(name); }
 
-let _resignedCols = null;
-async function getResignedCols() {
-  if (_resignedCols) return _resignedCols;
-  const [rows] = await pool.query(
-    `SELECT COLUMN_NAME AS c
-     FROM INFORMATION_SCHEMA.COLUMNS
-     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME='resigned_employee'`
-  );
-  _resignedCols = new Set(rows.map(r => r.c));
-  return _resignedCols;
-}
-
-function buildWhereResigned(filters, prefix = '') {
-  const p = prefix ? `${prefix}.` : '';
-  const cond = ['1=1'];
-  const vals = [];
-  if (filters.company) { cond.push(`${p}company = ?`); vals.push(filters.company); }
-  if (filters.group)   { cond.push(`${p}\`group\` = ?`); vals.push(filters.group); }
-  if (filters.site)    { cond.push(`${p}site = ?`); vals.push(filters.site); }
-  if (filters.name)    { cond.push(`${p}name LIKE ?`); vals.push(`%${filters.name}%`); }
-  return { where: `WHERE ${cond.join(' AND ')}`, vals };
-}
-
 exports.getFilterOptions = async () => {
   const [companies] = await pool.query(`SELECT DISTINCT COMPANY AS v FROM userDB WHERE COMPANY IS NOT NULL ORDER BY COMPANY`);
   const [groups]    = await pool.query(`SELECT DISTINCT \`GROUP\` AS v FROM userDB WHERE \`GROUP\` IS NOT NULL ORDER BY \`GROUP\``);
@@ -59,83 +36,30 @@ exports.getFilterOptions = async () => {
 };
 
 exports.getHeadCount = async (filters) => {
-  const START_YM = '2023-01';
-  const BASE_END = '2022-12-31';
-
-  const colsR = await getResignedCols();
   const { where, vals } = buildWhere(filters);
-  const { where: rWhere, vals: rVals } = buildWhereResigned(filters, 'r');
-
-  // hires: active(userDB) + resigned(resigned_employee)
-  const [hiresUser] = await pool.query(
-    `SELECT DATE_FORMAT(u.HIRE, '%Y-%m') AS ym, COUNT(*) AS cnt, GROUP_CONCAT(u.NAME SEPARATOR ', ') AS names
-     FROM userDB u ${where} AND u.HIRE IS NOT NULL
+  const [hires] = await pool.query(
+    `SELECT DATE_FORMAT(HIRE, '%Y-%m') AS ym, COUNT(*) AS cnt, GROUP_CONCAT(NAME SEPARATOR ', ') AS names
+     FROM userDB u ${where} AND HIRE IS NOT NULL
      GROUP BY ym ORDER BY ym`,
     vals
   );
 
-  let hiresResigned = [];
-  if (hasCol(colsR, 'hire_date')) {
-    const [rows] = await pool.query(
-      `SELECT DATE_FORMAT(r.hire_date, '%Y-%m') AS ym, COUNT(*) AS cnt, GROUP_CONCAT(r.name SEPARATOR ', ') AS names
-       FROM resigned_employee r ${rWhere} AND r.hire_date IS NOT NULL
-       GROUP BY ym ORDER BY ym`,
-      rVals
-    );
-    hiresResigned = rows;
-  }
-
-  const mergeByYm = (a, b) => {
-    const m = new Map();
-    const push = (r) => {
-      if (!r?.ym) return;
-      const cur = m.get(r.ym) || { ym: r.ym, cnt: 0, names: '' };
-      cur.cnt += Number(r.cnt || 0);
-      if (r.names) cur.names = cur.names ? `${cur.names}, ${r.names}` : r.names;
-      m.set(r.ym, cur);
-    };
-    a.forEach(push);
-    b.forEach(push);
-    return Array.from(m.values()).sort((x, y) => String(x.ym).localeCompare(String(y.ym)));
-  };
-  const hires = mergeByYm(hiresUser, hiresResigned);
+  const rCond = ['1=1'];
+  const rVals = [];
+  if (filters.company) { rCond.push(`company = ?`); rVals.push(filters.company); }
+  if (filters.group)   { rCond.push(`\`group\` = ?`); rVals.push(filters.group); }
+  if (filters.site)    { rCond.push(`site = ?`); rVals.push(filters.site); }
 
   const [resigns] = await pool.query(
-    `SELECT DATE_FORMAT(r.resign_date, '%Y-%m') AS ym, COUNT(*) AS cnt, GROUP_CONCAT(r.name SEPARATOR ', ') AS names
-     FROM resigned_employee r ${rWhere} AND r.resign_date IS NOT NULL
+    `SELECT DATE_FORMAT(resign_date, '%Y-%m') AS ym, COUNT(*) AS cnt, GROUP_CONCAT(name SEPARATOR ', ') AS names
+     FROM resigned_employee
+     WHERE ${rCond.join(' AND ')}
      GROUP BY ym ORDER BY ym`,
     rVals
   );
 
-  // baseline: 재직자(START_YM 이전) 포함
-  let baseline = 0;
-  if (hasCol(colsR, 'hire_date')) {
-    const [rows] = await pool.query(
-      `SELECT COUNT(*) AS cnt
-       FROM (
-         SELECT u.HIRE AS hire_date, NULL AS resign_date
-         FROM userDB u ${where}
-         UNION ALL
-         SELECT r.hire_date, r.resign_date
-         FROM resigned_employee r ${rWhere} AND r.hire_date IS NOT NULL
-       ) x
-       WHERE x.hire_date IS NOT NULL
-         AND x.hire_date <= ?
-         AND (x.resign_date IS NULL OR x.resign_date > ?)`,
-      [...vals, ...rVals, BASE_END, BASE_END]
-    );
-    baseline = rows[0]?.cnt || 0;
-  } else {
-    const [rows] = await pool.query(
-      `SELECT COUNT(*) AS cnt
-       FROM userDB u ${where} AND u.HIRE IS NOT NULL AND u.HIRE <= ?`,
-      [...vals, BASE_END]
-    );
-    baseline = rows[0]?.cnt || 0;
-  }
-
   const [total] = await pool.query(`SELECT COUNT(*) AS cnt FROM userDB u ${where}`, vals);
-  return { startYm: START_YM, baseline, hires, resigns, currentTotal: total[0]?.cnt || 0 };
+  return { hires, resigns, currentTotal: total[0]?.cnt || 0 };
 };
 
 exports.getHRDistribution = async (filters) => {
@@ -373,19 +297,8 @@ exports.getWorklogStats = async (filters) => {
 exports.getEngineerInfo = async (name) => {
   const cols = await getUserDBCols();
   const extra = [];
-  if (hasCol(cols, '25Y CAPA GOAL')) extra.push('u.\`25Y CAPA GOAL\` AS g25');
   if (hasCol(cols, '26Y CAPA GOAL')) extra.push('u.\`26Y CAPA GOAL\` AS g26');
-  if (hasCol(cols, '25Y LEVEL GOAL')) extra.push('u.\`25Y LEVEL GOAL\` AS lv_goal_25');
   if (hasCol(cols, '26Y LEVEL GOAL')) extra.push('u.\`26Y LEVEL GOAL\` AS lv_goal_26');
-
-  // level achieved dates (optional)
-  if (hasCol(cols, 'Level1 Achieve')) extra.push('u.\`Level1 Achieve\` AS lv11');
-  if (hasCol(cols, 'Level2 Achieve')) extra.push('u.\`Level2 Achieve\` AS lv12');
-  if (hasCol(cols, 'Level3 Achieve')) extra.push('u.\`Level3 Achieve\` AS lv13');
-  if (hasCol(cols, 'Level4 Achieve')) extra.push('u.\`Level4 Achieve\` AS lv2');
-  if (hasCol(cols, 'Level2-2(B) Achieve')) extra.push('u.\`Level2-2(B) Achieve\` AS lv22');
-  if (hasCol(cols, 'Level2-2(A) Achieve')) extra.push('u.\`Level2-2(A) Achieve\` AS lv23');
-  if (hasCol(cols, 'Level2-3(B) Achieve')) extra.push('u.\`Level2-3(B) Achieve\` AS lv24');
 
   const [rows] = await pool.query(
     `SELECT u.ID, u.NAME, u.COMPANY, u.EMPLOYEE_ID, u.\`GROUP\`, u.SITE, u.HIRE, u.role,
@@ -469,24 +382,6 @@ exports.updateEngineer = async (id, data) => {
     vals.push(data.lv_goal_26 === '' ? null : data.lv_goal_26);
   }
 
-  // level achieved dates
-  const lvMap = [
-    { col: 'Level1 Achieve', key: 'lv11' },
-    { col: 'Level2 Achieve', key: 'lv12' },
-    { col: 'Level3 Achieve', key: 'lv13' },
-    { col: 'Level4 Achieve', key: 'lv2' },
-    { col: 'Level2-2(B) Achieve', key: 'lv22' },
-    { col: 'Level2-2(A) Achieve', key: 'lv23' },
-    { col: 'Level2-3(B) Achieve', key: 'lv24' },
-  ];
-  for (const { col, key } of lvMap) {
-    if (!hasCol(cols, col)) continue;
-    if (data[key] !== undefined) {
-      set.push(`\`${col}\`=?`);
-      vals.push(data[key] === '' ? null : data[key]);
-    }
-  }
-
   if (!set.length) return;
   vals.push(id);
   await pool.query(`UPDATE userDB SET ${set.join(', ')} WHERE ID=?`, vals);
@@ -495,54 +390,59 @@ exports.updateEngineer = async (id, data) => {
 exports.resignEngineer = async ({ id, name, resign_date }) => {
   let row = null;
   if (id) {
-    const [r] = await pool.query(`SELECT ID, NAME, COMPANY, EMPLOYEE_ID, HIRE, \`GROUP\` AS grp, SITE FROM userDB WHERE ID=? LIMIT 1`, [id]);
+    const [r] = await pool.query(`SELECT ID, NAME, COMPANY, \`GROUP\` AS grp, SITE FROM userDB WHERE ID=? LIMIT 1`, [id]);
     row = r[0] || null;
   } else if (name) {
-    const [r] = await pool.query(`SELECT ID, NAME, COMPANY, EMPLOYEE_ID, HIRE, \`GROUP\` AS grp, SITE FROM userDB WHERE NAME=? LIMIT 1`, [name]);
+    const [r] = await pool.query(`SELECT ID, NAME, COMPANY, \`GROUP\` AS grp, SITE FROM userDB WHERE NAME=? LIMIT 1`, [name]);
     row = r[0] || null;
     id = row?.ID;
   }
   if (!row) throw new Error('대상 엔지니어를 찾을 수 없습니다.');
 
-  const colsR = await getResignedCols();
-  const fields = [];
-  const values = [];
-
-  const add = (col, v) => {
-    if (!hasCol(colsR, col)) return;
-    fields.push(col === 'group' ? '`group`' : col);
-    values.push(v);
-  };
-
-  add('userdb_id', row.ID);
-  add('name', row.NAME);
-  add('company', row.COMPANY);
-  add('employee_id', row.EMPLOYEE_ID || null);
-  add('group', row.grp);
-  add('site', row.SITE);
-  add('hire_date', row.HIRE || null);
-  add('resign_date', resign_date);
-  add('reason', null);
-
-  if (!fields.length) throw new Error('resigned_employee 테이블 컬럼을 확인해주세요.');
-
-  const placeholders = fields.map(() => '?').join(',');
-  const updates = fields
-    .filter(f => f !== 'userdb_id')
-    .map(f => `${f} = VALUES(${f})`)
-    .join(', ');
-
-  const sql = updates
-    ? `INSERT INTO resigned_employee (${fields.join(',')}) VALUES (${placeholders}) ON DUPLICATE KEY UPDATE ${updates}`
-    : `INSERT INTO resigned_employee (${fields.join(',')}) VALUES (${placeholders})`;
-
-  await pool.query(sql, values);
+  await pool.query(
+    `INSERT INTO resigned_employee (name, company, \`group\`, site, resign_date)
+     VALUES (?,?,?,?,?)
+     ON DUPLICATE KEY UPDATE company=VALUES(company), \`group\`=VALUES(\`group\`), site=VALUES(site), resign_date=VALUES(resign_date)`,
+    [row.NAME, row.COMPANY, row.grp, row.SITE, resign_date]
+  );
 
   if (id) await pool.query(`DELETE FROM userDB WHERE ID=?`, [id]);
 };
 
 exports.reinstateEngineer = async (name) => {
   await pool.query(`DELETE FROM resigned_employee WHERE name=?`, [name]);
+};
+
+exports.getMPICoverage = async (filters) => {
+  const cols = await getUserDBCols();
+  const { where, vals } = buildWhere(filters);
+
+  const eqsAll = [
+    { eq: 'SUPRA N', col: 'SUPRA N MPI' },
+    { eq: 'SUPRA XP', col: 'SUPRA XP MPI' },
+    { eq: 'INTEGER', col: 'INTEGER MPI' },
+    { eq: 'PRECIA', col: 'PRECIA MPI' },
+    { eq: 'ECOLITE', col: 'ECOLITE MPI' },
+    { eq: 'GENEVA', col: 'GENEVA MPI' },
+    { eq: 'HDW', col: 'HDW MPI' },
+  ];
+
+  const eqs = eqsAll.filter(e => hasCol(cols, e.col));
+  if (!eqs.length) {
+    const [totalRows] = await pool.query(`SELECT COUNT(*) AS cnt FROM userDB u ${where} AND u.MPI>=2`, vals);
+    return { total_mpi2: totalRows[0]?.cnt || 0, byEquipment: [] };
+  }
+
+  const selects = eqs.map(e =>
+    `SELECT '${e.eq}' AS eq,
+            SUM(CASE WHEN u.MPI>=2 AND IFNULL(u.\`${e.col}\`,0)>=1 THEN 1 ELSE 0 END) AS cnt,
+            GROUP_CONCAT(CASE WHEN u.MPI>=2 AND IFNULL(u.\`${e.col}\`,0)>=1 THEN u.NAME END ORDER BY u.NAME SEPARATOR ', ') AS names
+     FROM userDB u ${where}`
+  ).join('\nUNION ALL\n');
+
+  const [rows] = await pool.query(selects, Array(eqs.length).fill(vals).flat());
+  const [totalRows] = await pool.query(`SELECT COUNT(*) AS cnt FROM userDB u ${where} AND u.MPI>=2`, vals);
+  return { total_mpi2: totalRows[0]?.cnt || 0, byEquipment: rows };
 };
 
 exports.getExportData = async (filters) => {
@@ -596,4 +496,349 @@ exports.getExportData = async (filters) => {
   );
 
   return rows;
+};
+
+// =====================================================================================
+// Myself dashboard (auth-only): returns only the logged-in user's data
+// =====================================================================================
+function normKey(s){ return (s||'').toString().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); }
+
+exports.getMyDashboard = async (me) => {
+  const cols = await getUserDBCols();
+
+  // 1) Resolve user record (prefer EMPLOYEE_ID, fallback to NAME)
+  const where = [];
+  const vals = [];
+  if (me.employee_id) { where.push('u.EMPLOYEE_ID=?'); vals.push(me.employee_id); }
+  if (!where.length && me.name) { where.push('u.NAME=?'); vals.push(me.name); }
+  if (!where.length) return { profile: null };
+
+  const eqs = ['SUPRA N','SUPRA XP','INTEGER','PRECIA','ECOLITE','GENEVA','HDW'];
+
+  const baseSelect = [
+    'u.ID AS id',
+    'u.NAME AS name',
+    'u.COMPANY AS company',
+    'u.EMPLOYEE_ID AS employee_id',
+    'u.`GROUP` AS grp',
+    'u.SITE AS site',
+    'u.HIRE AS hire_date',
+    'u.role AS role',
+    'u.`MAIN EQ` AS main_eq',
+    'u.`MULTI EQ` AS multi_eq',
+    'u.`LEVEL(report)` AS level_report',
+    'u.`LEVEL` AS level_internal',
+    'u.`LEVEL(PSK)` AS level_psk',
+    'u.`MULTI LEVEL` AS multi_level',
+    'u.`MULTI LEVEL(PSK)` AS multi_level_psk',
+    'u.`SET UP CAPA` AS setup_capa',
+    'u.`MAINT CAPA` AS maint_capa',
+    'u.`MULTI CAPA` AS multi_capa',
+    'u.CAPA AS capa',
+    'u.MPI AS mpi'
+  ];
+
+  // goals (optional)
+  if (hasCol(cols,'25Y CAPA GOAL')) baseSelect.push('u.`25Y CAPA GOAL` AS goal25');
+  if (hasCol(cols,'26Y CAPA GOAL')) baseSelect.push('u.`26Y CAPA GOAL` AS goal26');
+
+  // level achieved dates (optional)
+  const achCols = [
+    ['Level1 Achieve','ach_11'],
+    ['Level2 Achieve','ach_12'],
+    ['Level3 Achieve','ach_13'],
+    ['Level4 Achieve','ach_2'],
+    ['Level2-2(B) Achieve','ach_22b'],
+    ['Level2-2(A) Achieve','ach_23']
+  ];
+  for (const [c, a] of achCols) if (hasCol(cols,c)) baseSelect.push(`u.\`${c}\` AS ${a}`);
+
+  // equipment capability columns (optional)
+  for (const eq of eqs) {
+    const c1 = `${eq} SET UP`;
+    const c2 = `${eq} MAINT`;
+    if (hasCol(cols,c1)) baseSelect.push(`u.\`${c1}\` AS ${normKey(eq)}_setup`);
+    if (hasCol(cols,c2)) baseSelect.push(`u.\`${c2}\` AS ${normKey(eq)}_maint`);
+  }
+
+  // monthly columns (v3 logic)
+  const months = [];
+  for (const m of ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']) {
+    months.push({
+      col: `25Y${m}`,
+      setup: `25Y${m}_SETUP`,
+      maint: `25Y${m}_MAINT`,
+      ym: `2025-${String(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].indexOf(m)+1).padStart(2,'0')}`
+    });
+  }
+  for (const m of ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP']) {
+    const sc = m === 'AUG' ? '26AUG_SETUP' : `26Y${m}_SETUP`;
+    months.push({
+      col: `26Y${m}`,
+      setup: sc,
+      maint: `26Y${m}_MAINT`,
+      ym: `2026-${String(['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP'].indexOf(m)+1).padStart(2,'0')}`
+    });
+  }
+
+  for (const m of months) {
+    if (hasCol(cols, m.col))   baseSelect.push(`u.\`${m.col}\` AS m_${m.ym.replace('-','_')}_total`);
+    if (hasCol(cols, m.setup)) baseSelect.push(`u.\`${m.setup}\` AS m_${m.ym.replace('-','_')}_setup`);
+    if (hasCol(cols, m.maint)) baseSelect.push(`u.\`${m.maint}\` AS m_${m.ym.replace('-','_')}_maint`);
+  }
+
+  const [uRows] = await pool.query(
+    `SELECT ${baseSelect.join(',\n')}
+     FROM userDB u
+     WHERE ${where.join(' AND ')}
+     LIMIT 1`,
+    vals
+  );
+  const u = uRows[0] || null;
+  if (!u) return { profile: null };
+
+  // 2) Profile block
+  const profile = {
+    id: u.id, name: u.name, company: u.company, employee_id: u.employee_id,
+    group: u.grp, site: u.site, hire_date: u.hire_date, role: u.role,
+    main_eq: u.main_eq, multi_eq: u.multi_eq,
+    level_report: u.level_report, level_internal: u.level_internal, level_psk: u.level_psk,
+    multi_level: u.multi_level, multi_level_psk: u.multi_level_psk,
+    setup_capa: u.setup_capa, maint_capa: u.maint_capa, multi_capa: u.multi_capa, capa: u.capa,
+    goal25: u.goal25 ?? null, goal26: u.goal26 ?? null,
+    achieved: {
+      '1-1': u.ach_11 ?? null,
+      '1-2': u.ach_12 ?? null,
+      '1-3': u.ach_13 ?? null,
+      '2':   u.ach_2  ?? null,
+      '2-2': u.ach_22b ?? null,
+      '2-3': u.ach_23 ?? null
+    }
+  };
+
+  // 3) Equipment capability (for bars)
+  const eqCapability = eqs.map(eq => {
+    const k = normKey(eq);
+    const setup = u[`${k}_setup`] ?? null;
+    const maint = u[`${k}_maint`] ?? null;
+    const total = (setup!=null || maint!=null) ? ((Number(setup||0)+Number(maint||0))/2) : null;
+    return { eq, setup, maint, total };
+  });
+
+  // 4) Main/Multi equipment capability
+  function pickEqCap(eq){
+    if(!eq) return { eq:null, setup:null, maint:null, total:null };
+    const k = normKey(eq);
+    const setup = u[`${k}_setup`] ?? null;
+    const maint = u[`${k}_maint`] ?? null;
+    const total = (setup!=null || maint!=null) ? ((Number(setup||0)+Number(maint||0))/2) : null;
+    return { eq, setup, maint, total };
+  }
+  const mainCap = pickEqCap(profile.main_eq);
+  const multiCap = pickEqCap(profile.multi_eq);
+
+  // 5) Monthly CAPA (main: uses monthly *_SETUP/*_MAINT columns)
+  const monthlyMain = [];
+  const monthlyAvg = [];
+  for (const m of months) {
+    const keyBase = `m_${m.ym.replace('-','_')}`;
+    const total = u[`${keyBase}_total`];
+    const setup = u[`${keyBase}_setup`];
+    const maint = u[`${keyBase}_maint`];
+    // Keep only meaningful months (any non-null and >0)
+    if ((total!=null && Number(total)>0) || (setup!=null && Number(setup)>0) || (maint!=null && Number(maint)>0)) {
+      monthlyMain.push({ ym: m.ym, setup: setup!=null?Number(setup):null, maint: maint!=null?Number(maint):null, total: total!=null?Number(total):null });
+      const goal = (m.ym.startsWith('2026-') ? profile.goal26 : profile.goal25);
+      monthlyAvg.push({ ym: m.ym, total: total!=null?Number(total):null, goal: goal!=null?Number(goal):null });
+    }
+  }
+
+  // 6) Monthly MULTI CAPA: try to use multi monthly columns if present, else fallback to worklog on multi_eq
+  const multiCandidates = (y, mon) => ([
+    `${y}${mon}_MULTI_SETUP`, `${y}${mon}_M_SETUP`, `${y}${mon}_MSETUP`, `${y}${mon}_MULTISETUP`,
+  ]);
+  const multiCandidatesM = (y, mon) => ([
+    `${y}${mon}_MULTI_MAINT`, `${y}${mon}_M_MAINT`, `${y}${mon}_MMAINT`, `${y}${mon}_MULTIMAINT`,
+    `${y}${mon}_MULTI_MAINT`, `${y}${mon}_MULTI_MAINT`,
+  ]);
+  function findFirst(list){
+    for(const c of list) if(hasCol(cols,c)) return c;
+    return null;
+  }
+  const monthlyMulti = [];
+  let multiUnit = 'capa';
+  // detect any multi columns
+  let hasAnyMultiCols = false;
+  for (const m of months) {
+    const y = m.ym.startsWith('2025-') ? '25Y' : '26Y';
+    const mon = m.ym.split('-')[1]; // '01'
+    // map to JAN..DEC
+    const idx = Number(mon)-1;
+    const monName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][idx];
+    const cS = findFirst(multiCandidates(y, monName));
+    const cM = findFirst(multiCandidatesM(y, monName));
+    if (cS || cM) { hasAnyMultiCols = true; break; }
+  }
+
+  if (hasAnyMultiCols) {
+    for (const m of months) {
+      const y = m.ym.startsWith('2025-') ? '25Y' : '26Y';
+      const idx = Number(m.ym.split('-')[1])-1;
+      const monName = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][idx];
+      const cS = findFirst(multiCandidates(y, monName));
+      const cM = findFirst(multiCandidatesM(y, monName));
+      const setup = cS ? u[cS] : null;
+      const maint = cM ? u[cM] : null;
+      if ((setup!=null && Number(setup)>0) || (maint!=null && Number(maint)>0)) {
+        monthlyMulti.push({ ym: m.ym, setup: setup!=null?Number(setup):null, maint: maint!=null?Number(maint):null });
+      }
+    }
+  } else {
+    // fallback: derive from worklog minutes on user's multi_eq
+    multiUnit = 'minutes';
+    if (profile.multi_eq) {
+      const [rows] = await pool.query(
+        `SELECT DATE_FORMAT(e.task_date,'%Y-%m') AS ym,
+                SUM(CASE WHEN e.work_type='SET UP' THEN w.task_duration ELSE 0 END) AS setup_minutes,
+                SUM(CASE WHEN e.work_type='MAINT' THEN w.task_duration ELSE 0 END) AS maint_minutes
+         FROM wl_event e
+         JOIN wl_worker w ON w.event_id=e.id
+         WHERE e.approval_status='APPROVED'
+           AND w.engineer_name=?
+           AND e.equipment_type=?
+         GROUP BY ym
+         ORDER BY ym`,
+        [profile.name, profile.multi_eq]
+      );
+      for (const r of rows) {
+        if ((r.setup_minutes && Number(r.setup_minutes)>0) || (r.maint_minutes && Number(r.maint_minutes)>0)) {
+          monthlyMulti.push({ ym: r.ym, setup: Number(r.setup_minutes||0), maint: Number(r.maint_minutes||0) });
+        }
+      }
+    }
+  }
+
+  // 7) Worklog stats (myself)
+  const meName = profile.name;
+  const [monthlyHours] = await pool.query(
+    `SELECT DATE_FORMAT(e.task_date,'%Y-%m') AS ym,
+            SUM(w.task_duration) AS total_minutes,
+            COUNT(DISTINCT e.id) AS event_count
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=?
+     GROUP BY ym
+     ORDER BY ym`,
+    [meName]
+  );
+
+  const [byWorkType] = await pool.query(
+    `SELECT e.work_type AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=?
+     GROUP BY e.work_type`,
+    [meName]
+  );
+  const [byWorkSort] = await pool.query(
+    `SELECT IFNULL(e.work_type2,'N/A') AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND e.work_type='MAINT'
+     GROUP BY label`,
+    [meName]
+  );
+
+  const [byGroup] = await pool.query(
+    `SELECT e.\`group\` AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND e.\`group\` IS NOT NULL AND e.\`group\`<>'SELECT'
+     GROUP BY e.\`group\` ORDER BY cnt DESC`,
+    [meName]
+  );
+  const [bySite] = await pool.query(
+    `SELECT e.site AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND e.site IS NOT NULL AND e.site<>'SELECT'
+     GROUP BY e.site ORDER BY cnt DESC`,
+    [meName]
+  );
+  const [byLine] = await pool.query(
+    `SELECT e.line AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND e.line IS NOT NULL AND e.line<>'SELECT'
+     GROUP BY e.line ORDER BY cnt DESC`,
+    [meName]
+  );
+
+  const [byShift] = await pool.query(
+    `SELECT CASE WHEN TIME(w.start_time)<'12:00:00' THEN '오전 근무' ELSE '오후 근무' END AS label,
+            COUNT(*) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND w.start_time IS NOT NULL
+     GROUP BY label`,
+    [meName]
+  );
+  const [byOvertime] = await pool.query(
+    `SELECT CASE WHEN TIME(w.end_time)<='18:00:00' THEN '일반 근무' ELSE '초과 근무' END AS label,
+            COUNT(*) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND w.end_time IS NOT NULL
+     GROUP BY label`,
+    [meName]
+  );
+
+  const [byEqType] = await pool.query(
+    `SELECT e.equipment_type AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND e.equipment_type IS NOT NULL AND e.equipment_type<>'SELECT'
+     GROUP BY e.equipment_type
+     ORDER BY cnt DESC`,
+    [meName]
+  );
+
+  const [reworkMonthly] = await pool.query(
+    `SELECT DATE_FORMAT(e.task_date,'%Y-%m') AS ym, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED' AND w.engineer_name=? AND e.is_rework=1
+     GROUP BY ym ORDER BY ym`,
+    [meName]
+  );
+
+  // 8) Ranks (this month)
+  const [timeRank] = await pool.query(
+    `SELECT w.engineer_name AS name, SUM(w.task_duration) AS total_minutes
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED'
+       AND e.task_date >= DATE_SUB(CURDATE(), INTERVAL DAYOFMONTH(CURDATE())-1 DAY)
+     GROUP BY w.engineer_name
+     ORDER BY total_minutes DESC`,
+    []
+  );
+  const [taskRank] = await pool.query(
+    `SELECT w.engineer_name AS name, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
+     WHERE e.approval_status='APPROVED'
+       AND e.task_date >= DATE_SUB(CURDATE(), INTERVAL DAYOFMONTH(CURDATE())-1 DAY)
+     GROUP BY w.engineer_name
+     ORDER BY cnt DESC`,
+    []
+  );
+
+  return {
+    profile,
+    capability: {
+      eqCapability,
+      main: mainCap,
+      multi: multiCap,
+      monthlyMain,
+      monthlyMulti,
+      monthlyMultiUnit: multiUnit,
+      monthlyAvg
+    },
+    work: {
+      monthlyHours, byWorkType, byWorkSort,
+      byGroup, bySite, byLine,
+      byShift, byOvertime,
+      byEqType, reworkMonthly
+    },
+    rank: { timeRank, taskRank, myName: meName }
+  };
 };

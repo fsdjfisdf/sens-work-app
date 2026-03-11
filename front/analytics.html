@@ -14,6 +14,7 @@
 </div>
 <div class="menu-bar"><div class="menu-bar-content">
   <a href="./user_info.html" class="menu-item">SECM</a>
+  <a href="./SECM_myself.html" class="menu-item">MY SECM</a>
   <a href="./worklog_new.html" class="menu-item">Create Worklog</a>
   <a href="./wl_approval.html" class="menu-item">Worklog Approval</a>
   <a href="./wl_read.html" class="menu-item">Load Worklog</a>
@@ -68,139 +69,46 @@
   <!-- HR -->
   <div class="cat-section active" data-cat="hr">
     <div class="chart-grid">
-      <div class="chart-card wide"><div class="chart-header"><h3>Head Count 추이</h3><button class="info-btn" data-desc="2023-01부터 현재까지 월별 재직 인원(선), 입사(막대), 퇴사(막대) 추이입니다. 2023-01 이전에 이미 재직 중이던 인원도 기준값(베이스라인)으로 포함됩니다. 막대에 마우스를 올리면 해당 월의 입·퇴사자 이름을 확인할 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-headcount"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>회사별 인원</h3><button class="info-btn" data-desc="현재 필터 조건 기준 회사별 인원 구성(명)과 비율(%)입니다. 특정 회사가 과도하게 편중되어 있거나 인력 분산이 필요한지 빠르게 확인할 때 사용합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-company"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>연차별 인원</h3><button class="info-btn" data-desc="입사일(HIRE) 기준으로 연차 구간별 인원 분포를 보여줍니다. 신입/중간/고연차 비중을 한눈에 확인해 교육·멘토링 리소스 배분에 활용할 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-experience"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Group / Site별 인원</h3><button class="info-btn" data-desc="그룹과 사이트 조합별 인원(명) 분포입니다. 특정 GS 조합이 과소/과밀인지 확인하고, 인력 이동 또는 채용 우선순위를 정할 때 참고합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-groupsite"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>Head Count 추이</h3><button class="info-btn" data-desc="2023년 1월부터 현재까지 월별 재직 인원, 입사자, 퇴사자 추이. 막대에 마우스를 올리면 해당 인원을 확인할 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-headcount"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>회사별 인원</h3><button class="info-btn" data-desc="SE&S와 SE&I의 인원 수 및 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-company"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>연차별 인원</h3><button class="info-btn" data-desc="입사일 기준 연차별 인원 분포"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-experience"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Group / Site별 인원</h3><button class="info-btn" data-desc="그룹·사이트 조합별 인원 분포"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-groupsite"></canvas></div>
     </div>
   </div>
 
   <!-- 레벨 -->
   <div class="cat-section" data-cat="level">
-    <div class="chart-grid two-col">
-      <div class="chart-card"><div class="chart-header"><h3>레벨별 인원 <span class="h3-meta" id="level-avg">평균 Lv.—</span></h3><button class="info-btn" data-desc="LEVEL(report) 기준 레벨 구간별 인원(명)과 비율(%)입니다. 막대 위 라벨은 '명수(비율)'로 표시됩니다. 우측 상단의 평균 레벨은 전체 인원을 점수화해(0=0, 1=1, 2=2, 2-2=3, 2-3=4, 2-4=5) 가중 평균으로 계산합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-dist"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>레벨별 평균 취득 기간</h3><button class="info-btn" data-desc="각 레벨을 취득하는 데 평균적으로 걸린 일수입니다. (예: 1-2는 1-1 취득일 → 1-2 취득일까지의 평균) 라벨은 '평균 일수(대상 인원)' 형태로 표시됩니다. 특정 레벨에서 병목이 큰지 확인할 때 유용합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-achieve"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>분기별 레벨 트렌드</h3><button class="info-btn" data-desc="2020 Q1~현재 분기 단위 트렌드입니다. 막대(오른쪽 축)는 분기 말 기준 레벨별 재직 인원 누적(스택)이며, 선(왼쪽 축)은 전체 평균 레벨 점수입니다. 평균 점수는 0=0, 1-1=0.5, 1-2=1, 1-3=1.5, 2=2, 2-2=3, 2-3=4, 2-4=5로 환산해 계산합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-trend"></canvas></div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="chart-header"><h3>레벨별 인원</h3><button class="info-btn" data-desc="LEVEL(report) 기준 인원 수와 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-dist"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>레벨별 평균 취득 기간</h3><button class="info-btn" data-desc="이전 레벨에서 해당 레벨까지 평균 소요 일수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-achieve"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>분기별 레벨 트렌드</h3><button class="info-btn" data-desc="2020 Q1~현재. 평균 점수(꺾은선)+레벨별 누적 인원(막대). 점수: 1-1=0.5, 1-2=1, 1-3=1.5, 2=2, 2-2=3, 2-3=4, 2-4=5"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-trend"></canvas></div>
     </div>
   </div>
 
   <!-- 역량 -->
   <div class="cat-section" data-cat="capa">
     <div class="chart-grid">
-      <div class="chart-card wide"><div class="chart-header"><h3>월별 역량 추이 (SETUP/MAINT/MULTI)</h3><button class="info-btn" data-desc="월별 평균 역량(%) 추이입니다. SETUP/MAINT는 월별 집계 컬럼(예: 25YSEP_SETUP)을 사용하며, MULTI는 엔지니어의 MULTI CAPA 평균을 함께 표시합니다. 세로축은 0~100% 고정이 아니라, 실제 데이터의 최소/최대에 맞춰 자동으로 확대되어 작은 변화도 잘 보이도록 합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-smm"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>월별 전체 역량 / 목표</h3><button class="info-btn" data-desc="월별 전체 역량(실선)과 목표(점선) 비교입니다. 목표는 연도별 CAPA GOAL 평균값을 사용합니다. 세로축은 데이터 범위에 맞춰 자동 조정되며, 각 포인트에 데이터 라벨(%)이 표시됩니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-total"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="설비별 평균 SETUP/MAINT/전체(평균) 역량(%)입니다. 해당 설비를 실제로 다루는 엔지니어(SETUP 또는 MAINT 값이 있는 인원)만 대상으로 평균을 계산해 왜곡을 줄였습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-capa"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>월별 역량 추이 (SETUP/MAINT/MULTI)</h3><button class="info-btn" data-desc="24년 9월~현재. SETUP, MAINT, MULTI 역량만 표시"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-smm"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>월별 전체 역량 / 목표</h3><button class="info-btn" data-desc="24년 9월~현재. 전체 역량과 목표(점선)"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-total"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="설비별 SETUP/MAINT/평균. 해당 설비를 다루는 엔지니어만 평균 계산"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-capa"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>MPI ≥ 2 엔지니어 설비 커버리지</h3><button class="info-btn" data-desc="MPI가 2 이상인 엔지니어들이 각 설비를 커버할 수 있는 인원 수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mpi-coverage"></canvas></div>
     </div>
   </div>
 
   <!-- 작업 분석 -->
-<div class="cat-section" data-cat="work">
-  <div class="chart-grid">
-
-    <div class="chart-card wide">
-      <div class="chart-header">
-        <h3>월별 작업시간</h3>
-        <button class="info-btn" data-desc="승인(APPROVED)된 작업 기준 월별 총 작업시간(분)과 작업 건수(선)를 함께 보여줍니다. 작업시간은 wl_worker의 task_duration(분)을 합산하고, 건수는 wl_event 기준으로 집계합니다.">
-          <i class="fas fa-info-circle"></i>
-        </button>
-      </div>
-      <canvas id="chart-monthly-hours"></canvas>
+  <div class="cat-section" data-cat="work">
+    <div class="chart-grid">
+      <div class="chart-card wide"><div class="chart-header"><h3>월별 작업시간</h3><button class="info-btn" data-desc="월별 총 작업시간(분)과 건수 추이"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-hours"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Work Type별</h3><button class="info-btn" data-desc="MAINT / SET UP / RELOCATION 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Work Sort별</h3><button class="info-btn" data-desc="MAINT 중 REP/ADJ/CLN/MON 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>오전/오후 근무</h3><button class="info-btn" data-desc="시작시간 12시 기준"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>일반/초과 근무</h3><button class="info-btn" data-desc="종료시간 18시 기준"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 오후 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별 오후 근무(12시 이후 시작) 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift-gs"></canvas></div>
+      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 초과 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별 초과 근무(18시 이후 종료) 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime-gs"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Rework 비율</h3><button class="info-btn" data-desc="전체 대비 Rework 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Rework 사유</h3><button class="info-btn" data-desc="Rework 사유별 건수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-reason"></canvas></div>
     </div>
-
-    <!-- (1) Work Type + Work Sort -->
-    <div class="pair-row">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Work Type별</h3>
-          <button class="info-btn" data-desc="MAINT / RELOCATION / SET UP의 작업 비중입니다. 라벨은 '건수(비율)'로 표시되며, 특정 유형의 작업 편중 여부를 빠르게 확인할 수 있습니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-worktype"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Work Sort별</h3>
-          <button class="info-btn" data-desc="MAINT 작업의 세부 분류(work_type2) 비중입니다. 어떤 유형의 유지보수(예: REP/ADJ/CLN/MON)가 많은지 확인해 자주 발생하는 원인에 대한 개선 포인트를 찾을 때 사용합니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-worksort"></canvas>
-      </div>
-    </div>
-
-    <!-- (2) 오전/오후 + 일반/초과 -->
-    <div class="pair-row">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>오전/오후 근무</h3>
-          <button class="info-btn" data-desc="시작시간 기준으로 오전(12:00 이전) / 오후(12:00 이후) 분포입니다. 근무 편중이 있는지, 스케줄링이 필요한지 참고합니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-shift"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>일반/초과 근무</h3>
-          <button class="info-btn" data-desc="종료시간 기준으로 일반(18:00 이전 종료) / 초과(18:00 이후 종료) 분포입니다. 초과근무가 빈번한지, 특정 기간/조합에서 과부하가 있는지 확인할 때 사용합니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-overtime"></canvas>
-      </div>
-    </div>
-
-    <!-- (3) 그룹-사이트 오후 + 그룹-사이트 초과  (여기서 wide 제거) -->
-    <div class="pair-row">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>그룹-사이트별 오후 근무 비율</h3>
-          <button class="info-btn" data-desc="그룹/사이트 조합별로 오후 근무(12:00 이후 시작) 비율을 계산합니다. 전체 건수 대비 오후 시작 건수 비율이며, 조합별 근무 패턴 차이를 확인할 수 있습니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-shift-gs"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>그룹-사이트별 초과 근무 비율</h3>
-          <button class="info-btn" data-desc="그룹/사이트 조합별로 초과 근무(18:00 이후 종료) 비율을 계산합니다. 전체 건수 대비 초과 종료 건수 비율이며, 병목/야근 집중 구간을 식별하는 데 사용합니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-overtime-gs"></canvas>
-      </div>
-    </div>
-
-    <!-- (4) Rework 비율 + Rework 사유 -->
-    <div class="pair-row">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Rework 비율</h3>
-          <button class="info-btn" data-desc="전체 작업 중 Rework(is_rework=1) 비중입니다. Rework 비중이 높으면 재작업 원인 분석 및 SOP 개선 우선순위를 높여야 합니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-rework"></canvas>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Rework 사유</h3>
-          <button class="info-btn" data-desc="Rework 작업의 사유(rework_reason)별 건수입니다. 빈도가 높은 사유부터 개선하면 전체 Rework를 빠르게 낮출 수 있습니다.">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-        <canvas id="chart-rework-reason"></canvas>
-      </div>
-    </div>
-
   </div>
-</div>
 </div></main>
 
 <div class="desc-popup" id="desc-popup" style="display:none;"><div class="desc-content"><p id="desc-text"></p><button class="btn sm" id="desc-close">닫기</button></div></div>
@@ -238,13 +146,6 @@
     <div class="a-field"><label>입사일</label><input type="date" id="e-hire"></div>
     <div class="a-field"><label>MAIN EQ</label><select id="e-maineq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
     <div class="a-field"><label>MULTI EQ</label><select id="e-multieq"><option value="">—</option><option>SUPRA N</option><option>SUPRA XP</option><option>INTEGER</option><option>PRECIA</option><option>ECOLITE</option><option>GENEVA</option><option>HDW</option></select></div>
-    <div class="a-field"><label>Lv1-1 취득</label><input type="date" id="e-lv11"></div>
-    <div class="a-field"><label>Lv1-2 취득</label><input type="date" id="e-lv12"></div>
-    <div class="a-field"><label>Lv1-3 취득</label><input type="date" id="e-lv13"></div>
-    <div class="a-field"><label>Lv2 취득</label><input type="date" id="e-lv2"></div>
-    <div class="a-field"><label>Lv2-2 취득</label><input type="date" id="e-lv22"></div>
-    <div class="a-field"><label>Lv2-3 취득</label><input type="date" id="e-lv23"></div>
-    <div class="a-field"><label>Lv2-4 취득</label><input type="date" id="e-lv24"></div>
     <div class="a-field"><label>25Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="e-g25"></div>
     <div class="a-field"><label>26Y CAPA 목표</label><input type="number" step="0.001" min="0" max="1" id="e-g26"></div>
     <div class="a-field"><label>25Y LEVEL 목표</label><input type="number" step="1" min="0" id="e-lvgoal25"></div>
