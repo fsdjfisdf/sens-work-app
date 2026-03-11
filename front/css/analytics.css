@@ -107,3 +107,21 @@ nav{position:fixed;top:0;left:0;right:0;z-index:var(--z-nav);background:var(--na
 footer{padding:24px 16px;text-align:center}footer p{font-size:11px;color:var(--muted)}
 @media(max-width:1100px){.filter-grid{grid-template-columns:repeat(2,1fr)}.chart-grid{grid-template-columns:1fr}.chart-card.wide{grid-column:auto}.eng-info-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.dash-inner{padding:0 10px}.filter-grid{grid-template-columns:1fr}.cat-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}.cat-tab{flex-shrink:0;font-size:12px;padding:8px 12px}.eng-info-grid{grid-template-columns:1fr 1fr}.add-grid{grid-template-columns:1fr}}
+
+.pair-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:14px;
+  grid-column:span 2; /* 기본 chart-grid가 2열일 때 */
+}
+
+@media (min-width: 1400px){
+  .pair-row{ grid-column:span 3; } /* chart-grid가 3열일 때: pair-row가 전체폭을 먹게 */
+}
+
+@media (max-width: 980px){
+  .pair-row{
+    grid-template-columns:1fr;
+    grid-column:span 1;
+  }
+}

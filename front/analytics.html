@@ -94,19 +94,113 @@
   </div>
 
   <!-- 작업 분석 -->
-  <div class="cat-section" data-cat="work">
-    <div class="chart-grid">
-      <div class="chart-card wide"><div class="chart-header"><h3>월별 작업시간</h3><button class="info-btn" data-desc="승인(APPROVED)된 작업 기준 월별 총 작업시간(분)과 작업 건수(선)를 함께 보여줍니다. 작업시간은 wl_worker의 task_duration(분)을 합산하고, 건수는 wl_event 기준으로 집계합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-hours"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Type별</h3><button class="info-btn" data-desc="MAINT / RELOCATION / SET UP의 작업 비중입니다. 라벨은 '건수(비율)'로 표시되며, 특정 유형의 작업 편중 여부를 빠르게 확인할 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Sort별</h3><button class="info-btn" data-desc="MAINT 작업의 세부 분류(work_type2) 비중입니다. 어떤 유형의 유지보수(예: REP/ADJ/CLN/MON)가 많은지 확인해 자주 발생하는 원인에 대한 개선 포인트를 찾을 때 사용합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>오전/오후 근무</h3><button class="info-btn" data-desc="시작시간 기준으로 오전(12:00 이전) / 오후(12:00 이후) 분포입니다. 근무 편중이 있는지, 스케줄링이 필요한지 참고합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>일반/초과 근무</h3><button class="info-btn" data-desc="종료시간 기준으로 일반(18:00 이전 종료) / 초과(18:00 이후 종료) 분포입니다. 초과근무가 빈번한지, 특정 기간/조합에서 과부하가 있는지 확인할 때 사용합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 오후 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별로 오후 근무(12:00 이후 시작) 비율을 계산합니다. 전체 건수 대비 오후 시작 건수 비율이며, 조합별 근무 패턴 차이를 확인할 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift-gs"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 초과 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별로 초과 근무(18:00 이후 종료) 비율을 계산합니다. 전체 건수 대비 초과 종료 건수 비율이며, 병목/야근 집중 구간을 식별하는 데 사용합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime-gs"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Rework 비율</h3><button class="info-btn" data-desc="전체 작업 중 Rework(is_rework=1) 비중입니다. Rework 비중이 높으면 재작업 원인 분석 및 SOP 개선 우선순위를 높여야 합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Rework 사유</h3><button class="info-btn" data-desc="Rework 작업의 사유(rework_reason)별 건수입니다. 빈도가 높은 사유부터 개선하면 전체 Rework를 빠르게 낮출 수 있습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-reason"></canvas></div>
+<div class="cat-section" data-cat="work">
+  <div class="chart-grid">
+
+    <div class="chart-card wide">
+      <div class="chart-header">
+        <h3>월별 작업시간</h3>
+        <button class="info-btn" data-desc="승인(APPROVED)된 작업 기준 월별 총 작업시간(분)과 작업 건수(선)를 함께 보여줍니다. 작업시간은 wl_worker의 task_duration(분)을 합산하고, 건수는 wl_event 기준으로 집계합니다.">
+          <i class="fas fa-info-circle"></i>
+        </button>
+      </div>
+      <canvas id="chart-monthly-hours"></canvas>
     </div>
+
+    <!-- (1) Work Type + Work Sort -->
+    <div class="pair-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Work Type별</h3>
+          <button class="info-btn" data-desc="MAINT / RELOCATION / SET UP의 작업 비중입니다. 라벨은 '건수(비율)'로 표시되며, 특정 유형의 작업 편중 여부를 빠르게 확인할 수 있습니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-worktype"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Work Sort별</h3>
+          <button class="info-btn" data-desc="MAINT 작업의 세부 분류(work_type2) 비중입니다. 어떤 유형의 유지보수(예: REP/ADJ/CLN/MON)가 많은지 확인해 자주 발생하는 원인에 대한 개선 포인트를 찾을 때 사용합니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-worksort"></canvas>
+      </div>
+    </div>
+
+    <!-- (2) 오전/오후 + 일반/초과 -->
+    <div class="pair-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>오전/오후 근무</h3>
+          <button class="info-btn" data-desc="시작시간 기준으로 오전(12:00 이전) / 오후(12:00 이후) 분포입니다. 근무 편중이 있는지, 스케줄링이 필요한지 참고합니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-shift"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>일반/초과 근무</h3>
+          <button class="info-btn" data-desc="종료시간 기준으로 일반(18:00 이전 종료) / 초과(18:00 이후 종료) 분포입니다. 초과근무가 빈번한지, 특정 기간/조합에서 과부하가 있는지 확인할 때 사용합니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-overtime"></canvas>
+      </div>
+    </div>
+
+    <!-- (3) 그룹-사이트 오후 + 그룹-사이트 초과  (여기서 wide 제거) -->
+    <div class="pair-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>그룹-사이트별 오후 근무 비율</h3>
+          <button class="info-btn" data-desc="그룹/사이트 조합별로 오후 근무(12:00 이후 시작) 비율을 계산합니다. 전체 건수 대비 오후 시작 건수 비율이며, 조합별 근무 패턴 차이를 확인할 수 있습니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-shift-gs"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>그룹-사이트별 초과 근무 비율</h3>
+          <button class="info-btn" data-desc="그룹/사이트 조합별로 초과 근무(18:00 이후 종료) 비율을 계산합니다. 전체 건수 대비 초과 종료 건수 비율이며, 병목/야근 집중 구간을 식별하는 데 사용합니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-overtime-gs"></canvas>
+      </div>
+    </div>
+
+    <!-- (4) Rework 비율 + Rework 사유 -->
+    <div class="pair-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Rework 비율</h3>
+          <button class="info-btn" data-desc="전체 작업 중 Rework(is_rework=1) 비중입니다. Rework 비중이 높으면 재작업 원인 분석 및 SOP 개선 우선순위를 높여야 합니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-rework"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Rework 사유</h3>
+          <button class="info-btn" data-desc="Rework 작업의 사유(rework_reason)별 건수입니다. 빈도가 높은 사유부터 개선하면 전체 Rework를 빠르게 낮출 수 있습니다.">
+            <i class="fas fa-info-circle"></i>
+          </button>
+        </div>
+        <canvas id="chart-rework-reason"></canvas>
+      </div>
+    </div>
+
   </div>
+</div>
 </div></main>
 
 <div class="desc-popup" id="desc-popup" style="display:none;"><div class="desc-content"><p id="desc-text"></p><button class="btn sm" id="desc-close">닫기</button></div></div>
