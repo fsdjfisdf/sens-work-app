@@ -20,18 +20,23 @@ if(token && !isAdminUser(me)){
 Chart.register(ChartDataLabels);
 Chart.defaults.set('plugins.datalabels', { display: false }); // off by default
 
-/* Semi-transparent palette — toned down */
+/* Semi-transparent muted palette */
 const C = {
-  blue:'rgba(59,130,246,.55)', blueF:'rgba(59,130,246,.18)',
-  red:'rgba(190,24,93,.52)', redF:'rgba(190,24,93,.16)',
-  green:'rgba(15,118,110,.55)', greenF:'rgba(15,118,110,.18)',
-  amber:'rgba(161,98,7,.50)', amberF:'rgba(161,98,7,.16)',
-  purple:'rgba(109,40,217,.52)', purpleF:'rgba(109,40,217,.16)',
-  cyan:'rgba(8,145,178,.52)', cyanF:'rgba(8,145,178,.16)',
-  pink:'rgba(157,23,77,.48)',
-  slate:'rgba(71,85,105,.58)', slateF:'rgba(71,85,105,.18)',
-  set:['rgba(59,130,246,.55)','rgba(71,85,105,.58)','rgba(109,40,217,.52)','rgba(15,118,110,.55)','rgba(8,145,178,.52)','rgba(161,98,7,.50)','rgba(99,102,241,.52)','rgba(100,116,139,.55)','rgba(127,29,29,.45)','rgba(83,109,254,.48)'],
-  solid:['rgba(37,99,235,.78)','rgba(51,65,85,.78)','rgba(91,33,182,.78)','rgba(15,118,110,.78)','rgba(14,116,144,.78)','rgba(133,77,14,.78)','rgba(79,70,229,.78)','rgba(71,85,105,.78)']
+  navy:'rgba(37,99,235,.55)', navyF:'rgba(37,99,235,.16)',
+  slate:'rgba(100,116,139,.55)', slateF:'rgba(100,116,139,.16)',
+  teal:'rgba(20,184,166,.55)', tealF:'rgba(20,184,166,.16)',
+  violet:'rgba(139,92,246,.55)', violetF:'rgba(139,92,246,.16)',
+  copper:'rgba(180,83,9,.50)', copperF:'rgba(180,83,9,.14)',
+  rose:'rgba(190,24,93,.45)', roseF:'rgba(190,24,93,.12)',
+  steel:'rgba(71,85,105,.52)', steelF:'rgba(71,85,105,.14)',
+  red:'rgba(220,38,38,.58)', redF:'rgba(220,38,38,.14)',
+  blue:'rgba(37,99,235,.55)', blueF:'rgba(37,99,235,.16)',
+  green:'rgba(20,184,166,.55)', greenF:'rgba(20,184,166,.16)',
+  amber:'rgba(180,83,9,.50)', amberF:'rgba(180,83,9,.14)',
+  purple:'rgba(139,92,246,.55)', purpleF:'rgba(139,92,246,.16)',
+  cyan:'rgba(14,116,144,.50)', pink:'rgba(190,24,93,.45)',
+  set:['rgba(37,99,235,.55)','rgba(100,116,139,.55)','rgba(20,184,166,.55)','rgba(139,92,246,.55)','rgba(180,83,9,.50)','rgba(71,85,105,.52)','rgba(14,116,144,.50)','rgba(190,24,93,.45)','rgba(51,65,85,.55)','rgba(15,118,110,.52)'],
+  solid:['rgba(37,99,235,.82)','rgba(100,116,139,.82)','rgba(20,184,166,.82)','rgba(139,92,246,.82)','rgba(180,83,9,.82)','rgba(71,85,105,.82)','rgba(14,116,144,.82)','rgba(190,24,93,.82)']
 };
 const charts = {};
 let allEngineers = [];
@@ -47,31 +52,25 @@ function getCtx(id) { destroyChart(id); return document.getElementById(id)?.getC
 const DL_BAR = { display:true, anchor:'end', align:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>v||'' };
 const DL_PCT = { display:true, font:{size:11,weight:'bold'}, color:'#fff', formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((s,x)=>s+x,0); return t?(Math.round(v/t*100)+'%'):''; } };
 const DL_LINE = { display:true, align:'top', anchor:'end', font:{size:10,weight:'bold'}, color:'#374151', formatter:v=>(v??'') };
-
-
-function getAutoRatioBounds(seriesList, pad = 0.18, minSpan = 0.08) {
-  const vals = (seriesList || []).flat().map(v => Number(v)).filter(v => Number.isFinite(v));
-  if (!vals.length) return { min: 0, max: 1 };
-  let min = Math.min(...vals);
-  let max = Math.max(...vals);
-  if (min === max) {
-    const delta = Math.max(0.04, Math.min(0.1, (max || 0.2) * 0.25));
-    min -= delta;
-    max += delta;
-  } else {
-    const span = max - min;
-    const delta = Math.max(span * pad, 0.02);
-    min -= delta;
-    max += delta;
+function axisRangePercent(values, pad=.06){
+  const nums = (values||[]).map(v=>Number(v)).filter(v=>Number.isFinite(v));
+  if(!nums.length) return {min:0,max:1};
+  let min = Math.min(...nums), max = Math.max(...nums);
+  if(min===max){ min=Math.max(0,min-pad); max=Math.min(1,max+pad); }
+  else {
+    const span=max-min;
+    min=Math.max(0, +(min - span*pad).toFixed(3));
+    max=Math.min(1, +(max + span*pad).toFixed(3));
   }
-  min = Math.max(0, Math.floor(min * 100) / 100);
-  max = Math.min(1, Math.ceil(max * 100) / 100);
-  if (max - min < minSpan) {
-    const mid = (min + max) / 2;
-    min = Math.max(0, +(mid - minSpan / 2).toFixed(2));
-    max = Math.min(1, +(mid + minSpan / 2).toFixed(2));
-  }
-  return { min, max };
+  return {min,max};
+}
+function axisRangeNumber(values, pad=.08){
+  const nums = (values||[]).map(v=>Number(v)).filter(v=>Number.isFinite(v));
+  if(!nums.length) return {min:0,max:100};
+  let min = Math.min(...nums), max = Math.max(...nums);
+  if(min===max){ min=Math.max(0,min-1); max=max+1; }
+  else { const span=max-min; min=Math.max(0, min-span*pad); max=max+span*pad; }
+  return {min:+min.toFixed(1), max:+max.toFixed(1)};
 }
 
 /* Nav */
@@ -142,33 +141,40 @@ async function initFilters() {
 
 /* ══ CHARTS ══ */
 
-/* 1. Head Count — current total 기준 역산으로 기존 재직자 포함 */
+/* 1. Head Count */
 async function renderHeadCount(f) {
   try {
     const {data} = await axios.get(`${API}/analytics/headcount?${qs(f)}`);
     const ctx = getCtx('chart-headcount'); if(!ctx) return;
-    const now = new Date(); const labels = []; let d = new Date(2023,0,1);
-    while(d<=now){labels.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);d.setMonth(d.getMonth()+1);}
+    const now = new Date();
+    const labels = [];
+    let d = new Date(2023,0,1);
+    while(d<=now){ labels.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); d.setMonth(d.getMonth()+1); }
 
     const hireMap={}, hireName={};
-    (data.hires||[]).forEach(r=>{hireMap[r.ym]=Number(r.cnt||0); hireName[r.ym]=r.names;});
+    (data.hires||[]).forEach(r=>{ hireMap[r.ym]=Number(r.cnt||0); hireName[r.ym]=r.names; });
     const resignMap={}, resignName={};
-    (data.resigns||[]).forEach(r=>{resignMap[r.ym]=Number(r.cnt||0); resignName[r.ym]=r.names;});
+    (data.resigns||[]).forEach(r=>{ resignMap[r.ym]=Number(r.cnt||0); resignName[r.ym]=r.names; });
 
-    let running = Number(data.currentTotal || 0);
+    let running = Number(data.currentTotal||0);
     const cumulative = new Array(labels.length).fill(0);
-    for(let i=labels.length-1; i>=0; i--){
-      const ym = labels[i];
+    for(let i=labels.length-1;i>=0;i--){
+      const l = labels[i];
       cumulative[i] = Math.max(0, running);
-      running = running - (hireMap[ym] || 0) + (resignMap[ym] || 0);
+      running -= (hireMap[l]||0);
+      running += (resignMap[l]||0);
     }
 
-    charts['chart-headcount']=new Chart(ctx,{type:'bar',data:{labels,datasets:[
-      {type:'line',label:'전체 재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.blueF,tension:.28,yAxisID:'y',fill:true,pointRadius:2,pointHoverRadius:4,datalabels:{display:false}},
-      {label:'입사',data:labels.map(l=>hireMap[l]||0),backgroundColor:C.green,borderRadius:4,yAxisID:'y1',datalabels:{display:false}},
-      {label:'퇴사',data:labels.map(l=>resignMap[l]||0),backgroundColor:C.purple,borderRadius:4,yAxisID:'y1',datalabels:{display:false}}
-    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return'';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
-  }catch(e){console.error(e);}
+    charts['chart-headcount']=new Chart(ctx,{
+      type:'bar',
+      data:{labels,datasets:[
+        {type:'line',label:'전체 재직 인원',data:cumulative,borderColor:C.solid[0],backgroundColor:C.navyF,tension:.28,yAxisID:'y',fill:true,pointRadius:2,pointHoverRadius:4,datalabels:{display:true,align:'top',anchor:'end',font:{size:10,weight:'bold'},color:'#334155',formatter:v=>v?`${v}명`:''}},
+        {label:'입사',data:labels.map(l=>hireMap[l]||0),backgroundColor:C.teal,yAxisID:'y1',borderRadius:4,datalabels:{display:false}},
+        {label:'퇴사',data:labels.map(l=>resignMap[l]||0),backgroundColor:C.rose,yAxisID:'y1',borderRadius:4,datalabels:{display:false}}
+      ]},
+      options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false},tooltip:{callbacks:{afterLabel:c=>{const l=labels[c.dataIndex];if(c.datasetIndex===1&&hireName[l])return hireName[l];if(c.datasetIndex===2&&resignName[l])return resignName[l];return '';}}}},scales:{y:{position:'left',title:{display:true,text:'재직',font:{size:11}},ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'입사/퇴사',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}
+    });
+  } catch(e){ console.error(e); }
 }
 
 /* 2. HR */
@@ -176,7 +182,7 @@ async function renderHR(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/hr-distribution?${qs(f)}`);
     let ctx=getCtx('chart-company');if(ctx){
-      charts['chart-company']=new Chart(ctx,{type:'doughnut',data:{labels:data.byCompany.map(r=>r.label),datasets:[{data:data.byCompany.map(r=>r.cnt),backgroundColor:[C.blue,C.slate,C.purple]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
+      charts['chart-company']=new Chart(ctx,{type:'doughnut',data:{labels:data.byCompany.map(r=>r.label),datasets:[{data:data.byCompany.map(r=>r.cnt),backgroundColor:[C.blue,C.green,C.amber]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
     }
     ctx=getCtx('chart-experience');if(ctx){
       charts['chart-experience']=new Chart(ctx,{type:'bar',data:{labels:data.byExp.map(r=>r.label),datasets:[{label:'인원',data:data.byExp.map(r=>r.cnt),backgroundColor:C.set.slice(0,data.byExp.length),borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:DL_BAR}}});
@@ -207,7 +213,7 @@ async function renderLevelAchieve(f) {
   }catch{}
 }
 
-/* 5. Level Trend — improved readability (fix 5) */
+/* 5. Level Trend */
 async function renderLevelTrend(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/level-trend?${qs(f)}`);
@@ -222,50 +228,63 @@ async function renderLevelTrend(f) {
     data.forEach(eng=>{
       const hireDate=eng.HIRE?new Date(eng.HIRE):null;
       const achieves=[{level:'1-1',date:eng.l1?new Date(eng.l1):null},{level:'1-2',date:eng.l2?new Date(eng.l2):null},{level:'1-3',date:eng.l3?new Date(eng.l3):null},{level:'2',date:eng.l4?new Date(eng.l4):null},{level:'2-2',date:eng.l22?new Date(eng.l22):null},{level:'2-3',date:eng.l23?new Date(eng.l23):null},{level:'2-4',date:eng.l24?new Date(eng.l24):null}];
-      quarters.forEach((ql,qi)=>{const[y,qn]=ql.split(' Q');const qEnd=new Date(+y,+qn*3,0);if(hireDate&&hireDate>qEnd)return;let curLevel='0';achieves.forEach(a=>{if(a.date&&a.date<=qEnd)curLevel=a.level;});levelCounts[curLevel][qi]++;avgScores[qi]+=SCORE[curLevel]||0;totals[qi]++;});
+      quarters.forEach((ql,qi)=>{
+        const [y,qn]=ql.split(' Q'); const qEnd=new Date(+y,+qn*3,0);
+        if(hireDate&&hireDate>qEnd)return;
+        let curLevel='0';
+        achieves.forEach(a=>{if(a.date&&a.date<=qEnd)curLevel=a.level;});
+        levelCounts[curLevel][qi]++; avgScores[qi]+=SCORE[curLevel]||0; totals[qi]++;
+      });
     });
     const avgLine=avgScores.map((s,i)=>totals[i]?+(s/totals[i]).toFixed(2):null);
-    const colors={'0':'rgba(148,163,184,.5)','1-1':'rgba(96,165,250,.5)','1-2':'rgba(37,99,235,.5)','1-3':'rgba(29,78,216,.6)','2':'rgba(34,197,94,.5)','2-2':'rgba(245,158,11,.5)','2-3':'rgba(249,115,22,.5)','2-4':'rgba(239,68,68,.5)'};
+    const colors={'0':'rgba(148,163,184,.36)','1-1':'rgba(96,165,250,.34)','1-2':'rgba(37,99,235,.34)','1-3':'rgba(29,78,216,.38)','2':'rgba(20,184,166,.34)','2-2':'rgba(139,92,246,.34)','2-3':'rgba(180,83,9,.30)','2-4':'rgba(190,24,93,.28)'};
     const datasets=[];
     if(isSingle) {
-      // 개인: 레벨 점수만 꺾은선으로
-      datasets.push({type:'line',label:`${data[0].NAME} 레벨 점수`,data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.solid[0],fill:false,datalabels:{display:true,align:'top',anchor:'end',font:{size:10,weight:'bold'},color:'#1f2937',formatter:v=>v!=null?`${v}`:''}});
+      datasets.push({type:'line',label:`${data[0].NAME} 레벨 점수`,data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,pointRadius:4,pointBackgroundColor:C.solid[0],fill:false,datalabels:{display:true,align:'top',anchor:'end',font:{size:10,weight:'bold'},color:'#334155',formatter:v=>v??''}});
     } else {
       LEVELS.forEach(l=>datasets.push({label:`Lv.${l}`,data:levelCounts[l],backgroundColor:colors[l],stack:'a',yAxisID:'y1'}));
-      datasets.push({type:'line',label:'평균 점수',data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,yAxisID:'y',pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:10,weight:'bold'},color:'#1f2937',formatter:v=>v!=null?`${v}`:''}});
+      datasets.push({type:'line',label:'평균 점수',data:avgLine,borderColor:C.solid[0],borderWidth:3,tension:.3,yAxisID:'y',pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:10,weight:'bold'},color:'#334155',formatter:v=>v??''}});
     }
     const scales = isSingle
       ? {y:{title:{display:true,text:'레벨 점수',font:{size:11}},min:0,max:5.5},x:{ticks:{maxRotation:45,font:{size:9}}}}
-      : {y:{position:'left',title:{display:true,text:'평균 점수',font:{size:11}},min:0},y1:{position:'right',stacked:true,grid:{drawOnChartArea:false},title:{display:true,text:'인원',font:{size:11}},ticks:{stepSize:1}},x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}}};
+      : {y:{position:'left',title:{display:true,text:'평균 점수',font:{size:11}},min:0,max:5.5},y1:{position:'right',stacked:true,grid:{drawOnChartArea:false},title:{display:true,text:'인원',font:{size:11}},ticks:{stepSize:1}},x:{stacked:true,ticks:{maxRotation:45,font:{size:9}}}};
     charts['chart-level-trend']=new Chart(ctx,{type:'bar',data:{labels:quarters,datasets},options:{responsive:true,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},datalabels:{display:false}},scales}});
   }catch(e){console.error(e);}
 }
 
-/* 6. Capability (fix 4 — add MULTI) */
+/* 6. Capability */
 async function renderCapability(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/capability?${qs(f)}`);
     const ctxS=getCtx('chart-capability-smm');
     const ctxT=getCtx('chart-capability-total');
     if(!ctxS && !ctxT) return;
-    const m=data.monthly.filter(r=>r.ym>='2024-09');
-    const goals=data.goals;
+    const m=(data.monthly||[]).filter(r=>r.ym>='2024-09');
+    const goals=data.goals||{};
     const goalLine=m.map(r=>{const y=+r.ym.split('-')[0];return y===2025?goals.g25:goals.g26;});
+    const capaVals = [
+      ...m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),
+      ...m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),
+      ...m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),
+      ...m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),
+      ...goalLine
+    ];
+    const range = axisRangePercent(capaVals);
 
     if(ctxS){
       charts['chart-capability-smm']=new Chart(ctxS,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.blueF,fill:false,tension:.3,pointRadius:2},
-        {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[1],tension:.3,pointRadius:2},
-        {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[4],borderDash:[4,4],tension:.3,pointRadius:2}
-      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+        {label:'SETUP',data:m.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):null),borderColor:C.solid[0],backgroundColor:C.navyF,fill:false,tension:.3,pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:9,weight:'bold'},color:'#334155',formatter:v=>v!=null?`${(v*100).toFixed(1)}%`:''}},
+        {label:'MAINT',data:m.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.tealF,fill:false,tension:.3,pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:9,weight:'bold'},color:'#334155',formatter:v=>v!=null?`${(v*100).toFixed(1)}%`:''}},
+        {label:'MULTI',data:m.map(r=>r.avg_multi?+r.avg_multi.toFixed(3):null),borderColor:C.solid[3],backgroundColor:C.violetF,fill:false,borderDash:[4,4],tension:.3,pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:9,weight:'bold'},color:'#334155',formatter:v=>v!=null?`${(v*100).toFixed(1)}%`:''}}
+      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:range.min,max:range.max,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
     if(ctxT){
       charts['chart-capability-total']=new Chart(ctxT,{type:'line',data:{labels:m.map(r=>r.ym),datasets:[
-        {label:'전체',data:m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),borderColor:C.solid[2],backgroundColor:C.greenF,fill:true,tension:.3,pointRadius:2},
-        {label:'목표',data:goalLine,borderColor:C.solid[3],borderDash:[6,4],pointRadius:0,borderWidth:2,datalabels:{display:true,align:'bottom',anchor:'end',font:{size:9,weight:'bold'},color:'#334155',formatter:v=>v!=null?`${(v*100).toFixed(1)}%`:''}}
-      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
+        {label:'전체',data:m.map(r=>r.avg_total?+r.avg_total.toFixed(3):null),borderColor:C.solid[1],backgroundColor:C.slateF,fill:true,tension:.3,pointRadius:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:9,weight:'bold'},color:'#334155',formatter:v=>v!=null?`${(v*100).toFixed(1)}%`:''}},
+        {label:'목표',data:goalLine,borderColor:C.solid[4],borderDash:[6,4],pointRadius:0,borderWidth:2,datalabels:{display:true,align:'top',anchor:'end',font:{size:9,weight:'bold'},color:'#475569',formatter:v=>v!=null?`${(v*100).toFixed(1)}%`:''}}
+      ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}},datalabels:{display:false}},scales:{y:{min:range.min,max:range.max,ticks:{callback:v=>(v*100).toFixed(0)+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
-  }catch{}
+  }catch(e){console.error(e);}
 }
 
 /* 7. Equipment Capability (fix 6 — add avg, exclude non-users) */
@@ -276,8 +295,8 @@ async function renderEqCapa(f) {
     const valid=data.filter(r=>r.eng_count>0);
     charts['chart-eq-capa']=new Chart(ctx,{type:'bar',data:{labels:valid.map(r=>`${r.eq_name} (${r.eng_count}명)`),datasets:[
       {label:'SETUP',data:valid.map(r=>r.avg_setup?+r.avg_setup.toFixed(3):0),backgroundColor:C.blue,borderRadius:3},
-      {label:'MAINT',data:valid.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):0),backgroundColor:C.slate,borderRadius:3},
-      {label:'평균',data:valid.map(r=>r.avg_total?+r.avg_total.toFixed(3):0),backgroundColor:C.purple,borderRadius:3}
+      {label:'MAINT',data:valid.map(r=>r.avg_maint?+r.avg_maint.toFixed(3):0),backgroundColor:C.green,borderRadius:3},
+      {label:'평균',data:valid.map(r=>r.avg_total?+r.avg_total.toFixed(3):0),backgroundColor:C.amber,borderRadius:3}
     ]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:true,anchor:'end',align:'end',font:{size:9},formatter:v=>v?(v*100).toFixed(0)+'%':''}},scales:{y:{min:0,max:1,ticks:{callback:v=>(v*100)+'%'}}}}});
   }catch{}
 }
@@ -293,66 +312,85 @@ async function renderMPICoverage(f) {
   }catch(e){console.error(e);}
 }
 
-/* 9. Worklog (fix 8,9,10) */
+/* 9. Worklog */
 async function renderWorklog(f) {
   try {
     const {data}=await axios.get(`${API}/analytics/worklog-stats?${qs(f)}`);
     const ALLOWED_GS=['PEE1-PT','PEE1-HS','PEE1-IC','PEE1-CJ','PEE2-PT','PEE2-HS','PSKH-PSKH'];
-    // Monthly hours
+
     let ctx=getCtx('chart-monthly-hours');if(ctx){
       charts['chart-monthly-hours']=new Chart(ctx,{type:'bar',data:{labels:data.monthlyHours.map(r=>r.ym),datasets:[
         {type:'line',label:'건수',data:data.monthlyHours.map(r=>r.event_count),borderColor:C.solid[0],yAxisID:'y1',tension:.3,pointRadius:2},
-        {label:'작업시간(분)',data:data.monthlyHours.map(r=>r.total_minutes),backgroundColor:C.greenF,borderColor:C.solid[1],borderWidth:1,borderRadius:3,yAxisID:'y'}
+        {label:'작업시간(분)',data:data.monthlyHours.map(r=>r.total_minutes),backgroundColor:C.slateF,borderColor:C.solid[1],borderWidth:1,borderRadius:3,yAxisID:'y'}
       ]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:false}},scales:{y:{position:'left',title:{display:true,text:'분',font:{size:11}}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'건',font:{size:11}},ticks:{stepSize:1}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
-    // Work Type — MAINT / RELOCATION / SET UP만
+
     ctx=getCtx('chart-worktype');if(ctx){
       const ORDER=['MAINT','RELOCATION','SET UP'];
       const map={};(data.byWorkType||[]).forEach(r=>map[r.label]=r.cnt);
       const labels=ORDER.filter(k=>map[k]);
       const vals=labels.map(k=>map[k]||0);
       const t=vals.reduce((s,x)=>s+x,0);
-      charts['chart-worktype']=new Chart(ctx,{type:'bar',data:{labels, datasets:[{data:vals,backgroundColor:[C.blue,C.slate,C.purple],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>t?`${v}건 (${Math.round(v/t*100)}%)`:''}},scales:{x:{ticks:{stepSize:1}}}}});
+      charts['chart-worktype']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:[C.navy,C.slate,C.teal],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>t?`${v}건 (${Math.round(v/t*100)}%)`:''}},scales:{x:{ticks:{stepSize:1}}}}});
     }
 
-    // Work Sort — horizontal bar (fix 8)
     ctx=getCtx('chart-worksort');if(ctx){
-      charts['chart-worksort']=new Chart(ctx,{type:'bar',data:{labels:data.byWorkType2.map(r=>r.label),datasets:[{data:data.byWorkType2.map(r=>r.cnt),backgroundColor:[C.red,C.blue,C.green,C.amber,C.slate],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v,c)=>{const t=data.byWorkType2.reduce((s,r)=>s+r.cnt,0);return`${v}건 (${Math.round(v/t*100)}%)`;}}}}});
-    }
-    // Shift
-    ctx=getCtx('chart-shift');if(ctx){
-      charts['chart-shift']=new Chart(ctx,{type:'doughnut',data:{labels:data.byShift.map(r=>r.label),datasets:[{data:data.byShift.map(r=>r.cnt),backgroundColor:[C.slate,C.blue]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
-    }
-    // Overtime
-    ctx=getCtx('chart-overtime');if(ctx){
-      charts['chart-overtime']=new Chart(ctx,{type:'doughnut',data:{labels:data.byOvertime.map(r=>r.label),datasets:[{data:data.byOvertime.map(r=>r.cnt),backgroundColor:[C.blue,C.purple]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
+      const rows=(data.byWorkType2||[]);
+      charts['chart-worksort']=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.label),datasets:[{data:rows.map(r=>r.cnt),backgroundColor:[C.navy,C.slate,C.teal,C.violet,C.copper,C.steel],borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:(v)=>{const t=rows.reduce((s,r)=>s+r.cnt,0);return t?`${v}건 (${Math.round(v/t*100)}%)`:'';}}}}});
     }
 
-    // Group/Site - Shift ratio
+    ctx=getCtx('chart-shift');if(ctx){
+      charts['chart-shift']=new Chart(ctx,{type:'doughnut',data:{labels:data.byShift.map(r=>r.label),datasets:[{data:data.byShift.map(r=>r.cnt),backgroundColor:[C.copper,C.navy]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
+    }
+
+    ctx=getCtx('chart-overtime');if(ctx){
+      charts['chart-overtime']=new Chart(ctx,{type:'doughnut',data:{labels:data.byOvertime.map(r=>r.label),datasets:[{data:data.byOvertime.map(r=>r.cnt),backgroundColor:[C.teal,C.rose]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
+    }
+
     ctx=getCtx('chart-shift-gs');if(ctx){
       const rows=(data.shiftByGroupSite||[]).filter(r=>r.total_cnt>0 && ALLOWED_GS.includes(r.label))
         .sort((a,b)=>ALLOWED_GS.indexOf(a.label)-ALLOWED_GS.indexOf(b.label));
       const labels=rows.map(r=>r.label);
       const vals=rows.map(r=>+(r.afternoon_cnt/r.total_cnt*100).toFixed(1));
-      charts['chart-shift-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'오후 근무 비율(%)',data:vals,backgroundColor:C.blue,borderRadius:4,maxBarThickness:42}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',offset:2,font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{maxRotation:25,minRotation:0,font:{size:10}}}}}});
+      charts['chart-shift-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'오후 근무 비율(%)',data:vals,backgroundColor:C.navy,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{font:{size:10}}}}}});
     }
 
-    // Group/Site - Overtime ratio
     ctx=getCtx('chart-overtime-gs');if(ctx){
       const rows=(data.overtimeByGroupSite||[]).filter(r=>r.total_cnt>0 && ALLOWED_GS.includes(r.label))
         .sort((a,b)=>ALLOWED_GS.indexOf(a.label)-ALLOWED_GS.indexOf(b.label));
       const labels=rows.map(r=>r.label);
       const vals=rows.map(r=>+(r.overtime_cnt/r.total_cnt*100).toFixed(1));
-      charts['chart-overtime-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'초과 근무 비율(%)',data:vals,backgroundColor:C.slate,borderRadius:4,maxBarThickness:42}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',offset:2,font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{maxRotation:25,minRotation:0,font:{size:10}}}}}});
+      charts['chart-overtime-gs']=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'초과 근무 비율(%)',data:vals,backgroundColor:C.rose,borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:11,weight:'bold'},formatter:v=>`${v}%`}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{font:{size:10}}}}}});
     }
-    // Rework
-    ctx=getCtx('chart-rework');if(ctx){
-      charts['chart-rework']=new Chart(ctx,{type:'doughnut',data:{labels:data.reworkRatio.map(r=>r.label),datasets:[{data:data.reworkRatio.map(r=>r.cnt),backgroundColor:[C.red,C.slate]}]},options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:DL_PCT}}});
+  }catch(e){console.error(e);}
+}
+
+async function renderRework(f) {
+  try {
+    const {data}=await axios.get(`${API}/analytics/worklog-stats?${qs(f)}`);
+
+    let ctx=getCtx('chart-rework-monthly'); if(ctx){
+      const rows=data.monthlyRework||[];
+      const ratios=rows.map(r=>r.total_cnt? +(r.rework_cnt/r.total_cnt*100).toFixed(1) : 0);
+      const rr = axisRangeNumber(ratios);
+      charts['chart-rework-monthly']=new Chart(ctx,{type:'bar',data:{labels:rows.map(r=>r.ym),datasets:[
+        {label:'전체 작업',data:rows.map(r=>r.total_cnt),backgroundColor:C.slate,borderRadius:4,datalabels:{display:false}},
+        {label:'Rework',data:rows.map(r=>r.rework_cnt),backgroundColor:C.rose,borderRadius:4,datalabels:{display:true,anchor:'end',align:'end',font:{size:10,weight:'bold'},formatter:v=>v?`${v}건`:''}},
+        {type:'line',label:'Rework 비율',data:ratios,borderColor:C.solid[0],backgroundColor:C.navyF,yAxisID:'y1',tension:.28,pointRadius:3,datalabels:{display:true,align:'top',anchor:'end',font:{size:10,weight:'bold'},color:'#334155',formatter:v=>`${v}%`}}
+      ]},options:{responsive:true,plugins:{legend:{position:'top'},datalabels:{display:false}},scales:{y:{position:'left',ticks:{stepSize:1}},y1:{position:'right',grid:{drawOnChartArea:false},min:rr.min,max:rr.max,ticks:{callback:v=>v+'%'}},x:{ticks:{maxRotation:45,font:{size:9}}}}}});
     }
-    // Rework reason — vertical bar (fix 9)
-    ctx=getCtx('chart-rework-reason');if(ctx&&data.reworkReason.length){
-      charts['chart-rework-reason']=new Chart(ctx,{type:'bar',data:{labels:data.reworkReason.map(r=>r.label),datasets:[{label:'건수',data:data.reworkReason.map(r=>r.cnt),backgroundColor:[C.red,C.amber,C.purple,C.slate,C.blue],borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false},datalabels:DL_BAR},scales:{y:{ticks:{stepSize:1}}}}});
-    }
+
+    const renderRatioBar = (id, rows, color) => {
+      const c=getCtx(id); if(!c) return;
+      const filtered=(rows||[]).filter(r=>Number(r.total_cnt||0)>0);
+      const ratios=filtered.map(r=>+(r.rework_cnt/r.total_cnt*100).toFixed(1));
+      charts[id]=new Chart(c,{type:'bar',data:{labels:filtered.map(r=>r.label),datasets:[{label:'Rework 비율(%)',data:ratios,backgroundColor:color,borderRadius:4}]},options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'end',font:{size:10,weight:'bold'},formatter:v=>`${v}%`}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'}}}}});
+    };
+
+    renderRatioBar('chart-rework-worktype', data.reworkByWorkType, C.navy);
+    renderRatioBar('chart-rework-worksort', data.reworkByWorkType2, C.violet);
+    renderRatioBar('chart-rework-eqtype', data.reworkByEqType, C.teal);
+    renderRatioBar('chart-rework-item', (data.reworkByItem||[]).slice(0,20), C.copper);
   }catch(e){console.error(e);}
 }
 
@@ -533,7 +571,7 @@ async function loadAll() {
   const editBtn=document.getElementById('btn-edit-eng');
   if(editBtn) editBtn.disabled = !name;
   if(name)showEngineerInfo(name);else document.getElementById('eng-info').style.display='none';
-  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderWorklog(f)]);
+  await Promise.allSettled([renderHeadCount(f),renderHR(f),renderLevelDist(f),renderLevelAchieve(f),renderLevelTrend(f),renderCapability(f),renderEqCapa(f),renderWorklog(f),renderRework(f)]);
 }
 
 /* Init */

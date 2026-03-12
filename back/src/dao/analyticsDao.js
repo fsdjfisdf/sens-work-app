@@ -27,18 +27,6 @@ async function getUserDBCols() {
 }
 function hasCol(cols, name) { return cols.has(name); }
 
-const _tableCache = new Map();
-async function hasTable(name) {
-  if (_tableCache.has(name)) return _tableCache.get(name);
-  const [rows] = await pool.query(
-    `SELECT 1 AS ok FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? LIMIT 1`,
-    [name]
-  );
-  const ok = rows.length > 0;
-  _tableCache.set(name, ok);
-  return ok;
-}
-
 exports.getFilterOptions = async () => {
   const [companies] = await pool.query(`SELECT DISTINCT COMPANY AS v FROM userDB WHERE COMPANY IS NOT NULL ORDER BY COMPANY`);
   const [groups]    = await pool.query(`SELECT DISTINCT \`GROUP\` AS v FROM userDB WHERE \`GROUP\` IS NOT NULL ORDER BY \`GROUP\``);
@@ -290,7 +278,7 @@ exports.getWorklogStats = async (filters) => {
   const [monthlyRework] = await pool.query(
     `SELECT DATE_FORMAT(e.task_date,'%Y-%m') AS ym,
             COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework = 1 THEN e.id END) AS rework_cnt
+            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
      FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
      ${wWhere}
      GROUP BY ym
@@ -299,68 +287,56 @@ exports.getWorklogStats = async (filters) => {
   );
 
   const [reworkByWorkType] = await pool.query(
-    `SELECT COALESCE(NULLIF(TRIM(e.work_type), ''), '미입력') AS label,
+    `SELECT IFNULL(NULLIF(TRIM(e.work_type),''),'미입력') AS label,
             COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework = 1 THEN e.id END) AS rework_cnt
+            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
      FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
      ${wWhere}
      GROUP BY label
-     ORDER BY rework_cnt DESC, total_cnt DESC, label`,
+     ORDER BY total_cnt DESC, label`,
     wVals
   );
 
   const [reworkByWorkType2] = await pool.query(
-    `SELECT COALESCE(NULLIF(TRIM(e.work_type2), ''), '미입력') AS label,
+    `SELECT IFNULL(NULLIF(TRIM(e.work_type2),''),'미입력') AS label,
             COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework = 1 THEN e.id END) AS rework_cnt
+            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
      FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
-     ${wWhere} AND e.work_type='MAINT'
+     ${wWhere}
      GROUP BY label
-     ORDER BY rework_cnt DESC, total_cnt DESC, label`,
+     ORDER BY total_cnt DESC, label`,
     wVals
   );
 
   const [reworkByEqType] = await pool.query(
-    `SELECT COALESCE(NULLIF(TRIM(e.equipment_type), ''), '미입력') AS label,
+    `SELECT IFNULL(NULLIF(TRIM(e.equipment_type),''),'미입력') AS label,
             COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework = 1 THEN e.id END) AS rework_cnt
+            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
      FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
      ${wWhere}
      GROUP BY label
+     ORDER BY total_cnt DESC, label`,
+    wVals
+  );
+
+  const [reworkByItem] = await pool.query(
+    `SELECT IFNULL(NULLIF(TRIM(i.item_name_free),''),'미입력') AS label,
+            COUNT(DISTINCT e.id) AS total_cnt,
+            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
+     FROM wl_event e
+     JOIN wl_work_item i ON i.event_id=e.id
+     JOIN wl_worker w ON w.event_id=e.id
+     ${wWhere}
+     GROUP BY label
+     HAVING total_cnt > 0
      ORDER BY rework_cnt DESC, total_cnt DESC, label`,
     wVals
   );
 
-  let reworkByItem = [];
-  if (await hasTable('wl_work_item')) {
-    const [rows] = await pool.query(
-      `SELECT COALESCE(NULLIF(TRIM(wi.item_name_free), ''), '미입력') AS label,
-              COUNT(DISTINCT e.id) AS total_cnt,
-              COUNT(DISTINCT CASE WHEN e.is_rework = 1 THEN e.id END) AS rework_cnt
-       FROM wl_event e
-       JOIN wl_worker w ON w.event_id = e.id
-       JOIN wl_work_item wi ON wi.event_id = e.id
-       ${wWhere}
-       GROUP BY label
-       ORDER BY rework_cnt DESC, total_cnt DESC, label`,
-      wVals
-    );
-    reworkByItem = rows;
-  }
-
   return {
-    monthlyHours,
-    byWorkType,
-    byWorkType2,
-    byShift,
-    byOvertime,
-    shiftByGroupSite,
-    overtimeByGroupSite,
-    monthlyRework,
-    reworkByWorkType,
-    reworkByWorkType2,
-    reworkByEqType,
-    reworkByItem
+    monthlyHours, byWorkType, byWorkType2, byShift, byOvertime,
+    shiftByGroupSite, overtimeByGroupSite,
+    monthlyRework, reworkByWorkType, reworkByWorkType2, reworkByEqType, reworkByItem
   };
 };
 
