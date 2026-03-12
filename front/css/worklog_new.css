@@ -497,3 +497,6 @@ footer{padding:36px 16px;text-align:center}footer p{font-size:11px;color:var(--m
 .suspect-label{display:inline-block;margin-bottom:6px;font-size:11px;font-weight:900;color:var(--muted);letter-spacing:.02em}
 .suspect-body p{margin:0;font-size:13px;line-height:1.6;color:var(--text);word-break:break-word}
 @media(max-width:640px){.rework-modal-head,.suspect-card-head,.rework-suspect-head{flex-direction:column}.suspect-use-btn,.rework-suspect-actions .btn-chip{width:100%;justify-content:center}}
+
+#rework-detail{min-height:88px;resize:vertical}
+#rework-detail-row .help{display:block;margin-top:6px}

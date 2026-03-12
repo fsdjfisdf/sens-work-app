@@ -153,6 +153,7 @@ exports.findReworkCandidates = async ({ task_name, task_cause, task_date, days =
         e.\`line\`,
         e.equipment_type,
         e.equipment_name,
+        e.task_description,
         e.task_cause,
         e.task_result,
         e.is_rework,
@@ -211,7 +212,7 @@ exports.submitEvent = async (payload) => {
         status, task_description, task_cause, task_result,
         SOP, tsguide,
         start_time, end_time, none_time, move_time,
-        is_rework, rework_reason, rework_seq, rework_ref_id,
+        is_rework, rework_reason, rework_detail, rework_seq, rework_ref_id,
         approval_status, created_by
       ) VALUES (
         ?, ?, ?, ?,
@@ -221,7 +222,7 @@ exports.submitEvent = async (payload) => {
         ?, ?, ?, ?,
         ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
         'PENDING', ?
       )`,
       [
@@ -248,6 +249,7 @@ exports.submitEvent = async (payload) => {
         evStartTime, evEndTime, evNoneTime, evMoveTime,
         payload.is_rework ? 1 : 0,
         payload.rework_reason || null,
+        payload.rework_detail || null,
         Number(payload.rework_seq) || 0,
         payload.rework_ref_id || null,
         payload.created_by || null,
@@ -413,7 +415,7 @@ const ALLOWED_PATCH_FIELDS = [
   'status', 'task_description', 'task_cause', 'task_result',
   'SOP', 'tsguide',
   'start_time', 'end_time', 'none_time', 'move_time',
-  'is_rework', 'rework_reason', 'rework_seq', 'rework_ref_id',
+  'is_rework', 'rework_reason', 'rework_detail', 'rework_seq', 'rework_ref_id',
 ];
 
 exports.patchEvent = async (id, patch) => {

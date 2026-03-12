@@ -307,6 +307,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     return $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
   }
 
+  function getReworkDetailPlaceholder(reason) {
+    switch (String(reason || '').trim()) {
+      case 'Human error':
+        return '예: 체결 순서를 놓쳐 O-ring 재조립 필요, 배선 연결 위치를 잘못 확인함';
+      case 'EQ error':
+        return '예: Valve 응답 지연으로 재작업, Pump down 불량 재발 등 설비 이상 내용을 구체적으로 작성';
+      case 'Part error':
+        return '예: O-ring 손상, 센서 불량, 규격 상이 등 부품 문제를 구체적으로 작성';
+      case '원인 모름':
+        return '예: 동일 증상 재발했으나 명확한 원인은 아직 확인되지 않음';
+      default:
+        return '예: 어떤 실수/이상/부품 문제였는지 구체적으로 작성';
+    }
+  }
+
+  function syncReworkUi() {
+    const isRw = document.getElementById('is-rework')?.checked;
+    const reasonRow = document.getElementById('rework-reason-row');
+    const detailRow = document.getElementById('rework-detail-row');
+    const detailEl = document.getElementById('rework-detail');
+    const reason = getV('rework-reason');
+    reasonRow?.classList.toggle('hidden', !isRw);
+    detailRow?.classList.toggle('hidden', !isRw);
+    if (detailEl) detailEl.placeholder = getReworkDetailPlaceholder(reason);
+    if (!isRw) {
+      selectedReworkRefId = null;
+      selectedReworkRefLabel = '';
+      setReworkRefInfo('');
+    }
+  }
+
   function setReworkRefInfo(label = '') {
     const box = document.getElementById('rework-ref-info');
     if (!box) return;
@@ -342,6 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <button type="button" class="btn-chip suspect-use-btn" data-ref-id="${row.id}" data-ref-label="${escHtml(refLabel)}">이 이력 기준으로 Rework 체크</button>
           </div>
           <div class="suspect-body">
+            <div><span class="suspect-label">ACTION</span><p>${escHtml(row.task_description || '-').replace(/\n/g, '<br>')}</p></div>
             <div><span class="suspect-label">CAUSE</span><p>${escHtml(row.task_cause || '-').replace(/\n/g, '<br>')}</p></div>
             <div><span class="suspect-label">RESULT</span><p>${escHtml(row.task_result || '-').replace(/\n/g, '<br>')}</p></div>
           </div>
@@ -355,10 +387,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       selectedReworkRefId = Number(btn.dataset.refId) || null;
       selectedReworkRefLabel = btn.dataset.refLabel || '';
       const rw = document.getElementById('is-rework');
-      if (rw) {
-        rw.checked = true;
-        document.getElementById('rework-reason-row')?.classList.remove('hidden');
-      }
+      if (rw) rw.checked = true;
+      syncReworkUi();
       setReworkRefInfo(selectedReworkRefLabel);
       hideAll();
       showToast('success', '관련 이력을 기준으로 REWORK 선택 준비가 되었습니다. 사유를 확인하세요.');
@@ -518,15 +548,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     return true;
   }
 
-  // Rework 체크박스 → 사유 표시
-  document.getElementById('is-rework')?.addEventListener('change', function() {
-    document.getElementById('rework-reason-row')?.classList.toggle('hidden', !this.checked);
-    if (!this.checked) {
-      selectedReworkRefId = null;
-      selectedReworkRefLabel = '';
-      setReworkRefInfo('');
-    }
-  });
+  // Rework 체크박스 / 사유 → 상세 입력 UI
+  document.getElementById('is-rework')?.addEventListener('change', syncReworkUi);
+  document.getElementById('rework-reason')?.addEventListener('change', syncReworkUi);
+  syncReworkUi();
 
   /* ══ Preview ══ */
   document.getElementById('preview-save')?.addEventListener('click', () => {
@@ -547,7 +572,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pv-title').textContent = getV('task_name');
     const isRw = document.getElementById('is-rework')?.checked;
     const rwReason = getV('rework-reason');
+    const rwDetail = getV('rework-detail');
     document.getElementById('pv-rework').textContent = isRw ? `✅ Rework (${rwReason || '사유 미선택'})` : '-';
+    document.getElementById('pv-rework-detail').textContent = isRw ? (rwDetail || '-') : '-';
     document.getElementById('pv-rework-ref').textContent = isRw ? (selectedReworkRefLabel || '-') : '-';
     showOverlay('preview-modal');
   });
@@ -560,13 +587,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_description = $$('.task-description-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_cause = $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_result = $$('.task-result-input').map(el => el.value.trim()).filter(Boolean).join('\n');
-    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, rework_reason: getV('rework-reason') || null, rework_ref_id: selectedReworkRefId || null, workers, workItems: selectedWI, parts: selectedParts };
+    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, rework_reason: getV('rework-reason') || null, rework_detail: getV('rework-detail') || null, rework_ref_id: selectedReworkRefId || null, workers, workItems: selectedWI, parts: selectedParts };
     try {
       const res = await axios.post(`${API}/wl/submit`, payload, { headers: authH() });
       if (res.status === 201) { document.getElementById('result-msg').textContent = '결재 대기 등록이 완료되었습니다.'; document.getElementById('result-code').textContent = `Work Code: ${res.data.work_code || '-'}`; showOverlay('result-modal'); }
     } catch (err) { const s = err.response?.status, m = err.response?.data?.error || err.message; let t = '저장 실패'; if (s === 401) t = '인증 만료'; if (s === 400) t = '입력 오류'; if (s === 403) t = '권한 없음'; showToast('error', `${t}: ${m}`); }
   });
-  document.getElementById('result-ok')?.addEventListener('click', () => { hideAll(); $('#worklogForm')?.reset(); selectedWI.length = 0; selectedParts.length = 0; renderSelectedChips(); clearReworkSuspects(true); goStep(1); });
+  document.getElementById('result-ok')?.addEventListener('click', () => { hideAll(); $('#worklogForm')?.reset(); selectedWI.length = 0; selectedParts.length = 0; renderSelectedChips(); clearReworkSuspects(true); syncReworkUi(); goStep(1); });
 
   /* ══ PASTE ══ */
   const pasteTA = document.getElementById('paste-textarea');

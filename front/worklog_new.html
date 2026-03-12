@@ -126,6 +126,11 @@
             <option value="원인 모름">원인 모름</option>
           </select>
         </div>
+        <div id="rework-detail-row" class="hidden" style="margin-top:10px;">
+          <label style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;display:block;">REWORK 상세 사유</label>
+          <textarea id="rework-detail" rows="3" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;resize:vertical;min-height:88px;" placeholder="예: 어떤 실수/이상/부품 문제였는지 구체적으로 작성"></textarea>
+          <small class="help">예: Human error인 경우 어떤 실수를 했는지, EQ/Part error인 경우 어떤 이상이 있었는지 구체적으로 적어주세요.</small>
+        </div>
         <div id="rework-ref-info" class="hidden"></div>
       </div>
       <div class="form-buttons"><button type="button" class="btn prev-step">← 이전</button><button type="button" id="preview-save" class="btn primary">미리보기</button><button type="submit" id="save-button" style="display:none">저장</button></div>
@@ -160,7 +165,7 @@
 <!-- Preview -->
 <div class="print-container" id="preview-modal">
   <h2>최종 확인</h2>
-  <table class="preview-table"><tr><th>Date</th><td id="pv-date"></td></tr><tr><th>EMS</th><td id="pv-ems"></td></tr><tr><th>Site/Line</th><td id="pv-site"></td></tr><tr><th>EQ Name</th><td id="pv-eqname"></td></tr><tr><th>EQ Type</th><td id="pv-eqtype"></td></tr><tr><th>Work Type</th><td id="pv-worktype"></td></tr><tr><th>Work Items</th><td id="pv-workitems"></td></tr><tr><th>Parts</th><td id="pv-parts"></td></tr><tr><th>Workers</th><td id="pv-workers" style="white-space:pre-wrap;"></td></tr><tr><th>Title</th><td id="pv-title"></td></tr><tr><th>Rework</th><td id="pv-rework"></td></tr><tr><th>Rework Ref</th><td id="pv-rework-ref"></td></tr></table>
+  <table class="preview-table"><tr><th>Date</th><td id="pv-date"></td></tr><tr><th>EMS</th><td id="pv-ems"></td></tr><tr><th>Site/Line</th><td id="pv-site"></td></tr><tr><th>EQ Name</th><td id="pv-eqname"></td></tr><tr><th>EQ Type</th><td id="pv-eqtype"></td></tr><tr><th>Work Type</th><td id="pv-worktype"></td></tr><tr><th>Work Items</th><td id="pv-workitems"></td></tr><tr><th>Parts</th><td id="pv-parts"></td></tr><tr><th>Workers</th><td id="pv-workers" style="white-space:pre-wrap;"></td></tr><tr><th>Title</th><td id="pv-title"></td></tr><tr><th>Rework</th><td id="pv-rework"></td></tr><tr><th>Rework Detail</th><td id="pv-rework-detail"></td></tr><tr><th>Rework Ref</th><td id="pv-rework-ref"></td></tr></table>
   <div class="modal-buttons"><button type="button" id="confirm-save" class="btn primary">결재 요청</button><button type="button" id="cancel-save" class="btn">CANCEL</button></div>
 </div>
 <div class="print-container" id="result-modal"><h2>완료</h2><p><span id="result-msg"></span></p><p id="result-code" style="font-size:.9em;color:var(--muted);"></p><div class="modal-buttons"><button type="button" id="result-ok" class="btn primary">확인</button></div></div>
