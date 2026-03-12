@@ -23,7 +23,9 @@ function initNav(){if(me){document.querySelectorAll('.sign-container.unsigned').
 
 function initDates(){const t=new Date(),f=new Date(t);f.setMonth(f.getMonth()-1);const fm=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;document.getElementById('f-date-from').value=fm(f);document.getElementById('f-date-to').value=fm(t);}
 
-function getFilters(){return{date_from:document.getElementById('f-date-from').value,date_to:document.getElementById('f-date-to').value,group:document.getElementById('f-group').value,site:document.getElementById('f-site').value,work_type:document.getElementById('f-work-type').value,equipment_name:document.getElementById('f-eq-name').value.trim(),worker_name:document.getElementById('f-worker').value.trim(),task_name:document.getElementById('f-title').value.trim()};}
+function getFilters(){return{date_from:document.getElementById('f-date-from').value,date_to:document.getElementById('f-date-to').value,group:document.getElementById('f-group').value,site:document.getElementById('f-site').value,work_type:document.getElementById('f-work-type').value,rework_filter:document.getElementById('f-rework').value,equipment_name:document.getElementById('f-eq-name').value.trim(),worker_name:document.getElementById('f-worker').value.trim(),task_name:document.getElementById('f-title').value.trim()};}
+
+function applyReworkFilter(rows,reworkFilter){if(!Array.isArray(rows))return[];if(reworkFilter==='Y')return rows.filter(r=>Number(r.is_rework)===1);if(reworkFilter==='N')return rows.filter(r=>Number(r.is_rework)!==1);return rows;}
 
 /* ══ Search + Pagination ══ */
 async function doSearch(){
@@ -40,24 +42,35 @@ async function doSearch(){
   }
 
   const p=new URLSearchParams();
-  for(const[k,v]of Object.entries(f)){if(v)p.set(k,v);}
+  for(const[k,v]of Object.entries(f)){if(v&&k!=='rework_filter')p.set(k,v);}
   p.set('limit','1000'); // 서버에서 최대 1000건
 
   try{
     const{data}=await axios.get(`${API}/wl/events?${p}`);
-    allRows=data.rows||[];
-    const total=data.total||allRows.length;
+    const serverRows=data.rows||[];
+    allRows=applyReworkFilter(serverRows,f.rework_filter);
+    const total=data.total||serverRows.length;
     curPage=1;
 
-    document.getElementById('result-summary').style.display='';
+    const summary=document.getElementById('result-summary');
+    summary.style.display='';
+    summary.querySelectorAll('.summary-note,.pagination').forEach(e=>e.remove());
     document.getElementById('result-count').textContent=allRows.length;
 
-    if(total>allRows.length){
-      document.getElementById('result-summary').insertAdjacentHTML('beforeend',
-        `<span style="color:var(--muted);font-size:12px;font-weight:600;">(전체 ${total}건 중 최근 ${allRows.length}건 표시)</span>`);
+    if(total>serverRows.length){
+      summary.insertAdjacentHTML('beforeend',`<span class="summary-note">(전체 ${total}건 중 최근 ${serverRows.length}건 수신)</span>`);
+    }
+    if(f.rework_filter==='Y'){
+      summary.insertAdjacentHTML('beforeend', `<span class="summary-note rework">REWORK만 표시</span>`);
+    }else if(f.rework_filter==='N'){
+      summary.insertAdjacentHTML('beforeend', `<span class="summary-note">일반 작업만 표시</span>`);
     }
 
-    if(!allRows.length){w.innerHTML='<div class="empty-state"><i class="fas fa-inbox"></i><p>결과 없음</p></div>';return;}
+    if(!allRows.length){
+      const emptyText = f.rework_filter==='Y' ? '조건에 맞는 REWORK 작업이 없습니다.' : (f.rework_filter==='N' ? '조건에 맞는 일반 작업이 없습니다.' : '결과 없음');
+      w.innerHTML=`<div class="empty-state"><i class="fas fa-inbox"></i><p>${emptyText}</p></div>`;
+      return;
+    }
     renderPage();
   }catch(e){w.innerHTML=`<div class="empty-state"><p>조회 실패: ${escHtml(e.response?.data?.error||e.message)}</p></div>`;}
 }
@@ -70,7 +83,9 @@ function renderPage(){
 
   let tableHtml=`<div class="table-scroll"><table class="wl-table"><thead><tr><th>Date</th><th>Work Code</th><th>Title</th><th>EQ Name</th><th>Group</th><th>Site</th><th>Type</th><th>EMS</th><th>Workers</th><th>RW</th></tr></thead><tbody>`;
   pageRows.forEach(r=>{
-    tableHtml+=`<tr data-id="${r.id}" class="clickable-row"><td>${fmtDate(r.task_date)}</td><td class="code-cell">${escHtml(r.work_code||'')}</td><td>${escHtml(r.task_name||'')}</td><td>${escHtml(r.equipment_name||'')}</td><td>${escHtml(r.group||'')}</td><td>${escHtml(r.site||'')}</td><td>${escHtml(r.work_type||'')}${r.work_type2?'/'+escHtml(r.work_type2):''}</td><td>${r.ems==1?'유상':'무상'}</td><td>${escHtml(r.workers_str||'')}</td><td>${r.is_rework?'<span class="rework-badge">RW</span>':''}</td></tr>`;
+    const rowClass=`clickable-row${Number(r.is_rework)===1?' row-rework':''}`;
+    const reworkCell=Number(r.is_rework)===1?'<span class="rework-badge">RW</span>':'<span class="rework-badge muted">-</span>';
+    tableHtml+=`<tr data-id="${r.id}" class="${rowClass}"><td>${fmtDate(r.task_date)}</td><td class="code-cell">${escHtml(r.work_code||'')}</td><td>${escHtml(r.task_name||'')}</td><td>${escHtml(r.equipment_name||'')}</td><td>${escHtml(r.group||'')}</td><td>${escHtml(r.site||'')}</td><td>${escHtml(r.work_type||'')}${r.work_type2?'/'+escHtml(r.work_type2):''}</td><td>${r.ems==1?'유상':'무상'}</td><td>${escHtml(r.workers_str||'')}</td><td>${reworkCell}</td></tr>`;
   });
   tableHtml+='</tbody></table></div>';
   w.innerHTML=tableHtml;
@@ -105,6 +120,10 @@ try{const{data}=await axios.get(`${API}/wl/event/${id}`);curEv=data;fillModal(da
 
 function fillModal(ev){document.getElementById('m-work-code').textContent=ev.work_code||'—';document.getElementById('m-title').textContent=ev.task_name||'';document.getElementById('m-date').textContent=fmtDate(ev.task_date);document.getElementById('m-ems').textContent=ev.ems==1?'유상':'무상';document.getElementById('m-group-site').textContent=`${ev.group||'—'} / ${ev.site||'—'}`;document.getElementById('m-line').textContent=ev.line||'—';document.getElementById('m-eq-name').textContent=ev.equipment_name||'—';document.getElementById('m-eq-type').textContent=ev.equipment_type||'—';document.getElementById('m-warranty').textContent=ev.warranty||'—';document.getElementById('m-work-type').textContent=ev.work_type||'—';document.getElementById('m-work-type2').textContent=ev.work_type2||'—';document.getElementById('m-sop').textContent=`${ev.SOP||'—'} / ${ev.tsguide||'—'}`;document.getElementById('m-status-text').textContent=ev.status||'—';
 const rw=document.getElementById('m-rework');rw.innerHTML=ev.is_rework?`<span class="rework-yes">✅ Rework${ev.rework_seq>0?' ('+ev.rework_seq+'차)':''}</span>`:'N';
+document.getElementById('m-rework-reason').textContent=ev.rework_reason||'—';
+const reworkDetailSection=document.getElementById('m-rework-detail-section');
+const reworkDetailEl=document.getElementById('m-rework-detail');
+if(Number(ev.is_rework)===1){reworkDetailSection.style.display='';reworkDetailEl.textContent=renderText(ev.rework_detail)||'—';}else{reworkDetailSection.style.display='none';reworkDetailEl.textContent='—';}
 const tb=document.getElementById('m-workers-tbody');tb.innerHTML='';(ev.workers||[]).forEach(w=>{const tr=document.createElement('tr');tr.innerHTML=`<td>${escHtml(w.engineer_name)}</td><td><span class="role-badge role-${w.role||'main'}">${w.role||'main'}</span></td><td>${fmtTime(w.start_time)}</td><td>${fmtTime(w.end_time)}</td><td>${w.none_time??0}분</td><td>${w.move_time??0}분</td><td>${w.task_duration??'—'}분</td>`;tb.appendChild(tr);});
 document.getElementById('m-action').textContent=renderText(ev.task_description);document.getElementById('m-cause').textContent=renderText(ev.task_cause);document.getElementById('m-result').textContent=renderText(ev.task_result);
 const h=document.getElementById('m-history');h.innerHTML='';(ev.approvals||[]).forEach(a=>{const d=document.createElement('div');d.className='approval-row';const dt=a.acted_at?new Date(a.acted_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',hour12:false}):'';d.innerHTML=`<span class="approval-action-badge action-${escHtml(a.action)}">${escHtml(a.action)}</span><span class="approval-actor">${escHtml(a.actor_name||'—')}</span><span class="approval-time">${escHtml(dt)}</span>${a.comment?`<span class="approval-comment">${escHtml(a.comment)}</span>`:''}`;h.appendChild(d);});
@@ -128,10 +147,10 @@ async function doDelete(){if(!curEv)return;if(!confirm('이 작업이력을 완�
 try{await axios.delete(`${API}/wl/event/${curEv.id}`);toast('success','삭제 완료','작업이력이 삭제되었습니다.');closeModal();doSearch();}catch(e){toast('error','삭제 실패',e.response?.data?.error||e.message);}}
 
 /* ══ Excel (날짜 수정 + Work Items/Parts 포함) ══ */
-async function doExcel(){const f=getFilters();const p=new URLSearchParams();for(const[k,v]of Object.entries(f)){if(v)p.set(k,v);}
-try{toast('success','준비 중','엑셀 데이터 준비...');const{data}=await axios.get(`${API}/wl/export/excel?${p}`);if(!data.length){toast('error','없음','데이터 없음');return;}
+async function doExcel(){const f=getFilters();const p=new URLSearchParams();for(const[k,v]of Object.entries(f)){if(v&&k!=='rework_filter')p.set(k,v);}
+try{toast('success','준비 중','엑셀 데이터 준비...');const{data}=await axios.get(`${API}/wl/export/excel?${p}`);const filtered=applyReworkFilter(data||[],f.rework_filter);if(!filtered.length){toast('error','없음','데이터 없음');return;}
 const hd=['Work Code','Title','Date','Country','Group','Site','Line','EQ Type','EQ Name','Warranty','EMS','Work Type','Work Sort','Setup Item','Status','Action','Cause','Result','SOP','TS Guide','Rework','Rework Seq','Work Items','Parts','Worker','Role','Level','Start','End','None(분)','Move(분)','Duration(분)','Approval'];
-const rows=data.map(r=>[r.work_code,r.task_name,
+const rows=filtered.map(r=>[r.work_code,r.task_name,
   fmtDate(r.task_date), // 날짜 포맷 수정
   r.country,r.group,r.site,r.line,r.equipment_type,r.equipment_name,r.warranty,r.ems_text,r.work_type,r.work_type2,r.setup_item,r.status,r.task_description,r.task_cause,r.task_result,r.SOP,r.tsguide,r.is_rework,r.rework_seq,
   r.work_items_str||'', // Work Items
@@ -142,7 +161,7 @@ const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([hd,...rows]);ws['!col
 document.addEventListener('DOMContentLoaded',()=>{
 initNav();initDates();
 document.getElementById('btn-search')?.addEventListener('click',doSearch);
-document.getElementById('btn-reset')?.addEventListener('click',()=>{['f-date-from','f-date-to','f-eq-name','f-worker','f-title'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['f-group','f-site','f-work-type'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});initDates();});
+document.getElementById('btn-reset')?.addEventListener('click',()=>{['f-date-from','f-date-to','f-eq-name','f-worker','f-title'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});['f-group','f-site','f-work-type','f-rework'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});initDates();});
 document.getElementById('btn-excel')?.addEventListener('click',doExcel);
 document.getElementById('modal-close')?.addEventListener('click',closeModal);
 document.getElementById('modal-overlay')?.addEventListener('click',closeModal);

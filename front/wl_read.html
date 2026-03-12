@@ -38,6 +38,7 @@
       <div class="filter-field"><label>Group</label><select id="f-group"><option value="">전체</option><option value="PEE1">PEE1</option><option value="PEE2">PEE2</option><option value="PSKH">PSKH</option></select></div>
       <div class="filter-field"><label>Site</label><select id="f-site"><option value="">전체</option><option value="PT">PT</option><option value="HS">HS</option><option value="IC">IC</option><option value="CJ">CJ</option><option value="PSKH">PSKH</option></select></div>
       <div class="filter-field"><label>Work Type</label><select id="f-work-type"><option value="">전체</option><option value="SET UP">SET UP</option><option value="MAINT">MAINT</option><option value="RELOCATION">RELOCATION</option></select></div>
+      <div class="filter-field"><label>Rework</label><select id="f-rework"><option value="">전체</option><option value="Y">REWORK만</option><option value="N">일반 작업만</option></select></div>
       <div class="filter-field"><label>EQ Name</label><input type="text" id="f-eq-name" placeholder="설비명"></div>
       <div class="filter-field"><label>작업자</label><input type="text" id="f-worker" placeholder="작업자명"></div>
       <div class="filter-field"><label>Title</label><input type="text" id="f-title" placeholder="제목"></div>
@@ -78,6 +79,7 @@
         <div class="info-cell"><div class="info-cell-label">Work Type</div><div class="info-cell-value" id="m-work-type">—</div></div>
         <div class="info-cell"><div class="info-cell-label">Work Sort</div><div class="info-cell-value" id="m-work-type2">—</div></div>
         <div class="info-cell"><div class="info-cell-label">Rework</div><div class="info-cell-value" id="m-rework">—</div></div>
+        <div class="info-cell"><div class="info-cell-label">Rework Reason</div><div class="info-cell-value" id="m-rework-reason">—</div></div>
         <div class="info-cell"><div class="info-cell-label">SOP / TS</div><div class="info-cell-value" id="m-sop">—</div></div>
         <div class="info-cell wide"><div class="info-cell-label">Status</div><div class="info-cell-value" id="m-status-text">—</div></div>
       </div>
@@ -87,6 +89,10 @@
       <div class="detail-section"><div class="detail-section-title"><i class="fas fa-wrench" style="font-size:10px;"></i> Action</div><div class="detail-text-block" id="m-action">—</div></div>
       <div class="detail-section"><div class="detail-section-title"><i class="fas fa-search" style="font-size:10px;"></i> Cause</div><div class="detail-text-block" id="m-cause">—</div></div>
       <div class="detail-section"><div class="detail-section-title"><i class="fas fa-check-circle" style="font-size:10px;"></i> Result</div><div class="detail-text-block" id="m-result">—</div></div>
+      <div class="detail-section rework-detail-section" id="m-rework-detail-section" style="display:none;">
+        <div class="detail-section-title"><i class="fas fa-exclamation-triangle" style="font-size:10px;"></i> Rework Detail</div>
+        <div class="detail-text-block rework-detail-block" id="m-rework-detail">—</div>
+      </div>
     </div>
     <div id="edit-mode" style="display:none;">
       <div class="edit-grid">
