@@ -166,7 +166,7 @@ exports.submitEvent = async (payload) => {
         status, task_description, task_cause, task_result,
         SOP, tsguide,
         start_time, end_time, none_time, move_time,
-        is_rework, rework_reason, rework_seq, rework_ref_id,
+        is_rework, rework_reason, rework_detail, rework_seq, rework_ref_id,
         approval_status, created_by
       ) VALUES (
         ?, ?, ?, ?,
@@ -176,7 +176,7 @@ exports.submitEvent = async (payload) => {
         ?, ?, ?, ?,
         ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
         'PENDING', ?
       )`,
       [
@@ -203,6 +203,7 @@ exports.submitEvent = async (payload) => {
         evStartTime, evEndTime, evNoneTime, evMoveTime,
         payload.is_rework ? 1 : 0,
         payload.rework_reason || null,
+        payload.rework_detail || null,
         Number(payload.rework_seq) || 0,
         payload.rework_ref_id || null,
         payload.created_by || null,
@@ -368,7 +369,7 @@ const ALLOWED_PATCH_FIELDS = [
   'status', 'task_description', 'task_cause', 'task_result',
   'SOP', 'tsguide',
   'start_time', 'end_time', 'none_time', 'move_time',
-  'is_rework', 'rework_reason', 'rework_seq', 'rework_ref_id',
+  'is_rework', 'rework_reason', 'rework_detail', 'rework_seq', 'rework_ref_id',
 ];
 
 exports.patchEvent = async (id, patch) => {
@@ -827,6 +828,8 @@ exports.listEventsForExcel = async (filters = {}) => {
         e.SOP,
         e.tsguide,
         CASE WHEN e.is_rework = 1 THEN 'Y' ELSE 'N' END AS is_rework,
+        e.rework_reason,
+        e.rework_detail,
         e.rework_seq,
         (SELECT GROUP_CONCAT(IFNULL(m.item_name, wi.item_name_free) ORDER BY wi.id SEPARATOR ', ')
          FROM wl_work_item wi LEFT JOIN wl_work_item_master m ON m.id = wi.master_id

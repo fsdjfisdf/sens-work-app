@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SECM — My Dashboard | S-WORKS</title>
+  <title>SECM | S-WORKS</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="./css/SECM_myself.css">
 </head>
@@ -34,7 +34,7 @@
       <div class="section-title" style="margin:0">
         <h2>내 정보</h2>
         <div style="display:flex;gap:6px;align-items:center">
-          <span class="h3-meta" id="profile-sub">로그인 정보 기반</span>
+          <span class="h3-meta" id="profile-sub">SECM</span>
         </div>
       </div>
 
@@ -62,9 +62,9 @@
     <div class="section-title"><h2>개인 대시보드</h2></div>
 
     <div class="chart-grid">
-      <div class="chart-card"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="새 엔지니어 스키마의 설비별 SET UP/MAINT 역량 점수(capability_score)를 세로 막대로 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-cap"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="엔지니어의 설비별 SET UP/MAINT 역량 표현"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-cap"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>주로 다루는 설비 역량 (MAIN/MULTI)</h3><button class="info-btn" data-desc="MAIN EQ와 MULTI EQ의 SET UP/MAINT 역량을 한 번에 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mainmulti-cap"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>설비 역량 (MAIN/MULTI)</h3><button class="info-btn" data-desc="MAIN EQ와 MULTI EQ의 SET UP/MAINT 역량을 한 번에 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mainmulti-cap"></canvas></div>
 
       <div class="chart-card"><div class="chart-header"><h3>월별 MAIN SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 MAIN 설비 기준 월별 SET UP/MAINT 추이입니다. 설비별 월별 CAPA 데이터가 없으면 해당 설비의 월별 작업시간(분)으로 대체 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
 
