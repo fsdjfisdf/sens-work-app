@@ -41,52 +41,52 @@
   <div class="dash-inner">
     <div class="card profile-card" id="profile-card">
       <div class="section-title" style="margin:0">
-        <h2>내 정보</h2>
+        <h2>SEnS/I Eng'r</h2>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="h3-meta" id="profile-sub">SECM</span>
-          <a href="./analytics.html" id="admin-top-link" class="menu-item hidden">Analytics (Admin)</a>
+          <a href="./analytics.html" id="admin-top-link" class="menu-item hidden">Analytics</a>
         </div>
       </div>
       <div class="profile-grid" id="profile-grid"></div>
     </div>
 
-    <div class="section-title"><h2>개인 대시보드</h2></div>
+    <div class="section-title"><h2>DASHBOARD</h2></div>
 
     <div class="chart-grid">
-      <div class="chart-card"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="엔지니어의 설비별 SET UP/MAINT 역량 표현"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-cap"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>CAPA</h3><button class="info-btn" data-desc="엔지니어의 설비별 SET UP/MAINT 역량"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-cap"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>월별 MAIN SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 월별 SET UP 역량과 MAINT 역량 트렌드입니다. 월별 CAPA 데이터를 기준으로 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>MONTHLY SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="월별 SET UP 역량과 MAINT 역량 트렌드"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>월별 평균 CAPA (목표 포함)</h3><button class="info-btn" data-desc="월별 CAPA(평균/총합) 추이와 연간 목표를 함께 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-avg"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>MONTHLY CAPA / GOAL</h3><button class="info-btn" data-desc="월별 CAPA TREND 와 KPI 목표 비교"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-avg"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>월별 작업시간</h3><button class="info-btn" data-desc="승인(APPROVED)된 작업 기준 월별 작업시간(분)과 건수 추이입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-hours"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>MONTHLY WORKING TIME</h3><button class="info-btn" data-desc="작업 기준 월별 작업시간(분)과 건수 TREND"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-hours"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>레벨 트렌드 (분기)</h3><button class="info-btn" data-desc="입사일부터 현재까지 분기별 레벨 변화를 영역 그래프로 표시합니다. 레벨이 변한 시점에는 취득일(날짜)을 같이 표기합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-timeline"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>LEVEL TREND</h3><button class="info-btn" data-desc="입사일부터 현재까지 분기별 레벨 변화"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-level-timeline"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>Work Type</h3><button class="info-btn" data-desc="작업 유형 비중(도넛)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Work Type</h3><button class="info-btn" data-desc="작업 유형 비중"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>Work Sort (MAINT)</h3><button class="info-btn" data-desc="MAINT 작업 세부 분류(work_type2) 비중(도넛)입니다. 색상은 차분한 반투명 팔레트로 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Work Sort (MAINT)</h3><button class="info-btn" data-desc="MAINT 작업 세부 분류"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
 
-      <div class="chart-card rank-card"><div class="chart-header"><h3>TIME RANK (이번달)</h3><button class="info-btn" data-desc="이번달 전체 작업자의 총 작업시간 순위입니다. 이름은 숨기고, 내 막대만 빨간색으로 강조합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-time-rank"></canvas></div>
+      <div class="chart-card rank-card"><div class="chart-header"><h3>TIME RANK (이번달)</h3><button class="info-btn" data-desc="이번달 전체 작업자의 총 작업시간 순위"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-time-rank"></canvas></div>
 
-      <div class="chart-card rank-card"><div class="chart-header"><h3>TASK RANK (이번달)</h3><button class="info-btn" data-desc="이번달 전체 작업자의 작업 건수 순위입니다. 이름은 숨기고, 내 막대만 빨간색으로 강조합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-task-rank"></canvas></div>
+      <div class="chart-card rank-card"><div class="chart-header"><h3>TASK RANK (이번달)</h3><button class="info-btn" data-desc="이번달 전체 작업자의 작업 건수 순위"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-task-rank"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>GROUP</h3><button class="info-btn" data-desc="내 작업 이력에서 GROUP 분포(SELECT 제외)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-group"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>GROUP</h3><button class="info-btn" data-desc="GROUP 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-group"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>SITE</h3><button class="info-btn" data-desc="내 작업 이력에서 SITE 분포(SELECT 제외)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-site"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>SITE</h3><button class="info-btn" data-desc="SITE 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-site"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>LINE</h3><button class="info-btn" data-desc="내 작업 이력에서 LINE 분포(SELECT 제외)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-line"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>LINE</h3><button class="info-btn" data-desc="LINE 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-line"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>오전/오후 근무</h3><button class="info-btn" data-desc="12:00 기준으로 오전/오후 근무 비중(가로 막대)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>DAY vs NIGHT</h3><button class="info-btn" data-desc="12:00 기준으로 오전/오후 근무 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>일반/초과 근무</h3><button class="info-btn" data-desc="18:00 기준으로 일반/초과 근무 비중(가로 막대)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>REGULAR vs OVERTIME</h3><button class="info-btn" data-desc="18:00 기준으로 일반/초과 근무 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>EQ TYPE</h3><button class="info-btn" data-desc="내 작업 이력에서 설비 유형 분포(SELECT 제외)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eqtype"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>EQ TYPE</h3><button class="info-btn" data-desc="설비 유형 분포 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eqtype"></canvas></div>
     </div>
   </div>
 </main>
 
-<footer><div class="dash-inner"><p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출·복사·배포를 금지합니다.</p></div></footer>
+<footer><div class="dash-inner"><p>제공되는 모든 정보는 SEnS/I의 사외비로 간주되며, 무단으로 정보의 유출·복사·배포를 금지합니다.</p></div></footer>
 <div id="toast-root"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
