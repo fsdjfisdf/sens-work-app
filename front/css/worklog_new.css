@@ -468,3 +468,25 @@ footer{padding:36px 16px;text-align:center}footer p{font-size:11px;color:var(--m
 @media(max-width:640px){:root{--nav-h:52px}.inner{padding:0 12px;max-width:100%}.step-line{width:28px}.step-dot{width:32px;height:32px}}
 @media(max-width:380px){:root{--nav-h:50px}.nav-title a{font-size:15px}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:0s!important;transition-duration:0s!important}}
+
+.rework-detail-wrap select,
+.rework-detail-textarea {
+  width: 100%;
+}
+
+.rework-detail-textarea {
+  min-height: 96px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-size: 14px;
+  line-height: 1.5;
+  background: #fff;
+  outline: none;
+}
+
+.rework-detail-textarea:focus {
+  border-color: rgba(37,99,235,.45);
+  box-shadow: 0 0 0 4px var(--primary-ring);
+}

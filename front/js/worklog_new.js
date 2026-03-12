@@ -326,10 +326,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     return true;
   }
 
-  // Rework 체크박스 → 사유 표시
-  document.getElementById('is-rework')?.addEventListener('change', function() {
-    document.getElementById('rework-reason-row')?.classList.toggle('hidden', !this.checked);
-  });
+  function getReworkDetailPlaceholder(reason) {
+    switch (reason) {
+      case 'Human error':
+        return '예: HUMAN ERROR - 체결 순서를 놓쳐 O-ring 재조립 필요';
+      case 'EQ error':
+        return '예: EQ ERROR - 센서 오동작으로 recipe 재수행';
+      case 'Part error':
+        return '예: PART ERROR - 부품 불량으로 재교체 후 재작업';
+      case '원인 모름':
+        return '예: 정확한 원인은 확인되지 않았으나 재작업이 필요했던 상황 설명';
+      default:
+        return '예: REWORK 상세 원인을 구체적으로 입력';
+    }
+  }
+
+  function syncReworkUi() {
+    const isRework = document.getElementById('is-rework')?.checked;
+    const reasonRow = document.getElementById('rework-reason-row');
+    const reasonEl = document.getElementById('rework-reason');
+    const detailEl = document.getElementById('rework-detail');
+    reasonRow?.classList.toggle('hidden', !isRework);
+    if (!isRework) {
+      if (reasonEl) reasonEl.value = '';
+      if (detailEl) detailEl.value = '';
+    }
+    if (detailEl) detailEl.placeholder = getReworkDetailPlaceholder(reasonEl?.value || '');
+  }
+
+  // Rework 체크박스/사유 → 상세 입력 UI 제어
+  document.getElementById('is-rework')?.addEventListener('change', syncReworkUi);
+  document.getElementById('rework-reason')?.addEventListener('change', syncReworkUi);
+  syncReworkUi();
 
   /* ══ Preview ══ */
   document.getElementById('preview-save')?.addEventListener('click', () => {
@@ -349,7 +377,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('pv-workers').textContent = ws.join('\n');
     document.getElementById('pv-title').textContent = getV('task_name');
     const isRw = document.getElementById('is-rework')?.checked;
-    document.getElementById('pv-rework').textContent = isRw ? `✅ Rework (${getV('rework-reason')})` : '-';
+    const rwReason = getV('rework-reason');
+    const rwDetail = getV('rework-detail');
+    document.getElementById('pv-rework').textContent = isRw
+      ? `✅ Rework (${rwReason || '-'})${rwDetail ? ` / 상세: ${rwDetail}` : ''}`
+      : '-';
     showOverlay('preview-modal');
   });
   document.getElementById('cancel-save')?.addEventListener('click', hideAll);
@@ -361,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const task_description = $$('.task-description-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_cause = $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_result = $$('.task-result-input').map(el => el.value.trim()).filter(Boolean).join('\n');
-    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, rework_reason: getV('rework-reason') || null, workers, workItems: selectedWI, parts: selectedParts };
+    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, rework_reason: getV('rework-reason') || null, rework_detail: getV('rework-detail') || null, workers, workItems: selectedWI, parts: selectedParts };
     try {
       const res = await axios.post(`${API}/wl/submit`, payload, { headers: authH() });
       if (res.status === 201) { document.getElementById('result-msg').textContent = '결재 대기 등록이 완료되었습니다.'; document.getElementById('result-code').textContent = `Work Code: ${res.data.work_code || '-'}`; showOverlay('result-modal'); }

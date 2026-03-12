@@ -104,7 +104,7 @@
       <div id="task-causes-container" class="form-group"><label class="group-label">CAUSE</label><div class="task-cause-item"><textarea class="task-cause-input" rows="3" required></textarea><button type="button" class="btn-remove remove-cause" disabled>−</button></div><button type="button" id="add-cause" class="btn-add">원인 추가 +</button></div>
       <div id="task-results-container" class="form-group"><label class="group-label">RESULT</label><div class="task-result-item"><textarea class="task-result-input" rows="3" required></textarea><button type="button" class="btn-remove remove-result" disabled>−</button></div><button type="button" id="add-result" class="btn-add">결과 추가 +</button></div>
       <div class="form-row rework-row"><label><input type="checkbox" id="is-rework">&nbsp;이 작업은 <strong>Rework</strong>입니다</label><small class="help">동일 설비+동일 원인 14일 이내 재작업 시 체크</small>
-        <div id="rework-reason-row" class="hidden" style="margin-top:10px;">
+        <div id="rework-reason-row" class="hidden rework-detail-wrap" style="margin-top:10px;">
           <label style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;display:block;">REWORK 사유</label>
           <select id="rework-reason" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;">
             <option value="">사유 선택</option>
@@ -113,6 +113,11 @@
             <option value="Part error">Part error</option>
             <option value="원인 모름">원인 모름</option>
           </select>
+          <div style="margin-top:10px;">
+            <label for="rework-detail" style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;display:block;">REWORK 상세 원인 <span style="font-weight:600;">(선택)</span></label>
+            <textarea id="rework-detail" rows="3" placeholder="예: HUMAN ERROR - 체결 순서를 놓쳐 O-ring 재조립 필요" class="rework-detail-textarea"></textarea>
+            <small class="help">REWORK 사유를 더 구체적으로 남기고 싶을 때 작성합니다.</small>
+          </div>
         </div>
       </div>
       <div class="form-buttons"><button type="button" class="btn prev-step">← 이전</button><button type="button" id="preview-save" class="btn primary">미리보기</button><button type="submit" id="save-button" style="display:none">저장</button></div>
