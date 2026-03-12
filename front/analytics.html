@@ -63,7 +63,6 @@
     <button class="cat-tab" data-cat="level"><i class="fas fa-layer-group"></i> 레벨</button>
     <button class="cat-tab" data-cat="capa"><i class="fas fa-chart-line"></i> 역량</button>
     <button class="cat-tab" data-cat="work"><i class="fas fa-tools"></i> 작업 분석</button>
-    <button class="cat-tab" data-cat="rework"><i class="fas fa-redo"></i> Rework</button>
   </div>
 
   <!-- HR -->
@@ -91,31 +90,31 @@
       <div class="chart-card wide"><div class="chart-header"><h3>월별 역량 추이 (SETUP/MAINT/MULTI)</h3><button class="info-btn" data-desc="24년 9월~현재. SETUP, MAINT, MULTI 역량만 표시"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-smm"></canvas></div>
       <div class="chart-card wide"><div class="chart-header"><h3>월별 전체 역량 / 목표</h3><button class="info-btn" data-desc="24년 9월~현재. 전체 역량과 목표(점선)"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-capability-total"></canvas></div>
       <div class="chart-card wide"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="설비별 SETUP/MAINT/평균. 해당 설비를 다루는 엔지니어만 평균 계산"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-capa"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>MPI ≥ 2 엔지니어 설비 커버리지</h3><button class="info-btn" data-desc="MPI가 2 이상인 엔지니어들이 각 설비를 커버할 수 있는 인원 수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mpi-coverage"></canvas></div>
-    </div>
+</div>
   </div>
 
   <!-- 작업 분석 -->
   <div class="cat-section" data-cat="work">
     <div class="chart-grid">
-      <div class="chart-card wide"><div class="chart-header"><h3>월별 작업시간</h3><button class="info-btn" data-desc="월별 총 작업시간(분)과 작업 건수 추이입니다. 승인된 작업 기준이며, 작업 시간과 건수의 변화를 함께 봅니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-hours"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Type별</h3><button class="info-btn" data-desc="MAINT / SET UP / RELOCATION 유형별 작업 비중입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Sort별</h3><button class="info-btn" data-desc="MAINT 작업의 세부 분류(REP / ADJ / CLN / MON 등) 비중입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>오전/오후 근무</h3><button class="info-btn" data-desc="작업 시작 시간을 기준으로 오전/오후 분포를 보여줍니다. 기준 시간은 12:00입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>일반/초과 근무</h3><button class="info-btn" data-desc="작업 종료 시간을 기준으로 일반/초과 근무 분포를 보여줍니다. 기준 시간은 18:00입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 오후 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별로 오후 시작 작업 비율을 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift-gs"></canvas></div>
-      <div class="chart-card wide"><div class="chart-header"><h3>그룹-사이트별 초과 근무 비율</h3><button class="info-btn" data-desc="그룹/사이트 조합별로 초과 종료 작업 비율을 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime-gs"></canvas></div>
-    </div>
-  </div>
+      <div class="chart-card wide"><div class="chart-header"><h3>Monthly Work Time & Count Trend</h3><button class="info-btn" data-desc="월별 총 작업시간(분)과 건수 추이"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-hours"></canvas></div>
 
-  <!-- Rework -->
-  <div class="cat-section" data-cat="rework">
-    <div class="chart-grid">
-      <div class="chart-card"><div class="chart-header"><h3>월별 Rework 비율</h3><button class="info-btn" data-desc="월별 전체 작업 건수 대비 Rework 건수와 비율을 함께 보여줍니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-monthly"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Type별 Rework 비율</h3><button class="info-btn" data-desc="Work Type별 전체 작업 중 Rework 비율을 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-type"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Sort별 Rework 비율</h3><button class="info-btn" data-desc="Work Sort별 전체 작업 중 Rework 비율을 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-sort"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>설비 종류별 Rework 비율</h3><button class="info-btn" data-desc="설비 종류별 전체 작업 중 Rework 비율을 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-eq"></canvas></div>
-      <div class="chart-card"><div class="chart-header"><h3>Work Item별 Rework 비율</h3><button class="info-btn" data-desc="wl_work_item 기준 work_item별 전체 작업 중 Rework 비율을 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-item"></canvas></div>
+      <div class="pair-row">
+        <div class="chart-card"><div class="chart-header"><h3>Work Type</h3><button class="info-btn" data-desc="MAINT / SET UP / RELOCATION 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
+        <div class="chart-card"><div class="chart-header"><h3>Work Sort</h3><button class="info-btn" data-desc="MAINT 중 REP/ADJ/CLN/MON 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
+      </div>
+
+      <div class="pair-row">
+        <div class="chart-card"><div class="chart-header"><h3>AM vs PM</h3><button class="info-btn" data-desc="작업시작시간 12시 기준"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift"></canvas></div>
+        <div class="chart-card"><div class="chart-header"><h3>Regular vs Overtime</h3><button class="info-btn" data-desc="작업종료시간 18시 기준"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
+      </div>
+
+      <div class="pair-row">
+        <div class="chart-card"><div class="chart-header"><h3>PM work(Group/Site)</h3><button class="info-btn" data-desc="그룹/사이트 조합별 오후 근무(12시 이후 시작) 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-shift-gs"></canvas></div>
+        <div class="chart-card"><div class="chart-header"><h3>Overtime work(Group/Site)</h3><button class="info-btn" data-desc="그룹/사이트 조합별 초과 근무(18시 이후 종료) 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime-gs"></canvas></div>
+      </div>
+
+      <div class="chart-card"><div class="chart-header"><h3>Rework</h3><button class="info-btn" data-desc="전체 대비 Rework 비율"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Rework Reason</h3><button class="info-btn" data-desc="Rework 사유별 건수"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework-reason"></canvas></div>
     </div>
   </div>
 </div></main>
