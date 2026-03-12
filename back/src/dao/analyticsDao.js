@@ -275,69 +275,23 @@ exports.getWorklogStats = async (filters) => {
     wVals
   );
 
-  const [monthlyRework] = await pool.query(
-    `SELECT DATE_FORMAT(e.task_date,'%Y-%m') AS ym,
-            COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
+  const [reworkRatio] = await pool.query(
+    `SELECT CASE WHEN e.is_rework=1 THEN 'Rework' ELSE '일반' END AS label, COUNT(DISTINCT e.id) AS cnt
      FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
      ${wWhere}
-     GROUP BY ym
-     ORDER BY ym`,
+     GROUP BY label`,
     wVals
   );
 
-  const [reworkByWorkType] = await pool.query(
-    `SELECT IFNULL(NULLIF(TRIM(e.work_type),''),'미입력') AS label,
-            COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
+  const [reworkReason] = await pool.query(
+    `SELECT IFNULL(e.rework_reason,'미입력') AS label, COUNT(DISTINCT e.id) AS cnt
      FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
-     ${wWhere}
-     GROUP BY label
-     ORDER BY total_cnt DESC, label`,
+     ${wWhere} AND e.is_rework=1
+     GROUP BY label`,
     wVals
   );
 
-  const [reworkByWorkType2] = await pool.query(
-    `SELECT IFNULL(NULLIF(TRIM(e.work_type2),''),'미입력') AS label,
-            COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
-     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
-     ${wWhere}
-     GROUP BY label
-     ORDER BY total_cnt DESC, label`,
-    wVals
-  );
-
-  const [reworkByEqType] = await pool.query(
-    `SELECT IFNULL(NULLIF(TRIM(e.equipment_type),''),'미입력') AS label,
-            COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
-     FROM wl_event e JOIN wl_worker w ON w.event_id=e.id
-     ${wWhere}
-     GROUP BY label
-     ORDER BY total_cnt DESC, label`,
-    wVals
-  );
-
-  const [reworkByItem] = await pool.query(
-    `SELECT IFNULL(NULLIF(TRIM(i.item_name_free),''),'미입력') AS label,
-            COUNT(DISTINCT e.id) AS total_cnt,
-            COUNT(DISTINCT CASE WHEN e.is_rework=1 THEN e.id END) AS rework_cnt
-     FROM wl_event e
-     JOIN wl_work_item i ON i.event_id=e.id
-     JOIN wl_worker w ON w.event_id=e.id
-     ${wWhere}
-     GROUP BY label
-     HAVING total_cnt > 0
-     ORDER BY rework_cnt DESC, total_cnt DESC, label`,
-    wVals
-  );
-
-  return {
-    monthlyHours, byWorkType, byWorkType2, byShift, byOvertime,
-    shiftByGroupSite, overtimeByGroupSite,
-    monthlyRework, reworkByWorkType, reworkByWorkType2, reworkByEqType, reworkByItem
-  };
+  return { monthlyHours, byWorkType, byWorkType2, byShift, byOvertime, shiftByGroupSite, overtimeByGroupSite, reworkRatio, reworkReason };
 };
 
 exports.getEngineerInfo = async (name) => {
@@ -542,4 +496,457 @@ exports.getExportData = async (filters) => {
   );
 
   return rows;
+};
+
+
+/* ===== Personal dashboard (SECM_myself) ===== */
+let _engTablesCache = null;
+const _engColsCache = new Map();
+let _engEqCache = null;
+
+async function engGetTables() {
+  if (_engTablesCache) return _engTablesCache;
+  const [rows] = await pool.query(
+    `SELECT TABLE_NAME AS t FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE()`
+  );
+  _engTablesCache = new Set(rows.map(r => r.t));
+  return _engTablesCache;
+}
+
+async function engHasTable(name) {
+  const tables = await engGetTables();
+  return tables.has(name);
+}
+
+async function engGetColumns(name) {
+  if (_engColsCache.has(name)) return _engColsCache.get(name);
+  const [rows] = await pool.query(
+    `SELECT COLUMN_NAME AS c
+     FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
+    [name]
+  );
+  const cols = new Set(rows.map(r => r.c));
+  _engColsCache.set(name, cols);
+  return cols;
+}
+
+async function engHasColumn(tableName, columnName) {
+  const cols = await engGetColumns(tableName);
+  return cols.has(columnName);
+}
+
+async function engGetEqRows() {
+  if (_engEqCache) return _engEqCache;
+  if (!(await engHasTable('eq_master'))) return [];
+  const [rows] = await pool.query(
+    `SELECT id, eq_name, eq_code, display_order, is_active
+     FROM eq_master
+     ORDER BY COALESCE(display_order, 9999), id`
+  );
+  _engEqCache = rows;
+  return rows;
+}
+
+function engNormalizeLevelCode(code) {
+  if (code == null) return null;
+  let s = String(code).trim().toUpperCase();
+  if (!s) return null;
+  s = s.replace(/^LV\.?\s*/, '').replace(/\s+/g, '');
+  const map = {
+    '0': '0',
+    '1': '1',
+    '1-1': '1-1',
+    '1-2': '1-2',
+    '1-3': '1-3',
+    '2': '2',
+    '2-2': '2-2',
+    '2-3': '2-3',
+    '2-4': '2-4',
+    '2-2(B)': '2-2',
+    '2-2(A)': '2-3',
+    '2-3(B)': '2-4',
+  };
+  return map[s] || null;
+}
+
+function engNormalizeMonthlyRows(rows) {
+  return (rows || []).map(r => ({
+    ym: r.ym,
+    setup: r.setup == null ? null : Number(r.setup),
+    maint: r.maint == null ? null : Number(r.maint),
+    total: r.total == null ? null : Number(r.total),
+  }));
+}
+
+async function engGetWorkerNameColumn() {
+  if (!(await engHasTable('wl_worker'))) return null;
+  const cols = await engGetColumns('wl_worker');
+  for (const c of ['engineer_name', 'name', 'worker_name', 'task_man']) {
+    if (cols.has(c)) return c;
+  }
+  return null;
+}
+
+async function engGetWorkerDurationColumn() {
+  if (!(await engHasTable('wl_worker'))) return null;
+  const cols = await engGetColumns('wl_worker');
+  for (const c of ['task_duration', 'duration']) {
+    if (cols.has(c)) return c;
+  }
+  return null;
+}
+
+async function engGetMonthlyEqCapability(engineerId, eqId) {
+  if (!engineerId || !eqId) return { rows: [], unit: 'capa', source: 'none' };
+  const candidates = [
+    { table: 'monthly_eq_capability', eqCols: ['eq_id', 'equipment_id'] },
+    { table: 'monthly_capability', eqCols: ['eq_id', 'equipment_id'] },
+  ];
+  for (const cfg of candidates) {
+    if (!(await engHasTable(cfg.table))) continue;
+    const cols = await engGetColumns(cfg.table);
+    if (!cols.has('engineer_id') || !cols.has('ym') || !cols.has('setup_score') || !cols.has('maint_score')) continue;
+    const eqCol = cfg.eqCols.find(c => cols.has(c));
+    if (!eqCol) continue;
+    const totalExpr = cols.has('total_score')
+      ? 'total_score AS total'
+      : `(CASE
+            WHEN setup_score IS NULL AND maint_score IS NULL THEN NULL
+            WHEN setup_score IS NOT NULL AND maint_score IS NOT NULL THEN (setup_score + maint_score) / 2
+            ELSE COALESCE(setup_score, maint_score)
+          END) AS total`;
+    const [rows] = await pool.query(
+      `SELECT ym, setup_score AS setup, maint_score AS maint, ${totalExpr}
+       FROM ${cfg.table}
+       WHERE engineer_id = ? AND ${eqCol} = ?
+       ORDER BY ym`,
+      [engineerId, eqId]
+    );
+    if (rows.length) return { rows: engNormalizeMonthlyRows(rows), unit: 'capa', source: cfg.table };
+  }
+  return { rows: [], unit: 'capa', source: 'none' };
+}
+
+async function engGetMonthlyAvgCapability(engineerId, goalMap) {
+  if (!(await engHasTable('monthly_capability'))) return [];
+  const cols = await engGetColumns('monthly_capability');
+  if (!cols.has('engineer_id') || !cols.has('ym')) return [];
+  const totalExpr = cols.has('total_score')
+    ? 'total_score AS total'
+    : `(CASE
+          WHEN setup_score IS NULL AND maint_score IS NULL THEN NULL
+          WHEN setup_score IS NOT NULL AND maint_score IS NOT NULL THEN (setup_score + maint_score) / 2
+          ELSE COALESCE(setup_score, maint_score)
+        END) AS total`;
+  const [rows] = await pool.query(
+    `SELECT ym, ${totalExpr}
+     FROM monthly_capability
+     WHERE engineer_id = ?
+     ORDER BY ym`,
+    [engineerId]
+  );
+  return rows.map(r => ({
+    ym: r.ym,
+    total: r.total == null ? null : Number(r.total),
+    goal: goalMap[Number(String(r.ym).slice(0, 4))]?.capa_goal ?? null,
+  }));
+}
+
+async function engGetMyWorkSection(engineerName) {
+  const empty = {
+    monthlyHours: [], byWorkType: [], byWorkSort: [], byGroup: [], bySite: [], byLine: [],
+    byShift: [], byOvertime: [], byEqType: []
+  };
+  if (!engineerName) return empty;
+  if (!(await engHasTable('wl_event')) || !(await engHasTable('wl_worker'))) return empty;
+
+  const workerNameCol = await engGetWorkerNameColumn();
+  const durationCol = await engGetWorkerDurationColumn();
+  if (!workerNameCol || !durationCol) return empty;
+
+  const eventCols = await engGetColumns('wl_event');
+  const startExpr = eventCols.has('start_time') ? 'e.start_time' : 'NULL';
+  const endExpr = eventCols.has('end_time') ? 'e.end_time' : 'NULL';
+
+  const baseWhere = `WHERE e.approval_status = 'APPROVED' AND w.${workerNameCol} = ?`;
+  const vals = [engineerName];
+
+  const [monthlyHours] = await pool.query(
+    `SELECT DATE_FORMAT(e.task_date, '%Y-%m') AS ym,
+            SUM(COALESCE(w.${durationCol}, 0)) AS total_minutes,
+            COUNT(DISTINCT e.id) AS event_count
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere}
+     GROUP BY ym
+     ORDER BY ym`,
+    vals
+  );
+
+  const [byWorkType] = await pool.query(
+    `SELECT IFNULL(NULLIF(TRIM(e.work_type), ''), 'N/A') AS label,
+            COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere}
+     GROUP BY label
+     ORDER BY cnt DESC, label`,
+    vals
+  );
+
+  const [byWorkSort] = await pool.query(
+    `SELECT IFNULL(NULLIF(TRIM(e.work_type2), ''), 'N/A') AS label,
+            COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND REPLACE(UPPER(TRIM(COALESCE(e.work_type, ''))), ' ', '') = 'MAINT'
+     GROUP BY label
+     ORDER BY cnt DESC, label`,
+    vals
+  );
+
+  const [byGroup] = await pool.query(
+    `SELECT e.\`group\` AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND e.\`group\` IS NOT NULL AND e.\`group\` <> '' AND UPPER(e.\`group\`) <> 'SELECT'
+     GROUP BY e.\`group\`
+     ORDER BY cnt DESC, label`,
+    vals
+  );
+
+  const [bySite] = await pool.query(
+    `SELECT e.site AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND e.site IS NOT NULL AND e.site <> '' AND UPPER(e.site) <> 'SELECT'
+     GROUP BY e.site
+     ORDER BY cnt DESC, label`,
+    vals
+  );
+
+  const [byLine] = await pool.query(
+    `SELECT e.line AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND e.line IS NOT NULL AND e.line <> '' AND UPPER(e.line) <> 'SELECT'
+     GROUP BY e.line
+     ORDER BY cnt DESC, label`,
+    vals
+  );
+
+  const [byShift] = await pool.query(
+    `SELECT CASE WHEN TIME(${startExpr}) < '12:00:00' THEN '오전 근무' ELSE '오후 근무' END AS label,
+            COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND ${startExpr} IS NOT NULL
+     GROUP BY label`,
+    vals
+  );
+
+  const [byOvertime] = await pool.query(
+    `SELECT CASE WHEN TIME(${endExpr}) <= '18:00:00' THEN '일반 근무' ELSE '초과 근무' END AS label,
+            COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND ${endExpr} IS NOT NULL
+     GROUP BY label`,
+    vals
+  );
+
+  const [byEqType] = await pool.query(
+    `SELECT e.equipment_type AS label, COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     ${baseWhere} AND e.equipment_type IS NOT NULL AND e.equipment_type <> '' AND UPPER(e.equipment_type) <> 'SELECT'
+     GROUP BY e.equipment_type
+     ORDER BY cnt DESC, label`,
+    vals
+  );
+
+  return { monthlyHours, byWorkType, byWorkSort, byGroup, bySite, byLine, byShift, byOvertime, byEqType };
+}
+
+async function engGetRankSection(myName) {
+  const empty = { timeRank: [], taskRank: [], myName: myName || '' };
+  if (!(await engHasTable('wl_event')) || !(await engHasTable('wl_worker'))) return empty;
+  const workerNameCol = await engGetWorkerNameColumn();
+  const durationCol = await engGetWorkerDurationColumn();
+  if (!workerNameCol || !durationCol) return empty;
+
+  const [timeRank] = await pool.query(
+    `SELECT w.${workerNameCol} AS name,
+            SUM(COALESCE(w.${durationCol}, 0)) AS total_minutes
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     WHERE e.approval_status = 'APPROVED'
+       AND DATE_FORMAT(e.task_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+       AND w.${workerNameCol} IS NOT NULL AND w.${workerNameCol} <> ''
+     GROUP BY w.${workerNameCol}
+     ORDER BY total_minutes DESC, name`,
+    []
+  );
+
+  const [taskRank] = await pool.query(
+    `SELECT w.${workerNameCol} AS name,
+            COUNT(DISTINCT e.id) AS cnt
+     FROM wl_event e
+     JOIN wl_worker w ON w.event_id = e.id
+     WHERE e.approval_status = 'APPROVED'
+       AND DATE_FORMAT(e.task_date, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+       AND w.${workerNameCol} IS NOT NULL AND w.${workerNameCol} <> ''
+     GROUP BY w.${workerNameCol}
+     ORDER BY cnt DESC, name`,
+    []
+  );
+
+  return { timeRank, taskRank, myName: myName || '' };
+}
+
+exports.getMyDashboard = async (me) => {
+  if (!(await engHasTable('engineer'))) return { profile: null };
+
+  const hasEqMaster = await engHasTable('eq_master');
+  const where = [];
+  const vals = [];
+  if (me.employee_id != null && me.employee_id !== '') {
+    where.push('e.employee_id = ?');
+    vals.push(me.employee_id);
+  }
+  if (me.name) {
+    where.push('e.name = ?');
+    vals.push(me.name);
+  }
+  if (!where.length) return { profile: null };
+
+  const [rows] = await pool.query(
+    `SELECT e.id, e.name, e.company, e.employee_id, e.\`group\`, e.site, e.hire_date, e.role,
+            e.main_eq_id, e.multi_eq_id,
+            e.level_report, e.level_internal, e.level_psk, e.multi_level, e.multi_level_psk
+            ${hasEqMaster ? ', meq.eq_name AS main_eq, mueq.eq_name AS multi_eq' : ', NULL AS main_eq, NULL AS multi_eq'}
+     FROM engineer e
+     ${hasEqMaster ? 'LEFT JOIN eq_master meq ON meq.id = e.main_eq_id LEFT JOIN eq_master mueq ON mueq.id = e.multi_eq_id' : ''}
+     WHERE ${where.join(' OR ')}
+     LIMIT 1`,
+    vals
+  );
+  const u = rows[0] || null;
+  if (!u) return { profile: null };
+
+  const engineerId = u.id;
+  let capabilitySummary = { setup_capa: null, maint_capa: null, capa: null };
+  if (await engHasTable('capability_score')) {
+    const [capRows] = await pool.query(
+      `SELECT AVG(CASE WHEN setup_score > 0 THEN setup_score END) AS setup_capa,
+              AVG(CASE WHEN maint_score > 0 THEN maint_score END) AS maint_capa,
+              AVG(
+                CASE
+                  WHEN setup_score IS NULL AND maint_score IS NULL THEN NULL
+                  WHEN setup_score IS NOT NULL AND maint_score IS NOT NULL THEN (setup_score + maint_score) / 2
+                  ELSE COALESCE(setup_score, maint_score)
+                END
+              ) AS capa
+       FROM capability_score
+       WHERE engineer_id = ?`,
+      [engineerId]
+    );
+    capabilitySummary = capRows[0] || capabilitySummary;
+  }
+
+  const goalMap = {};
+  if (await engHasTable('annual_goal')) {
+    const [goalRows] = await pool.query(
+      `SELECT goal_year, capa_goal, level_goal, multi_level_goal
+       FROM annual_goal
+       WHERE engineer_id = ?`,
+      [engineerId]
+    );
+    goalRows.forEach(r => { goalMap[Number(r.goal_year)] = r; });
+  }
+
+  const achieved = {};
+  if (await engHasTable('level_history')) {
+    const [historyRows] = await pool.query(
+      `SELECT level_code, MIN(achieved_date) AS achieved_date
+       FROM level_history
+       WHERE engineer_id = ? AND achieved_date IS NOT NULL
+       GROUP BY level_code`,
+      [engineerId]
+    );
+    historyRows.forEach(r => {
+      const code = engNormalizeLevelCode(r.level_code);
+      if (code) achieved[code] = r.achieved_date;
+    });
+  }
+
+  let eqCapability = [];
+  if (await engHasTable('capability_score') && hasEqMaster) {
+    const [eqRows] = await pool.query(
+      `SELECT em.id AS eq_id, em.eq_name AS eq, cs.setup_score AS setup, cs.maint_score AS maint
+       FROM capability_score cs
+       JOIN eq_master em ON em.id = cs.eq_id
+       WHERE cs.engineer_id = ?
+       ORDER BY COALESCE(em.display_order, 9999), em.id`,
+      [engineerId]
+    );
+    eqCapability = eqRows.map(r => ({
+      eq_id: r.eq_id,
+      eq: r.eq,
+      setup: r.setup == null ? null : Number(r.setup),
+      maint: r.maint == null ? null : Number(r.maint),
+      total: (r.setup != null && r.maint != null) ? (Number(r.setup) + Number(r.maint)) / 2 : (r.setup ?? r.maint ?? null)
+    }));
+  }
+
+  const pickEqCap = (eqName) => {
+    const row = eqCapability.find(r => r.eq === eqName) || null;
+    return row ? { eq: row.eq, setup: row.setup, maint: row.maint, total: row.total } : { eq: eqName || null, setup: null, maint: null, total: null };
+  };
+
+  const mainCap = pickEqCap(u.main_eq);
+  const multiCap = pickEqCap(u.multi_eq);
+  const mainMonthlySeries = await engGetMonthlyEqCapability(engineerId, u.main_eq_id);
+  const monthlyAvg = await engGetMonthlyAvgCapability(engineerId, goalMap);
+  const work = await engGetMyWorkSection(u.name);
+  const rank = await engGetRankSection(u.name);
+
+  return {
+    profile: {
+      id: u.id,
+      name: u.name,
+      company: u.company,
+      employee_id: u.employee_id,
+      group: u.group,
+      site: u.site,
+      hire_date: u.hire_date,
+      role: u.role,
+      main_eq: u.main_eq,
+      multi_eq: u.multi_eq,
+      level_report: u.level_report,
+      level_internal: u.level_internal,
+      level_psk: u.level_psk,
+      multi_level: u.multi_level,
+      multi_level_psk: u.multi_level_psk,
+      setup_capa: capabilitySummary.setup_capa ?? null,
+      maint_capa: capabilitySummary.maint_capa ?? null,
+      multi_capa: multiCap.total ?? null,
+      capa: capabilitySummary.capa ?? null,
+      goal25: goalMap[2025]?.capa_goal ?? null,
+      goal26: goalMap[2026]?.capa_goal ?? null,
+      achieved,
+    },
+    capability: {
+      eqCapability,
+      main: mainCap,
+      multi: multiCap,
+      monthlyMain: mainMonthlySeries.rows,
+      monthlyMainUnit: mainMonthlySeries.unit,
+      monthlyMainSource: mainMonthlySeries.source,
+      monthlyAvg,
+    },
+    work,
+    rank,
+  };
 };

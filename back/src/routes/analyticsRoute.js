@@ -23,8 +23,14 @@ function requireAdmin(req, res, next) {
   return res.status(403).json({ error: '관리자만 접근 가능합니다.' });
 }
 
-// All analytics endpoints: JWT + admin
-router.use(jwt, requireAdmin);
+// All analytics endpoints: JWT
+router.use(jwt);
+
+// Myself endpoints (auth only)
+router.get('/myself/dashboard', ctrl.getMyDashboard);
+
+// Admin endpoints
+router.use(requireAdmin);
 
 router.get('/filters',            ctrl.getFilters);
 router.get('/headcount',          ctrl.getHeadCount);

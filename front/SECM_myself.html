@@ -64,11 +64,7 @@
     <div class="chart-grid">
       <div class="chart-card"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="엔지니어의 설비별 SET UP/MAINT 역량 표현"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-cap"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>설비 역량 (MAIN/MULTI)</h3><button class="info-btn" data-desc="MAIN EQ와 MULTI EQ의 SET UP/MAINT 역량을 한 번에 비교합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-mainmulti-cap"></canvas></div>
-
-      <div class="chart-card"><div class="chart-header"><h3>월별 MAIN SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 MAIN 설비 기준 월별 SET UP/MAINT 추이입니다. 설비별 월별 CAPA 데이터가 없으면 해당 설비의 월별 작업시간(분)으로 대체 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
-
-      <div class="chart-card"><div class="chart-header"><h3>월별 MULTI SET UP / MAINT <span class="h3-meta" id="meta-monthly-multi">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 MULTI 설비 기준 월별 SET UP/MAINT 추이입니다. 설비별 월별 CAPA 데이터가 없으면 해당 설비의 월별 작업시간(분)으로 대체 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-multi"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>월별 MAIN SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 MAIN 설비 기준 월별 SET UP/MAINT 역량 추이입니다. 월별 설비 CAPA 데이터가 있는 경우에만 표시하며, 작업시간 같은 다른 수치로 대체하지 않습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
 
       <div class="chart-card"><div class="chart-header"><h3>월별 평균 CAPA (목표 포함)</h3><button class="info-btn" data-desc="월별 CAPA(평균/총합) 추이와 연간 목표를 함께 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-avg"></canvas></div>
 
@@ -95,8 +91,6 @@
       <div class="chart-card"><div class="chart-header"><h3>일반/초과 근무</h3><button class="info-btn" data-desc="18:00 기준으로 일반/초과 근무 비중(가로 막대)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-overtime"></canvas></div>
 
       <div class="chart-card"><div class="chart-header"><h3>EQ TYPE</h3><button class="info-btn" data-desc="내 작업 이력에서 설비 유형 분포(SELECT 제외)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eqtype"></canvas></div>
-
-      <div class="chart-card"><div class="chart-header"><h3>REWORK 개수</h3><button class="info-btn" data-desc="월별 Rework(is_rework=1) 작업 건수 추이입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-rework"></canvas></div>
     </div>
   </div>
 </main>

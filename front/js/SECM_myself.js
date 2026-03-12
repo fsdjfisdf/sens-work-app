@@ -24,6 +24,19 @@ document.addEventListener('click', (e)=>{
 function qs(sel){ return document.querySelector(sel); }
 function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
 
+async function fetchMyDashboard(){
+  const urls = [`${API}/analytics/myself/dashboard`, '/analytics/myself/dashboard'];
+  let lastErr = null;
+  for(const url of urls){
+    try{ return await axios.get(url); }
+    catch(err){
+      lastErr = err;
+      if(err?.response?.status !== 404) throw err;
+    }
+  }
+  throw lastErr;
+}
+
 function toast(type, msg){
   const root = qs('#toast-root'); if(!root) return;
   const t = document.createElement('div');
@@ -62,6 +75,7 @@ const C = {
   fillBlue:'rgba(37,99,235,.18)',
   fillRed:'rgba(239,68,68,.18)',
   fillSlate:'rgba(100,116,139,.16)',
+  rankGray:'rgba(203,213,225,.42)',
   set:['rgba(37,99,235,.65)','rgba(100,116,139,.65)','rgba(34,197,94,.65)','rgba(245,158,11,.65)','rgba(239,68,68,.65)','rgba(139,92,246,.65)','rgba(6,182,212,.65)']
 };
 
@@ -388,7 +402,7 @@ function computeLevelTimeline(profile){
 
 async function load(){
   try{
-    const { data } = await axios.get(`${API}/analytics/myself/dashboard`);
+    const { data } = await fetchMyDashboard();
     if(!data?.profile){
       toast('error','내 정보를 찾을 수 없습니다.');
       return;
@@ -458,54 +472,27 @@ async function load(){
       suggestedMax: ratioMode ? 110 : undefined
     });
 
-    // 2) Main/Multi capability
-    const main = data.capability?.main || {};
-    const multi = data.capability?.multi || {};
-    const mmLabels = ['MAIN SETUP','MAIN MAINT','MULTI SETUP','MULTI MAINT'];
-    const mmRaw = [
-      main.setup!=null?Number(main.setup):0,
-      main.maint!=null?Number(main.maint):0,
-      multi.setup!=null?Number(multi.setup):0,
-      multi.maint!=null?Number(multi.maint):0
-    ];
-    const mmRatio = isRatioLike(mmRaw);
-    const mmVals = mmRatio ? mmRaw.map(toPct) : mmRaw;
-    barV('chart-mainmulti-cap', mmLabels, [
-      { label:`${main.eq||'MAIN'} / ${multi.eq||'MULTI'}`, data:mmVals, backgroundColor:[C.blue,C.slate,C.blue,C.slate], borderRadius:10 }
-    ], { formatter:(v)=> mmRatio?`${fmt1(v)}%`:fmt1(v), suggestedMax: mmRatio?110:undefined });
-
     // 3) Monthly main setup/maint
     const mMain = data.capability?.monthlyMain || [];
-    const mLabels = mMain.map(r=>r.ym);
-    const mSetupRaw = mMain.map(r=>r.setup==null?null:Number(r.setup));
-    const mMaintRaw = mMain.map(r=>r.maint==null?null:Number(r.maint));
-    const mRatio = isRatioLike([...mSetupRaw.filter(v=>v!=null), ...mMaintRaw.filter(v=>v!=null)]);
-    const mSetup = mRatio ? mSetupRaw.map(v=>v==null?null:toPct(v)) : mSetupRaw;
-    const mMaint = mRatio ? mMaintRaw.map(v=>v==null?null:toPct(v)) : mMaintRaw;
+    const mainUnit = data.capability?.monthlyMainUnit || 'capa';
+    const mainSource = data.capability?.monthlyMainSource || 'none';
+    if(mainUnit !== 'capa' || mainSource === 'worklog'){
+      setNoData('chart-monthly-main');
+    } else {
+      const mLabels = mMain.map(r=>r.ym);
+      const mSetupRaw = mMain.map(r=>r.setup==null?null:Number(r.setup));
+      const mMaintRaw = mMain.map(r=>r.maint==null?null:Number(r.maint));
+      const mRatio = isRatioLike([...mSetupRaw.filter(v=>v!=null), ...mMaintRaw.filter(v=>v!=null)]);
+      const mSetup = mRatio ? mSetupRaw.map(v=>v==null?null:toPct(v)) : mSetupRaw;
+      const mMaint = mRatio ? mMaintRaw.map(v=>v==null?null:toPct(v)) : mMaintRaw;
 
-    line('chart-monthly-main', mLabels, [
-      { label:'SET UP', data:mSetup, borderColor:C.blue, backgroundColor:C.fillBlue, tension:.35, fill:false },
-      { label:'MAINT', data:mMaint, borderColor:C.slate, backgroundColor:C.fillSlate, tension:.35, fill:false },
-    ], { labelMode:'last', formatter:(v)=> mRatio?`${fmt1(v)}%`:fmt1(v) });
+      line('chart-monthly-main', mLabels, [
+        { label:'SET UP', data:mSetup, borderColor:C.blue, backgroundColor:C.fillBlue, tension:.35, fill:false },
+        { label:'MAINT', data:mMaint, borderColor:C.slate, backgroundColor:C.fillSlate, tension:.35, fill:false },
+      ], { labelMode:'last', formatter:(v)=> mRatio?`${fmt1(v)}%`:fmt1(v) });
+    }
 
-    // 5) Monthly multi setup/maint
-    const mMulti = data.capability?.monthlyMulti || [];
-    const multiUnit = data.capability?.monthlyMultiUnit || 'capa';
-    const mmLabels2 = mMulti.map(r=>r.ym);
-    const mmSetup2 = mMulti.map(r=>r.setup==null?null:Number(r.setup));
-    const mmMaint2 = mMulti.map(r=>r.maint==null?null:Number(r.maint));
-    const mmRatio2 = (multiUnit==='capa') && isRatioLike([...mmSetup2.filter(v=>v!=null), ...mmMaint2.filter(v=>v!=null)]);
-    const mmSetup2v = mmRatio2 ? mmSetup2.map(v=>v==null?null:toPct(v)) : mmSetup2;
-    const mmMaint2v = mmRatio2 ? mmMaint2.map(v=>v==null?null:toPct(v)) : mmMaint2;
-
-    line('chart-monthly-multi', mmLabels2, [
-      { label: multiUnit==='minutes' ? 'SET UP (분)' : 'SET UP', data:mmSetup2v, borderColor:C.blue, backgroundColor:C.fillBlue, tension:.35, fill:false },
-      { label: multiUnit==='minutes' ? 'MAINT (분)' : 'MAINT', data:mmMaint2v, borderColor:C.slate, backgroundColor:C.fillSlate, tension:.35, fill:false },
-    ], { labelMode:'last', formatter:(v)=> {
-      if(v==null) return '';
-      if(multiUnit==='minutes') return `${Math.round(Number(v))}`;
-      return mmRatio2?`${fmt1(v)}%`:fmt1(v);
-    } });
+    // 6) Monthly avg capa + goal
 
     // 6) Monthly avg capa + goal
     const mAvg = data.capability?.monthlyAvg || [];
@@ -622,16 +609,11 @@ async function load(){
     const eqt = data.work?.byEqType || [];
     barH('chart-eqtype', eqt.slice(0,12).map(r=>r.label), eqt.slice(0,12).map(r=>Number(r.cnt||0)), { percentTotal: eqt.reduce((a,b)=>a+Number(b.cnt||0),0) });
 
-    // 19 rework counting (line)
-    const rw = data.work?.reworkMonthly || [];
-    line('chart-rework', rw.map(r=>r.ym), [
-      { label:'Rework(건)', data: rw.map(r=>Number(r.cnt||0)), borderColor:C.red, backgroundColor:C.fillRed, tension:.35, fill:true }
-    ], { labelMode:'all', formatter:(v)=> v==null?'':`${v}` });
-
   }catch(e){
     console.error(e);
     if(e?.response?.status===401){ location.href='./signin.html'; return; }
-    toast('error','데이터 로딩 실패');
+    if(e?.response?.status===404){ toast('error','개인 대시보드 API가 서버에 없습니다. analyticsRoute / analyticsController / analyticsDao도 함께 반영해야 합니다.'); return; }
+    toast('error', e?.response?.data?.error || '데이터 로딩 실패');
   }
 }
 
