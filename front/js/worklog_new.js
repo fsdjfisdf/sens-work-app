@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const getV = id => (document.getElementById(id)?.value || '').trim();
   const normalizeText = s => String(s || '').replace(/\r/g, ' ').replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+  const normalizeLooseText = s => String(s || '').replace(/[\s\u00A0]+/g, '').trim().toLowerCase();
 
   if (!localStorage.getItem('x-access-token')) { alert('로그인이 필요합니다.'); location.replace('./signin.html'); return; }
   const authH = () => ({ 'Content-Type': 'application/json', 'x-access-token': localStorage.getItem('x-access-token') });
@@ -35,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ══ STEPS ══ */
   let curStep = 1; const STEPS = 4;
-  function goStep(n) { const c = $(`.form-step[data-step="${curStep}"]`), x = $(`.form-step[data-step="${n}"]`); if (!x || c === x) return; c?.classList.remove('active'); x.classList.add('active'); curStep = n; updInd(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function goStep(n) { const c = $(`.form-step[data-step="${curStep}"]`), x = $(`.form-step[data-step="${n}"]`); if (!x || c === x) return; c?.classList.remove('active'); x.classList.add('active'); curStep = n; updInd(); window.scrollTo({ top: 0, behavior: 'smooth' }); if (n === 4) setTimeout(() => checkReworkCandidates(false), 0); }
   function updInd() { $$('.step-dot').forEach(d => { const t = +d.dataset.target; d.classList.toggle('active', t === curStep); d.classList.toggle('completed', t < curStep); }); $$('.step-line').forEach((l, i) => l.classList.toggle('done', i + 1 < curStep)); }
   $$('.next-step').forEach(b => b.addEventListener('click', () => { goStep(curStep + 1); }));
   $$('.prev-step').forEach(b => b.addEventListener('click', () => goStep(curStep - 1)));
@@ -69,7 +70,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('worksort-row')?.classList.toggle('hidden', !isMaint);
     document.getElementById('work-items-section')?.classList.toggle('hidden', !isMaint);
     document.getElementById('parts-section')?.classList.toggle('hidden', !isMaint);
-    if (isMaint) fetchMasterData();
+    if (isMaint) { fetchMasterData(); scheduleReworkCheck(); }
+    else clearReworkSuspects(true);
   });
 
   document.getElementById('equipment_type')?.addEventListener('change', () => {
@@ -268,40 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   addDyn('task-causes-container','task-cause-item','task-cause-input','remove-cause','add-cause');
   addDyn('task-results-container','task-result-item','task-result-input','remove-result','add-result');
 
-  /* ══ Validation ══ */
-  function valStep(s) {
-    switch (s) {
-      case 1: {
-        if (!getV('task_date')) { showToast('error','WORK DATE를 입력하세요.'); return false; }
-        if (!getV('equipment_name')) { showToast('error','EQ NAME을 입력하세요.'); return false; }
-        if (getV('group') === 'SELECT') { showToast('error','GROUP을 선택하세요.'); return false; }
-        if (getV('site') === 'SELECT') { showToast('error','SITE를 선택하세요.'); return false; }
-        if (getV('equipment_type') === 'SELECT') { showToast('error','EQ TYPE을 선택하세요.'); return false; }
-        if (getV('warranty') === 'SELECT') { showToast('error','WARRANTY를 선택하세요.'); return false; }
-        if (curEms() === null) { showToast('error','EMS를 선택하세요.'); return false; }
-        return true;
-      }
-      case 2: { if (getV('workType') === 'SELECT') { showToast('error','WORK TYPE을 선택하세요.'); return false; } return true; }
-      case 3: {
-        const cs = $$('.task-man-container');
-        const ns = cs.map(c => c.querySelector('.task-man-input')?.value.trim()).filter(Boolean);
-        if (!ns.length) { showToast('error','작업자를 1명 이상 입력하세요.'); return false; }
-        for (const c of cs) { const n = c.querySelector('.task-man-input')?.value.trim(); if (!n) continue; const s = c.querySelector('.worker-start-time')?.value, e = c.querySelector('.worker-end-time')?.value; if (!s || !e) { showToast('error', `${n}의 시작/종료 시간을 입력하세요.`); return false; } }
-        return true;
-      }
-      case 4: { if (!getV('task_name')) { showToast('error','TITLE을 입력하세요.'); return false; } return true; }
-      default: return true;
-    }
-  }
-
-  /* ══ Overlay ══ */
-  const overlay = document.getElementById('modal-overlay');
-  let activeModal = null;
-  function showOverlay(modalId) { activeModal = modalId; overlay.style.display = 'block'; document.getElementById(modalId).style.display = 'block'; }
-  function hideAll() { overlay.style.display = 'none'; ['preview-modal','result-modal','popup','picker-modal'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; }); activeModal = null; }
-  overlay.addEventListener('click', hideAll);
-
-  /* ══ 최종 검증 (결재 요청 시에만) — 누락 시 해당 Step으로 이동 ══ */
+  /* ══ Validation / REWORK helper ══ */
   function getTaskCauseValue() {
     return $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
   }
@@ -345,6 +314,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function escHtml(v) {
+    return String(v || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
   function renderReworkSuspects(rows, total) {
     const box = document.getElementById('rework-suspect-box');
     const list = document.getElementById('rework-suspect-list');
@@ -360,24 +333,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     msg.textContent = `2주 이내 동일한 TITLE + 동일한 CAUSE의 MAINT 이력이 ${total}건 있습니다. 이 작업건은 REWORK일 가능성이 있으니 아래 이력을 보고 직접 판단하세요.`;
     list.innerHTML = rows.map(row => {
       const refLabel = `${row.task_date} · ${row.equipment_name || '-'} · ${row.work_code || `#${row.id}`}`;
-      const badge = row.is_rework ? `<span class="suspect-badge warn">REWORK ${row.rework_reason ? `· ${row.rework_reason}` : ''}</span>` : '<span class="suspect-badge">일반 이력</span>';
+      const badge = row.is_rework ? `<span class="suspect-badge warn">REWORK ${row.rework_reason ? `· ${escHtml(row.rework_reason)}` : ''}</span>` : '<span class="suspect-badge">일반 이력</span>';
       const daysText = Number.isFinite(Number(row.days_diff)) ? `<span class="suspect-meta-chip">${row.days_diff}일 전</span>` : '';
       return `
         <div class="suspect-card">
           <div class="suspect-card-head">
             <div>
               <div class="suspect-title-row">
-                <strong>${row.task_name || '-'}</strong>
+                <strong>${escHtml(row.task_name || '-')}</strong>
                 ${badge}
               </div>
-              <div class="suspect-meta">${row.task_date || '-'} · ${row.site || '-'} / ${row.line || '-'} · ${row.equipment_type || '-'} · ${row.equipment_name || '-'} ${daysText}</div>
-              <div class="suspect-meta">WORK CODE: ${row.work_code || '-'} · 작업자: ${row.workers_str || '-'}</div>
+              <div class="suspect-meta">${escHtml(row.task_date || '-')} · ${escHtml(row.site || '-')} / ${escHtml(row.line || '-')} · ${escHtml(row.equipment_type || '-')} · ${escHtml(row.equipment_name || '-')} ${daysText}</div>
+              <div class="suspect-meta">WORK CODE: ${escHtml(row.work_code || '-')} · 작업자: ${escHtml(row.workers_str || '-')}</div>
             </div>
-            <button type="button" class="btn-chip suspect-use-btn" data-ref-id="${row.id}" data-ref-label="${refLabel.replace(/"/g, '&quot;')}">이 이력 기준으로 Rework 체크</button>
+            <button type="button" class="btn-chip suspect-use-btn" data-ref-id="${row.id}" data-ref-label="${escHtml(refLabel)}">이 이력 기준으로 Rework 체크</button>
           </div>
           <div class="suspect-body">
-            <div><span class="suspect-label">CAUSE</span><p>${(row.task_cause || '-').replace(/\n/g, '<br>')}</p></div>
-            <div><span class="suspect-label">RESULT</span><p>${(row.task_result || '-').replace(/\n/g, '<br>')}</p></div>
+            <div><span class="suspect-label">CAUSE</span><p>${escHtml(row.task_cause || '-').replace(/\n/g, '<br>')}</p></div>
+            <div><span class="suspect-label">RESULT</span><p>${escHtml(row.task_result || '-').replace(/\n/g, '<br>')}</p></div>
           </div>
         </div>
       `;
@@ -406,7 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       clearReworkSuspects(true);
       return;
     }
-    if (!taskDate || !normalizeText(taskName) || !normalizeText(taskCause)) {
+    if (!taskDate || !normalizeLooseText(taskName) || !normalizeLooseText(taskCause)) {
       clearReworkSuspects(true);
       return;
     }
@@ -440,53 +413,59 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function scheduleReworkCheck() {
     clearTimeout(suspectDebounce);
-    suspectDebounce = setTimeout(() => { checkReworkCandidates(false); }, 450);
+    suspectDebounce = setTimeout(() => checkReworkCandidates(false), 350);
   }
 
   document.getElementById('task_name')?.addEventListener('input', scheduleReworkCheck);
   document.getElementById('task-causes-container')?.addEventListener('input', e => {
     if (e.target?.classList?.contains('task-cause-input')) scheduleReworkCheck();
   });
-  document.getElementById('workType')?.addEventListener('change', () => {
-    if (getV('workType') === 'MAINT') scheduleReworkCheck();
-    else clearReworkSuspects(true);
-  });
   document.getElementById('task_date')?.addEventListener('change', scheduleReworkCheck);
   document.getElementById('rework-suspect-refresh')?.addEventListener('click', () => checkReworkCandidates(true));
-
   document.getElementById('rework-reason')?.addEventListener('change', updateReworkDetailPlaceholder);
   updateReworkDetailPlaceholder();
 
-  function validateAll() {
-    // Step 1
-    if (!getV('task_date')) { showToast('error','WORK DATE를 입력하세요.'); goStep(1); return false; }
-    if (!getV('equipment_name')) { showToast('error','EQ NAME을 입력하세요.'); goStep(1); return false; }
-    if (getV('group') === 'SELECT') { showToast('error','GROUP을 선택하세요.'); goStep(1); return false; }
-    if (getV('site') === 'SELECT') { showToast('error','SITE를 선택하세요.'); goStep(1); return false; }
-    if (getV('equipment_type') === 'SELECT') { showToast('error','EQ TYPE을 선택하세요.'); goStep(1); return false; }
-    if (getV('warranty') === 'SELECT') { showToast('error','WARRANTY를 선택하세요.'); goStep(1); return false; }
-    if (curEms() === null) { showToast('error','EMS를 선택하세요.'); goStep(1); return false; }
-    // Step 2
-    if (getV('workType') === 'SELECT') { showToast('error','WORK TYPE을 선택하세요.'); goStep(2); return false; }
-    // Step 3
-    const cs = $$('.task-man-container');
-    const ns = cs.map(c => c.querySelector('.task-man-input')?.value.trim()).filter(Boolean);
-    if (!ns.length) { showToast('error','작업자를 1명 이상 입력하세요.'); goStep(3); return false; }
-    for (const c of cs) {
-      const n = c.querySelector('.task-man-input')?.value.trim(); if (!n) continue;
-      const s = c.querySelector('.worker-start-time')?.value, e = c.querySelector('.worker-end-time')?.value;
-      if (!s || !e) { showToast('error', `${n}의 시작/종료 시간을 입력하세요.`); goStep(3); return false; }
+  function valStep(s) {
+    switch (s) {
+      case 1: {
+        if (!getV('task_date')) { showToast('error','WORK DATE를 입력하세요.'); return false; }
+        if (!getV('equipment_name')) { showToast('error','EQ NAME을 입력하세요.'); return false; }
+        if (getV('group') === 'SELECT') { showToast('error','GROUP을 선택하세요.'); return false; }
+        if (getV('site') === 'SELECT') { showToast('error','SITE를 선택하세요.'); return false; }
+        if (!getV('line')) { showToast('error','LINE을 입력하세요.'); return false; }
+        return true;
+      }
+      case 2: {
+        if (getV('equipment_type') === 'SELECT') { showToast('error','EQ TYPE을 선택하세요.'); return false; }
+        if (getV('warranty') === 'SELECT') { showToast('error','WARRANTY를 선택하세요.'); return false; }
+        return true;
+      }
+      case 3: {
+        if (getV('workType') === 'SELECT') { showToast('error','WORK TYPE을 선택하세요.'); return false; }
+        if ((getV('workType') === 'SET UP' || getV('workType') === 'RELOCATION') && getV('additionalWorkType') === 'SELECT') { showToast('error','SETUP ITEM을 선택하세요.'); return false; }
+        if (getV('workType') === 'MAINT' && getV('workType2') === 'SELECT') { showToast('error','MAINT 분류를 선택하세요.'); return false; }
+        if (!$$('.task-man-container').some(c => (c.querySelector('.task-man-input')?.value || '').trim())) { showToast('error','작업자를 1명 이상 입력하세요.'); return false; }
+        return true;
+      }
+      case 4: {
+        if (!getV('task_name')) { showToast('error','TITLE을 입력하세요.'); return false; }
+        if (!getTaskCauseValue()) { showToast('error','CAUSE를 입력하세요.'); return false; }
+        return true;
+      }
+      default: return true;
     }
-    // Step 4
-    if (!getV('task_name')) { showToast('error','TITLE을 입력하세요.'); goStep(4); return false; }
-    // Rework reason
+  }
+
+  function validateAll() {
+    for (let s = 1; s <= STEPS; s++) {
+      if (!valStep(s)) { goStep(s); return false; }
+    }
     if (document.getElementById('is-rework')?.checked && !getV('rework-reason')) {
       showToast('error','Rework 사유를 선택하세요.'); goStep(4); return false;
     }
     return true;
   }
 
-  // Rework 체크박스 → 사유 표시
   document.getElementById('is-rework')?.addEventListener('change', function() {
     document.getElementById('rework-reason-row')?.classList.toggle('hidden', !this.checked);
     if (!this.checked) {
@@ -499,10 +478,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ══ Preview ══ */
   document.getElementById('preview-save')?.addEventListener('click', () => {
     if (!validateAll()) return;
-    const now = new Date(); if (now.getHours() < 11 && getV('task_date') === today()) { if (!confirm('오전 11시 이전입니다. 오늘 작업이 맞습니까?')) { goStep(1); return; } }
-    const ws = $$('.task-man-container').map(c => { const n = c.querySelector('.task-man-input')?.value.trim() || '', r = c.querySelector('.task-man-role')?.value || 'main', s = c.querySelector('.worker-start-time')?.value || '', e = c.querySelector('.worker-end-time')?.value || '', nn = c.querySelector('.worker-none-time')?.value || '0', mm = c.querySelector('.worker-move-time')?.value || '0'; return n ? `${n}(${r}) ${s}~${e} 논:${nn}분 무브:${mm}분` : ''; }).filter(Boolean);
+    const now = new Date();
+    if (now.getHours() < 11 && getV('task_date') === today()) {
+      if (!confirm('오전 11시 이전입니다. 오늘 작업이 맞습니까?')) { goStep(1); return; }
+    }
+    const ws = $$('.task-man-container').map(c => {
+      const n = c.querySelector('.task-man-input')?.value.trim() || '';
+      const r = c.querySelector('.task-man-role')?.value || 'main';
+      const s = c.querySelector('.worker-start-time')?.value || '';
+      const e = c.querySelector('.worker-end-time')?.value || '';
+      const nn = c.querySelector('.worker-none-time')?.value || '0';
+      const mm = c.querySelector('.worker-move-time')?.value || '0';
+      return n ? `${n}(${r}) ${s}~${e} 논:${nn}분 무브:${mm}분` : '';
+    }).filter(Boolean);
     const wiStr = selectedWI.map(s => s.master_id ? (masterItems.find(m => m.id === s.master_id)?.item_name || '') : s.item_name_free).join(', ');
-    const ptStr = selectedParts.map(p => { const nm = p.master_id ? (masterParts.find(m => m.id === p.master_id)?.part_name || '') : p.part_name_free; return `${nm} ×${p.qty}`; }).join(', ');
+    const ptStr = selectedParts.map(p => {
+      const nm = p.master_id ? (masterParts.find(m => m.id === p.master_id)?.part_name || '') : p.part_name_free;
+      return `${nm} ×${p.qty}`;
+    }).join(', ');
     document.getElementById('pv-date').textContent = getV('task_date');
     document.getElementById('pv-ems').textContent = curEms() === 1 ? '유상' : '무상';
     document.getElementById('pv-site').textContent = `${getV('site')} / ${getV('line')}`;
@@ -525,39 +518,160 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* ══ Submit ══ */
   document.getElementById('confirm-save')?.addEventListener('click', async () => {
     hideAll();
-    const workers = $$('.task-man-container').map(c => ({ name: c.querySelector('.task-man-input')?.value.trim() || '', role: c.querySelector('.task-man-role')?.value || 'main', start_time: c.querySelector('.worker-start-time')?.value ? c.querySelector('.worker-start-time').value + ':00' : null, end_time: c.querySelector('.worker-end-time')?.value ? c.querySelector('.worker-end-time').value + ':00' : null, none_time: Number(c.querySelector('.worker-none-time')?.value) || 0, move_time: Number(c.querySelector('.worker-move-time')?.value) || 0 })).filter(w => w.name);
+    const workers = $$('.task-man-container').map(c => ({
+      name: c.querySelector('.task-man-input')?.value.trim() || '',
+      role: c.querySelector('.task-man-role')?.value || 'main',
+      start_time: c.querySelector('.worker-start-time')?.value ? c.querySelector('.worker-start-time').value + ':00' : null,
+      end_time: c.querySelector('.worker-end-time')?.value ? c.querySelector('.worker-end-time').value + ':00' : null,
+      none_time: Number(c.querySelector('.worker-none-time')?.value) || 0,
+      move_time: Number(c.querySelector('.worker-move-time')?.value) || 0,
+    })).filter(w => w.name);
     const task_description = $$('.task-description-input').map(el => el.value.trim()).filter(Boolean).join('\n');
-    const task_cause = getTaskCauseValue();
+    const task_cause = $$('.task-cause-input').map(el => el.value.trim()).filter(Boolean).join('\n');
     const task_result = $$('.task-result-input').map(el => el.value.trim()).filter(Boolean).join('\n');
-    const payload = { task_name: getV('task_name'), task_date: getV('task_date'), country: getV('country') || 'KR', group: getV('group'), site: getV('site'), line: getV('line'), equipment_type: getV('equipment_type'), equipment_name: getV('equipment_name'), warranty: getV('warranty'), ems: curEms(), work_type: getV('workType'), work_type2: getV('workType2') || null, setup_item: getV('additionalWorkType') || null, status: getV('status'), task_description, task_cause, task_result, SOP: getV('SOP'), tsguide: getV('tsguide'), start_time: null, end_time: null, none_time: 0, move_time: 0, is_rework: document.getElementById('is-rework')?.checked ? 1 : 0, rework_reason: getV('rework-reason') || null, rework_detail: getV('rework-detail') || null, rework_ref_id: selectedReworkRefId || null, workers, workItems: selectedWI, parts: selectedParts };
+    const payload = {
+      task_name: getV('task_name'),
+      task_date: getV('task_date'),
+      country: getV('country') || 'KR',
+      group: getV('group'),
+      site: getV('site'),
+      line: getV('line'),
+      equipment_type: getV('equipment_type'),
+      equipment_name: getV('equipment_name'),
+      warranty: getV('warranty'),
+      ems: curEms(),
+      work_type: getV('workType'),
+      work_type2: getV('workType2') || null,
+      setup_item: getV('additionalWorkType') || null,
+      status: getV('status'),
+      task_description,
+      task_cause,
+      task_result,
+      SOP: getV('SOP'),
+      tsguide: getV('tsguide'),
+      start_time: null,
+      end_time: null,
+      none_time: 0,
+      move_time: 0,
+      is_rework: document.getElementById('is-rework')?.checked ? 1 : 0,
+      rework_reason: getV('rework-reason') || null,
+      rework_detail: getV('rework-detail') || null,
+      rework_ref_id: selectedReworkRefId || null,
+      workers,
+      workItems: selectedWI,
+      parts: selectedParts,
+    };
     try {
       const res = await axios.post(`${API}/wl/submit`, payload, { headers: authH() });
-      if (res.status === 201) { document.getElementById('result-msg').textContent = '결재 대기 등록이 완료되었습니다.'; document.getElementById('result-code').textContent = `Work Code: ${res.data.work_code || '-'}`; showOverlay('result-modal'); }
-    } catch (err) { const s = err.response?.status, m = err.response?.data?.error || err.message; let t = '저장 실패'; if (s === 401) t = '인증 만료'; if (s === 400) t = '입력 오류'; if (s === 403) t = '권한 없음'; showToast('error', `${t}: ${m}`); }
+      if (res.status === 201) {
+        document.getElementById('result-msg').textContent = '결재 대기 등록이 완료되었습니다.';
+        document.getElementById('result-code').textContent = `Work Code: ${res.data.work_code || '-'}`;
+        showOverlay('result-modal');
+      }
+    } catch (err) {
+      const s = err.response?.status, m = err.response?.data?.error || err.message;
+      let t = '저장 실패'; if (s === 401) t = '인증 만료'; if (s === 400) t = '입력 오류'; if (s === 403) t = '권한 없음';
+      showToast('error', `${t}: ${m}`);
+    }
   });
-  document.getElementById('result-ok')?.addEventListener('click', () => { hideAll(); $('#worklogForm')?.reset(); selectedWI.length = 0; selectedParts.length = 0; renderSelectedChips(); goStep(1); });
+  document.getElementById('result-ok')?.addEventListener('click', () => {
+    hideAll();
+    $('#worklogForm')?.reset();
+    selectedWI.length = 0;
+    selectedParts.length = 0;
+    renderSelectedChips();
+    clearReworkSuspects(true);
+    goStep(1);
+  });
 
   /* ══ PASTE ══ */
   const pasteTA = document.getElementById('paste-textarea');
   document.getElementById('paste-button')?.addEventListener('click', () => showOverlay('popup'));
   document.getElementById('paste-cancel')?.addEventListener('click', hideAll);
-  pasteTA?.addEventListener('input', () => { document.getElementById('paste-lines').textContent = pasteTA.value.split('\n').length; document.getElementById('paste-chars').textContent = pasteTA.value.length; });
-  document.getElementById('paste-submit')?.addEventListener('click', () => { const t = pasteTA?.value || ''; if (!t.trim()) return; parsePaste(t); hideAll(); });
+  pasteTA?.addEventListener('input', () => {
+    document.getElementById('paste-lines').textContent = pasteTA.value.split('\n').length;
+    document.getElementById('paste-chars').textContent = pasteTA.value.length;
+  });
+  document.getElementById('paste-submit')?.addEventListener('click', () => {
+    const t = pasteTA?.value || '';
+    if (!t.trim()) return;
+    parsePaste(t);
+    hideAll();
+  });
 
   function parsePaste(raw) {
-    const lines = raw.split('\n'); let title = '', statusL = [], actL = [], cauL = [], resL = [], wLine = '', tLine = '', sec = '';
-    for (const l of lines) { const t = l.trim(); if (!t) continue; if (!title && !t.match(/^\d\)/)) { title = t; continue; } if (t.match(/^1\)\s*STATUS/i)) { sec = 'st'; continue; } if (t.match(/^2\)\s*ACTION/i)) { sec = 'ac'; continue; } if (t.match(/^3\)\s*CAUSE/i)) { sec = 'ca'; continue; } if (t.match(/^4\)\s*RESULT/i)) { sec = 're'; continue; } if (t.match(/^5\)/)) { sec = ''; continue; } if (t.match(/^작업자\s*[:：]/)) { wLine = t; continue; } if (t.match(/^작업\s*시간\s*[:：]/)) { tLine = t; continue; } if (sec === 'st') statusL.push(t); else if (sec === 'ac') actL.push(t); else if (sec === 'ca') cauL.push(t); else if (sec === 're') resL.push(t); }
+    const lines = raw.split('\n');
+    let title = '', statusL = [], actL = [], cauL = [], resL = [], wLine = '', tLine = '', sec = '';
+    for (const l of lines) {
+      const t = l.trim();
+      if (!t) continue;
+      if (!title && !t.match(/^\d\)/)) { title = t; continue; }
+      if (t.match(/^1\)\s*STATUS/i)) { sec = 'st'; continue; }
+      if (t.match(/^2\)\s*ACTION/i)) { sec = 'ac'; continue; }
+      if (t.match(/^3\)\s*CAUSE/i)) { sec = 'ca'; continue; }
+      if (t.match(/^4\)\s*RESULT/i)) { sec = 're'; continue; }
+      if (t.match(/^5\)/)) { sec = ''; continue; }
+      if (t.match(/^작업자\s*[:：]/)) { wLine = t; continue; }
+      if (t.match(/^작업\s*시간\s*[:：]/)) { tLine = t; continue; }
+      if (sec === 'st') statusL.push(t);
+      else if (sec === 'ac') actL.push(t);
+      else if (sec === 'ca') cauL.push(t);
+      else if (sec === 're') resL.push(t);
+    }
     if (title) { const el = document.getElementById('task_name'); if (el) el.value = title; }
     if (statusL.length) { const el = document.getElementById('status'); if (el) el.value = statusL.join('\n'); }
     fillDyn('task-descriptions-container', '.task-description-input', 'task-desc-item', 'remove-desc', 'add-desc', actL);
     fillDyn('task-causes-container', '.task-cause-input', 'task-cause-item', 'remove-cause', 'add-cause', [...new Set(cauL)]);
     fillDyn('task-results-container', '.task-result-input', 'task-result-item', 'remove-result', 'add-result', [...new Set(resL)]);
     let pS = '', pE = '', pN = 0, pM = 0;
-    if (tLine) { const m = tLine.match(/(\d{1,2}:\d{2})\s*[-~]\s*(\d{1,2}:\d{2})/); if (m) { pS = m[1].padStart(5,'0'); pE = m[2].padStart(5,'0'); } const nm = tLine.match(/논\s*(\d+)/); const mm = tLine.match(/무브\s*(\d+)/); if (nm) pN = +nm[1]; if (mm) pM = +mm[1]; }
-    if (wLine) { const names = wLine.replace(/^작업자\s*[:：]\s*/,'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean); const con = document.getElementById('task-mans-container'), ba = con.querySelector('.worker-bulk-actions'); $$('.task-man-container').slice(1).forEach(el => el.remove()); if (names[0]) { const f = $('.task-man-container'); if (f) { f.querySelector('.task-man-input').value = names[0]; if (pS) f.querySelector('.worker-start-time').value = pS; if (pE) f.querySelector('.worker-end-time').value = pE; f.querySelector('.worker-none-time').value = pN; f.querySelector('.worker-move-time').value = pM; calcWD(f); } } names.slice(1).forEach(name => { const r = mkWorker(name); r.querySelector('.worker-start-time').value = pS; r.querySelector('.worker-end-time').value = pE; r.querySelector('.worker-none-time').value = pN; r.querySelector('.worker-move-time').value = pM; con.insertBefore(r, ba); calcWD(r); }); updRmBtns(); }
+    if (tLine) {
+      const m = tLine.match(/(\d{1,2}:\d{2})\s*[-~]\s*(\d{1,2}:\d{2})/);
+      if (m) { pS = m[1].padStart(5,'0'); pE = m[2].padStart(5,'0'); }
+      const nm = tLine.match(/논\s*(\d+)/); const mm = tLine.match(/무브\s*(\d+)/);
+      if (nm) pN = +nm[1]; if (mm) pM = +mm[1];
+    }
+    if (wLine) {
+      const names = wLine.replace(/^작업자\s*[:：]\s*/,'').split(/[,，、]/).map(s=>s.trim()).filter(Boolean);
+      const con = document.getElementById('task-mans-container'), ba = con.querySelector('.worker-bulk-actions');
+      $$('.task-man-container').slice(1).forEach(el => el.remove());
+      if (names[0]) {
+        const f = $('.task-man-container');
+        if (f) {
+          f.querySelector('.task-man-input').value = names[0];
+          if (pS) f.querySelector('.worker-start-time').value = pS;
+          if (pE) f.querySelector('.worker-end-time').value = pE;
+          f.querySelector('.worker-none-time').value = pN;
+          f.querySelector('.worker-move-time').value = pM;
+          calcWD(f);
+        }
+      }
+      names.slice(1).forEach(name => {
+        const r = mkWorker(name);
+        r.querySelector('.worker-start-time').value = pS;
+        r.querySelector('.worker-end-time').value = pE;
+        r.querySelector('.worker-none-time').value = pN;
+        r.querySelector('.worker-move-time').value = pM;
+        con.insertBefore(r, ba);
+        calcWD(r);
+      });
+      updRmBtns();
+    }
     goStep(4);
+    scheduleReworkCheck();
   }
-  function fillDyn(cid, isel, ic, rc, aid, lines) { if (!lines.length) return; const c = document.getElementById(cid), b = document.getElementById(aid); c.querySelectorAll(`.${ic}`).forEach(el => el.remove()); const d = document.createElement('div'); d.className = ic; d.innerHTML = `<textarea class="${isel.replace('.','')}" rows="4"></textarea><button type="button" class="btn-remove ${rc}">−</button>`; d.querySelector('textarea').value = lines.join('\n'); d.querySelector(`.${rc}`).addEventListener('click', () => d.remove()); c.insertBefore(d, b); }
+
+  function fillDyn(cid, isel, ic, rc, aid, lines) {
+    if (!lines.length) return;
+    const c = document.getElementById(cid), b = document.getElementById(aid);
+    c.querySelectorAll(`.${ic}`).forEach(el => el.remove());
+    const d = document.createElement('div');
+    d.className = ic;
+    d.innerHTML = `<textarea class="${isel.replace('.','')}" rows="4"></textarea><button type="button" class="btn-remove ${rc}">−</button>`;
+    d.querySelector('textarea').value = lines.join('\n');
+    d.querySelector(`.${rc}`).addEventListener('click', () => d.remove());
+    c.insertBefore(d, b);
+  }
+
 
   /* ══ Equipment Modal ══ */
   document.querySelector('.equipment-add-modal-close')?.addEventListener('click', () => document.getElementById('equipment-add-modal')?.classList.remove('active'));

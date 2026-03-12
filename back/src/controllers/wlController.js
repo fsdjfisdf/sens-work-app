@@ -145,9 +145,7 @@ exports.getReworkCandidates = async (req, res) => {
     const days = Math.min(Math.max(Number(req.query.days) || 14, 1), 60);
     const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 20);
 
-    if (!taskName || !taskCause || !taskDate) {
-      return res.json({ rows: [], total: 0 });
-    }
+    if (!taskName || !taskCause || !taskDate) return res.json({ rows: [], total: 0 });
 
     const result = await wlDao.findReworkCandidates({
       task_name: taskName,

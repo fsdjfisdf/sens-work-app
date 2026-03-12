@@ -19,6 +19,7 @@ router.get('/approvers', jwt, ctrl.getApprovers);
 
 // 제출
 router.post('/submit', jwt, ctrl.submit);
+router.get('/rework-candidates', jwt, ctrl.getReworkCandidates);
 
 // 대기 목록 / 반려 목록
 router.get('/pending',        jwt, ctrl.listPending);
