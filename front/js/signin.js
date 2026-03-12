@@ -52,7 +52,7 @@ async function signIn(event) {
     }
 
     alert(signInReturn.data.message);
-    window.location.replace("./user_info.html");
+    window.location.replace("./SECM_myself.html");
   } catch (error) {
     if (error.response && error.response.status === 429) {
       alert(error.response.data.message); // 차단 메시지
