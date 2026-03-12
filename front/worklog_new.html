@@ -106,14 +106,16 @@
         <div class="rework-suspect-head">
           <div>
             <strong>REWORK 의심 이력</strong>
-            <p id="rework-suspect-message">2주 이내 동일한 TITLE + 동일한 CAUSE의 MAINT 이력이 있으면 여기 표시됩니다.</p>
+            <p id="rework-suspect-message">2주 이내 동일 TITLE + 동일 CAUSE의 MAINT 이력이 있으면 여기 표시됩니다.</p>
           </div>
-          <button type="button" id="rework-suspect-refresh" class="btn-chip">다시 확인</button>
+          <div class="rework-suspect-actions">
+            <button type="button" id="rework-suspect-open" class="btn-chip hidden">관련 이력 보기</button>
+            <button type="button" id="rework-suspect-refresh" class="btn-chip">다시 확인</button>
+          </div>
         </div>
-        <div id="rework-suspect-list" class="rework-suspect-list"></div>
       </div>
       <div id="task-results-container" class="form-group"><label class="group-label">RESULT</label><div class="task-result-item"><textarea class="task-result-input" rows="3" required></textarea><button type="button" class="btn-remove remove-result" disabled>−</button></div><button type="button" id="add-result" class="btn-add">결과 추가 +</button></div>
-      <div class="form-row rework-row"><label><input type="checkbox" id="is-rework">&nbsp;이 작업은 <strong>Rework</strong>입니다</label><small class="help">MAINT 작성 중 2주 이내 동일 TITLE + 동일 CAUSE 이력이 보이면 작업자가 직접 판단해서 체크하세요.</small>
+      <div class="form-row rework-row"><label><input type="checkbox" id="is-rework">&nbsp;이 작업은 <strong>Rework</strong>입니다</label><small class="help">2주 이내 동일 TITLE + 동일 CAUSE의 MAINT 이력이 있으면 관련 이력을 확인한 뒤 작업자가 직접 판단해서 체크하세요.</small>
         <div id="rework-reason-row" class="hidden" style="margin-top:10px;">
           <label style="font-size:12px;font-weight:800;color:var(--muted);margin-bottom:6px;display:block;">REWORK 사유</label>
           <select id="rework-reason" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;">
@@ -123,10 +125,8 @@
             <option value="Part error">Part error</option>
             <option value="원인 모름">원인 모름</option>
           </select>
-          <label style="font-size:12px;font-weight:800;color:var(--muted);margin:12px 0 6px;display:block;">REWORK 상세 원인</label>
-          <textarea id="rework-detail" rows="3" placeholder="예: 체결 순서를 놓쳐 O-ring 재조립 필요" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r);font-size:14px;resize:vertical;"></textarea>
-          <div id="rework-ref-info" class="rework-ref-info hidden"></div>
         </div>
+        <div id="rework-ref-info" class="hidden"></div>
       </div>
       <div class="form-buttons"><button type="button" class="btn prev-step">← 이전</button><button type="button" id="preview-save" class="btn primary">미리보기</button><button type="submit" id="save-button" style="display:none">저장</button></div>
     </div>
@@ -164,6 +164,8 @@
   <div class="modal-buttons"><button type="button" id="confirm-save" class="btn primary">결재 요청</button><button type="button" id="cancel-save" class="btn">CANCEL</button></div>
 </div>
 <div class="print-container" id="result-modal"><h2>완료</h2><p><span id="result-msg"></span></p><p id="result-code" style="font-size:.9em;color:var(--muted);"></p><div class="modal-buttons"><button type="button" id="result-ok" class="btn primary">확인</button></div></div>
+
+<div class="print-container rework-suspect-modal" id="rework-suspect-modal"><div class="rework-modal-head"><div><h2>REWORK 의심 이력</h2><p id="rework-suspect-modal-message" class="rework-modal-message">관련 작업이력 목록</p></div><button type="button" id="rework-suspect-close" class="picker-close-btn">×</button></div><div id="rework-suspect-list" class="rework-suspect-list"></div><div class="modal-buttons"><button type="button" id="rework-suspect-close-footer" class="btn">닫기</button></div></div>
 
 <div id="popup"><h3>PASTE INFORM</h3><div class="guide">붙여넣기 형식으로 입력 후 WRITE 클릭</div><textarea id="paste-textarea" placeholder="EPAB515 PM1 ..."></textarea><div class="toolbar"><div class="left"><button id="paste-submit" class="btn primary sm">WRITE</button><button id="paste-cancel" class="btn sm">CANCEL</button></div><div class="meta"><span id="paste-lines">0</span> lines · <span id="paste-chars">0</span> chars</div></div></div>
 

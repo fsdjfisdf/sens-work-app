@@ -116,7 +116,6 @@ exports.submit = async (req, res) => {
       move_time:        Number(body.move_time) || 0,
       is_rework:        body.is_rework ? 1 : 0,
       rework_reason:    body.rework_reason || null,
-      rework_detail:    body.rework_detail || null,
       rework_seq:       Number(body.rework_seq) || 0,
       rework_ref_id:    body.rework_ref_id || null,
       created_by:       createdBy,

@@ -137,6 +137,46 @@ const normalizeCompareText = (v) => String(v || '')
   .trim()
   .toLowerCase();
 
+exports.findReworkCandidates = async ({ task_name, task_cause, task_date, days = 14, limit = 8 }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    const titleNorm = normalizeCompareText(task_name);
+    const causeNorm = normalizeCompareText(task_cause);
+
+    const sql = `
+      SELECT
+        e.id,
+        e.work_code,
+        e.task_name,
+        e.task_date,
+        e.site,
+        e.\`line\`,
+        e.equipment_type,
+        e.equipment_name,
+        e.task_cause,
+        e.task_result,
+        e.is_rework,
+        e.rework_reason,
+        DATEDIFF(?, e.task_date) AS days_diff,
+        GROUP_CONCAT(CONCAT(w.engineer_name, '(', w.role, ')') ORDER BY w.id SEPARATOR ', ') AS workers_str
+      FROM wl_event e
+      LEFT JOIN wl_worker w ON w.event_id = e.id
+      WHERE e.approval_status = 'APPROVED'
+        AND e.work_type = 'MAINT'
+        AND e.task_date >= DATE_SUB(?, INTERVAL ? DAY)
+        AND e.task_date <= ?
+        AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(IFNULL(e.task_name, ''), ' ', ''), CHAR(10), ''), CHAR(13), ''), CHAR(9), '')) = ?
+        AND LOWER(REPLACE(REPLACE(REPLACE(REPLACE(IFNULL(e.task_cause, ''), ' ', ''), CHAR(10), ''), CHAR(13), ''), CHAR(9), '')) = ?
+      GROUP BY e.id
+      ORDER BY e.task_date DESC, e.id DESC
+      LIMIT ?
+    `;
+
+    const [rows] = await conn.query(sql, [task_date, task_date, Number(days) || 14, task_date, titleNorm, causeNorm, Number(limit) || 8]);
+    return { rows, total: rows.length };
+  } finally { conn.release(); }
+};
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 결재 대기 제출  →  wl_event + wl_worker + wl_work_item + wl_part
@@ -171,7 +211,7 @@ exports.submitEvent = async (payload) => {
         status, task_description, task_cause, task_result,
         SOP, tsguide,
         start_time, end_time, none_time, move_time,
-        is_rework, rework_reason, rework_detail, rework_seq, rework_ref_id,
+        is_rework, rework_reason, rework_seq, rework_ref_id,
         approval_status, created_by
       ) VALUES (
         ?, ?, ?, ?,
@@ -181,7 +221,7 @@ exports.submitEvent = async (payload) => {
         ?, ?, ?, ?,
         ?, ?,
         ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?,
         'PENDING', ?
       )`,
       [
@@ -208,7 +248,6 @@ exports.submitEvent = async (payload) => {
         evStartTime, evEndTime, evNoneTime, evMoveTime,
         payload.is_rework ? 1 : 0,
         payload.rework_reason || null,
-        payload.rework_detail || null,
         Number(payload.rework_seq) || 0,
         payload.rework_ref_id || null,
         payload.created_by || null,
@@ -374,7 +413,7 @@ const ALLOWED_PATCH_FIELDS = [
   'status', 'task_description', 'task_cause', 'task_result',
   'SOP', 'tsguide',
   'start_time', 'end_time', 'none_time', 'move_time',
-  'is_rework', 'rework_reason', 'rework_detail', 'rework_seq', 'rework_ref_id',
+  'is_rework', 'rework_reason', 'rework_seq', 'rework_ref_id',
 ];
 
 exports.patchEvent = async (id, patch) => {
@@ -632,78 +671,6 @@ exports.listMyRejected = async (userIdx) => {
   } finally { conn.release(); }
 };
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// REWORK 의심 이력 조회 (동일 TITLE + 동일 CAUSE의 MAINT 이력)
-// 공백/대소문자/줄바꿈 차이는 무시
-// ─────────────────────────────────────────────────────────────────────────────
-
-exports.findReworkCandidates = async ({ task_name, task_cause, task_date, days = 14, limit = 8 }) => {
-  const conn = await pool.getConnection(async c => c);
-  try {
-    if (!task_date) return { total: 0, rows: [] };
-
-    const normalizedTitle = normalizeCompareText(task_name);
-    const normalizedCause = normalizeCompareText(task_cause);
-    if (!normalizedTitle || !normalizedCause) return { total: 0, rows: [] };
-
-    const safeDays = Math.min(Math.max(Number(days) || 14, 1), 60);
-    const vals = [normalizedTitle, normalizedCause, task_date, safeDays, task_date];
-
-    const normalizeSql = "LOWER(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(%COL%, ''), CHAR(13), ''), CHAR(10), ''), CHAR(9), ''), ' ', ''))";
-    const titleExpr = normalizeSql.replace('%COL%', 'e.task_name');
-    const causeExpr = normalizeSql.replace('%COL%', 'e.task_cause');
-
-    const [rows] = await conn.query(
-      `SELECT
-         e.id,
-         e.work_code,
-         e.task_date,
-         e.task_name,
-         e.task_cause,
-         e.task_result,
-         e.site,
-         e.\`line\`,
-         e.equipment_type,
-         e.equipment_name,
-         e.is_rework,
-         e.rework_reason,
-         e.approval_status,
-         GROUP_CONCAT(DISTINCT w.engineer_name ORDER BY w.id SEPARATOR ', ') AS workers_str
-       FROM wl_event e
-       LEFT JOIN wl_worker w ON w.event_id = e.id
-       WHERE e.approval_status = 'APPROVED'
-         AND e.work_type = 'MAINT'
-         AND ${titleExpr} = ?
-         AND ${causeExpr} = ?
-         AND e.task_date >= DATE_SUB(?, INTERVAL ? DAY)
-         AND e.task_date <= ?
-       GROUP BY e.id
-       ORDER BY e.task_date DESC, e.id DESC
-       LIMIT 100`,
-      vals
-    );
-
-    const filtered = rows.filter(row =>
-      normalizeCompareText(row.task_name) === normalizedTitle &&
-      normalizeCompareText(row.task_cause) === normalizedCause
-    );
-
-    const baseDate = task_date ? new Date(task_date) : null;
-    const withDays = filtered.map(row => {
-      const rowDate = row.task_date ? new Date(row.task_date) : null;
-      const daysDiff = (baseDate && rowDate)
-        ? Math.max(0, Math.floor((baseDate - rowDate) / 86400000))
-        : null;
-      return { ...row, days_diff: daysDiff };
-    });
-
-    return {
-      total: withDays.length,
-      rows: withDays.slice(0, Math.min(Math.max(Number(limit) || 8, 1), 20)),
-    };
-  } finally { conn.release(); }
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // [추가] 전체 이벤트 조회 (wl_read 페이지용 — 승인 완료 건 + 필터)
