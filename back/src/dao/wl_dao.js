@@ -133,6 +133,13 @@ exports.getPartsByEqType = async (equipmentType) => {
 };
 
 
+const normalizeCompareText = (v) => String(v || '')
+  .replace(/\r/g, ' ')
+  .replace(/\n+/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .toLowerCase();
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 결재 대기 제출  →  wl_event + wl_worker + wl_work_item + wl_part
 // [수정] 작업자별 none_time, move_time 지원
@@ -629,6 +636,66 @@ exports.listMyRejected = async (userIdx) => {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REWORK 의심 이력 조회 (동일 TITLE + 동일 CAUSE의 MAINT 이력)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.findReworkCandidates = async ({ task_name, task_cause, task_date, days = 14, limit = 8 }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    if (!task_date) return { total: 0, rows: [] };
+
+    const safeDays = Math.min(Math.max(Number(days) || 14, 1), 60);
+    const vals = [String(task_name || '').trim(), task_date, safeDays, task_date];
+
+    const [rows] = await conn.query(
+      `SELECT
+         e.id,
+         e.work_code,
+         e.task_date,
+         e.task_name,
+         e.task_cause,
+         e.task_result,
+         e.site,
+         e.\`line\`,
+         e.equipment_type,
+         e.equipment_name,
+         e.is_rework,
+         e.rework_reason,
+         e.approval_status,
+         GROUP_CONCAT(DISTINCT w.engineer_name ORDER BY w.id SEPARATOR ', ') AS workers_str
+       FROM wl_event e
+       LEFT JOIN wl_worker w ON w.event_id = e.id
+       WHERE e.approval_status = 'APPROVED'
+         AND e.work_type = 'MAINT'
+         AND TRIM(e.task_name) = TRIM(?)
+         AND e.task_date >= DATE_SUB(?, INTERVAL ? DAY)
+         AND e.task_date <= ?
+       GROUP BY e.id
+       ORDER BY e.task_date DESC, e.id DESC
+       LIMIT 100`,
+      vals
+    );
+
+    const targetCause = normalizeCompareText(task_cause);
+    const filtered = rows.filter(row => normalizeCompareText(row.task_cause) === targetCause);
+    const baseDate = task_date ? new Date(task_date) : null;
+    const withDays = filtered.map(row => {
+      const rowDate = row.task_date ? new Date(row.task_date) : null;
+      const daysDiff = (baseDate && rowDate)
+        ? Math.max(0, Math.floor((baseDate - rowDate) / 86400000))
+        : null;
+      return { ...row, days_diff: daysDiff };
+    });
+
+    return {
+      total: withDays.length,
+      rows: withDays.slice(0, Math.min(Math.max(Number(limit) || 8, 1), 20)),
+    };
+  } finally { conn.release(); }
+};
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // [추가] 전체 이벤트 조회 (wl_read 페이지용 — 승인 완료 건 + 필터)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -828,8 +895,6 @@ exports.listEventsForExcel = async (filters = {}) => {
         e.SOP,
         e.tsguide,
         CASE WHEN e.is_rework = 1 THEN 'Y' ELSE 'N' END AS is_rework,
-        e.rework_reason,
-        e.rework_detail,
         e.rework_seq,
         (SELECT GROUP_CONCAT(IFNULL(m.item_name, wi.item_name_free) ORDER BY wi.id SEPARATOR ', ')
          FROM wl_work_item wi LEFT JOIN wl_work_item_master m ON m.id = wi.master_id

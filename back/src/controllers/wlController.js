@@ -135,6 +135,35 @@ exports.submit = async (req, res) => {
 };
 
 
+// ─── REWORK 의심 이력 조회 ───────────────────────────────────────────────────
+// GET /wl/rework-candidates?task_name=&task_cause=&task_date=&days=14&limit=8
+exports.getReworkCandidates = async (req, res) => {
+  try {
+    const taskName = String(req.query.task_name || '').trim();
+    const taskCause = String(req.query.task_cause || '').trim();
+    const taskDate = String(req.query.task_date || '').trim();
+    const days = Math.min(Math.max(Number(req.query.days) || 14, 1), 60);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 8, 1), 20);
+
+    if (!taskName || !taskCause || !taskDate) {
+      return res.json({ rows: [], total: 0 });
+    }
+
+    const result = await wlDao.findReworkCandidates({
+      task_name: taskName,
+      task_cause: taskCause,
+      task_date: taskDate,
+      days,
+      limit,
+    });
+    res.json(result);
+  } catch (e) {
+    console.error('getReworkCandidates error:', e);
+    res.status(500).json({ error: 'REWORK 의심 이력 조회 오류' });
+  }
+};
+
+
 // ─── 대기 목록 ───────────────────────────────────────────────────────────────
 exports.listPending = async (req, res) => {
   try {
