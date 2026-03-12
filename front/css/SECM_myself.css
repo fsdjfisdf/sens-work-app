@@ -14,7 +14,7 @@ body{
   margin:0;background:var(--bg);color:var(--text);
   font-family:"Pretendard Variable",Pretendard,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   -webkit-font-smoothing:antialiased;
-  padding-top: calc(var(--nav-h) + var(--safe-top) + 60px);
+  padding-top: calc(var(--nav-h) + var(--safe-top) + 20px);
   padding-bottom:var(--safe-bottom);
   line-height:1.5;font-size:14px;
 }
@@ -70,6 +70,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:var(--z-nav);background:var(--na
 .chart-card:hover{box-shadow:var(--sm)}
 .chart-card canvas{width:100%!important;max-height:320px}
 .chart-card.tall canvas{max-height:420px}
+.chart-card.rank-card canvas{max-height:320px}
+#admin-top-link{height:28px;padding:0 10px}
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .chart-header h3{font-size:13px;font-weight:950;margin:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .h3-meta{font-size:11px;font-weight:900;color:var(--muted)}

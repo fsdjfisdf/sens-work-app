@@ -598,7 +598,7 @@ async function engGetWorkerDurationColumn() {
 }
 
 async function engGetMonthlyEqCapability(engineerId, eqId) {
-  if (!engineerId || !eqId) return { rows: [], unit: 'capa', source: 'none' };
+  if (!engineerId) return { rows: [], unit: 'capa', source: 'none' };
   const candidates = [
     { table: 'monthly_eq_capability', eqCols: ['eq_id', 'equipment_id'] },
     { table: 'monthly_capability', eqCols: ['eq_id', 'equipment_id'] },
@@ -608,7 +608,7 @@ async function engGetMonthlyEqCapability(engineerId, eqId) {
     const cols = await engGetColumns(cfg.table);
     if (!cols.has('engineer_id') || !cols.has('ym') || !cols.has('setup_score') || !cols.has('maint_score')) continue;
     const eqCol = cfg.eqCols.find(c => cols.has(c));
-    if (!eqCol) continue;
+    if (!eqCol || !eqId) continue;
     const totalExpr = cols.has('total_score')
       ? 'total_score AS total'
       : `(CASE
@@ -625,6 +625,29 @@ async function engGetMonthlyEqCapability(engineerId, eqId) {
     );
     if (rows.length) return { rows: engNormalizeMonthlyRows(rows), unit: 'capa', source: cfg.table };
   }
+
+  // Fallback: engineer-level monthly capability trend (still capability data, not worklog)
+  if (await engHasTable('monthly_capability')) {
+    const cols = await engGetColumns('monthly_capability');
+    if (cols.has('engineer_id') && cols.has('ym') && cols.has('setup_score') && cols.has('maint_score')) {
+      const totalExpr = cols.has('total_score')
+        ? 'total_score AS total'
+        : `(CASE
+              WHEN setup_score IS NULL AND maint_score IS NULL THEN NULL
+              WHEN setup_score IS NOT NULL AND maint_score IS NOT NULL THEN (setup_score + maint_score) / 2
+              ELSE COALESCE(setup_score, maint_score)
+            END) AS total`;
+      const [rows] = await pool.query(
+        `SELECT ym, setup_score AS setup, maint_score AS maint, ${totalExpr}
+         FROM monthly_capability
+         WHERE engineer_id = ?
+         ORDER BY ym`,
+        [engineerId]
+      );
+      if (rows.length) return { rows: engNormalizeMonthlyRows(rows), unit: 'capa', source: 'monthly_capability_fallback' };
+    }
+  }
+
   return { rows: [], unit: 'capa', source: 'none' };
 }
 

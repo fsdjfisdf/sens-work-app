@@ -37,6 +37,14 @@ async function fetchMyDashboard(){
   throw lastErr;
 }
 
+function isAdminUser(payload){
+  if(!payload) return false;
+  const role = [payload.role, payload.ROLE, payload.user_role, payload.authority, payload.auth].find(v=>v!=null);
+  const r = String(role || '').toLowerCase();
+  return r === 'admin' || r === 'administrator' || r === 'super' ||
+         payload.isAdmin === true || payload.is_admin === 1 || payload.admin === true;
+}
+
 function toast(type, msg){
   const root = qs('#toast-root'); if(!root) return;
   const t = document.createElement('div');
@@ -54,6 +62,9 @@ function toast(type, msg){
   const signed = qs('.sign-container.signed');
   const unsigned = qs('.sign-container.unsigned');
   if(token){ signed?.classList.remove('hidden'); unsigned?.classList.add('hidden'); }
+  const showAdmin = isAdminUser(me);
+  qs('#admin-menu-link')?.classList.toggle('hidden', !showAdmin);
+  qs('#admin-top-link')?.classList.toggle('hidden', !showAdmin);
   btn?.addEventListener('click', ()=> bar?.classList.toggle('open'));
   qs('#sign-out')?.addEventListener('click', ()=>{
     localStorage.removeItem('x-access-token');
@@ -67,17 +78,27 @@ Chart.defaults.set('plugins.datalabels', { display: false });
 
 /* Palette (muted, premium) */
 const C = {
-  blue:'rgba(37,99,235,.70)',
-  red:'rgba(239,68,68,.75)',
-  green:'rgba(34,197,94,.70)',
-  amber:'rgba(245,158,11,.70)',
-  slate:'rgba(100,116,139,.70)',
-  fillBlue:'rgba(37,99,235,.18)',
-  fillRed:'rgba(239,68,68,.18)',
-  fillSlate:'rgba(100,116,139,.16)',
-  rankGray:'rgba(203,213,225,.42)',
-  set:['rgba(37,99,235,.65)','rgba(100,116,139,.65)','rgba(34,197,94,.65)','rgba(245,158,11,.65)','rgba(239,68,68,.65)','rgba(139,92,246,.65)','rgba(6,182,212,.65)']
+  blue:'rgba(59,130,246,.72)',
+  red:'rgba(220,38,38,.78)',
+  slate:'rgba(100,116,139,.72)',
+  fillBlue:'rgba(59,130,246,.16)',
+  fillRed:'rgba(220,38,38,.14)',
+  fillSlate:'rgba(100,116,139,.14)',
+  rankGray:'rgba(226,232,240,.75)',
+  premium:[
+    'rgba(59,130,246,.58)',
+    'rgba(99,102,241,.54)',
+    'rgba(14,165,233,.52)',
+    'rgba(71,85,105,.56)',
+    'rgba(148,163,184,.56)',
+    'rgba(15,118,110,.54)',
+    'rgba(139,92,246,.50)',
+    'rgba(51,65,85,.58)',
+    'rgba(30,64,175,.54)',
+    'rgba(67,56,202,.50)'
+  ]
 };
+function premiumColors(n){ return Array.from({length:n}, (_,i)=> C.premium[i % C.premium.length]); }
 
 const charts = {};
 
@@ -179,7 +200,7 @@ function barH(id, labels, data, opts={}){
         label: opts.label || '',
         data,
         borderRadius:8,
-        backgroundColor: opts.colors || C.blue
+        backgroundColor: opts.colors || (opts.variedColors ? premiumColors(labels.length) : C.blue)
       }]
     },
     options:{
@@ -299,7 +320,7 @@ function donut(id, labels, values){
 
   charts[id] = new Chart(el,{
     type:'doughnut',
-    data:{ labels, datasets:[{ data: values, backgroundColor: labels.map((_,i)=>C.set[i % C.set.length]), borderWidth:0 }]},
+    data:{ labels, datasets:[{ data: values, backgroundColor: premiumColors(labels.length), borderWidth:0 }]},
     options:{
       responsive:true,
       maintainAspectRatio:false,
@@ -446,15 +467,6 @@ async function load(){
     const myMonthMin = mh ? Number(mh.total_minutes||0) : 0;
     const myMonthEvents = mh ? Number(mh.event_count||0) : 0;
 
-    qs('#kpi-month-hours').textContent = fmtHours(myMonthMin);
-    qs('#kpi-month-events').textContent = `이번달 작업 ${myMonthEvents}건`;
-    qs('#kpi-time-rank').textContent = tr.rank ? `${tr.rank} / ${tr.total}` : '-';
-    qs('#kpi-time-top').textContent = tr.pct ? `TOP ${tr.pct}%` : '-';
-    qs('#kpi-task-rank').textContent = kr.rank ? `${kr.rank} / ${kr.total}` : '-';
-    qs('#kpi-task-top').textContent = kr.pct ? `TOP ${kr.pct}%` : '-';
-    qs('#meta-time-rank').textContent = `내 ${fmtHours(tr.myVal)} · TOP ${tr.pct ?? '-'}%`;
-    qs('#meta-task-rank').textContent = `내 ${kr.myVal}건 · TOP ${kr.pct ?? '-'}%`;
-
     // 1) Equipment capability (vertical grouped bars)
     const eqCap = (data.capability?.eqCapability || []).filter(r=>r.setup!=null || r.maint!=null);
     const eqLabels = eqCap.map(r=>r.eq);
@@ -476,7 +488,7 @@ async function load(){
     const mMain = data.capability?.monthlyMain || [];
     const mainUnit = data.capability?.monthlyMainUnit || 'capa';
     const mainSource = data.capability?.monthlyMainSource || 'none';
-    if(mainUnit !== 'capa' || mainSource === 'worklog'){
+    if(mainUnit !== 'capa' || !mMain.length){
       setNoData('chart-monthly-main');
     } else {
       const mLabels = mMain.map(r=>r.ym);
@@ -485,14 +497,12 @@ async function load(){
       const mRatio = isRatioLike([...mSetupRaw.filter(v=>v!=null), ...mMaintRaw.filter(v=>v!=null)]);
       const mSetup = mRatio ? mSetupRaw.map(v=>v==null?null:toPct(v)) : mSetupRaw;
       const mMaint = mRatio ? mMaintRaw.map(v=>v==null?null:toPct(v)) : mMaintRaw;
-
+      qs('#meta-monthly-main').textContent = mainSource === 'monthly_capability_fallback' ? '전체 월별 CAPA 기준' : (p.main_eq || '-');
       line('chart-monthly-main', mLabels, [
         { label:'SET UP', data:mSetup, borderColor:C.blue, backgroundColor:C.fillBlue, tension:.35, fill:false },
         { label:'MAINT', data:mMaint, borderColor:C.slate, backgroundColor:C.fillSlate, tension:.35, fill:false },
       ], { labelMode:'last', formatter:(v)=> mRatio?`${fmt1(v)}%`:fmt1(v) });
     }
-
-    // 6) Monthly avg capa + goal
 
     // 6) Monthly avg capa + goal
     const mAvg = data.capability?.monthlyAvg || [];
@@ -590,29 +600,28 @@ async function load(){
 
     // 13~15 Group/Site/Line (horizontal)
     const g = data.work?.byGroup || [];
-    barH('chart-group', g.map(r=>r.label), g.map(r=>Number(r.cnt||0)), { percentTotal: g.reduce((a,b)=>a+Number(b.cnt||0),0) });
+    barH('chart-group', g.map(r=>r.label), g.map(r=>Number(r.cnt||0)), { percentTotal: g.reduce((a,b)=>a+Number(b.cnt||0),0), variedColors:true });
 
     const s = data.work?.bySite || [];
-    barH('chart-site', s.map(r=>r.label), s.map(r=>Number(r.cnt||0)), { percentTotal: s.reduce((a,b)=>a+Number(b.cnt||0),0) });
+    barH('chart-site', s.map(r=>r.label), s.map(r=>Number(r.cnt||0)), { percentTotal: s.reduce((a,b)=>a+Number(b.cnt||0),0), variedColors:true });
 
     const l = data.work?.byLine || [];
-    barH('chart-line', l.map(r=>r.label), l.map(r=>Number(r.cnt||0)), { percentTotal: l.reduce((a,b)=>a+Number(b.cnt||0),0) });
+    barH('chart-line', l.map(r=>r.label), l.map(r=>Number(r.cnt||0)), { percentTotal: l.reduce((a,b)=>a+Number(b.cnt||0),0), variedColors:true });
 
     // 16~17 shift/overtime (horizontal + percent)
     const sh = data.work?.byShift || [];
-    barH('chart-shift', sh.map(r=>r.label), sh.map(r=>Number(r.cnt||0)), { percentTotal: sh.reduce((a,b)=>a+Number(b.cnt||0),0) });
+    barH('chart-shift', sh.map(r=>r.label), sh.map(r=>Number(r.cnt||0)), { percentTotal: sh.reduce((a,b)=>a+Number(b.cnt||0),0), variedColors:true });
 
     const ot = data.work?.byOvertime || [];
-    barH('chart-overtime', ot.map(r=>r.label), ot.map(r=>Number(r.cnt||0)), { percentTotal: ot.reduce((a,b)=>a+Number(b.cnt||0),0) });
+    barH('chart-overtime', ot.map(r=>r.label), ot.map(r=>Number(r.cnt||0)), { percentTotal: ot.reduce((a,b)=>a+Number(b.cnt||0),0), variedColors:true });
 
     // 18 eq type (horizontal)
     const eqt = data.work?.byEqType || [];
-    barH('chart-eqtype', eqt.slice(0,12).map(r=>r.label), eqt.slice(0,12).map(r=>Number(r.cnt||0)), { percentTotal: eqt.reduce((a,b)=>a+Number(b.cnt||0),0) });
-
+    barH('chart-eqtype', eqt.slice(0,12).map(r=>r.label), eqt.slice(0,12).map(r=>Number(r.cnt||0)), { percentTotal: eqt.reduce((a,b)=>a+Number(b.cnt||0),0), variedColors:true });
   }catch(e){
     console.error(e);
     if(e?.response?.status===401){ location.href='./signin.html'; return; }
-    if(e?.response?.status===404){ toast('error','개인 대시보드 API가 서버에 없습니다. analyticsRoute / analyticsController / analyticsDao도 함께 반영해야 합니다.'); return; }
+    if(e?.response?.status===404){ toast('error','개인 대시보드 API가 서버에 없습니다. 백엔드 route/controller/dao도 같이 반영해야 합니다.'); return; }
     toast('error', e?.response?.data?.error || '데이터 로딩 실패');
   }
 }

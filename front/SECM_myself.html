@@ -20,7 +20,7 @@
   <div class="menu-bar">
     <div class="menu-bar-content">
       <a href="./SECM_myself.html" class="menu-item active-page">MY SECM</a>
-      <a href="./analytics.html" class="menu-item">Analytics (Admin)</a>
+      <a href="./analytics.html" id="admin-menu-link" class="menu-item hidden">Analytics (Admin)</a>
       <a href="./worklog_new.html" class="menu-item">Create Worklog</a>
       <a href="./wl_read.html" class="menu-item">Load Worklog</a>
       <button id="sign-out" class="menu-item">Logout</button>
@@ -35,27 +35,9 @@
         <h2>내 정보</h2>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="h3-meta" id="profile-sub">SECM</span>
+          <a href="./analytics.html" id="admin-top-link" class="menu-item hidden">Analytics (Admin)</a>
         </div>
       </div>
-
-      <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-label">이번달 근무 시간</div>
-          <div class="kpi-value" id="kpi-month-hours">-</div>
-          <div class="kpi-sub" id="kpi-month-events">-</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">TIME RANK</div>
-          <div class="kpi-value" id="kpi-time-rank">-</div>
-          <div class="kpi-sub" id="kpi-time-top">-</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">TASK RANK</div>
-          <div class="kpi-value" id="kpi-task-rank">-</div>
-          <div class="kpi-sub" id="kpi-task-top">-</div>
-        </div>
-      </div>
-
       <div class="profile-grid" id="profile-grid"></div>
     </div>
 
@@ -64,7 +46,7 @@
     <div class="chart-grid">
       <div class="chart-card"><div class="chart-header"><h3>설비별 역량</h3><button class="info-btn" data-desc="엔지니어의 설비별 SET UP/MAINT 역량 표현"><i class="fas fa-info-circle"></i></button></div><canvas id="chart-eq-cap"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>월별 MAIN SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 MAIN 설비 기준 월별 SET UP/MAINT 역량 추이입니다. 월별 설비 CAPA 데이터가 있는 경우에만 표시하며, 작업시간 같은 다른 수치로 대체하지 않습니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>월별 MAIN SET UP / MAINT <span class="h3-meta" id="meta-monthly-main">-</span></h3><button class="info-btn" data-desc="로그인한 엔지니어의 월별 SET UP 역량과 MAINT 역량 트렌드입니다. 월별 CAPA 데이터를 기준으로 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-main"></canvas></div>
 
       <div class="chart-card"><div class="chart-header"><h3>월별 평균 CAPA (목표 포함)</h3><button class="info-btn" data-desc="월별 CAPA(평균/총합) 추이와 연간 목표를 함께 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-monthly-avg"></canvas></div>
 
@@ -74,11 +56,11 @@
 
       <div class="chart-card"><div class="chart-header"><h3>Work Type</h3><button class="info-btn" data-desc="작업 유형 비중(도넛)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worktype"></canvas></div>
 
-      <div class="chart-card"><div class="chart-header"><h3>Work Sort (MAINT)</h3><button class="info-btn" data-desc="MAINT 작업 세부 분류(work_type2) 비중(도넛)입니다. 색상은 신호등 느낌을 줄이기 위해 차분한 팔레트로 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
+      <div class="chart-card"><div class="chart-header"><h3>Work Sort (MAINT)</h3><button class="info-btn" data-desc="MAINT 작업 세부 분류(work_type2) 비중(도넛)입니다. 색상은 차분한 반투명 팔레트로 표시합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-worksort"></canvas></div>
 
-      <div class="chart-card tall"><div class="chart-header"><h3>TIME RANK (이번달)</h3><span class="h3-meta" id="meta-time-rank">-</span><button class="info-btn" data-desc="이번달 전체 작업자의 총 작업시간 순위입니다. 이름은 숨기고 순위 번호만 표시하며, 내 막대만 빨간색으로 강조됩니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-time-rank"></canvas></div>
+      <div class="chart-card rank-card"><div class="chart-header"><h3>TIME RANK (이번달)</h3><button class="info-btn" data-desc="이번달 전체 작업자의 총 작업시간 순위입니다. 이름은 숨기고, 내 막대만 빨간색으로 강조합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-time-rank"></canvas></div>
 
-      <div class="chart-card tall"><div class="chart-header"><h3>TASK RANK (이번달)</h3><span class="h3-meta" id="meta-task-rank">-</span><button class="info-btn" data-desc="이번달 전체 작업자의 작업 건수 순위입니다. 이름은 숨기고 순위 번호만 표시하며, 내 막대만 빨간색으로 강조됩니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-task-rank"></canvas></div>
+      <div class="chart-card rank-card"><div class="chart-header"><h3>TASK RANK (이번달)</h3><button class="info-btn" data-desc="이번달 전체 작업자의 작업 건수 순위입니다. 이름은 숨기고, 내 막대만 빨간색으로 강조합니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-task-rank"></canvas></div>
 
       <div class="chart-card"><div class="chart-header"><h3>GROUP</h3><button class="info-btn" data-desc="내 작업 이력에서 GROUP 분포(SELECT 제외)입니다."><i class="fas fa-info-circle"></i></button></div><canvas id="chart-group"></canvas></div>
 
