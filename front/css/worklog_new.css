@@ -235,6 +235,193 @@ nav {
 .rework-row label { font-size: 14px; color: var(--text); cursor: pointer; display: flex; align-items: center; }
 .rework-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--danger); }
 
+/* ---------- Rework Detail / Suspect ---------- */
+#rework-reason-row,
+#rework-detail-row {
+  margin-top: 10px;
+}
+
+#rework-detail {
+  min-height: 88px;
+  resize: vertical;
+}
+
+#rework-ref-info {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+#rework-suspect-box {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+#rework-suspect-box .suspect-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+#rework-suspect-message {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #92400e;
+  font-weight: 700;
+}
+
+#rework-suspect-refresh {
+  flex-shrink: 0;
+}
+
+#rework-suspect-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.suspect-loading {
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.suspect-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+}
+
+.suspect-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.suspect-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.suspect-title-row strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.suspect-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.suspect-badge.warn {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+.suspect-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.suspect-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.suspect-use-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.suspect-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.suspect-body > div {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #eaeef4;
+}
+
+.suspect-label {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.suspect-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .suspect-card-head,
+  #rework-suspect-box .suspect-top {
+    flex-direction: column;
+  }
+
+  .suspect-use-btn,
+  #rework-suspect-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .suspect-title-row {
+    gap: 6px;
+  }
+}
+
 /* ---------- Dynamic textarea items ---------- */
 .task-desc-item, .task-cause-item, .task-result-item {
   display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px;
