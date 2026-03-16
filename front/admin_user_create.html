@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 계정 관리</title>
+  <link rel="stylesheet" href="./css/admin_user_create.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="panel">
+      <div class="header-row">
+        <div>
+          <p class="eyebrow">ADMIN ONLY</p>
+          <h1>사용자 계정 생성</h1>
+          <p class="subtext">admin 권한 사용자만 새로운 로그인 계정을 생성하고 비밀번호를 초기화할 수 있습니다.</p>
+        </div>
+        <button id="refresh-users" type="button" class="ghost-btn">목록 새로고침</button>
+      </div>
+
+      <form id="create-user-form" class="form-grid">
+        <input type="text" id="userID" placeholder="아이디" maxlength="20" required />
+        <input type="text" id="nickname" placeholder="닉네임" maxlength="10" required />
+        <input type="password" id="password" placeholder="초기 비밀번호" maxlength="16" required />
+        <input type="password" id="confirmPassword" placeholder="비밀번호 확인" maxlength="16" required />
+
+        <select id="group" required>
+          <option value="" disabled selected>GROUP 선택</option>
+          <option value="PEE1">PEE1</option>
+          <option value="PEE2">PEE2</option>
+          <option value="PSKH">PSKH</option>
+        </select>
+
+        <select id="site" required>
+          <option value="" disabled selected>SITE 선택</option>
+          <option value="PT">PT</option>
+          <option value="HS">HS</option>
+          <option value="IC">IC</option>
+          <option value="CJ">CJ</option>
+          <option value="PSKH">PSKH</option>
+        </select>
+
+        <input type="number" id="level" placeholder="레벨" min="0" step="1" required />
+        <input type="date" id="hireDate" required />
+
+        <select id="role" required>
+          <option value="worker" selected>worker</option>
+          <option value="editor">editor</option>
+          <option value="admin">admin</option>
+        </select>
+
+        <select id="status" required>
+          <option value="A" selected>A</option>
+          <option value="I">I</option>
+          <option value="D">D</option>
+        </select>
+
+        <button type="submit" class="primary-btn">계정 생성</button>
+      </form>
+
+      <p id="create-result" class="result-text"></p>
+    </section>
+
+    <section class="panel">
+      <div class="header-row">
+        <div>
+          <p class="eyebrow">PASSWORD RESET</p>
+          <h2>관리자 비밀번호 초기화</h2>
+        </div>
+      </div>
+
+      <form id="reset-password-form" class="form-grid reset-grid">
+        <input type="number" id="resetUserIdx" placeholder="대상 userIdx" min="1" required />
+        <input type="password" id="resetPassword" placeholder="새 비밀번호" maxlength="16" required />
+        <input type="password" id="resetPasswordConfirm" placeholder="새 비밀번호 확인" maxlength="16" required />
+        <button type="submit" class="primary-btn">비밀번호 초기화</button>
+      </form>
+
+      <p id="reset-result" class="result-text"></p>
+    </section>
+
+    <section class="panel">
+      <div class="header-row">
+        <div>
+          <p class="eyebrow">USER LIST</p>
+          <h2>현재 사용자 목록</h2>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>userIdx</th>
+              <th>userID</th>
+              <th>nickname</th>
+              <th>group</th>
+              <th>site</th>
+              <th>level</th>
+              <th>role</th>
+              <th>status</th>
+              <th>hire_date</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            <tr><td colspan="9">불러오는 중...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./js/admin_user_create.js"></script>
+</body>
+</html>

@@ -2,8 +2,9 @@ module.exports = function (app) {
     const index = require("../controllers/indexController");
     const jwtMiddleware = require("../../config/jwtMiddleware");
 
-    // 회원가입
-    app.post("/sign-up", index.createUsers);
+    // 관리자 전용 계정 생성
+    app.post("/sign-up", jwtMiddleware, index.createUsers);
+    app.post("/admin/users", jwtMiddleware, index.createUsers);
 
     // 로그인
     app.post("/sign-in", index.createJwt);
@@ -17,9 +18,9 @@ module.exports = function (app) {
     // 평균 정보 조회
     app.get("/average-info", jwtMiddleware, index.getAverageInfo);
 
-    // 모든 사용자 조회
+    // 모든 사용자 조회 (admin only)
     app.get("/users", jwtMiddleware, index.getAllUsers);
-    
+
     // 작업 시간 조회
     app.get("/worktime-by-date", jwtMiddleware, index.getWorkTimeByDate);
 
@@ -31,5 +32,7 @@ module.exports = function (app) {
 
     // 비밀번호 변경
     app.post("/change-password", jwtMiddleware, index.changePassword);
-    
+
+    // 관리자 비밀번호 초기화
+    app.post("/admin/reset-password", jwtMiddleware, index.adminResetPassword);
 };

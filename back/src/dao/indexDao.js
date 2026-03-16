@@ -13,38 +13,57 @@ exports.isValidUsers = async function (connection, userID) {
   return rows;
 };
 
-// 회원가입
-exports.insertUsers = async function (connection, userID, password, nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa) {
+// 회원가입 / 관리자 계정 생성
+exports.insertUsers = async function (connection, userID, password, nickname, group, site, level, hireDate, role, status) {
   const Query = `
-  INSERT INTO Users(
-    userID,
-    password,
-    password_changed_at,
-    nickname,
-    \`group\`,
-    site,
-    level,
-    hire_date,
-    main_set_up_capa,
-    main_maint_capa,
-    main_capa,
-    multi_set_up_capa,
-    multi_maint_capa,
-    multi_capa,
-    total_capa
-  )
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
-`;
-  const Params = [userID, password, new Date(), nickname, group, site, level, hireDate, mainSetUpCapa, mainMaintCapa, mainCapa, multiSetUpCapa, multiMaintCapa, multiCapa, totalCapa];
+    INSERT INTO Users(
+      userID,
+      password,
+      password_changed_at,
+      nickname,
+      \`group\`,
+      site,
+      level,
+      hire_date,
+      role,
+      status
+    )
+    VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?);
+  `;
 
+  const Params = [userID, password, nickname, group, site, level, hireDate, role, status];
   const rows = await connection.query(Query, Params);
-
   return rows;
+};
+
+exports.getUserByUserID = async function (connection, userID) {
+  const Query = `SELECT userIdx, userID, nickname, role, status FROM Users WHERE userID = ? LIMIT 1;`;
+  return await connection.query(Query, [userID]);
+};
+
+exports.getUserByNickname = async function (connection, nickname) {
+  const Query = `SELECT userIdx, userID, nickname, role, status FROM Users WHERE nickname = ? LIMIT 1;`;
+  return await connection.query(Query, [nickname]);
 };
 
 // 회원 정보 조회
 exports.getUserById = async function (connection, userIdx) {
-  const Query = `SELECT userID, nickname, role, \`group\`, site, level, hire_date, main_set_up_capa, main_maint_capa, main_capa, multi_set_up_capa, multi_maint_capa, multi_capa, total_capa FROM Users WHERE userIdx = ? AND status = 'A';`;
+  const Query = `
+    SELECT
+      userIdx,
+      userID,
+      nickname,
+      role,
+      \`group\`,
+      site,
+      level,
+      hire_date,
+      status,
+      created_at,
+      updated_at
+    FROM Users
+    WHERE userIdx = ? AND status = 'A';
+  `;
   const Params = [userIdx];
 
   const [rows] = await connection.query(Query, Params);
