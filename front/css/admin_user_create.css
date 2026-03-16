@@ -731,3 +731,105 @@ input[type="date"] { color-scheme: light; }
     scroll-behavior: auto !important;
   }
 }
+
+@media (max-width: 640px) {
+  /* iPhone 확대 방지 */
+  .form-row input,
+  .form-row select,
+  .btn,
+  .btn-chip {
+    font-size: 16px;
+  }
+
+  /* 테이블을 모바일 카드형으로 전환 */
+  .table-wrap {
+    overflow: visible;
+    border: none;
+    background: transparent;
+  }
+
+  .table-wrap table {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .table-wrap thead {
+    display: none;
+  }
+
+  .table-wrap tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .table-wrap tbody tr {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow-xs);
+    padding: 14px;
+  }
+
+  .table-wrap tbody td {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef2f7;
+    word-break: break-word;
+  }
+
+  .table-wrap tbody td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .table-wrap tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .04em;
+  }
+
+  .name-cell {
+    align-items: flex-start;
+  }
+
+  .action-stack {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .action-stack .btn-chip {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  /* 통계 카드도 더 촘촘하게 */
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 가이드 카드 / 필터 패널 여백 보정 */
+  .guide-card,
+  .stat-card,
+  .panel,
+  .hero-card {
+    border-radius: 16px;
+  }
+
+  /* 모달 내부도 모바일 친화적으로 */
+  .modal-card {
+    padding-bottom: calc(18px + var(--safe-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-close {
+    top: 10px;
+    right: 10px;
+  }
+}

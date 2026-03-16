@@ -201,31 +201,31 @@ function renderTable() {
       const disableStatusButton = isSelf && user.role === "admin";
       const selfLabel = isSelf ? `<span class="self-tag">내 계정</span>` : "";
 
-      return `
-        <tr>
-          <td>${escapeHtml(user.userIdx)}</td>
-          <td>
-            <div class="name-cell">
-              <strong>${escapeHtml(user.nickname)}</strong>
-              ${selfLabel}
-            </div>
-          </td>
-          <td>${escapeHtml(user.userID)}</td>
-          <td>${escapeHtml(user.group)}</td>
-          <td>${escapeHtml(user.site)}</td>
-          <td>${escapeHtml(user.level)}</td>
-          <td>${getRoleBadge(user.role)}</td>
-          <td>${getStatusBadge(user.status)}</td>
-          <td>${escapeHtml(formatDate(user.hire_date))}</td>
-          <td>
-            <div class="action-stack">
-              <button type="button" class="btn btn-chip" data-action="detail" data-user-idx="${escapeHtml(user.userIdx)}">상세</button>
-              <button type="button" class="btn btn-chip" data-action="status" data-user-idx="${escapeHtml(user.userIdx)}" ${disableStatusButton ? "disabled" : ""}>상태 변경</button>
-              <button type="button" class="btn btn-chip" data-action="reset-password" data-user-idx="${escapeHtml(user.userIdx)}">비밀번호 초기화</button>
-            </div>
-          </td>
-        </tr>
-      `;
+return `
+  <tr>
+    <td data-label="IDX">${escapeHtml(user.userIdx)}</td>
+    <td data-label="이름">
+      <div class="name-cell">
+        <strong>${escapeHtml(user.nickname)}</strong>
+        ${selfLabel}
+      </div>
+    </td>
+    <td data-label="아이디">${escapeHtml(user.userID)}</td>
+    <td data-label="GROUP">${escapeHtml(user.group)}</td>
+    <td data-label="SITE">${escapeHtml(user.site)}</td>
+    <td data-label="LEVEL">${escapeHtml(user.level)}</td>
+    <td data-label="ROLE">${getRoleBadge(user.role)}</td>
+    <td data-label="상태">${getStatusBadge(user.status)}</td>
+    <td data-label="입사일">${escapeHtml(formatDate(user.hire_date))}</td>
+    <td data-label="관리">
+      <div class="action-stack">
+        <button type="button" class="btn btn-chip" data-action="detail" data-user-idx="${escapeHtml(user.userIdx)}">상세</button>
+        <button type="button" class="btn btn-chip" data-action="status" data-user-idx="${escapeHtml(user.userIdx)}" ${disableStatusButton ? "disabled" : ""}>상태 변경</button>
+        <button type="button" class="btn btn-chip" data-action="reset-password" data-user-idx="${escapeHtml(user.userIdx)}">비밀번호 초기화</button>
+      </div>
+    </td>
+  </tr>
+`;
     })
     .join("");
 }
