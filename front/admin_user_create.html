@@ -11,26 +11,17 @@
   <nav>
     <div class="nav-container">
       <div class="nav-title"><a href="./SECM_myself.html">S-WORKS</a></div>
-      <div class="sign-container">
-        <button type="button" class="menu-btn" id="open-create-modal-btn">계정 생성</button>
-        <button type="button" class="sign-link" id="refresh-users-btn">새로고침</button>
-      </div>
     </div>
   </nav>
 
   <main class="inner admin-page">
     <section class="hero-card">
       <div class="hero-copy">
-        <p class="eyebrow">ADMIN ACCOUNT CENTER</p>
-        <h1>사용자 계정 관리</h1>
-        <p class="hero-text">
-          신규 계정 생성, 퇴사자 비활성화, 권한/상태 변경, 비밀번호 초기화를 한 화면에서 처리합니다.
-          <strong>nickname</strong>은 별명용이 아니라 실제 사람 이름을 입력하는 칸으로 사용합니다.
-        </p>
+        <p class="eyebrow">Only admin</p>
       </div>
       <div class="hero-actions">
-        <button type="button" class="btn primary" id="hero-create-btn">신규 계정 생성</button>
-        <button type="button" class="btn" id="hero-refresh-btn">목록 다시 불러오기</button>
+        <button type="button" class="btn primary" id="hero-create-btn">계정 생성</button>
+        <button type="button" class="btn" id="hero-refresh-btn">새로고침</button>
       </div>
     </section>
 
@@ -62,8 +53,7 @@
         <section class="panel guide-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">STATUS GUIDE</p>
-              <h2>상태값 안내</h2>
+              <p class="eyebrow">STATUS</p>
             </div>
           </div>
 
@@ -90,7 +80,6 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">FILTERS</p>
-              <h2>사용자 검색</h2>
             </div>
           </div>
 
@@ -118,11 +107,6 @@
               </select>
             </div>
           </div>
-
-          <div class="filter-actions">
-            <button type="button" class="btn" id="reset-filter-btn">필터 초기화</button>
-            <button type="button" class="btn primary" id="filter-refresh-btn">다시 조회</button>
-          </div>
         </section>
       </div>
 
@@ -130,11 +114,10 @@
         <div class="panel-head table-head">
           <div>
             <p class="eyebrow">USER DIRECTORY</p>
-            <h2>사용자 목록</h2>
-            <p class="subtext">행의 버튼으로 상세 확인, 상태 변경, 비밀번호 초기화를 처리할 수 있습니다.</p>
+            <p class="subtext">상세 확인, 상태 변경, 비밀번호 초기화를 처리할 수 있습니다.</p>
           </div>
           <div class="table-meta">
-            <span class="meta-pill" id="visible-count-pill">0명 표시중</span>
+            <span class="meta-pill" id="visible-count-pill">0명</span>
           </div>
         </div>
 
@@ -173,22 +156,20 @@
       <div class="modal-head">
         <div>
           <p class="eyebrow">CREATE ACCOUNT</p>
-          <h3>신규 사용자 생성</h3>
-          <p class="modal-text">이름 칸은 실제 사람 이름입니다. 생성 후 목록에서 상태와 권한을 다시 조정할 수 있습니다.</p>
+          <h3>NEW ID</h3>
         </div>
       </div>
 
       <form id="create-user-form" class="modal-form two-col">
         <div class="form-row">
           <label for="userID">아이디</label>
-          <input type="text" id="userID" maxlength="20" placeholder="예: hyunwoo01" required />
-          <small>영문 시작, 6~20자 영문/숫자</small>
+          <input type="text" id="userID" maxlength="20" placeholder="예: ses320020" required />
+          <small>ses+사번</small>
         </div>
 
         <div class="form-row">
           <label for="nickname">이름</label>
           <input type="text" id="nickname" maxlength="10" placeholder="실제 이름 입력" required />
-          <small>Users.nickname 컬럼에 저장됩니다.</small>
         </div>
 
         <div class="form-row">
@@ -253,7 +234,7 @@
 
         <div class="modal-actions span-2">
           <button type="button" class="btn" data-close-modal>취소</button>
-          <button type="submit" class="btn primary">계정 생성</button>
+          <button type="submit" class="btn primary">생성</button>
         </div>
       </form>
     </div>
