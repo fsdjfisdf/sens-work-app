@@ -1,7 +1,7 @@
 const API = {
-  listUsers: '/api/admin/users',
-  createUser: '/api/admin/users',
-  updateUserStatus: (userId) => `/api/admin/users/${encodeURIComponent(userId)}/status`
+  listUsers: 'http://3.37.73.151:3001/api/admin/users',
+  createUser: 'http://3.37.73.151:3001/api/admin/users',
+  updateUserStatus: (userId) => `http://3.37.73.151:3001/api/admin/users/${encodeURIComponent(userId)}/status`
 };
 
 const state = {
