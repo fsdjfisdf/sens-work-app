@@ -3,123 +3,191 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>사용자 관리</title>
-  <link rel="stylesheet" href="./admin_user_create.css" />
+  <title>관리자 계정 관리</title>
+  <link rel="stylesheet" href="./css/admin_user_create.css" />
 </head>
 <body>
-  <div class="page-shell">
-    <div class="page-header">
+  <main class="page-shell">
+    <section class="hero panel">
       <div>
-        <h1>사용자 관리</h1>
-        <p>사용자 생성과 계정 활성/비활성 관리를 할 수 있습니다.</p>
+        <p class="eyebrow">ADMIN ONLY</p>
+        <h1>사용자 계정 관리</h1>
+        <p class="hero-text">관리자만 계정을 만들고, 비밀번호를 초기화하고, 퇴사자 계정을 비활성화할 수 있습니다.</p>
       </div>
-      <button class="ghost-btn" id="refreshBtn" type="button">새로고침</button>
-    </div>
-
-    <section class="panel">
-      <div class="panel-header">
-        <h2>새 사용자 생성</h2>
-      </div>
-
-      <form id="adminUserForm" class="create-form">
-        <div class="grid">
-          <div class="field">
-            <label for="userId">아이디</label>
-            <input type="text" id="userId" name="userId" autocomplete="off" required />
-          </div>
-
-          <div class="field">
-            <label for="password">비밀번호</label>
-            <input type="password" id="password" name="password" required />
-          </div>
-
-          <div class="field">
-            <label for="name">이름</label>
-            <input type="text" id="name" name="name" required />
-          </div>
-
-          <div class="field">
-            <label for="status">계정 상태</label>
-            <select id="status" name="status">
-              <option value="1">활성</option>
-              <option value="0">비활성</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>권한</label>
-          <div class="role-cards" id="roleCards">
-            <label class="role-card selected">
-              <input type="radio" name="role" value="A" checked />
-              <span class="role-code">A</span>
-              <span class="role-title">관리자</span>
-              <span class="role-desc">사용자 관리, 주요 설정 변경 가능</span>
-            </label>
-
-            <label class="role-card">
-              <input type="radio" name="role" value="I" />
-              <span class="role-code">I</span>
-              <span class="role-title">일반 사용자</span>
-              <span class="role-desc">일반 업무 기능 사용 가능</span>
-            </label>
-
-            <label class="role-card">
-              <input type="radio" name="role" value="D" />
-              <span class="role-code">D</span>
-              <span class="role-title">조회 전용</span>
-              <span class="role-desc">조회만 가능, 등록/수정/삭제 제한</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="button-row">
-          <button class="primary-btn" type="submit">사용자 저장</button>
-          <button class="secondary-btn" type="button" id="resetBtn">초기화</button>
-        </div>
-      </form>
+      <button id="refresh-users" type="button" class="secondary-btn">목록 새로고침</button>
     </section>
 
     <section class="panel">
-      <div class="panel-header panel-header-wrap">
+      <div class="section-head">
         <div>
-          <h2>계정 상태 관리</h2>
-          <p class="section-desc">퇴사자나 미사용 계정은 비활성화할 수 있습니다.</p>
+          <p class="eyebrow">CREATE ACCOUNT</p>
+          <h2>신규 계정 생성</h2>
+          <p class="subtext">여기서 입력하는 <strong>이름</strong>은 DB의 <code>nickname</code> 컬럼에 저장됩니다.</p>
+        </div>
+      </div>
+
+      <div class="guide-grid status-guide">
+        <article class="guide-card">
+          <span class="status-badge active">A</span>
+          <strong>Active</strong>
+          <p>정상 사용 상태입니다. 로그인 가능합니다.</p>
+        </article>
+        <article class="guide-card">
+          <span class="status-badge inactive">I</span>
+          <strong>Inactive</strong>
+          <p>비활성화 상태입니다. 퇴사자, 휴직자, 사용 중지 계정에 사용합니다. 로그인 불가입니다.</p>
+        </article>
+        <article class="guide-card">
+          <span class="status-badge deleted">D</span>
+          <strong>Deleted</strong>
+          <p>삭제 처리 상태입니다. 일반 운영에서는 보통 직접 쓰지 않고, 내부 정리용 상태로 두는 편이 안전합니다.</p>
+        </article>
+      </div>
+
+      <form id="create-user-form" class="admin-form">
+        <div class="field">
+          <label for="userID">아이디</label>
+          <input type="text" id="userID" placeholder="예: hyunwoo01" maxlength="20" required />
+          <small>영문으로 시작하는 6~20자 영문/숫자</small>
         </div>
 
-        <div class="toolbar">
-          <input type="text" id="searchInput" placeholder="이름 또는 아이디 검색" />
-          <select id="statusFilter">
-            <option value="all">전체</option>
-            <option value="1">활성만</option>
-            <option value="0">비활성만</option>
+        <div class="field">
+          <label for="nickname">이름</label>
+          <input type="text" id="nickname" placeholder="실제 이름 입력" maxlength="10" required />
+          <small>DB의 nickname 컬럼에 저장됩니다.</small>
+        </div>
+
+        <div class="field">
+          <label for="password">초기 비밀번호</label>
+          <input type="password" id="password" placeholder="초기 비밀번호" maxlength="16" required />
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">비밀번호 확인</label>
+          <input type="password" id="confirmPassword" placeholder="비밀번호 확인" maxlength="16" required />
+        </div>
+
+        <div class="field">
+          <label for="group">GROUP</label>
+          <select id="group" required>
+            <option value="" disabled selected>GROUP 선택</option>
+            <option value="PEE1">PEE1</option>
+            <option value="PEE2">PEE2</option>
+            <option value="PSKH">PSKH</option>
           </select>
+        </div>
+
+        <div class="field">
+          <label for="site">SITE</label>
+          <select id="site" required>
+            <option value="" disabled selected>SITE 선택</option>
+            <option value="PT">PT</option>
+            <option value="HS">HS</option>
+            <option value="IC">IC</option>
+            <option value="CJ">CJ</option>
+            <option value="PSKH">PSKH</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="level">레벨</label>
+          <input type="number" id="level" placeholder="0" min="0" step="1" required />
+        </div>
+
+        <div class="field">
+          <label for="hireDate">입사일</label>
+          <input type="date" id="hireDate" required />
+        </div>
+
+        <div class="field">
+          <label for="role">권한</label>
+          <select id="role" required>
+            <option value="worker" selected>worker</option>
+            <option value="editor">editor</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="status">상태</label>
+          <select id="status" required>
+            <option value="A" selected>A - 사용중</option>
+            <option value="I">I - 비활성화</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="primary-btn">계정 생성</button>
+        </div>
+      </form>
+
+      <p id="create-result" class="result-text"></p>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">PASSWORD RESET</p>
+          <h2>관리자 비밀번호 초기화</h2>
+          <p class="subtext">대상 사용자의 <code>userIdx</code>를 기준으로 초기 비밀번호를 다시 설정합니다.</p>
+        </div>
+      </div>
+
+      <form id="reset-password-form" class="reset-form">
+        <div class="field">
+          <label for="resetUserIdx">대상 userIdx</label>
+          <input type="number" id="resetUserIdx" placeholder="예: 17" min="1" required />
+        </div>
+        <div class="field">
+          <label for="resetPassword">새 비밀번호</label>
+          <input type="password" id="resetPassword" placeholder="새 비밀번호" maxlength="16" required />
+        </div>
+        <div class="field">
+          <label for="resetPasswordConfirm">새 비밀번호 확인</label>
+          <input type="password" id="resetPasswordConfirm" placeholder="새 비밀번호 확인" maxlength="16" required />
+        </div>
+        <div class="form-actions inline-end">
+          <button type="submit" class="primary-btn">비밀번호 초기화</button>
+        </div>
+      </form>
+
+      <p id="reset-result" class="result-text"></p>
+    </section>
+
+    <section class="panel">
+      <div class="section-head list-head">
+        <div>
+          <p class="eyebrow">USER LIST</p>
+          <h2>현재 사용자 목록</h2>
+          <p class="subtext">퇴사자는 <strong>비활성화(I)</strong> 처리하면 로그인할 수 없습니다. 복직이나 재사용 시 다시 활성화(A)하면 됩니다.</p>
         </div>
       </div>
 
       <div class="table-wrap">
-        <table class="user-table">
+        <table>
           <thead>
             <tr>
+              <th>userIdx</th>
               <th>아이디</th>
               <th>이름</th>
-              <th>권한</th>
+              <th>GROUP</th>
+              <th>SITE</th>
+              <th>LEVEL</th>
+              <th>ROLE</th>
               <th>상태</th>
+              <th>입사일</th>
               <th>관리</th>
             </tr>
           </thead>
-          <tbody id="userTableBody">
-            <tr>
-              <td colspan="5" class="empty-row">사용자 목록을 불러오는 중입니다.</td>
-            </tr>
+          <tbody id="user-table-body">
+            <tr><td colspan="10">불러오는 중...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
-  </div>
+  </main>
 
-  <div class="toast" id="toast"></div>
-
-  <script src="./admin_user_create.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="./js/admin_user_create.js"></script>
 </body>
 </html>
