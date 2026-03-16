@@ -32,7 +32,7 @@ function validateCreateUserPayload({ userID, password, nickname, group, site, le
   }
 
   if (!nicknameRegExp.test(nickname || "")) {
-    return "닉네임은 2~10자의 한글/영문/숫자만 사용할 수 있습니다.";
+    return "이름은 2~10자의 한글/영문/숫자만 사용할 수 있습니다.";
   }
 
   if (!group || !site || !hireDate) {
@@ -286,15 +286,6 @@ exports.createUsers = async function (req, res) {
           isSuccess: false,
           code: 409,
           message: "이미 사용 중인 아이디입니다.",
-        });
-      }
-
-      const [existingNicknameRows] = await indexDao.getUserByNickname(connection, nickname);
-      if (existingNicknameRows.length > 0) {
-        return res.status(409).json({
-          isSuccess: false,
-          code: 409,
-          message: "이미 사용 중인 닉네임입니다.",
         });
       }
 
@@ -715,6 +706,97 @@ return res.status(400).json({
   }
 };
 
+
+exports.updateUserStatus = async function (req, res) {
+  if (!isAdminRequest(req)) {
+    return res.status(403).json({
+      isSuccess: false,
+      code: 403,
+      message: "admin 권한이 있는 사용자만 상태를 변경할 수 있습니다.",
+    });
+  }
+
+  const userIdx = Number(req.params.userIdx);
+  const { status } = req.body;
+  const allowedStatus = ["A", "I", "D"];
+
+  if (!Number.isInteger(userIdx) || userIdx < 1) {
+    return res.status(400).json({
+      isSuccess: false,
+      code: 400,
+      message: "올바른 userIdx가 필요합니다.",
+    });
+  }
+
+  if (!allowedStatus.includes(status)) {
+    return res.status(400).json({
+      isSuccess: false,
+      code: 400,
+      message: "변경할 status 값이 올바르지 않습니다.",
+    });
+  }
+
+  if (req.verifiedToken.userIdx === userIdx && status !== "A") {
+    return res.status(400).json({
+      isSuccess: false,
+      code: 400,
+      message: "본인 admin 계정은 직접 비활성화하거나 삭제할 수 없습니다.",
+    });
+  }
+
+  try {
+    const connection = await pool.getConnection(async (conn) => conn);
+    try {
+      const [rows] = await indexDao.getUserByIdxForAdmin(connection, userIdx);
+
+      if (rows.length < 1) {
+        return res.status(404).json({
+          isSuccess: false,
+          code: 404,
+          message: "대상 사용자를 찾을 수 없습니다.",
+        });
+      }
+
+      await indexDao.updateUserStatus(connection, userIdx, status);
+
+      const statusMessageMap = {
+        A: "계정이 활성화되었습니다.",
+        I: "계정이 비활성화되었습니다. 해당 사용자는 로그인할 수 없습니다.",
+        D: "계정이 삭제 처리되었습니다.",
+      };
+
+      return res.status(200).json({
+        isSuccess: true,
+        code: 200,
+        message: statusMessageMap[status],
+        result: {
+          userIdx,
+          userID: rows[0].userID,
+          nickname: rows[0].nickname,
+          status,
+        },
+      });
+    } catch (err) {
+      logger.error(`updateUserStatus Query error
+: ${JSON.stringify(err)}`);
+      return res.status(500).json({
+        isSuccess: false,
+        code: 500,
+        message: "상태 변경 중 서버 오류가 발생했습니다.",
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (err) {
+    logger.error(`updateUserStatus DB Connection error
+: ${JSON.stringify(err)}`);
+    return res.status(500).json({
+      isSuccess: false,
+      code: 500,
+      message: "DB 연결 중 오류가 발생했습니다.",
+    });
+  }
+};
 
 
 exports.adminResetPassword = async function (req, res) {

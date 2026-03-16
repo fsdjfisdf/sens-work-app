@@ -46,6 +46,17 @@ exports.getUserByNickname = async function (connection, nickname) {
   return await connection.query(Query, [nickname]);
 };
 
+
+exports.getUserByIdxForAdmin = async function (connection, userIdx) {
+  const Query = `SELECT userIdx, userID, nickname, role, status FROM Users WHERE userIdx = ? LIMIT 1;`;
+  return await connection.query(Query, [userIdx]);
+};
+
+exports.updateUserStatus = async function (connection, userIdx, status) {
+  const Query = `UPDATE Users SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE userIdx = ?;`;
+  return await connection.query(Query, [status, userIdx]);
+};
+
 // 회원 정보 조회
 exports.getUserById = async function (connection, userIdx) {
   const Query = `

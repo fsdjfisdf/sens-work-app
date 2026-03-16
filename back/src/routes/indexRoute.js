@@ -33,6 +33,9 @@ module.exports = function (app) {
     // 비밀번호 변경
     app.post("/change-password", jwtMiddleware, index.changePassword);
 
+    // 사용자 상태 변경 (admin only)
+    app.patch("/admin/users/:userIdx/status", jwtMiddleware, index.updateUserStatus);
+
     // 관리자 비밀번호 초기화
     app.post("/admin/reset-password", jwtMiddleware, index.adminResetPassword);
 };
