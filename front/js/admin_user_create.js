@@ -51,14 +51,10 @@ const dom = {
     inactive: document.getElementById("stat-inactive"),
     admin: document.getElementById("stat-admin"),
   },
-  buttons: {
-    openCreateModal: document.getElementById("open-create-modal-btn"),
-    heroCreate: document.getElementById("hero-create-btn"),
-    refreshTop: document.getElementById("refresh-users-btn"),
-    refreshHero: document.getElementById("hero-refresh-btn"),
-    refreshFilter: document.getElementById("filter-refresh-btn"),
-    resetFilter: document.getElementById("reset-filter-btn"),
-  },
+buttons: {
+  heroCreate: document.getElementById("hero-create-btn"),
+  heroRefresh: document.getElementById("hero-refresh-btn"),
+},
   modals: {
     create: document.getElementById("create-user-modal"),
     detail: document.getElementById("user-detail-modal"),
@@ -420,21 +416,22 @@ function handleTableAction(event) {
 }
 
 function bindEvents() {
-  dom.buttons.openCreateModal.addEventListener("click", () => openModal(dom.modals.create));
-  dom.buttons.heroCreate.addEventListener("click", () => openModal(dom.modals.create));
-  dom.buttons.refreshTop.addEventListener("click", loadUsers);
-  dom.buttons.refreshHero.addEventListener("click", loadUsers);
-  dom.buttons.refreshFilter.addEventListener("click", loadUsers);
-  dom.buttons.resetFilter.addEventListener("click", resetFilters);
+  if (dom.buttons.heroCreate) {
+    dom.buttons.heroCreate.addEventListener("click", () => openModal(dom.modals.create));
+  }
 
-  dom.searchInput.addEventListener("input", applyFilters);
-  dom.roleFilter.addEventListener("change", applyFilters);
-  dom.statusFilter.addEventListener("change", applyFilters);
+  if (dom.buttons.heroRefresh) {
+    dom.buttons.heroRefresh.addEventListener("click", loadUsers);
+  }
 
-  dom.forms.create.addEventListener("submit", submitCreateUser);
-  dom.forms.status.addEventListener("submit", submitStatusChange);
-  dom.forms.reset.addEventListener("submit", submitPasswordReset);
-  dom.userTableBody.addEventListener("click", handleTableAction);
+  if (dom.searchInput) dom.searchInput.addEventListener("input", applyFilters);
+  if (dom.roleFilter) dom.roleFilter.addEventListener("change", applyFilters);
+  if (dom.statusFilter) dom.statusFilter.addEventListener("change", applyFilters);
+
+  if (dom.forms.create) dom.forms.create.addEventListener("submit", submitCreateUser);
+  if (dom.forms.status) dom.forms.status.addEventListener("submit", submitStatusChange);
+  if (dom.forms.reset) dom.forms.reset.addEventListener("submit", submitPasswordReset);
+  if (dom.userTableBody) dom.userTableBody.addEventListener("click", handleTableAction);
 
   document.querySelectorAll("[data-close-modal]").forEach((button) => {
     button.addEventListener("click", () => closeAllModals());
@@ -442,16 +439,12 @@ function bindEvents() {
 
   document.querySelectorAll(".modal").forEach((modal) => {
     modal.addEventListener("click", (event) => {
-      if (event.target === modal) {
-        closeModal(modal);
-      }
+      if (event.target === modal) closeModal(modal);
     });
   });
 
   window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
-      closeAllModals();
-    }
+    if (event.key === "Escape") closeAllModals();
   });
 }
 
