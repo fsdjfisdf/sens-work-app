@@ -1,101 +1,89 @@
 const businessDao = require('../dao/businessDao');
 
-const ALLOWED_TRIP_REASONS = ['SET UP', 'MAINT', 'SET UP&MAINT', 'GTS'];
-
-function normalizeBody(body = {}) {
-    return {
-        name: String(body.name || '').trim(),
-        company: String(body.company || '').trim(),
-        group: String(body.group || '').trim(),
-        site: String(body.site || '').trim(),
-        country: String(body.country || '').trim(),
-        city: String(body.city || '').trim(),
-        customer: String(body.customer || '').trim(),
-        equipment: String(body.equipment || '').trim(),
-        tripReason: String(body.tripReason || body.reason || '').trim(),
-        startDate: String(body.startDate || '').trim(),
-        endDate: String(body.endDate || '').trim()
-    };
-}
-
-function validatePayload(payload) {
-    const requiredFields = ['name', 'company', 'group', 'site', 'country', 'city', 'customer', 'equipment', 'tripReason', 'startDate', 'endDate'];
-    const missingField = requiredFields.find((field) => !payload[field]);
-
-    if (missingField) {
-        return `${missingField} 값이 비어 있습니다.`;
-    }
-
-    if (!ALLOWED_TRIP_REASONS.includes(payload.tripReason)) {
-        return 'tripReason 값이 올바르지 않습니다.';
-    }
-
-    if (payload.endDate < payload.startDate) {
-        return '종료일은 시작일보다 빠를 수 없습니다.';
-    }
-
-    return null;
-}
-
 exports.getBusinessData = async (req, res) => {
-    try {
-        const data = await businessDao.getBusinessData(req.query || {});
-        res.status(200).json(data);
-    } catch (err) {
-        console.error('Error retrieving business data:', err.message);
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const rows = await businessDao.getBusinessData(req.query || {});
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error('Error retrieving business data:', error.message);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 exports.addBusinessData = async (req, res) => {
-    const payload = normalizeBody(req.body);
-    const validationError = validatePayload(payload);
+  const payload = extractPayload(req.body || {});
 
-    if (validationError) {
-        return res.status(400).json({ error: validationError });
-    }
-
-    try {
-        const result = await businessDao.addBusinessData(payload);
-        res.status(201).json({ message: 'Business data added successfully', id: result.insertId });
-    } catch (err) {
-        console.error('Error adding business data:', err.message);
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    validatePayload(payload);
+    const result = await businessDao.addBusinessData(payload);
+    res.status(201).json({ message: 'Business trip created successfully', id: result.insertId });
+  } catch (error) {
+    console.error('Error adding business data:', error.message);
+    res.status(error.statusCode || 500).json({ error: error.message });
+  }
 };
 
 exports.updateBusinessData = async (req, res) => {
-    const id = Number(req.params.id);
-    const payload = normalizeBody(req.body);
-    const validationError = validatePayload(payload);
+  const payload = extractPayload(req.body || {});
+  const id = req.params.id;
 
-    if (validationError) {
-        return res.status(400).json({ error: validationError });
+  try {
+    validatePayload(payload);
+    const result = await businessDao.updateBusinessData(id, payload);
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: 'No business trip found with the specified ID' });
     }
-
-    try {
-        const result = await businessDao.updateBusinessData(id, payload);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'No business data found with the specified ID' });
-        }
-        res.status(200).json({ message: 'Business data updated successfully' });
-    } catch (err) {
-        console.error('Error updating business data:', err.message);
-        res.status(500).json({ error: err.message });
-    }
+    res.status(200).json({ message: 'Business trip updated successfully' });
+  } catch (error) {
+    console.error('Error updating business data:', error.message);
+    res.status(error.statusCode || 500).json({ error: error.message });
+  }
 };
 
 exports.deleteBusinessData = async (req, res) => {
-    const id = Number(req.params.id);
+  const id = req.params.id;
 
-    try {
-        const result = await businessDao.deleteBusinessData(id);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'No business data found with the specified ID' });
-        }
-        res.status(200).json({ message: 'Business data deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting business data:', err.message);
-        res.status(500).json({ error: err.message });
+  try {
+    const result = await businessDao.deleteBusinessData(id);
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: 'No business trip found with the specified ID' });
     }
+    res.status(200).json({ message: 'Business trip deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting business data:', error.message);
+    res.status(500).json({ error: error.message });
+  }
 };
+
+function extractPayload(body) {
+  return {
+    name: `${body.name || ''}`.trim(),
+    company: `${body.company || ''}`.trim(),
+    group: `${body.group || ''}`.trim(),
+    site: `${body.site || ''}`.trim(),
+    country: `${body.country || ''}`.trim(),
+    city: `${body.city || ''}`.trim(),
+    customer: `${body.customer || ''}`.trim(),
+    equipment: `${body.equipment || ''}`.trim(),
+    tripReason: `${body.tripReason || body.trip_reason || 'SET UP'}`.trim(),
+    startDate: `${body.startDate || body.start_date || ''}`.trim(),
+    endDate: `${body.endDate || body.end_date || ''}`.trim(),
+  };
+}
+
+function validatePayload(payload) {
+  const allowedReasons = new Set(['SET UP', 'MAINT', 'SET UP&MAINT', 'GTS']);
+
+  if (!payload.name) throw httpError(400, 'name is required');
+  if (!payload.country) throw httpError(400, 'country is required');
+  if (!payload.startDate) throw httpError(400, 'startDate is required');
+  if (!payload.endDate) throw httpError(400, 'endDate is required');
+  if (payload.startDate > payload.endDate) throw httpError(400, 'endDate cannot be earlier than startDate');
+  if (!allowedReasons.has(payload.tripReason)) throw httpError(400, 'tripReason is invalid');
+}
+
+function httpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
