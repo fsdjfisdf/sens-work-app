@@ -9,18 +9,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="path/to/tooltip.css">
 </head>
 <body>
     <nav>
         <div class="inner">
             <div class="nav-container">
                 <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
+                <div class="sign-container unsigned hidden">
                     <a href="./signin.html" class="sign-link">Login</a>
                 </div>
                 <div class="sign-container signed hidden">
-                    <button class="menu-btn">
+                    <button class="menu-btn" type="button" aria-label="메뉴 열기">
                         <div class="menu-icon">
                             <span></span>
                             <span></span>
@@ -40,208 +39,313 @@
                 <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
                 <a href="./PCI.html" class="menu-item">PCI</a>
                 <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
+                <a href="./business.html" class="menu-item">Business Trip</a>
                 <a href="./report.html" class="menu-item">국내 출장 보고서</a>
                 <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
                 <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
                 <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
+                <button id="sign-out" class="menu-item" type="button">Logout</button>
             </div>
         </div>
     </nav>
-    <section>
+
+    <main>
+        <section class="page-heading">
+            <div class="inner heading-grid">
+                <div>
+                    <p class="eyebrow">Overseas Engineer Management</p>
+                    <h2>해외출장 관리 대시보드</h2>
+                    <p class="subcopy">출장 일정 보드, 목적별 분석, 장비/국가 분포, 이력 관리까지 한 화면에서 처리합니다.</p>
+                </div>
+                <div class="header-actions">
+                    <button id="add-trip-button" class="primary-btn admin-only" type="button">출장 이력 추가</button>
+                    <button id="export-button" class="ghost-btn" type="button">현재 조회 결과 엑셀 저장</button>
+                </div>
+            </div>
+        </section>
+
+        <section>
             <div class="inner">
-                <div id="search-container">
-                    <input type="text" id="search-name" placeholder="Name">
-                    <select id="search-group">
-                        <option value="SELECT">Group</option>
-                        <option value="PEE1">PEE1</option>
-                        <option value="PEE2">PEE2</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="search-site">
-                        <option value="SELECT">Site</option>
-                        <option value="PT">PT</option>
-                        <option value="HS">HS</option>
-                        <option value="IC">IC</option>
-                        <option value="CJ">CJ</option>
-                        <option value="PSKH">PSKH</option>
-                    </select>
-                    <select id="search-country">
-                        <option value="SELECT">Country</option>
-                        <option value="USA">USA</option>
-                        <option value="Ireland">Ireland</option>
-                        <option value="Japan">Japan</option>
-                        <option value="China">China</option>
-                        <option value="Taiwan">Taiwan</option>
-                        <option value="Singapore">Singapore</option>
-                    </select>
-                    <select id="search-city">
-                        <option value="SELECT">City</option>
-                    </select>
-                    <select id="search-customer">
-                        <option value="SELECT">Customer</option>
-                        <option value="Intel">Intel</option>
-                        <option value="Micron">Micron</option>
-                        <option value="Hynix">Hynix</option>
-                        <option value="Samsung">Samsung</option>
-                        <option value="JIDIAN">JIDIAN</option>
-                        <option value="GTX">GTX</option>
-                    </select>
-                    <select id="search-equipment">
-                        <option value="SELECT">Equipment</option>
-                        <option value="SUPRA N">SUPRA N</option>
-                        <option value="SUPRA XP">SUPRA XP</option>
-                        <option value="SUPRA Vplus">SUPRA Vplus</option>
-                        <option value="PRECIA">PRECIA</option>
-                        <option value="Omnis">OMNIS</option>
-                    </select>
-                    <button id="search-button">Search</button>
-                    <button id="reset-button">Reset</button>
-                    <button id="export-button">Export to Excel</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="engineer-count">
-            <div class="outer">
-                <div class="inner">
-                    <div class="engineer-summary">
-                        <p id="unique-engineer-count">Loading...</p>
+                <div id="search-container" class="panel">
+                    <div class="field wide">
+                        <label for="search-name">이름</label>
+                        <input type="text" id="search-name" placeholder="엔지니어 이름 검색">
                     </div>
-                    <div class="engineer-summary">
-                        <p id="current-engineer-count">Loading...</p>
+                    <div class="field">
+                        <label for="search-group">Group</label>
+                        <select id="search-group">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-site">Site</label>
+                        <select id="search-site">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-country">Country</label>
+                        <select id="search-country">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-city">City</label>
+                        <select id="search-city">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-customer">Customer</label>
+                        <select id="search-customer">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-equipment">Equipment</label>
+                        <select id="search-equipment">
+                            <option value="">전체</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-trip-reason">출장 목적</label>
+                        <select id="search-trip-reason">
+                            <option value="">전체</option>
+                            <option value="SET UP">SET UP</option>
+                            <option value="MAINT">MAINT</option>
+                            <option value="SET UP&MAINT">SET UP&MAINT</option>
+                            <option value="GTS">GTS</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="search-date-from">기간 시작</label>
+                        <input type="date" id="search-date-from">
+                    </div>
+                    <div class="field">
+                        <label for="search-date-to">기간 종료</label>
+                        <input type="date" id="search-date-to">
+                    </div>
+                    <div class="toolbar-buttons">
+                        <button id="search-button" class="primary-btn" type="button">검색</button>
+                        <button id="reset-button" class="ghost-btn" type="button">초기화</button>
                     </div>
                 </div>
             </div>
         </section>
-        
-        
-            <section>
-                                <div class="inner">
-                </div>
-            <div id="chart-container">
-                <canvas id="trip-chart" width="1200" height="1000"></canvas>
+
+        <section id="summary-section">
+            <div class="inner stats-grid">
+                <article class="stat-card">
+                    <span class="stat-label">총 출장 건수</span>
+                    <strong id="stat-total-trips">0</strong>
+                    <small>현재 필터 기준</small>
+                </article>
+                <article class="stat-card accent">
+                    <span class="stat-label">출장 중 인원</span>
+                    <strong id="stat-active-engineers">0</strong>
+                    <small>오늘 날짜 기준</small>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">출장 엔지니어 수</span>
+                    <strong id="stat-unique-engineers">0</strong>
+                    <small>중복 제거</small>
+                </article>
+                <article class="stat-card">
+                    <span class="stat-label">누적 출장 일수</span>
+                    <strong id="stat-total-days">0</strong>
+                    <small>시작/종료일 포함</small>
+                </article>
             </div>
-            <style>
-                /* 화면 중앙 정렬을 위한 스타일 */
-                #chart-container {
-                    display: flex;
-                    justify-content: center; /* 가로 중앙 정렬 */
-                    align-items: center;    /* 세로 중앙 정렬 */
-                    background-color: #ffffff; /* 배경색 추가 (선택 사항) */
-                }
-            </style>
         </section>
-        <!-- 검색 필터 섹션 -->
 
-
+        <section id="trip-board-section">
+            <div class="inner">
+                <div class="section-head">
+                    <div>
+                        <h3>출장 일정 보드</h3>
+                        <p>각 출장 건을 한 줄로 배치한 일정 보드입니다. 현재 진행 중인 일정은 강조 표시됩니다.</p>
+                    </div>
+                    <span id="board-range" class="board-range">-</span>
+                </div>
+                <div class="panel trip-board-panel">
+                    <div id="trip-board-empty" class="empty-state hidden">조건에 맞는 출장 이력이 없습니다.</div>
+                    <div id="trip-board-wrapper" class="trip-board-wrapper hidden">
+                        <div id="trip-board-header" class="trip-board-header"></div>
+                        <div id="trip-board-body" class="trip-board-body"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <section id="graphs">
-            <div class="inner">
-                <div class="chart-row">
-                    <div class="chart-container">
-                        <h3>Yearly Business Trips</h3>
-                        <canvas id="yearly-trips-chart"></canvas>
+            <div class="inner chart-grid">
+                <article class="chart-card panel">
+                    <div class="chart-head">
+                        <h3>월별 출장 건수</h3>
+                        <p>출장 흐름 파악</p>
                     </div>
-                    <div class="chart-container">
-                        <h3>Trips per Group-Site</h3>
-                        <canvas id="group-site-chart"></canvas>
+                    <canvas id="monthly-trips-chart"></canvas>
+                </article>
+                <article class="chart-card panel">
+                    <div class="chart-head">
+                        <h3>출장 목적 분포</h3>
+                        <p>SET UP / MAINT / GTS</p>
                     </div>
-                    <div class="chart-container">
-                        <h3>Trips per Country-City</h3>
-                        <canvas id="country-city-chart"></canvas>
+                    <canvas id="purpose-chart"></canvas>
+                </article>
+                <article class="chart-card panel">
+                    <div class="chart-head">
+                        <h3>국가별 출장 건수</h3>
+                        <p>출장 집중 국가</p>
                     </div>
-                </div>
-                <div class="chart-row">
-                    <div class="chart-container">
-                        <h3>Trips per Equipment</h3>
-                        <canvas id="equipment-chart"></canvas>
+                    <canvas id="country-chart"></canvas>
+                </article>
+                <article class="chart-card panel">
+                    <div class="chart-head">
+                        <h3>장비별 출장 건수</h3>
+                        <p>어떤 장비 대응이 많은지</p>
                     </div>
-                    <div class="chart-container">
-                        <h3>Engineer Trip Count Distribution</h3>
-                        <canvas id="engineer-trip-count-chart"></canvas>
+                    <canvas id="equipment-chart"></canvas>
+                </article>
+                <article class="chart-card panel">
+                    <div class="chart-head">
+                        <h3>엔지니어별 출장 일수 TOP 10</h3>
+                        <p>누적 출장일 기준</p>
                     </div>
-                </div>
+                    <canvas id="engineer-days-chart"></canvas>
+                </article>
+                <article class="chart-card panel">
+                    <div class="chart-head">
+                        <h3>Group / Site 별 출장 건수</h3>
+                        <p>내부 조직 분포</p>
+                    </div>
+                    <canvas id="group-site-chart"></canvas>
+                </article>
             </div>
         </section>
-        
 
-        <!-- 데이터 표 섹션 -->
         <section id="data-table">
-            <div class="inner">
-                <h2>Business Trip Data</h2>
-                <table id="business-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Group</th>
-                            <th>Site</th>
-                            <th>Country</th>
-                            <th>City</th>
-                            <th>Customer</th>
-                            <th>Equipment</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data dynamically rendered here -->
-                    </tbody>
-                </table>
+            <div class="inner panel table-panel">
+                <div class="section-head">
+                    <div>
+                        <h3>출장 이력 목록</h3>
+                        <p id="table-result-text">0건</p>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table id="business-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Company</th>
+                                <th>Group</th>
+                                <th>Site</th>
+                                <th>Country</th>
+                                <th>City</th>
+                                <th>Customer</th>
+                                <th>Equipment</th>
+                                <th>Reason</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Days</th>
+                                <th class="admin-only">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </section>
+
         <footer>
             <div class="inner">
-                <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+                <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단 유출, 복사, 배포를 금지합니다.</p>
             </div>
         </footer>
     </main>
+
+    <div id="trip-modal" class="modal hidden" aria-hidden="true">
+        <div class="modal-backdrop" data-close="modal"></div>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="trip-modal-title">
+            <div class="modal-head">
+                <div>
+                    <p class="eyebrow">Business Trip Form</p>
+                    <h3 id="trip-modal-title">출장 이력 추가</h3>
+                </div>
+                <button id="trip-modal-close" class="icon-btn" type="button" aria-label="닫기">×</button>
+            </div>
+            <form id="trip-form" class="modal-form">
+                <input type="hidden" id="trip-id">
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="trip-name">이름</label>
+                        <input type="text" id="trip-name" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-company">Company</label>
+                        <input type="text" id="trip-company" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-group">Group</label>
+                        <input type="text" id="trip-group" list="group-list" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-site">Site</label>
+                        <input type="text" id="trip-site" list="site-list" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-country">Country</label>
+                        <input type="text" id="trip-country" list="country-list" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-city">City</label>
+                        <input type="text" id="trip-city" list="city-list" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-customer">Customer</label>
+                        <input type="text" id="trip-customer" list="customer-list" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-equipment">Equipment</label>
+                        <input type="text" id="trip-equipment" list="equipment-list" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-reason">출장 목적</label>
+                        <select id="trip-reason" required>
+                            <option value="SET UP">SET UP</option>
+                            <option value="MAINT">MAINT</option>
+                            <option value="SET UP&MAINT">SET UP&MAINT</option>
+                            <option value="GTS">GTS</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="trip-start-date">Start Date</label>
+                        <input type="date" id="trip-start-date" required>
+                    </div>
+                    <div class="field">
+                        <label for="trip-end-date">End Date</label>
+                        <input type="date" id="trip-end-date" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="trip-form-cancel" class="ghost-btn">취소</button>
+                    <button type="submit" id="trip-form-submit" class="primary-btn">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <datalist id="group-list"></datalist>
+    <datalist id="site-list"></datalist>
+    <datalist id="country-list"></datalist>
+    <datalist id="city-list"></datalist>
+    <datalist id="customer-list"></datalist>
+    <datalist id="equipment-list"></datalist>
+
+    <div id="toast" class="toast hidden"></div>
+
     <script src="./js/business.js" defer></script>
     <script defer src="./js/logoutTimer.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-            const userRole = localStorage.getItem("user-role");
-
-            if (!token) {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            }
-
-            if (!token || userRole !== 'admin') {
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = 'none';
-                });
-            }
-
-            const signOutButton = document.querySelector("#sign-out");
-
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    localStorage.removeItem("user-role");
-                    alert("로그아웃 되었습니다.");
-                    window.location.replace("./signin.html");
-                });
-            }
-            const menuBtn = document.querySelector('.menu-btn');
-            const menuBar = document.querySelector('.menu-bar');
-
-            menuBtn.addEventListener('click', function() {
-                menuBar.classList.toggle('open');
-            });
-
-            document.addEventListener('click', function(event) {
-                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                    menuBar.classList.remove('open');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
