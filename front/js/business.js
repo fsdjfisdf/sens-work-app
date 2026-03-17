@@ -176,9 +176,17 @@
 
   function normalizeDate(value) {
     if (!value) return '';
-    const date = new Date(value);
+    return formatDateLocal(value);
+  }
+
+  function formatDateLocal(value) {
+    if (!value) return '';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+    const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    return date.toISOString().split('T')[0];
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
   function populateFilterOptions(data) {
@@ -723,11 +731,19 @@
 
   function getInclusiveDays(startDate, endDate) {
     if (!startDate || !endDate) return 0;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
-    const diff = end.getTime() - start.getTime();
-    return Math.max(1, Math.floor(diff / 86400000) + 1);
+    const start = parseYmdToUtc(startDate);
+    const end = parseYmdToUtc(endDate);
+    if (Number.isNaN(start) || Number.isNaN(end)) return 0;
+    const diff = end - start;
+    return Math.max(1, Math.round(diff / 86400000) + 1);
+  }
+
+  function parseYmdToUtc(value) {
+    const normalized = normalizeDate(value);
+    const parts = normalized.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return NaN;
+    const [year, month, day] = parts;
+    return Date.UTC(year, month - 1, day);
   }
 
   function formatDisplayDate(value) {
@@ -740,7 +756,7 @@
   }
 
   function todayString() {
-    return new Date().toISOString().split('T')[0];
+    return formatDateLocal(new Date());
   }
 
   function getToken() {

@@ -49,7 +49,7 @@ button, input, select, textarea { font: inherit; }
 .hidden { display: none !important; }
 
 .inner {
-  width: min(1360px, calc(100vw - 32px));
+  width: min(1680px, calc(100vw - 24px));
   margin: 0 auto;
 }
 
@@ -72,7 +72,7 @@ nav {
   justify-content: space-between;
   gap: 10px;
   min-height: var(--nav-h);
-  max-width: 2048px;
+  max-width: 1720px;
   margin: 0 auto;
   padding: 0 16px;
 }
@@ -156,7 +156,7 @@ nav {
 .menu-bar.open { max-height: 70vh; }
 
 .menu-bar-content {
-  max-width: 2048px;
+  max-width: 1720px;
   margin: 0 auto;
   padding: 10px 12px;
   display: flex;
@@ -430,10 +430,10 @@ nav {
 
 #business-table {
   width: 100%;
-  min-width: 1400px;
+  min-width: 1500px;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
+  table-layout: auto;
   font-size: 13px;
 }
 
@@ -479,6 +479,29 @@ nav {
   text-align: left;
 }
 
+#business-table th:last-child,
+#business-table td:last-child {
+  position: sticky;
+  right: 0;
+  min-width: 146px;
+}
+
+#business-table thead th:last-child {
+  z-index: 4;
+  background: #f8fafc;
+  box-shadow: -10px 0 16px rgba(15, 23, 42, 0.06);
+}
+
+#business-table tbody td:last-child {
+  background: #fff;
+  box-shadow: -10px 0 16px rgba(15, 23, 42, 0.06);
+}
+
+#business-table th:nth-child(11),
+#business-table td:nth-child(11) {
+  min-width: 220px;
+}
+
 .cell-main {
   display: block;
   font-weight: 800;
@@ -497,7 +520,7 @@ nav {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .empty-state {
@@ -682,7 +705,7 @@ footer p {
 @media (max-width: 640px) {
   :root { --nav-h: 52px; }
 
-  .inner { width: min(100%, calc(100vw - 24px)); }
+  .inner { width: min(100%, calc(100vw - 16px)); }
   .page-shell { padding: 12px 0 28px; }
   .summary-grid,
   .filter-grid { grid-template-columns: 1fr; }
