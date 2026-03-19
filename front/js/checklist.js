@@ -696,34 +696,39 @@
     return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
   }
 
-  function getToken() {
-    return localStorage.getItem('token')
-      || localStorage.getItem('accessToken')
-      || sessionStorage.getItem('token')
-      || sessionStorage.getItem('accessToken')
-      || '';
+function getToken() {
+  return localStorage.getItem('x-access-token')
+    || sessionStorage.getItem('x-access-token')
+    || localStorage.getItem('token')
+    || localStorage.getItem('accessToken')
+    || sessionStorage.getItem('token')
+    || sessionStorage.getItem('accessToken')
+    || '';
+}
+
+async function api(path, options = {}) {
+  const token = getToken();
+  state.token = token;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { 'x-access-token': token, Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {}),
+  };
+
+  const res = await fetch(path, {
+    method: options.method || 'GET',
+    credentials: 'include',
+    headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(json.error || json.message || `HTTP ${res.status}`);
   }
-
-  async function api(path, options = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...(state.token ? { 'x-access-token': state.token, Authorization: `Bearer ${state.token}` } : {}),
-      ...(options.headers || {}),
-    };
-
-    const res = await fetch(path, {
-      method: options.method || 'GET',
-      credentials: 'include',
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
-
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(json.error || json.message || `HTTP ${res.status}`);
-    }
-    return json;
-  }
+  return json;
+}
 
   function showToast(message, type = 'success') {
     els.toast.textContent = message;
