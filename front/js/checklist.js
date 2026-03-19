@@ -1,623 +1,707 @@
 (() => {
+  'use strict';
+
   const state = {
-    token: localStorage.getItem('x-access-token') || localStorage.getItem('token') || '',
+    token: null,
     me: null,
-    availableRows: [],
-    currentEquipmentGroup: '',
-    currentKind: 'SETUP',
-    checklist: null,
-    dirty: false,
-    collapsedSections: new Set(),
-    toastTimer: null,
+    available: [],
+    workspaceFilter: '',
+    currentTemplateKey: null,
+    currentChecklist: null,
+    checklistSearch: '',
+    onlyUnchecked: false,
+    myRequests: [],
+    rejectedRequests: [],
+    approvalQueue: [],
+    decisionHistory: [],
+    approvalDetail: null,
   };
 
   const els = {};
 
   document.addEventListener('DOMContentLoaded', init);
 
-  function qs(id) { return document.getElementById(id); }
-
   async function init() {
-    cache();
-    bind();
+    cacheElements();
+    bindEvents();
+    state.token = getToken();
 
     try {
-      await loadBootstrap();
-      await loadChecklist();
+      const me = await api('/api/checklists/me');
+      state.me = me;
+      renderUserBadge();
+      toggleAdminUI();
+
+      await Promise.all([
+        loadWorkspace(),
+        loadMyRequests(),
+        loadRejectedRequests(),
+        state.me?.user?.role === 'admin' ? loadApprovalQueue() : Promise.resolve(),
+        state.me?.user?.role === 'admin' ? loadDecisionHistory() : Promise.resolve(),
+      ]);
     } catch (error) {
       console.error(error);
-      showToast(error.message || '초기 화면 로딩 중 오류가 발생했습니다.', 'danger');
+      showToast(error.message || '체크리스트 화면을 불러오지 못했습니다.', 'danger');
     }
   }
 
-  function cache() {
+  function cacheElements() {
     Object.assign(els, {
-      userBadge: qs('userBadge'),
-      approvalLink: qs('approvalLink'),
-      overallCompletion: qs('overallCompletion'),
-      responseStatus: qs('responseStatus'),
-      questionCount: qs('questionCount'),
-      statusBanner: qs('statusBanner'),
-      equipmentSelect: qs('equipmentSelect'),
-      kindSelect: qs('kindSelect'),
-      questionSearch: qs('questionSearch'),
-      incompleteOnly: qs('incompleteOnly'),
-      collapseAllBtn: qs('collapseAllBtn'),
-      expandAllBtn: qs('expandAllBtn'),
-      checkAllVisibleBtn: qs('checkAllVisibleBtn'),
-      uncheckAllVisibleBtn: qs('uncheckAllVisibleBtn'),
-      reloadBtn: qs('reloadBtn'),
-      screenHint: qs('screenHint'),
-      profileInfo: qs('profileInfo'),
-      availableEquipmentList: qs('availableEquipmentList'),
-      sectionProgressList: qs('sectionProgressList'),
-      adminAccessPanel: qs('adminAccessPanel'),
-      accessEngineerId: qs('accessEngineerId'),
-      accessEquipmentGroup: qs('accessEquipmentGroup'),
-      accessType: qs('accessType'),
-      accessReason: qs('accessReason'),
-      loadAccessBtn: qs('loadAccessBtn'),
-      saveAccessBtn: qs('saveAccessBtn'),
-      accessResult: qs('accessResult'),
-      templateTitle: qs('templateTitle'),
-      templateMeta: qs('templateMeta'),
-      checklistSections: qs('checklistSections'),
-      saveBtn: qs('saveBtn'),
-      submitBtn: qs('submitBtn'),
-      toast: qs('toast'),
+      userBadge: qs('#userBadge'),
+      refreshBtn: qs('#refreshBtn'),
+      tabBar: qs('#tabBar'),
+      workspaceEquipmentFilter: qs('#workspaceEquipmentFilter'),
+      workspaceList: qs('#workspaceList'),
+      mineStatusFilter: qs('#mineStatusFilter'),
+      myRequestList: qs('#myRequestList'),
+      rejectedList: qs('#rejectedList'),
+      queueEquipmentFilter: qs('#queueEquipmentFilter'),
+      approvalQueueList: qs('#approvalQueueList'),
+      historyDecisionFilter: qs('#historyDecisionFilter'),
+      decisionHistoryList: qs('#decisionHistoryList'),
+
+      checklistModal: qs('#checklistModal'),
+      modalEyebrow: qs('#modalEyebrow'),
+      modalTitle: qs('#modalTitle'),
+      modalMeta: qs('#modalMeta'),
+      modalStatusPill: qs('#modalStatusPill'),
+      questionSearchInput: qs('#questionSearchInput'),
+      onlyUncheckedToggle: qs('#onlyUncheckedToggle'),
+      expandAllBtn: qs('#expandAllBtn'),
+      collapseAllBtn: qs('#collapseAllBtn'),
+      markVisibleBtn: qs('#markVisibleBtn'),
+      clearVisibleBtn: qs('#clearVisibleBtn'),
+      decisionBanner: qs('#decisionBanner'),
+      checklistSections: qs('#checklistSections'),
+      modalSummaryText: qs('#modalSummaryText'),
+      saveDraftBtn: qs('#saveDraftBtn'),
+      submitRequestBtn: qs('#submitRequestBtn'),
+
+      approvalModal: qs('#approvalModal'),
+      approvalTitle: qs('#approvalTitle'),
+      approvalMeta: qs('#approvalMeta'),
+      approvalStatusPill: qs('#approvalStatusPill'),
+      approvalEngineer: qs('#approvalEngineer'),
+      approvalCompletion: qs('#approvalCompletion'),
+      approvalComment: qs('#approvalComment'),
+      approvalSections: qs('#approvalSections'),
+      approvalDecisionInfo: qs('#approvalDecisionInfo'),
+      approveBtn: qs('#approveBtn'),
+      rejectBtn: qs('#rejectBtn'),
+
+      toast: qs('#toast'),
     });
   }
 
-  function bind() {
-    els.equipmentSelect.addEventListener('change', async () => {
-      state.currentEquipmentGroup = els.equipmentSelect.value;
-      await guardedReload();
+  function bindEvents() {
+    els.refreshBtn.addEventListener('click', reloadAll);
+    els.tabBar.addEventListener('click', onTabClick);
+    els.workspaceEquipmentFilter.addEventListener('change', () => {
+      state.workspaceFilter = els.workspaceEquipmentFilter.value;
+      renderWorkspace();
     });
-    els.kindSelect.addEventListener('change', async () => {
-      state.currentKind = els.kindSelect.value;
-      await guardedReload();
-    });
-    els.questionSearch.addEventListener('input', applyFilters);
-    els.incompleteOnly.addEventListener('change', applyFilters);
-    els.reloadBtn.addEventListener('click', () => guardedReload(true));
-    els.saveBtn.addEventListener('click', () => saveChecklist('ACTIVE'));
-    els.submitBtn.addEventListener('click', () => saveChecklist('SUBMITTED'));
-    els.checkAllVisibleBtn.addEventListener('click', () => bulkToggleVisible(true));
-    els.uncheckAllVisibleBtn.addEventListener('click', () => bulkToggleVisible(false));
-    els.collapseAllBtn.addEventListener('click', () => setAllSectionsCollapsed(true));
-    els.expandAllBtn.addEventListener('click', () => setAllSectionsCollapsed(false));
-    els.loadAccessBtn?.addEventListener('click', loadEngineerAccess);
-    els.saveAccessBtn?.addEventListener('click', saveEngineerAccess);
+    els.mineStatusFilter.addEventListener('change', renderMyRequests);
+    els.queueEquipmentFilter.addEventListener('change', renderApprovalQueue);
+    els.historyDecisionFilter.addEventListener('change', loadDecisionHistory);
 
-    window.addEventListener('beforeunload', (e) => {
-      if (!state.dirty) return;
-      e.preventDefault();
-      e.returnValue = '';
+    els.questionSearchInput.addEventListener('input', () => {
+      state.checklistSearch = els.questionSearchInput.value.trim().toLowerCase();
+      renderChecklistSections();
+    });
+    els.onlyUncheckedToggle.addEventListener('change', () => {
+      state.onlyUnchecked = !!els.onlyUncheckedToggle.checked;
+      renderChecklistSections();
+    });
+    els.expandAllBtn.addEventListener('click', () => toggleAllSections(true));
+    els.collapseAllBtn.addEventListener('click', () => toggleAllSections(false));
+    els.markVisibleBtn.addEventListener('click', () => markVisibleQuestions(true));
+    els.clearVisibleBtn.addEventListener('click', () => markVisibleQuestions(false));
+    els.saveDraftBtn.addEventListener('click', () => saveCurrentChecklist('ACTIVE'));
+    els.submitRequestBtn.addEventListener('click', () => saveCurrentChecklist('SUBMITTED'));
+
+    els.approveBtn.addEventListener('click', () => decideApproval('APPROVED'));
+    els.rejectBtn.addEventListener('click', () => decideApproval('REJECTED'));
+
+    document.querySelectorAll('[data-close="checklist"]').forEach((node) => {
+      node.addEventListener('click', closeChecklistModal);
+    });
+    document.querySelectorAll('[data-close="approval"]').forEach((node) => {
+      node.addEventListener('click', closeApprovalModal);
     });
   }
 
-  async function loadBootstrap() {
-    const [me, available] = await Promise.all([
-      api('/api/checklists/me'),
-      api('/api/checklists/available'),
-    ]);
-
-    state.me = me;
-    state.availableRows = Array.isArray(available?.rows) ? available.rows : [];
-
-    renderMe();
-    buildSelectors();
-    renderAvailableEquipment();
-    renderAdminPanel();
+  async function reloadAll() {
+    try {
+      await Promise.all([
+        loadWorkspace(),
+        loadMyRequests(),
+        loadRejectedRequests(),
+        state.me?.user?.role === 'admin' ? loadApprovalQueue() : Promise.resolve(),
+        state.me?.user?.role === 'admin' ? loadDecisionHistory() : Promise.resolve(),
+      ]);
+      showToast('목록을 새로고침했습니다.', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '새로고침 중 오류가 발생했습니다.', 'danger');
+    }
   }
 
-  function renderMe() {
+  function renderUserBadge() {
     const user = state.me?.user || {};
     const engineer = state.me?.engineer || {};
-    els.userBadge.textContent = `${engineer.name || user.nickname || '사용자'} · ${engineer.group || user.group || '-'} / ${engineer.site || user.site || '-'}`;
-
-    els.profileInfo.innerHTML = `
-      <dt>이름</dt><dd>${escapeHtml(engineer.name || user.nickname || '-')}</dd>
-      <dt>권한</dt><dd>${escapeHtml(user.role || '-')}</dd>
-      <dt>GROUP</dt><dd>${escapeHtml(engineer.group || user.group || '-')}</dd>
-      <dt>SITE</dt><dd>${escapeHtml(engineer.site || user.site || '-')}</dd>
-      <dt>매핑 방식</dt><dd>${escapeHtml(engineer.resolved_by || '-')}</dd>
-      <dt>Engineer ID</dt><dd>${engineer.id || '-'}</dd>
-    `;
+    els.userBadge.textContent = `${user.nickname || '-'} · ${engineer.group || user.group || '-'} / ${engineer.site || user.site || '-'}`;
   }
 
-  function buildSelectors() {
-    const equipmentMap = new Map();
-    state.availableRows.forEach((row) => {
-      if (!equipmentMap.has(row.equipment_group_code)) {
-        equipmentMap.set(row.equipment_group_code, {
-          code: row.equipment_group_code,
-          name: row.equipment_group_name || row.equipment_group_code,
-        });
+  function toggleAdminUI() {
+    const isAdmin = state.me?.user?.role === 'admin';
+    qsa('.admin-only').forEach((node) => node.classList.toggle('hidden', !isAdmin));
+  }
+
+  function onTabClick(event) {
+    const btn = event.target.closest('.tab-btn');
+    if (!btn) return;
+    const tab = btn.dataset.tab;
+    qsa('.tab-btn').forEach((node) => node.classList.toggle('is-active', node === btn));
+    qsa('.tab-panel').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === tab));
+  }
+
+  async function loadWorkspace() {
+    const data = await api('/api/checklists/available');
+    state.available = Array.isArray(data?.rows) ? data.rows : [];
+    buildEquipmentFilters();
+    renderWorkspace();
+  }
+
+  function buildEquipmentFilters() {
+    const map = new Map();
+    state.available.forEach((row) => {
+      if (!map.has(row.equipment_group_code)) {
+        map.set(row.equipment_group_code, row.equipment_group_name);
       }
     });
-
-    const equipmentItems = [...equipmentMap.values()];
-    els.equipmentSelect.innerHTML = equipmentItems.length
-      ? equipmentItems.map((item) => `<option value="${escapeAttr(item.code)}">${escapeHtml(item.name)}</option>`).join('')
-      : '<option value="">접근 가능한 설비 없음</option>';
-
-    if (!state.currentEquipmentGroup || !equipmentMap.has(state.currentEquipmentGroup)) {
-      state.currentEquipmentGroup = equipmentItems[0]?.code || '';
-    }
-    els.equipmentSelect.value = state.currentEquipmentGroup;
-
-    const allEquipmentOptions = Array.isArray(state.me?.access)
-      ? state.me.access.map((row) => `<option value="${escapeAttr(row.code)}">${escapeHtml(row.display_name)}</option>`).join('')
-      : '';
-    els.accessEquipmentGroup.innerHTML = allEquipmentOptions;
+    const options = ['<option value="">전체 설비</option>']
+      .concat(Array.from(map.entries()).map(([code, name]) => `<option value="${escapeAttr(code)}">${escapeHtml(name)}</option>`))
+      .join('');
+    els.workspaceEquipmentFilter.innerHTML = options;
+    if (els.queueEquipmentFilter) els.queueEquipmentFilter.innerHTML = options;
   }
 
-  function renderAvailableEquipment() {
-    const access = Array.isArray(state.me?.access) ? state.me.access : [];
-    const allowed = access.filter((row) => row.allowed);
-
-    if (!allowed.length) {
-      els.availableEquipmentList.className = 'mini-list empty-box';
-      els.availableEquipmentList.textContent = '접근 가능한 설비 없음';
+  function renderWorkspace() {
+    const rows = state.available.filter((row) => !state.workspaceFilter || row.equipment_group_code === state.workspaceFilter);
+    if (!rows.length) {
+      els.workspaceList.innerHTML = emptyBox('접근 가능한 체크리스트가 없습니다.');
       return;
     }
 
-    els.availableEquipmentList.className = 'mini-list';
-    els.availableEquipmentList.innerHTML = allowed.map((row) => {
-      const templates = state.availableRows.filter((v) => v.equipment_group_code === row.code);
-      const kinds = templates.map((v) => v.checklist_kind).sort().join(' / ');
+    els.workspaceList.innerHTML = rows.map((row) => {
+      const rate = calcRate(row.checked_count, row.question_count);
+      const status = row.response_status || 'ACTIVE';
       return `
-        <button type="button" class="equipment-chip ${row.code === state.currentEquipmentGroup ? 'is-active' : ''}" data-eq="${escapeAttr(row.code)}">
-          <strong>${escapeHtml(row.display_name)}</strong>
-          <span>${escapeHtml(kinds || '템플릿 없음')}</span>
+        <article class="select-card">
+          <div class="select-card__top">
+            <div>
+              <p class="card-kicker">${escapeHtml(row.equipment_group_name)}</p>
+              <h3>${escapeHtml(row.template_name)}</h3>
+            </div>
+            <span class="status-pill status-pill--${status.toLowerCase()}">${escapeHtml(status)}</span>
+          </div>
+          <div class="select-card__meta">
+            <span>${escapeHtml(row.checklist_kind)}</span>
+            <span>${rate}%</span>
+            <span>${Number(row.checked_count || 0)} / ${Number(row.question_count || 0)}</span>
+          </div>
+          <div class="mini-bar"><span style="width:${rate}%"></span></div>
+          <div class="select-card__actions">
+            <button class="btn primary open-checklist-btn"
+              data-equipment="${escapeAttr(row.equipment_group_code)}"
+              data-kind="${escapeAttr(row.checklist_kind)}">열기</button>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    qsa('.open-checklist-btn', els.workspaceList).forEach((btn) => {
+      btn.addEventListener('click', () => openChecklist(btn.dataset.equipment, btn.dataset.kind));
+    });
+  }
+
+  async function loadMyRequests() {
+    const data = await api('/api/checklists/my/requests');
+    state.myRequests = Array.isArray(data?.rows) ? data.rows : [];
+    renderMyRequests();
+  }
+
+  function renderMyRequests() {
+    const statusFilter = els.mineStatusFilter.value;
+    const rows = state.myRequests.filter((row) => {
+      if (row.response_status === 'REJECTED') return false;
+      if (!statusFilter) return ['SUBMITTED', 'APPROVED'].includes(row.response_status);
+      return row.response_status === statusFilter;
+    });
+    renderRequestList(els.myRequestList, rows, '요청 이력이 없습니다.', openMyRequestDetail);
+  }
+
+  async function loadRejectedRequests() {
+    const data = await api('/api/checklists/my/requests?status=REJECTED');
+    state.rejectedRequests = Array.isArray(data?.rows) ? data.rows : [];
+    renderRequestList(els.rejectedList, state.rejectedRequests, '반려된 체크리스트가 없습니다.', openRejectedFromList, true);
+  }
+
+  async function loadApprovalQueue() {
+    const data = await api('/api/checklists/admin/requests?status=SUBMITTED');
+    state.approvalQueue = Array.isArray(data?.rows) ? data.rows : [];
+    renderApprovalQueue();
+  }
+
+  function renderApprovalQueue() {
+    const equipmentFilter = els.queueEquipmentFilter.value;
+    const rows = state.approvalQueue.filter((row) => !equipmentFilter || row.equipment_group_code === equipmentFilter);
+    renderAdminList(els.approvalQueueList, rows, '결재 대기 목록이 없습니다.', openApprovalModal);
+  }
+
+  async function loadDecisionHistory() {
+    const decision = els.historyDecisionFilter?.value || '';
+    const data = await api(`/api/checklists/admin/history${decision ? `?decision=${encodeURIComponent(decision)}` : ''}`);
+    state.decisionHistory = Array.isArray(data?.rows) ? data.rows : [];
+    renderAdminList(els.decisionHistoryList, state.decisionHistory, '내 결재 이력이 없습니다.', openApprovalModal, true);
+  }
+
+  function renderRequestList(container, rows, emptyText, clickHandler, emphasizeRejected = false) {
+    if (!rows.length) {
+      container.innerHTML = emptyBox(emptyText);
+      return;
+    }
+    container.innerHTML = rows.map((row) => {
+      const rate = calcRate(row.checked_questions, row.total_questions);
+      const dateText = formatDateTime(row.rejected_at || row.approved_at || row.submitted_at || row.updated_at);
+      const rejectedClass = emphasizeRejected && row.response_status === 'REJECTED' ? ' is-rejected' : '';
+      return `
+        <button type="button" class="list-row${rejectedClass}" data-id="${row.response_id}">
+          <div class="list-row__left">
+            <div class="list-row__title-wrap">
+              <strong>${escapeHtml(row.equipment_group_name)} · ${escapeHtml(row.checklist_kind)}</strong>
+              <span class="status-pill status-pill--${String(row.response_status).toLowerCase()}">${escapeHtml(row.response_status)}</span>
+            </div>
+            <p>${escapeHtml(row.template_name)}</p>
+            <small>${dateText}</small>
+            ${row.decision_comment ? `<div class="list-note">${escapeHtml(row.decision_comment)}</div>` : ''}
+          </div>
+          <div class="list-row__right">
+            <span>${rate}%</span>
+            <span>${Number(row.checked_questions || 0)} / ${Number(row.total_questions || 0)}</span>
+          </div>
         </button>
       `;
     }).join('');
 
-    els.availableEquipmentList.querySelectorAll('.equipment-chip').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        els.equipmentSelect.value = btn.dataset.eq;
-        state.currentEquipmentGroup = btn.dataset.eq;
-        await guardedReload();
-      });
+    qsa('.list-row', container).forEach((node) => {
+      node.addEventListener('click', () => clickHandler(Number(node.dataset.id)));
     });
   }
 
-  function renderAdminPanel() {
-    const role = state.me?.user?.role;
-    const isAdmin = role === 'admin';
-    const canManageAccess = role === 'admin' || role === 'editor';
+  function renderAdminList(container, rows, emptyText, clickHandler, history = false) {
+    if (!rows.length) {
+      container.innerHTML = emptyBox(emptyText);
+      return;
+    }
+    container.innerHTML = rows.map((row) => {
+      const rate = calcRate(row.checked_questions, row.total_questions);
+      const decisionDate = history ? formatDateTime(row.approved_at || row.rejected_at || row.updated_at) : formatDateTime(row.submitted_at || row.updated_at);
+      return `
+        <button type="button" class="list-row" data-id="${row.response_id}">
+          <div class="list-row__left">
+            <div class="list-row__title-wrap">
+              <strong>${escapeHtml(row.engineer_name)} · ${escapeHtml(row.equipment_group_name)} · ${escapeHtml(row.checklist_kind)}</strong>
+              <span class="status-pill status-pill--${String(row.response_status).toLowerCase()}">${escapeHtml(row.response_status)}</span>
+            </div>
+            <p>${escapeHtml(row.template_name)}</p>
+            <small>${decisionDate}</small>
+            ${row.decision_comment ? `<div class="list-note">${escapeHtml(row.decision_comment)}</div>` : ''}
+          </div>
+          <div class="list-row__right">
+            <span>${rate}%</span>
+            <span>${Number(row.checked_questions || 0)} / ${Number(row.total_questions || 0)}</span>
+          </div>
+        </button>
+      `;
+    }).join('');
 
-    els.adminAccessPanel.classList.toggle('hidden', !canManageAccess);
-    els.approvalLink.classList.toggle('hidden', !isAdmin);
+    qsa('.list-row', container).forEach((node) => {
+      node.addEventListener('click', () => clickHandler(Number(node.dataset.id)));
+    });
   }
 
-  async function guardedReload(force = false) {
-    if (!force && state.dirty) {
-      const proceed = window.confirm('저장되지 않은 변경사항이 있습니다. 계속 이동할까요?');
-      if (!proceed) {
-        els.equipmentSelect.value = state.currentEquipmentGroup;
-        els.kindSelect.value = state.currentKind;
-        return;
+  async function openChecklist(equipment, kind) {
+    try {
+      state.checklistSearch = '';
+      state.onlyUnchecked = false;
+      els.questionSearchInput.value = '';
+      els.onlyUncheckedToggle.checked = false;
+      const data = await api(`/api/checklists/my?equipment_group=${encodeURIComponent(equipment)}&kind=${encodeURIComponent(kind)}`);
+      state.currentTemplateKey = `${equipment}__${kind}`;
+      state.currentChecklist = data;
+      renderChecklistModal();
+      openModal(els.checklistModal);
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '체크리스트를 불러오지 못했습니다.', 'danger');
+    }
+  }
+
+  function renderChecklistModal() {
+    const data = state.currentChecklist;
+    if (!data) return;
+
+    const template = data.template || {};
+    const response = data.response || {};
+    const summary = data.summary || {};
+    const permission = data.permission || {};
+
+    els.modalEyebrow.textContent = `${template.equipment_group_name || template.equipment_group_code || ''} · ${template.checklist_kind || ''}`;
+    els.modalTitle.textContent = template.template_name || '체크리스트';
+    els.modalMeta.textContent = `v${template.version_no || 1}`;
+    setStatusPill(els.modalStatusPill, response.response_status || 'ACTIVE');
+
+    const decisionComment = response.decision_comment ? `반려/결재 의견: ${response.decision_comment}` : '';
+    const bannerMsg = response.response_status === 'REJECTED'
+      ? (decisionComment || '반려된 체크리스트입니다. 수정 후 다시 결재 요청하세요.')
+      : response.response_status === 'SUBMITTED'
+        ? '결재 요청이 제출되었습니다. 관리자 승인 전까지 수정할 수 없습니다.'
+        : response.response_status === 'APPROVED'
+          ? '승인 완료된 체크리스트입니다.'
+          : '';
+    els.decisionBanner.classList.toggle('hidden', !bannerMsg);
+    els.decisionBanner.textContent = bannerMsg;
+    els.decisionBanner.className = `decision-banner ${bannerMsg ? '' : 'hidden'} ${String(response.response_status || '').toLowerCase()}`.trim();
+
+    els.saveDraftBtn.disabled = !permission.can_edit;
+    els.submitRequestBtn.disabled = !permission.can_submit;
+
+    renderChecklistSections();
+    els.modalSummaryText.textContent = `${summary.checked_questions || 0} / ${summary.total_questions || 0} 완료 · ${summary.completion_rate || 0}%`;
+  }
+
+  function renderChecklistSections() {
+    const data = state.currentChecklist;
+    if (!data) return;
+    const permission = data.permission || {};
+    const search = state.checklistSearch;
+    const onlyUnchecked = state.onlyUnchecked;
+
+    const renderedSections = (data.sections || []).map((section, sectionIndex) => {
+      const visibleQuestions = (section.questions || []).filter((question) => {
+        const matchSearch = !search || question.question_text.toLowerCase().includes(search) || String(question.question_code || '').toLowerCase().includes(search);
+        const matchUnchecked = !onlyUnchecked || !question.is_checked;
+        return matchSearch && matchUnchecked;
+      });
+
+      if (!visibleQuestions.length) return '';
+
+      const summary = calcSectionSummary(visibleQuestions);
+      return `
+        <section class="section-card" data-section-index="${sectionIndex}">
+          <button type="button" class="section-card__head" data-toggle-section>
+            <div>
+              <p>${sectionIndex + 1}. ${escapeHtml(section.section_name)}</p>
+              <small>${summary.checked} / ${summary.total} 완료</small>
+            </div>
+            <div class="section-card__head-right">
+              <div class="mini-bar mini-bar--wide"><span style="width:${summary.rate}%"></span></div>
+              <strong>${summary.rate}%</strong>
+            </div>
+          </button>
+          <div class="section-card__body is-open">
+            ${visibleQuestions.map((question, idx) => `
+              <article class="question-card ${question.is_checked ? 'is-checked' : ''}" data-question-id="${question.id}">
+                <div class="question-card__meta">
+                  <span>${sectionIndex + 1}.${idx + 1}</span>
+                  <code>${escapeHtml(question.question_code)}</code>
+                </div>
+                <p>${escapeHtml(question.question_text)}</p>
+                <div class="question-card__actions">
+                  <button type="button" class="toggle-chip ${question.is_checked ? 'is-active' : ''}" data-toggle-question="${question.id}" ${permission.can_edit ? '' : 'disabled'}>
+                    ${question.is_checked ? '체크됨' : '미체크'}
+                  </button>
+                </div>
+              </article>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }).filter(Boolean);
+
+    if (!renderedSections.length) {
+      els.checklistSections.innerHTML = emptyBox('표시할 질문이 없습니다.');
+      return;
+    }
+
+    els.checklistSections.innerHTML = renderedSections.join('');
+
+    qsa('[data-toggle-section]', els.checklistSections).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const body = btn.nextElementSibling;
+        body.classList.toggle('is-open');
+      });
+    });
+
+    qsa('[data-toggle-question]', els.checklistSections).forEach((btn) => {
+      btn.addEventListener('click', () => toggleQuestion(Number(btn.dataset.toggleQuestion)));
+    });
+
+    const summary = calcOverallSummary(data.sections || []);
+    els.modalSummaryText.textContent = `${summary.checked} / ${summary.total} 완료 · ${summary.rate}%`;
+  }
+
+  function toggleQuestion(questionId) {
+    if (!state.currentChecklist?.permission?.can_edit) return;
+    for (const section of state.currentChecklist.sections || []) {
+      const question = (section.questions || []).find((item) => item.id === questionId);
+      if (question) {
+        question.is_checked = !question.is_checked;
+        break;
       }
     }
-    await loadChecklist();
+    renderChecklistSections();
   }
 
-  async function loadChecklist() {
-    if (!state.currentEquipmentGroup) {
-      els.checklistSections.className = 'empty-box empty-box--lg';
-      els.checklistSections.textContent = '접근 가능한 설비가 없습니다.';
-      return;
-    }
+  function toggleAllSections(open) {
+    qsa('.section-card__body', els.checklistSections).forEach((body) => {
+      body.classList.toggle('is-open', open);
+    });
+  }
 
-    els.kindSelect.value = state.currentKind;
-    setToolbarDisabled(true);
-    setStatusBanner('체크리스트를 불러오는 중입니다.', 'loading');
+  function markVisibleQuestions(checked) {
+    if (!state.currentChecklist?.permission?.can_edit) return;
+    const visibleIds = qsa('[data-toggle-question]', els.checklistSections).map((btn) => Number(btn.dataset.toggleQuestion));
+    const visibleIdSet = new Set(visibleIds);
+    for (const section of state.currentChecklist.sections || []) {
+      for (const question of section.questions || []) {
+        if (visibleIdSet.has(question.id)) question.is_checked = checked;
+      }
+    }
+    renderChecklistSections();
+  }
+
+  async function saveCurrentChecklist(responseStatus) {
+    if (!state.currentChecklist) return;
+    const template = state.currentChecklist.template || {};
+    const answers = flattenAnswers(state.currentChecklist.sections || []);
 
     try {
-      const data = await api(`/api/checklists/my?equipment_group=${encodeURIComponent(state.currentEquipmentGroup)}&kind=${encodeURIComponent(state.currentKind)}`);
-      state.checklist = data;
-      state.dirty = false;
-      state.collapsedSections.clear();
-
-      renderChecklist();
-      updateSummary();
-      applyFilters();
-    } finally {
-      setToolbarDisabled(false);
-    }
-  }
-
-  function renderChecklist() {
-    const data = state.checklist;
-    const template = data?.template;
-    const response = data?.response;
-    const permission = data?.permission || {};
-    const status = response?.response_status || 'ACTIVE';
-
-    els.templateTitle.textContent = `${template?.equipment_group_code || '-'} · ${template?.checklist_kind || '-'} Checklist`;
-    els.templateMeta.textContent = `${template?.template_name || ''} ${template?.version_no ? `(v${template.version_no})` : ''}`;
-
-    if (!data?.sections?.length) {
-      els.checklistSections.className = 'empty-box empty-box--lg';
-      els.checklistSections.textContent = '표시할 질문이 없습니다.';
-      updateStatusBanner(status, permission, response);
-      updateActionButtons(status, permission);
-      return;
-    }
-
-    els.checklistSections.className = 'section-stack';
-    els.checklistSections.innerHTML = data.sections.map((section, idx) => renderSection(section, idx + 1)).join('');
-
-    els.checklistSections.querySelectorAll('.section-head').forEach((head) => {
-      head.addEventListener('click', (e) => {
-        if (e.target.closest('button')) return;
-        const code = head.dataset.sectionCode;
-        toggleSection(code);
-      });
-    });
-
-    els.checklistSections.querySelectorAll('.question-check').forEach((checkbox) => {
-      checkbox.addEventListener('change', handleQuestionToggle);
-    });
-
-    els.checklistSections.querySelectorAll('.js-section-check-all').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setSectionQuestions(btn.dataset.sectionCode, true);
-      });
-    });
-    els.checklistSections.querySelectorAll('.js-section-uncheck-all').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setSectionQuestions(btn.dataset.sectionCode, false);
-      });
-    });
-
-    updateStatusBanner(status, permission, response);
-    updateActionButtons(status, permission);
-  }
-
-  function renderSection(section, index) {
-    const percent = Number(section?.summary?.completion_rate || 0);
-    const questions = section.questions.map((q, qIndex) => `
-      <label class="question-card ${q.is_checked ? 'is-checked' : ''}" data-question-row>
-        <input class="question-check" type="checkbox" data-question-id="${q.id}" ${q.is_checked ? 'checked' : ''} />
-        <div class="question-copy">
-          <div class="question-meta">
-            <span class="question-index">${index}.${qIndex + 1}</span>
-            <span class="question-code">${escapeHtml(q.question_code)}</span>
-            <span class="question-state">${q.is_checked ? '완료' : '미완료'}</span>
-          </div>
-          <div class="question-text">${escapeHtml(q.question_text)}</div>
-        </div>
-      </label>
-    `).join('');
-
-    return `
-      <article class="section-card ${state.collapsedSections.has(section.section_code) ? 'is-collapsed' : ''}" data-section-code="${escapeAttr(section.section_code)}">
-        <div class="section-head" data-section-code="${escapeAttr(section.section_code)}">
-          <div class="section-head__left">
-            <span class="section-chip">${index}</span>
-            <div>
-              <h3>${escapeHtml(section.section_name)}</h3>
-              <p>${section.summary.checked_questions}/${section.summary.total_questions} 완료</p>
-            </div>
-          </div>
-
-          <div class="section-head__right">
-            <div class="section-bar"><span style="width:${percent}%"></span></div>
-            <strong>${percent}%</strong>
-            <button type="button" class="btn btn--line btn--sm js-section-check-all" data-section-code="${escapeAttr(section.section_code)}">전체 체크</button>
-            <button type="button" class="btn btn--line btn--sm js-section-uncheck-all" data-section-code="${escapeAttr(section.section_code)}">전체 해제</button>
-          </div>
-        </div>
-        <div class="section-body">
-          ${questions}
-        </div>
-      </article>
-    `;
-  }
-
-  function handleQuestionToggle(event) {
-    const checkbox = event.currentTarget;
-    const card = checkbox.closest('.question-card');
-    card.classList.toggle('is-checked', checkbox.checked);
-    const stateEl = card.querySelector('.question-state');
-    if (stateEl) stateEl.textContent = checkbox.checked ? '완료' : '미완료';
-    state.dirty = true;
-    updateSummaryFromDom();
-    applyFilters();
-  }
-
-  function updateSummary() {
-    const summary = state.checklist?.summary || { completion_rate: 0, checked_questions: 0, total_questions: 0 };
-    els.overallCompletion.textContent = `${summary.completion_rate || 0}%`;
-    els.responseStatus.textContent = state.checklist?.response?.response_status || 'ACTIVE';
-    els.questionCount.textContent = `${summary.checked_questions || 0} / ${summary.total_questions || 0}`;
-
-    const sections = state.checklist?.sections || [];
-    if (!sections.length) {
-      els.sectionProgressList.className = 'section-progress-stack empty-box';
-      els.sectionProgressList.textContent = '아직 불러온 데이터가 없습니다.';
-      return;
-    }
-
-    els.sectionProgressList.className = 'section-progress-stack';
-    els.sectionProgressList.innerHTML = sections.map((section) => `
-      <div class="progress-card">
-        <div class="progress-card__top">
-          <strong>${escapeHtml(section.section_name)}</strong>
-          <span>${section.summary.completion_rate}%</span>
-        </div>
-        <div class="section-bar"><span style="width:${section.summary.completion_rate}%"></span></div>
-        <p>${section.summary.checked_questions}/${section.summary.total_questions} 완료</p>
-      </div>
-    `).join('');
-  }
-
-  function updateSummaryFromDom() {
-    const sectionEls = [...els.checklistSections.querySelectorAll('.section-card')];
-    let totalQuestions = 0;
-    let totalChecked = 0;
-    const sectionSummaries = [];
-
-    sectionEls.forEach((sectionEl) => {
-      const rows = [...sectionEl.querySelectorAll('.question-card')];
-      const checked = rows.filter((row) => row.querySelector('.question-check').checked).length;
-      const total = rows.length;
-      const percent = total ? Math.round((checked / total) * 1000) / 10 : 0;
-      totalQuestions += total;
-      totalChecked += checked;
-
-      const code = sectionEl.dataset.sectionCode;
-      const title = sectionEl.querySelector('h3')?.textContent || code;
-      sectionSummaries.push({
-        code,
-        title,
-        checked,
-        total,
-        percent,
-      });
-
-      const strong = sectionEl.querySelector('.section-head__right strong');
-      if (strong) strong.textContent = `${percent}%`;
-      const p = sectionEl.querySelector('.section-head__left p');
-      if (p) p.textContent = `${checked}/${total} 완료`;
-      const bar = sectionEl.querySelector('.section-bar span');
-      if (bar) bar.style.width = `${percent}%`;
-    });
-
-    const overall = totalQuestions ? Math.round((totalChecked / totalQuestions) * 1000) / 10 : 0;
-    els.overallCompletion.textContent = `${overall}%`;
-    els.questionCount.textContent = `${totalChecked} / ${totalQuestions}`;
-
-    els.sectionProgressList.className = 'section-progress-stack';
-    els.sectionProgressList.innerHTML = sectionSummaries.map((section) => `
-      <div class="progress-card">
-        <div class="progress-card__top">
-          <strong>${escapeHtml(section.title)}</strong>
-          <span>${section.percent}%</span>
-        </div>
-        <div class="section-bar"><span style="width:${section.percent}%"></span></div>
-        <p>${section.checked}/${section.total} 완료</p>
-      </div>
-    `).join('');
-  }
-
-  function updateStatusBanner(status, permission, response) {
-    const comment = response?.decision_comment ? `사유: ${response.decision_comment}` : '';
-    if (status === 'SUBMITTED') {
-      setStatusBanner('결재 요청이 제출되었습니다. 관리자 승인 전까지 수정할 수 없습니다.', 'submitted');
-    } else if (status === 'APPROVED') {
-      setStatusBanner(`승인 완료된 체크리스트입니다. ${comment}`.trim(), 'approved');
-    } else if (status === 'REJECTED') {
-      setStatusBanner(`반려된 체크리스트입니다. 수정 후 다시 결재 요청하세요. ${comment}`.trim(), 'rejected');
-    } else {
-      setStatusBanner(permission?.can_submit
-        ? '질문을 체크한 뒤 임시 저장 또는 결재 요청을 진행할 수 있습니다.'
-        : '현재 상태에서는 수정할 수 없습니다.', 'idle');
-    }
-  }
-
-  function updateActionButtons(status, permission) {
-    const canEdit = !!permission?.can_edit;
-    const canSubmit = !!permission?.can_submit;
-
-    els.saveBtn.disabled = !canEdit;
-    els.submitBtn.disabled = !canSubmit;
-    els.questionSearch.disabled = false;
-    els.incompleteOnly.disabled = false;
-
-    els.checklistSections.querySelectorAll('.question-check').forEach((el) => {
-      el.disabled = !canEdit;
-    });
-
-    els.checklistSections.querySelectorAll('.js-section-check-all, .js-section-uncheck-all').forEach((el) => {
-      el.disabled = !canEdit;
-    });
-  }
-
-  function applyFilters() {
-    const keyword = (els.questionSearch.value || '').trim().toLowerCase();
-    const incompleteOnly = els.incompleteOnly.checked;
-
-    const sections = [...els.checklistSections.querySelectorAll('.section-card')];
-    sections.forEach((section) => {
-      let visibleCount = 0;
-      section.querySelectorAll('.question-card').forEach((card) => {
-        const text = (card.innerText || '').toLowerCase();
-        const isChecked = card.querySelector('.question-check').checked;
-        const matched = (!keyword || text.includes(keyword)) && (!incompleteOnly || !isChecked);
-        card.classList.toggle('hidden', !matched);
-        if (matched) visibleCount += 1;
-      });
-      section.classList.toggle('hidden-by-filter', visibleCount === 0);
-    });
-
-    const visibleQuestions = els.checklistSections.querySelectorAll('.question-card:not(.hidden)').length;
-    els.screenHint.textContent = `현재 보이는 질문 ${visibleQuestions}개`;
-  }
-
-  function toggleSection(code) {
-    const card = els.checklistSections.querySelector(`.section-card[data-section-code="${CSS.escape(code)}"]`);
-    if (!card) return;
-    const isCollapsed = card.classList.toggle('is-collapsed');
-    if (isCollapsed) state.collapsedSections.add(code);
-    else state.collapsedSections.delete(code);
-  }
-
-  function setAllSectionsCollapsed(collapsed) {
-    els.checklistSections.querySelectorAll('.section-card').forEach((card) => {
-      card.classList.toggle('is-collapsed', collapsed);
-      const code = card.dataset.sectionCode;
-      if (collapsed) state.collapsedSections.add(code);
-      else state.collapsedSections.delete(code);
-    });
-  }
-
-  function setSectionQuestions(sectionCode, checked) {
-    const section = els.checklistSections.querySelector(`.section-card[data-section-code="${CSS.escape(sectionCode)}"]`);
-    if (!section) return;
-
-    section.querySelectorAll('.question-card:not(.hidden) .question-check').forEach((checkbox) => {
-      if (checkbox.disabled) return;
-      checkbox.checked = checked;
-      const card = checkbox.closest('.question-card');
-      card.classList.toggle('is-checked', checked);
-      const stateEl = card.querySelector('.question-state');
-      if (stateEl) stateEl.textContent = checked ? '완료' : '미완료';
-    });
-
-    state.dirty = true;
-    updateSummaryFromDom();
-    applyFilters();
-  }
-
-  function bulkToggleVisible(checked) {
-    els.checklistSections.querySelectorAll('.question-card:not(.hidden) .question-check').forEach((checkbox) => {
-      if (checkbox.disabled) return;
-      checkbox.checked = checked;
-      const card = checkbox.closest('.question-card');
-      card.classList.toggle('is-checked', checked);
-      const stateEl = card.querySelector('.question-state');
-      if (stateEl) stateEl.textContent = checked ? '완료' : '미완료';
-    });
-    state.dirty = true;
-    updateSummaryFromDom();
-    applyFilters();
-  }
-
-  async function saveChecklist(nextStatus) {
-    if (!state.checklist?.template) return;
-
-    const payload = {
-      equipment_group: state.currentEquipmentGroup,
-      kind: state.currentKind,
-      response_status: nextStatus,
-      answers: collectAnswersFromDom(),
-    };
-
-    const message = nextStatus === 'SUBMITTED'
-      ? '현재 체크 상태로 결재 요청을 보낼까요? 제출 후에는 승인 전까지 수정할 수 없습니다.'
-      : '현재 체크 상태를 저장할까요?';
-
-    const ok = window.confirm(message);
-    if (!ok) return;
-
-    setToolbarDisabled(true);
-    try {
-      const saved = await api('/api/checklists/my', {
+      const data = await api('/api/checklists/my', {
         method: 'PUT',
-        body: payload,
+        body: {
+          equipment_group: template.equipment_group_code,
+          kind: template.checklist_kind,
+          response_status: responseStatus,
+          answers,
+        },
       });
-      state.checklist = saved;
-      state.dirty = false;
-      renderChecklist();
-      updateSummary();
-      applyFilters();
-      showToast(nextStatus === 'SUBMITTED' ? '결재 요청을 보냈습니다.' : '체크리스트를 저장했습니다.', 'success');
+      state.currentChecklist = data;
+      renderChecklistModal();
+      await Promise.all([
+        loadWorkspace(),
+        loadMyRequests(),
+        loadRejectedRequests(),
+      ]);
+      showToast(responseStatus === 'SUBMITTED' ? '결재 요청을 보냈습니다.' : '체크리스트를 저장했습니다.', 'success');
     } catch (error) {
       console.error(error);
       showToast(error.message || '저장 중 오류가 발생했습니다.', 'danger');
-    } finally {
-      setToolbarDisabled(false);
     }
   }
 
-  function collectAnswersFromDom() {
-    return [...els.checklistSections.querySelectorAll('.question-check')].map((checkbox) => ({
-      question_id: Number(checkbox.dataset.questionId),
-      is_checked: checkbox.checked,
-    }));
-  }
-
-  async function loadEngineerAccess() {
-    const engineerId = Number(els.accessEngineerId.value);
-    if (!engineerId) {
-      showToast('Engineer ID를 입력하세요.', 'danger');
-      return;
-    }
-
+  async function openMyRequestDetail(responseId) {
     try {
-      const data = await api(`/api/checklists/admin/access?engineer_id=${engineerId}`);
-      const overrides = Array.isArray(data?.overrides) ? data.overrides : [];
-      if (!overrides.length) {
-        els.accessResult.className = 'empty-box empty-box--sm';
-        els.accessResult.textContent = '예외 설정이 없습니다.';
-        return;
-      }
-
-      els.accessResult.className = 'access-list';
-      els.accessResult.innerHTML = overrides.map((row) => `
-        <div class="access-item">
-          <strong>${escapeHtml(row.equipment_group_code)}</strong>
-          <span>${escapeHtml(row.access_type)}</span>
-          <p>${escapeHtml(row.reason || '-')}</p>
-        </div>
-      `).join('');
+      const data = await api(`/api/checklists/my/requests/${responseId}`);
+      state.currentChecklist = data;
+      renderChecklistModal();
+      openModal(els.checklistModal);
     } catch (error) {
       console.error(error);
-      showToast(error.message || '예외 조회 중 오류가 발생했습니다.', 'danger');
+      showToast(error.message || '상세 정보를 불러오지 못했습니다.', 'danger');
     }
   }
 
-  async function saveEngineerAccess() {
-    const payload = {
-      engineer_id: Number(els.accessEngineerId.value),
-      equipment_group: els.accessEquipmentGroup.value,
-      access_type: els.accessType.value,
-      reason: els.accessReason.value.trim(),
-    };
-
-    if (!payload.engineer_id || !payload.equipment_group) {
-      showToast('Engineer ID와 설비 그룹을 확인하세요.', 'danger');
-      return;
+  async function openRejectedFromList(responseId) {
+    try {
+      const data = await api(`/api/checklists/my/requests/${responseId}`);
+      state.currentChecklist = data;
+      renderChecklistModal();
+      openModal(els.checklistModal);
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '반려 상세를 불러오지 못했습니다.', 'danger');
     }
+  }
+
+  async function openApprovalModal(responseId) {
+    try {
+      const data = await api(`/api/checklists/admin/requests/${responseId}`);
+      state.approvalDetail = data;
+      renderApprovalModal();
+      openModal(els.approvalModal);
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '결재 상세를 불러오지 못했습니다.', 'danger');
+    }
+  }
+
+  function renderApprovalModal() {
+    const data = state.approvalDetail;
+    if (!data) return;
+    const template = data.template || {};
+    const engineer = data.engineer || {};
+    const response = data.response || {};
+    const summary = data.summary || {};
+
+    els.approvalTitle.textContent = template.template_name || '결재 상세';
+    els.approvalMeta.textContent = `${template.equipment_group_name || template.equipment_group_code || '-'} · ${template.checklist_kind || '-'} · v${template.version_no || 1}`;
+    setStatusPill(els.approvalStatusPill, response.response_status || '-');
+    els.approvalEngineer.textContent = `${engineer.name || '-'} · ${engineer.group || '-'} / ${engineer.site || '-'}`;
+    els.approvalCompletion.textContent = `${summary.checked_questions || 0} / ${summary.total_questions || 0} · ${summary.completion_rate || 0}%`;
+    els.approvalComment.value = response.decision_comment || '';
+    els.approvalDecisionInfo.textContent = response.decision_comment || '승인 또는 반려 의견을 남길 수 있습니다.';
+
+    const canApprove = !!data.permission?.can_approve;
+    els.approveBtn.disabled = !canApprove;
+    els.rejectBtn.disabled = !canApprove;
+
+    els.approvalSections.innerHTML = (data.sections || []).map((section, idx) => {
+      const summary = calcSectionSummary(section.questions || []);
+      return `
+        <section class="section-card section-card--readonly">
+          <div class="section-card__head section-card__head--static">
+            <div>
+              <p>${idx + 1}. ${escapeHtml(section.section_name)}</p>
+              <small>${summary.checked} / ${summary.total} 완료</small>
+            </div>
+            <div class="section-card__head-right">
+              <div class="mini-bar mini-bar--wide"><span style="width:${summary.rate}%"></span></div>
+              <strong>${summary.rate}%</strong>
+            </div>
+          </div>
+          <div class="section-card__body is-open">
+            ${(section.questions || []).map((question, qIndex) => `
+              <article class="question-card ${question.is_checked ? 'is-checked' : ''}">
+                <div class="question-card__meta">
+                  <span>${idx + 1}.${qIndex + 1}</span>
+                  <code>${escapeHtml(question.question_code)}</code>
+                </div>
+                <p>${escapeHtml(question.question_text)}</p>
+                <div class="question-card__actions">
+                  <span class="read-state ${question.is_checked ? 'is-checked' : ''}">${question.is_checked ? '체크됨' : '미체크'}</span>
+                </div>
+              </article>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }).join('') || emptyBox('상세 질문이 없습니다.');
+  }
+
+  async function decideApproval(decision) {
+    if (!state.approvalDetail?.response?.id) return;
+    const confirmMsg = decision === 'APPROVED' ? '이 체크리스트를 승인할까요?' : '이 체크리스트를 반려할까요?';
+    if (!window.confirm(confirmMsg)) return;
 
     try {
-      await api('/api/checklists/admin/access', {
-        method: 'PUT',
-        body: payload,
+      await api(`/api/checklists/admin/requests/${state.approvalDetail.response.id}/decision`, {
+        method: 'POST',
+        body: {
+          decision,
+          comment: els.approvalComment.value.trim(),
+        },
       });
-      showToast('접근 예외를 저장했습니다.', 'success');
-      await loadEngineerAccess();
+      showToast(decision === 'APPROVED' ? '승인했습니다.' : '반려했습니다.', 'success');
+      closeApprovalModal();
+      await Promise.all([loadApprovalQueue(), loadDecisionHistory(), loadMyRequests(), loadRejectedRequests()]);
     } catch (error) {
       console.error(error);
-      showToast(error.message || '접근 예외 저장 중 오류가 발생했습니다.', 'danger');
+      showToast(error.message || '결재 처리 중 오류가 발생했습니다.', 'danger');
     }
   }
 
-  function setToolbarDisabled(disabled) {
-    [els.reloadBtn, els.saveBtn, els.submitBtn, els.checkAllVisibleBtn, els.uncheckAllVisibleBtn, els.collapseAllBtn, els.expandAllBtn]
-      .forEach((btn) => { if (btn) btn.disabled = disabled; });
+  function closeChecklistModal() {
+    closeModal(els.checklistModal);
   }
 
-  function setStatusBanner(message, type = 'idle') {
-    els.statusBanner.className = `status-banner status-banner--${type}`;
-    els.statusBanner.textContent = message;
+  function closeApprovalModal() {
+    closeModal(els.approvalModal);
+  }
+
+  function openModal(node) {
+    node.classList.remove('hidden');
+    node.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('modal-open');
+  }
+
+  function closeModal(node) {
+    node.classList.add('hidden');
+    node.setAttribute('aria-hidden', 'true');
+    if (qsa('.modal:not(.hidden)').length === 0) {
+      document.body.classList.remove('modal-open');
+    }
+  }
+
+  function flattenAnswers(sections) {
+    return (sections || []).flatMap((section) => (section.questions || []).map((question) => ({
+      question_id: question.id,
+      is_checked: !!question.is_checked,
+      note: question.note || null,
+    })));
+  }
+
+  function calcSectionSummary(questions) {
+    const total = questions.length;
+    const checked = questions.filter((q) => !!q.is_checked).length;
+    const rate = total ? round1((checked / total) * 100) : 0;
+    return { total, checked, rate };
+  }
+
+  function calcOverallSummary(sections) {
+    const allQuestions = (sections || []).flatMap((section) => section.questions || []);
+    return calcSectionSummary(allQuestions);
+  }
+
+  function calcRate(checked, total) {
+    const c = Number(checked || 0);
+    const t = Number(total || 0);
+    return t ? round1((c / t) * 100) : 0;
+  }
+
+  function setStatusPill(node, status) {
+    const value = String(status || '-').toUpperCase();
+    node.className = `status-pill status-pill--${value.toLowerCase()}`;
+    node.textContent = value;
+  }
+
+  function emptyBox(text) {
+    return `<div class="empty-box">${escapeHtml(text)}</div>`;
+  }
+
+  function round1(n) {
+    return Math.round(Number(n || 0) * 10) / 10;
+  }
+
+  function formatDateTime(v) {
+    if (!v) return '-';
+    const d = new Date(v);
+    if (Number.isNaN(d.getTime())) return String(v);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+  }
+
+  function getToken() {
+    return localStorage.getItem('token')
+      || localStorage.getItem('accessToken')
+      || sessionStorage.getItem('token')
+      || sessionStorage.getItem('accessToken')
+      || '';
   }
 
   async function api(path, options = {}) {
@@ -629,33 +713,36 @@
 
     const res = await fetch(path, {
       method: options.method || 'GET',
+      credentials: 'include',
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
-      credentials: 'include',
     });
 
-    const data = await res.json().catch(() => ({}));
+    const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const err = new Error(data?.error || data?.message || '요청 처리 실패');
-      err.status = res.status;
-      err.payload = data;
-      throw err;
+      throw new Error(json.error || json.message || `HTTP ${res.status}`);
     }
-    return data;
+    return json;
   }
 
   function showToast(message, type = 'success') {
-    clearTimeout(state.toastTimer);
     els.toast.textContent = message;
-    els.toast.className = `toast toast--${type}`;
-    state.toast.classList?.remove('hidden');
-    state.toastTimer = setTimeout(() => {
-      els.toast.classList.add('hidden');
-    }, 2600);
+    els.toast.className = `toast ${type}`;
+    els.toast.classList.remove('hidden');
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(() => els.toast.classList.add('hidden'), 2200);
   }
 
-  function escapeHtml(v) {
-    return String(v == null ? '' : v)
+  function qs(selector, root = document) {
+    return root.querySelector(selector);
+  }
+
+  function qsa(selector, root = document) {
+    return Array.from(root.querySelectorAll(selector));
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -663,7 +750,7 @@
       .replace(/'/g, '&#39;');
   }
 
-  function escapeAttr(v) {
-    return escapeHtml(v).replace(/"/g, '&quot;');
+  function escapeAttr(value) {
+    return escapeHtml(value);
   }
 })();

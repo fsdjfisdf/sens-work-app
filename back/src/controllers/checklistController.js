@@ -223,3 +223,44 @@ exports.decideApprovalRequest = async (req, res) => {
     return handleError(res, err, '체크리스트 결재 처리 오류');
   }
 };
+
+
+exports.getMyRequestList = async (req, res) => {
+  try {
+    const data = await checklistDao.getMyRequestList({
+      userIdx: req.user?.userIdx,
+      status: String(req.query.status || '').trim().toUpperCase(),
+      equipmentGroupCode: normalizeEquipmentGroup(req.query.equipment_group || req.query.equipmentGroup),
+      checklistKind: normalizeKind(req.query.kind),
+    });
+    return res.json(data);
+  } catch (err) {
+    return handleError(res, err, '내 체크리스트 요청 목록 조회 오류');
+  }
+};
+
+exports.getMyRequestDetail = async (req, res) => {
+  try {
+    const responseId = Number(req.params.responseId);
+    if (!responseId) return res.status(400).json({ error: 'responseId is required' });
+    const data = await checklistDao.getMyRequestDetail({
+      userIdx: req.user?.userIdx,
+      responseId,
+    });
+    return res.json(data);
+  } catch (err) {
+    return handleError(res, err, '내 체크리스트 요청 상세 조회 오류');
+  }
+};
+
+exports.getMyDecisionHistory = async (req, res) => {
+  try {
+    const data = await checklistDao.getMyDecisionHistory({
+      userIdx: req.user?.userIdx,
+      decision: String(req.query.decision || '').trim().toUpperCase(),
+    });
+    return res.json(data);
+  } catch (err) {
+    return handleError(res, err, '내 결재 처리 이력 조회 오류');
+  }
+};

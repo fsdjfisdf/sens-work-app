@@ -1018,3 +1018,220 @@ exports.syncCatalog = async () => {
     conn.release();
   }
 };
+
+
+exports.getMyRequestList = async ({ userIdx, status = '', equipmentGroupCode = '', checklistKind = '' }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    const engineer = await resolveEngineer(conn, userIdx);
+    if (!engineer?.id) {
+      const err = new Error('engineer 테이블과 현재 로그인 사용자가 연결되지 않았습니다.');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const filters = ['r.engineer_id = ?'];
+    const params = [engineer.id];
+
+    if (status && ['SUBMITTED', 'APPROVED', 'REJECTED', 'ACTIVE'].includes(status)) {
+      filters.push('r.response_status = ?');
+      params.push(status);
+    }
+    if (equipmentGroupCode) {
+      filters.push('t.equipment_group_code = ?');
+      params.push(sanitizeCode(equipmentGroupCode));
+    }
+    if (checklistKind && ['SETUP', 'MAINT'].includes(checklistKind)) {
+      filters.push('t.checklist_kind = ?');
+      params.push(sanitizeKind(checklistKind));
+    }
+
+    const whereSql = `WHERE ${filters.join(' AND ')}`;
+    const [rows] = await conn.query(
+      `SELECT
+         r.id AS response_id,
+         r.response_status,
+         r.submitted_at,
+         r.approved_at,
+         r.rejected_at,
+         r.updated_at,
+         r.decision_comment,
+         t.id AS template_id,
+         t.template_name,
+         t.checklist_kind,
+         t.equipment_group_code,
+         eg.display_name AS equipment_group_name,
+         COUNT(q.id) AS total_questions,
+         COALESCE(SUM(CASE WHEN a.is_checked = 1 THEN 1 ELSE 0 END), 0) AS checked_questions
+       FROM checklist_response r
+       JOIN checklist_template t ON t.id = r.template_id
+       JOIN checklist_equipment_group eg ON eg.code = t.equipment_group_code
+       LEFT JOIN checklist_question q
+         ON q.template_id = t.id
+        AND q.is_active = 1
+       LEFT JOIN checklist_response_answer a
+         ON a.response_id = r.id
+        AND a.question_id = q.id
+       ${whereSql}
+       GROUP BY
+         r.id, r.response_status, r.submitted_at, r.approved_at, r.rejected_at, r.updated_at, r.decision_comment,
+         t.id, t.template_name, t.checklist_kind, t.equipment_group_code, eg.display_name
+       ORDER BY
+         CASE r.response_status
+           WHEN 'REJECTED' THEN 1
+           WHEN 'SUBMITTED' THEN 2
+           WHEN 'APPROVED' THEN 3
+           ELSE 4
+         END,
+         COALESCE(r.updated_at, r.submitted_at) DESC,
+         r.id DESC`,
+      params
+    );
+
+    return { engineer, rows };
+  } finally {
+    conn.release();
+  }
+};
+
+exports.getMyRequestDetail = async ({ userIdx, responseId }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    const engineer = await resolveEngineer(conn, userIdx);
+    if (!engineer?.user) {
+      const err = new Error('사용자 정보를 찾을 수 없습니다.');
+      err.statusCode = 401;
+      throw err;
+    }
+
+    const row = await loadResponseBundleByResponseId(conn, responseId);
+    if (!row) {
+      const err = new Error('체크리스트 응답을 찾을 수 없습니다.');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    if (engineer.user.role !== 'admin' && row.engineer_id !== engineer.id) {
+      const err = new Error('해당 체크리스트를 볼 권한이 없습니다.');
+      err.statusCode = 403;
+      throw err;
+    }
+
+    const sections = await loadTemplateStructure(conn, row.template_id);
+    const answers = await loadResponseAnswers(conn, row.id);
+
+    const payload = decorateChecklistPayload({
+      engineer: {
+        id: row.engineer_id,
+        legacy_id: row.legacy_id,
+        name: row.engineer_name,
+        company: row.company,
+        group: row.engineer_group,
+        site: row.engineer_site,
+        role: row.engineer_role,
+        user: engineer.user,
+      },
+      template: {
+        id: row.template_id,
+        equipment_group_code: row.equipment_group_code,
+        equipment_group_name: row.equipment_group_name,
+        checklist_kind: row.checklist_kind,
+        template_name: row.template_name,
+        version_no: row.version_no,
+      },
+      response: {
+        id: row.id,
+        response_status: row.response_status,
+        submitted_at: row.submitted_at,
+        approved_at: row.approved_at,
+        rejected_at: row.rejected_at,
+        created_by: row.created_by,
+        updated_by: row.updated_by,
+        approved_by: row.approved_by,
+        rejected_by: row.rejected_by,
+        decision_comment: row.decision_comment,
+        created_by_name: row.created_by_name,
+        updated_by_name: row.updated_by_name,
+        approved_by_name: row.approved_by_name,
+        rejected_by_name: row.rejected_by_name,
+        answers,
+      },
+      sections,
+    });
+
+    return {
+      ...payload,
+      permission: buildPermission({
+        role: engineer.user?.role,
+        responseStatus: row.response_status,
+      }),
+    };
+  } finally {
+    conn.release();
+  }
+};
+
+exports.getMyDecisionHistory = async ({ userIdx, decision = '' }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    await ensureAdmin(conn, userIdx);
+
+    const filters = [];
+    const params = [];
+
+    if (decision === 'APPROVED') {
+      filters.push('r.approved_by = ?');
+      params.push(userIdx);
+    } else if (decision === 'REJECTED') {
+      filters.push('r.rejected_by = ?');
+      params.push(userIdx);
+    } else {
+      filters.push('(r.approved_by = ? OR r.rejected_by = ?)');
+      params.push(userIdx, userIdx);
+    }
+
+    const whereSql = `WHERE ${filters.join(' AND ')}`;
+    const [rows] = await conn.query(
+      `SELECT
+         r.id AS response_id,
+         r.response_status,
+         r.submitted_at,
+         r.approved_at,
+         r.rejected_at,
+         r.updated_at,
+         r.decision_comment,
+         e.id AS engineer_id,
+         e.name AS engineer_name,
+         e.\`group\` AS engineer_group,
+         e.site AS engineer_site,
+         t.id AS template_id,
+         t.template_name,
+         t.checklist_kind,
+         t.equipment_group_code,
+         eg.display_name AS equipment_group_name,
+         COUNT(q.id) AS total_questions,
+         COALESCE(SUM(CASE WHEN a.is_checked = 1 THEN 1 ELSE 0 END), 0) AS checked_questions
+       FROM checklist_response r
+       JOIN engineer e ON e.id = r.engineer_id
+       JOIN checklist_template t ON t.id = r.template_id
+       JOIN checklist_equipment_group eg ON eg.code = t.equipment_group_code
+       LEFT JOIN checklist_question q
+         ON q.template_id = t.id
+        AND q.is_active = 1
+       LEFT JOIN checklist_response_answer a
+         ON a.response_id = r.id
+        AND a.question_id = q.id
+       ${whereSql}
+       GROUP BY
+         r.id, r.response_status, r.submitted_at, r.approved_at, r.rejected_at, r.updated_at, r.decision_comment,
+         e.id, e.name, e.\`group\`, e.site,
+         t.id, t.template_name, t.checklist_kind, t.equipment_group_code, eg.display_name
+       ORDER BY COALESCE(r.approved_at, r.rejected_at, r.updated_at) DESC, r.id DESC`,
+      params
+    );
+
+    return { rows };
+  } finally {
+    conn.release();
+  }
+};

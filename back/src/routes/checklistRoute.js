@@ -19,12 +19,15 @@ router.get('/available', jwt, ctrl.getAvailable);
 router.get('/template', jwt, ctrl.getTemplate);
 router.get('/my', jwt, ctrl.getMyChecklist);
 router.put('/my', jwt, ctrl.saveMyChecklist);
+router.get('/my/requests', jwt, ctrl.getMyRequestList);
+router.get('/my/requests/:responseId', jwt, ctrl.getMyRequestDetail);
 
 router.post('/admin/sync-catalog', jwt, requireRole(), ctrl.syncCatalog);
 router.get('/admin/access', jwt, requireRole(), ctrl.getEngineerAccess);
 router.put('/admin/access', jwt, requireRole(), ctrl.upsertEngineerAccess);
 router.delete('/admin/access/:engineerId/:equipmentGroup', jwt, requireRole(), ctrl.deleteEngineerAccess);
 
+router.get('/admin/history', jwt, requireRole(['admin']), ctrl.getMyDecisionHistory);
 router.get('/admin/requests', jwt, requireRole(['admin']), ctrl.getApprovalQueue);
 router.get('/admin/requests/:responseId', jwt, requireRole(['admin']), ctrl.getApprovalRequestDetail);
 router.post('/admin/requests/:responseId/decision', jwt, requireRole(['admin']), ctrl.decideApprovalRequest);
