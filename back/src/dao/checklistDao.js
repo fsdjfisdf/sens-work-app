@@ -11,10 +11,6 @@ function sanitizeKind(v) {
   return String(v || '').trim().toUpperCase();
 }
 
-function toYN(v) {
-  return v ? 1 : 0;
-}
-
 function calcSectionSummary(section, answersMap) {
   const total = section.questions.length;
   const checked = section.questions.filter((q) => !!answersMap.get(q.id)).length;
@@ -89,7 +85,7 @@ async function getAccessMap(conn, engineerId, engineerGroup) {
 
   if (engineerId) {
     const [overrideRows] = await conn.query(
-      `SELECT equipment_group_code, access_type, reason, created_at, updated_at
+      `SELECT equipment_group_code, access_type
          FROM checklist_engineer_access_override
         WHERE engineer_id = ?`,
       [engineerId]
@@ -109,14 +105,14 @@ async function getAccessMap(conn, engineerId, engineerGroup) {
 
 async function findActiveTemplate(conn, equipmentGroupCode, checklistKind) {
   const [rows] = await conn.query(
-    `SELECT *
+    `SELECT id, equipment_group_code, checklist_kind, template_name, version_no, is_active, created_at, updated_at
        FROM checklist_template
       WHERE equipment_group_code = ?
         AND checklist_kind = ?
         AND is_active = 1
       ORDER BY version_no DESC, id DESC
       LIMIT 1`,
-    [equipmentGroupCode, checklistKind]
+    [sanitizeCode(equipmentGroupCode), sanitizeKind(checklistKind)]
   );
   return rows[0] || null;
 }
@@ -181,7 +177,7 @@ async function ensureTemplateAccess(conn, userIdx, equipmentGroupCode) {
   }
 
   const accessRows = await getAccessMap(conn, engineer.id || null, engineer.group || engineer.user?.group || '');
-  const access = accessRows.find((row) => row.code === equipmentGroupCode);
+  const access = accessRows.find((row) => row.code === sanitizeCode(equipmentGroupCode));
   if (!access?.allowed) {
     const err = new Error('해당 설비 체크리스트 접근 권한이 없습니다.');
     err.statusCode = 403;
@@ -189,6 +185,21 @@ async function ensureTemplateAccess(conn, userIdx, equipmentGroupCode) {
   }
 
   return { engineer, accessRows };
+}
+
+async function ensureAdmin(conn, userIdx) {
+  const user = await getUserById(conn, userIdx);
+  if (!user) {
+    const err = new Error('사용자 정보를 찾을 수 없습니다.');
+    err.statusCode = 401;
+    throw err;
+  }
+  if (user.role !== 'admin') {
+    const err = new Error('관리자만 사용할 수 있습니다.');
+    err.statusCode = 403;
+    throw err;
+  }
+  return user;
 }
 
 async function getOrCreateResponse(conn, engineerId, templateId, userIdx) {
@@ -203,18 +214,108 @@ async function getOrCreateResponse(conn, engineerId, templateId, userIdx) {
 
   const [result] = await conn.query(
     `INSERT INTO checklist_response (
-       engineer_id, template_id, response_status, created_by, updated_by, submitted_at
-     ) VALUES (?, ?, 'ACTIVE', ?, ?, NOW())`,
+       engineer_id, template_id, response_status, created_by, updated_by
+     ) VALUES (?, ?, 'ACTIVE', ?, ?)`,
     [engineerId, templateId, userIdx || null, userIdx || null]
   );
 
   const [createdRows] = await conn.query(
-    `SELECT *
-       FROM checklist_response
-      WHERE id = ?`,
+    `SELECT * FROM checklist_response WHERE id = ?`,
     [result.insertId]
   );
   return createdRows[0];
+}
+
+function buildPermission({ role, responseStatus }) {
+  const status = String(responseStatus || 'ACTIVE').toUpperCase();
+  const isAdmin = role === 'admin';
+  const canEdit = isAdmin || ['ACTIVE', 'REJECTED', ''].includes(status);
+  const canSubmit = isAdmin || ['ACTIVE', 'REJECTED', ''].includes(status);
+  const canApprove = isAdmin && status === 'SUBMITTED';
+  return { can_edit: canEdit, can_submit: canSubmit, can_approve: canApprove };
+}
+
+function decorateChecklistPayload({ engineer, template, response, sections }) {
+  const answersMap = new Map((response?.answers || []).map((row) => [row.question_id, !!row.is_checked]));
+  const answersDetailMap = new Map((response?.answers || []).map((row) => [row.question_id, row]));
+
+  const sectionsWithAnswers = sections.map((section) => {
+    const summary = calcSectionSummary(section, answersMap);
+    return {
+      ...section,
+      summary,
+      questions: section.questions.map((q) => ({
+        ...q,
+        is_checked: !!answersMap.get(q.id),
+        checked_at: answersDetailMap.get(q.id)?.checked_at || null,
+        note: answersDetailMap.get(q.id)?.note || null,
+      })),
+    };
+  });
+
+  const totalQuestions = sectionsWithAnswers.reduce((acc, section) => acc + section.questions.length, 0);
+  const totalChecked = sectionsWithAnswers.reduce((acc, section) => acc + section.summary.checked_questions, 0);
+  const overallCompletionRate = totalQuestions > 0
+    ? Math.round((totalChecked / totalQuestions) * 1000) / 10
+    : 0;
+
+  return {
+    engineer,
+    template,
+    response: response ? { ...response, answers: undefined } : null,
+    sections: sectionsWithAnswers,
+    summary: {
+      total_questions: totalQuestions,
+      checked_questions: totalChecked,
+      completion_rate: overallCompletionRate,
+    },
+  };
+}
+
+async function loadResponseAnswers(conn, responseId) {
+  const [rows] = await conn.query(
+    `SELECT question_id, is_checked, checked_at, note
+       FROM checklist_response_answer
+      WHERE response_id = ?`,
+    [responseId]
+  );
+  return rows;
+}
+
+async function loadResponseBundleByResponseId(conn, responseId) {
+  const [rows] = await conn.query(
+    `SELECT
+        r.*,
+        e.id AS engineer_id,
+        e.legacy_id,
+        e.name AS engineer_name,
+        e.company,
+        e.\`group\` AS engineer_group,
+        e.site AS engineer_site,
+        e.role AS engineer_role,
+        t.id AS template_id,
+        t.equipment_group_code,
+        t.checklist_kind,
+        t.template_name,
+        t.version_no,
+        eg.display_name AS equipment_group_name,
+        uc.nickname AS created_by_name,
+        uu.nickname AS updated_by_name,
+        ua.nickname AS approved_by_name,
+        ur.nickname AS rejected_by_name
+      FROM checklist_response r
+      JOIN engineer e ON e.id = r.engineer_id
+      JOIN checklist_template t ON t.id = r.template_id
+      JOIN checklist_equipment_group eg ON eg.code = t.equipment_group_code
+      LEFT JOIN Users uc ON uc.userIdx = r.created_by
+      LEFT JOIN Users uu ON uu.userIdx = r.updated_by
+      LEFT JOIN Users ua ON ua.userIdx = r.approved_by
+      LEFT JOIN Users ur ON ur.userIdx = r.rejected_by
+      WHERE r.id = ?
+      LIMIT 1`,
+    [responseId]
+  );
+  return rows[0] || null;
 }
 
 exports.getCurrentUserProfile = async (userIdx) => {
@@ -257,7 +358,7 @@ exports.getAvailableTemplatesForUser = async (userIdx) => {
 
     const access = await getAccessMap(conn, engineer.id || null, engineer.group || engineer.user.group || '');
     const allowedCodes = access.filter((row) => row.allowed).map((row) => row.code);
-    if (!allowedCodes.length) return { engineer, rows: [] };
+    if (!allowedCodes.length) return { engineer, rows: [], access };
 
     const [templateRows] = await conn.query(
       `SELECT
@@ -268,18 +369,29 @@ exports.getAvailableTemplatesForUser = async (userIdx) => {
          t.template_name,
          t.version_no,
          t.updated_at,
-         COUNT(q.id) AS question_count
+         r.response_status,
+         r.updated_at AS response_updated_at,
+         COUNT(q.id) AS question_count,
+         COALESCE(SUM(CASE WHEN a.is_checked = 1 THEN 1 ELSE 0 END), 0) AS checked_count
        FROM checklist_template t
        JOIN checklist_equipment_group eg
          ON eg.code = t.equipment_group_code
        LEFT JOIN checklist_question q
          ON q.template_id = t.id
         AND q.is_active = 1
+       LEFT JOIN checklist_response r
+         ON r.template_id = t.id
+        AND r.engineer_id = ?
+       LEFT JOIN checklist_response_answer a
+         ON a.response_id = r.id
+        AND a.question_id = q.id
       WHERE t.is_active = 1
         AND t.equipment_group_code IN (?)
-      GROUP BY t.id, t.equipment_group_code, eg.display_name, t.checklist_kind, t.template_name, t.version_no, t.updated_at
+      GROUP BY
+        t.id, t.equipment_group_code, eg.display_name, t.checklist_kind, t.template_name, t.version_no, t.updated_at,
+        r.response_status, r.updated_at
       ORDER BY eg.sort_order, t.checklist_kind, t.version_no DESC`,
-      [allowedCodes]
+      [engineer.id || 0, allowedCodes]
     );
 
     return { engineer, rows: templateRows, access };
@@ -333,50 +445,24 @@ exports.getMyChecklist = async ({ userIdx, equipmentGroupCode, checklistKind }) 
     );
     const response = responseRows[0] || null;
 
-    let answerRows = [];
+    let answers = [];
     if (response) {
-      const [rows] = await conn.query(
-        `SELECT question_id, is_checked, checked_at, note
-           FROM checklist_response_answer
-          WHERE response_id = ?`,
-        [response.id]
-      );
-      answerRows = rows;
+      answers = await loadResponseAnswers(conn, response.id);
     }
 
-    const answersMap = new Map(answerRows.map((row) => [row.question_id, !!row.is_checked]));
-    const answersDetailMap = new Map(answerRows.map((row) => [row.question_id, row]));
-
-    const sectionsWithAnswers = sections.map((section) => {
-      const summary = calcSectionSummary(section, answersMap);
-      return {
-        ...section,
-        summary,
-        questions: section.questions.map((q) => ({
-          ...q,
-          is_checked: !!answersMap.get(q.id),
-          checked_at: answersDetailMap.get(q.id)?.checked_at || null,
-          note: answersDetailMap.get(q.id)?.note || null,
-        })),
-      };
-    });
-
-    const totalQuestions = sectionsWithAnswers.reduce((acc, section) => acc + section.questions.length, 0);
-    const totalChecked = sectionsWithAnswers.reduce((acc, section) => acc + section.summary.checked_questions, 0);
-    const overallCompletionRate = totalQuestions > 0
-      ? Math.round((totalChecked / totalQuestions) * 1000) / 10
-      : 0;
-
-    return {
+    const payload = decorateChecklistPayload({
       engineer,
       template,
-      response,
-      sections: sectionsWithAnswers,
-      summary: {
-        total_questions: totalQuestions,
-        checked_questions: totalChecked,
-        completion_rate: overallCompletionRate,
-      },
+      response: response ? { ...response, answers } : null,
+      sections,
+    });
+
+    return {
+      ...payload,
+      permission: buildPermission({
+        role: engineer.user?.role,
+        responseStatus: payload.response?.response_status || 'ACTIVE',
+      }),
     };
   } finally {
     conn.release();
@@ -399,6 +485,18 @@ exports.saveMyChecklist = async ({ userIdx, equipmentGroupCode, checklistKind, a
     if (!template) {
       const err = new Error('체크리스트 템플릿이 없습니다. 먼저 sync-catalog를 실행하세요.');
       err.statusCode = 404;
+      throw err;
+    }
+
+    const response = await getOrCreateResponse(conn, engineer.id, template.id, userIdx);
+    const currentStatus = String(response.response_status || 'ACTIVE').toUpperCase();
+    const userRole = engineer.user?.role || 'worker';
+
+    if (userRole !== 'admin' && ['SUBMITTED', 'APPROVED'].includes(currentStatus)) {
+      const err = new Error(currentStatus === 'APPROVED'
+        ? '승인 완료된 체크리스트는 수정할 수 없습니다.'
+        : '결재 대기 중인 체크리스트는 수정할 수 없습니다.');
+      err.statusCode = 409;
       throw err;
     }
 
@@ -428,33 +526,30 @@ exports.saveMyChecklist = async ({ userIdx, equipmentGroupCode, checklistKind, a
       });
     }
 
-    const seen = new Set();
     const normalizedMap = new Map();
     for (const row of normalized) {
-      if (seen.has(row.question_id)) continue;
-      seen.add(row.question_id);
-      normalizedMap.set(row.question_id, row);
+      if (!normalizedMap.has(row.question_id)) normalizedMap.set(row.question_id, row);
     }
-
     for (const row of questionRows) {
       if (!normalizedMap.has(row.id)) {
-        normalizedMap.set(row.id, {
-          question_id: row.id,
-          is_checked: 0,
-          note: null,
-        });
+        normalizedMap.set(row.id, { question_id: row.id, is_checked: 0, note: null });
       }
     }
 
-    const response = await getOrCreateResponse(conn, engineer.id, template.id, userIdx);
+    const nextStatus = responseStatus === 'SUBMITTED' ? 'SUBMITTED' : 'ACTIVE';
 
     await conn.query(
       `UPDATE checklist_response
           SET response_status = ?,
               updated_by = ?,
-              submitted_at = NOW()
+              submitted_at = CASE WHEN ? = 'SUBMITTED' THEN NOW() ELSE NULL END,
+              approved_by = NULL,
+              approved_at = NULL,
+              rejected_by = NULL,
+              rejected_at = NULL,
+              decision_comment = NULL
         WHERE id = ?`,
-      [responseStatus === 'SUBMITTED' ? 'SUBMITTED' : 'ACTIVE', userIdx || null, response.id]
+      [nextStatus, userIdx || null, nextStatus, response.id]
     );
 
     await conn.query(`DELETE FROM checklist_response_answer WHERE response_id = ?`, [response.id]);
@@ -564,6 +659,206 @@ exports.deleteEngineerAccessOverride = async ({ engineerId, equipmentGroupCode }
       [engineerId, equipmentGroupCode]
     );
     return await exports.getEngineerAccess(engineerId);
+  } finally {
+    conn.release();
+  }
+};
+
+exports.getApprovalQueue = async ({ userIdx, status = 'SUBMITTED', equipmentGroupCode = '', checklistKind = '', keyword = '' }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    await ensureAdmin(conn, userIdx);
+
+    const filters = [];
+    const params = [];
+
+    if (status && ['SUBMITTED', 'APPROVED', 'REJECTED', 'ACTIVE'].includes(status)) {
+      filters.push('r.response_status = ?');
+      params.push(status);
+    }
+    if (equipmentGroupCode) {
+      filters.push('t.equipment_group_code = ?');
+      params.push(equipmentGroupCode);
+    }
+    if (checklistKind && ['SETUP', 'MAINT'].includes(checklistKind)) {
+      filters.push('t.checklist_kind = ?');
+      params.push(checklistKind);
+    }
+    if (keyword) {
+      filters.push('(e.name LIKE ? OR t.template_name LIKE ? OR eg.display_name LIKE ?)');
+      params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+    }
+
+    const whereSql = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+
+    const [rows] = await conn.query(
+      `SELECT
+         r.id AS response_id,
+         r.response_status,
+         r.submitted_at,
+         r.approved_at,
+         r.rejected_at,
+         r.updated_at,
+         r.decision_comment,
+         e.id AS engineer_id,
+         e.name AS engineer_name,
+         e.\`group\` AS engineer_group,
+         e.site AS engineer_site,
+         t.id AS template_id,
+         t.template_name,
+         t.checklist_kind,
+         t.equipment_group_code,
+         eg.display_name AS equipment_group_name,
+         COUNT(q.id) AS total_questions,
+         COALESCE(SUM(CASE WHEN a.is_checked = 1 THEN 1 ELSE 0 END), 0) AS checked_questions
+       FROM checklist_response r
+       JOIN engineer e ON e.id = r.engineer_id
+       JOIN checklist_template t ON t.id = r.template_id
+       JOIN checklist_equipment_group eg ON eg.code = t.equipment_group_code
+       LEFT JOIN checklist_question q
+         ON q.template_id = t.id
+        AND q.is_active = 1
+       LEFT JOIN checklist_response_answer a
+         ON a.response_id = r.id
+        AND a.question_id = q.id
+       ${whereSql}
+       GROUP BY
+         r.id, r.response_status, r.submitted_at, r.approved_at, r.rejected_at, r.updated_at, r.decision_comment,
+         e.id, e.name, e.\`group\`, e.site,
+         t.id, t.template_name, t.checklist_kind, t.equipment_group_code, eg.display_name
+       ORDER BY
+         CASE r.response_status
+           WHEN 'SUBMITTED' THEN 1
+           WHEN 'REJECTED' THEN 2
+           WHEN 'APPROVED' THEN 3
+           ELSE 4
+         END,
+         COALESCE(r.submitted_at, r.updated_at) DESC,
+         r.id DESC`,
+      params
+    );
+
+    return { rows };
+  } finally {
+    conn.release();
+  }
+};
+
+exports.getApprovalRequestDetail = async ({ userIdx, responseId }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    const adminUser = await ensureAdmin(conn, userIdx);
+    const row = await loadResponseBundleByResponseId(conn, responseId);
+    if (!row) {
+      const err = new Error('체크리스트 응답을 찾을 수 없습니다.');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const sections = await loadTemplateStructure(conn, row.template_id);
+    const answers = await loadResponseAnswers(conn, row.id);
+
+    const payload = decorateChecklistPayload({
+      engineer: {
+        id: row.engineer_id,
+        legacy_id: row.legacy_id,
+        name: row.engineer_name,
+        company: row.company,
+        group: row.engineer_group,
+        site: row.engineer_site,
+        role: row.engineer_role,
+        user: adminUser,
+      },
+      template: {
+        id: row.template_id,
+        equipment_group_code: row.equipment_group_code,
+        equipment_group_name: row.equipment_group_name,
+        checklist_kind: row.checklist_kind,
+        template_name: row.template_name,
+        version_no: row.version_no,
+      },
+      response: {
+        id: row.id,
+        response_status: row.response_status,
+        submitted_at: row.submitted_at,
+        approved_at: row.approved_at,
+        rejected_at: row.rejected_at,
+        created_by: row.created_by,
+        updated_by: row.updated_by,
+        approved_by: row.approved_by,
+        rejected_by: row.rejected_by,
+        decision_comment: row.decision_comment,
+        created_by_name: row.created_by_name,
+        updated_by_name: row.updated_by_name,
+        approved_by_name: row.approved_by_name,
+        rejected_by_name: row.rejected_by_name,
+        answers,
+      },
+      sections,
+    });
+
+    return {
+      ...payload,
+      permission: {
+        can_edit: false,
+        can_submit: false,
+        can_approve: row.response_status === 'SUBMITTED',
+      },
+    };
+  } finally {
+    conn.release();
+  }
+};
+
+exports.decideApprovalRequest = async ({ userIdx, responseId, decision, comment }) => {
+  const conn = await pool.getConnection(async c => c);
+  try {
+    await conn.beginTransaction();
+    await ensureAdmin(conn, userIdx);
+
+    const row = await loadResponseBundleByResponseId(conn, responseId);
+    if (!row) {
+      const err = new Error('체크리스트 응답을 찾을 수 없습니다.');
+      err.statusCode = 404;
+      throw err;
+    }
+    if (row.response_status !== 'SUBMITTED') {
+      const err = new Error('제출 상태(SUBMITTED)인 체크리스트만 결재할 수 있습니다.');
+      err.statusCode = 409;
+      throw err;
+    }
+
+    if (decision === 'APPROVED') {
+      await conn.query(
+        `UPDATE checklist_response
+            SET response_status = 'APPROVED',
+                approved_by = ?,
+                approved_at = NOW(),
+                rejected_by = NULL,
+                rejected_at = NULL,
+                decision_comment = ?
+          WHERE id = ?`,
+        [userIdx, comment || null, responseId]
+      );
+    } else {
+      await conn.query(
+        `UPDATE checklist_response
+            SET response_status = 'REJECTED',
+                rejected_by = ?,
+                rejected_at = NOW(),
+                approved_by = NULL,
+                approved_at = NULL,
+                decision_comment = ?
+          WHERE id = ?`,
+        [userIdx, comment || null, responseId]
+      );
+    }
+
+    await conn.commit();
+    return await exports.getApprovalRequestDetail({ userIdx, responseId });
+  } catch (err) {
+    await conn.rollback();
+    throw err;
   } finally {
     conn.release();
   }

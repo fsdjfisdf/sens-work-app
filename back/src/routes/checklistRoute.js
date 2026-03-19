@@ -25,4 +25,8 @@ router.get('/admin/access', jwt, requireRole(), ctrl.getEngineerAccess);
 router.put('/admin/access', jwt, requireRole(), ctrl.upsertEngineerAccess);
 router.delete('/admin/access/:engineerId/:equipmentGroup', jwt, requireRole(), ctrl.deleteEngineerAccess);
 
+router.get('/admin/requests', jwt, requireRole(['admin']), ctrl.getApprovalQueue);
+router.get('/admin/requests/:responseId', jwt, requireRole(['admin']), ctrl.getApprovalRequestDetail);
+router.post('/admin/requests/:responseId/decision', jwt, requireRole(['admin']), ctrl.decideApprovalRequest);
+
 module.exports = router;

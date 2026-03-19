@@ -89,14 +89,16 @@ exports.saveMyChecklist = async (req, res) => {
     if (!['SETUP', 'MAINT'].includes(checklistKind)) return res.status(400).json({ error: 'kind must be SETUP or MAINT' });
 
     const answers = normalizeAnswers(req.body?.answers);
+    const responseStatus = req.body?.response_status === 'SUBMITTED' ? 'SUBMITTED' : 'ACTIVE';
+
     const data = await checklistDao.saveMyChecklist({
       userIdx: req.user?.userIdx,
       equipmentGroupCode,
       checklistKind,
-      responseStatus: req.body?.response_status === 'SUBMITTED' ? 'SUBMITTED' : 'ACTIVE',
+      responseStatus,
       answers,
     });
-    return res.json({ message: '체크리스트 저장 완료', ...data });
+    return res.json({ message: responseStatus === 'SUBMITTED' ? '결재 요청 완료' : '체크리스트 저장 완료', ...data });
   } catch (err) {
     return handleError(res, err, '내 체크리스트 저장 오류');
   }
@@ -162,5 +164,62 @@ exports.deleteEngineerAccess = async (req, res) => {
     return res.json({ message: '체크리스트 접근 예외 삭제 완료', ...data });
   } catch (err) {
     return handleError(res, err, '체크리스트 접근 예외 삭제 오류');
+  }
+};
+
+exports.getApprovalQueue = async (req, res) => {
+  try {
+    const data = await checklistDao.getApprovalQueue({
+      userIdx: req.user?.userIdx,
+      status: String(req.query.status || 'SUBMITTED').trim().toUpperCase(),
+      equipmentGroupCode: normalizeEquipmentGroup(req.query.equipment_group || req.query.equipmentGroup),
+      checklistKind: normalizeKind(req.query.kind),
+      keyword: String(req.query.keyword || '').trim(),
+    });
+    return res.json(data);
+  } catch (err) {
+    return handleError(res, err, '체크리스트 결재 대기 목록 조회 오류');
+  }
+};
+
+exports.getApprovalRequestDetail = async (req, res) => {
+  try {
+    const responseId = Number(req.params.responseId);
+    if (!responseId) return res.status(400).json({ error: 'responseId is required' });
+
+    const data = await checklistDao.getApprovalRequestDetail({
+      userIdx: req.user?.userIdx,
+      responseId,
+    });
+    return res.json(data);
+  } catch (err) {
+    return handleError(res, err, '체크리스트 결재 상세 조회 오류');
+  }
+};
+
+exports.decideApprovalRequest = async (req, res) => {
+  try {
+    const responseId = Number(req.params.responseId);
+    const decision = String(req.body?.decision || '').trim().toUpperCase();
+    const comment = req.body?.comment == null ? null : String(req.body.comment).trim();
+
+    if (!responseId) return res.status(400).json({ error: 'responseId is required' });
+    if (!['APPROVED', 'REJECTED'].includes(decision)) {
+      return res.status(400).json({ error: 'decision must be APPROVED or REJECTED' });
+    }
+
+    const data = await checklistDao.decideApprovalRequest({
+      userIdx: req.user?.userIdx,
+      responseId,
+      decision,
+      comment,
+    });
+
+    return res.json({
+      message: decision === 'APPROVED' ? '체크리스트 승인 완료' : '체크리스트 반려 완료',
+      ...data,
+    });
+  } catch (err) {
+    return handleError(res, err, '체크리스트 결재 처리 오류');
   }
 };
