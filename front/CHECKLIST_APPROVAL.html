@@ -4,41 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checklist Approval — S-WORKS</title>
-  <link rel="stylesheet" href="../css/checklist_approval.css" />
+  <link rel="stylesheet" href="../css/checklist_approval_refined.css" />
   <script defer src="../js/checklist_approval.js"></script>
 </head>
 <body>
   <header class="shell-nav">
     <div class="shell-nav__inner">
-      <a href="./index.html" class="shell-brand">S-WORKS</a>
-      <nav class="shell-links">
+      <div class="shell-brand-wrap">
+        <a href="./index.html" class="shell-brand">S-WORKS</a>
+        <span class="shell-brand__sub">Approval</span>
+      </div>
+
+      <nav class="shell-links" aria-label="주요 메뉴">
         <a href="./CHECKLIST.html">Checklist</a>
         <a href="./CHECKLIST_APPROVAL.html" class="is-active">Checklist Approval</a>
       </nav>
+
       <span id="userBadge" class="user-pill">로딩 중</span>
     </div>
   </header>
 
   <main class="page-shell">
     <section class="hero-card">
-      <div>
+      <div class="hero-copy">
         <p class="eyebrow">Admin Only</p>
         <h1>체크리스트 결재</h1>
         <p class="hero-desc">
-          제출된 체크리스트를 설비 / 유형 / 작성자 기준으로 검토하고 승인 또는 반려합니다.
-          반려 시 사유를 남길 수 있고, 작성자는 수정 후 다시 결재 요청할 수 있습니다.
+          제출된 체크리스트를 빠르게 훑고, 필요한 항목은 상세 확인한 뒤 승인 또는 반려합니다.
+          목록과 상세가 동시에 잘 보이도록 밀도를 정리했습니다.
         </p>
       </div>
+
       <div class="hero-metrics">
-        <div class="metric-card">
+        <div class="metric-card metric-card--warn">
           <span>SUBMITTED</span>
           <strong id="submittedCount">0</strong>
         </div>
-        <div class="metric-card">
+        <div class="metric-card metric-card--success">
           <span>APPROVED</span>
           <strong id="approvedCount">0</strong>
         </div>
-        <div class="metric-card">
+        <div class="metric-card metric-card--danger">
           <span>REJECTED</span>
           <strong id="rejectedCount">0</strong>
         </div>
@@ -46,6 +52,14 @@
     </section>
 
     <section class="toolbar-card">
+      <div class="toolbar-card__head">
+        <div>
+          <p class="eyebrow">Filter</p>
+          <h2>결재 목록 정리</h2>
+          <p class="toolbar-desc">상태, 설비, 유형, 검색어 기준으로 목록을 빠르게 좁힐 수 있습니다.</p>
+        </div>
+      </div>
+
       <div class="toolbar-grid">
         <label class="field">
           <span>상태</span>
@@ -79,16 +93,19 @@
         </label>
       </div>
 
-      <div class="toolbar-row">
+      <div class="toolbar-row toolbar-row--topline">
         <button id="reloadBtn" class="btn btn--line" type="button">목록 새로고침</button>
       </div>
     </section>
 
     <section class="workspace-grid">
       <aside class="queue-panel">
-        <div class="panel-card">
+        <div class="panel-card queue-card">
           <div class="panel-card__head">
-            <h2>결재 목록</h2>
+            <div>
+              <p class="eyebrow">Queue</p>
+              <h2>결재 목록</h2>
+            </div>
             <span id="queueCountBadge" class="badge">0건</span>
           </div>
           <div id="queueList" class="queue-list empty-box">불러온 결재 요청이 없습니다.</div>
