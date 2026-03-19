@@ -2,19 +2,23 @@
   'use strict';
 
   const state = {
-    token: null,
     me: null,
     available: [],
-    workspaceFilter: '',
-    currentTemplateKey: null,
-    currentChecklist: null,
-    checklistSearch: '',
-    onlyUnchecked: false,
     myRequests: [],
-    rejectedRequests: [],
-    approvalQueue: [],
-    decisionHistory: [],
-    approvalDetail: null,
+    adminQueue: [],
+    adminHistory: [],
+    accessDetail: null,
+    checklistPayload: null,
+    checklistMode: 'edit',
+    detailPayload: null,
+    detailMode: 'view',
+    filters: {
+      workspace: { equipment: '', kind: '', search: '' },
+      requests: { status: '', equipment: '', kind: '', search: '' },
+      rejected: { equipment: '', kind: '', search: '' },
+      queue: { status: 'SUBMITTED', group: '', site: '', equipment: '', kind: '', search: '' },
+      history: { decision: '', group: '', site: '', equipment: '', kind: '', search: '' },
+    },
   };
 
   const els = {};
@@ -22,128 +26,149 @@
   document.addEventListener('DOMContentLoaded', init);
 
   async function init() {
-    cacheElements();
+    bindElements();
     bindEvents();
-    state.token = getToken();
-
     try {
-      const me = await api('/api/checklists/me');
-      state.me = me;
+      const meData = await api('/api/checklists/me');
+      state.me = meData;
       renderUserBadge();
-      toggleAdminUI();
-
-      await Promise.all([
-        loadWorkspace(),
-        loadMyRequests(),
-        loadRejectedRequests(),
-        state.me?.user?.role === 'admin' ? loadApprovalQueue() : Promise.resolve(),
-        state.me?.user?.role === 'admin' ? loadDecisionHistory() : Promise.resolve(),
-      ]);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '체크리스트 화면을 불러오지 못했습니다.', 'danger');
+      toggleRoleUI();
+      await reloadAll();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '체크리스트 화면을 불러오지 못했습니다.', 'danger');
     }
   }
 
-  function cacheElements() {
-    Object.assign(els, {
-      userBadge: qs('#userBadge'),
-      refreshBtn: qs('#refreshBtn'),
-      tabBar: qs('#tabBar'),
-      workspaceEquipmentFilter: qs('#workspaceEquipmentFilter'),
-      workspaceList: qs('#workspaceList'),
-      mineStatusFilter: qs('#mineStatusFilter'),
-      myRequestList: qs('#myRequestList'),
-      rejectedList: qs('#rejectedList'),
-      queueEquipmentFilter: qs('#queueEquipmentFilter'),
-      approvalQueueList: qs('#approvalQueueList'),
-      historyDecisionFilter: qs('#historyDecisionFilter'),
-      decisionHistoryList: qs('#decisionHistoryList'),
-
-      checklistModal: qs('#checklistModal'),
-      modalEyebrow: qs('#modalEyebrow'),
-      modalTitle: qs('#modalTitle'),
-      modalMeta: qs('#modalMeta'),
-      modalStatusPill: qs('#modalStatusPill'),
-      questionSearchInput: qs('#questionSearchInput'),
-      onlyUncheckedToggle: qs('#onlyUncheckedToggle'),
-      expandAllBtn: qs('#expandAllBtn'),
-      collapseAllBtn: qs('#collapseAllBtn'),
-      markVisibleBtn: qs('#markVisibleBtn'),
-      clearVisibleBtn: qs('#clearVisibleBtn'),
-      decisionBanner: qs('#decisionBanner'),
-      checklistSections: qs('#checklistSections'),
-      modalSummaryText: qs('#modalSummaryText'),
-      saveDraftBtn: qs('#saveDraftBtn'),
-      submitRequestBtn: qs('#submitRequestBtn'),
-
-      approvalModal: qs('#approvalModal'),
-      approvalTitle: qs('#approvalTitle'),
-      approvalMeta: qs('#approvalMeta'),
-      approvalStatusPill: qs('#approvalStatusPill'),
-      approvalEngineer: qs('#approvalEngineer'),
-      approvalCompletion: qs('#approvalCompletion'),
-      approvalComment: qs('#approvalComment'),
-      approvalSections: qs('#approvalSections'),
-      approvalDecisionInfo: qs('#approvalDecisionInfo'),
-      approveBtn: qs('#approveBtn'),
-      rejectBtn: qs('#rejectBtn'),
-
-      toast: qs('#toast'),
-    });
+  function bindElements() {
+    const ids = [
+      'userBadge','refreshBtn','tabBar',
+      'workspaceEquipmentFilter','workspaceKindFilter','workspaceSearch','workspaceList',
+      'requestsStatusFilter','requestsEquipmentFilter','requestsKindFilter','requestsSearch','requestsList',
+      'rejectedEquipmentFilter','rejectedKindFilter','rejectedSearch','rejectedList',
+      'queueStatusFilter','queueGroupFilter','queueSiteFilter','queueEquipmentFilter','queueKindFilter','queueSearch','queueList',
+      'historyDecisionFilter','historyGroupFilter','historySiteFilter','historyEquipmentFilter','historyKindFilter','historySearch','historyList',
+      'accessEngineerId','loadAccessBtn','accessSummary','accessCurrentList','accessEquipmentSelect','accessTypeSelect','accessReasonInput','saveAccessBtn',
+      'checklistModal','checklistModalEyebrow','checklistModalTitle','checklistModalMeta','checklistModalStatus','modalSearchInput','modalOnlyUnchecked','modalExpandBtn','modalCollapseBtn','modalMarkVisibleBtn','modalClearVisibleBtn','modalNotice','modalSections','modalFooterInfo','modalSaveBtn','modalSubmitBtn',
+      'detailModal','detailModalEyebrow','detailModalTitle','detailModalMeta','detailModalStatus','detailDecisionBox','detailDecisionComment','detailDecisionInfo','detailSections','detailFooterInfo','detailFooterActions','detailRejectBtn','detailApproveBtn',
+      'toast'
+    ];
+    ids.forEach(id => { els[id] = document.getElementById(id); });
   }
 
   function bindEvents() {
     els.refreshBtn.addEventListener('click', reloadAll);
     els.tabBar.addEventListener('click', onTabClick);
-    els.workspaceEquipmentFilter.addEventListener('change', () => {
-      state.workspaceFilter = els.workspaceEquipmentFilter.value;
-      renderWorkspace();
-    });
-    els.mineStatusFilter.addEventListener('change', renderMyRequests);
-    els.queueEquipmentFilter.addEventListener('change', renderApprovalQueue);
-    els.historyDecisionFilter.addEventListener('change', loadDecisionHistory);
 
-    els.questionSearchInput.addEventListener('input', () => {
-      state.checklistSearch = els.questionSearchInput.value.trim().toLowerCase();
-      renderChecklistSections();
-    });
-    els.onlyUncheckedToggle.addEventListener('change', () => {
-      state.onlyUnchecked = !!els.onlyUncheckedToggle.checked;
-      renderChecklistSections();
-    });
-    els.expandAllBtn.addEventListener('click', () => toggleAllSections(true));
-    els.collapseAllBtn.addEventListener('click', () => toggleAllSections(false));
-    els.markVisibleBtn.addEventListener('click', () => markVisibleQuestions(true));
-    els.clearVisibleBtn.addEventListener('click', () => markVisibleQuestions(false));
-    els.saveDraftBtn.addEventListener('click', () => saveCurrentChecklist('ACTIVE'));
-    els.submitRequestBtn.addEventListener('click', () => saveCurrentChecklist('SUBMITTED'));
+    bindFilter('workspaceEquipmentFilter', 'workspace', 'equipment', renderWorkspace);
+    bindFilter('workspaceKindFilter', 'workspace', 'kind', renderWorkspace);
+    bindFilter('workspaceSearch', 'workspace', 'search', renderWorkspace, 'input');
 
-    els.approveBtn.addEventListener('click', () => decideApproval('APPROVED'));
-    els.rejectBtn.addEventListener('click', () => decideApproval('REJECTED'));
+    bindFilter('requestsStatusFilter', 'requests', 'status', renderRequests);
+    bindFilter('requestsEquipmentFilter', 'requests', 'equipment', renderRequests);
+    bindFilter('requestsKindFilter', 'requests', 'kind', renderRequests);
+    bindFilter('requestsSearch', 'requests', 'search', renderRequests, 'input');
 
-    document.querySelectorAll('[data-close="checklist"]').forEach((node) => {
-      node.addEventListener('click', closeChecklistModal);
-    });
-    document.querySelectorAll('[data-close="approval"]').forEach((node) => {
-      node.addEventListener('click', closeApprovalModal);
+    bindFilter('rejectedEquipmentFilter', 'rejected', 'equipment', renderRejected);
+    bindFilter('rejectedKindFilter', 'rejected', 'kind', renderRejected);
+    bindFilter('rejectedSearch', 'rejected', 'search', renderRejected, 'input');
+
+    bindFilter('queueStatusFilter', 'queue', 'status', loadAdminQueue);
+    bindFilter('queueGroupFilter', 'queue', 'group', renderQueue);
+    bindFilter('queueSiteFilter', 'queue', 'site', renderQueue);
+    bindFilter('queueEquipmentFilter', 'queue', 'equipment', renderQueue);
+    bindFilter('queueKindFilter', 'queue', 'kind', renderQueue);
+    bindFilter('queueSearch', 'queue', 'search', renderQueue, 'input');
+
+    bindFilter('historyDecisionFilter', 'history', 'decision', loadAdminHistory);
+    bindFilter('historyGroupFilter', 'history', 'group', renderHistory);
+    bindFilter('historySiteFilter', 'history', 'site', renderHistory);
+    bindFilter('historyEquipmentFilter', 'history', 'equipment', renderHistory);
+    bindFilter('historyKindFilter', 'history', 'kind', renderHistory);
+    bindFilter('historySearch', 'history', 'search', renderHistory, 'input');
+
+    els.loadAccessBtn.addEventListener('click', loadAccessDetail);
+    els.saveAccessBtn.addEventListener('click', saveAccessOverride);
+
+    els.workspaceList.addEventListener('click', onWorkspaceClick);
+    els.requestsList.addEventListener('click', onRequestsClick);
+    els.rejectedList.addEventListener('click', onRejectedClick);
+    els.queueList.addEventListener('click', onQueueClick);
+    els.historyList.addEventListener('click', onHistoryClick);
+    els.accessCurrentList.addEventListener('click', onAccessListClick);
+
+    document.querySelectorAll('[data-close="checklist"]').forEach(n => n.addEventListener('click', closeChecklistModal));
+    document.querySelectorAll('[data-close="detail"]').forEach(n => n.addEventListener('click', closeDetailModal));
+
+    els.modalSearchInput.addEventListener('input', renderChecklistSections);
+    els.modalOnlyUnchecked.addEventListener('change', renderChecklistSections);
+    els.modalExpandBtn.addEventListener('click', () => setAllSectionOpen(true, els.modalSections));
+    els.modalCollapseBtn.addEventListener('click', () => setAllSectionOpen(false, els.modalSections));
+    els.modalMarkVisibleBtn.addEventListener('click', () => toggleVisibleQuestions(true));
+    els.modalClearVisibleBtn.addEventListener('click', () => toggleVisibleQuestions(false));
+    els.modalSections.addEventListener('change', onChecklistAnswerChange);
+    els.modalSaveBtn.addEventListener('click', () => submitChecklist('ACTIVE'));
+    els.modalSubmitBtn.addEventListener('click', () => submitChecklist('SUBMITTED'));
+
+    els.detailRejectBtn.addEventListener('click', () => decideChecklist('REJECTED'));
+    els.detailApproveBtn.addEventListener('click', () => decideChecklist('APPROVED'));
+  }
+
+  function bindFilter(id, group, key, callback, eventName = 'change') {
+    els[id].addEventListener(eventName, () => {
+      state.filters[group][key] = els[id].value.trim();
+      callback();
     });
   }
 
   async function reloadAll() {
     try {
       await Promise.all([
-        loadWorkspace(),
+        loadAvailable(),
         loadMyRequests(),
-        loadRejectedRequests(),
-        state.me?.user?.role === 'admin' ? loadApprovalQueue() : Promise.resolve(),
-        state.me?.user?.role === 'admin' ? loadDecisionHistory() : Promise.resolve(),
+        isAdmin() ? loadAdminQueue() : Promise.resolve(),
+        isAdmin() ? loadAdminHistory() : Promise.resolve(),
       ]);
-      showToast('목록을 새로고침했습니다.', 'success');
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '새로고침 중 오류가 발생했습니다.', 'danger');
+      showToast('새로고침되었습니다.', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '데이터를 불러오지 못했습니다.', 'danger');
     }
+  }
+
+  async function loadAvailable() {
+    const data = await api('/api/checklists/available');
+    state.available = Array.isArray(data.rows) ? data.rows : [];
+    hydrateEquipmentOptions();
+    renderWorkspace();
+  }
+
+  async function loadMyRequests() {
+    const data = await api('/api/checklists/my/requests');
+    state.myRequests = Array.isArray(data.rows) ? data.rows : [];
+    hydrateRequestOptions();
+    renderRequests();
+    renderRejected();
+  }
+
+  async function loadAdminQueue() {
+    if (!isAdmin()) return;
+    const params = new URLSearchParams();
+    if (state.filters.queue.status) params.set('status', state.filters.queue.status);
+    const data = await api(`/api/checklists/admin/requests${params.toString() ? `?${params.toString()}` : ''}`);
+    state.adminQueue = Array.isArray(data.rows) ? data.rows : [];
+    hydrateQueueOptions();
+    renderQueue();
+  }
+
+  async function loadAdminHistory() {
+    if (!isAdmin()) return;
+    const params = new URLSearchParams();
+    if (state.filters.history.decision) params.set('decision', state.filters.history.decision);
+    const data = await api(`/api/checklists/admin/history${params.toString() ? `?${params.toString()}` : ''}`);
+    state.adminHistory = Array.isArray(data.rows) ? data.rows : [];
+    hydrateHistoryOptions();
+    renderHistory();
   }
 
   function renderUserBadge() {
@@ -152,482 +177,580 @@
     els.userBadge.textContent = `${user.nickname || '-'} · ${engineer.group || user.group || '-'} / ${engineer.site || user.site || '-'}`;
   }
 
-  function toggleAdminUI() {
-    const isAdmin = state.me?.user?.role === 'admin';
-    qsa('.admin-only').forEach((node) => node.classList.toggle('hidden', !isAdmin));
+  function toggleRoleUI() {
+    document.querySelectorAll('.admin-only').forEach(node => node.classList.toggle('hidden', !isAdmin()));
+    document.querySelectorAll('.admin-manage-only').forEach(node => node.classList.toggle('hidden', !canManageAccess()));
   }
 
-  function onTabClick(event) {
-    const btn = event.target.closest('.tab-btn');
+  function onTabClick(e) {
+    const btn = e.target.closest('.cl-tab');
     if (!btn) return;
     const tab = btn.dataset.tab;
-    qsa('.tab-btn').forEach((node) => node.classList.toggle('is-active', node === btn));
-    qsa('.tab-panel').forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === tab));
+    document.querySelectorAll('.cl-tab').forEach(node => node.classList.toggle('is-active', node === btn));
+    document.querySelectorAll('.cl-panel').forEach(node => node.classList.toggle('is-active', node.dataset.panel === tab));
   }
 
-  async function loadWorkspace() {
-    const data = await api('/api/checklists/available');
-    state.available = Array.isArray(data?.rows) ? data.rows : [];
-    buildEquipmentFilters();
-    renderWorkspace();
-  }
-
-  function buildEquipmentFilters() {
-    const map = new Map();
-    state.available.forEach((row) => {
-      if (!map.has(row.equipment_group_code)) {
-        map.set(row.equipment_group_code, row.equipment_group_name);
-      }
-    });
-    const options = ['<option value="">전체 설비</option>']
-      .concat(Array.from(map.entries()).map(([code, name]) => `<option value="${escapeAttr(code)}">${escapeHtml(name)}</option>`))
-      .join('');
+  function hydrateEquipmentOptions() {
+    const options = buildOptionsFromRows(state.available, 'equipment_group_code', 'equipment_group_name', true);
     els.workspaceEquipmentFilter.innerHTML = options;
-    if (els.queueEquipmentFilter) els.queueEquipmentFilter.innerHTML = options;
+    els.accessEquipmentSelect.innerHTML = buildOptionsFromRows(state.available, 'equipment_group_code', 'equipment_group_name', false);
+  }
+
+  function hydrateRequestOptions() {
+    const options = buildOptionsFromRows(state.myRequests, 'equipment_group_code', 'equipment_group_name', true);
+    els.requestsEquipmentFilter.innerHTML = options;
+    els.rejectedEquipmentFilter.innerHTML = options;
+  }
+
+  function hydrateQueueOptions() {
+    els.queueGroupFilter.innerHTML = buildOptionsFromRows(state.adminQueue, 'engineer_group', 'engineer_group', true, '전체 그룹');
+    els.queueSiteFilter.innerHTML = buildOptionsFromRows(state.adminQueue, 'engineer_site', 'engineer_site', true, '전체 사이트');
+    els.queueEquipmentFilter.innerHTML = buildOptionsFromRows(state.adminQueue, 'equipment_group_code', 'equipment_group_name', true);
+  }
+
+  function hydrateHistoryOptions() {
+    els.historyGroupFilter.innerHTML = buildOptionsFromRows(state.adminHistory, 'engineer_group', 'engineer_group', true, '전체 그룹');
+    els.historySiteFilter.innerHTML = buildOptionsFromRows(state.adminHistory, 'engineer_site', 'engineer_site', true, '전체 사이트');
+    els.historyEquipmentFilter.innerHTML = buildOptionsFromRows(state.adminHistory, 'equipment_group_code', 'equipment_group_name', true);
   }
 
   function renderWorkspace() {
-    const rows = state.available.filter((row) => !state.workspaceFilter || row.equipment_group_code === state.workspaceFilter);
+    const f = state.filters.workspace;
+    const rows = state.available.filter(row => {
+      if (f.equipment && row.equipment_group_code !== f.equipment) return false;
+      if (f.kind && row.checklist_kind !== f.kind) return false;
+      if (f.search && !matchesSearch(row, f.search, ['equipment_group_name','template_name','checklist_kind'])) return false;
+      return true;
+    });
     if (!rows.length) {
-      els.workspaceList.innerHTML = emptyBox('접근 가능한 체크리스트가 없습니다.');
+      els.workspaceList.innerHTML = emptyBox('표시할 체크리스트가 없습니다.');
       return;
     }
-
-    els.workspaceList.innerHTML = rows.map((row) => {
+    els.workspaceList.innerHTML = rows.map(row => {
       const rate = calcRate(row.checked_count, row.question_count);
-      const status = row.response_status || 'ACTIVE';
       return `
         <article class="select-card">
-          <div class="select-card__top">
+          <div class="select-card__head">
             <div>
-              <p class="card-kicker">${escapeHtml(row.equipment_group_name)}</p>
+              <p class="kicker">${escapeHtml(row.equipment_group_name || row.equipment_group_code)}</p>
               <h3>${escapeHtml(row.template_name)}</h3>
             </div>
-            <span class="status-pill status-pill--${status.toLowerCase()}">${escapeHtml(status)}</span>
+            <span class="status-chip status-chip--${statusClass(row.response_status || 'ACTIVE')}">${escapeHtml(row.response_status || 'ACTIVE')}</span>
           </div>
-          <div class="select-card__meta">
+          <div class="meta-row">
             <span>${escapeHtml(row.checklist_kind)}</span>
-            <span>${rate}%</span>
             <span>${Number(row.checked_count || 0)} / ${Number(row.question_count || 0)}</span>
+            <span>${rate}%</span>
           </div>
-          <div class="mini-bar"><span style="width:${rate}%"></span></div>
-          <div class="select-card__actions">
-            <button class="btn primary open-checklist-btn"
-              data-equipment="${escapeAttr(row.equipment_group_code)}"
-              data-kind="${escapeAttr(row.checklist_kind)}">열기</button>
+          <div class="progress"><span style="width:${rate}%"></span></div>
+          <div class="card-actions">
+            <button class="btn btn-primary js-open-checklist" type="button" data-equipment="${escapeAttr(row.equipment_group_code)}" data-kind="${escapeAttr(row.checklist_kind)}">체크하기</button>
           </div>
-        </article>
-      `;
+        </article>`;
     }).join('');
+  }
 
-    qsa('.open-checklist-btn', els.workspaceList).forEach((btn) => {
-      btn.addEventListener('click', () => openChecklist(btn.dataset.equipment, btn.dataset.kind));
+  function renderRequests() {
+    const f = state.filters.requests;
+    const rows = state.myRequests.filter(row => row.response_status !== 'REJECTED').filter(row => {
+      if (f.status && row.response_status !== f.status) return false;
+      if (f.equipment && row.equipment_group_code !== f.equipment) return false;
+      if (f.kind && row.checklist_kind !== f.kind) return false;
+      if (f.search && !matchesSearch(row, f.search, ['equipment_group_name','template_name','checklist_kind','decision_comment'])) return false;
+      return true;
     });
+    els.requestsList.innerHTML = renderRequestStack(rows, '요청 내역이 없습니다.', false);
   }
 
-  async function loadMyRequests() {
-    const data = await api('/api/checklists/my/requests');
-    state.myRequests = Array.isArray(data?.rows) ? data.rows : [];
-    renderMyRequests();
-  }
-
-  function renderMyRequests() {
-    const statusFilter = els.mineStatusFilter.value;
-    const rows = state.myRequests.filter((row) => {
-      if (row.response_status === 'REJECTED') return false;
-      if (!statusFilter) return ['SUBMITTED', 'APPROVED'].includes(row.response_status);
-      return row.response_status === statusFilter;
+  function renderRejected() {
+    const f = state.filters.rejected;
+    const rows = state.myRequests.filter(row => row.response_status === 'REJECTED').filter(row => {
+      if (f.equipment && row.equipment_group_code !== f.equipment) return false;
+      if (f.kind && row.checklist_kind !== f.kind) return false;
+      if (f.search && !matchesSearch(row, f.search, ['equipment_group_name','template_name','decision_comment'])) return false;
+      return true;
     });
-    renderRequestList(els.myRequestList, rows, '요청 이력이 없습니다.', openMyRequestDetail);
+    els.rejectedList.innerHTML = renderRequestStack(rows, '반려된 체크리스트가 없습니다.', true);
   }
 
-  async function loadRejectedRequests() {
-    const data = await api('/api/checklists/my/requests?status=REJECTED');
-    state.rejectedRequests = Array.isArray(data?.rows) ? data.rows : [];
-    renderRequestList(els.rejectedList, state.rejectedRequests, '반려된 체크리스트가 없습니다.', openRejectedFromList, true);
+  function renderRequestStack(rows, emptyText, allowRewrite) {
+    if (!rows.length) return emptyBox(emptyText);
+    return rows.map(row => {
+      const rate = calcRate(row.checked_questions, row.total_questions);
+      const dateLabel = row.response_status === 'APPROVED' ? '승인일' : row.response_status === 'SUBMITTED' ? '제출일' : '수정일';
+      const dateValue = formatDate(row.approved_at || row.submitted_at || row.updated_at);
+      return `
+        <article class="list-card">
+          <div class="list-card__main">
+            <div class="list-card__title-row">
+              <div>
+                <p class="kicker">${escapeHtml(row.equipment_group_name)}</p>
+                <h3>${escapeHtml(row.template_name)}</h3>
+              </div>
+              <span class="status-chip status-chip--${statusClass(row.response_status)}">${escapeHtml(row.response_status)}</span>
+            </div>
+            <div class="meta-row">
+              <span>${escapeHtml(row.checklist_kind)}</span>
+              <span>${Number(row.checked_questions || 0)} / ${Number(row.total_questions || 0)}</span>
+              <span>${rate}%</span>
+              <span>${dateLabel} ${escapeHtml(dateValue)}</span>
+            </div>
+            ${row.decision_comment ? `<div class="comment-box">${escapeHtml(row.decision_comment)}</div>` : ''}
+          </div>
+          <div class="list-card__actions">
+            <button class="btn js-view-my-request" type="button" data-response-id="${row.response_id}">상세</button>
+            ${allowRewrite ? `<button class="btn btn-primary js-rewrite-request" type="button" data-equipment="${escapeAttr(row.equipment_group_code)}" data-kind="${escapeAttr(row.checklist_kind)}">재작성</button>` : ''}
+          </div>
+        </article>`;
+    }).join('');
   }
 
-  async function loadApprovalQueue() {
-    const data = await api('/api/checklists/admin/requests?status=SUBMITTED');
-    state.approvalQueue = Array.isArray(data?.rows) ? data.rows : [];
-    renderApprovalQueue();
-  }
-
-  function renderApprovalQueue() {
-    const equipmentFilter = els.queueEquipmentFilter.value;
-    const rows = state.approvalQueue.filter((row) => !equipmentFilter || row.equipment_group_code === equipmentFilter);
-    renderAdminList(els.approvalQueueList, rows, '결재 대기 목록이 없습니다.', openApprovalModal);
-  }
-
-  async function loadDecisionHistory() {
-    const decision = els.historyDecisionFilter?.value || '';
-    const data = await api(`/api/checklists/admin/history${decision ? `?decision=${encodeURIComponent(decision)}` : ''}`);
-    state.decisionHistory = Array.isArray(data?.rows) ? data.rows : [];
-    renderAdminList(els.decisionHistoryList, state.decisionHistory, '내 결재 이력이 없습니다.', openApprovalModal, true);
-  }
-
-  function renderRequestList(container, rows, emptyText, clickHandler, emphasizeRejected = false) {
+  function renderQueue() {
+    const f = state.filters.queue;
+    const rows = state.adminQueue.filter(row => {
+      if (f.group && row.engineer_group !== f.group) return false;
+      if (f.site && row.engineer_site !== f.site) return false;
+      if (f.equipment && row.equipment_group_code !== f.equipment) return false;
+      if (f.kind && row.checklist_kind !== f.kind) return false;
+      if (f.search && !matchesSearch(row, f.search, ['engineer_name','equipment_group_name','template_name','engineer_group','engineer_site'])) return false;
+      return true;
+    });
     if (!rows.length) {
-      container.innerHTML = emptyBox(emptyText);
+      els.queueList.innerHTML = emptyBox('조건에 맞는 결재 대기 이력이 없습니다.');
       return;
     }
-    container.innerHTML = rows.map((row) => {
-      const rate = calcRate(row.checked_questions, row.total_questions);
-      const dateText = formatDateTime(row.rejected_at || row.approved_at || row.submitted_at || row.updated_at);
-      const rejectedClass = emphasizeRejected && row.response_status === 'REJECTED' ? ' is-rejected' : '';
-      return `
-        <button type="button" class="list-row${rejectedClass}" data-id="${row.response_id}">
-          <div class="list-row__left">
-            <div class="list-row__title-wrap">
-              <strong>${escapeHtml(row.equipment_group_name)} · ${escapeHtml(row.checklist_kind)}</strong>
-              <span class="status-pill status-pill--${String(row.response_status).toLowerCase()}">${escapeHtml(row.response_status)}</span>
-            </div>
-            <p>${escapeHtml(row.template_name)}</p>
-            <small>${dateText}</small>
-            ${row.decision_comment ? `<div class="list-note">${escapeHtml(row.decision_comment)}</div>` : ''}
-          </div>
-          <div class="list-row__right">
-            <span>${rate}%</span>
-            <span>${Number(row.checked_questions || 0)} / ${Number(row.total_questions || 0)}</span>
-          </div>
-        </button>
-      `;
-    }).join('');
-
-    qsa('.list-row', container).forEach((node) => {
-      node.addEventListener('click', () => clickHandler(Number(node.dataset.id)));
-    });
+    els.queueList.innerHTML = rows.map(row => queueCard(row, 'js-open-approval')).join('');
   }
 
-  function renderAdminList(container, rows, emptyText, clickHandler, history = false) {
+  function renderHistory() {
+    const f = state.filters.history;
+    const rows = state.adminHistory.filter(row => {
+      if (f.group && row.engineer_group !== f.group) return false;
+      if (f.site && row.engineer_site !== f.site) return false;
+      if (f.equipment && row.equipment_group_code !== f.equipment) return false;
+      if (f.kind && row.checklist_kind !== f.kind) return false;
+      if (f.search && !matchesSearch(row, f.search, ['engineer_name','equipment_group_name','template_name','engineer_group','engineer_site'])) return false;
+      return true;
+    });
     if (!rows.length) {
-      container.innerHTML = emptyBox(emptyText);
+      els.historyList.innerHTML = emptyBox('내 결재 이력이 없습니다.');
       return;
     }
-    container.innerHTML = rows.map((row) => {
-      const rate = calcRate(row.checked_questions, row.total_questions);
-      const decisionDate = history ? formatDateTime(row.approved_at || row.rejected_at || row.updated_at) : formatDateTime(row.submitted_at || row.updated_at);
-      return `
-        <button type="button" class="list-row" data-id="${row.response_id}">
-          <div class="list-row__left">
-            <div class="list-row__title-wrap">
-              <strong>${escapeHtml(row.engineer_name)} · ${escapeHtml(row.equipment_group_name)} · ${escapeHtml(row.checklist_kind)}</strong>
-              <span class="status-pill status-pill--${String(row.response_status).toLowerCase()}">${escapeHtml(row.response_status)}</span>
-            </div>
-            <p>${escapeHtml(row.template_name)}</p>
-            <small>${decisionDate}</small>
-            ${row.decision_comment ? `<div class="list-note">${escapeHtml(row.decision_comment)}</div>` : ''}
-          </div>
-          <div class="list-row__right">
-            <span>${rate}%</span>
-            <span>${Number(row.checked_questions || 0)} / ${Number(row.total_questions || 0)}</span>
-          </div>
-        </button>
-      `;
-    }).join('');
-
-    qsa('.list-row', container).forEach((node) => {
-      node.addEventListener('click', () => clickHandler(Number(node.dataset.id)));
-    });
+    els.historyList.innerHTML = rows.map(row => queueCard(row, 'js-open-history')).join('');
   }
 
-  async function openChecklist(equipment, kind) {
-    try {
-      state.checklistSearch = '';
-      state.onlyUnchecked = false;
-      els.questionSearchInput.value = '';
-      els.onlyUncheckedToggle.checked = false;
-      const data = await api(`/api/checklists/my?equipment_group=${encodeURIComponent(equipment)}&kind=${encodeURIComponent(kind)}`);
-      state.currentTemplateKey = `${equipment}__${kind}`;
-      state.currentChecklist = data;
-      renderChecklistModal();
-      openModal(els.checklistModal);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '체크리스트를 불러오지 못했습니다.', 'danger');
-    }
-  }
-
-  function renderChecklistModal() {
-    const data = state.currentChecklist;
-    if (!data) return;
-
-    const template = data.template || {};
-    const response = data.response || {};
-    const summary = data.summary || {};
-    const permission = data.permission || {};
-
-    els.modalEyebrow.textContent = `${template.equipment_group_name || template.equipment_group_code || ''} · ${template.checklist_kind || ''}`;
-    els.modalTitle.textContent = template.template_name || '체크리스트';
-    els.modalMeta.textContent = `v${template.version_no || 1}`;
-    setStatusPill(els.modalStatusPill, response.response_status || 'ACTIVE');
-
-    const decisionComment = response.decision_comment ? `반려/결재 의견: ${response.decision_comment}` : '';
-    const bannerMsg = response.response_status === 'REJECTED'
-      ? (decisionComment || '반려된 체크리스트입니다. 수정 후 다시 결재 요청하세요.')
-      : response.response_status === 'SUBMITTED'
-        ? '결재 요청이 제출되었습니다. 관리자 승인 전까지 수정할 수 없습니다.'
-        : response.response_status === 'APPROVED'
-          ? '승인 완료된 체크리스트입니다.'
-          : '';
-    els.decisionBanner.classList.toggle('hidden', !bannerMsg);
-    els.decisionBanner.textContent = bannerMsg;
-    els.decisionBanner.className = `decision-banner ${bannerMsg ? '' : 'hidden'} ${String(response.response_status || '').toLowerCase()}`.trim();
-
-    els.saveDraftBtn.disabled = !permission.can_edit;
-    els.submitRequestBtn.disabled = !permission.can_submit;
-
-    renderChecklistSections();
-    els.modalSummaryText.textContent = `${summary.checked_questions || 0} / ${summary.total_questions || 0} 완료 · ${summary.completion_rate || 0}%`;
-  }
-
-  function renderChecklistSections() {
-    const data = state.currentChecklist;
-    if (!data) return;
-    const permission = data.permission || {};
-    const search = state.checklistSearch;
-    const onlyUnchecked = state.onlyUnchecked;
-
-    const renderedSections = (data.sections || []).map((section, sectionIndex) => {
-      const visibleQuestions = (section.questions || []).filter((question) => {
-        const matchSearch = !search || question.question_text.toLowerCase().includes(search) || String(question.question_code || '').toLowerCase().includes(search);
-        const matchUnchecked = !onlyUnchecked || !question.is_checked;
-        return matchSearch && matchUnchecked;
-      });
-
-      if (!visibleQuestions.length) return '';
-
-      const summary = calcSectionSummary(visibleQuestions);
-      return `
-        <section class="section-card" data-section-index="${sectionIndex}">
-          <button type="button" class="section-card__head" data-toggle-section>
+  function queueCard(row, btnClass) {
+    const rate = calcRate(row.checked_questions, row.total_questions);
+    return `
+      <article class="list-card list-card--approval">
+        <div class="list-card__main">
+          <div class="list-card__title-row">
             <div>
-              <p>${sectionIndex + 1}. ${escapeHtml(section.section_name)}</p>
-              <small>${summary.checked} / ${summary.total} 완료</small>
+              <p class="kicker">${escapeHtml(row.engineer_group || '-')} / ${escapeHtml(row.engineer_site || '-')}</p>
+              <h3>${escapeHtml(row.engineer_name || '-')} · ${escapeHtml(row.template_name)}</h3>
             </div>
-            <div class="section-card__head-right">
-              <div class="mini-bar mini-bar--wide"><span style="width:${summary.rate}%"></span></div>
-              <strong>${summary.rate}%</strong>
-            </div>
-          </button>
-          <div class="section-card__body is-open">
-            ${visibleQuestions.map((question, idx) => `
-              <article class="question-card ${question.is_checked ? 'is-checked' : ''}" data-question-id="${question.id}">
-                <div class="question-card__meta">
-                  <span>${sectionIndex + 1}.${idx + 1}</span>
-                  <code>${escapeHtml(question.question_code)}</code>
-                </div>
-                <p>${escapeHtml(question.question_text)}</p>
-                <div class="question-card__actions">
-                  <button type="button" class="toggle-chip ${question.is_checked ? 'is-active' : ''}" data-toggle-question="${question.id}" ${permission.can_edit ? '' : 'disabled'}>
-                    ${question.is_checked ? '체크됨' : '미체크'}
-                  </button>
-                </div>
-              </article>
-            `).join('')}
+            <span class="status-chip status-chip--${statusClass(row.response_status)}">${escapeHtml(row.response_status)}</span>
           </div>
-        </section>
-      `;
-    }).filter(Boolean);
+          <div class="meta-row">
+            <span>${escapeHtml(row.equipment_group_name)}</span>
+            <span>${escapeHtml(row.checklist_kind)}</span>
+            <span>${Number(row.checked_questions || 0)} / ${Number(row.total_questions || 0)}</span>
+            <span>${rate}%</span>
+            <span>${escapeHtml(formatDate(row.submitted_at || row.approved_at || row.rejected_at || row.updated_at))}</span>
+          </div>
+          ${row.decision_comment ? `<div class="comment-box">${escapeHtml(row.decision_comment)}</div>` : ''}
+        </div>
+        <div class="list-card__actions">
+          <button class="btn btn-primary ${btnClass}" type="button" data-response-id="${row.response_id}">열기</button>
+        </div>
+      </article>`;
+  }
 
-    if (!renderedSections.length) {
-      els.checklistSections.innerHTML = emptyBox('표시할 질문이 없습니다.');
+  async function onWorkspaceClick(e) {
+    const btn = e.target.closest('.js-open-checklist');
+    if (!btn) return;
+    await openChecklist(btn.dataset.equipment, btn.dataset.kind);
+  }
+
+  async function onRequestsClick(e) {
+    const detailBtn = e.target.closest('.js-view-my-request');
+    if (!detailBtn) return;
+    await openMyRequestDetail(detailBtn.dataset.responseId);
+  }
+
+  async function onRejectedClick(e) {
+    const detailBtn = e.target.closest('.js-view-my-request');
+    if (detailBtn) {
+      await openMyRequestDetail(detailBtn.dataset.responseId);
       return;
     }
-
-    els.checklistSections.innerHTML = renderedSections.join('');
-
-    qsa('[data-toggle-section]', els.checklistSections).forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const body = btn.nextElementSibling;
-        body.classList.toggle('is-open');
-      });
-    });
-
-    qsa('[data-toggle-question]', els.checklistSections).forEach((btn) => {
-      btn.addEventListener('click', () => toggleQuestion(Number(btn.dataset.toggleQuestion)));
-    });
-
-    const summary = calcOverallSummary(data.sections || []);
-    els.modalSummaryText.textContent = `${summary.checked} / ${summary.total} 완료 · ${summary.rate}%`;
+    const rewriteBtn = e.target.closest('.js-rewrite-request');
+    if (!rewriteBtn) return;
+    await openChecklist(rewriteBtn.dataset.equipment, rewriteBtn.dataset.kind);
   }
 
-  function toggleQuestion(questionId) {
-    if (!state.currentChecklist?.permission?.can_edit) return;
-    for (const section of state.currentChecklist.sections || []) {
-      const question = (section.questions || []).find((item) => item.id === questionId);
-      if (question) {
-        question.is_checked = !question.is_checked;
-        break;
-      }
-    }
-    renderChecklistSections();
+  async function onQueueClick(e) {
+    const btn = e.target.closest('.js-open-approval');
+    if (!btn) return;
+    await openApprovalDetail(btn.dataset.responseId);
   }
 
-  function toggleAllSections(open) {
-    qsa('.section-card__body', els.checklistSections).forEach((body) => {
-      body.classList.toggle('is-open', open);
-    });
+  async function onHistoryClick(e) {
+    const btn = e.target.closest('.js-open-history');
+    if (!btn) return;
+    await openApprovalDetail(btn.dataset.responseId, true);
   }
 
-  function markVisibleQuestions(checked) {
-    if (!state.currentChecklist?.permission?.can_edit) return;
-    const visibleIds = qsa('[data-toggle-question]', els.checklistSections).map((btn) => Number(btn.dataset.toggleQuestion));
-    const visibleIdSet = new Set(visibleIds);
-    for (const section of state.currentChecklist.sections || []) {
-      for (const question of section.questions || []) {
-        if (visibleIdSet.has(question.id)) question.is_checked = checked;
-      }
-    }
-    renderChecklistSections();
-  }
-
-  async function saveCurrentChecklist(responseStatus) {
-    if (!state.currentChecklist) return;
-    const template = state.currentChecklist.template || {};
-    const answers = flattenAnswers(state.currentChecklist.sections || []);
-
+  async function openChecklist(equipmentGroup, kind) {
     try {
-      const data = await api('/api/checklists/my', {
-        method: 'PUT',
-        body: {
-          equipment_group: template.equipment_group_code,
-          kind: template.checklist_kind,
-          response_status: responseStatus,
-          answers,
-        },
-      });
-      state.currentChecklist = data;
-      renderChecklistModal();
-      await Promise.all([
-        loadWorkspace(),
-        loadMyRequests(),
-        loadRejectedRequests(),
-      ]);
-      showToast(responseStatus === 'SUBMITTED' ? '결재 요청을 보냈습니다.' : '체크리스트를 저장했습니다.', 'success');
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '저장 중 오류가 발생했습니다.', 'danger');
+      const payload = await api(`/api/checklists/my?equipment_group=${encodeURIComponent(equipmentGroup)}&kind=${encodeURIComponent(kind)}`);
+      state.checklistPayload = payload;
+      state.checklistMode = 'edit';
+      populateChecklistModal();
+      openModal(els.checklistModal);
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '체크리스트를 불러오지 못했습니다.', 'danger');
     }
   }
 
   async function openMyRequestDetail(responseId) {
     try {
-      const data = await api(`/api/checklists/my/requests/${responseId}`);
-      state.currentChecklist = data;
-      renderChecklistModal();
-      openModal(els.checklistModal);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '상세 정보를 불러오지 못했습니다.', 'danger');
+      const payload = await api(`/api/checklists/my/requests/${responseId}`);
+      state.detailPayload = payload;
+      state.detailMode = 'view';
+      populateDetailModal();
+      openModal(els.detailModal);
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '상세를 불러오지 못했습니다.', 'danger');
     }
   }
 
-  async function openRejectedFromList(responseId) {
+  async function openApprovalDetail(responseId, historyOnly = false) {
     try {
-      const data = await api(`/api/checklists/my/requests/${responseId}`);
-      state.currentChecklist = data;
-      renderChecklistModal();
-      openModal(els.checklistModal);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '반려 상세를 불러오지 못했습니다.', 'danger');
+      const payload = await api(`/api/checklists/admin/requests/${responseId}`);
+      state.detailPayload = payload;
+      state.detailMode = historyOnly ? 'history' : 'approve';
+      populateDetailModal();
+      openModal(els.detailModal);
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '결재 상세를 불러오지 못했습니다.', 'danger');
     }
   }
 
-  async function openApprovalModal(responseId) {
-    try {
-      const data = await api(`/api/checklists/admin/requests/${responseId}`);
-      state.approvalDetail = data;
-      renderApprovalModal();
-      openModal(els.approvalModal);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '결재 상세를 불러오지 못했습니다.', 'danger');
+  function populateChecklistModal() {
+    const payload = state.checklistPayload;
+    if (!payload) return;
+    els.checklistModalEyebrow.textContent = `${payload.template?.equipment_group_name || payload.template?.equipment_group_code || '-'} · ${payload.template?.checklist_kind || '-'}`;
+    els.checklistModalTitle.textContent = payload.template?.template_name || '체크리스트';
+    els.checklistModalMeta.textContent = `${payload.engineer?.name || '-'} · ${payload.engineer?.group || '-'} / ${payload.engineer?.site || '-'}`;
+    els.checklistModalStatus.textContent = payload.response?.response_status || 'ACTIVE';
+    els.checklistModalStatus.className = `status-chip status-chip--${statusClass(payload.response?.response_status || 'ACTIVE')}`;
+    const comment = payload.response?.decision_comment;
+    if (comment && payload.response?.response_status === 'REJECTED') {
+      els.modalNotice.textContent = `반려 사유: ${comment}`;
+      els.modalNotice.classList.remove('hidden');
+    } else if (payload.response?.response_status === 'SUBMITTED') {
+      els.modalNotice.textContent = '결재 대기 중이라 수정할 수 없습니다.';
+      els.modalNotice.classList.remove('hidden');
+    } else if (payload.response?.response_status === 'APPROVED') {
+      els.modalNotice.textContent = '승인 완료된 체크리스트입니다.';
+      els.modalNotice.classList.remove('hidden');
+    } else {
+      els.modalNotice.classList.add('hidden');
+      els.modalNotice.textContent = '';
     }
+    const canEdit = !!payload.permission?.can_edit;
+    els.modalSaveBtn.disabled = !canEdit;
+    els.modalSubmitBtn.disabled = !payload.permission?.can_submit;
+    els.modalSearchInput.value = '';
+    els.modalOnlyUnchecked.checked = false;
+    renderChecklistSections();
   }
 
-  function renderApprovalModal() {
-    const data = state.approvalDetail;
-    if (!data) return;
-    const template = data.template || {};
-    const engineer = data.engineer || {};
-    const response = data.response || {};
-    const summary = data.summary || {};
+  function renderChecklistSections() {
+    const payload = state.checklistPayload;
+    if (!payload) return;
+    const search = els.modalSearchInput.value.trim().toLowerCase();
+    const onlyUnchecked = els.modalOnlyUnchecked.checked;
+    const canEdit = !!payload.permission?.can_edit;
+    const sections = (payload.sections || []).map(section => {
+      const questions = (section.questions || []).filter(q => {
+        if (search && !(String(q.question_text || '').toLowerCase().includes(search) || String(q.question_code || '').toLowerCase().includes(search))) return false;
+        if (onlyUnchecked && q.is_checked) return false;
+        return true;
+      });
+      return { ...section, filteredQuestions: questions };
+    }).filter(section => section.filteredQuestions.length > 0);
 
-    els.approvalTitle.textContent = template.template_name || '결재 상세';
-    els.approvalMeta.textContent = `${template.equipment_group_name || template.equipment_group_code || '-'} · ${template.checklist_kind || '-'} · v${template.version_no || 1}`;
-    setStatusPill(els.approvalStatusPill, response.response_status || '-');
-    els.approvalEngineer.textContent = `${engineer.name || '-'} · ${engineer.group || '-'} / ${engineer.site || '-'}`;
-    els.approvalCompletion.textContent = `${summary.checked_questions || 0} / ${summary.total_questions || 0} · ${summary.completion_rate || 0}%`;
-    els.approvalComment.value = response.decision_comment || '';
-    els.approvalDecisionInfo.textContent = response.decision_comment || '승인 또는 반려 의견을 남길 수 있습니다.';
+    if (!sections.length) {
+      els.modalSections.innerHTML = emptyBox('조건에 맞는 질문이 없습니다.');
+      els.modalFooterInfo.textContent = summaryText(payload.summary);
+      return;
+    }
 
-    const canApprove = !!data.permission?.can_approve;
-    els.approveBtn.disabled = !canApprove;
-    els.rejectBtn.disabled = !canApprove;
-
-    els.approvalSections.innerHTML = (data.sections || []).map((section, idx) => {
-      const summary = calcSectionSummary(section.questions || []);
+    els.modalSections.innerHTML = sections.map((section, idx) => {
+      const checked = section.filteredQuestions.filter(q => q.is_checked).length;
+      const total = section.filteredQuestions.length;
       return `
-        <section class="section-card section-card--readonly">
-          <div class="section-card__head section-card__head--static">
+        <section class="cl-accordion ${idx === 0 ? 'is-open' : ''}" data-section>
+          <button class="cl-accordion__head" type="button" data-accordion-toggle>
             <div>
-              <p>${idx + 1}. ${escapeHtml(section.section_name)}</p>
-              <small>${summary.checked} / ${summary.total} 완료</small>
+              <strong>${escapeHtml(section.section_name)}</strong>
+              <span>${checked} / ${total}</span>
             </div>
-            <div class="section-card__head-right">
-              <div class="mini-bar mini-bar--wide"><span style="width:${summary.rate}%"></span></div>
-              <strong>${summary.rate}%</strong>
-            </div>
-          </div>
-          <div class="section-card__body is-open">
-            ${(section.questions || []).map((question, qIndex) => `
-              <article class="question-card ${question.is_checked ? 'is-checked' : ''}">
-                <div class="question-card__meta">
-                  <span>${idx + 1}.${qIndex + 1}</span>
-                  <code>${escapeHtml(question.question_code)}</code>
+            <span class="accordion-arrow">▾</span>
+          </button>
+          <div class="cl-accordion__body">
+            ${section.filteredQuestions.map(q => `
+              <label class="question-row ${q.is_checked ? 'is-checked' : ''}">
+                <input type="checkbox" data-question-id="${q.id}" ${q.is_checked ? 'checked' : ''} ${!canEdit ? 'disabled' : ''} />
+                <div class="question-row__text">
+                  <span class="question-row__code">${escapeHtml(q.question_code)}</span>
+                  <strong>${escapeHtml(q.question_text)}</strong>
                 </div>
-                <p>${escapeHtml(question.question_text)}</p>
-                <div class="question-card__actions">
-                  <span class="read-state ${question.is_checked ? 'is-checked' : ''}">${question.is_checked ? '체크됨' : '미체크'}</span>
-                </div>
-              </article>
-            `).join('')}
+              </label>`).join('')}
           </div>
-        </section>
-      `;
-    }).join('') || emptyBox('상세 질문이 없습니다.');
+        </section>`;
+    }).join('');
+
+    els.modalSections.querySelectorAll('[data-accordion-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('[data-section]').classList.toggle('is-open'));
+    });
+
+    const currentSummary = calcSummaryFromPayload(payload);
+    els.modalFooterInfo.textContent = summaryText(currentSummary);
   }
 
-  async function decideApproval(decision) {
-    if (!state.approvalDetail?.response?.id) return;
-    const confirmMsg = decision === 'APPROVED' ? '이 체크리스트를 승인할까요?' : '이 체크리스트를 반려할까요?';
-    if (!window.confirm(confirmMsg)) return;
+  function onChecklistAnswerChange(e) {
+    const input = e.target.closest('input[type="checkbox"][data-question-id]');
+    if (!input || !state.checklistPayload) return;
+    const qid = Number(input.dataset.questionId);
+    for (const section of state.checklistPayload.sections || []) {
+      const q = (section.questions || []).find(item => item.id === qid);
+      if (q) {
+        q.is_checked = input.checked;
+        break;
+      }
+    }
+    input.closest('.question-row')?.classList.toggle('is-checked', input.checked);
+    els.modalFooterInfo.textContent = summaryText(calcSummaryFromPayload(state.checklistPayload));
+  }
 
+  function setAllSectionOpen(isOpen, container) {
+    container.querySelectorAll('[data-section]').forEach(sec => sec.classList.toggle('is-open', isOpen));
+  }
+
+  function toggleVisibleQuestions(nextChecked) {
+    const canEdit = !!state.checklistPayload?.permission?.can_edit;
+    if (!canEdit) return;
+    els.modalSections.querySelectorAll('input[type="checkbox"][data-question-id]').forEach(input => {
+      input.checked = nextChecked;
+      const qid = Number(input.dataset.questionId);
+      for (const section of state.checklistPayload.sections || []) {
+        const q = (section.questions || []).find(item => item.id === qid);
+        if (q) q.is_checked = nextChecked;
+      }
+      input.closest('.question-row')?.classList.toggle('is-checked', nextChecked);
+    });
+    els.modalFooterInfo.textContent = summaryText(calcSummaryFromPayload(state.checklistPayload));
+  }
+
+  async function submitChecklist(responseStatus) {
     try {
-      await api(`/api/checklists/admin/requests/${state.approvalDetail.response.id}/decision`, {
+      const payload = state.checklistPayload;
+      if (!payload) return;
+      const body = {
+        equipment_group: payload.template?.equipment_group_code,
+        kind: payload.template?.checklist_kind,
+        response_status: responseStatus,
+        answers: flattenAnswers(payload.sections),
+      };
+      const result = await api('/api/checklists/my', { method: 'PUT', body });
+      state.checklistPayload = result;
+      populateChecklistModal();
+      await Promise.all([loadAvailable(), loadMyRequests()]);
+      if (isAdmin()) await Promise.all([loadAdminQueue(), loadAdminHistory()]);
+      showToast(responseStatus === 'SUBMITTED' ? '결재 요청되었습니다.' : '저장되었습니다.', 'success');
+      if (responseStatus === 'SUBMITTED') closeChecklistModal();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '저장 중 오류가 발생했습니다.', 'danger');
+    }
+  }
+
+  function populateDetailModal() {
+    const payload = state.detailPayload;
+    if (!payload) return;
+    els.detailModalEyebrow.textContent = `${payload.template?.equipment_group_name || payload.template?.equipment_group_code || '-'} · ${payload.template?.checklist_kind || '-'}`;
+    els.detailModalTitle.textContent = payload.template?.template_name || '상세';
+    els.detailModalMeta.textContent = `${payload.engineer?.name || '-'} · ${payload.engineer?.group || '-'} / ${payload.engineer?.site || '-'}`;
+    els.detailModalStatus.textContent = payload.response?.response_status || '-';
+    els.detailModalStatus.className = `status-chip status-chip--${statusClass(payload.response?.response_status || 'ACTIVE')}`;
+    els.detailFooterInfo.textContent = summaryText(payload.summary);
+
+    if (payload.response?.decision_comment) {
+      els.detailDecisionInfo.textContent = `결재 의견: ${payload.response.decision_comment}`;
+      els.detailDecisionInfo.classList.remove('hidden');
+    } else {
+      els.detailDecisionInfo.textContent = '';
+      els.detailDecisionInfo.classList.add('hidden');
+    }
+
+    const canApprove = state.detailMode === 'approve' && !!payload.permission?.can_approve;
+    els.detailDecisionBox.classList.toggle('hidden', !canApprove);
+    els.detailRejectBtn.classList.toggle('hidden', !canApprove);
+    els.detailApproveBtn.classList.toggle('hidden', !canApprove);
+    els.detailDecisionComment.value = payload.response?.decision_comment || '';
+
+    els.detailSections.innerHTML = (payload.sections || []).map(section => `
+      <section class="cl-accordion is-open" data-section>
+        <button class="cl-accordion__head" type="button" data-accordion-toggle>
+          <div>
+            <strong>${escapeHtml(section.section_name)}</strong>
+            <span>${Number(section.summary?.checked_questions || 0)} / ${Number(section.summary?.total_questions || 0)}</span>
+          </div>
+          <span class="accordion-arrow">▾</span>
+        </button>
+        <div class="cl-accordion__body">
+          ${(section.questions || []).map(q => `
+            <div class="question-row question-row--readonly ${q.is_checked ? 'is-checked' : ''}">
+              <div class="readonly-check ${q.is_checked ? 'is-on' : ''}">${q.is_checked ? '✓' : ''}</div>
+              <div class="question-row__text">
+                <span class="question-row__code">${escapeHtml(q.question_code)}</span>
+                <strong>${escapeHtml(q.question_text)}</strong>
+              </div>
+            </div>`).join('')}
+        </div>
+      </section>`).join('');
+
+    els.detailSections.querySelectorAll('[data-accordion-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('[data-section]').classList.toggle('is-open'));
+    });
+  }
+
+  async function decideChecklist(decision) {
+    try {
+      const responseId = state.detailPayload?.response?.id;
+      if (!responseId) return;
+      const comment = els.detailDecisionComment.value.trim();
+      await api(`/api/checklists/admin/requests/${responseId}/decision`, {
         method: 'POST',
+        body: { decision, comment },
+      });
+      showToast(decision === 'APPROVED' ? '승인 완료' : '반려 완료', 'success');
+      closeDetailModal();
+      await Promise.all([loadMyRequests(), loadAdminQueue(), loadAdminHistory()]);
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '결재 처리 중 오류가 발생했습니다.', 'danger');
+    }
+  }
+
+  async function loadAccessDetail() {
+    const engineerId = Number(els.accessEngineerId.value);
+    if (!engineerId) {
+      showToast('Engineer ID를 입력하세요.', 'warning');
+      return;
+    }
+    try {
+      const data = await api(`/api/checklists/admin/access?engineer_id=${engineerId}`);
+      state.accessDetail = data;
+      renderAccessDetail();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '예외 권한 정보를 불러오지 못했습니다.', 'danger');
+    }
+  }
+
+  function renderAccessDetail() {
+    const data = state.accessDetail;
+    if (!data?.engineer) {
+      els.accessSummary.innerHTML = emptyBox('불러온 엔지니어 정보가 없습니다.');
+      els.accessCurrentList.innerHTML = '';
+      return;
+    }
+    els.accessSummary.innerHTML = `
+      <div class="engineer-summary">
+        <strong>${escapeHtml(data.engineer.name)}</strong>
+        <span>ID ${data.engineer.id}</span>
+        <span>${escapeHtml(data.engineer.group || '-')} / ${escapeHtml(data.engineer.site || '-')}</span>
+      </div>`;
+
+    const defaultMap = new Map((data.default_access || []).map(row => [row.code, row.allowed]));
+    const overrideMap = new Map((data.overrides || []).map(row => [row.equipment_group_code, row]));
+    els.accessCurrentList.innerHTML = (data.final_access || []).map(row => {
+      const override = overrideMap.get(row.code);
+      return `
+        <article class="list-card list-card--compact">
+          <div class="list-card__main">
+            <div class="list-card__title-row">
+              <h3>${escapeHtml(row.display_name)}</h3>
+              <span class="status-chip ${row.allowed ? 'status-chip--approved' : 'status-chip--rejected'}">${row.allowed ? '허용' : '차단'}</span>
+            </div>
+            <div class="meta-row">
+              <span>기본 권한 ${defaultMap.get(row.code) ? '허용' : '차단'}</span>
+              <span>${override ? `예외 ${escapeHtml(override.access_type)}` : '예외 없음'}</span>
+              <span>${override?.reason ? escapeHtml(override.reason) : ''}</span>
+            </div>
+          </div>
+          <div class="list-card__actions">
+            ${override ? `<button class="btn js-delete-access" type="button" data-equipment="${escapeAttr(row.code)}">예외 삭제</button>` : ''}
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  async function saveAccessOverride() {
+    const engineerId = Number(els.accessEngineerId.value);
+    if (!engineerId) {
+      showToast('먼저 Engineer ID를 입력하세요.', 'warning');
+      return;
+    }
+    try {
+      await api('/api/checklists/admin/access', {
+        method: 'PUT',
         body: {
-          decision,
-          comment: els.approvalComment.value.trim(),
+          engineer_id: engineerId,
+          equipment_group: els.accessEquipmentSelect.value,
+          access_type: els.accessTypeSelect.value,
+          reason: els.accessReasonInput.value.trim(),
         },
       });
-      showToast(decision === 'APPROVED' ? '승인했습니다.' : '반려했습니다.', 'success');
-      closeApprovalModal();
-      await Promise.all([loadApprovalQueue(), loadDecisionHistory(), loadMyRequests(), loadRejectedRequests()]);
-    } catch (error) {
-      console.error(error);
-      showToast(error.message || '결재 처리 중 오류가 발생했습니다.', 'danger');
+      showToast('예외 권한이 저장되었습니다.', 'success');
+      els.accessReasonInput.value = '';
+      await loadAccessDetail();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '예외 권한 저장에 실패했습니다.', 'danger');
+    }
+  }
+
+  async function onAccessListClick(e) {
+    const btn = e.target.closest('.js-delete-access');
+    if (!btn) return;
+    const engineerId = Number(els.accessEngineerId.value);
+    if (!engineerId) return;
+    try {
+      await api(`/api/checklists/admin/access/${engineerId}/${encodeURIComponent(btn.dataset.equipment)}`, { method: 'DELETE' });
+      showToast('예외 권한이 삭제되었습니다.', 'success');
+      await loadAccessDetail();
+    } catch (err) {
+      console.error(err);
+      showToast(err.message || '예외 권한 삭제에 실패했습니다.', 'danger');
     }
   }
 
   function closeChecklistModal() {
     closeModal(els.checklistModal);
+    state.checklistPayload = null;
   }
 
-  function closeApprovalModal() {
-    closeModal(els.approvalModal);
+  function closeDetailModal() {
+    closeModal(els.detailModal);
+    state.detailPayload = null;
   }
 
   function openModal(node) {
@@ -639,123 +762,125 @@
   function closeModal(node) {
     node.classList.add('hidden');
     node.setAttribute('aria-hidden', 'true');
-    if (qsa('.modal:not(.hidden)').length === 0) {
+    if (document.querySelectorAll('.modal:not(.hidden)').length === 0) {
       document.body.classList.remove('modal-open');
     }
   }
 
+  async function api(path, options = {}) {
+    const token = getToken();
+    const headers = {
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { 'x-access-token': token, Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    };
+    const res = await fetch(path, {
+      method: options.method || 'GET',
+      credentials: 'include',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || json.message || `HTTP ${res.status}`);
+    return json;
+  }
+
+  function getToken() {
+    return localStorage.getItem('x-access-token')
+      || sessionStorage.getItem('x-access-token')
+      || localStorage.getItem('token')
+      || localStorage.getItem('accessToken')
+      || sessionStorage.getItem('token')
+      || sessionStorage.getItem('accessToken')
+      || '';
+  }
+
+  function isAdmin() { return state.me?.user?.role === 'admin'; }
+  function canManageAccess() { return ['admin', 'editor'].includes(state.me?.user?.role); }
+
+  function calcRate(checked, total) {
+    const c = Number(checked || 0), t = Number(total || 0);
+    if (!t) return 0;
+    return Math.round((c / t) * 1000) / 10;
+  }
+
+  function calcSummaryFromPayload(payload) {
+    const questions = flattenAnswers(payload.sections);
+    const total = questions.length;
+    const checked = questions.filter(row => row.is_checked).length;
+    return { total_questions: total, checked_questions: checked, completion_rate: calcRate(checked, total) };
+  }
+
+  function summaryText(summary) {
+    return `완료 ${Number(summary.checked_questions || 0)} / ${Number(summary.total_questions || 0)} · ${Number(summary.completion_rate || 0)}%`;
+  }
+
   function flattenAnswers(sections) {
-    return (sections || []).flatMap((section) => (section.questions || []).map((question) => ({
-      question_id: question.id,
-      is_checked: !!question.is_checked,
-      note: question.note || null,
+    return (sections || []).flatMap(section => (section.questions || []).map(q => ({
+      question_id: q.id,
+      question_code: q.question_code,
+      is_checked: !!q.is_checked,
+      note: q.note || null,
     })));
   }
 
-  function calcSectionSummary(questions) {
-    const total = questions.length;
-    const checked = questions.filter((q) => !!q.is_checked).length;
-    const rate = total ? round1((checked / total) * 100) : 0;
-    return { total, checked, rate };
+  function buildOptionsFromRows(rows, codeKey, nameKey, includeAll = true, allLabel = '전체 설비') {
+    const map = new Map();
+    (rows || []).forEach(row => {
+      const code = row[codeKey];
+      const name = row[nameKey] || row[codeKey];
+      if (code && !map.has(code)) map.set(code, name);
+    });
+    const opts = [];
+    if (includeAll) opts.push(`<option value="">${escapeHtml(allLabel)}</option>`);
+    for (const [code, name] of map.entries()) {
+      opts.push(`<option value="${escapeAttr(code)}">${escapeHtml(name)}</option>`);
+    }
+    return opts.join('');
   }
 
-  function calcOverallSummary(sections) {
-    const allQuestions = (sections || []).flatMap((section) => section.questions || []);
-    return calcSectionSummary(allQuestions);
+  function matchesSearch(row, rawSearch, keys) {
+    const search = String(rawSearch || '').trim().toLowerCase();
+    if (!search) return true;
+    return keys.some(key => String(row[key] || '').toLowerCase().includes(search));
   }
 
-  function calcRate(checked, total) {
-    const c = Number(checked || 0);
-    const t = Number(total || 0);
-    return t ? round1((c / t) * 100) : 0;
+  function formatDate(value) {
+    if (!value) return '-';
+    try {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch {
+      return String(value);
+    }
   }
 
-  function setStatusPill(node, status) {
-    const value = String(status || '-').toUpperCase();
-    node.className = `status-pill status-pill--${value.toLowerCase()}`;
-    node.textContent = value;
+  function pad(v) { return String(v).padStart(2, '0'); }
+
+  function statusClass(status) {
+    const s = String(status || '').toUpperCase();
+    if (s === 'APPROVED') return 'approved';
+    if (s === 'REJECTED') return 'rejected';
+    if (s === 'SUBMITTED') return 'submitted';
+    return 'idle';
   }
 
-  function emptyBox(text) {
-    return `<div class="empty-box">${escapeHtml(text)}</div>`;
+  function emptyBox(message) {
+    return `<div class="empty-box">${escapeHtml(message)}</div>`;
   }
 
-  function round1(n) {
-    return Math.round(Number(n || 0) * 10) / 10;
-  }
-
-  function formatDateTime(v) {
-    if (!v) return '-';
-    const d = new Date(v);
-    if (Number.isNaN(d.getTime())) return String(v);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mi = String(d.getMinutes()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-  }
-
-function getToken() {
-  return localStorage.getItem('x-access-token')
-    || sessionStorage.getItem('x-access-token')
-    || localStorage.getItem('token')
-    || localStorage.getItem('accessToken')
-    || sessionStorage.getItem('token')
-    || sessionStorage.getItem('accessToken')
-    || '';
-}
-
-async function api(path, options = {}) {
-  const token = getToken();
-  state.token = token;
-
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { 'x-access-token': token, Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
-  };
-
-  const res = await fetch(path, {
-    method: options.method || 'GET',
-    credentials: 'include',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(json.error || json.message || `HTTP ${res.status}`);
-  }
-  return json;
-}
-
-  function showToast(message, type = 'success') {
-    els.toast.textContent = message;
-    els.toast.className = `toast ${type}`;
-    els.toast.classList.remove('hidden');
+  function showToast(message, tone = 'info') {
     clearTimeout(showToast._timer);
-    showToast._timer = setTimeout(() => els.toast.classList.add('hidden'), 2200);
-  }
-
-  function qs(selector, root = document) {
-    return root.querySelector(selector);
-  }
-
-  function qsa(selector, root = document) {
-    return Array.from(root.querySelectorAll(selector));
+    els.toast.textContent = message;
+    els.toast.className = `toast toast--${tone}`;
+    els.toast.classList.remove('hidden');
+    showToast._timer = setTimeout(() => els.toast.classList.add('hidden'), 2800);
   }
 
   function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    return String(value ?? '').replace(/[&<>'"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[ch]));
   }
 
-  function escapeAttr(value) {
-    return escapeHtml(value);
-  }
+  function escapeAttr(value) { return escapeHtml(value); }
 })();

@@ -3,197 +3,235 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>S-WORKS · CHECKLIST</title>
+  <title>S-WORKS CHECKLIST</title>
   <link rel="stylesheet" href="../css/checklist.css" />
 </head>
 <body>
-  <nav class="topbar">
-    <div class="topbar__inner">
-      <div class="brand">S-WORKS</div>
-      <div class="topbar__right">
-        <span id="userBadge" class="user-badge">사용자 확인 중...</span>
-      </div>
-    </div>
-  </nav>
-
-  <main class="page-wrap">
-    <section class="hero-card">
-      <div class="hero-card__text">
+  <div class="cl-page">
+    <header class="cl-topbar">
+      <div class="cl-topbar__left">
+        <p class="cl-topbar__eyebrow">S-WORKS</p>
         <h1>Checklist</h1>
-        <p>목록에서 선택하고, 모달에서 작성하고, 결재도 모달에서 처리합니다.</p>
+        <p class="cl-topbar__desc">작성, 결재 요청, 반려 재작성, 관리자 결재를 한 화면에서 처리합니다.</p>
       </div>
-      <div class="hero-card__actions">
-        <button id="refreshBtn" class="btn">새로고침</button>
+      <div class="cl-topbar__right">
+        <div class="cl-userbox">
+          <span class="cl-userbox__label">로그인</span>
+          <strong id="userBadge">-</strong>
+        </div>
+        <button id="refreshBtn" class="btn btn-primary" type="button">새로고침</button>
       </div>
-    </section>
+    </header>
 
-    <section class="tab-section">
-      <div class="tab-bar" id="tabBar">
-        <button class="tab-btn is-active" data-tab="workspace">작성하기</button>
-        <button class="tab-btn" data-tab="mine">내 결재요청</button>
-        <button class="tab-btn" data-tab="rejected">반려/재작성</button>
-        <button class="tab-btn admin-only hidden" data-tab="queue">결재 대기</button>
-        <button class="tab-btn admin-only hidden" data-tab="history">내 결재 이력</button>
-      </div>
-    </section>
+    <main class="cl-main">
+      <section class="cl-section cl-tabs-wrap">
+        <div id="tabBar" class="cl-tabs" role="tablist">
+          <button class="cl-tab is-active" type="button" data-tab="workspace">체크리스트 작성</button>
+          <button class="cl-tab" type="button" data-tab="requests">내 결재 요청</button>
+          <button class="cl-tab" type="button" data-tab="rejected">반려 / 재작성</button>
+          <button class="cl-tab admin-only hidden" type="button" data-tab="queue">결재 대기</button>
+          <button class="cl-tab admin-only hidden" type="button" data-tab="history">내 결재 이력</button>
+          <button class="cl-tab admin-manage-only hidden" type="button" data-tab="access">예외 엔지니어 관리</button>
+        </div>
+      </section>
 
-    <section class="panel tab-panel is-active" data-panel="workspace">
-      <div class="panel__head">
-        <div>
-          <h2>작성 가능한 체크리스트</h2>
-          <p>설비와 유형별로 선택해서 모달에서 작성합니다.</p>
+      <section class="cl-panel is-active" data-panel="workspace">
+        <div class="cl-section">
+          <div class="section-head">
+            <div>
+              <h2>체크리스트 작성</h2>
+              <p>설비와 작업 종류를 선택해 모달에서 체크하세요.</p>
+            </div>
+          </div>
+          <div class="filters-grid filters-grid--workspace">
+            <label class="field"><span>설비</span><select id="workspaceEquipmentFilter"></select></label>
+            <label class="field"><span>작업 종류</span><select id="workspaceKindFilter"><option value="">전체</option><option value="SETUP">SETUP</option><option value="MAINT">MAINT</option></select></label>
+            <label class="field field--wide"><span>검색</span><input id="workspaceSearch" type="text" placeholder="설비명, 템플릿명 검색" /></label>
+          </div>
+          <div id="workspaceList" class="card-grid"></div>
         </div>
-        <div class="filter-inline">
-          <select id="workspaceEquipmentFilter">
-            <option value="">전체 설비</option>
-          </select>
-        </div>
-      </div>
-      <div id="workspaceList" class="card-grid"></div>
-    </section>
+      </section>
 
-    <section class="panel tab-panel" data-panel="mine">
-      <div class="panel__head">
-        <div>
-          <h2>내 결재요청 리스트</h2>
-          <p>결재 요청한 체크리스트와 승인 완료된 항목을 확인합니다.</p>
+      <section class="cl-panel" data-panel="requests">
+        <div class="cl-section">
+          <div class="section-head">
+            <div>
+              <h2>내 결재 요청</h2>
+              <p>내가 올린 체크리스트의 제출/승인 상태를 확인합니다.</p>
+            </div>
+          </div>
+          <div class="filters-grid filters-grid--requests">
+            <label class="field"><span>상태</span><select id="requestsStatusFilter"><option value="">전체</option><option value="SUBMITTED">SUBMITTED</option><option value="APPROVED">APPROVED</option><option value="ACTIVE">ACTIVE</option></select></label>
+            <label class="field"><span>설비</span><select id="requestsEquipmentFilter"></select></label>
+            <label class="field"><span>작업 종류</span><select id="requestsKindFilter"><option value="">전체</option><option value="SETUP">SETUP</option><option value="MAINT">MAINT</option></select></label>
+            <label class="field field--wide"><span>검색</span><input id="requestsSearch" type="text" placeholder="설비명, 템플릿명 검색" /></label>
+          </div>
+          <div id="requestsList" class="stack-list"></div>
         </div>
-        <div class="filter-inline">
-          <select id="mineStatusFilter">
-            <option value="">전체</option>
-            <option value="SUBMITTED">SUBMITTED</option>
-            <option value="APPROVED">APPROVED</option>
-          </select>
-        </div>
-      </div>
-      <div id="myRequestList" class="list-stack"></div>
-    </section>
+      </section>
 
-    <section class="panel tab-panel" data-panel="rejected">
-      <div class="panel__head">
-        <div>
-          <h2>반려 / 재작성 필요</h2>
-          <p>반려 사유를 확인하고 다시 열어 재요청할 수 있습니다.</p>
+      <section class="cl-panel" data-panel="rejected">
+        <div class="cl-section">
+          <div class="section-head">
+            <div>
+              <h2>반려 / 재작성</h2>
+              <p>반려된 체크리스트를 다시 열어 수정하고 재요청할 수 있습니다.</p>
+            </div>
+          </div>
+          <div class="filters-grid filters-grid--rejected">
+            <label class="field"><span>설비</span><select id="rejectedEquipmentFilter"></select></label>
+            <label class="field"><span>작업 종류</span><select id="rejectedKindFilter"><option value="">전체</option><option value="SETUP">SETUP</option><option value="MAINT">MAINT</option></select></label>
+            <label class="field field--wide"><span>검색</span><input id="rejectedSearch" type="text" placeholder="설비명, 템플릿명 검색" /></label>
+          </div>
+          <div id="rejectedList" class="stack-list"></div>
         </div>
-      </div>
-      <div id="rejectedList" class="list-stack"></div>
-    </section>
+      </section>
 
-    <section class="panel tab-panel admin-only hidden" data-panel="queue">
-      <div class="panel__head">
-        <div>
-          <h2>결재 대기</h2>
-          <p>관리자만 승인/반려할 수 있습니다.</p>
+      <section class="cl-panel admin-only hidden" data-panel="queue">
+        <div class="cl-section">
+          <div class="section-head">
+            <div>
+              <h2>결재 대기 이력</h2>
+              <p>관리자만 결재 및 반려할 수 있습니다. 필터로 대상만 좁혀서 처리하세요.</p>
+            </div>
+          </div>
+          <div class="filters-grid filters-grid--queue">
+            <label class="field"><span>상태</span><select id="queueStatusFilter"><option value="SUBMITTED">SUBMITTED</option><option value="REJECTED">REJECTED</option><option value="APPROVED">APPROVED</option><option value="ACTIVE">ACTIVE</option><option value="">전체</option></select></label>
+            <label class="field"><span>그룹</span><select id="queueGroupFilter"></select></label>
+            <label class="field"><span>사이트</span><select id="queueSiteFilter"></select></label>
+            <label class="field"><span>설비</span><select id="queueEquipmentFilter"></select></label>
+            <label class="field"><span>작업 종류</span><select id="queueKindFilter"><option value="">전체</option><option value="SETUP">SETUP</option><option value="MAINT">MAINT</option></select></label>
+            <label class="field field--wide"><span>검색</span><input id="queueSearch" type="text" placeholder="이름, 설비명, 템플릿명 검색" /></label>
+          </div>
+          <div id="queueList" class="stack-list"></div>
         </div>
-        <div class="filter-inline">
-          <select id="queueEquipmentFilter">
-            <option value="">전체 설비</option>
-          </select>
-        </div>
-      </div>
-      <div id="approvalQueueList" class="list-stack"></div>
-    </section>
+      </section>
 
-    <section class="panel tab-panel admin-only hidden" data-panel="history">
-      <div class="panel__head">
-        <div>
-          <h2>내 결재 이력</h2>
-          <p>내가 승인하거나 반려한 체크리스트를 확인합니다.</p>
+      <section class="cl-panel admin-only hidden" data-panel="history">
+        <div class="cl-section">
+          <div class="section-head">
+            <div>
+              <h2>내 결재 이력</h2>
+              <p>내가 승인 또는 반려한 체크리스트만 조회합니다.</p>
+            </div>
+          </div>
+          <div class="filters-grid filters-grid--history">
+            <label class="field"><span>결정</span><select id="historyDecisionFilter"><option value="">전체</option><option value="APPROVED">APPROVED</option><option value="REJECTED">REJECTED</option></select></label>
+            <label class="field"><span>그룹</span><select id="historyGroupFilter"></select></label>
+            <label class="field"><span>사이트</span><select id="historySiteFilter"></select></label>
+            <label class="field"><span>설비</span><select id="historyEquipmentFilter"></select></label>
+            <label class="field"><span>작업 종류</span><select id="historyKindFilter"><option value="">전체</option><option value="SETUP">SETUP</option><option value="MAINT">MAINT</option></select></label>
+            <label class="field field--wide"><span>검색</span><input id="historySearch" type="text" placeholder="이름, 설비명, 템플릿명 검색" /></label>
+          </div>
+          <div id="historyList" class="stack-list"></div>
         </div>
-        <div class="filter-inline">
-          <select id="historyDecisionFilter">
-            <option value="">전체</option>
-            <option value="APPROVED">APPROVED</option>
-            <option value="REJECTED">REJECTED</option>
-          </select>
+      </section>
+
+      <section class="cl-panel admin-manage-only hidden" data-panel="access">
+        <div class="cl-section">
+          <div class="section-head">
+            <div>
+              <h2>예외 엔지니어 관리</h2>
+              <p>기본 그룹 권한 외에 특정 엔지니어에게 설비 체크리스트 접근을 허용/차단합니다.</p>
+            </div>
+          </div>
+          <div class="access-layout">
+            <div class="access-box">
+              <div class="filters-grid filters-grid--access-top">
+                <label class="field"><span>Engineer ID</span><input id="accessEngineerId" type="number" min="1" placeholder="예: 12" /></label>
+                <div class="field field--action">
+                  <span>&nbsp;</span>
+                  <button id="loadAccessBtn" class="btn btn-primary" type="button">불러오기</button>
+                </div>
+              </div>
+              <div id="accessSummary" class="empty-box">엔지니어 ID를 입력하고 불러오세요.</div>
+              <div id="accessCurrentList" class="stack-list compact-list"></div>
+            </div>
+            <div class="access-box">
+              <div class="filters-grid filters-grid--access-form">
+                <label class="field"><span>설비</span><select id="accessEquipmentSelect"></select></label>
+                <label class="field"><span>예외 유형</span><select id="accessTypeSelect"><option value="ALLOW">ALLOW</option><option value="DENY">DENY</option></select></label>
+                <label class="field field--wide"><span>사유</span><input id="accessReasonInput" type="text" placeholder="사유를 입력하세요" /></label>
+              </div>
+              <div class="access-actions">
+                <button id="saveAccessBtn" class="btn btn-primary" type="button">예외 저장</button>
+              </div>
+              <div class="hint-box">
+                기본 권한은 그룹(PEE1/PEE2/PSKH) 기준으로 자동 부여됩니다. 여기서는 예외만 관리합니다.
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div id="decisionHistoryList" class="list-stack"></div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <div id="checklistModal" class="modal hidden" aria-hidden="true">
-    <div class="modal__backdrop" data-close="checklist"></div>
-    <div class="modal__dialog modal__dialog--xl">
-      <div class="modal__header">
+    <div class="modal-backdrop" data-close="checklist"></div>
+    <div class="modal-dialog modal-dialog--xl">
+      <div class="modal-header">
         <div>
-          <p id="modalEyebrow" class="modal__eyebrow">CHECKLIST</p>
-          <h3 id="modalTitle">체크리스트</h3>
-          <p id="modalMeta" class="modal__meta">-</p>
+          <p id="checklistModalEyebrow" class="modal-eyebrow">CHECKLIST</p>
+          <h3 id="checklistModalTitle">체크리스트</h3>
+          <p id="checklistModalMeta" class="modal-meta">-</p>
         </div>
-        <div class="modal__header-actions">
-          <span id="modalStatusPill" class="status-pill status-pill--idle">-</span>
-          <button class="icon-btn" data-close="checklist" aria-label="닫기">×</button>
-        </div>
-      </div>
-
-      <div class="modal__toolbar">
-        <div class="toolbar-left">
-          <input id="questionSearchInput" class="search-input" type="text" placeholder="질문 검색" />
-          <label class="check-inline">
-            <input id="onlyUncheckedToggle" type="checkbox" />
-            <span>미완료만 보기</span>
-          </label>
-        </div>
-        <div class="toolbar-right">
-          <button id="expandAllBtn" class="btn sm">전체 펼치기</button>
-          <button id="collapseAllBtn" class="btn sm">전체 접기</button>
-          <button id="markVisibleBtn" class="btn sm">보이는 항목 체크</button>
-          <button id="clearVisibleBtn" class="btn sm">보이는 항목 해제</button>
+        <div class="modal-header-actions">
+          <span id="checklistModalStatus" class="status-chip status-chip--idle">-</span>
+          <button class="icon-btn" type="button" data-close="checklist" aria-label="닫기">×</button>
         </div>
       </div>
 
-      <div id="decisionBanner" class="decision-banner hidden"></div>
-      <div id="checklistSections" class="modal__body checklist-body"></div>
+      <div class="modal-toolbar">
+        <label class="field field--inline"><span>검색</span><input id="modalSearchInput" type="text" placeholder="질문 검색" /></label>
+        <label class="inline-check"><input id="modalOnlyUnchecked" type="checkbox" /> <span>미체크만 보기</span></label>
+        <div class="toolbar-actions">
+          <button id="modalExpandBtn" class="btn" type="button">전체 펼치기</button>
+          <button id="modalCollapseBtn" class="btn" type="button">전체 접기</button>
+          <button id="modalMarkVisibleBtn" class="btn" type="button">보이는 항목 체크</button>
+          <button id="modalClearVisibleBtn" class="btn" type="button">보이는 항목 해제</button>
+        </div>
+      </div>
 
-      <div class="modal__footer">
-        <div id="modalSummaryText" class="footer-summary">-</div>
+      <div id="modalNotice" class="notice-box hidden"></div>
+      <div id="modalSections" class="modal-body checklist-sections"></div>
+
+      <div class="modal-footer">
+        <div id="modalFooterInfo" class="footer-info">-</div>
         <div class="footer-actions">
-          <button id="saveDraftBtn" class="btn">저장</button>
-          <button id="submitRequestBtn" class="btn primary">결재 요청</button>
+          <button id="modalSaveBtn" class="btn" type="button">저장</button>
+          <button id="modalSubmitBtn" class="btn btn-primary" type="button">결재 요청</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="approvalModal" class="modal hidden" aria-hidden="true">
-    <div class="modal__backdrop" data-close="approval"></div>
-    <div class="modal__dialog modal__dialog--lg">
-      <div class="modal__header">
+  <div id="detailModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close="detail"></div>
+    <div class="modal-dialog modal-dialog--xl">
+      <div class="modal-header">
         <div>
-          <p class="modal__eyebrow">APPROVAL</p>
-          <h3 id="approvalTitle">결재 상세</h3>
-          <p id="approvalMeta" class="modal__meta">-</p>
+          <p id="detailModalEyebrow" class="modal-eyebrow">DETAIL</p>
+          <h3 id="detailModalTitle">상세 보기</h3>
+          <p id="detailModalMeta" class="modal-meta">-</p>
         </div>
-        <div class="modal__header-actions">
-          <span id="approvalStatusPill" class="status-pill status-pill--idle">-</span>
-          <button class="icon-btn" data-close="approval" aria-label="닫기">×</button>
-        </div>
-      </div>
-
-      <div class="approval-top-grid">
-        <div class="info-card">
-          <label>작성자</label>
-          <strong id="approvalEngineer">-</strong>
-        </div>
-        <div class="info-card">
-          <label>완료율</label>
-          <strong id="approvalCompletion">-</strong>
+        <div class="modal-header-actions">
+          <span id="detailModalStatus" class="status-chip status-chip--idle">-</span>
+          <button class="icon-btn" type="button" data-close="detail" aria-label="닫기">×</button>
         </div>
       </div>
 
-      <div class="form-block">
-        <label for="approvalComment">결재 의견</label>
-        <textarea id="approvalComment" rows="3" placeholder="반려 시 사유를 적어두면 좋습니다."></textarea>
+      <div id="detailDecisionBox" class="decision-box hidden">
+        <label class="field"><span>결재 의견</span><textarea id="detailDecisionComment" rows="3" placeholder="반려 시 사유를 입력하세요"></textarea></label>
       </div>
 
-      <div id="approvalSections" class="modal__body approval-body"></div>
+      <div id="detailDecisionInfo" class="notice-box hidden"></div>
+      <div id="detailSections" class="modal-body checklist-sections checklist-sections--readonly"></div>
 
-      <div class="modal__footer">
-        <div class="footer-summary" id="approvalDecisionInfo">-</div>
-        <div class="footer-actions">
-          <button id="rejectBtn" class="btn danger">반려</button>
-          <button id="approveBtn" class="btn primary">승인</button>
+      <div class="modal-footer">
+        <div id="detailFooterInfo" class="footer-info">-</div>
+        <div id="detailFooterActions" class="footer-actions">
+          <button id="detailRejectBtn" class="btn btn-danger hidden" type="button">반려</button>
+          <button id="detailApproveBtn" class="btn btn-primary hidden" type="button">승인</button>
         </div>
       </div>
     </div>
