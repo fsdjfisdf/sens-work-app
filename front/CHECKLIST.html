@@ -1,237 +1,160 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checklist</title>
-    <link rel="stylesheet" href="./css/worklog.css">
-    <script defer src="./js/checklist.js"></script>
-    <script defer src="./js/logoutTimer.js"></script>
-    <style>
-        /* 비활성화된 버튼 스타일 */
-        .btn-primary:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        /* 경고 메시지 스타일 */
-        .warning-message {
-            color: red;
-            font-size: 14px;
-            display: none;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S-WORKS Checklist</title>
+  <link rel="stylesheet" href="../css/checklist.css" />
+  <script defer src="../js/checklist.js"></script>
 </head>
 <body>
-    <nav>
-        <div class="inner">
-            <div class="nav-container">
-                <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-                <div class="sign-container unsigned">
-                    <a href="./signin.html" class="sign-link">Login</a>
-                </div>
-                <div class="sign-container signed hidden">
-                    <button class="menu-btn">
-                        <div class="menu-icon">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="menu-bar">
-            <div class="menu-bar-content">
-                <a href="./user_info.html" class="menu-item">SECM</a>
-                <a href="./worklog.html" class="menu-item">Create Worklog</a>
-                <a href="./approval.html" class="menu-item">Worklog Approval</a>
-                <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-                <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-                <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-                <a href="./PCI.html" class="menu-item">PCI</a>
-                <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-                <a href="./business.html" class="menu-item">Business trip</a>
-                <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-                <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-                <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
-                <a href="./update.html" class="menu-item">Update</a>
-                <button id="sign-out" class="menu-item">Logout</button>
-            </div>
-        </div>
+  <header class="topbar">
+    <div class="topbar__brand">
+      <a href="./index.html" class="brand-link">S-WORKS</a>
+      <span class="brand-sub">Checklist</span>
+    </div>
+    <nav class="topbar__nav">
+      <a href="./PCI.html">PCI</a>
+      <a href="./worklog.html">Create Worklog</a>
+      <a href="./approval.html">Worklog Approval</a>
+      <a href="./loadworklog.html">Load Worklog</a>
     </nav>
+    <div class="topbar__actions">
+      <span id="userBadge" class="user-badge">로딩 중</span>
+      <button id="logoutBtn" class="btn btn--ghost" type="button">로그아웃</button>
+    </div>
+  </header>
 
-    <main>
-        <section class="checklist-form-container">
-            <div class="inner">
-                <h2>Checklist</h2>
-                <div class="form">
-                    <div class="form-row">
-                        <label for="groupSelect">Group</label>
-                        <select id="groupSelect">
-                            <option value="">Select Group</option>
-                            <option value="PEE1">PEE1</option>
-                            <option value="PEE2">PEE2</option>
-                            <option value="PSKH">PSKH</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label for="equipmentSelect">Equipment</label>
-                        <select id="equipmentSelect">
-                            <option value="">Select Equipment</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label for="taskTypeSelect">Task Type</label>
-                        <select id="taskTypeSelect">
-                            <option value="">Select Task Type</option>
-                            <option value="SET UP">SET UP</option>
-                            <option value="MAINTENANCE">MAINTENANCE</option>
-                        </select>
-                    </div>
-
-                    <div class="form-buttons">
-                        <button id="moveButton" class="btn-primary" disabled>SEARCH</button>
-                        <button id="resetButton" class="btn-secondary">Reset</button>
-                    </div>
-
-                    <!-- 경고 메시지 -->
-                    <p id="warningMessage" class="warning-message">3가지 필드를 모두 선택해야 SEARCH 버튼을 사용할 수 있습니다.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="inner">
-            <p>제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며, 위반 시 법적 조치가 취해질 수 있습니다.</p>
+  <main class="page">
+    <section class="hero card">
+      <div>
+        <p class="eyebrow">Unified Checklist</p>
+        <h1>통합 체크리스트</h1>
+        <p class="muted">
+          설비별 / SETUP·MAINT 체크리스트를 한 화면에서 조회하고 저장합니다.
+          기본 접근 권한은 engineer.group 기준이며, 예외 권한은 관리자 override를 따릅니다.
+        </p>
+      </div>
+      <div class="hero__meta">
+        <div class="metric">
+          <span class="metric__label">전체 완료율</span>
+          <strong id="overallCompletion">-</strong>
         </div>
-    </footer>
+        <div class="metric">
+          <span class="metric__label">응답 상태</span>
+          <strong id="responseStatus">-</strong>
+        </div>
+      </div>
+    </section>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const groupSelect = document.getElementById("groupSelect");
-            const equipmentSelect = document.getElementById("equipmentSelect");
-            const taskTypeSelect = document.getElementById("taskTypeSelect");
-            const moveButton = document.getElementById("moveButton");
-            const resetButton = document.getElementById("resetButton");
-            const warningMessage = document.getElementById("warningMessage");
+    <section class="toolbar card">
+      <div class="toolbar__row toolbar__row--primary">
+        <div class="field field--grow">
+          <label for="equipmentSelect">설비 그룹</label>
+          <select id="equipmentSelect"></select>
+        </div>
+        <div class="field">
+          <label for="kindSelect">유형</label>
+          <select id="kindSelect">
+            <option value="SETUP">SETUP</option>
+            <option value="MAINT">MAINT</option>
+          </select>
+        </div>
+        <div class="field field--grow">
+          <label for="questionSearch">질문 검색</label>
+          <input id="questionSearch" type="text" placeholder="질문 내용 또는 코드 검색" />
+        </div>
+      </div>
+      <div class="toolbar__row">
+        <label class="inline-check">
+          <input id="incompleteOnly" type="checkbox" />
+          <span>미완료 항목만 보기</span>
+        </label>
+        <div class="toolbar__spacer"></div>
+        <button id="reloadBtn" class="btn btn--ghost" type="button">새로고침</button>
+        <button id="saveBtn" class="btn btn--primary" type="button">저장</button>
+        <button id="submitBtn" class="btn btn--dark" type="button">제출 상태로 저장</button>
+      </div>
+      <p id="screenHint" class="toolbar__hint muted"></p>
+    </section>
 
-            // 이동 대상 페이지 맵
-            const pageMap = {
-                "SUPRA N": { "SET UP": "supra_setup.html", "MAINTENANCE": "supra_maintenance.html" },
-                "SUPRA XP": { "SET UP": "supra_xp_setup.html", "MAINTENANCE": "supra_xp_maintenance.html" },
-                "INTEGER": { "SET UP": "integer_setup.html", "MAINTENANCE": "integer_maintenance.html" },
-                "PRECIA": { "SET UP": "precia_setup.html", "MAINTENANCE": "precia_maintenance.html" },
-                "ECOLITE": { "SET UP": "ecolite_setup.html", "MAINTENANCE": "ecolite_maintenance.html" },
-                "GENEVA": { "SET UP": "geneva_setup.html", "MAINTENANCE": "geneva_maintenance.html" },
-                "HDW": { "SET UP": "hdw_setup.html", "MAINTENANCE": "hdw_maintenance.html" },
+    <section class="content-grid">
+      <aside class="summary card">
+        <div class="card__header">
+          <h2>내 정보</h2>
+        </div>
+        <dl id="profileInfo" class="profile-list"></dl>
 
-            };
+        <div class="divider"></div>
 
-            // 그룹 선택에 따른 설비 옵션
-            const equipmentOptions = {
-                "": ["SUPRA N", "SUPRA XP", "INTEGER", "PRECIA", "ECOLITE", "GENEVA", "HDW"],
-                "PEE1": ["SUPRA N", "SUPRA XP"],
-                "PEE2": ["INTEGER", "PRECIA"],
-                "PSKH": ["ECOLITE", "GENEVA", "HDW"]
-            };
+        <div class="card__header">
+          <h2>섹션 진행률</h2>
+        </div>
+        <div id="sectionProgressList" class="section-progress-list empty-state-small">
+          아직 불러온 데이터가 없습니다.
+        </div>
+      </aside>
 
-            function updateMoveButtonState() {
-                const allFieldsSelected = groupSelect.value && equipmentSelect.value && taskTypeSelect.value;
-                moveButton.disabled = !allFieldsSelected;
-                warningMessage.style.display = 'none'; // 선택 상태가 변경되면 경고 메시지 숨김
-            }
+      <section class="checklist card">
+        <div class="card__header card__header--sticky">
+          <div>
+            <h2 id="templateTitle">체크리스트</h2>
+            <p id="templateMeta" class="muted">설비와 유형을 선택하세요.</p>
+          </div>
+          <div class="card__header-actions">
+            <button id="checkAllVisibleBtn" class="btn btn--ghost" type="button">보이는 항목 전체 체크</button>
+            <button id="uncheckAllVisibleBtn" class="btn btn--ghost" type="button">보이는 항목 전체 해제</button>
+          </div>
+        </div>
 
-            groupSelect.addEventListener("change", function() {
-                equipmentSelect.innerHTML = '<option value="">Select Equipment</option>';
-                equipmentOptions[groupSelect.value].forEach(optionText => {
-                    const option = document.createElement("option");
-                    option.value = optionText;
-                    option.textContent = optionText;
-                    equipmentSelect.appendChild(option);
-                });
-                updateMoveButtonState();
-            });
+        <form id="checklistForm" class="checklist-form">
+          <div id="checklistSections" class="checklist-sections empty-state">
+            접근 가능한 설비와 유형을 선택하면 체크리스트가 표시됩니다.
+          </div>
+        </form>
+      </section>
+    </section>
 
-            equipmentSelect.addEventListener("change", updateMoveButtonState);
-            taskTypeSelect.addEventListener("change", updateMoveButtonState);
+    <section id="adminPanel" class="admin card hidden">
+      <div class="card__header">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h2>체크리스트 접근 예외 관리</h2>
+          <p class="muted">현재 백엔드에는 engineer 검색 API가 없어서 engineer_id를 직접 넣는 방식으로 구현했습니다.</p>
+        </div>
+      </div>
 
-            resetButton.addEventListener("click", function() {
-                groupSelect.value = "";
-                equipmentSelect.innerHTML = '<option value="">Select Equipment</option>';
-                taskTypeSelect.value = "";
-                moveButton.disabled = true;
-                warningMessage.style.display = 'none';
-            });
+      <div class="admin__grid">
+        <div class="field">
+          <label for="accessEngineerId">Engineer ID</label>
+          <input id="accessEngineerId" type="number" min="1" placeholder="예: 12" />
+        </div>
+        <div class="field">
+          <label for="accessEquipmentGroup">설비 그룹</label>
+          <select id="accessEquipmentGroup"></select>
+        </div>
+        <div class="field">
+          <label for="accessType">예외 타입</label>
+          <select id="accessType">
+            <option value="ALLOW">ALLOW</option>
+            <option value="DENY">DENY</option>
+          </select>
+        </div>
+        <div class="field field--grow">
+          <label for="accessReason">사유</label>
+          <input id="accessReason" type="text" placeholder="예: 예외 교육 이수" />
+        </div>
+      </div>
 
-            moveButton.addEventListener("click", function(event) {
-                if (moveButton.disabled) {
-                    warningMessage.style.display = 'block'; // 경고 메시지 표시
-                    event.preventDefault();
-                } else {
-                    const selectedEquipment = equipmentSelect.value;
-                    const selectedTaskType = taskTypeSelect.value;
-                    const targetPage = pageMap[selectedEquipment]?.[selectedTaskType];
-                    if (targetPage) {
-                        window.location.href = targetPage; // 이동
-                    }
-                }
-            });
-        });
+      <div class="toolbar__row">
+        <button id="loadAccessBtn" class="btn btn--ghost" type="button">현재 예외 조회</button>
+        <button id="saveAccessBtn" class="btn btn--primary" type="button">예외 저장</button>
+      </div>
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const token = localStorage.getItem("x-access-token");
-            const userRole = localStorage.getItem("user-role");
+      <div id="accessResult" class="admin__result empty-state-small">아직 조회한 데이터가 없습니다.</div>
+    </section>
+  </main>
 
-            if (!token) {
-                document.querySelector(".unsigned").classList.remove("hidden");
-                document.querySelector(".signed").classList.add("hidden");
-            } else {
-                document.querySelector(".unsigned").classList.add("hidden");
-                document.querySelector(".signed").classList.remove("hidden");
-            }
-
-            if (!token || userRole !== 'admin') {
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = 'none';
-                });
-            }
-
-            const signOutButton = document.querySelector("#sign-out");
-
-            if (signOutButton) {
-                signOutButton.addEventListener("click", function() {
-                    localStorage.removeItem("x-access-token");
-                    localStorage.removeItem("user-role");
-                    alert("로그아웃 되었습니다.");
-                    window.location.replace("./signin.html");
-                });
-            }
-            const menuBtn = document.querySelector('.menu-btn');
-            const menuBar = document.querySelector('.menu-bar');
-
-            menuBtn.addEventListener('click', function() {
-                menuBar.classList.toggle('open');
-            });
-
-            document.addEventListener('click', function(event) {
-                if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-                    menuBar.classList.remove('open');
-                }
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = localStorage.getItem('x-access-token');
-            if (!token) {
-                alert('로그인이 필요합니다.');
-                window.location.replace('./signin.html');
-                return;
-            }
-    })
-    </script>
+  <div id="toast" class="toast hidden"></div>
 </body>
 </html>

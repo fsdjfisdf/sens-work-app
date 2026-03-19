@@ -180,6 +180,12 @@ app.use('/api', setupBoardRoute);
 const wlRoute = require('../src/routes/wlRoute');
 app.use('/wl', wlRoute);
 
+const checklistRoute = require('../src/routes/checklistRoute');
+app.use('/api/checklists', checklistRoute);
+
+const legacyChecklistAdapterRoute = require('../src/routes/legacyChecklistAdapterRoute');
+app.use('/', legacyChecklistAdapterRoute);
+
 const analysisRoute = require('../src/routes/analysisRoute');
 app.use('/analysis', analysisRoute);
 
