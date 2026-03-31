@@ -12,7 +12,6 @@
   };
 
   const els = {};
-
   document.addEventListener('DOMContentLoaded', init);
 
   function qs(id) { return document.getElementById(id); }
@@ -50,6 +49,7 @@
       templateTitle: qs('templateTitle'),
       templateMeta: qs('templateMeta'),
       statusPill: qs('statusPill'),
+      statusLabel: qs('statusLabel'),
       statusDate: qs('statusDate'),
       statusMessage: qs('statusMessage'),
       checklistSections: qs('checklistSections'),
@@ -86,8 +86,7 @@
 
   function renderEquipmentBoard() {
     const grouped = new Map();
-
-    state.availableRows.forEach((row) => {
+    for (const row of state.availableRows) {
       const code = row.equipment_group_code;
       if (!grouped.has(code)) {
         grouped.set(code, {
@@ -97,7 +96,7 @@
         });
       }
       grouped.get(code).rows[row.checklist_kind] = row;
-    });
+    }
 
     const items = [...grouped.values()];
     if (!items.length) {
@@ -110,16 +109,19 @@
     els.equipmentBoard.innerHTML = items.map((item) => {
       const setup = item.rows.SETUP || null;
       const maint = item.rows.MAINT || null;
-      const selected = state.currentEquipmentGroup === item.code;
+      const setupSelected = state.currentEquipmentGroup === item.code && state.currentKind === 'SETUP';
+      const maintSelected = state.currentEquipmentGroup === item.code && state.currentKind === 'MAINT';
+      const cardSelected = state.currentEquipmentGroup === item.code;
+
       return `
-        <article class="equipment-card ${selected ? 'is-selected' : ''}">
+        <article class="equipment-card ${cardSelected ? 'is-selected' : ''}">
           <div class="equipment-card__title">
             <strong>${escapeHtml(item.name)}</strong>
             <span>${escapeHtml(item.code)}</span>
           </div>
           <div class="kind-actions">
-            ${renderKindButton(item.code, 'SETUP', setup, selected && state.currentKind === 'SETUP')}
-            ${renderKindButton(item.code, 'MAINT', maint, selected && state.currentKind === 'MAINT')}
+            ${renderKindButton(item.code, 'SETUP', setup, setupSelected)}
+            ${renderKindButton(item.code, 'MAINT', maint, maintSelected)}
           </div>
         </article>
       `;
@@ -130,8 +132,8 @@
       button.addEventListener('click', async () => {
         const nextEquipment = button.dataset.eq;
         const nextKind = button.dataset.kind;
-        if (state.currentEquipmentGroup === nextEquipment && state.currentKind === nextKind) return;
 
+        if (state.currentEquipmentGroup === nextEquipment && state.currentKind === nextKind) return;
         if (state.dirty) {
           const proceed = window.confirm('저장되지 않은 변경사항이 있습니다. 이동하면 현재 변경사항이 사라집니다.');
           if (!proceed) return;
@@ -156,6 +158,7 @@
         ${disabled ? 'disabled' : ''}
       >
         <b>${kind}</b>
+        <small>${disabled ? '템플릿 없음' : getStatusText(row.response_status || 'ACTIVE')}</small>
       </button>
     `;
   }
@@ -168,7 +171,7 @@
     }
 
     setButtonsDisabled(true);
-    setMiniStatus('loading', '불러오는 중', '-', '체크리스트를 불러오는 중입니다.');
+    setStatusState('loading', '불러오는 중', '체크리스트를 불러오는 중입니다.', '-');
     els.checklistSections.className = 'empty-box empty-box--lg';
     els.checklistSections.textContent = '체크리스트를 불러오는 중입니다.';
 
@@ -194,7 +197,7 @@
     els.templateMeta.textContent = `${template.checklist_kind || state.currentKind} · ${template.template_name || '현재 활성 템플릿'}`;
 
     const statusDate = response.approved_at || response.rejected_at || response.submitted_at || response.updated_at || template.updated_at || null;
-    setMiniStatus(status.toLowerCase(), getStatusText(status), formatDateTime(statusDate), buildStatusMessage(status, response));
+    setStatusState(status.toLowerCase(), getStatusText(status), buildStatusMessage(status, response), formatDateTime(statusDate));
 
     if (!Array.isArray(state.checklist?.sections) || !state.checklist.sections.length) {
       els.checklistSections.className = 'empty-box empty-box--lg';
@@ -306,6 +309,9 @@
       renderEquipmentBoardFromSaved(saved);
       renderEquipmentBoard();
       renderCurrentChecklist();
+      if (nextStatus === 'SUBMITTED') {
+        scrollToTop();
+      }
       showToast(nextStatus === 'SUBMITTED' ? '결재 요청을 보냈습니다.' : '저장했습니다.');
     } catch (error) {
       console.error(error);
@@ -317,10 +323,10 @@
   }
 
   function renderEquipmentBoardFromSaved(saved) {
-    const template = saved?.template || {};
-    const response = saved?.response || {};
+    if (!saved?.template) return;
     state.availableRows = state.availableRows.map((row) => {
-      if (row.equipment_group_code === template.equipment_group_code && row.checklist_kind === template.checklist_kind) {
+      if (row.equipment_group_code === saved.template.equipment_group_code && row.checklist_kind === saved.template.checklist_kind) {
+        const response = saved.response || {};
         return {
           ...row,
           response_status: response.response_status || 'ACTIVE',
@@ -357,19 +363,20 @@
     els.submitBtn.disabled = disabled;
   }
 
-  function setMiniStatus(type, label, dateText, message) {
+  function setStatusState(type, label, message, dateText) {
     els.statusPill.className = `status-pill status-pill--${type || 'idle'}`;
     els.statusPill.textContent = label || '-';
+    els.statusLabel.textContent = label || '-';
     els.statusDate.textContent = dateText || '-';
+    els.statusMessage.className = `status-message status-message--${type || 'idle'}`;
     els.statusMessage.textContent = message || '-';
-    els.statusMessage.className = `mini-note mini-note--${type || 'idle'}`;
   }
 
   function buildStatusMessage(status, response) {
-    if (status === 'SUBMITTED') return '결재 대기 상태입니다.';
-    if (status === 'APPROVED') return response?.decision_comment ? `승인 · ${response.decision_comment}` : '승인 완료 상태입니다.';
-    if (status === 'REJECTED') return response?.decision_comment ? `반려 · ${response.decision_comment}` : '반려 상태입니다.';
-    return '작성 중';
+    if (status === 'SUBMITTED') return '결재 요청이 제출된 상태입니다. 승인 또는 반려 전까지 수정할 수 없습니다.';
+    if (status === 'APPROVED') return response?.decision_comment ? `승인 코멘트: ${response.decision_comment}` : '승인 완료 상태입니다.';
+    if (status === 'REJECTED') return response?.decision_comment ? `반려 코멘트: ${response.decision_comment}` : '반려 상태입니다. 관리자 코멘트가 없습니다.';
+    return '작성 중입니다. 체크 후 저장하거나 결재 요청할 수 있습니다.';
   }
 
   function getStatusText(status) {
@@ -422,6 +429,10 @@
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return String(value);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function cssEscape(value) {

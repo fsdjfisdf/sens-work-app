@@ -26,28 +26,35 @@
 
   <main class="page-shell">
     <section class="selector card">
+      <div class="selector-head">
+        <h1>체크리스트 작성</h1>
+        <p>설비와 유형만 선택하면 바로 체크할 수 있습니다.</p>
+      </div>
       <div id="equipmentBoard" class="equipment-board"></div>
     </section>
 
     <section class="checklist-wrap card">
-      <div class="checklist-topbar">
-        <div class="checklist-title-wrap">
-          <h1 id="templateTitle">체크리스트</h1>
+      <div class="checklist-top">
+        <div>
+          <h2 id="templateTitle">체크리스트</h2>
           <p id="templateMeta" class="template-meta">설비를 선택하세요.</p>
         </div>
 
-        <div class="checklist-mini-meta">
-          <div class="mini-meta-row">
+        <div class="mini-status-wrap">
+          <div class="mini-status-row">
             <span id="statusPill" class="status-pill status-pill--idle">대기</span>
-            <span id="statusDate" class="mini-date">-</span>
+            <div class="mini-status-text">
+              <strong id="statusLabel">-</strong>
+              <span id="statusDate">-</span>
+            </div>
           </div>
-          <p id="statusMessage" class="mini-note">설비를 선택하면 현재 상태가 표시됩니다.</p>
+          <p id="statusMessage" class="status-message status-message--idle">설비를 선택하면 상태가 여기에 표시됩니다.</p>
         </div>
       </div>
 
       <div id="checklistSections" class="empty-box empty-box--lg">체크리스트를 불러오는 중입니다.</div>
 
-      <div class="checklist-actions">
+      <div class="action-bar">
         <button id="saveBtn" type="button" class="btn btn-line">임시 저장</button>
         <button id="submitBtn" type="button" class="btn btn-primary">결재 요청</button>
       </div>
