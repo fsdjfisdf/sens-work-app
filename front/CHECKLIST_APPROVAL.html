@@ -4,80 +4,57 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checklist Approval — S-WORKS</title>
-  <link rel="stylesheet" href="../css/checklist_approval.css" />
-  <script defer src="../js/checklist_approval.js"></script>
+  <link rel="stylesheet" href="./css/checklist_approval.css" />
+  <script defer src="./js/checklist_approval.js"></script>
 </head>
 <body>
   <header class="shell-nav">
     <div class="shell-nav__inner">
-      <div class="shell-brand-wrap">
-        <a href="./index.html" class="shell-brand">S-WORKS</a>
-        <span class="shell-brand__sub">Approval</span>
+      <div class="brand-wrap">
+        <a href="./index.html" class="brand">S-WORKS</a>
+        <span class="brand-sub">Approval</span>
       </div>
 
-      <nav class="shell-links" aria-label="주요 메뉴">
+      <nav class="nav-links" aria-label="주요 메뉴">
         <a href="./CHECKLIST.html">Checklist</a>
-        <a href="./CHECKLIST_APPROVAL.html" class="is-active">Checklist Approval</a>
+        <a href="./CHECKLIST_APPROVAL.html" class="is-active">Approval</a>
       </nav>
 
-      <span id="userBadge" class="user-pill">로딩 중</span>
+      <div id="userBadge" class="user-badge">로딩 중</div>
     </div>
   </header>
 
   <main class="page-shell">
-    <section class="hero-card">
-      <div class="hero-copy">
-        <p class="eyebrow">Admin Only</p>
-        <h1>체크리스트 결재</h1>
-        <p class="hero-desc">
-          제출된 체크리스트를 빠르게 훑고, 필요한 항목은 상세 확인한 뒤 승인 또는 반려합니다.
-          목록과 상세가 동시에 잘 보이도록 밀도를 정리했습니다.
-        </p>
-      </div>
-
-      <div class="hero-metrics">
-        <div class="metric-card metric-card--warn">
-          <span>SUBMITTED</span>
-          <strong id="submittedCount">0</strong>
-        </div>
-        <div class="metric-card metric-card--success">
-          <span>APPROVED</span>
-          <strong id="approvedCount">0</strong>
-        </div>
-        <div class="metric-card metric-card--danger">
-          <span>REJECTED</span>
-          <strong id="rejectedCount">0</strong>
-        </div>
+    <section class="page-head card">
+      <div>
+        <p class="eyebrow">Approval</p>
+        <h1>체크리스트 결재 관리</h1>
       </div>
     </section>
 
-    <section class="toolbar-card">
-      <div class="toolbar-card__head">
-        <div>
-          <p class="eyebrow">Filter</p>
-          <h2>결재 목록 정리</h2>
-          <p class="toolbar-desc">상태, 설비, 유형, 검색어 기준으로 목록을 빠르게 좁힐 수 있습니다.</p>
-        </div>
-      </div>
+    <section class="status-tabs card">
+      <button type="button" class="status-tab is-active" data-status="SUBMITTED">
+        <span>결재 대기</span>
+        <strong id="submittedCount">0</strong>
+      </button>
+      <button type="button" class="status-tab" data-status="REJECTED">
+        <span>반려</span>
+        <strong id="rejectedCount">0</strong>
+      </button>
+      <button type="button" class="status-tab" data-status="APPROVED">
+        <span>승인 완료</span>
+        <strong id="approvedCount">0</strong>
+      </button>
+    </section>
 
-      <div class="toolbar-grid">
+    <section class="filter-card card">
+      <div class="filter-grid">
         <label class="field">
-          <span>상태</span>
-          <select id="statusFilter">
-            <option value="SUBMITTED">SUBMITTED</option>
-            <option value="APPROVED">APPROVED</option>
-            <option value="REJECTED">REJECTED</option>
-            <option value="ACTIVE">ACTIVE</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>설비 그룹</span>
+          <span>설비</span>
           <select id="equipmentFilter">
             <option value="">전체</option>
           </select>
         </label>
-
         <label class="field">
           <span>유형</span>
           <select id="kindFilter">
@@ -86,78 +63,67 @@
             <option value="MAINT">MAINT</option>
           </select>
         </label>
-
-        <label class="field field--grow">
+        <label class="field field-grow">
           <span>검색</span>
-          <input id="keywordInput" type="text" placeholder="작성자 또는 템플릿 검색" />
+          <input id="keywordInput" type="text" placeholder="작성자 또는 설비 검색" />
         </label>
-      </div>
-
-      <div class="toolbar-row toolbar-row--topline">
-        <button id="reloadBtn" class="btn btn--line" type="button">목록 새로고침</button>
+        <button id="reloadBtn" type="button" class="btn btn-line">새로고침</button>
       </div>
     </section>
 
     <section class="workspace-grid">
-      <aside class="queue-panel">
-        <div class="panel-card queue-card">
-          <div class="panel-card__head">
-            <div>
-              <p class="eyebrow">Queue</p>
-              <h2>결재 목록</h2>
-            </div>
-            <span id="queueCountBadge" class="badge">0건</span>
+      <aside class="queue-card card">
+        <div class="queue-head">
+          <div>
+            <p class="eyebrow">Queue</p>
+            <h2>목록</h2>
           </div>
-          <div id="queueList" class="queue-list empty-box">불러온 결재 요청이 없습니다.</div>
+          <span id="queueCountBadge" class="queue-count">0건</span>
         </div>
+        <div id="queueList" class="queue-list empty-box">목록을 불러오는 중입니다.</div>
       </aside>
 
-      <section class="detail-panel">
-        <div class="detail-card">
-          <div class="detail-card__head">
-            <div>
-              <p class="eyebrow">Request Detail</p>
-              <h2 id="detailTitle">결재 대상을 선택하세요.</h2>
-              <p id="detailMeta" class="detail-meta">왼쪽 목록에서 한 건을 선택하면 상세가 표시됩니다.</p>
-            </div>
-            <div id="detailStatusPill" class="status-pill status-pill--idle">-</div>
+      <section class="detail-card card">
+        <div class="detail-head">
+          <div>
+            <p class="eyebrow">Detail</p>
+            <h2 id="detailTitle">항목을 선택하세요.</h2>
+            <p id="detailMeta" class="detail-meta">왼쪽 목록에서 한 건을 선택하면 상세가 표시됩니다.</p>
           </div>
+          <span id="detailStatusPill" class="status-pill status-pill--idle">-</span>
+        </div>
 
-          <div class="detail-summary-grid">
-            <div class="summary-box">
-              <span>작성자</span>
-              <strong id="detailEngineer">-</strong>
-            </div>
-            <div class="summary-box">
-              <span>설비 / 유형</span>
-              <strong id="detailEquipment">-</strong>
-            </div>
-            <div class="summary-box">
-              <span>완료율</span>
-              <strong id="detailCompletion">-</strong>
-            </div>
-            <div class="summary-box">
-              <span>최근 사유</span>
-              <strong id="detailComment">-</strong>
-            </div>
+        <div class="summary-grid">
+          <div class="summary-box">
+            <span>작성자</span>
+            <strong id="detailEngineer">-</strong>
           </div>
-
-          <div class="decision-box">
-            <label class="field field--grow">
-              <span>결재 코멘트</span>
-              <textarea id="decisionComment" rows="3" placeholder="승인 또는 반려 사유를 남길 수 있습니다."></textarea>
-            </label>
-
-            <div class="decision-actions">
-              <button id="approveBtn" class="btn btn--approve" type="button">승인</button>
-              <button id="rejectBtn" class="btn btn--reject" type="button">반려</button>
-            </div>
+          <div class="summary-box">
+            <span>설비 / 유형</span>
+            <strong id="detailEquipment">-</strong>
           </div>
-
-          <div id="detailSections" class="detail-sections empty-box empty-box--lg">
-            상세 체크리스트 내용이 여기에 표시됩니다.
+          <div class="summary-box">
+            <span>완료율</span>
+            <strong id="detailCompletion">-</strong>
+          </div>
+          <div class="summary-box">
+            <span>사유</span>
+            <strong id="detailComment">-</strong>
           </div>
         </div>
+
+        <div class="decision-card">
+          <label class="field field-grow">
+            <span>결재 코멘트</span>
+            <textarea id="decisionComment" rows="3" placeholder="승인 또는 반려 사유를 남길 수 있습니다."></textarea>
+          </label>
+          <div class="decision-actions">
+            <button id="approveBtn" type="button" class="btn btn-approve">승인</button>
+            <button id="rejectBtn" type="button" class="btn btn-reject">반려</button>
+          </div>
+        </div>
+
+        <div id="detailSections" class="detail-sections empty-box empty-box--lg">상세 체크리스트가 여기에 표시됩니다.</div>
       </section>
     </section>
   </main>
