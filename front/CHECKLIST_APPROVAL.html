@@ -25,13 +25,6 @@
   </header>
 
   <main class="page-shell">
-    <section class="page-head card">
-      <div>
-        <p class="eyebrow">Approval</p>
-        <h1>체크리스트 결재 관리</h1>
-      </div>
-    </section>
-
     <section class="status-tabs card">
       <button type="button" class="status-tab is-active" data-status="SUBMITTED">
         <span>결재 대기</span>
@@ -74,10 +67,7 @@
     <section class="workspace-grid">
       <aside class="queue-card card">
         <div class="queue-head">
-          <div>
-            <p class="eyebrow">Queue</p>
-            <h2>목록</h2>
-          </div>
+          <h2>목록</h2>
           <span id="queueCountBadge" class="queue-count">0건</span>
         </div>
         <div id="queueList" class="queue-list empty-box">목록을 불러오는 중입니다.</div>
@@ -86,7 +76,6 @@
       <section class="detail-card card">
         <div class="detail-head">
           <div>
-            <p class="eyebrow">Detail</p>
             <h2 id="detailTitle">항목을 선택하세요.</h2>
             <p id="detailMeta" class="detail-meta">왼쪽 목록에서 한 건을 선택하면 상세가 표시됩니다.</p>
           </div>
@@ -107,10 +96,20 @@
             <strong id="detailCompletion">-</strong>
           </div>
           <div class="summary-box">
-            <span>사유</span>
+            <span>반려 / 결재 코멘트</span>
             <strong id="detailComment">-</strong>
           </div>
         </div>
+
+        <section id="comparisonCard" class="comparison-card hidden">
+          <div class="comparison-head">
+            <h3>이전 제출본 대비 변경점</h3>
+            <p id="comparisonSummary">-</p>
+          </div>
+          <div id="comparisonList" class="comparison-list"></div>
+        </section>
+
+        <div id="detailSections" class="detail-sections empty-box empty-box--lg">상세 체크리스트가 여기에 표시됩니다.</div>
 
         <div class="decision-card">
           <label class="field field-grow">
@@ -118,12 +117,10 @@
             <textarea id="decisionComment" rows="3" placeholder="승인 또는 반려 사유를 남길 수 있습니다."></textarea>
           </label>
           <div class="decision-actions">
-            <button id="approveBtn" type="button" class="btn btn-approve">승인</button>
-            <button id="rejectBtn" type="button" class="btn btn-reject">반려</button>
+            <button id="approveBtn" type="button" class="btn btn-soft-approve">승인</button>
+            <button id="rejectBtn" type="button" class="btn btn-soft-reject">반려</button>
           </div>
         </div>
-
-        <div id="detailSections" class="detail-sections empty-box empty-box--lg">상세 체크리스트가 여기에 표시됩니다.</div>
       </section>
     </section>
   </main>

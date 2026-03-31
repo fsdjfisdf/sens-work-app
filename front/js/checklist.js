@@ -50,7 +50,6 @@
       templateTitle: qs('templateTitle'),
       templateMeta: qs('templateMeta'),
       statusPill: qs('statusPill'),
-      statusLabel: qs('statusLabel'),
       statusDate: qs('statusDate'),
       statusMessage: qs('statusMessage'),
       checklistSections: qs('checklistSections'),
@@ -80,7 +79,6 @@
 
   function pickDefaultSelection() {
     if (state.currentEquipmentGroup && state.currentKind) return;
-
     const preferred = state.availableRows.find((row) => row.checklist_kind === 'SETUP') || state.availableRows[0];
     state.currentEquipmentGroup = preferred?.equipment_group_code || '';
     state.currentKind = preferred?.checklist_kind || 'SETUP';
@@ -88,7 +86,8 @@
 
   function renderEquipmentBoard() {
     const grouped = new Map();
-    for (const row of state.availableRows) {
+
+    state.availableRows.forEach((row) => {
       const code = row.equipment_group_code;
       if (!grouped.has(code)) {
         grouped.set(code, {
@@ -98,7 +97,7 @@
         });
       }
       grouped.get(code).rows[row.checklist_kind] = row;
-    }
+    });
 
     const items = [...grouped.values()];
     if (!items.length) {
@@ -111,19 +110,16 @@
     els.equipmentBoard.innerHTML = items.map((item) => {
       const setup = item.rows.SETUP || null;
       const maint = item.rows.MAINT || null;
-      const setupSelected = state.currentEquipmentGroup === item.code && state.currentKind === 'SETUP';
-      const maintSelected = state.currentEquipmentGroup === item.code && state.currentKind === 'MAINT';
-      const cardSelected = state.currentEquipmentGroup === item.code;
-
+      const selected = state.currentEquipmentGroup === item.code;
       return `
-        <article class="equipment-card ${cardSelected ? 'is-selected' : ''}">
+        <article class="equipment-card ${selected ? 'is-selected' : ''}">
           <div class="equipment-card__title">
             <strong>${escapeHtml(item.name)}</strong>
             <span>${escapeHtml(item.code)}</span>
           </div>
           <div class="kind-actions">
-            ${renderKindButton(item.code, 'SETUP', setup, setupSelected)}
-            ${renderKindButton(item.code, 'MAINT', maint, maintSelected)}
+            ${renderKindButton(item.code, 'SETUP', setup, selected && state.currentKind === 'SETUP')}
+            ${renderKindButton(item.code, 'MAINT', maint, selected && state.currentKind === 'MAINT')}
           </div>
         </article>
       `;
@@ -134,8 +130,8 @@
       button.addEventListener('click', async () => {
         const nextEquipment = button.dataset.eq;
         const nextKind = button.dataset.kind;
-
         if (state.currentEquipmentGroup === nextEquipment && state.currentKind === nextKind) return;
+
         if (state.dirty) {
           const proceed = window.confirm('저장되지 않은 변경사항이 있습니다. 이동하면 현재 변경사항이 사라집니다.');
           if (!proceed) return;
@@ -160,7 +156,6 @@
         ${disabled ? 'disabled' : ''}
       >
         <b>${kind}</b>
-        <small>${disabled ? '템플릿 없음' : getStatusText(row.response_status || 'ACTIVE')}</small>
       </button>
     `;
   }
@@ -173,7 +168,7 @@
     }
 
     setButtonsDisabled(true);
-    setStatusState('loading', '불러오는 중', '체크리스트를 불러오는 중입니다.', '-');
+    setMiniStatus('loading', '불러오는 중', '-', '체크리스트를 불러오는 중입니다.');
     els.checklistSections.className = 'empty-box empty-box--lg';
     els.checklistSections.textContent = '체크리스트를 불러오는 중입니다.';
 
@@ -199,7 +194,7 @@
     els.templateMeta.textContent = `${template.checklist_kind || state.currentKind} · ${template.template_name || '현재 활성 템플릿'}`;
 
     const statusDate = response.approved_at || response.rejected_at || response.submitted_at || response.updated_at || template.updated_at || null;
-    setStatusState(status.toLowerCase(), getStatusText(status), buildStatusMessage(status, response), formatDateTime(statusDate));
+    setMiniStatus(status.toLowerCase(), getStatusText(status), formatDateTime(statusDate), buildStatusMessage(status, response));
 
     if (!Array.isArray(state.checklist?.sections) || !state.checklist.sections.length) {
       els.checklistSections.className = 'empty-box empty-box--lg';
@@ -362,20 +357,19 @@
     els.submitBtn.disabled = disabled;
   }
 
-  function setStatusState(type, label, message, dateText) {
+  function setMiniStatus(type, label, dateText, message) {
     els.statusPill.className = `status-pill status-pill--${type || 'idle'}`;
     els.statusPill.textContent = label || '-';
-    els.statusLabel.textContent = label || '-';
     els.statusDate.textContent = dateText || '-';
-    els.statusMessage.className = `status-message status-message--${type || 'idle'}`;
     els.statusMessage.textContent = message || '-';
+    els.statusMessage.className = `mini-note mini-note--${type || 'idle'}`;
   }
 
   function buildStatusMessage(status, response) {
-    if (status === 'SUBMITTED') return '결재 요청이 제출된 상태입니다. 승인 또는 반려 전까지 수정할 수 없습니다.';
-    if (status === 'APPROVED') return response?.decision_comment ? `승인 완료 · ${response.decision_comment}` : '관리자 승인 완료 상태입니다.';
-    if (status === 'REJECTED') return response?.decision_comment ? `반려됨 · ${response.decision_comment}` : '반려된 상태입니다. 수정 후 다시 결재 요청하세요.';
-    return '작성 중입니다. 체크 후 저장하거나 결재 요청할 수 있습니다.';
+    if (status === 'SUBMITTED') return '결재 대기 상태입니다.';
+    if (status === 'APPROVED') return response?.decision_comment ? `승인 · ${response.decision_comment}` : '승인 완료 상태입니다.';
+    if (status === 'REJECTED') return response?.decision_comment ? `반려 · ${response.decision_comment}` : '반려 상태입니다.';
+    return '작성 중';
   }
 
   function getStatusText(status) {

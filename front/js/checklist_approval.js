@@ -63,6 +63,9 @@
       detailEquipment: qs('detailEquipment'),
       detailCompletion: qs('detailCompletion'),
       detailComment: qs('detailComment'),
+      comparisonCard: qs('comparisonCard'),
+      comparisonSummary: qs('comparisonSummary'),
+      comparisonList: qs('comparisonList'),
       decisionComment: qs('decisionComment'),
       approveBtn: qs('approveBtn'),
       rejectBtn: qs('rejectBtn'),
@@ -73,28 +76,25 @@
   }
 
   function bind() {
-    const reloadAll = async () => {
-      state.selectedId = null;
-      await loadCounts();
-      await loadQueue();
-    };
-
     els.tabs.forEach((tab) => {
       tab.addEventListener('click', async () => {
-        if (state.currentStatus === tab.dataset.status) return;
-        state.currentStatus = tab.dataset.status;
-        state.selectedId = null;
+        const nextStatus = tab.dataset.status;
+        if (state.currentStatus === nextStatus) return;
+        state.currentStatus = nextStatus;
         updateTabs();
         await loadQueue();
       });
     });
 
-    els.equipmentFilter.addEventListener('change', reloadAll);
-    els.kindFilter.addEventListener('change', reloadAll);
+    els.equipmentFilter.addEventListener('change', loadQueue);
+    els.kindFilter.addEventListener('change', loadQueue);
     els.keywordInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') reloadAll();
+      if (e.key === 'Enter') loadQueue();
     });
-    els.reloadBtn.addEventListener('click', reloadAll);
+    els.reloadBtn.addEventListener('click', async () => {
+      await loadCounts();
+      await loadQueue();
+    });
     els.approveBtn.addEventListener('click', () => decide('APPROVED'));
     els.rejectBtn.addEventListener('click', () => decide('REJECTED'));
   }
@@ -108,7 +108,7 @@
     });
 
     const options = ['<option value="">전체</option>'];
-    [...map.entries()].forEach(([code, name]) => {
+    [...map.entries()].sort((a, b) => a[1].localeCompare(b[1], 'ko')).forEach(([code, name]) => {
       options.push(`<option value="${escapeAttr(code)}">${escapeHtml(name)}</option>`);
     });
     els.equipmentFilter.innerHTML = options.join('');
@@ -192,23 +192,22 @@
 
     els.queueList.className = 'queue-list';
     els.queueList.innerHTML = state.queue.map((row) => {
+      const when = row.approved_at || row.rejected_at || row.submitted_at || row.updated_at;
       const percent = row.total_questions
         ? Math.round((Number(row.checked_questions || 0) / Number(row.total_questions || 0)) * 1000) / 10
         : 0;
-      const when = row.approved_at || row.rejected_at || row.submitted_at || row.updated_at;
 
       return `
         <button type="button" class="queue-item ${row.response_id === state.selectedId ? 'is-active' : ''}" data-id="${row.response_id}">
-          <div class="queue-item__top">
+          <div class="queue-item__row">
             <strong>${escapeHtml(row.engineer_name || '-')}</strong>
             <span class="status-pill status-pill--${String(row.response_status || '').toLowerCase()}">${escapeHtml(getStatusText(row.response_status))}</span>
           </div>
-          <p>${escapeHtml(row.equipment_group_name || row.equipment_group_code || '-')} · ${escapeHtml(row.checklist_kind || '-')}</p>
-          <div class="mini-bar"><span style="width:${percent}%"></span></div>
-          <div class="queue-item__meta">
+          <div class="queue-item__row queue-item__row--sub">
+            <span>${escapeHtml(row.equipment_group_name || row.equipment_group_code || '-')} · ${escapeHtml(row.checklist_kind || '-')}</span>
             <span>${percent}%</span>
-            <span>${escapeHtml(formatDateTime(when))}</span>
           </div>
+          <div class="queue-item__date">${escapeHtml(formatDateTime(when))}</div>
         </button>
       `;
     }).join('');
@@ -254,6 +253,8 @@
     els.approveBtn.disabled = !canApprove;
     els.rejectBtn.disabled = !canApprove;
 
+    renderComparison(data);
+
     if (!Array.isArray(data?.sections) || !data.sections.length) {
       els.detailSections.className = 'detail-sections empty-box empty-box--lg';
       els.detailSections.textContent = '표시할 상세 질문이 없습니다.';
@@ -270,9 +271,7 @@
               <h3>${sectionIndex + 1}. ${escapeHtml(section.section_name)}</h3>
               <p>${section.summary.checked_questions}/${section.summary.total_questions} 완료</p>
             </div>
-            <div style="width:min(220px,32%)">
-              <div class="mini-bar"><span style="width:${percent}%"></span></div>
-            </div>
+            <div class="section-progress">${percent}%</div>
           </div>
           <div class="detail-question-list">
             ${section.questions.map((question, questionIndex) => `
@@ -289,6 +288,82 @@
         </article>
       `;
     }).join('');
+  }
+
+  function renderComparison(data) {
+    const comparison = buildComparison(data);
+
+    els.comparisonCard.classList.remove('hidden');
+    els.comparisonSummary.textContent = comparison.summary;
+
+    if (!comparison.items.length) {
+      els.comparisonList.className = 'comparison-list empty-box';
+      els.comparisonList.textContent = comparison.emptyMessage;
+      return;
+    }
+
+    els.comparisonList.className = 'comparison-list';
+    els.comparisonList.innerHTML = comparison.items.map((item) => `
+      <div class="comparison-item comparison-item--${escapeAttr(item.type)}">
+        <span class="comparison-badge">${escapeHtml(item.label)}</span>
+        <div class="comparison-copy">
+          <strong>${escapeHtml(item.code || '-')}</strong>
+          <p>${escapeHtml(item.text || '')}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function buildComparison(data) {
+    const previousSections = data?.previous?.sections || data?.previous_sections || null;
+    if (!Array.isArray(previousSections) || !previousSections.length) {
+      return {
+        summary: '이전 제출본 비교 정보 없음',
+        items: [],
+        emptyMessage: '현재 API는 이전 제출 시점의 체크리스트 스냅샷을 내려주지 않아서 변경점 비교를 표시할 수 없습니다.',
+      };
+    }
+
+    const currentMap = flattenSections(data?.sections || []);
+    const prevMap = flattenSections(previousSections);
+    const items = [];
+
+    currentMap.forEach((current, questionId) => {
+      const prev = prevMap.get(questionId);
+      if (!prev) return;
+      if (!!current.is_checked !== !!prev.is_checked) {
+        items.push({
+          type: current.is_checked ? 'added' : 'removed',
+          label: current.is_checked ? '추가 체크' : '체크 해제',
+          code: current.question_code,
+          text: current.question_text,
+        });
+      }
+    });
+
+    const summary = items.length
+      ? `이전 제출본 대비 ${items.length}개 항목 변경`
+      : '이전 제출본과 동일';
+
+    return {
+      summary,
+      items,
+      emptyMessage: '변경된 항목이 없습니다.',
+    };
+  }
+
+  function flattenSections(sections) {
+    const map = new Map();
+    sections.forEach((section) => {
+      (section.questions || []).forEach((question) => {
+        map.set(Number(question.id), {
+          question_code: question.question_code,
+          question_text: question.question_text,
+          is_checked: !!question.is_checked,
+        });
+      });
+    });
+    return map;
   }
 
   async function decide(decision) {
@@ -331,6 +406,10 @@
     els.decisionComment.value = '';
     els.approveBtn.disabled = true;
     els.rejectBtn.disabled = true;
+    els.comparisonCard.classList.add('hidden');
+    els.comparisonSummary.textContent = '-';
+    els.comparisonList.className = 'comparison-list';
+    els.comparisonList.innerHTML = '';
     els.detailSections.className = 'detail-sections empty-box empty-box--lg';
     els.detailSections.textContent = '상세 체크리스트가 여기에 표시됩니다.';
   }
