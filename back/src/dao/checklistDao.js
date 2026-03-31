@@ -318,6 +318,170 @@ async function loadResponseBundleByResponseId(conn, responseId) {
   return rows[0] || null;
 }
 
+function getQuestionCompareKey(question) {
+  const code = String(question?.question_code || '').trim();
+  if (code) return code;
+  const id = question?.id || question?.question_id || '';
+  return `ID:${id}`;
+}
+
+function flattenQuestionsForCompare(sections) {
+  const rows = [];
+  for (const section of Array.isArray(sections) ? sections : []) {
+    for (const question of Array.isArray(section?.questions) ? section.questions : []) {
+      rows.push({
+        question_key: getQuestionCompareKey(question),
+        question_code: question.question_code || null,
+        question_text: question.question_text || '',
+        section_name: section.section_name || section.section_code || 'GENERAL',
+        is_checked: !!question.is_checked,
+      });
+    }
+  }
+  return rows;
+}
+
+function buildLatestApprovedComparison(currentPayload, previousPayload) {
+  if (!previousPayload) return null;
+
+  const currentRows = flattenQuestionsForCompare(currentPayload?.sections || []);
+  const previousRows = flattenQuestionsForCompare(previousPayload?.sections || []);
+  const currentMap = new Map(currentRows.map((row) => [row.question_key, row]));
+  const previousMap = new Map(previousRows.map((row) => [row.question_key, row]));
+  const allKeys = new Set([...currentMap.keys(), ...previousMap.keys()]);
+
+  const changes = [];
+  for (const key of allKeys) {
+    const current = currentMap.get(key) || null;
+    const previous = previousMap.get(key) || null;
+
+    if (current && previous) {
+      if (!!current.is_checked !== !!previous.is_checked) {
+        const type = current.is_checked ? 'checked' : 'unchecked';
+        changes.push({
+          type,
+          label: current.is_checked ? '새 체크' : '해제',
+          question_key: key,
+          question_code: current.question_code || previous.question_code || null,
+          question_text: current.question_text || previous.question_text || '',
+          message: `${current.question_text || previous.question_text || ''} · ${previous.is_checked ? '완료' : '미완료'} → ${current.is_checked ? '완료' : '미완료'}`,
+          current_checked: !!current.is_checked,
+          previous_checked: !!previous.is_checked,
+        });
+      }
+      continue;
+    }
+
+    if (current && !previous && current.is_checked) {
+      changes.push({
+        type: 'added',
+        label: '신규 문항',
+        question_key: key,
+        question_code: current.question_code || null,
+        question_text: current.question_text || '',
+        message: `${current.question_text || ''} · 이전 승인본에는 없던 문항입니다.`,
+        current_checked: true,
+        previous_checked: false,
+      });
+    }
+
+    if (!current && previous && previous.is_checked) {
+      changes.push({
+        type: 'removed',
+        label: '제외 문항',
+        question_key: key,
+        question_code: previous.question_code || null,
+        question_text: previous.question_text || '',
+        message: `${previous.question_text || ''} · 이전 승인본에는 있었지만 현재 체크리스트에는 없습니다.`,
+        current_checked: false,
+        previous_checked: true,
+      });
+    }
+  }
+
+  const sortOrder = { checked: 1, unchecked: 2, added: 3, removed: 4 };
+  changes.sort((a, b) => {
+    const typeDiff = (sortOrder[a.type] || 99) - (sortOrder[b.type] || 99);
+    if (typeDiff !== 0) return typeDiff;
+    return String(a.question_code || a.question_key || '').localeCompare(String(b.question_code || b.question_key || ''), 'ko');
+  });
+
+  return {
+    basis: 'LATEST_APPROVED',
+    previous_response: {
+      id: previousPayload?.response?.id || null,
+      response_status: previousPayload?.response?.response_status || null,
+      approved_at: previousPayload?.response?.approved_at || null,
+      updated_at: previousPayload?.response?.updated_at || null,
+      template_name: previousPayload?.template?.template_name || null,
+      version_no: previousPayload?.template?.version_no || null,
+    },
+    summary: {
+      changed_count: changes.length,
+      current_checked_count: currentPayload?.summary?.checked_questions || 0,
+      previous_checked_count: previousPayload?.summary?.checked_questions || 0,
+    },
+    changes,
+  };
+}
+
+async function loadLatestApprovedPayload(conn, currentRow, adminUser) {
+  const [prevRows] = await conn.query(
+    `SELECT r.id
+       FROM checklist_response r
+       JOIN checklist_template t ON t.id = r.template_id
+      WHERE r.engineer_id = ?
+        AND r.response_status = 'APPROVED'
+        AND t.equipment_group_code = ?
+        AND t.checklist_kind = ?
+        AND r.id <> ?
+      ORDER BY COALESCE(r.approved_at, r.updated_at, r.submitted_at) DESC, r.id DESC
+      LIMIT 1`,
+    [currentRow.engineer_id, currentRow.equipment_group_code, currentRow.checklist_kind, currentRow.id]
+  );
+
+  const prevId = prevRows[0]?.id;
+  if (!prevId) return null;
+
+  const prevRow = await loadResponseBundleByResponseId(conn, prevId);
+  if (!prevRow) return null;
+
+  const prevSections = await loadTemplateStructure(conn, prevRow.template_id);
+  const prevAnswers = await loadResponseAnswers(conn, prevRow.id);
+
+  return decorateChecklistPayload({
+    engineer: {
+      id: prevRow.engineer_id,
+      legacy_id: prevRow.legacy_id,
+      name: prevRow.engineer_name,
+      company: prevRow.company,
+      group: prevRow.engineer_group,
+      site: prevRow.engineer_site,
+      role: prevRow.engineer_role,
+      user: adminUser,
+    },
+    template: {
+      id: prevRow.template_id,
+      equipment_group_code: prevRow.equipment_group_code,
+      equipment_group_name: prevRow.equipment_group_name,
+      checklist_kind: prevRow.checklist_kind,
+      template_name: prevRow.template_name,
+      version_no: prevRow.version_no,
+    },
+    response: {
+      id: prevRow.id,
+      response_status: prevRow.response_status,
+      submitted_at: prevRow.submitted_at,
+      approved_at: prevRow.approved_at,
+      rejected_at: prevRow.rejected_at,
+      updated_at: prevRow.updated_at,
+      decision_comment: prevRow.decision_comment,
+      answers: prevAnswers,
+    },
+    sections: prevSections,
+  });
+}
+
 exports.getCurrentUserProfile = async (userIdx) => {
   const conn = await pool.getConnection(async c => c);
   try {
@@ -783,6 +947,7 @@ exports.getApprovalRequestDetail = async ({ userIdx, responseId }) => {
         submitted_at: row.submitted_at,
         approved_at: row.approved_at,
         rejected_at: row.rejected_at,
+        updated_at: row.updated_at,
         created_by: row.created_by,
         updated_by: row.updated_by,
         approved_by: row.approved_by,
@@ -797,8 +962,12 @@ exports.getApprovalRequestDetail = async ({ userIdx, responseId }) => {
       sections,
     });
 
+    const previousPayload = await loadLatestApprovedPayload(conn, row, adminUser);
+    const comparison = buildLatestApprovedComparison(payload, previousPayload);
+
     return {
       ...payload,
+      comparison,
       permission: {
         can_edit: false,
         can_submit: false,

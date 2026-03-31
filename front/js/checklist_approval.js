@@ -65,6 +65,7 @@
       detailComment: qs('detailComment'),
       comparisonCard: qs('comparisonCard'),
       comparisonSummary: qs('comparisonSummary'),
+      comparisonBasis: qs('comparisonBasis'),
       comparisonList: qs('comparisonList'),
       decisionComment: qs('decisionComment'),
       approveBtn: qs('approveBtn'),
@@ -237,6 +238,7 @@
     const engineer = data?.engineer || {};
     const response = data?.response || {};
     const summary = data?.summary || {};
+    const diffMap = buildDiffMap(data?.comparison);
 
     els.detailTitle.textContent = template.template_name || '상세 정보';
     els.detailMeta.textContent = `${template.equipment_group_name || template.equipment_group_code || '-'} · ${template.checklist_kind || '-'} · v${template.version_no || 1}`;
@@ -253,7 +255,7 @@
     els.approveBtn.disabled = !canApprove;
     els.rejectBtn.disabled = !canApprove;
 
-    renderComparison(data);
+    renderComparison(data?.comparison);
 
     if (!Array.isArray(data?.sections) || !data.sections.length) {
       els.detailSections.className = 'detail-sections empty-box empty-box--lg';
@@ -274,106 +276,81 @@
             <div class="section-progress">${percent}%</div>
           </div>
           <div class="detail-question-list">
-            ${section.questions.map((question, questionIndex) => `
-              <div class="detail-question ${question.is_checked ? 'is-checked' : ''}">
-                <div class="detail-question__meta">
-                  <span>${sectionIndex + 1}.${questionIndex + 1}</span>
-                  <code>${escapeHtml(question.question_code || '-')}</code>
-                  <b>${question.is_checked ? '완료' : '미완료'}</b>
-                </div>
-                <p>${escapeHtml(question.question_text || '')}</p>
-              </div>
-            `).join('')}
+            ${section.questions.map((question, questionIndex) => renderQuestionRow(question, sectionIndex, questionIndex, diffMap)).join('')}
           </div>
         </article>
       `;
     }).join('');
   }
 
-  function renderComparison(data) {
-    const comparison = buildComparison(data);
+  function renderQuestionRow(question, sectionIndex, questionIndex, diffMap) {
+    const key = getQuestionKey(question);
+    const diff = diffMap.get(key);
+    const compareClass = diff ? ` is-compared-${diff.type}` : '';
+    const compareFlag = diff ? `<span class="compare-flag compare-flag--${escapeAttr(diff.type)}">${escapeHtml(diff.label)}</span>` : '';
 
+    return `
+      <div class="detail-question ${question.is_checked ? 'is-checked' : ''}${compareClass}">
+        <div class="detail-question__meta">
+          <span>${sectionIndex + 1}.${questionIndex + 1}</span>
+          <code>${escapeHtml(question.question_code || '-')}</code>
+          <b>${question.is_checked ? '완료' : '미완료'}</b>
+          ${compareFlag}
+        </div>
+        <p>${escapeHtml(question.question_text || '')}</p>
+      </div>
+    `;
+  }
+
+  function buildDiffMap(comparison) {
+    const map = new Map();
+    (comparison?.changes || []).forEach((item) => {
+      if (item?.question_key && ['checked', 'unchecked', 'added'].includes(item.type)) {
+        map.set(item.question_key, item);
+      }
+    });
+    return map;
+  }
+
+  function renderComparison(comparison) {
     els.comparisonCard.classList.remove('hidden');
-    els.comparisonSummary.textContent = comparison.summary;
 
-    if (!comparison.items.length) {
+    if (!comparison || !comparison.previous_response) {
+      els.comparisonBasis.textContent = '비교 이력 없음';
+      els.comparisonSummary.textContent = '같은 작성자의 최근 승인 완료본이 없어서 비교할 수 없습니다.';
       els.comparisonList.className = 'comparison-list empty-box';
-      els.comparisonList.textContent = comparison.emptyMessage;
+      els.comparisonList.textContent = '비교 가능한 최근 승인 완료 이력이 없습니다.';
+      return;
+    }
+
+    const prev = comparison.previous_response;
+    const summary = comparison.summary || {};
+    els.comparisonBasis.textContent = `최근 승인본 · v${prev.version_no || 1}`;
+    els.comparisonSummary.textContent = `${formatDateTime(prev.approved_at || prev.updated_at)} 승인본과 비교 · 변경 ${summary.changed_count || 0}건 / 현재 체크 ${summary.current_checked_count || 0} / 이전 체크 ${summary.previous_checked_count || 0}`;
+
+    if (!Array.isArray(comparison.changes) || !comparison.changes.length) {
+      els.comparisonList.className = 'comparison-list empty-box';
+      els.comparisonList.textContent = '최근 승인 완료본과 비교했을 때 변경된 항목이 없습니다.';
       return;
     }
 
     els.comparisonList.className = 'comparison-list';
-    els.comparisonList.innerHTML = comparison.items.map((item) => `
+    els.comparisonList.innerHTML = comparison.changes.map((item) => `
       <div class="comparison-item comparison-item--${escapeAttr(item.type)}">
         <span class="comparison-badge">${escapeHtml(item.label)}</span>
         <div class="comparison-copy">
-          <strong>${escapeHtml(item.code || '-')}</strong>
-          <p>${escapeHtml(item.text || '')}</p>
+          <strong>${escapeHtml(item.question_code || item.question_key || '-')}</strong>
+          <p>${escapeHtml(item.message || item.question_text || '')}</p>
         </div>
       </div>
     `).join('');
   }
 
-  function buildComparison(data) {
-    const previousSections = data?.previous?.sections || data?.previous_sections || null;
-    if (!Array.isArray(previousSections) || !previousSections.length) {
-      return {
-        summary: '이전 제출본 비교 정보 없음',
-        items: [],
-        emptyMessage: '현재 API는 이전 제출 시점의 체크리스트 스냅샷을 내려주지 않아서 변경점 비교를 표시할 수 없습니다.',
-      };
-    }
-
-    const currentMap = flattenSections(data?.sections || []);
-    const prevMap = flattenSections(previousSections);
-    const items = [];
-
-    currentMap.forEach((current, questionId) => {
-      const prev = prevMap.get(questionId);
-      if (!prev) return;
-      if (!!current.is_checked !== !!prev.is_checked) {
-        items.push({
-          type: current.is_checked ? 'added' : 'removed',
-          label: current.is_checked ? '추가 체크' : '체크 해제',
-          code: current.question_code,
-          text: current.question_text,
-        });
-      }
-    });
-
-    const summary = items.length
-      ? `이전 제출본 대비 ${items.length}개 항목 변경`
-      : '이전 제출본과 동일';
-
-    return {
-      summary,
-      items,
-      emptyMessage: '변경된 항목이 없습니다.',
-    };
-  }
-
-  function flattenSections(sections) {
-    const map = new Map();
-    sections.forEach((section) => {
-      (section.questions || []).forEach((question) => {
-        map.set(Number(question.id), {
-          question_code: question.question_code,
-          question_text: question.question_text,
-          is_checked: !!question.is_checked,
-        });
-      });
-    });
-    return map;
-  }
-
   async function decide(decision) {
     if (!state.selectedId) {
-      showToast('결재 대상을 먼저 선택하세요.', 'danger');
+      showToast('선택된 체크리스트가 없습니다.', 'danger');
       return;
     }
-
-    const message = decision === 'APPROVED' ? '이 체크리스트를 승인하시겠습니까?' : '이 체크리스트를 반려하시겠습니까?';
-    if (!window.confirm(message)) return;
 
     try {
       const data = await api(`/api/checklists/admin/requests/${state.selectedId}/decision`, {
@@ -383,10 +360,10 @@
           comment: els.decisionComment.value.trim(),
         },
       });
-      renderDetail(data);
+
+      showToast(data?.message || (decision === 'APPROVED' ? '승인 완료' : '반려 완료'), 'success');
       await loadCounts();
       await loadQueue();
-      showToast(decision === 'APPROVED' ? '승인 처리했습니다.' : '반려 처리했습니다.');
     } catch (error) {
       console.error(error);
       showToast(error.message || '결재 처리 중 오류가 발생했습니다.', 'danger');
@@ -407,27 +384,14 @@
     els.approveBtn.disabled = true;
     els.rejectBtn.disabled = true;
     els.comparisonCard.classList.add('hidden');
-    els.comparisonSummary.textContent = '-';
-    els.comparisonList.className = 'comparison-list';
     els.comparisonList.innerHTML = '';
     els.detailSections.className = 'detail-sections empty-box empty-box--lg';
     els.detailSections.textContent = '상세 체크리스트가 여기에 표시됩니다.';
   }
 
   function setBusy(disabled) {
-    els.reloadBtn.disabled = disabled;
-    els.equipmentFilter.disabled = disabled;
-    els.kindFilter.disabled = disabled;
-  }
-
-  function getStatusText(status) {
-    const map = {
-      SUBMITTED: '결재 대기',
-      REJECTED: '반려',
-      APPROVED: '승인 완료',
-      ACTIVE: '작성중',
-    };
-    return map[String(status || '').toUpperCase()] || String(status || '-');
+    [els.reloadBtn, els.approveBtn, els.rejectBtn, els.equipmentFilter, els.kindFilter, els.keywordInput]
+      .forEach((el) => { if (el) el.disabled = disabled; });
   }
 
   async function api(path, options = {}) {
@@ -454,6 +418,36 @@
     return data;
   }
 
+  function getQuestionKey(question) {
+    const code = String(question?.question_code || '').trim();
+    if (code) return code;
+    return `ID:${question?.id || question?.question_id || ''}`;
+  }
+
+  function getStatusText(status) {
+    const map = {
+      SUBMITTED: '결재 대기',
+      APPROVED: '승인 완료',
+      REJECTED: '반려',
+      ACTIVE: '작성 중',
+    };
+    return map[String(status || '').toUpperCase()] || String(status || '-');
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  }
+
   function showToast(message, type = 'success') {
     clearTimeout(state.toastTimer);
     els.toast.textContent = message;
@@ -464,15 +458,8 @@
     }, 2600);
   }
 
-  function formatDateTime(value) {
-    if (!value) return '-';
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return String(value);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  }
-
-  function escapeHtml(value) {
-    return String(value == null ? '' : value)
+  function escapeHtml(v) {
+    return String(v == null ? '' : v)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -480,7 +467,7 @@
       .replace(/'/g, '&#39;');
   }
 
-  function escapeAttr(value) {
-    return escapeHtml(value).replace(/"/g, '&quot;');
+  function escapeAttr(v) {
+    return escapeHtml(v).replace(/"/g, '&quot;');
   }
 })();

@@ -103,8 +103,11 @@
 
         <section id="comparisonCard" class="comparison-card hidden">
           <div class="comparison-head">
-            <h3>이전 제출본 대비 변경점</h3>
-            <p id="comparisonSummary">-</p>
+            <div>
+              <h3>최근 승인 완료본 비교</h3>
+              <p id="comparisonSummary">-</p>
+            </div>
+            <span id="comparisonBasis" class="comparison-basis">-</span>
           </div>
           <div id="comparisonList" class="comparison-list"></div>
         </section>
@@ -117,8 +120,8 @@
             <textarea id="decisionComment" rows="3" placeholder="승인 또는 반려 사유를 남길 수 있습니다."></textarea>
           </label>
           <div class="decision-actions">
-            <button id="approveBtn" type="button" class="btn btn-soft-approve">승인</button>
-            <button id="rejectBtn" type="button" class="btn btn-soft-reject">반려</button>
+            <button id="approveBtn" type="button" class="btn btn-line">승인</button>
+            <button id="rejectBtn" type="button" class="btn btn-line">반려</button>
           </div>
         </div>
       </section>
