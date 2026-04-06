@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.replace("./index.html");
         return;
     }
-  const res = await fetch("http://3.37.73.151:3001/logs");
+  const res = await fetch("http://13.125.122.202:3001/logs");
   workLogs = await res.json();
   updateCharts(workLogs);
 

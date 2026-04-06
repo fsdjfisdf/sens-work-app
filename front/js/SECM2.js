@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 데이터 가져오기
     async function fetchData() {
         try {
-            const response = await fetch('http://3.37.73.151:3001/api/secm'); // 엔지니어 데이터 API
+            const response = await fetch('http://13.125.122.202:3001/api/secm'); // 엔지니어 데이터 API
             return await response.json();
         } catch (error) {
             console.error('Error fetching data:', error);

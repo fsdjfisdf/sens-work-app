@@ -34,7 +34,7 @@ async function assertAdmin() {
     throw new Error('not admin (local)');
   }
   try {
-    const res = await axios.get('http://3.37.73.151:3001/user-info', {
+    const res = await axios.get('http://13.125.122.202:3001/user-info', {
       headers: { 'x-access-token': token }
     });
     const serverRole = res.data?.result?.ROLE || res.data?.result?.role || res.data?.result?.UserRole;
@@ -578,7 +578,7 @@ async function runForecast(){
 
   try {
     // 1) 과거 시계열
-    const seriesRes = await axios.get('http://3.37.73.151:3001/analysis/series', {
+    const seriesRes = await axios.get('http://13.125.122.202:3001/analysis/series', {
       headers: {'x-access-token': token},
       params: baseApiParams,
       signal: abortCtrl.signal
@@ -586,7 +586,7 @@ async function runForecast(){
     const series = seriesRes.data?.series || [];
 
     // 2) 예측
-    const fcRes = await axios.get('http://3.37.73.151:3001/analysis/forecast', {
+    const fcRes = await axios.get('http://13.125.122.202:3001/analysis/forecast', {
       headers: {'x-access-token': token},
       params: baseApiParams,
       signal: abortCtrl.signal
@@ -596,7 +596,7 @@ async function runForecast(){
     // 3) 현재 인원(userDB)
     let available = 0;
     try {
-      const hcRes = await axios.get('http://3.37.73.151:3001/analysis/headcount', {
+      const hcRes = await axios.get('http://13.125.122.202:3001/analysis/headcount', {
         headers: {'x-access-token': token},
         params: cleanParams({ group: apiGroup, site: apiSite, _ts: Date.now() }),
         signal: abortCtrl.signal
@@ -714,7 +714,7 @@ async function fetchHiringPlanOnly(params, opts = {}) {
   const token = localStorage.getItem('x-access-token');
   const tripMatrix = loadTripMatrix();
 
-  const hpRes = await axios.get('http://3.37.73.151:3001/analysis/hiring-plan', {
+  const hpRes = await axios.get('http://13.125.122.202:3001/analysis/hiring-plan', {
     headers: { 'x-access-token': token },
     signal: opts.signal,
     params: cleanParams({
@@ -1334,11 +1334,11 @@ async function fetchPerSiteForecasts(params){
     const [grp, st] = key.split('-');
     try{
       const [fcRes, hcRes] = await Promise.all([
-        axios.get('http://3.37.73.151:3001/analysis/forecast', {
+        axios.get('http://13.125.122.202:3001/analysis/forecast', {
           headers, signal: abortCtrl?.signal,
           params: { ...baseCommon, group: grp, site: st }
         }),
-        axios.get('http://3.37.73.151:3001/analysis/headcount', {
+        axios.get('http://13.125.122.202:3001/analysis/headcount', {
           headers, signal: abortCtrl?.signal,
           params: cleanParams({ group: grp, site: st, _ts: Date.now() })
         })

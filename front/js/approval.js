@@ -1,6 +1,6 @@
 // ./js/approval.js
 (function () {
-  const API = 'http://3.37.73.151:3001';
+  const API = 'http://13.125.122.202:3001';
   const token = localStorage.getItem('x-access-token');
   if (!token) {
     alert('로그인이 필요합니다.');

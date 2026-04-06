@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 현재 로그인한 사용자 정보를 받아오는 함수
 async function getCurrentUser() {
     try {
-        const response = await axios.get('http://3.37.73.151:3001/user-info', {
+        const response = await axios.get('http://13.125.122.202:3001/user-info', {
             headers: {
                 'x-access-token': localStorage.getItem('x-access-token')
             }
@@ -78,7 +78,7 @@ async function loadWorkLogs() {
         // 데이터를 불러오기 전에 인위적으로 3초 대기
         await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const response = await axios.get('http://3.37.73.151:3001/logs');
+        const response = await axios.get('http://13.125.122.202:3001/logs');
         logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
         displayLogs(logs);
         calculateWorkerStats(logs); // 작업자 통계 계산 함수 호출
@@ -325,7 +325,7 @@ async function loadWorkLogs() {
 
     async function deleteLog(id) {
         try {
-            await axios.delete(`http://3.37.73.151:3001/logs/${id}`);
+            await axios.delete(`http://13.125.122.202:3001/logs/${id}`);
         } catch (error) {
             console.error('작업 로그 삭제 중 오류 발생:', error);
         }
@@ -498,7 +498,7 @@ function showEditForm(log) {
         try {
             console.log(`Updating log with ID: ${log.id}`);
             console.log('Updated log data:', updatedLog);
-            const response = await axios.put(`http://3.37.73.151:3001/work-logs/${log.id}`, updatedLog);
+            const response = await axios.put(`http://13.125.122.202:3001/work-logs/${log.id}`, updatedLog);
             console.log('Response from server:', response);
             editModal.style.display = 'none';
             loadWorkLogs(); // 작업 로그 다시 불러오기

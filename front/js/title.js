@@ -8,7 +8,7 @@ document.getElementById('titleForm').addEventListener('submit', async function(e
     const reason = document.getElementById('reason').value;
 
     try {
-        const response = await fetch('http://3.37.73.151:3001/api/save-title', {
+        const response = await fetch('http://13.125.122.202:3001/api/save-title', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

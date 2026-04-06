@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   // ===== 설정 =====
   const IDLE_MS = 30 * 60 * 1000; // 30분
-  const LOGOUT_URL = "http://3.37.73.151:3001/logout"; // 있으면 호출, 없으면 에러 무시
+  const LOGOUT_URL = "http://13.125.122.202:3001/logout"; // 있으면 호출, 없으면 에러 무시
 
   let logoutTO = null;
   const bc = "BroadcastChannel" in window ? new BroadcastChannel("auth") : null;

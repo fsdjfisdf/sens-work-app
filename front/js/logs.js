@@ -1,4 +1,4 @@
-const ws = new WebSocket('ws://3.37.73.151:3001');
+const ws = new WebSocket('ws://13.125.122.202:3001');
 
 ws.onmessage = (event) => {
     try {

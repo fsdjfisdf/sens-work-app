@@ -101,7 +101,7 @@ async function loadUserInfo() {
   
 
   try {
-      const response = await fetch('http://3.37.73.151:3001/user-info', {
+      const response = await fetch('http://13.125.122.202:3001/user-info', {
           method: 'GET',
           headers: {
               'Content-Type': 'application/json',
@@ -559,7 +559,7 @@ async function renderLevelChangeChart(levelChangeData, allQuarters) {
     }
 
     try {
-        const response = await axios.get('http://3.37.73.151:3001/logs', {
+        const response = await axios.get('http://13.125.122.202:3001/logs', {
             headers: { 'x-access-token': token }
         });
 
@@ -721,7 +721,7 @@ async function calculateAndRenderUserRanking() {
   if (!token) return;
 
   try {
-    const response = await axios.get('http://3.37.73.151:3001/logs', {
+    const response = await axios.get('http://13.125.122.202:3001/logs', {
       headers: { 'x-access-token': token }
     });
 
@@ -801,7 +801,7 @@ async function calculateAndRenderUserTaskRanking() {
   if (!token) return;
 
   try {
-    const response = await axios.get('http://3.37.73.151:3001/logs', {
+    const response = await axios.get('http://13.125.122.202:3001/logs', {
       headers: { 'x-access-token': token }
     });
 

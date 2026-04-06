@@ -9,7 +9,7 @@ document.getElementById("add-form").addEventListener("submit", async (e) => {
   const token = localStorage.getItem("x-access-token");
 
   try {
-    const res = await fetch("http://3.37.73.151:3001/api/test/add-question", {
+    const res = await fetch("http://13.125.122.202:3001/api/test/add-question", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

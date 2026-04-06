@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://3.37.73.151:3001";
+const API_BASE_URL = "http://13.125.122.202:3001";
 const token = localStorage.getItem("x-access-token");
 
 function decodeJwtPayload(jwtToken) {

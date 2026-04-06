@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // SUPRA SETUP 데이터를 불러오는 함수
     async function loadSetupData() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/supra-setup/all', {
+            const response = await axios.get('http://13.125.122.202:3001/supra-setup/all', {
                 headers: {
                     'x-access-token': token
                 }
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 체크리스트 데이터를 불러오는 함수
     async function loadChecklistData() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/supra-setup/data', {
+            const response = await axios.get('http://13.125.122.202:3001/supra-setup/data', {
                 headers: {
                     'x-access-token': token
                 }
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 작업 이력 데이터를 불러오는 함수
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/logs');
+            const response = await axios.get('http://13.125.122.202:3001/logs');
             return response.data;
         } catch (error) {
             console.error('작업 로그를 불러오는 중 오류 발생:', error);

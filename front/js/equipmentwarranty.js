@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        fetch(`http://3.37.73.151:3001/api/equipment?eqname=${equipmentName}`)
+        fetch(`http://13.125.122.202:3001/api/equipment?eqname=${equipmentName}`)
             .then(response => response.json())
             .then(data => {
                 console.log("📡 서버 응답 데이터:", data); // ✅ 응답 확인용 콘솔 출력
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     
         try {
-            const response = await fetch("http://3.37.73.151:3001/api/equipment", {
+            const response = await fetch("http://13.125.122.202:3001/api/equipment", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/api/equipment/update-info', {
+            const response = await axios.post('http://13.125.122.202:3001/api/equipment/update-info', {
                 eqname: equipmentName,
                 info: updatedInfo,
             });

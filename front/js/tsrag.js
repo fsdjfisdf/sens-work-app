@@ -1,6 +1,6 @@
 // tsrag.js
 
-const API_BASE = "http://3.37.73.151:3001";
+const API_BASE = "http://13.125.122.202:3001";
 
 // DOM helper
 const $ = (id) => document.getElementById(id);

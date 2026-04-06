@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 체크리스트 불러오기
     if (token) {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/supra-maintenance', {
+            const response = await axios.get('http://13.125.122.202:3001/supra-maintenance', {
                 headers: {
                     'x-access-token': token
                 }
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             // 서버로 데이터 전송
-            const response = await axios.post('http://3.37.73.151:3001/supra-maintenance/request-approval', {
+            const response = await axios.post('http://13.125.122.202:3001/supra-maintenance/request-approval', {
                 checklistData: data, // 체크리스트 데이터
                 approverName      // 결재자 이름
             }, {

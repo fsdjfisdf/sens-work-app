@@ -1280,7 +1280,7 @@
   async function warmupLogsCache() {
     if (state.logsAllCache) return state.logsAllCache;
 
-    const res = await fetch('http://3.37.73.151:3001/logs');
+    const res = await fetch('http://13.125.122.202:3001/logs');
     if (!res.ok) throw new Error('작업 이력을 가져오지 못했습니다.');
     const logs = await res.json();
     if (!Array.isArray(logs)) throw new Error('작업 이력 응답 형식이 올바르지 않습니다.');

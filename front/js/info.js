@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
     loadUserInfo();
 
     function loadUserInfo() {
-        axios.get('http://3.37.73.151:3001/user-info', {
+        axios.get('http://13.125.122.202:3001/user-info', {
             headers: { "x-access-token": token }
         }).then(response => {
             const userInfo = response.data.result;

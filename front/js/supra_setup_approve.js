@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await axios.get('http://3.37.73.151:3001/supra-setup/approvals/pending', {
+        const response = await axios.get('http://13.125.122.202:3001/supra-setup/approvals/pending', {
             headers: { 'x-access-token': token }
         });
 
@@ -57,7 +57,7 @@ async function handleApproval(name, status) {
 
     try {
         const response = await axios.post(
-            `http://3.37.73.151:3001/supra-setup/approve`, // name을 본문에 포함
+            `http://13.125.122.202:3001/supra-setup/approve`, // name을 본문에 포함
             { name, status },
             {
                 headers: {

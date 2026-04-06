@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async function getCurrentUser() {
             try {
-                const response = await axios.get('http://3.37.73.151:3001/user-info', {
+                const response = await axios.get('http://13.125.122.202:3001/user-info', {
                     headers: {
                         'x-access-token': localStorage.getItem('x-access-token')
                     }
@@ -85,13 +85,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         async function loadData() {
             try {
                 console.log("Loading equipment data...");
-                const equipmentResponse = await axios.get('http://3.37.73.151:3001/api/equipment', {
+                const equipmentResponse = await axios.get('http://13.125.122.202:3001/api/equipment', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 await getCurrentUser(); // 현재 사용자 정보 불러오기
                 console.log("Equipment Data:", equipmentResponse.data);
         
-                const workLogResponse = await axios.get('http://3.37.73.151:3001/logs', {
+                const workLogResponse = await axios.get('http://13.125.122.202:3001/logs', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 console.log("WorkLog Data:", workLogResponse.data);
@@ -478,7 +478,7 @@ document.getElementById('save-info').addEventListener('click', async () => {
     const eqName = selectedEqName.textContent.trim().toLowerCase();
     const updatedInfo = infoText.value.trim();
 
-    console.log('PUT Request to:', `http://3.37.73.151:3001/api/Equipment/${encodeURIComponent(eqName)}`);
+    console.log('PUT Request to:', `http://13.125.122.202:3001/api/Equipment/${encodeURIComponent(eqName)}`);
     console.log('Payload:', { info: updatedInfo });
 
     if (!eqName) {
@@ -488,7 +488,7 @@ document.getElementById('save-info').addEventListener('click', async () => {
 
     try {
         const response = await axios.put(
-            `http://3.37.73.151:3001/api/Equipment/${encodeURIComponent(eqName)}`,
+            `http://13.125.122.202:3001/api/Equipment/${encodeURIComponent(eqName)}`,
             { info: updatedInfo },
             { headers: { Authorization: `Bearer ${token}` } }
         );

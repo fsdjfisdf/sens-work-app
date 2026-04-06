@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/logs');
+            const response = await axios.get('http://13.125.122.202:3001/logs');
             logs = response.data.sort((a, b) => new Date(b.task_date) - new Date(a.task_date));
         } catch (error) {
             console.error('작업 로그 불러오기 실패:', error);
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // getCurrentUser 함수 정의
     async function getCurrentUser() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/user-info', {
+            const response = await axios.get('http://13.125.122.202:3001/user-info', {
                 headers: { 'x-access-token': localStorage.getItem('x-access-token') }
             });
             currentUserNickname = response.data.result.NAME;

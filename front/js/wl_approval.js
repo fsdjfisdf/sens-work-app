@@ -1,7 +1,7 @@
 /* wl_approval.js — 결재/반려 수정(전체 필드)/재제출 */
 'use strict';
 
-const API = 'http://3.37.73.151:3001';
+const API = 'http://13.125.122.202:3001';
 const token = localStorage.getItem('x-access-token') || '';
 const me = (() => { try { return JSON.parse(atob(token.split('.')[1])); } catch { return null; } })();
 axios.defaults.headers.common['x-access-token'] = token;

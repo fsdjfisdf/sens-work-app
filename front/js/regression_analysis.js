@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchLogs() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/logs', {
+            const response = await axios.get('http://13.125.122.202:3001/logs', {
                 headers: {
                     'x-access-token': localStorage.getItem('x-access-token')
                 }

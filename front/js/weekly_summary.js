@@ -1,6 +1,6 @@
 // === 설정 ===
 // 같은 호스트/포트에서 서빙 중이면 빈 문자열 유지. 포트/호스트 다르면 "http://<IP>:3001"
-const API_BASE_URL = "http://3.37.73.151:3001";
+const API_BASE_URL = "http://13.125.122.202:3001";
 
 // Chart.js datalabels (있을 때만 등록)
 try { if (window.Chart && window.ChartDataLabels) Chart.register(window.ChartDataLabels); } catch (_){}

@@ -1,6 +1,6 @@
 /* SECM_myself.js — personal dashboard */
 'use strict';
-const API = 'http://3.37.73.151:3001';
+const API = 'http://13.125.122.202:3001';
 const token = localStorage.getItem('x-access-token') || '';
 axios.defaults.headers.common['x-access-token'] = token;
 

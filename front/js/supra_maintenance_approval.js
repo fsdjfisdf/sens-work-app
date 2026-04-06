@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const API_URL = 'http://3.37.73.151:3001';
+    const API_URL = 'http://13.125.122.202:3001';
     const token = localStorage.getItem('x-access-token');
     console.log('DOM Loaded'); // DOM 로드 확인
     await loadApprovalRequests(); // 초기 로드

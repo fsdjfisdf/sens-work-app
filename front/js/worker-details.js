@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchWorkLogs() {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/logs');
+            const response = await axios.get('http://13.125.122.202:3001/logs');
             const logs = response.data;
             return logs.filter(log => log.task_man.includes(workerName));
         } catch (error) {

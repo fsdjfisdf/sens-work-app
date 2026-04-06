@@ -700,7 +700,7 @@ $$('.prev-step').forEach(btn => {
     }
 
     try{
-      const response = await axios.post(`http://3.37.73.151:3001/approval/work-log/submit`, {
+      const response = await axios.post(`http://13.125.122.202:3001/approval/work-log/submit`, {
         task_name, task_result: taskResults, task_cause: taskCauses, task_man: taskMans,
         task_description: taskDescriptions, task_date, start_time, end_time, none_time: noneTime, move_time: moveTime,
         group, site, SOP, tsguide, warranty, line, equipment_type, equipment_name, workType, workType2,

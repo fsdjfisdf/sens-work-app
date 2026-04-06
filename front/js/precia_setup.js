@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 체크리스트 불러오기
     if (token) {
         try {
-            const response = await axios.get('http://3.37.73.151:3001/precia-setup', {
+            const response = await axios.get('http://13.125.122.202:3001/precia-setup', {
                 headers: {
                     'x-access-token': token
                 }
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/precia-setup', data, {
+            const response = await axios.post('http://13.125.122.202:3001/precia-setup', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token

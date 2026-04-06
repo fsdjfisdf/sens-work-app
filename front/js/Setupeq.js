@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const modalBody = document.getElementById("modal-body");
     const closeModalBtn = document.getElementById("close-modal");
     const saveChangesBtn = document.getElementById("save-changes");
-    const API_BASE_URL = "http://3.37.73.151:3001/api/setupeq";
+    const API_BASE_URL = "http://13.125.122.202:3001/api/setupeq";
 
     // 📌 탭 요소 가져오기
     const editTab = document.getElementById("edit-tab");
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const companyChartCanvas = document.getElementById("company-distribution-chart").getContext("2d");
     
         try {
-            const response = await axios.get("http://3.37.73.151:3001/api/setupeq");
+            const response = await axios.get("http://13.125.122.202:3001/api/setupeq");
             let equipmentData = response.data;
     
             // 📌 필터 값 가져오기
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     async function fetchEquipment() {
         try {
-            const response = await axios.get("http://3.37.73.151:3001/api/setupeq");
+            const response = await axios.get("http://13.125.122.202:3001/api/setupeq");
             let equipment = response.data;
     
             // 📌 먼저 averageProgress 계산
@@ -562,7 +562,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    const API_BASE_URL = "http://3.37.73.151:3001/api/setup_equipment";
+    const API_BASE_URL = "http://13.125.122.202:3001/api/setup_equipment";
 
     // 📌 모달 관련 요소 가져오기
     const addEquipmentModal = document.getElementById("equipment-add-modal");

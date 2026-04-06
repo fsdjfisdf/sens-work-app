@@ -437,7 +437,7 @@ function rowTemplate() {
           if (ems === 1 && pendingId && draft && Array.isArray(draft.rows) && draft.rows.length) {
             try {
               const token = localStorage.getItem('x-access-token') || '';
-              const API_BASE = window.API_BASE || 'http://3.37.73.151:3001';
+              const API_BASE = window.API_BASE || 'http://13.125.122.202:3001';
               await axios.post(
                 `${API_BASE}/api/work-log-paid/pending/${pendingId}`,
                 { rows: draft.rows },

@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         const nickname = document.getElementById('filterNickname').value;
 
         try {
-            const response = await axios.get('http://3.37.73.151:3001/average-info', {
+            const response = await axios.get('http://13.125.122.202:3001/average-info', {
                 headers: { "x-access-token": token },
                 params: { group, site, level, nickname }
             });

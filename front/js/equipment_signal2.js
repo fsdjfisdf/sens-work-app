@@ -1,5 +1,5 @@
 // equipment_signal2.js
-const API_BASE_EQ2 = 'http://3.37.73.151:3001/api';
+const API_BASE_EQ2 = 'http://13.125.122.202:3001/api';
 
 let eq2Equipments = [];
 let eq2SelectedEquipment = null;

@@ -3,7 +3,7 @@
  */
 'use strict';
 document.addEventListener('DOMContentLoaded', async () => {
-  const API = 'http://3.37.73.151:3001';
+  const API = 'http://13.125.122.202:3001';
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const getV = id => (document.getElementById(id)?.value || '').trim();

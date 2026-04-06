@@ -6,7 +6,7 @@
   // ---------- API 베이스 (html에서 window.API_BASE 주입됨) ----------
   const API_BASE =
     (typeof API !== 'undefined' ? API : null) ||
-    (window.API_BASE || 'http://3.37.73.151:3001');
+    (window.API_BASE || 'http://13.125.122.202:3001');
 
   // ---------- 날짜 유틸 (로컬 기준 YYYY-MM-DD) ----------
   const toLocalISODate = (d)=> {

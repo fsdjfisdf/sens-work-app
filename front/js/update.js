@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   /* -------------------- API -------------------- */
   async function fetchUpdates(){
     try{
-      const { data } = await axios.get('http://3.37.73.151:3001/api/updates');
+      const { data } = await axios.get('http://13.125.122.202:3001/api/updates');
       updateList.innerHTML = data.map(update => `
         <li class="update-item" data-id="${update.id}">
           <div class="item-content">
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function showUpdateDetails(id){
     try{
-      const { data } = await axios.get(`http://3.37.73.151:3001/api/updates/${id}`);
+      const { data } = await axios.get(`http://13.125.122.202:3001/api/updates/${id}`);
       modalTitle.textContent   = data.title;
       modalContent.innerHTML = escapeHtml(data.content).replace(/\r?\n/g, '<br>');
       modalDate.textContent    = new Date(data.created_at).toLocaleString();
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     try{
-      await axios.post('http://3.37.73.151:3001/api/updates', { title, content });
+      await axios.post('http://13.125.122.202:3001/api/updates', { title, content });
       newUpdateTitle.value = ''; newUpdateContent.value = '';
       closeModal(addModal);
       await fetchUpdates();
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function showEditModal(id){
     try{
-      const { data } = await axios.get(`http://3.37.73.151:3001/api/updates/${id}`);
+      const { data } = await axios.get(`http://13.125.122.202:3001/api/updates/${id}`);
       editUpdateTitle.value   = data.title;
       editUpdateContent.value = data.content;
       currentEditId = id;
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     try{
-      await axios.put(`http://3.37.73.151:3001/api/updates/${currentEditId}`, { title, content });
+      await axios.put(`http://13.125.122.202:3001/api/updates/${currentEditId}`, { title, content });
       closeModal(editModal);
       await fetchUpdates();
     }catch(err){

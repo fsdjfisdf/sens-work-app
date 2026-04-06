@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const response = await axios.get('http://3.37.73.151:3001/geneva-maintenance', {
+        const response = await axios.get('http://13.125.122.202:3001/geneva-maintenance', {
             headers: {
                 'x-access-token': token
             }
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         try {
-            const response = await axios.post('http://3.37.73.151:3001/geneva-maintenance', data, {
+            const response = await axios.post('http://13.125.122.202:3001/geneva-maintenance', data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
