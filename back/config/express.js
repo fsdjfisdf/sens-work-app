@@ -193,7 +193,7 @@ const analyticsRoute = require('../src/routes/analyticsRoute');
 app.use('/analytics', analyticsRoute);
 
 const pciRoute = require('../src/routes/pciRoute');
-app.use('/pci', pciRoute);
+app.use('/api/pci', pciRoute);
 
 
 
