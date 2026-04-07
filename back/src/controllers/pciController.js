@@ -35,13 +35,12 @@ async function buildExportWorkbook(data) {
   const filters = data.filters || {};
   summarySheet.addRows([
     { label: '설비군', value: filters.equipment_group || '' },
-    { label: '도메인', value: filters.pci_domain || '' },
+    { label: '작업 유형', value: filters.pci_domain || '' },
     { label: '그룹', value: filters.engineer_group || '' },
     { label: '사이트', value: filters.site || '' },
     { label: '검색어', value: filters.keyword || '' },
     { label: '기간 시작', value: filters.date_from || '' },
     { label: '기간 종료', value: filters.date_to || '' },
-    { label: '원본 작업 타입', value: filters.source_work_type || '' },
     { label: '엔지니어 수', value: Number(data.summary?.engineer_count || 0) },
     { label: '항목 수', value: Number(data.summary?.item_count || 0) },
     { label: '전체 평균 PCI', value: Number(data.summary?.avg_pci || 0) },

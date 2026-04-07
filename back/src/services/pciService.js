@@ -311,7 +311,6 @@ async function saveManualCredit({ userIdx, manualCreditId, body }) {
     manualCreditId: manualCreditId ? Number(manualCreditId) : null,
     engineerId,
     pciItemId,
-    sourceWorkType: String(body.source_work_type || 'MERGED').toUpperCase(),
     mainCountAdd,
     supportCountAdd,
     convertedCountAdd,
