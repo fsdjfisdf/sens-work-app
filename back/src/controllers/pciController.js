@@ -1,16 +1,123 @@
+
 'use strict';
 
 const pciService = require('../services/pciService');
-const { resolveUserIdx } = require('../dao/pciDao');
 
 function extractUserIdx(req) {
-  return (
-    req.user?.userIdx ||
-    req.user?.user_idx ||
-    req.auth?.userIdx ||
-    req.userIdx ||
-    null
-  );
+  return req.user?.userIdx || req.user?.user_idx || req.auth?.userIdx || req.userIdx || null;
+}
+
+async function buildExportWorkbook(data) {
+  let ExcelJS;
+  try {
+    ExcelJS = require('exceljs');
+  } catch (err) {
+    const e = new Error('엑셀 추출을 위해 exceljs 패키지가 필요합니다. back 폴더에서 npm install exceljs 를 실행하세요.');
+    e.statusCode = 500;
+    throw e;
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'OpenAI';
+  workbook.created = new Date();
+
+  const matrixSheet = workbook.addWorksheet('PCI Matrix');
+  const summarySheet = workbook.addWorksheet('Summary');
+
+  const engineers = data.engineers || [];
+  const items = data.items || [];
+  const cells = new Map((data.cells || []).map((row) => [`${row.pci_item_id}:${row.engineer_id}`, row]));
+  const avgMap = new Map((data.engineer_averages || []).map((row) => [row.engineer_id, row.avg_pci]));
+
+  summarySheet.columns = [
+    { header: '항목', key: 'label', width: 24 },
+    { header: '값', key: 'value', width: 32 },
+  ];
+  const filters = data.filters || {};
+  summarySheet.addRows([
+    { label: '설비군', value: filters.equipment_group || '' },
+    { label: '도메인', value: filters.pci_domain || '' },
+    { label: '그룹', value: filters.engineer_group || '' },
+    { label: '사이트', value: filters.site || '' },
+    { label: '검색어', value: filters.keyword || '' },
+    { label: '기간 시작', value: filters.date_from || '' },
+    { label: '기간 종료', value: filters.date_to || '' },
+    { label: '원본 작업 타입', value: filters.source_work_type || '' },
+    { label: '엔지니어 수', value: Number(data.summary?.engineer_count || 0) },
+    { label: '항목 수', value: Number(data.summary?.item_count || 0) },
+    { label: '전체 평균 PCI', value: Number(data.summary?.avg_pci || 0) },
+  ]);
+  summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C1C1E' } };
+  summarySheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+  const headerRow1 = ['카테고리', '작업 항목', '영문명', '기준 횟수'];
+  const headerRow2 = ['', '', '', ''];
+  engineers.forEach((eng) => {
+    headerRow1.push(eng.engineer_name);
+    headerRow2.push(`평균 ${Number(avgMap.get(eng.engineer_id) || 0).toFixed(1)}%`);
+  });
+
+  matrixSheet.addRow(headerRow1);
+  matrixSheet.addRow(headerRow2);
+
+  items.forEach((item) => {
+    const row = [
+      item.category || '-',
+      item.item_name_kr || item.item_name || item.item_code,
+      item.item_name || item.item_code,
+      Number(item.required_count || 0),
+    ];
+    engineers.forEach((eng) => {
+      const cell = cells.get(`${item.pci_item_id}:${eng.engineer_id}`);
+      row.push(Number(cell?.pci_score || 0));
+    });
+    matrixSheet.addRow(row);
+  });
+
+  matrixSheet.views = [{ state: 'frozen', xSplit: 4, ySplit: 2 }];
+  matrixSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  matrixSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C1C1E' } };
+  matrixSheet.getRow(2).font = { italic: true, color: { argb: 'FF666666' } };
+  matrixSheet.getRow(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F4F8' } };
+
+  matrixSheet.columns = [
+    { width: 18 },
+    { width: 28 },
+    { width: 22 },
+    { width: 10 },
+    ...engineers.map(() => ({ width: 12 })),
+  ];
+
+  for (let c = 5; c <= 4 + engineers.length; c += 1) {
+    for (let r = 3; r <= 2 + items.length; r += 1) {
+      const cell = matrixSheet.getRow(r).getCell(c);
+      cell.numFmt = '0.0';
+      const value = Number(cell.value || 0);
+      let color = 'FFF4F4F6';
+      if (value >= 80) color = 'FF5B8DEF';
+      else if (value >= 60) color = 'FF8FB1F2';
+      else if (value >= 40) color = 'FFB7CBF7';
+      else if (value > 0) color = 'FFDDE7FB';
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    }
+  }
+
+  [summarySheet, matrixSheet].forEach((sheet) => {
+    sheet.eachRow((row) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE1E4EA' } },
+          left: { style: 'thin', color: { argb: 'FFE1E4EA' } },
+          bottom: { style: 'thin', color: { argb: 'FFE1E4EA' } },
+          right: { style: 'thin', color: { argb: 'FFE1E4EA' } },
+        };
+      });
+    });
+  });
+
+  return workbook;
 }
 
 exports.getFilterOptions = async (req, res, next) => {
@@ -31,6 +138,20 @@ exports.getMatrix = async (req, res, next) => {
   }
 };
 
+exports.exportMatrix = async (req, res, next) => {
+  try {
+    const data = await pciService.getMatrix(req.query);
+    const workbook = await buildExportWorkbook(data);
+    const filename = `pci_matrix_${(req.query.equipment_group || 'ALL')}_${new Date().toISOString().slice(0,10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getCellDetail = async (req, res, next) => {
   try {
     const data = await pciService.getCellDetail(req.query);
@@ -42,10 +163,7 @@ exports.getCellDetail = async (req, res, next) => {
 
 exports.getEngineerDetail = async (req, res, next) => {
   try {
-    const data = await pciService.getEngineerDetail({
-      ...req.query,
-      engineer_id: req.params.engineerId,
-    });
+    const data = await pciService.getEngineerDetail({ ...req.query, engineer_id: req.params.engineerId });
     res.json({ isSuccess: true, data });
   } catch (err) {
     next(err);
@@ -76,10 +194,7 @@ exports.updatePciItem = async (req, res, next) => {
 
 exports.rebuildRange = async (req, res, next) => {
   try {
-    const data = await pciService.rebuildRange({
-      userIdx: extractUserIdx(req),
-      body: req.body || {},
-    });
+    const data = await pciService.rebuildRange({ userIdx: extractUserIdx(req), body: req.body || {} });
     res.json({ isSuccess: true, data });
   } catch (err) {
     next(err);

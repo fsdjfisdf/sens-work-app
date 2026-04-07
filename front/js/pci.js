@@ -39,6 +39,7 @@
       dateFrom: qs('dateFrom'),
       dateTo: qs('dateTo'),
       reloadBtn: qs('reloadBtn'),
+      exportBtn: qs('exportBtn'),
       rebuildBtn: qs('rebuildBtn'),
       searchBtn: qs('searchBtn'),
       engineerCount: qs('engineerCount'),
@@ -61,7 +62,7 @@
       detailSupportCount: qs('detailSupportCount'),
       detailConvertedCount: qs('detailConvertedCount'),
       detailEventCount: qs('detailEventCount'),
-      detailSelfCompleted: qs('detailSelfCompleted'),
+      detailSelfProgress: qs('detailSelfProgress'),
       selfQuestionList: qs('selfQuestionList'),
       eventList: qs('eventList'),
       toast: qs('toast'),
@@ -74,10 +75,10 @@
       await search();
     });
     els.searchBtn.addEventListener('click', search);
+    els.exportBtn.addEventListener('click', exportExcel);
     els.rebuildBtn.addEventListener('click', rebuildRange);
     els.closeDetailBtn.addEventListener('click', closeDetail);
     els.detailBackdrop.addEventListener('click', closeDetail);
-
     els.domain.addEventListener('change', handleDomainChange);
     els.keyword.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') search();
@@ -126,95 +127,61 @@
   function renderSelectOptions(select, rows, { placeholder = true, getValue, getLabel }) {
     const html = [];
     if (placeholder) html.push('<option value="">전체</option>');
-    for (const row of rows) {
-      html.push(`<option value="${escapeAttr(getValue(row))}">${escapeHtml(getLabel(row))}</option>`);
-    }
+    for (const row of rows) html.push(`<option value="${escapeAttr(getValue(row))}">${escapeHtml(getLabel(row))}</option>`);
     select.innerHTML = html.join('');
   }
 
   function fillSimpleOptions(select, values, includeAll) {
     const html = [];
     if (includeAll) html.push('<option value="">전체</option>');
-    for (const value of values) {
-      html.push(`<option value="${escapeAttr(value)}">${escapeHtml(value)}</option>`);
-    }
+    for (const value of values) html.push(`<option value="${escapeAttr(value)}">${escapeHtml(value)}</option>`);
     select.innerHTML = html.join('');
   }
 
-  async function search() {
-    if (!els.equipmentGroup.value) {
-      showToast('설비군을 먼저 선택하세요.', 'danger');
-      return;
-    }
-
-    const domain = els.domain.value;
-    const params = new URLSearchParams({
+  function collectFilters() {
+    return {
       equipment_group: els.equipmentGroup.value,
-      domain,
-      source_work_type: domain === 'MAINT' ? 'MAINT' : els.sourceWorkType.value,
+      domain: els.domain.value,
+      source_work_type: els.domain.value === 'MAINT' ? 'MAINT' : els.sourceWorkType.value,
       group: els.engineerGroup.value,
       site: els.site.value,
       keyword: els.keyword.value.trim(),
       date_from: els.dateFrom.value,
       date_to: els.dateTo.value,
-    });
-
-    try {
-      const data = await api(`/api/pci/matrix?${params.toString()}`);
-      state.matrix = data;
-      state.engineerAvgMap = computeEngineerAverages(data);
-      renderSummary(data);
-      renderMatrix(data);
-    } catch (error) {
-      console.error(error);
-      els.matrixWrap.classList.add('hidden');
-      els.matrixEmpty.classList.remove('hidden');
-      els.matrixEmpty.textContent = error.message || '조회 실패';
-      showToast(error.message || '조회 실패', 'danger');
-    }
+    };
   }
 
-  function computeEngineerAverages(data) {
-    const avgMap = new Map();
-    const engineers = data.engineers || [];
-    const cells = data.cells || [];
-
-    for (const engineer of engineers) {
-      const scores = cells
-        .filter((cell) => cell.engineer_id === engineer.engineer_id)
-        .map((cell) => Number(cell.pci_score || 0));
-      const avg = scores.length ? scores.reduce((acc, cur) => acc + cur, 0) / scores.length : 0;
-      avgMap.set(engineer.engineer_id, Number(avg.toFixed(1)));
-    }
-    return avgMap;
+  async function search() {
+    const params = new URLSearchParams(collectFilters());
+    const data = await api(`/api/pci/matrix?${params.toString()}`);
+    state.matrix = data;
+    state.engineerAvgMap = new Map((data.engineer_averages || []).map((row) => [row.engineer_id, row.avg_pci]));
+    renderSummary(data);
+    renderMatrix(data);
   }
 
   function renderSummary(data) {
-    const engineers = data.engineers || [];
-    const items = data.items || [];
-    const scores = (data.cells || []).map((row) => Number(row.pci_score || 0));
-    const avg = scores.length ? scores.reduce((acc, cur) => acc + cur, 0) / scores.length : 0;
-
-    els.engineerCount.textContent = String(engineers.length);
-    els.itemCount.textContent = String(items.length);
-    els.avgPci.textContent = `${avg.toFixed(1)}%`;
-    els.sourceTypeLabel.textContent = data?.filters?.source_work_type || data?.meta?.source_work_type || '-';
+    els.engineerCount.textContent = String(data.summary?.engineer_count || data.engineers?.length || 0);
+    els.itemCount.textContent = String(data.summary?.item_count || data.items?.length || 0);
+    els.avgPci.textContent = `${Number(data.summary?.avg_pci || 0).toFixed(1)}%`;
+    els.sourceTypeLabel.textContent = data.meta?.source_work_type || '-';
   }
 
   function renderMatrix(data) {
     const engineers = data.engineers || [];
     const items = data.items || [];
-    const cellMap = new Map((data.cells || []).map((row) => [`${row.pci_item_id}:${row.engineer_id}`, row]));
 
     if (!engineers.length || !items.length) {
       els.matrixWrap.classList.add('hidden');
       els.matrixEmpty.classList.remove('hidden');
-      els.matrixEmpty.textContent = '조건에 맞는 데이터가 없습니다.';
+      els.matrixEmpty.textContent = '표시할 데이터가 없습니다.';
       return;
     }
 
+    const cellMap = new Map((data.cells || []).map((row) => [`${row.pci_item_id}:${row.engineer_id}`, row]));
+
     const html = `
-      <table class="matrix">
+      <table class="matrix-table">
         <thead>
           <tr>
             <th class="sticky-col cat-col">카테고리</th>
@@ -231,7 +198,6 @@
     els.matrixWrap.innerHTML = html;
     els.matrixWrap.classList.remove('hidden');
     els.matrixEmpty.classList.add('hidden');
-
     els.matrixWrap.querySelectorAll('.pci-cell').forEach((cell) => {
       cell.addEventListener('click', () => openDetail(cell.dataset.engineerId, cell.dataset.pciItemId));
     });
@@ -262,15 +228,10 @@
           const cell = cellMap.get(`${item.pci_item_id}:${eng.engineer_id}`) || makeEmptyCell(eng.engineer_id, item.pci_item_id);
           const score = Number(cell.pci_score || 0);
           return `
-            <td
-              class="pci-cell ${getHeatClass(score)}"
-              data-engineer-id="${eng.engineer_id}"
-              data-pci-item-id="${item.pci_item_id}"
-              title="클릭해서 상세 보기"
-            >
+            <td class="pci-cell ${getHeatClass(score)}" data-engineer-id="${eng.engineer_id}" data-pci-item-id="${item.pci_item_id}" title="클릭해서 상세 보기">
               <span class="pci-value">${score.toFixed(0)}%</span>
               <span class="pci-meta">
-                ${cell.self_completed ? 'Self O' : 'Self X'}<br>
+                Self ${Number(cell.self_score || 0).toFixed(1)} / Hist ${Number(cell.history_score || 0).toFixed(1)}<br>
                 M ${Number(cell.main_count || 0).toFixed(1)} / S ${Number(cell.support_count || 0).toFixed(1)}
               </span>
             </td>
@@ -281,14 +242,7 @@
   }
 
   function makeEmptyCell(engineerId, pciItemId) {
-    return {
-      engineer_id: engineerId,
-      pci_item_id: pciItemId,
-      pci_score: 0,
-      self_completed: false,
-      main_count: 0,
-      support_count: 0,
-    };
+    return { engineer_id: engineerId, pci_item_id: pciItemId, pci_score: 0, self_score: 0, history_score: 0, main_count: 0, support_count: 0 };
   }
 
   function getHeatClass(score) {
@@ -309,7 +263,6 @@
         date_to: els.dateTo.value,
         source_work_type: els.domain.value === 'MAINT' ? 'MAINT' : els.sourceWorkType.value,
       });
-
       const data = await api(`/api/pci/cell-detail?${params.toString()}`);
       renderDetail(data);
       els.detailPanel.classList.add('is-open');
@@ -338,7 +291,7 @@
     els.detailSupportCount.textContent = String(Number(summary.support_count || 0).toFixed(1));
     els.detailConvertedCount.textContent = String(Number(summary.converted_count || 0).toFixed(2));
     els.detailEventCount.textContent = String(Number(summary.event_count || 0));
-    els.detailSelfCompleted.textContent = summary.self_completed ? '완료' : '미완료';
+    els.detailSelfProgress.textContent = `${Number(summary.self_checked_questions || 0)} / ${Number(summary.self_total_questions || 0)}`;
 
     renderSelfQuestions(data.self_questions || []);
     renderEvents(data.events || []);
@@ -357,7 +310,7 @@
           <span class="badge badge--neutral">문항코드 ${escapeHtml(row.question_code || '-')}</span>
           <span class="badge ${row.is_checked ? 'badge--ok' : 'badge--off'}">${row.is_checked ? '체크됨' : '체크 안됨'}</span>
           <span class="badge badge--neutral">응답상태 ${escapeHtml(row.response_status || '-')}</span>
-          ${Number(row.approved_response_count || 0) > 0 ? `<span class="badge badge--neutral">승인본 ${Number(row.approved_response_count)}건</span>` : ''}
+          ${Number(row.mapped_question_count || 0) > 1 ? `<span class="badge badge--neutral">중복문항 ${Number(row.mapped_question_count)}개 통합</span>` : ''}
         </div>
       </article>
     `).join('');
@@ -378,9 +331,7 @@
           <span class="badge badge--neutral">M ${Number(row.main_count || 0).toFixed(1)} / S ${Number(row.support_count || 0).toFixed(1)}</span>
           <span class="badge badge--neutral">환산 ${Number(row.converted_count || 0).toFixed(2)}</span>
         </div>
-        <div class="list-item__meta">
-          ${escapeHtml(row.equipment_type || '-')} / ${escapeHtml(row.equipment_name || '-')} / 그룹 ${escapeHtml(row.event_group || '-')} / 사이트 ${escapeHtml(row.event_site || '-')} / 라인 ${escapeHtml(row.line || '-')}
-        </div>
+        <div class="list-item__meta">${escapeHtml(row.equipment_type || '-')} / ${escapeHtml(row.equipment_name || '-')} / 그룹 ${escapeHtml(row.event_group || '-')} / 사이트 ${escapeHtml(row.event_site || '-')} / 라인 ${escapeHtml(row.line || '-')}</div>
         <div class="list-item__body">
           ${row.setup_item ? `setup_item: ${escapeHtml(row.setup_item)}<br>` : ''}
           ${row.task_description ? `설명: ${escapeHtml(row.task_description)}<br>` : ''}
@@ -389,6 +340,38 @@
         </div>
       </article>
     `).join('');
+  }
+
+  async function exportExcel() {
+    try {
+      const params = new URLSearchParams(collectFilters());
+      const res = await fetch(`/api/pci/export?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          ...(state.token ? { 'x-access-token': state.token, Authorization: `Bearer ${state.token}` } : {}),
+        },
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.message || json.error || '엑셀 추출 실패');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+      a.href = url;
+      a.download = match ? decodeURIComponent(match[1]) : 'pci_matrix.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('엑셀 파일을 다운로드했습니다.');
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '엑셀 추출 실패', 'danger');
+    }
   }
 
   function closeDetail() {
@@ -400,15 +383,8 @@
   async function rebuildRange() {
     const ok = window.confirm(`현재 기간(${els.dateFrom.value} ~ ${els.dateTo.value})으로 PCI 집계를 다시 수행할까요?`);
     if (!ok) return;
-
     try {
-      await api('/api/pci/admin/rebuild', {
-        method: 'POST',
-        body: {
-          date_from: els.dateFrom.value,
-          date_to: els.dateTo.value,
-        },
-      });
+      await api('/api/pci/admin/rebuild', { method: 'POST', body: { date_from: els.dateFrom.value, date_to: els.dateTo.value } });
       showToast('재집계를 시작했습니다.');
       await search();
     } catch (error) {
@@ -426,15 +402,11 @@
       method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...(state.token ? {
-          'x-access-token': state.token,
-          Authorization: `Bearer ${state.token}`,
-        } : {}),
+        ...(state.token ? { 'x-access-token': state.token, Authorization: `Bearer ${state.token}` } : {}),
       },
       credentials: 'include',
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
-
     const json = await res.json().catch(() => ({}));
     if (!res.ok || json.isSuccess === false) {
       const err = new Error(json.message || json.error || '요청 실패');
