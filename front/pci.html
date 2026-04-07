@@ -83,6 +83,84 @@
       <div class="summary-box"><span>원본 작업 타입</span><strong id="sourceTypeLabel">-</strong></div>
     </section>
 
+    <section id="adminPanel" class="admin-card hidden">
+      <div class="admin-card__head">
+        <div>
+          <p class="eyebrow">Admin Tools</p>
+          <h2>관리자 수동 가산 / 역량 업데이트</h2>
+          <p class="page-desc">현재 필터 기준으로 수동 가산을 등록하고 capability_score, monthly_capability를 동기화합니다.</p>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <section class="admin-block">
+          <h3>수동 가산 입력</h3>
+          <div class="form-grid form-grid--admin">
+            <label class="field"><span>엔지니어</span><select id="manualEngineer"></select></label>
+            <label class="field"><span>PCI 항목</span><select id="manualItem"></select></label>
+            <label class="field"><span>원본 작업 타입</span>
+              <select id="manualSourceWorkType">
+                <option value="MERGED">MERGED</option>
+                <option value="SETUP">SETUP</option>
+                <option value="RELOCATION">RELOCATION</option>
+                <option value="MAINT">MAINT</option>
+              </select>
+            </label>
+            <label class="field"><span>적용일</span><input id="manualEffectiveDate" type="date" /></label>
+            <label class="field"><span>Main 가산</span><input id="manualMainCount" type="number" step="0.1" value="0" /></label>
+            <label class="field"><span>Support 가산</span><input id="manualSupportCount" type="number" step="0.1" value="0" /></label>
+            <label class="field"><span>추가 환산치</span><input id="manualConvertedCount" type="number" step="0.1" value="0" /></label>
+            <label class="field field--grow"><span>비고</span><input id="manualNote" type="text" placeholder="예: 관리자 교육 인정" /></label>
+          </div>
+          <div class="admin-actions">
+            <button id="saveManualBtn" class="primary-btn" type="button">수동 가산 저장</button>
+            <button id="cancelManualEditBtn" class="ghost-btn hidden" type="button">수정 취소</button>
+            <span id="manualEditState" class="inline-note">신규 등록</span>
+          </div>
+        </section>
+
+        <section class="admin-block">
+          <h3>역량 업데이트</h3>
+          <div class="form-grid form-grid--admin">
+            <label class="field"><span>monthly_capability 월</span><input id="monthlyYm" type="month" /></label>
+          </div>
+          <div class="admin-actions admin-actions--stack">
+            <button id="syncCapabilityBtn" class="primary-btn" type="button">현재 설비군 capability_score 업데이트</button>
+            <button id="syncMonthlyBtn" class="ghost-btn" type="button">선택 월 monthly_capability 업데이트</button>
+            <div id="adminResult" class="admin-result">-</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="admin-block">
+        <div class="admin-block__head">
+          <h3>수동 가산 이력</h3>
+          <button id="refreshManualListBtn" class="ghost-btn" type="button">목록 새로고침</button>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>생성일</th>
+                <th>엔지니어</th>
+                <th>항목</th>
+                <th>작업타입</th>
+                <th>Main</th>
+                <th>Support</th>
+                <th>추가환산</th>
+                <th>적용일</th>
+                <th>비고</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="manualCreditTbody">
+              <tr><td colspan="10" class="table-empty">등록된 수동 가산이 없습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
     <section class="matrix-card">
       <div class="matrix-card__head">
         <div>

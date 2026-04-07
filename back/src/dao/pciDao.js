@@ -872,6 +872,133 @@ async function deleteManualCredit({ userIdx, manualCreditId }) {
   }
 }
 
+
+async function getEqIdByEquipmentGroupCode(conn, equipmentGroupCode) {
+  const normalized = String(equipmentGroupCode || '').trim().toUpperCase().replace(/\s+/g, '_');
+  const [rows] = await conn.query(
+    `SELECT id, eq_code, eq_name
+       FROM eq_master
+      WHERE REPLACE(UPPER(COALESCE(eq_code, '')), ' ', '_') = ?
+         OR REPLACE(UPPER(COALESCE(eq_name, '')), ' ', '_') = ?
+      ORDER BY id
+      LIMIT 1`,
+    [normalized, normalized]
+  );
+  return rows[0] || null;
+}
+
+async function upsertCapabilityScores({ userIdx, equipmentGroupCode, rows }) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await ensureAdmin(conn, userIdx);
+
+    const eq = await getEqIdByEquipmentGroupCode(conn, equipmentGroupCode);
+    if (!eq) {
+      const err = new Error(`eq_master 에서 설비군(${equipmentGroupCode})을 찾을 수 없습니다.`);
+      err.statusCode = 404;
+      throw err;
+    }
+
+    let affected = 0;
+    for (const row of rows) {
+      const engineerId = Number(row.engineer_id);
+      const setupScore = Number(row.setup_score || 0);
+      const maintScore = Number(row.maint_score || 0);
+      const [[exists]] = await conn.query(
+        `SELECT id FROM capability_score WHERE engineer_id = ? AND eq_id = ? LIMIT 1`,
+        [engineerId, eq.id]
+      );
+
+      if (exists) {
+        await conn.query(
+          `UPDATE capability_score
+              SET setup_score = ?,
+                  maint_score = ?
+            WHERE id = ?`,
+          [setupScore, maintScore, exists.id]
+        );
+      } else {
+        await conn.query(
+          `INSERT INTO capability_score (engineer_id, eq_id, setup_score, maint_score)
+           VALUES (?, ?, ?, ?)`,
+          [engineerId, eq.id, setupScore, maintScore]
+        );
+      }
+      affected += 1;
+    }
+
+    await conn.commit();
+    return { ok: true, eq_id: eq.id, eq_code: eq.eq_code, eq_name: eq.eq_name, affected_rows: affected };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+async function upsertMonthlyCapability({ userIdx, ym, rows }) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await ensureAdmin(conn, userIdx);
+
+    let affected = 0;
+    for (const row of rows) {
+      const engineerId = Number(row.engineer_id);
+      const totalScore = Number(row.total_score || 0);
+      const setupScore = Number(row.setup_score || 0);
+      const maintScore = Number(row.maint_score || 0);
+      const [[exists]] = await conn.query(
+        `SELECT id FROM monthly_capability WHERE engineer_id = ? AND ym = ? LIMIT 1`,
+        [engineerId, ym]
+      );
+
+      if (exists) {
+        await conn.query(
+          `UPDATE monthly_capability
+              SET total_score = ?,
+                  setup_score = ?,
+                  maint_score = ?
+            WHERE id = ?`,
+          [totalScore, setupScore, maintScore, exists.id]
+        );
+      } else {
+        await conn.query(
+          `INSERT INTO monthly_capability (engineer_id, ym, total_score, setup_score, maint_score)
+           VALUES (?, ?, ?, ?, ?)`,
+          [engineerId, ym, totalScore, setupScore, maintScore]
+        );
+      }
+      affected += 1;
+    }
+
+    await conn.commit();
+    return { ok: true, ym, affected_rows: affected };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+async function getActiveEquipmentGroups() {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.query(
+      `SELECT code, display_name, sort_order
+         FROM checklist_equipment_group
+        WHERE is_active = 1
+        ORDER BY sort_order, code`
+    );
+    return rows;
+  } finally {
+    conn.release();
+  }
+}
+
 module.exports = {
   resolveUserIdx,
   getFilterOptions,
@@ -884,4 +1011,7 @@ module.exports = {
   getManualCredits,
   saveManualCredit,
   deleteManualCredit,
+  upsertCapabilityScores,
+  upsertMonthlyCapability,
+  getActiveEquipmentGroups,
 };

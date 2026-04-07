@@ -319,6 +319,130 @@ async function saveManualCredit({ userIdx, manualCreditId, body }) {
   });
 }
 
+
+function average(values) {
+  if (!values || !values.length) return 0;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function normalizeMonth(value) {
+  const v = String(value || '').trim();
+  if (!/^\d{4}-\d{2}$/.test(v)) {
+    const err = new Error('ym 은 YYYY-MM 형식이어야 합니다.');
+    err.statusCode = 400;
+    throw err;
+  }
+  return v;
+}
+
+function getMonthRange(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const start = new Date(Date.UTC(y, m - 1, 1));
+  const end = new Date(Date.UTC(y, m, 0));
+  const fmt = (d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  return { dateFrom: fmt(start), dateTo: fmt(end) };
+}
+
+async function syncCapabilityScore({ userIdx, body }) {
+  const equipmentGroupCode = String(body.equipment_group || body.equipmentGroupCode || '').trim();
+  if (!equipmentGroupCode) {
+    const err = new Error('equipment_group 값이 필요합니다.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const dateFrom = normalizeDate(body.date_from || body.dateFrom, '2025-01-01');
+  const dateTo = normalizeDate(body.date_to || body.dateTo, new Date().toISOString().slice(0, 10));
+  const common = {
+    equipment_group: equipmentGroupCode,
+    group: body.group || '',
+    site: body.site || '',
+    keyword: body.keyword || '',
+    date_from: dateFrom,
+    date_to: dateTo,
+  };
+
+  const [setup, maint] = await Promise.all([
+    getMatrix({ ...common, domain: 'SETUP', source_work_type: body.source_work_type || body.sourceWorkType || 'MERGED' }),
+    getMatrix({ ...common, domain: 'MAINT', source_work_type: 'MAINT' }),
+  ]);
+
+  const map = new Map();
+  for (const row of setup.engineers || []) {
+    if (!map.has(row.engineer_id)) map.set(row.engineer_id, { engineer_id: row.engineer_id, engineer_name: row.engineer_name, setup_score: 0, maint_score: 0 });
+  }
+  for (const row of maint.engineers || []) {
+    if (!map.has(row.engineer_id)) map.set(row.engineer_id, { engineer_id: row.engineer_id, engineer_name: row.engineer_name, setup_score: 0, maint_score: 0 });
+  }
+  for (const row of setup.engineer_averages || []) {
+    if (!map.has(row.engineer_id)) map.set(row.engineer_id, { engineer_id: row.engineer_id, engineer_name: '', setup_score: 0, maint_score: 0 });
+    map.get(row.engineer_id).setup_score = Number((Number(row.avg_pci || 0) / 100).toFixed(6));
+  }
+  for (const row of maint.engineer_averages || []) {
+    if (!map.has(row.engineer_id)) map.set(row.engineer_id, { engineer_id: row.engineer_id, engineer_name: '', setup_score: 0, maint_score: 0 });
+    map.get(row.engineer_id).maint_score = Number((Number(row.avg_pci || 0) / 100).toFixed(6));
+  }
+
+  const rows = [...map.values()];
+  const result = await pciDao.upsertCapabilityScores({ userIdx, equipmentGroupCode, rows });
+  return {
+    ...result,
+    filters: { ...common, source_work_type: body.source_work_type || body.sourceWorkType || 'MERGED' },
+    rows,
+  };
+}
+
+async function syncMonthlyCapability({ userIdx, body }) {
+  const ym = normalizeMonth(body.ym);
+  const { dateFrom, dateTo } = getMonthRange(ym);
+  const common = {
+    group: body.group || '',
+    site: body.site || '',
+    keyword: body.keyword || '',
+    date_from: dateFrom,
+    date_to: dateTo,
+  };
+
+  const groups = await pciDao.getActiveEquipmentGroups();
+  const bucket = new Map();
+
+  for (const groupRow of groups) {
+    const [setup, maint] = await Promise.all([
+      getMatrix({ ...common, equipment_group: groupRow.code, domain: 'SETUP', source_work_type: 'MERGED' }),
+      getMatrix({ ...common, equipment_group: groupRow.code, domain: 'MAINT', source_work_type: 'MAINT' }),
+    ]);
+
+    for (const cell of setup.cells || []) {
+      if (!bucket.has(cell.engineer_id)) bucket.set(cell.engineer_id, { engineer_id: cell.engineer_id, setup: [], maint: [], total: [] });
+      const v = Number(cell.pci_score || 0) / 100;
+      bucket.get(cell.engineer_id).setup.push(v);
+      bucket.get(cell.engineer_id).total.push(v);
+    }
+    for (const cell of maint.cells || []) {
+      if (!bucket.has(cell.engineer_id)) bucket.set(cell.engineer_id, { engineer_id: cell.engineer_id, setup: [], maint: [], total: [] });
+      const v = Number(cell.pci_score || 0) / 100;
+      bucket.get(cell.engineer_id).maint.push(v);
+      bucket.get(cell.engineer_id).total.push(v);
+    }
+  }
+
+  const rows = [...bucket.values()].map((row) => ({
+    engineer_id: row.engineer_id,
+    setup_score: Number(average(row.setup).toFixed(6)),
+    maint_score: Number(average(row.maint).toFixed(6)),
+    total_score: Number(average(row.total).toFixed(6)),
+  }));
+
+  const result = await pciDao.upsertMonthlyCapability({ userIdx, ym, rows });
+  return {
+    ...result,
+    ym,
+    date_from: dateFrom,
+    date_to: dateTo,
+    rows,
+  };
+}
+
 async function deleteManualCredit({ userIdx, manualCreditId }) {
   const id = Number(manualCreditId);
   if (!id) {
@@ -340,4 +464,6 @@ module.exports = {
   getManualCredits,
   saveManualCredit,
   deleteManualCredit,
+  syncCapabilityScore,
+  syncMonthlyCapability,
 };

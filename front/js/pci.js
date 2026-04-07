@@ -5,6 +5,9 @@
     filters: null,
     matrix: null,
     engineerAvgMap: new Map(),
+    adminItems: [],
+    manualCredits: [],
+    manualEditId: null,
     toastTimer: null,
   };
 
@@ -41,6 +44,24 @@
       reloadBtn: qs('reloadBtn'),
       exportBtn: qs('exportBtn'),
       rebuildBtn: qs('rebuildBtn'),
+      adminPanel: qs('adminPanel'),
+      manualEngineer: qs('manualEngineer'),
+      manualItem: qs('manualItem'),
+      manualSourceWorkType: qs('manualSourceWorkType'),
+      manualEffectiveDate: qs('manualEffectiveDate'),
+      manualMainCount: qs('manualMainCount'),
+      manualSupportCount: qs('manualSupportCount'),
+      manualConvertedCount: qs('manualConvertedCount'),
+      manualNote: qs('manualNote'),
+      saveManualBtn: qs('saveManualBtn'),
+      cancelManualEditBtn: qs('cancelManualEditBtn'),
+      manualEditState: qs('manualEditState'),
+      refreshManualListBtn: qs('refreshManualListBtn'),
+      manualCreditTbody: qs('manualCreditTbody'),
+      syncCapabilityBtn: qs('syncCapabilityBtn'),
+      syncMonthlyBtn: qs('syncMonthlyBtn'),
+      monthlyYm: qs('monthlyYm'),
+      adminResult: qs('adminResult'),
       searchBtn: qs('searchBtn'),
       engineerCount: qs('engineerCount'),
       itemCount: qs('itemCount'),
@@ -77,6 +98,11 @@
     els.searchBtn.addEventListener('click', search);
     els.exportBtn.addEventListener('click', exportExcel);
     els.rebuildBtn.addEventListener('click', rebuildRange);
+    if (els.saveManualBtn) els.saveManualBtn.addEventListener('click', saveManualCredit);
+    if (els.cancelManualEditBtn) els.cancelManualEditBtn.addEventListener('click', resetManualForm);
+    if (els.refreshManualListBtn) els.refreshManualListBtn.addEventListener('click', loadManualCredits);
+    if (els.syncCapabilityBtn) els.syncCapabilityBtn.addEventListener('click', syncCapabilityScore);
+    if (els.syncMonthlyBtn) els.syncMonthlyBtn.addEventListener('click', syncMonthlyCapability);
     els.closeDetailBtn.addEventListener('click', closeDetail);
     els.detailBackdrop.addEventListener('click', closeDetail);
     els.domain.addEventListener('change', handleDomainChange);
@@ -91,6 +117,7 @@
     from.setFullYear(now.getFullYear() - 1);
     els.dateTo.value = toDateInputValue(now);
     els.dateFrom.value = toDateInputValue(from);
+    if (els.monthlyYm) els.monthlyYm.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}`;
   }
 
   function handleDomainChange() {
@@ -98,9 +125,11 @@
     if (domain === 'MAINT') {
       els.sourceWorkType.value = 'MAINT';
       els.sourceWorkType.disabled = true;
+      if (els.manualSourceWorkType) { els.manualSourceWorkType.value = 'MAINT'; els.manualSourceWorkType.disabled = true; }
     } else {
       if (els.sourceWorkType.value === 'MAINT') els.sourceWorkType.value = 'MERGED';
       els.sourceWorkType.disabled = false;
+      if (els.manualSourceWorkType) { if (els.manualSourceWorkType.value === 'MAINT') els.manualSourceWorkType.value = 'MERGED'; els.manualSourceWorkType.disabled = false; }
     }
   }
 
@@ -158,6 +187,11 @@
     state.engineerAvgMap = new Map((data.engineer_averages || []).map((row) => [row.engineer_id, row.avg_pci]));
     renderSummary(data);
     renderMatrix(data);
+    if (state.meRole === 'admin') {
+      await loadAdminItems();
+      populateManualEngineerOptions();
+      await loadManualCredits();
+    }
   }
 
   function renderSummary(data) {
@@ -394,7 +428,201 @@
   }
 
   function toggleAdminUI() {
-    els.rebuildBtn.classList.toggle('hidden', state.meRole !== 'admin');
+    const hide = state.meRole !== 'admin';
+    els.rebuildBtn.classList.toggle('hidden', hide);
+    if (els.adminPanel) els.adminPanel.classList.toggle('hidden', hide);
+  }
+
+
+  async function loadAdminItems() {
+    const params = new URLSearchParams({
+      equipment_group: els.equipmentGroup.value,
+      domain: els.domain.value,
+      keyword: '',
+    });
+    const data = await api(`/api/pci/admin/items?${params.toString()}`);
+    state.adminItems = data.rows || [];
+    populateManualItemOptions();
+  }
+
+  function populateManualEngineerOptions() {
+    const engineers = state.matrix?.engineers || [];
+    if (!els.manualEngineer) return;
+    if (!engineers.length) {
+      els.manualEngineer.innerHTML = '<option value="">조회된 엔지니어 없음</option>';
+      return;
+    }
+    els.manualEngineer.innerHTML = engineers.map((row) =>
+      `<option value="${row.engineer_id}">${escapeHtml(row.engineer_name)}${row.group || row.site ? ` (${escapeHtml([row.group,row.site].filter(Boolean).join('/') )})` : ''}</option>`
+    ).join('');
+  }
+
+  function populateManualItemOptions() {
+    if (!els.manualItem) return;
+    const items = state.adminItems || [];
+    if (!items.length) {
+      els.manualItem.innerHTML = '<option value="">조회된 항목 없음</option>';
+      return;
+    }
+    els.manualItem.innerHTML = items.map((row) =>
+      `<option value="${row.id}">${escapeHtml(row.item_name_kr || row.item_name || row.item_code)} · ${escapeHtml(row.item_code)}</option>`
+    ).join('');
+  }
+
+  async function loadManualCredits() {
+    if (state.meRole !== 'admin') return;
+    const params = new URLSearchParams({
+      equipment_group: els.equipmentGroup.value,
+      domain: els.domain.value,
+      keyword: '',
+    });
+    const data = await api(`/api/pci/admin/manual-credits?${params.toString()}`);
+    state.manualCredits = data.rows || [];
+    renderManualCredits();
+  }
+
+  function renderManualCredits() {
+    const rows = state.manualCredits || [];
+    if (!rows.length) {
+      els.manualCreditTbody.innerHTML = '<tr><td colspan="10" class="table-empty">등록된 수동 가산이 없습니다.</td></tr>';
+      return;
+    }
+    els.manualCreditTbody.innerHTML = rows.map((row) => `
+      <tr>
+        <td>${escapeHtml(formatDateTime(row.created_at))}</td>
+        <td>${escapeHtml(row.engineer_name || '-')}</td>
+        <td>${escapeHtml(row.item_name_kr || row.item_name || row.item_code || '-')}</td>
+        <td>${escapeHtml(row.source_work_type || '-')}</td>
+        <td>${Number(row.main_count_add || 0).toFixed(1)}</td>
+        <td>${Number(row.support_count_add || 0).toFixed(1)}</td>
+        <td>${Number(row.converted_count_add || 0).toFixed(1)}</td>
+        <td>${escapeHtml(row.effective_date || '-')}</td>
+        <td>${escapeHtml(row.note || '-')}</td>
+        <td>
+          <div class="table-actions">
+            <button class="small-btn small-btn--edit" type="button" data-manual-edit="${row.id}">수정</button>
+            <button class="small-btn small-btn--delete" type="button" data-manual-delete="${row.id}">삭제</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+    els.manualCreditTbody.querySelectorAll('[data-manual-edit]').forEach((btn) => btn.addEventListener('click', () => fillManualForm(btn.dataset.manualEdit)));
+    els.manualCreditTbody.querySelectorAll('[data-manual-delete]').forEach((btn) => btn.addEventListener('click', () => deleteManualCredit(btn.dataset.manualDelete)));
+  }
+
+  function fillManualForm(id) {
+    const row = (state.manualCredits || []).find((item) => String(item.id) === String(id));
+    if (!row) return;
+    state.manualEditId = row.id;
+    els.manualEngineer.value = String(row.engineer_id);
+    els.manualItem.value = String(row.pci_item_id);
+    els.manualSourceWorkType.value = row.source_work_type || 'MERGED';
+    els.manualEffectiveDate.value = row.effective_date || '';
+    els.manualMainCount.value = Number(row.main_count_add || 0);
+    els.manualSupportCount.value = Number(row.support_count_add || 0);
+    els.manualConvertedCount.value = Number(row.converted_count_add || 0);
+    els.manualNote.value = row.note || '';
+    els.manualEditState.textContent = `수정 중 #${row.id}`;
+    els.cancelManualEditBtn.classList.remove('hidden');
+  }
+
+  function resetManualForm() {
+    state.manualEditId = null;
+    if (els.manualEngineer.options.length) els.manualEngineer.selectedIndex = 0;
+    if (els.manualItem.options.length) els.manualItem.selectedIndex = 0;
+    els.manualMainCount.value = '0';
+    els.manualSupportCount.value = '0';
+    els.manualConvertedCount.value = '0';
+    els.manualEffectiveDate.value = '';
+    els.manualNote.value = '';
+    els.manualEditState.textContent = '신규 등록';
+    els.cancelManualEditBtn.classList.add('hidden');
+    handleDomainChange();
+  }
+
+  async function saveManualCredit() {
+    try {
+      const body = {
+        engineer_id: Number(els.manualEngineer.value),
+        pci_item_id: Number(els.manualItem.value),
+        source_work_type: els.manualSourceWorkType.value,
+        effective_date: els.manualEffectiveDate.value,
+        main_count_add: Number(els.manualMainCount.value || 0),
+        support_count_add: Number(els.manualSupportCount.value || 0),
+        converted_count_add: Number(els.manualConvertedCount.value || 0),
+        note: els.manualNote.value.trim(),
+      };
+      if (state.manualEditId) {
+        await api(`/api/pci/admin/manual-credits/${state.manualEditId}`, { method: 'PUT', body });
+        showToast('수동 가산을 수정했습니다.');
+      } else {
+        await api('/api/pci/admin/manual-credits', { method: 'POST', body });
+        showToast('수동 가산을 등록했습니다.');
+      }
+      resetManualForm();
+      await loadManualCredits();
+      await search();
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '수동 가산 저장 실패', 'danger');
+    }
+  }
+
+  async function deleteManualCredit(id) {
+    const ok = window.confirm('이 수동 가산을 삭제할까요?');
+    if (!ok) return;
+    try {
+      await api(`/api/pci/admin/manual-credits/${id}`, { method: 'DELETE' });
+      showToast('수동 가산을 삭제했습니다.');
+      if (String(state.manualEditId || '') === String(id)) resetManualForm();
+      await loadManualCredits();
+      await search();
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || '수동 가산 삭제 실패', 'danger');
+    }
+  }
+
+  async function syncCapabilityScore() {
+    const ok = window.confirm(`현재 필터 기준으로 capability_score 를 업데이트할까요?\n설비군: ${els.equipmentGroup.value}\n기간: ${els.dateFrom.value} ~ ${els.dateTo.value}`);
+    if (!ok) return;
+    try {
+      const data = await api('/api/pci/admin/capability-score/sync', {
+        method: 'POST',
+        body: collectFilters(),
+      });
+      els.adminResult.textContent = `capability_score 업데이트 완료 · 대상 ${data.affected_rows || 0}명 · eq_id ${data.eq_id || '-'} (${data.eq_code || '-'})`;
+      showToast('capability_score 업데이트 완료');
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || 'capability_score 업데이트 실패', 'danger');
+    }
+  }
+
+  async function syncMonthlyCapability() {
+    const ym = els.monthlyYm.value;
+    if (!ym) {
+      showToast('월을 선택하세요.', 'danger');
+      return;
+    }
+    const ok = window.confirm(`${ym} 기준으로 monthly_capability 를 업데이트할까요?`);
+    if (!ok) return;
+    try {
+      const data = await api('/api/pci/admin/monthly-capability/sync', {
+        method: 'POST',
+        body: {
+          ym,
+          group: els.engineerGroup.value,
+          site: els.site.value,
+          keyword: els.keyword.value.trim(),
+        },
+      });
+      els.adminResult.textContent = `monthly_capability 업데이트 완료 · ${data.ym} · 대상 ${data.affected_rows || 0}명`;
+      showToast('monthly_capability 업데이트 완료');
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || 'monthly_capability 업데이트 실패', 'danger');
+    }
   }
 
   async function api(path, options = {}) {
@@ -420,6 +648,13 @@
   function toDateInputValue(date) {
     const d = new Date(date);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
 
   function showToast(message, type = 'success') {

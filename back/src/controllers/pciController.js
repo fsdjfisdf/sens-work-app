@@ -190,3 +190,22 @@ exports.deleteManualCredit = async (req, res, next) => {
     next(err);
   }
 };
+
+
+exports.syncCapabilityScore = async (req, res, next) => {
+  try {
+    const data = await pciService.syncCapabilityScore({ userIdx: extractUserIdx(req), body: req.body || {} });
+    res.json({ isSuccess: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.syncMonthlyCapability = async (req, res, next) => {
+  try {
+    const data = await pciService.syncMonthlyCapability({ userIdx: extractUserIdx(req), body: req.body || {} });
+    res.json({ isSuccess: true, data });
+  } catch (err) {
+    next(err);
+  }
+};

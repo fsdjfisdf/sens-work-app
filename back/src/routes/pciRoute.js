@@ -38,5 +38,7 @@ router.get('/admin/manual-credits', auth, pciController.getManualCredits);
 router.post('/admin/manual-credits', auth, pciController.createManualCredit);
 router.put('/admin/manual-credits/:id', auth, pciController.updateManualCredit);
 router.delete('/admin/manual-credits/:id', auth, pciController.deleteManualCredit);
+router.post('/admin/capability-score/sync', auth, pciController.syncCapabilityScore);
+router.post('/admin/monthly-capability/sync', auth, pciController.syncMonthlyCapability);
 
 module.exports = router;
