@@ -3,172 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PCI (Personal Capability Index)</title>
-
-  <!-- ✅ PCI 전용 CSS로 변경 -->
-  <link rel="stylesheet" href="./css/PCI.css" />
-
-  <script defer src="./js/PCI.js"></script>
-  <script defer src="./js/logoutTimer.js"></script>
+  <title>PCI Matrix</title>
+  <link rel="stylesheet" href="./pci.css" />
 </head>
 <body>
-  <nav>
-    <div class="inner">
-      <div class="nav-container">
-        <h1 class="nav-title"><a href="./index.html">S-WORKS</a></h1>
-
-        <div class="sign-container unsigned">
-          <a href="./signin.html" class="sign-link">Login</a>
-        </div>
-
-        <div class="sign-container signed hidden">
-          <button class="menu-btn" type="button" aria-label="메뉴 열기">
-            <div class="menu-icon" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </div>
-          </button>
-        </div>
+  <div class="page-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">S-WORKS</p>
+        <h1>PCI Matrix</h1>
+        <p class="page-desc">설비군별 작업 항목 × 엔지니어 역량 지표</p>
       </div>
-    </div>
 
-    <div class="menu-bar">
-      <div class="menu-bar-content">
-        <a href="./user_info.html" class="menu-item">SECM</a>
-        <a href="./worklog.html" class="menu-item">Create Worklog</a>
-        <a href="./approval.html" class="menu-item">Worklog Approval</a>
-        <a href="./loadworklog.html" class="menu-item">Load Worklog</a>
-        <a href="./equipment_signal.html" class="menu-item">Equipment</a>
-        <a href="./Setupeq.html" class="menu-item">Setup EQ</a>
-        <a href="./PCI.html" class="menu-item">PCI</a>
-        <a href="./CHECKLIST.html" class="menu-item">Checklist</a>
-        <a href="./business.html" class="menu-item">Business trip</a>
-        <a href="./report.html" class="menu-item">국내 출장 보고서</a>
-        <a href="./workload.html" class="menu-item admin-only">Operating Rate</a>
-        <a href="./analysis.html" class="menu-item admin-only">Predicted Workers</a>
-        <a href="./update.html" class="menu-item">Update</a>
-        <button id="sign-out" class="menu-item" type="button">Logout</button>
+      <div class="header-actions">
+        <button id="reloadBtn" class="ghost-btn" type="button">새로고침</button>
+        <button id="rebuildBtn" class="primary-btn hidden" type="button">관리자 재집계</button>
       </div>
-    </div>
-  </nav>
+    </header>
 
-  <main>
-    <section class="pci-hero">
-      <div class="inner">
-        <div class="pci-card">
-          <div class="pci-head">
-            <h2>PCI (Personal Capability Index)</h2>
-            <p class="sub">
-              설비를 선택한 뒤 <b>SET UP / MAINT</b> 버튼을 누르면 바로 이동합니다.
-            </p>
-          </div>
+    <section class="filter-card">
+      <div class="filter-grid">
+        <label class="field">
+          <span>설비군</span>
+          <select id="equipmentGroup"></select>
+        </label>
 
-          <!-- ✅ 설비 버튼 영역 -->
-          <div class="block">
-            <div class="block-title">
-              <span class="badge">Step 1</span>
-              <h3>Equipment</h3>
-            </div>
+        <label class="field">
+          <span>도메인</span>
+          <select id="domain">
+            <option value="SETUP">SETUP / RELOCATION</option>
+            <option value="MAINT">MAINT</option>
+          </select>
+        </label>
 
-            <div class="equip-grid" id="equipGrid" role="list" aria-label="설비 선택">
-              <!-- JS가 버튼 생성 -->
-            </div>
+        <label class="field">
+          <span>원본 작업 타입</span>
+          <select id="sourceWorkType">
+            <option value="MERGED">SETUP + RELOCATION</option>
+            <option value="SETUP">SETUP만</option>
+            <option value="RELOCATION">RELOCATION만</option>
+            <option value="MAINT">MAINT</option>
+          </select>
+        </label>
 
-            <p class="hint">
-            선택: <b id="selectedEquipText">없음</b>
-            </p>
-          </div>
+        <label class="field">
+          <span>그룹</span>
+          <select id="engineerGroup">
+            <option value="">전체</option>
+          </select>
+        </label>
 
-          <!-- ✅ 작업유형 버튼 영역(설비 선택 후 표시) -->
-          <div class="block hidden reveal" id="taskBlock">
-            <div class="block-title">
-              <span class="badge">Step 2</span>
-              <h3>Task Type</h3>
-            </div>
+        <label class="field">
+          <span>사이트</span>
+          <select id="site">
+            <option value="">전체</option>
+          </select>
+        </label>
 
-            <div class="task-actions">
-              <button type="button" class="task-btn" id="btnSetup">
-                SET UP
-              </button>
-              <button type="button" class="task-btn" id="btnMaint">
-                MAINT
-              </button>
-            </div>
+        <label class="field">
+          <span>기간 시작</span>
+          <input id="dateFrom" type="date" />
+        </label>
 
-            <p class="small">
-              * 설비 선택 후 바로 이동됩니다.
-            </p>
-          </div>
+        <label class="field">
+          <span>기간 종료</span>
+          <input id="dateTo" type="date" />
+        </label>
 
-          <div class="bottom-actions">
-            <button type="button" class="btn-secondary" id="resetBtn">Reset</button>
-          </div>
-        </div>
+        <label class="field field--grow">
+          <span>엔지니어 검색</span>
+          <input id="keyword" type="text" placeholder="이름 검색" />
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle">
+          <input id="zeroHide" type="checkbox" />
+          <span>0% 숨기기</span>
+        </label>
+
+        <label class="toggle">
+          <input id="lowOnly" type="checkbox" />
+          <span>미달 항목만 보기 (80% 미만)</span>
+        </label>
+
+        <button id="searchBtn" class="primary-btn" type="button">조회</button>
       </div>
     </section>
-  </main>
 
-  <footer>
-    <div class="inner">
-      <p>
-        제공되는 모든 정보는 SEnS의 사외비로 간주되며, 무단으로 정보의 유출, 복사, 배포를 금지하며,
-        위반 시 법적 조치가 취해질 수 있습니다.
-      </p>
+    <section class="summary-strip">
+      <div class="summary-box">
+        <span>엔지니어 수</span>
+        <strong id="engineerCount">0</strong>
+      </div>
+      <div class="summary-box">
+        <span>항목 수</span>
+        <strong id="itemCount">0</strong>
+      </div>
+      <div class="summary-box">
+        <span>평균 PCI</span>
+        <strong id="avgPci">0%</strong>
+      </div>
+      <div class="summary-box">
+        <span>필터 Work Type</span>
+        <strong id="sourceTypeLabel">-</strong>
+      </div>
+    </section>
+
+    <section class="matrix-card">
+      <div id="matrixEmpty" class="empty-box">조건을 선택하고 조회하세요.</div>
+      <div id="matrixWrap" class="matrix-wrap hidden"></div>
+    </section>
+  </div>
+
+  <aside id="detailPanel" class="detail-panel">
+    <div class="detail-panel__header">
+      <div>
+        <p class="eyebrow">PCI Detail</p>
+        <h2 id="detailTitle">상세 정보</h2>
+        <p id="detailSub" class="detail-sub">-</p>
+      </div>
+      <button id="closeDetailBtn" class="ghost-icon-btn" type="button">✕</button>
     </div>
-  </footer>
 
-  <script>
-    // ✅ 기존 네비/권한/로그아웃 로직 유지(정리 버전)
-    document.addEventListener("DOMContentLoaded", function () {
-      const token = localStorage.getItem("x-access-token");
-      const userRole = localStorage.getItem("user-role");
+    <div class="detail-panel__body">
+      <section class="detail-section">
+        <h3>점수 요약</h3>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <span>PCI</span>
+            <strong id="detailPciScore">0%</strong>
+          </div>
+          <div class="stat-box">
+            <span>Self</span>
+            <strong id="detailSelfScore">0</strong>
+          </div>
+          <div class="stat-box">
+            <span>History</span>
+            <strong id="detailHistoryScore">0</strong>
+          </div>
+          <div class="stat-box">
+            <span>달성률</span>
+            <strong id="detailHistoryRatio">0%</strong>
+          </div>
+        </div>
+      </section>
 
-      // signed/unsigned 토글
-      if (!token) {
-        document.querySelector(".unsigned").classList.remove("hidden");
-        document.querySelector(".signed").classList.add("hidden");
-      } else {
-        document.querySelector(".unsigned").classList.add("hidden");
-        document.querySelector(".signed").classList.remove("hidden");
-      }
+      <section class="detail-section">
+        <h3>집계 정보</h3>
+        <div class="meta-list">
+          <div><span>required_count</span><strong id="detailRequiredCount">-</strong></div>
+          <div><span>main_count</span><strong id="detailMainCount">-</strong></div>
+          <div><span>support_count</span><strong id="detailSupportCount">-</strong></div>
+          <div><span>converted_count</span><strong id="detailConvertedCount">-</strong></div>
+          <div><span>event_count</span><strong id="detailEventCount">-</strong></div>
+          <div><span>self 완료</span><strong id="detailSelfCompleted">-</strong></div>
+        </div>
+      </section>
 
-      // admin-only 숨김
-      if (!token || userRole !== "admin") {
-        document.querySelectorAll(".admin-only").forEach((el) => (el.style.display = "none"));
-      }
+      <section class="detail-section">
+        <h3>Self Checklist 문항</h3>
+        <div id="selfQuestionList" class="list-box"></div>
+      </section>
 
-      // logout
-      const signOutButton = document.querySelector("#sign-out");
-      if (signOutButton) {
-        signOutButton.addEventListener("click", function () {
-          localStorage.removeItem("x-access-token");
-          localStorage.removeItem("user-role");
-          alert("로그아웃 되었습니다.");
-          window.location.replace("./signin.html");
-        });
-      }
+      <section class="detail-section">
+        <h3>집계 이벤트</h3>
+        <div id="eventList" class="list-box"></div>
+      </section>
+    </div>
+  </aside>
 
-      // menu toggle
-      const menuBtn = document.querySelector(".menu-btn");
-      const menuBar = document.querySelector(".menu-bar");
-      if (menuBtn && menuBar) {
-        menuBtn.addEventListener("click", function () {
-          menuBar.classList.toggle("open");
-        });
+  <div id="toast" class="toast hidden"></div>
 
-        document.addEventListener("click", function (event) {
-          if (!menuBtn.contains(event.target) && !menuBar.contains(event.target)) {
-            menuBar.classList.remove("open");
-          }
-        });
-      }
-
-      // ✅ 로그인 가드
-      if (!token) {
-        alert("로그인이 필요합니다.");
-        window.location.replace("./signin.html");
-        return;
-      }
-    });
-  </script>
+  <script src="./pci.js"></script>
 </body>
 </html>
