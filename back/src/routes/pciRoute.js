@@ -1,4 +1,3 @@
-
 'use strict';
 
 const express = require('express');
@@ -35,5 +34,9 @@ router.get('/engineer/:engineerId', auth, pciController.getEngineerDetail);
 router.get('/admin/items', auth, pciController.getAdminItems);
 router.put('/admin/items/:pciItemId', auth, pciController.updatePciItem);
 router.post('/admin/rebuild', auth, pciController.rebuildRange);
+router.get('/admin/manual-credits', auth, pciController.getManualCredits);
+router.post('/admin/manual-credits', auth, pciController.createManualCredit);
+router.put('/admin/manual-credits/:id', auth, pciController.updateManualCredit);
+router.delete('/admin/manual-credits/:id', auth, pciController.deleteManualCredit);
 
 module.exports = router;

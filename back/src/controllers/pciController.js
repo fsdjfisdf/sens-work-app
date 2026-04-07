@@ -1,4 +1,3 @@
-
 'use strict';
 
 const pciService = require('../services/pciService');
@@ -31,7 +30,7 @@ async function buildExportWorkbook(data) {
 
   summarySheet.columns = [
     { header: '항목', key: 'label', width: 24 },
-    { header: '값', key: 'value', width: 32 },
+    { header: '값', key: 'value', width: 36 },
   ];
   const filters = data.filters || {};
   summarySheet.addRows([
@@ -47,9 +46,6 @@ async function buildExportWorkbook(data) {
     { label: '항목 수', value: Number(data.summary?.item_count || 0) },
     { label: '전체 평균 PCI', value: Number(data.summary?.avg_pci || 0) },
   ]);
-  summarySheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  summarySheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C1C1E' } };
-  summarySheet.views = [{ state: 'frozen', ySplit: 1 }];
 
   const headerRow1 = ['카테고리', '작업 항목', '영문명', '기준 횟수'];
   const headerRow2 = ['', '', '', ''];
@@ -73,48 +69,6 @@ async function buildExportWorkbook(data) {
       row.push(Number(cell?.pci_score || 0));
     });
     matrixSheet.addRow(row);
-  });
-
-  matrixSheet.views = [{ state: 'frozen', xSplit: 4, ySplit: 2 }];
-  matrixSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  matrixSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C1C1E' } };
-  matrixSheet.getRow(2).font = { italic: true, color: { argb: 'FF666666' } };
-  matrixSheet.getRow(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F4F8' } };
-
-  matrixSheet.columns = [
-    { width: 18 },
-    { width: 28 },
-    { width: 22 },
-    { width: 10 },
-    ...engineers.map(() => ({ width: 12 })),
-  ];
-
-  for (let c = 5; c <= 4 + engineers.length; c += 1) {
-    for (let r = 3; r <= 2 + items.length; r += 1) {
-      const cell = matrixSheet.getRow(r).getCell(c);
-      cell.numFmt = '0.0';
-      const value = Number(cell.value || 0);
-      let color = 'FFF4F4F6';
-      if (value >= 80) color = 'FF5B8DEF';
-      else if (value >= 60) color = 'FF8FB1F2';
-      else if (value >= 40) color = 'FFB7CBF7';
-      else if (value > 0) color = 'FFDDE7FB';
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: color } };
-      cell.alignment = { horizontal: 'center', vertical: 'middle' };
-    }
-  }
-
-  [summarySheet, matrixSheet].forEach((sheet) => {
-    sheet.eachRow((row) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'FFE1E4EA' } },
-          left: { style: 'thin', color: { argb: 'FFE1E4EA' } },
-          bottom: { style: 'thin', color: { argb: 'FFE1E4EA' } },
-          right: { style: 'thin', color: { argb: 'FFE1E4EA' } },
-        };
-      });
-    });
   });
 
   return workbook;
@@ -195,6 +149,42 @@ exports.updatePciItem = async (req, res, next) => {
 exports.rebuildRange = async (req, res, next) => {
   try {
     const data = await pciService.rebuildRange({ userIdx: extractUserIdx(req), body: req.body || {} });
+    res.json({ isSuccess: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getManualCredits = async (req, res, next) => {
+  try {
+    const data = await pciService.getManualCredits(req.query);
+    res.json({ isSuccess: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createManualCredit = async (req, res, next) => {
+  try {
+    const data = await pciService.saveManualCredit({ userIdx: extractUserIdx(req), body: req.body || {} });
+    res.json({ isSuccess: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateManualCredit = async (req, res, next) => {
+  try {
+    const data = await pciService.saveManualCredit({ userIdx: extractUserIdx(req), manualCreditId: req.params.id, body: req.body || {} });
+    res.json({ isSuccess: true, data });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteManualCredit = async (req, res, next) => {
+  try {
+    const data = await pciService.deleteManualCredit({ userIdx: extractUserIdx(req), manualCreditId: req.params.id });
     res.json({ isSuccess: true, data });
   } catch (err) {
     next(err);

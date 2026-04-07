@@ -1,4 +1,3 @@
-
 'use strict';
 
 const pciDao = require('../dao/pciDao');
@@ -56,13 +55,17 @@ function shapeMatrixResult(raw) {
       self_completed: !!row.self_completed,
       self_total_questions: Number(row.self_total_questions || 0),
       self_checked_questions: Number(row.self_checked_questions || 0),
-      self_score: Number(row.self_score),
-      main_count: Number(row.main_count),
-      support_count: Number(row.support_count),
-      converted_count: Number(row.converted_count),
-      event_count: Number(row.event_count),
-      history_score: Number(row.history_score),
-      pci_score: Number(row.pci_score),
+      self_score: Number(row.self_score || 0),
+      main_count: Number(row.main_count || 0),
+      support_count: Number(row.support_count || 0),
+      converted_count: Number(row.converted_count || 0),
+      event_count: Number(row.event_count || 0),
+      manual_main_count: Number(row.manual_main_count || 0),
+      manual_support_count: Number(row.manual_support_count || 0),
+      manual_converted_count: Number(row.manual_converted_count || 0),
+      manual_event_count: Number(row.manual_event_count || 0),
+      history_score: Number(row.history_score || 0),
+      pci_score: Number(row.pci_score || 0),
     };
 
     cellMap.set(`${row.pci_item_id}:${row.engineer_id}`, cell);
@@ -172,6 +175,10 @@ async function getCellDetail(params) {
       support_count: Number(summary.support_count || 0),
       converted_count: convertedCount,
       event_count: Number(summary.event_count || 0),
+      manual_main_count: Number(summary.manual_main_count || 0),
+      manual_support_count: Number(summary.manual_support_count || 0),
+      manual_converted_count: Number(summary.manual_converted_count || 0),
+      manual_event_count: Number(summary.manual_event_count || 0),
       self_score: selfScore,
       self_completed: !!summary.self_completed,
       self_total_questions: Number(summary.self_total_questions || 0),
@@ -260,14 +267,66 @@ async function updatePciItem({ userIdx, pciItemId, body }) {
     historyMaxScore,
     sortOrder,
     isActive: body.is_active !== false && body.is_active !== 0,
-    descriptionText: body.description_text || null,
+    descriptionText: body.description_text || '',
   });
 }
 
 async function rebuildRange({ userIdx, body }) {
-  const dateFrom = normalizeDate(body.date_from, '2025-01-01');
-  const dateTo = normalizeDate(body.date_to, new Date().toISOString().slice(0, 10));
+  const dateFrom = normalizeDate(body.date_from || body.dateFrom, '2025-01-01');
+  const dateTo = normalizeDate(body.date_to || body.dateTo, new Date().toISOString().slice(0, 10));
   return await pciDao.rebuildRange({ userIdx, dateFrom, dateTo });
+}
+
+async function getManualCredits(params) {
+  return await pciDao.getManualCredits({
+    engineerId: params.engineerId || params.engineer_id || '',
+    equipmentGroupCode: params.equipmentGroupCode || params.equipment_group || '',
+    pciDomain: String(params.pciDomain || params.domain || '').toUpperCase(),
+    keyword: params.keyword || '',
+  });
+}
+
+async function saveManualCredit({ userIdx, manualCreditId, body }) {
+  const engineerId = Number(body.engineer_id);
+  const pciItemId = Number(body.pci_item_id);
+  const mainCountAdd = Number(body.main_count_add ?? 0);
+  const supportCountAdd = Number(body.support_count_add ?? 0);
+  const convertedCountAdd = Number(body.converted_count_add ?? 0);
+
+  if (!engineerId || !pciItemId) {
+    const err = new Error('engineer_id 와 pci_item_id 가 필요합니다.');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (![mainCountAdd, supportCountAdd, convertedCountAdd].some((v) => Number.isFinite(v) && v !== 0)) {
+    const err = new Error('가산할 main/support/converted 값 중 하나는 0보다 커야 합니다.');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  return await pciDao.saveManualCredit({
+    userIdx,
+    manualCreditId: manualCreditId ? Number(manualCreditId) : null,
+    engineerId,
+    pciItemId,
+    sourceWorkType: String(body.source_work_type || 'MERGED').toUpperCase(),
+    mainCountAdd,
+    supportCountAdd,
+    convertedCountAdd,
+    effectiveDate: normalizeDate(body.effective_date || body.effectiveDate, ''),
+    note: body.note || '',
+    isActive: body.is_active !== false && body.is_active !== 0,
+  });
+}
+
+async function deleteManualCredit({ userIdx, manualCreditId }) {
+  const id = Number(manualCreditId);
+  if (!id) {
+    const err = new Error('manual credit id 가 필요합니다.');
+    err.statusCode = 400;
+    throw err;
+  }
+  return await pciDao.deleteManualCredit({ userIdx, manualCreditId: id });
 }
 
 module.exports = {
@@ -278,4 +337,7 @@ module.exports = {
   getAdminItems,
   updatePciItem,
   rebuildRange,
+  getManualCredits,
+  saveManualCredit,
+  deleteManualCredit,
 };
