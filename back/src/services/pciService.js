@@ -235,8 +235,9 @@ async function getFilterOptions() {
   return await pciDao.getFilterOptions();
 }
 
-async function getAdminItems(params) {
+async function getAdminItems({ userIdx, params }) {
   return await pciDao.getAdminItems({
+    userIdx,
     equipmentGroupCode: params.equipmentGroupCode || params.equipment_group || '',
     pciDomain: String(params.pciDomain || params.domain || '').toUpperCase(),
     keyword: params.keyword || '',
@@ -277,8 +278,9 @@ async function rebuildRange({ userIdx, body }) {
   return await pciDao.rebuildRange({ userIdx, dateFrom, dateTo });
 }
 
-async function getManualCredits(params) {
+async function getManualCredits({ userIdx, params }) {
   return await pciDao.getManualCredits({
+    userIdx,
     engineerId: params.engineerId || params.engineer_id || '',
     equipmentGroupCode: params.equipmentGroupCode || params.equipment_group || '',
     pciDomain: String(params.pciDomain || params.domain || '').toUpperCase(),

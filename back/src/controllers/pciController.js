@@ -126,7 +126,7 @@ exports.getEngineerDetail = async (req, res, next) => {
 
 exports.getAdminItems = async (req, res, next) => {
   try {
-    const data = await pciService.getAdminItems(req.query);
+    const data = await pciService.getAdminItems({ userIdx: extractUserIdx(req), params: req.query });
     res.json({ isSuccess: true, data });
   } catch (err) {
     next(err);
@@ -157,7 +157,7 @@ exports.rebuildRange = async (req, res, next) => {
 
 exports.getManualCredits = async (req, res, next) => {
   try {
-    const data = await pciService.getManualCredits(req.query);
+    const data = await pciService.getManualCredits({ userIdx: extractUserIdx(req), params: req.query });
     res.json({ isSuccess: true, data });
   } catch (err) {
     next(err);

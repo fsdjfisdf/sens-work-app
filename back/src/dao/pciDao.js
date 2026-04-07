@@ -730,9 +730,11 @@ async function rebuildRange({ userIdx, dateFrom, dateTo }) {
   }
 }
 
-async function getAdminItems({ equipmentGroupCode = '', pciDomain = '', keyword = '' }) {
+async function getAdminItems({ userIdx, equipmentGroupCode = '', pciDomain = '', keyword = '' }) {
   const conn = await pool.getConnection();
   try {
+    await ensureAdmin(conn, userIdx);
+
     const [rows] = await conn.query(
       `
       SELECT
@@ -757,9 +759,11 @@ async function getAdminItems({ equipmentGroupCode = '', pciDomain = '', keyword 
   }
 }
 
-async function getManualCredits({ engineerId = '', equipmentGroupCode = '', pciDomain = '', keyword = '' }) {
+async function getManualCredits({ userIdx, engineerId = '', equipmentGroupCode = '', pciDomain = '', keyword = '' }) {
   const conn = await pool.getConnection();
   try {
+    await ensureAdmin(conn, userIdx);
+
     const [rows] = await conn.query(
       `
       SELECT
