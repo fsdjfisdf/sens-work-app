@@ -312,7 +312,7 @@ async function getCellDetail({
         e.task_description,
         e.task_cause,
         e.task_result,
-        e.group AS event_group,
+        e.\`group\` AS event_group,
         e.site AS event_site,
         e.line
       FROM pci_event_fact f
@@ -337,10 +337,13 @@ async function getCellDetail({
         q.id AS checklist_question_id,
         q.question_code,
         q.question_text,
-        r.id AS response_id,
-        r.response_status,
-        a.is_checked,
-        a.checked_at
+        COALESCE(MAX(CASE WHEN r.response_status = 'APPROVED' THEN a.is_checked ELSE 0 END), 0) AS is_checked,
+        MAX(CASE WHEN r.response_status = 'APPROVED' THEN a.checked_at ELSE NULL END) AS checked_at,
+        CASE
+          WHEN MAX(CASE WHEN r.response_status = 'APPROVED' THEN 1 ELSE 0 END) = 1 THEN 'APPROVED'
+          ELSE '-'
+        END AS response_status,
+        COUNT(DISTINCT CASE WHEN r.response_status = 'APPROVED' THEN r.id ELSE NULL END) AS approved_response_count
       FROM pci_item_selfcheck_map sm
       JOIN checklist_question q
         ON q.id = sm.checklist_question_id
@@ -349,9 +352,9 @@ async function getCellDetail({
       LEFT JOIN checklist_response r
         ON r.id = a.response_id
        AND r.engineer_id = ?
-       AND r.response_status = 'APPROVED'
       WHERE sm.pci_item_id = ?
         AND sm.is_active = 1
+      GROUP BY q.id, q.question_code, q.question_text
       ORDER BY q.id
       `,
       [engineerId, pciItemId]
@@ -562,7 +565,7 @@ async function getAdminItems({
     const [rows] = await conn.query(
       `
       SELECT
-        pi.*,
+        pi.*, 
         COUNT(DISTINCT sm.id) AS source_map_count,
         COUNT(DISTINCT scm.id) AS selfcheck_map_count
       FROM pci_item pi

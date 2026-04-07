@@ -7,19 +7,25 @@
   <link rel="stylesheet" href="./pci.css" />
 </head>
 <body>
-  <div class="page-shell">
-    <header class="page-header">
-      <div>
-        <p class="eyebrow">S-WORKS</p>
-        <h1>PCI Matrix</h1>
-        <p class="page-desc">설비군별 작업 항목 × 엔지니어 역량 지표</p>
-      </div>
+  <nav>
+    <div class="nav-container">
+      <div class="nav-title"><a href="#">S-WORKS</a></div>
+      <div class="nav-meta">PCI MATRIX</div>
+    </div>
+  </nav>
 
-      <div class="header-actions">
+  <main class="page-shell">
+    <section class="hero-card">
+      <div>
+        <p class="eyebrow">Personal Capability Index</p>
+        <h1>엔지니어 역량 매트릭스</h1>
+        <p class="page-desc">작업 항목별 PCI를 설비군·그룹·사이트·기간 기준으로 조회합니다.</p>
+      </div>
+      <div class="hero-actions">
         <button id="reloadBtn" class="ghost-btn" type="button">새로고침</button>
         <button id="rebuildBtn" class="primary-btn hidden" type="button">관리자 재집계</button>
       </div>
-    </header>
+    </section>
 
     <section class="filter-card">
       <div class="filter-grid">
@@ -76,17 +82,7 @@
         </label>
       </div>
 
-      <div class="toggle-row">
-        <label class="toggle">
-          <input id="zeroHide" type="checkbox" />
-          <span>0% 숨기기</span>
-        </label>
-
-        <label class="toggle">
-          <input id="lowOnly" type="checkbox" />
-          <span>미달 항목만 보기 (80% 미만)</span>
-        </label>
-
+      <div class="filter-actions">
         <button id="searchBtn" class="primary-btn" type="button">조회</button>
       </div>
     </section>
@@ -101,80 +97,76 @@
         <strong id="itemCount">0</strong>
       </div>
       <div class="summary-box">
-        <span>평균 PCI</span>
+        <span>전체 평균 PCI</span>
         <strong id="avgPci">0%</strong>
       </div>
       <div class="summary-box">
-        <span>필터 Work Type</span>
+        <span>원본 작업 타입</span>
         <strong id="sourceTypeLabel">-</strong>
       </div>
     </section>
 
     <section class="matrix-card">
+      <div class="matrix-card__head">
+        <div>
+          <h2>PCI Matrix</h2>
+          <p id="matrixGuide">셀을 클릭하면 계산 근거와 이력 상세를 볼 수 있습니다.</p>
+        </div>
+      </div>
       <div id="matrixEmpty" class="empty-box">조건을 선택하고 조회하세요.</div>
       <div id="matrixWrap" class="matrix-wrap hidden"></div>
     </section>
-  </div>
+  </main>
 
-  <aside id="detailPanel" class="detail-panel">
-    <div class="detail-panel__header">
-      <div>
-        <p class="eyebrow">PCI Detail</p>
-        <h2 id="detailTitle">상세 정보</h2>
-        <p id="detailSub" class="detail-sub">-</p>
+  <aside id="detailPanel" class="detail-panel" aria-hidden="true">
+    <div class="detail-panel__backdrop" id="detailBackdrop"></div>
+    <div class="detail-panel__content">
+      <div class="detail-panel__header">
+        <div>
+          <p class="eyebrow">PCI DETAIL</p>
+          <h2 id="detailTitle">상세 정보</h2>
+          <p id="detailSub" class="detail-sub">-</p>
+        </div>
+        <button id="closeDetailBtn" class="ghost-icon-btn" type="button">✕</button>
       </div>
-      <button id="closeDetailBtn" class="ghost-icon-btn" type="button">✕</button>
-    </div>
 
-    <div class="detail-panel__body">
-      <section class="detail-section">
-        <h3>점수 요약</h3>
-        <div class="stat-grid">
-          <div class="stat-box">
-            <span>PCI</span>
-            <strong id="detailPciScore">0%</strong>
+      <div class="detail-panel__body">
+        <section class="detail-section">
+          <h3>점수 요약</h3>
+          <div class="stat-grid">
+            <div class="stat-box"><span>PCI</span><strong id="detailPciScore">0%</strong></div>
+            <div class="stat-box"><span>Self</span><strong id="detailSelfScore">0</strong></div>
+            <div class="stat-box"><span>History</span><strong id="detailHistoryScore">0</strong></div>
+            <div class="stat-box"><span>달성률</span><strong id="detailHistoryRatio">0%</strong></div>
           </div>
-          <div class="stat-box">
-            <span>Self</span>
-            <strong id="detailSelfScore">0</strong>
-          </div>
-          <div class="stat-box">
-            <span>History</span>
-            <strong id="detailHistoryScore">0</strong>
-          </div>
-          <div class="stat-box">
-            <span>달성률</span>
-            <strong id="detailHistoryRatio">0%</strong>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="detail-section">
-        <h3>집계 정보</h3>
-        <div class="meta-list">
-          <div><span>required_count</span><strong id="detailRequiredCount">-</strong></div>
-          <div><span>main_count</span><strong id="detailMainCount">-</strong></div>
-          <div><span>support_count</span><strong id="detailSupportCount">-</strong></div>
-          <div><span>converted_count</span><strong id="detailConvertedCount">-</strong></div>
-          <div><span>event_count</span><strong id="detailEventCount">-</strong></div>
-          <div><span>self 완료</span><strong id="detailSelfCompleted">-</strong></div>
-        </div>
-      </section>
+        <section class="detail-section">
+          <h3>집계 정보</h3>
+          <div class="meta-list">
+            <div><span>required_count</span><strong id="detailRequiredCount">-</strong></div>
+            <div><span>main_count</span><strong id="detailMainCount">-</strong></div>
+            <div><span>support_count</span><strong id="detailSupportCount">-</strong></div>
+            <div><span>converted_count</span><strong id="detailConvertedCount">-</strong></div>
+            <div><span>event_count</span><strong id="detailEventCount">-</strong></div>
+            <div><span>self 완료</span><strong id="detailSelfCompleted">-</strong></div>
+          </div>
+        </section>
 
-      <section class="detail-section">
-        <h3>Self Checklist 문항</h3>
-        <div id="selfQuestionList" class="list-box"></div>
-      </section>
+        <section class="detail-section">
+          <h3>Self Checklist 문항</h3>
+          <div id="selfQuestionList" class="list-box"></div>
+        </section>
 
-      <section class="detail-section">
-        <h3>집계 이벤트</h3>
-        <div id="eventList" class="list-box"></div>
-      </section>
+        <section class="detail-section">
+          <h3>집계 이벤트</h3>
+          <div id="eventList" class="list-box"></div>
+        </section>
+      </div>
     </div>
   </aside>
 
   <div id="toast" class="toast hidden"></div>
-
   <script src="./pci.js"></script>
 </body>
 </html>

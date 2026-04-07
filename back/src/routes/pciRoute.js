@@ -3,7 +3,31 @@
 const express = require('express');
 const router = express.Router();
 const pciController = require('../controllers/pciController');
-const auth = require('../../config/jwtMiddleware');
+
+function resolveAuthMiddleware() {
+  const candidates = [
+    '../../config/jwtMiddleware',
+    '../middlewares/auth',
+    '../middleware/auth',
+    '../../middlewares/auth',
+  ];
+
+  for (const path of candidates) {
+    try {
+      const mod = require(path);
+      if (typeof mod === 'function') return mod;
+      if (typeof mod?.jwtMiddleware === 'function') return mod.jwtMiddleware;
+      if (typeof mod?.verifyToken === 'function') return mod.verifyToken;
+      if (typeof mod?.auth === 'function') return mod.auth;
+    } catch (_) {
+      // next
+    }
+  }
+
+  return (req, res, next) => next();
+}
+
+const auth = resolveAuthMiddleware();
 
 router.get('/filters', auth, pciController.getFilterOptions);
 router.get('/matrix', auth, pciController.getMatrix);

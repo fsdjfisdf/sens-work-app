@@ -4,7 +4,8 @@
     meRole: localStorage.getItem('user-role') || '',
     filters: null,
     matrix: null,
-    loading: false,
+    engineerAvgMap: new Map(),
+    toastTimer: null,
   };
 
   const els = {};
@@ -15,15 +16,15 @@
   async function init() {
     cache();
     bind();
-    setDefaultDates();
+    applyDefaultDates();
+    toggleAdminUI();
 
     try {
       await loadFilters();
       await search();
-      toggleAdminUI();
     } catch (error) {
       console.error(error);
-      showToast(error.message || 'PCI 초기화에 실패했습니다.', 'danger');
+      showToast(error.message || '초기화 실패', 'danger');
     }
   }
 
@@ -34,14 +35,12 @@
       sourceWorkType: qs('sourceWorkType'),
       engineerGroup: qs('engineerGroup'),
       site: qs('site'),
+      keyword: qs('keyword'),
       dateFrom: qs('dateFrom'),
       dateTo: qs('dateTo'),
-      keyword: qs('keyword'),
-      zeroHide: qs('zeroHide'),
-      lowOnly: qs('lowOnly'),
-      searchBtn: qs('searchBtn'),
       reloadBtn: qs('reloadBtn'),
       rebuildBtn: qs('rebuildBtn'),
+      searchBtn: qs('searchBtn'),
       engineerCount: qs('engineerCount'),
       itemCount: qs('itemCount'),
       avgPci: qs('avgPci'),
@@ -49,6 +48,7 @@
       matrixWrap: qs('matrixWrap'),
       matrixEmpty: qs('matrixEmpty'),
       detailPanel: qs('detailPanel'),
+      detailBackdrop: qs('detailBackdrop'),
       closeDetailBtn: qs('closeDetailBtn'),
       detailTitle: qs('detailTitle'),
       detailSub: qs('detailSub'),
@@ -69,30 +69,36 @@
   }
 
   function bind() {
+    els.reloadBtn.addEventListener('click', async () => {
+      await loadFilters();
+      await search();
+    });
     els.searchBtn.addEventListener('click', search);
-    els.reloadBtn.addEventListener('click', search);
-    els.domain.addEventListener('change', syncSourceTypeWithDomain);
-    els.closeDetailBtn.addEventListener('click', closeDetail);
     els.rebuildBtn.addEventListener('click', rebuildRange);
+    els.closeDetailBtn.addEventListener('click', closeDetail);
+    els.detailBackdrop.addEventListener('click', closeDetail);
+
+    els.domain.addEventListener('change', handleDomainChange);
+    els.keyword.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') search();
+    });
   }
 
-  function setDefaultDates() {
-    const today = new Date();
-    const yearAgo = new Date(today);
-    yearAgo.setFullYear(today.getFullYear() - 1);
-
-    els.dateTo.value = toDateInputValue(today);
-    els.dateFrom.value = toDateInputValue(yearAgo);
+  function applyDefaultDates() {
+    const now = new Date();
+    const from = new Date(now);
+    from.setFullYear(now.getFullYear() - 1);
+    els.dateTo.value = toDateInputValue(now);
+    els.dateFrom.value = toDateInputValue(from);
   }
 
-  function syncSourceTypeWithDomain() {
-    if (els.domain.value === 'MAINT') {
+  function handleDomainChange() {
+    const domain = els.domain.value;
+    if (domain === 'MAINT') {
       els.sourceWorkType.value = 'MAINT';
       els.sourceWorkType.disabled = true;
     } else {
-      if (els.sourceWorkType.value === 'MAINT') {
-        els.sourceWorkType.value = 'MERGED';
-      }
+      if (els.sourceWorkType.value === 'MAINT') els.sourceWorkType.value = 'MERGED';
       els.sourceWorkType.disabled = false;
     }
   }
@@ -100,97 +106,110 @@
   async function loadFilters() {
     const data = await api('/api/pci/filters');
     state.filters = data;
-    renderFilterOptions();
+
+    renderSelectOptions(els.equipmentGroup, data.equipment_groups || [], {
+      placeholder: false,
+      getValue: (row) => row.code,
+      getLabel: (row) => row.display_name || row.code,
+    });
+
+    fillSimpleOptions(els.engineerGroup, data.groups || [], true);
+    fillSimpleOptions(els.site, data.sites || [], true);
+
+    if (!els.equipmentGroup.value && (data.equipment_groups || []).length) {
+      els.equipmentGroup.value = data.equipment_groups[0].code;
+    }
+
+    handleDomainChange();
   }
 
-  function renderFilterOptions() {
-    const filters = state.filters || {};
-    els.equipmentGroup.innerHTML = (filters.equipment_groups || [])
-      .map((row) => `<option value="${escapeAttr(row.code)}">${escapeHtml(row.display_name || row.code)}</option>`)
-      .join('');
+  function renderSelectOptions(select, rows, { placeholder = true, getValue, getLabel }) {
+    const html = [];
+    if (placeholder) html.push('<option value="">전체</option>');
+    for (const row of rows) {
+      html.push(`<option value="${escapeAttr(getValue(row))}">${escapeHtml(getLabel(row))}</option>`);
+    }
+    select.innerHTML = html.join('');
+  }
 
-    els.engineerGroup.innerHTML = `<option value="">전체</option>` +
-      (filters.groups || []).map((value) => `<option value="${escapeAttr(value)}">${escapeHtml(value)}</option>`).join('');
-
-    els.site.innerHTML = `<option value="">전체</option>` +
-      (filters.sites || []).map((value) => `<option value="${escapeAttr(value)}">${escapeHtml(value)}</option>`).join('');
-
-    syncSourceTypeWithDomain();
+  function fillSimpleOptions(select, values, includeAll) {
+    const html = [];
+    if (includeAll) html.push('<option value="">전체</option>');
+    for (const value of values) {
+      html.push(`<option value="${escapeAttr(value)}">${escapeHtml(value)}</option>`);
+    }
+    select.innerHTML = html.join('');
   }
 
   async function search() {
-    if (state.loading) return;
-    state.loading = true;
-    els.searchBtn.disabled = true;
+    if (!els.equipmentGroup.value) {
+      showToast('설비군을 먼저 선택하세요.', 'danger');
+      return;
+    }
+
+    const domain = els.domain.value;
+    const params = new URLSearchParams({
+      equipment_group: els.equipmentGroup.value,
+      domain,
+      source_work_type: domain === 'MAINT' ? 'MAINT' : els.sourceWorkType.value,
+      group: els.engineerGroup.value,
+      site: els.site.value,
+      keyword: els.keyword.value.trim(),
+      date_from: els.dateFrom.value,
+      date_to: els.dateTo.value,
+    });
 
     try {
-      const query = new URLSearchParams({
-        equipment_group: els.equipmentGroup.value,
-        domain: els.domain.value,
-        source_work_type: els.sourceWorkType.value,
-        group: els.engineerGroup.value,
-        site: els.site.value,
-        keyword: els.keyword.value.trim(),
-        date_from: els.dateFrom.value,
-        date_to: els.dateTo.value,
-      });
-
-      const data = await api(`/api/pci/matrix?${query.toString()}`);
+      const data = await api(`/api/pci/matrix?${params.toString()}`);
       state.matrix = data;
+      state.engineerAvgMap = computeEngineerAverages(data);
       renderSummary(data);
       renderMatrix(data);
     } catch (error) {
       console.error(error);
-      showToast(error.message || '조회 중 오류가 발생했습니다.', 'danger');
       els.matrixWrap.classList.add('hidden');
       els.matrixEmpty.classList.remove('hidden');
       els.matrixEmpty.textContent = error.message || '조회 실패';
-    } finally {
-      state.loading = false;
-      els.searchBtn.disabled = false;
+      showToast(error.message || '조회 실패', 'danger');
     }
+  }
+
+  function computeEngineerAverages(data) {
+    const avgMap = new Map();
+    const engineers = data.engineers || [];
+    const cells = data.cells || [];
+
+    for (const engineer of engineers) {
+      const scores = cells
+        .filter((cell) => cell.engineer_id === engineer.engineer_id)
+        .map((cell) => Number(cell.pci_score || 0));
+      const avg = scores.length ? scores.reduce((acc, cur) => acc + cur, 0) / scores.length : 0;
+      avgMap.set(engineer.engineer_id, Number(avg.toFixed(1)));
+    }
+    return avgMap;
   }
 
   function renderSummary(data) {
     const engineers = data.engineers || [];
     const items = data.items || [];
-    const cells = filterCells(data.cells || []);
-
-    const avg = cells.length
-      ? (cells.reduce((acc, row) => acc + Number(row.pci_score || 0), 0) / cells.length)
-      : 0;
+    const scores = (data.cells || []).map((row) => Number(row.pci_score || 0));
+    const avg = scores.length ? scores.reduce((acc, cur) => acc + cur, 0) / scores.length : 0;
 
     els.engineerCount.textContent = String(engineers.length);
     els.itemCount.textContent = String(items.length);
     els.avgPci.textContent = `${avg.toFixed(1)}%`;
-    els.sourceTypeLabel.textContent = data.meta?.source_work_type || '-';
+    els.sourceTypeLabel.textContent = data?.filters?.source_work_type || data?.meta?.source_work_type || '-';
   }
 
   function renderMatrix(data) {
     const engineers = data.engineers || [];
     const items = data.items || [];
-    const filteredCellList = filterCells(data.cells || []);
-    const cellMap = new Map(filteredCellList.map((row) => [`${row.pci_item_id}:${row.engineer_id}`, row]));
+    const cellMap = new Map((data.cells || []).map((row) => [`${row.pci_item_id}:${row.engineer_id}`, row]));
 
     if (!engineers.length || !items.length) {
       els.matrixWrap.classList.add('hidden');
       els.matrixEmpty.classList.remove('hidden');
       els.matrixEmpty.textContent = '조건에 맞는 데이터가 없습니다.';
-      return;
-    }
-
-    const visibleItems = items.filter((item) => {
-      const rowCells = engineers.map((eng) => cellMap.get(`${item.pci_item_id}:${eng.engineer_id}`)).filter(Boolean);
-      if (!rowCells.length) return !els.zeroHide.checked && !els.lowOnly.checked;
-      if (els.zeroHide.checked && rowCells.every((cell) => Number(cell.pci_score || 0) <= 0)) return false;
-      if (els.lowOnly.checked && rowCells.every((cell) => Number(cell.pci_score || 0) >= 80)) return false;
-      return true;
-    });
-
-    if (!visibleItems.length) {
-      els.matrixWrap.classList.add('hidden');
-      els.matrixEmpty.classList.remove('hidden');
-      els.matrixEmpty.textContent = '조건에 맞는 항목이 없습니다.';
       return;
     }
 
@@ -200,16 +219,11 @@
           <tr>
             <th class="sticky-col cat-col">카테고리</th>
             <th class="sticky-col sticky-col--second item-col">작업 항목</th>
-            ${engineers.map((eng) => `
-              <th class="engineer-col">
-                <div>${escapeHtml(eng.engineer_name)}</div>
-                <small>${escapeHtml([eng.group, eng.site].filter(Boolean).join(' / '))}</small>
-              </th>
-            `).join('')}
+            ${engineers.map((eng) => renderEngineerHead(eng)).join('')}
           </tr>
         </thead>
         <tbody>
-          ${visibleItems.map((item) => renderRow(item, engineers, cellMap)).join('')}
+          ${items.map((item) => renderRow(item, engineers, cellMap)).join('')}
         </tbody>
       </table>
     `;
@@ -219,10 +233,21 @@
     els.matrixEmpty.classList.add('hidden');
 
     els.matrixWrap.querySelectorAll('.pci-cell').forEach((cell) => {
-      cell.addEventListener('click', () => {
-        openDetail(cell.dataset.engineerId, cell.dataset.pciItemId);
-      });
+      cell.addEventListener('click', () => openDetail(cell.dataset.engineerId, cell.dataset.pciItemId));
     });
+  }
+
+  function renderEngineerHead(engineer) {
+    const avg = state.engineerAvgMap.get(engineer.engineer_id) || 0;
+    return `
+      <th class="engineer-col">
+        <div class="engineer-head">
+          <div class="engineer-name">${escapeHtml(engineer.engineer_name)}</div>
+          <div class="engineer-sub">${escapeHtml([engineer.group, engineer.site].filter(Boolean).join(' / ') || '-')}</div>
+          <div class="engineer-avg">평균 ${avg.toFixed(1)}%</div>
+        </div>
+      </th>
+    `;
   }
 
   function renderRow(item, engineers, cellMap) {
@@ -234,15 +259,7 @@
           <div class="item-sub">${escapeHtml(item.item_name || item.item_code)} · 기준 ${Number(item.required_count || 0)}</div>
         </td>
         ${engineers.map((eng) => {
-          const cell = cellMap.get(`${item.pci_item_id}:${eng.engineer_id}`) || {
-            engineer_id: eng.engineer_id,
-            pci_item_id: item.pci_item_id,
-            pci_score: 0,
-            self_completed: false,
-            converted_count: 0,
-            main_count: 0,
-            support_count: 0,
-          };
+          const cell = cellMap.get(`${item.pci_item_id}:${eng.engineer_id}`) || makeEmptyCell(eng.engineer_id, item.pci_item_id);
           const score = Number(cell.pci_score || 0);
           return `
             <td
@@ -253,9 +270,8 @@
             >
               <span class="pci-value">${score.toFixed(0)}%</span>
               <span class="pci-meta">
-                ${cell.self_completed ? 'Self O' : 'Self X'} ·
-                M ${Number(cell.main_count || 0).toFixed(1)} /
-                S ${Number(cell.support_count || 0).toFixed(1)}
+                ${cell.self_completed ? 'Self O' : 'Self X'}<br>
+                M ${Number(cell.main_count || 0).toFixed(1)} / S ${Number(cell.support_count || 0).toFixed(1)}
               </span>
             </td>
           `;
@@ -264,13 +280,15 @@
     `;
   }
 
-  function filterCells(cells) {
-    return cells.filter((row) => {
-      const score = Number(row.pci_score || 0);
-      if (els.zeroHide.checked && score <= 0) return false;
-      if (els.lowOnly.checked && score >= 80) return false;
-      return true;
-    });
+  function makeEmptyCell(engineerId, pciItemId) {
+    return {
+      engineer_id: engineerId,
+      pci_item_id: pciItemId,
+      pci_score: 0,
+      self_completed: false,
+      main_count: 0,
+      support_count: 0,
+    };
   }
 
   function getHeatClass(score) {
@@ -289,12 +307,13 @@
         pci_item_id: pciItemId,
         date_from: els.dateFrom.value,
         date_to: els.dateTo.value,
-        source_work_type: els.sourceWorkType.value,
+        source_work_type: els.domain.value === 'MAINT' ? 'MAINT' : els.sourceWorkType.value,
       });
 
       const data = await api(`/api/pci/cell-detail?${params.toString()}`);
       renderDetail(data);
       els.detailPanel.classList.add('is-open');
+      els.detailPanel.setAttribute('aria-hidden', 'false');
       document.body.classList.add('panel-open');
     } catch (error) {
       console.error(error);
@@ -321,42 +340,60 @@
     els.detailEventCount.textContent = String(Number(summary.event_count || 0));
     els.detailSelfCompleted.textContent = summary.self_completed ? '완료' : '미완료';
 
-    els.selfQuestionList.innerHTML = (data.self_questions || []).length
-      ? data.self_questions.map((row) => `
-          <article class="list-item">
-            <div class="list-item__title">${escapeHtml(row.question_text || row.question_code || '-')}</div>
-            <div class="list-item__meta">
-              문항코드: ${escapeHtml(row.question_code || '-')}<br>
-              상태: ${row.is_checked ? '체크됨' : '체크 안됨'} / 응답상태: ${escapeHtml(row.response_status || '-')}
-            </div>
-          </article>
-        `).join('')
-      : `<div class="list-item"><div class="list-item__meta">연결된 self checklist 문항이 없습니다.</div></div>`;
+    renderSelfQuestions(data.self_questions || []);
+    renderEvents(data.events || []);
+  }
 
-    els.eventList.innerHTML = (data.events || []).length
-      ? data.events.map((row) => `
-          <article class="list-item">
-            <div class="list-item__title">${escapeHtml(row.task_date || '-')} · ${escapeHtml(row.task_name || '-')}</div>
-            <div class="list-item__meta">
-              ${escapeHtml(row.equipment_type || '-')} / ${escapeHtml(row.equipment_name || '-')} / ${escapeHtml(row.work_type || '-')} / ${escapeHtml(row.role || '-')}
-              <br>
-              main ${Number(row.main_count || 0).toFixed(1)} · support ${Number(row.support_count || 0).toFixed(1)} · converted ${Number(row.converted_count || 0).toFixed(2)}
-              <br>
-              그룹 ${escapeHtml(row.event_group || '-')} / 사이트 ${escapeHtml(row.event_site || '-')} / 라인 ${escapeHtml(row.line || '-')}
-            </div>
-            <div class="list-item__body">
-              ${row.setup_item ? `setup_item: ${escapeHtml(row.setup_item)}<br>` : ''}
-              ${row.task_description ? `설명: ${escapeHtml(row.task_description)}<br>` : ''}
-              ${row.task_cause ? `원인: ${escapeHtml(row.task_cause)}<br>` : ''}
-              ${row.task_result ? `결과: ${escapeHtml(row.task_result)}` : ''}
-            </div>
-          </article>
-        `).join('')
-      : `<div class="list-item"><div class="list-item__meta">집계된 작업이 없습니다.</div></div>`;
+  function renderSelfQuestions(rows) {
+    if (!rows.length) {
+      els.selfQuestionList.innerHTML = `<div class="list-item"><div class="list-item__meta">연결된 self checklist 문항이 없습니다.</div></div>`;
+      return;
+    }
+
+    els.selfQuestionList.innerHTML = rows.map((row) => `
+      <article class="list-item">
+        <div class="list-item__title">${escapeHtml(row.question_text || row.question_code || '-')}</div>
+        <div class="badge-row">
+          <span class="badge badge--neutral">문항코드 ${escapeHtml(row.question_code || '-')}</span>
+          <span class="badge ${row.is_checked ? 'badge--ok' : 'badge--off'}">${row.is_checked ? '체크됨' : '체크 안됨'}</span>
+          <span class="badge badge--neutral">응답상태 ${escapeHtml(row.response_status || '-')}</span>
+          ${Number(row.approved_response_count || 0) > 0 ? `<span class="badge badge--neutral">승인본 ${Number(row.approved_response_count)}건</span>` : ''}
+        </div>
+      </article>
+    `).join('');
+  }
+
+  function renderEvents(rows) {
+    if (!rows.length) {
+      els.eventList.innerHTML = `<div class="list-item"><div class="list-item__meta">집계된 작업이 없습니다.</div></div>`;
+      return;
+    }
+
+    els.eventList.innerHTML = rows.map((row) => `
+      <article class="list-item">
+        <div class="list-item__title">${escapeHtml(row.task_date || '-')} · ${escapeHtml(row.task_name || '-')}</div>
+        <div class="badge-row">
+          <span class="badge badge--neutral">${escapeHtml(row.source_work_type || row.work_type || '-')}</span>
+          <span class="badge badge--neutral">${escapeHtml(row.role || '-')}</span>
+          <span class="badge badge--neutral">M ${Number(row.main_count || 0).toFixed(1)} / S ${Number(row.support_count || 0).toFixed(1)}</span>
+          <span class="badge badge--neutral">환산 ${Number(row.converted_count || 0).toFixed(2)}</span>
+        </div>
+        <div class="list-item__meta">
+          ${escapeHtml(row.equipment_type || '-')} / ${escapeHtml(row.equipment_name || '-')} / 그룹 ${escapeHtml(row.event_group || '-')} / 사이트 ${escapeHtml(row.event_site || '-')} / 라인 ${escapeHtml(row.line || '-')}
+        </div>
+        <div class="list-item__body">
+          ${row.setup_item ? `setup_item: ${escapeHtml(row.setup_item)}<br>` : ''}
+          ${row.task_description ? `설명: ${escapeHtml(row.task_description)}<br>` : ''}
+          ${row.task_cause ? `원인: ${escapeHtml(row.task_cause)}<br>` : ''}
+          ${row.task_result ? `결과: ${escapeHtml(row.task_result)}` : ''}
+        </div>
+      </article>
+    `).join('');
   }
 
   function closeDetail() {
     els.detailPanel.classList.remove('is-open');
+    els.detailPanel.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('panel-open');
   }
 
@@ -413,19 +450,16 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  let toastTimer = null;
   function showToast(message, type = 'success') {
-    clearTimeout(toastTimer);
+    clearTimeout(state.toastTimer);
     els.toast.textContent = message;
+    els.toast.className = `toast toast--${type}`;
     els.toast.classList.remove('hidden');
-    els.toast.style.borderColor = type === 'danger' ? 'rgba(239,91,114,.35)' : 'rgba(122,162,255,.32)';
-    toastTimer = setTimeout(() => {
-      els.toast.classList.add('hidden');
-    }, 2600);
+    state.toastTimer = setTimeout(() => els.toast.classList.add('hidden'), 2500);
   }
 
   function escapeHtml(value) {
-    return String(value ?? '')
+    return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
