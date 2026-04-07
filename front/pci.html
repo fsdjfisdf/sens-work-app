@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCI Matrix</title>
+  <link rel="stylesheet" href="./pci.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">S-WORKS</p>
+        <h1>PCI Matrix</h1>
+        <p class="page-desc">설비군별 작업 항목 × 엔지니어 역량 지표</p>
+      </div>
+
+      <div class="header-actions">
+        <button id="reloadBtn" class="ghost-btn" type="button">새로고침</button>
+        <button id="rebuildBtn" class="primary-btn hidden" type="button">관리자 재집계</button>
+      </div>
+    </header>
+
+    <section class="filter-card">
+      <div class="filter-grid">
+        <label class="field">
+          <span>설비군</span>
+          <select id="equipmentGroup"></select>
+        </label>
+
+        <label class="field">
+          <span>도메인</span>
+          <select id="domain">
+            <option value="SETUP">SETUP / RELOCATION</option>
+            <option value="MAINT">MAINT</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>원본 작업 타입</span>
+          <select id="sourceWorkType">
+            <option value="MERGED">SETUP + RELOCATION</option>
+            <option value="SETUP">SETUP만</option>
+            <option value="RELOCATION">RELOCATION만</option>
+            <option value="MAINT">MAINT</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>그룹</span>
+          <select id="engineerGroup">
+            <option value="">전체</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>사이트</span>
+          <select id="site">
+            <option value="">전체</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>기간 시작</span>
+          <input id="dateFrom" type="date" />
+        </label>
+
+        <label class="field">
+          <span>기간 종료</span>
+          <input id="dateTo" type="date" />
+        </label>
+
+        <label class="field field--grow">
+          <span>엔지니어 검색</span>
+          <input id="keyword" type="text" placeholder="이름 검색" />
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle">
+          <input id="zeroHide" type="checkbox" />
+          <span>0% 숨기기</span>
+        </label>
+
+        <label class="toggle">
+          <input id="lowOnly" type="checkbox" />
+          <span>미달 항목만 보기 (80% 미만)</span>
+        </label>
+
+        <button id="searchBtn" class="primary-btn" type="button">조회</button>
+      </div>
+    </section>
+
+    <section class="summary-strip">
+      <div class="summary-box">
+        <span>엔지니어 수</span>
+        <strong id="engineerCount">0</strong>
+      </div>
+      <div class="summary-box">
+        <span>항목 수</span>
+        <strong id="itemCount">0</strong>
+      </div>
+      <div class="summary-box">
+        <span>평균 PCI</span>
+        <strong id="avgPci">0%</strong>
+      </div>
+      <div class="summary-box">
+        <span>필터 Work Type</span>
+        <strong id="sourceTypeLabel">-</strong>
+      </div>
+    </section>
+
+    <section class="matrix-card">
+      <div id="matrixEmpty" class="empty-box">조건을 선택하고 조회하세요.</div>
+      <div id="matrixWrap" class="matrix-wrap hidden"></div>
+    </section>
+  </div>
+
+  <aside id="detailPanel" class="detail-panel">
+    <div class="detail-panel__header">
+      <div>
+        <p class="eyebrow">PCI Detail</p>
+        <h2 id="detailTitle">상세 정보</h2>
+        <p id="detailSub" class="detail-sub">-</p>
+      </div>
+      <button id="closeDetailBtn" class="ghost-icon-btn" type="button">✕</button>
+    </div>
+
+    <div class="detail-panel__body">
+      <section class="detail-section">
+        <h3>점수 요약</h3>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <span>PCI</span>
+            <strong id="detailPciScore">0%</strong>
+          </div>
+          <div class="stat-box">
+            <span>Self</span>
+            <strong id="detailSelfScore">0</strong>
+          </div>
+          <div class="stat-box">
+            <span>History</span>
+            <strong id="detailHistoryScore">0</strong>
+          </div>
+          <div class="stat-box">
+            <span>달성률</span>
+            <strong id="detailHistoryRatio">0%</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3>집계 정보</h3>
+        <div class="meta-list">
+          <div><span>required_count</span><strong id="detailRequiredCount">-</strong></div>
+          <div><span>main_count</span><strong id="detailMainCount">-</strong></div>
+          <div><span>support_count</span><strong id="detailSupportCount">-</strong></div>
+          <div><span>converted_count</span><strong id="detailConvertedCount">-</strong></div>
+          <div><span>event_count</span><strong id="detailEventCount">-</strong></div>
+          <div><span>self 완료</span><strong id="detailSelfCompleted">-</strong></div>
+        </div>
+      </section>
+
+      <section class="detail-section">
+        <h3>Self Checklist 문항</h3>
+        <div id="selfQuestionList" class="list-box"></div>
+      </section>
+
+      <section class="detail-section">
+        <h3>집계 이벤트</h3>
+        <div id="eventList" class="list-box"></div>
+      </section>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="./pci.js"></script>
+</body>
+</html>
