@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const pciController = require('../controllers/pciController');
-const auth = require('../middlewares/auth');
+const auth = require('../../config/jwtMiddleware');
 
 router.get('/filters', auth, pciController.getFilterOptions);
 router.get('/matrix', auth, pciController.getMatrix);
